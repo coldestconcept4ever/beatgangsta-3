@@ -1,0 +1,146 @@
+import React from 'react';
+import { useTranslation } from 'react-i18next';
+import { AppTheme } from '../types';
+import { motion, AnimatePresence } from 'motion/react';
+import { X, CheckCircle2 } from 'lucide-react';
+
+interface DawSelectionModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  onSelect: (daw: string | null) => void;
+  initialDaw: string | null;
+  theme: AppTheme;
+}
+
+export const DawSelectionModal: React.FC<DawSelectionModalProps> = ({
+  isOpen,
+  onClose,
+  onSelect,
+  initialDaw,
+  theme
+}) => {
+  const { t } = useTranslation();
+  const [selected, setSelected] = React.useState<string | null>(initialDaw);
+
+  React.useEffect(() => {
+    if (isOpen) {
+      setSelected(initialDaw);
+    }
+  }, [isOpen, initialDaw]);
+
+  if (!isOpen) return null;
+
+  const handleContinue = () => {
+    onSelect(selected);
+  };
+
+  const daws = [
+    { id: 'Ableton Live', name: t('daw_ableton_live'), desc: t('daw_ableton_live_desc') },
+    { id: 'Logic Pro', name: t('daw_logic_pro'), desc: t('daw_logic_pro_desc') },
+    { id: 'Studio One', name: t('daw_studio_one'), desc: t('daw_studio_one_desc') },
+    { id: 'FL Studio', name: t('daw_fl_studio'), desc: t('daw_fl_studio_desc') },
+    { id: 'Reaper', name: t('daw_reaper'), desc: t('daw_reaper_desc') },
+    { id: 'Pro Tools', name: t('daw_pro_tools'), desc: t('daw_pro_tools_desc') },
+    { id: 'Cubase', name: t('daw_cubase'), desc: t('daw_cubase_desc') },
+    { id: 'Bitwig Studio', name: t('daw_bitwig_studio'), desc: t('daw_bitwig_studio_desc') },
+    { id: 'Mixcraft', name: t('daw_mixcraft'), desc: t('daw_mixcraft_desc') },
+    { id: 'BandLab', name: 'BandLab', desc: 'Free online DAW with built-in effects' },
+    { id: 'Other', name: t('daw_other'), desc: t('daw_other_desc') }
+  ];
+
+  const containerClasses = theme === 'coldest' 
+    ? "bg-white/95 border-white text-[#0c4a6e]" 
+    : theme === 'hustle-time'
+    ? "bg-[#001a14]/95 border-yellow-500/30 text-yellow-50"
+    : theme === 'chef-mode'
+    ? "bg-orange-50/95 border-orange-200 text-orange-950"
+    : "bg-black/95 border-red-900/50 text-red-50";
+
+  const buttonClasses = (id: string | null) => {
+    const active = selected === id;
+    if (theme === 'coldest') {
+      return active 
+        ? "bg-sky-500 text-white shadow-lg scale-105" 
+        : "bg-black/5 text-sky-900 hover:bg-black/10";
+    } else if (theme === 'hustle-time') {
+      return active 
+        ? "bg-yellow-500 text-emerald-950 shadow-lg shadow-yellow-900/40 scale-105" 
+        : "bg-white/5 text-yellow-400 hover:bg-white/10";
+    } else if (theme === 'chef-mode') {
+      return active
+        ? "bg-orange-500 text-white shadow-lg scale-105"
+        : "bg-black/5 text-orange-900 hover:bg-black/10";
+    } else {
+      return active 
+        ? "bg-red-600 text-white shadow-lg shadow-red-900/40 scale-105" 
+        : "bg-white/5 text-red-400 hover:bg-white/10";
+    }
+  };
+
+  return (
+    <AnimatePresence>
+      <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-6">
+        <motion.div 
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          className="absolute inset-0 bg-black/60 backdrop-blur-md"
+          onClick={onClose}
+        />
+        <motion.div 
+          initial={{ opacity: 0, scale: 0.95, y: 20 }}
+          animate={{ opacity: 1, scale: 1, y: 0 }}
+          exit={{ opacity: 0, scale: 0.95, y: 20 }}
+          className={`relative w-full max-w-2xl rounded-[3rem] p-8 sm:p-10 border shadow-2xl overflow-hidden ${containerClasses}`}
+        >
+          <button 
+            onClick={onClose}
+            className="absolute top-6 right-6 p-2 rounded-full hover:bg-black/5 transition-colors"
+          >
+            <X className="w-6 h-6" />
+          </button>
+
+          <div className="mb-8">
+            <h2 className="text-3xl font-black tracking-tighter mb-2">
+              {initialDaw ? t('switch_daw') : t('locate_plugin_list')}
+            </h2>
+            <p className="text-sm font-bold opacity-60">
+              {initialDaw ? t('select_daw_update') : t('select_daw_prompt')}
+            </p>
+          </div>
+
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mb-4">
+            {daws.filter(d => d.id !== 'Other').map((daw) => (
+              <button
+                key={daw.id}
+                onClick={() => setSelected(daw.id)}
+                className={`flex flex-col items-center justify-center py-4 px-2 rounded-xl transition-all text-center h-full ${buttonClasses(daw.id)}`}
+              >
+                <h3 className="font-black text-[10px] uppercase tracking-widest leading-tight">{daw.name}</h3>
+              </button>
+            ))}
+          </div>
+
+          <button
+            onClick={() => setSelected(null)}
+            className={`w-full py-4 rounded-xl transition-all text-center mb-8 ${buttonClasses(null)}`}
+          >
+            <h3 className="font-black text-[10px] uppercase tracking-widest">{t('other_skip')}</h3>
+          </button>
+
+          <button
+            onClick={handleContinue}
+            className={`w-full py-4 rounded-full font-black text-xs uppercase tracking-[0.3em] transition-all shadow-xl active:scale-95 ${
+              theme === 'coldest' ? 'bg-sky-500 text-white hover:bg-sky-600' : 
+              theme === 'hustle-time' ? 'bg-yellow-500 text-emerald-950 hover:bg-yellow-600' : 
+              theme === 'chef-mode' ? 'bg-orange-500 text-white hover:bg-orange-600' :
+              'bg-red-600 text-white hover:bg-red-700'
+            }`}
+          >
+            {t('continue_to_equipment')}
+          </button>
+        </motion.div>
+      </div>
+    </AnimatePresence>
+  );
+};

@@ -1,0 +1,331 @@
+export const VIBE_EXAMPLES = [
+  "Cyberpunk Phonk, Ethereal Cloud Rap",
+  "Lil Wayne Type, Southern Trap",
+  "Lo-fi Hip Hop, Chill Boom Bap",
+  "Dark Drill, Gritty Street Rap",
+  "Hyperpop, Glitchcore Vocals",
+  "Old School G-Funk, West Coast Vibe",
+  "Melodic Trap, Emotional R&B",
+  "Boom Bap, 90s Golden Era",
+  "Experimental Jazz Rap, Abstract Beats",
+  "Dancehall Fusion, Island Vibe"
+];
+
+export const SONG_EXAMPLES = [
+  "Sicko Mode by Travis Scott",
+  "Killa Cam by Cam'ron",
+  "N.Y. State of Mind by Nas",
+  "A Milli by Lil Wayne",
+  "Money Trees by Kendrick Lamar",
+  "Still D.R.E. by Dr. Dre",
+  "Life's a Bitch by Nas",
+  "Bound 2 by Kanye West",
+  "Shook Ones, Pt. II by Mobb Deep",
+  "Dreams and Nightmares by Meek Mill"
+];
+
+export const DRUM_BRANDS = [
+  "Mapex", "Ludwig", "Gretsch", "Tama", "Pearl", "Yamaha", "DW (Drum Workshop)", "Sonor", "Rogers", "Slingerland", "Premier", "PDP", "Odery", "Canopus", "Craviotto", "Noble & Cooley"
+];
+
+export const BANDLAB_FREE_PLUGINS_LATEST = [
+  // Dynamics
+  { vendor: "BandLab", name: "BL Compressor", type: "Dynamics" },
+  { vendor: "BandLab", name: "BL Limiter", type: "Dynamics" },
+  { vendor: "BandLab", name: "BL Noise Gate", type: "Dynamics" },
+  { vendor: "BandLab", name: "BL De-Esser", type: "Dynamics" },
+  { vendor: "BandLab", name: "BL Parallel Compressor", type: "Dynamics" },
+  { vendor: "BandLab", name: "BL Soft Clipper", type: "Dynamics" },
+  { vendor: "BandLab", name: "BL Transient Shaper", type: "Dynamics" },
+  { vendor: "BandLab", name: "BL VCA Compressor", type: "Dynamics" },
+  { vendor: "BandLab", name: "BL FET Compressor", type: "Dynamics" },
+  { vendor: "BandLab", name: "BL Opto Compressor", type: "Dynamics" },
+  { vendor: "BandLab", name: "BL Punch", type: "Dynamics" },
+  { vendor: "BandLab", name: "BL Impact", type: "Dynamics" },
+  { vendor: "BandLab", name: "BL Tighten", type: "Dynamics" },
+  { vendor: "BandLab", name: "BL Smooth", type: "Dynamics" },
+  
+  // EQ
+  { vendor: "BandLab", name: "BL Graphic EQ", type: "EQ" },
+  { vendor: "BandLab", name: "BL Parametric EQ", type: "EQ" },
+  { vendor: "BandLab", name: "BL 10-Band EQ", type: "EQ" },
+  { vendor: "BandLab", name: "BL 3-Band EQ", type: "EQ" },
+  { vendor: "BandLab", name: "BL High Pass Filter", type: "EQ" },
+  { vendor: "BandLab", name: "BL Low Pass Filter", type: "EQ" },
+  { vendor: "BandLab", name: "BL Shelf EQ", type: "EQ" },
+  { vendor: "BandLab", name: "BL Tilt EQ", type: "EQ" },
+  { vendor: "BandLab", name: "BL Air EQ", type: "EQ" },
+  
+  // Reverb
+  { vendor: "BandLab", name: "BL Studio Reverb", type: "Reverb" },
+  { vendor: "BandLab", name: "BL Space Maker", type: "Reverb" },
+  { vendor: "BandLab", name: "BL Spring Reverb", type: "Reverb" },
+  { vendor: "BandLab", name: "BL Plate Reverb", type: "Reverb" },
+  { vendor: "BandLab", name: "BL Hall Reverb", type: "Reverb" },
+  { vendor: "BandLab", name: "BL Room Reverb", type: "Reverb" },
+  { vendor: "BandLab", name: "BL Gated Reverb", type: "Reverb" },
+  { vendor: "BandLab", name: "BL Ambience", type: "Reverb" },
+  
+  // Delay
+  { vendor: "BandLab", name: "BL Digital Delay", type: "Delay" },
+  { vendor: "BandLab", name: "BL Tape Delay", type: "Delay" },
+  { vendor: "BandLab", name: "BL Ping Pong Delay", type: "Delay" },
+  { vendor: "BandLab", name: "BL Multi-Tap Delay", type: "Delay" },
+  { vendor: "BandLab", name: "BL Reverse Delay", type: "Delay" },
+  { vendor: "BandLab", name: "BL Analog Delay", type: "Delay" },
+  { vendor: "BandLab", name: "BL Slapback Delay", type: "Delay" },
+  { vendor: "BandLab", name: "BL Modulated Delay", type: "Delay" },
+  
+  // Modulation
+  { vendor: "BandLab", name: "BL Chorus", type: "Modulation" },
+  { vendor: "BandLab", name: "BL Flanger", type: "Modulation" },
+  { vendor: "BandLab", name: "BL Phaser", type: "Modulation" },
+  { vendor: "BandLab", name: "BL Tremolo", type: "Modulation" },
+  { vendor: "BandLab", name: "BL Vibrato", type: "Modulation" },
+  { vendor: "BandLab", name: "BL Rotary", type: "Modulation" },
+  { vendor: "BandLab", name: "BL Ring Modulator", type: "Modulation" },
+  { vendor: "BandLab", name: "BL Ensemble", type: "Modulation" },
+  { vendor: "BandLab", name: "BL Dimension", type: "Modulation" },
+  { vendor: "BandLab", name: "BL Auto-Pan", type: "Modulation" },
+  
+  // Distortion / Saturation
+  { vendor: "BandLab", name: "BL Distortion", type: "Distortion" },
+  { vendor: "BandLab", name: "BL Fuzz", type: "Distortion" },
+  { vendor: "BandLab", name: "BL Overdrive", type: "Distortion" },
+  { vendor: "BandLab", name: "BL BitCrusher", type: "Distortion" },
+  { vendor: "BandLab", name: "BL Saturator", type: "Distortion" },
+  { vendor: "BandLab", name: "BL Tube Amp", type: "Distortion" },
+  { vendor: "BandLab", name: "BL Guitar Amp Sim", type: "Distortion" },
+  { vendor: "BandLab", name: "BL Bass Amp Sim", type: "Distortion" },
+  { vendor: "BandLab", name: "BL Cabinet Sim", type: "Distortion" },
+  { vendor: "BandLab", name: "BL Tape Saturation", type: "Distortion" },
+  { vendor: "BandLab", name: "BL Vinyl Sim", type: "Distortion" },
+  { vendor: "BandLab", name: "BL Lo-Fi", type: "Distortion" },
+  
+  // Pitch
+  { vendor: "BandLab", name: "BL AutoPitch", type: "Pitch" },
+  { vendor: "BandLab", name: "BL Pitch Shifter", type: "Pitch" },
+  { vendor: "BandLab", name: "BL Harmony", type: "Pitch" },
+  { vendor: "BandLab", name: "BL Octaver", type: "Pitch" },
+  { vendor: "BandLab", name: "BL Vocal Tuner", type: "Pitch" },
+  
+  // Filter
+  { vendor: "BandLab", name: "BL Multi-Filter", type: "Filter" },
+  { vendor: "BandLab", name: "BL Auto Wah", type: "Filter" },
+  { vendor: "BandLab", name: "BL Talk Box", type: "Filter" },
+  { vendor: "BandLab", name: "BL Formant Filter", type: "Filter" },
+  { vendor: "BandLab", name: "BL Comb Filter", type: "Filter" },
+  { vendor: "BandLab", name: "BL Resonant Filter", type: "Filter" },
+  
+  // Harmonic / Imaging / Utility
+  { vendor: "BandLab", name: "BL Exciter", type: "Harmonic" },
+  { vendor: "BandLab", name: "BL Stereoizer", type: "Imaging" },
+  { vendor: "BandLab", name: "BL Widener", type: "Imaging" },
+  { vendor: "BandLab", name: "BL Gain", type: "Utility" },
+  { vendor: "BandLab", name: "BL Pan", type: "Utility" },
+  { vendor: "BandLab", name: "BL Phase Invert", type: "Utility" },
+  { vendor: "BandLab", name: "BL Mono Maker", type: "Imaging" },
+  { vendor: "BandLab", name: "BL Mid-Side Processor", type: "Imaging" },
+  { vendor: "BandLab", name: "BL Spectrum Analyzer", type: "Utility" },
+  { vendor: "BandLab", name: "BL VU Meter", type: "Utility" },
+  
+  // Guitar Specific (Basic Pedals)
+  { vendor: "BandLab", name: "BL Blues Driver", type: "Distortion" },
+  { vendor: "BandLab", name: "BL Metal Zone", type: "Distortion" },
+  { vendor: "BandLab", name: "BL Tube Screamer", type: "Distortion" },
+  { vendor: "BandLab", name: "BL Rat Distortion", type: "Distortion" },
+  { vendor: "BandLab", name: "BL Big Muff Fuzz", type: "Distortion" },
+  { vendor: "BandLab", name: "BL Dyna Comp", type: "Dynamics" },
+  { vendor: "BandLab", name: "BL Cry Baby Wah", type: "Filter" },
+  { vendor: "BandLab", name: "BL Phase 90", type: "Modulation" },
+  { vendor: "BandLab", name: "BL CE-2 Chorus", type: "Modulation" },
+  
+  // Vocal Specific
+  { vendor: "BandLab", name: "BL Vocal Doubler", type: "Modulation" },
+  { vendor: "BandLab", name: "BL Breath Control", type: "Dynamics" },
+  { vendor: "BandLab", name: "BL Sibilance Control", type: "Dynamics" },
+  { vendor: "BandLab", name: "BL Vocal Air", type: "EQ" },
+  { vendor: "BandLab", name: "BL Vocal Enhancer", type: "Harmonic" },
+  { vendor: "BandLab", name: "BL Warmth", type: "Harmonic" },
+  
+  // Mastering (Standard)
+  { vendor: "BandLab", name: "BL Master EQ", type: "EQ" },
+  { vendor: "BandLab", name: "BL Master Compressor", type: "Dynamics" },
+  { vendor: "BandLab", name: "BL Master Limiter", type: "Dynamics" },
+  { vendor: "BandLab", name: "BL Stereo Imager", type: "Imaging" },
+  { vendor: "BandLab", name: "BL Harmonic Exciter", type: "Harmonic" }
+];
+
+export const BANDLAB_PREMIUM_PLUGINS_LATEST = [
+  // Pro Series
+  { vendor: "BandLab", name: "BL Pro EQ", type: "EQ" },
+  { vendor: "BandLab", name: "BL Pro Compressor", type: "Dynamics" },
+  { vendor: "BandLab", name: "BL Pro Limiter", type: "Dynamics" },
+  { vendor: "BandLab", name: "BL Pro De-Esser", type: "Dynamics" },
+  { vendor: "BandLab", name: "BL Pro Reverb", type: "Reverb" },
+  { vendor: "BandLab", name: "BL Pro Delay", type: "Delay" },
+  { vendor: "BandLab", name: "BL Pro Chorus", type: "Modulation" },
+  { vendor: "BandLab", name: "BL Pro Flanger", type: "Modulation" },
+  { vendor: "BandLab", name: "BL Pro Phaser", type: "Modulation" },
+  { vendor: "BandLab", name: "BL Pro Saturator", type: "Distortion" },
+  { vendor: "BandLab", name: "BL Pro Exciter", type: "Harmonic" },
+  { vendor: "BandLab", name: "BL Pro Stereoizer", type: "Imaging" },
+  { vendor: "BandLab", name: "BL Pro Widener", type: "Imaging" },
+  { vendor: "BandLab", name: "BL Pro Multi-Band", type: "Dynamics" },
+  { vendor: "BandLab", name: "BL Pro Transient", type: "Dynamics" },
+  { vendor: "BandLab", name: "BL Pro Gate", type: "Dynamics" },
+  { vendor: "BandLab", name: "BL Pro Expander", type: "Dynamics" },
+  { vendor: "BandLab", name: "BL Pro Pitch", type: "Pitch" },
+  { vendor: "BandLab", name: "BL Pro Harmony", type: "Pitch" },
+  { vendor: "BandLab", name: "BL Pro Vocal", type: "Dynamics" },
+  { vendor: "BandLab", name: "BL Pro Guitar", type: "Distortion" },
+  { vendor: "BandLab", name: "BL Pro Bass", type: "Distortion" },
+  { vendor: "BandLab", name: "BL Pro Drum", type: "Dynamics" },
+  { vendor: "BandLab", name: "BL Pro Master", type: "Dynamics" },
+  { vendor: "BandLab", name: "BL Pro Mix", type: "Dynamics" },
+  { vendor: "BandLab", name: "BL Pro Bus", type: "Dynamics" },
+  { vendor: "BandLab", name: "BL Pro Channel", type: "Utility" },
+  { vendor: "BandLab", name: "BL Pro Strip", type: "Utility" },
+  { vendor: "BandLab", name: "BL Pro Console", type: "Distortion" },
+  { vendor: "BandLab", name: "BL Pro Tape", type: "Distortion" },
+  { vendor: "BandLab", name: "BL Pro Vinyl", type: "Distortion" },
+  { vendor: "BandLab", name: "BL Pro Lo-Fi", type: "Distortion" },
+  { vendor: "BandLab", name: "BL Pro Digital", type: "Utility" },
+  { vendor: "BandLab", name: "BL Pro Analog", type: "Distortion" },
+  { vendor: "BandLab", name: "BL Pro Vintage", type: "Distortion" },
+  { vendor: "BandLab", name: "BL Pro Modern", type: "Dynamics" },
+  { vendor: "BandLab", name: "BL Pro Hybrid", type: "Dynamics" },
+  { vendor: "BandLab", name: "BL Pro Surgical", type: "EQ" },
+  { vendor: "BandLab", name: "BL Pro Musical", type: "EQ" },
+  { vendor: "BandLab", name: "BL Pro Adaptive", type: "EQ" },
+  { vendor: "BandLab", name: "BL Pro Match", type: "EQ" },
+  { vendor: "BandLab", name: "BL Pro Linear", type: "EQ" },
+  { vendor: "BandLab", name: "BL Pro Zero", type: "EQ" },
+  { vendor: "BandLab", name: "BL Pro Phase", type: "Utility" },
+  { vendor: "BandLab", name: "BL Pro Gain", type: "Utility" },
+  { vendor: "BandLab", name: "BL Pro Signal", type: "Utility" },
+  { vendor: "BandLab", name: "BL Pro Sidechain", type: "Dynamics" },
+  { vendor: "BandLab", name: "BL Pro Spectral", type: "Modulation" },
+  { vendor: "BandLab", name: "BL Pro Frequency", type: "Pitch" },
+  { vendor: "BandLab", name: "BL Pro Granular", type: "Modulation" },
+  { vendor: "BandLab", name: "BL Pro Chaos", type: "Modulation" },
+  { vendor: "BandLab", name: "BL Pro Glitch", type: "Modulation" },
+  { vendor: "BandLab", name: "BL Pro Stutter", type: "Modulation" },
+  { vendor: "BandLab", name: "BL Pro Filter", type: "Filter" },
+  { vendor: "BandLab", name: "BL Pro Resonator", type: "Filter" },
+  { vendor: "BandLab", name: "BL Pro Ambience", type: "Reverb" },
+  { vendor: "BandLab", name: "BL Pro Cathedral", type: "Reverb" },
+  { vendor: "BandLab", name: "BL Pro Hall", type: "Reverb" },
+  { vendor: "BandLab", name: "BL Pro Room", type: "Reverb" },
+  { vendor: "BandLab", name: "BL Pro Plate", type: "Reverb" },
+  { vendor: "BandLab", name: "BL Pro Spring", type: "Reverb" },
+  { vendor: "BandLab", name: "BL Pro Space", type: "Reverb" },
+  { vendor: "BandLab", name: "BL Pro Echo", type: "Delay" },
+  { vendor: "BandLab", name: "BL Pro Slapback", type: "Delay" },
+  { vendor: "BandLab", name: "BL Pro Reverse", type: "Delay" },
+  { vendor: "BandLab", name: "BL Pro Ping Pong", type: "Delay" },
+  { vendor: "BandLab", name: "BL Pro Multi-Tap", type: "Delay" },
+  { vendor: "BandLab", name: "BL Pro Infinity", type: "Delay" },
+  { vendor: "BandLab", name: "BL Pro Dream", type: "Reverb" },
+  { vendor: "BandLab", name: "BL Pro Ethereal", type: "Reverb" },
+  { vendor: "BandLab", name: "BL Pro Swirl", type: "Modulation" },
+  { vendor: "BandLab", name: "BL Pro Flutter", type: "Modulation" },
+  { vendor: "BandLab", name: "BL Pro Spin", type: "Modulation" },
+  { vendor: "BandLab", name: "BL Pro Wave", type: "Modulation" },
+  { vendor: "BandLab", name: "BL Pro Grit", type: "Distortion" },
+  { vendor: "BandLab", name: "BL Pro Dirt", type: "Distortion" },
+  { vendor: "BandLab", name: "BL Pro Crush", type: "Distortion" },
+  { vendor: "BandLab", name: "BL Pro Burn", type: "Distortion" },
+  { vendor: "BandLab", name: "BL Pro Leveler", type: "Utility" },
+  { vendor: "BandLab", name: "BL Pro Balancer", type: "Utility" },
+  { vendor: "BandLab", name: "BL Pro Align", type: "Utility" },
+  { vendor: "BandLab", name: "BL Pro Offset", type: "Utility" },
+  { vendor: "BandLab", name: "BL Pro 76", type: "Dynamics" },
+  { vendor: "BandLab", name: "BL Pro LA-2A", type: "Dynamics" },
+  { vendor: "BandLab", name: "BL Pro Pultec", type: "EQ" },
+  { vendor: "BandLab", name: "BL Pro Fairchild", type: "Dynamics" },
+  { vendor: "BandLab", name: "BL Pro SSL", type: "Dynamics" },
+  { vendor: "BandLab", name: "BL Pro Neve", type: "EQ" },
+  { vendor: "BandLab", name: "BL Pro API", type: "EQ" },
+  { vendor: "BandLab", name: "BL Pro 1176", type: "Dynamics" },
+  { vendor: "BandLab", name: "BL Pro LA-3A", type: "Dynamics" },
+  { vendor: "BandLab", name: "BL Pro DBX", type: "Dynamics" },
+  
+  // Vintage / Classic Emulations
+  { vendor: "BandLab", name: "76 Compressor", type: "Dynamics" },
+  { vendor: "BandLab", name: "LA-2A Compressor", type: "Dynamics" },
+  { vendor: "BandLab", name: "Pultec EQ", type: "EQ" },
+  { vendor: "BandLab", name: "Fairchild 670", type: "Dynamics" },
+  { vendor: "BandLab", name: "SSL Bus Compressor", type: "Dynamics" },
+  { vendor: "BandLab", name: "Neve 1073 EQ", type: "EQ" },
+  { vendor: "BandLab", name: "API 550A EQ", type: "EQ" },
+  { vendor: "BandLab", name: "1176 Limiting Amplifier", type: "Dynamics" },
+  { vendor: "BandLab", name: "Teletronix LA-3A", type: "Dynamics" },
+  { vendor: "BandLab", name: "DBX 160 Compressor", type: "Dynamics" },
+  
+  // Advanced Guitar Models
+  { vendor: "BandLab", name: "BL Tube Screamer TS9", type: "Distortion" },
+  { vendor: "BandLab", name: "BL Plexi Drive", type: "Distortion" },
+  { vendor: "BandLab", name: "BL Bass Ampeg SVT", type: "Distortion" },
+  { vendor: "BandLab", name: "BL Bass Fender Bassman", type: "Distortion" },
+  { vendor: "BandLab", name: "BL Bass Aguilar", type: "Distortion" },
+  { vendor: "BandLab", name: "BL Bass Darkglass", type: "Distortion" },
+  
+  // Specialty / Experimental
+  { vendor: "BandLab", name: "BL Spectral Blur", type: "Modulation" },
+  { vendor: "BandLab", name: "BL Frequency Shifter", type: "Pitch" },
+  { vendor: "BandLab", name: "BL Granular Delay", type: "Delay" },
+  { vendor: "BandLab", name: "BL Pitch Freeze", type: "Pitch" },
+  { vendor: "BandLab", name: "BL Chaos Modulator", type: "Modulation" },
+  { vendor: "BandLab", name: "BL Glitch Machine", type: "Modulation" },
+  { vendor: "BandLab", name: "BL Tape Stop", type: "Modulation" },
+  { vendor: "BandLab", name: "BL Vinyl Crackle", type: "Distortion" },
+  
+  // Mastering Tools
+  { vendor: "BandLab", name: "BL Master Limiter Pro", type: "Dynamics" },
+  { vendor: "BandLab", name: "BL Master EQ Pro", type: "EQ" },
+  { vendor: "BandLab", name: "BL Master Comp Pro", type: "Dynamics" },
+  { vendor: "BandLab", name: "BL Master Widener Pro", type: "Imaging" },
+  { vendor: "BandLab", name: "BL Master Exciter Pro", type: "Harmonic" },
+  
+  // Lo-Fi & Retro Series
+  { vendor: "BandLab", name: "BL Lo-Fi Reverb", type: "Reverb" },
+  { vendor: "BandLab", name: "BL Lo-Fi Delay", type: "Delay" },
+  { vendor: "BandLab", name: "BL Lo-Fi Chorus", type: "Modulation" },
+  { vendor: "BandLab", name: "BL Lo-Fi Filter", type: "Filter" },
+  { vendor: "BandLab", name: "BL Lo-Fi Comp", type: "Dynamics" },
+  { vendor: "BandLab", name: "BL Lo-Fi EQ", type: "EQ" },
+  { vendor: "BandLab", name: "BL Retro Reverb", type: "Reverb" },
+  { vendor: "BandLab", name: "BL Retro Delay", type: "Delay" },
+  { vendor: "BandLab", name: "BL Retro Chorus", type: "Modulation" },
+  { vendor: "BandLab", name: "BL Retro Filter", type: "Filter" },
+  { vendor: "BandLab", name: "BL Retro Comp", type: "Dynamics" },
+  { vendor: "BandLab", name: "BL Retro EQ", type: "EQ" }
+];
+
+export const BANDLAB_PLUGINS_LATEST = [...BANDLAB_FREE_PLUGINS_LATEST, ...BANDLAB_PREMIUM_PLUGINS_LATEST];
+
+export const DRUM_TUNING_PRESETS = [
+  {
+    name: "Post-Punk / 80s",
+    kick: "Medium, relatively loose batter head, tighter resonant head.",
+    snare: "Medium-high, very sensitive snare wires.",
+    toms: "Medium, let them resonate a lot.",
+    notes: "Focus on clarity and a 'boxy' but punchy kick."
+  },
+  {
+    name: "Modern Indie",
+    kick: "Medium-low, more pressure on the pedal.",
+    snare: "Medium, very taut head.",
+    toms: "Low, controlled resonance.",
+    notes: "Deadened snare often works well here."
+  },
+  {
+    name: "Cloud Rap / OG Phonk",
+    kick: "Very low tuning.",
+    snare: "Somewhat muffled (wallet or cloth).",
+    toms: "Extremely low tuning.",
+    muffling: "Gaffer tape, towel on kick, moon gel on toms.",
+    notes: "Focus on sub-heavy low end and dry, 'dusty' snare."
+  }
+];

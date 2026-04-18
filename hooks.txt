@@ -1,0 +1,311 @@
+2:import React, { useState, useMemo, useEffect, useRef, useCallback } from 'react';
+43:import { useTranslation } from 'react-i18next';
+49:  const canvasRef = useRef<HTMLCanvasElement>(null);
+50:  const isDragging = useRef(false);
+52:  useEffect(() => {
+105:  useEffect(() => {
+106:    const onMouseMove = (e: MouseEvent) => {
+123:    window.addEventListener('mousemove', onMouseMove);
+124:    window.addEventListener('mouseup', onEnd);
+129:      window.removeEventListener('mousemove', onMouseMove);
+130:      window.removeEventListener('mouseup', onEnd);
+143:        onMouseDown={(e) => {
+158:  const { t } = useTranslation();
+159:  const [imgSrc, setImgSrc] = useState<string | null>(null);
+160:  const [isGenerating, setIsGenerating] = useState(false);
+229:  useEffect(() => {
+399:  const [showRigUI, setShowRigUI] = useState(false);
+400:  const [showBrandMenu, setShowBrandMenu] = useState(false);
+401:  const [showFriendsInfo, setShowFriendsInfo] = useState(false);
+402:  const [showModeInfo, setShowModeInfo] = useState(false);
+403:  const [showCookieConsent, setShowCookieConsent] = useState(() => {
+405:    // @ts-ignore - navigator.globalPrivacyControl is a non-standard but widely used property
+411:  const [backupInfo, setBackupInfo] = useState<{ hasBackup: boolean; backupDate?: string } | null>(null);
+412:  const [showCookiePolicy, setShowCookiePolicy] = useState(false);
+413:  const [showContactForm, setShowContactForm] = useState(false);
+414:  const [showStatusPage, setShowStatusPage] = useState(() => {
+420:  const [showInternationalizationModal, setShowInternationalizationModal] = useState(false);
+421:  const [currentCountry, setCurrentCountry] = useState(() => localStorage.getItem('bg_country') || 'US');
+422:  const { t, i18n } = useTranslation();
+424:  useEffect(() => {
+428:  useEffect(() => {
+432:      window.removeEventListener('mousedown', handleInteraction);
+437:    window.addEventListener('mousedown', handleInteraction);
+442:      window.removeEventListener('mousedown', handleInteraction);
+448:  useEffect(() => {
+460:  const [activeUI] = useState(() => {
+470:  const [tutorialProgress, setTutorialProgress] = useState<TutorialProgress | null>(() => {
+478:  const [showWelcomeSplash, setShowWelcomeSplash] = useState<'back' | 'new' | null>(null);
+480:  useEffect(() => {
+493:    if (user) {
+506:  const loadTutorialProgressFromCloud = useCallback(async (showSplash = false) => {
+507:    if (!userRef.current) return;
+535:  const [currentAudioInfo, setCurrentAudioInfo] = useState<{
+542:  const [isGangstaVox, setIsGangstaVox] = useState<boolean>(false);
+543:  const [csvInput, setCsvInput] = useState<string>('');
+544:  const [plugins, setPlugins] = useState<VSTPlugin[]>(() => {
+552:  const [starredPlugins, setStarredPlugins] = useState<string[]>(() => {
+560:  const [sortBy, setSortBy] = useState<'name' | 'vendor' | 'type'>('type');
+561:  const [selectedFolder, setSelectedFolder] = useState<string | null>(null);
+562:  const [folderToRemove, setFolderToRemove] = useState<string | null>(null);
+563:  const [deletedPlugins, setDeletedPlugins] = useState<VSTPlugin[]>(() => {
+571:  const [pendingPlaceholders, setPendingPlaceholders] = useState<any[]>([]);
+572:  const deletionTimerRef = useRef<NodeJS.Timeout | null>(null);
+573:  const [showTrashModal, setShowTrashModal] = useState(false);
+576:  useEffect(() => {
+586:  useEffect(() => {
+590:  useEffect(() => {
+630:  const [recipes, setRecipes] = useState<BeatRecipe[]>([]);
+631:  const [critiques, setCritiques] = useState<MixCritique[]>([]);
+632:  const [latestErrorLog, setLatestErrorLog] = useState<string | null>(null);
+633:  const [audioMode, setAudioMode] = useState<'recipe' | 'critique'>('recipe');
+634:  const [critiqueContext, setCritiqueContext] = useState<string>('');
+635:  const [referenceTrack, setReferenceTrack] = useState<string>('');
+636:  const [referenceTrackFile, setReferenceTrackFile] = useState<File | null>(null);
+637:  const referenceTrackInputRef = useRef<HTMLInputElement>(null);
+638:  const [hasStems, setHasStems] = useState<boolean>(false);
+639:  const [loading, setLoading] = useState<boolean>(false);
+640:  const [tutorialPhase, setTutorialPhase] = useState<string>(() => {
+645:  const tutorialPhaseRef = useRef(tutorialPhase);
+646:  useEffect(() => { tutorialPhaseRef.current = tutorialPhase; }, [tutorialPhase]);
+647:  const [showTutorial, setShowTutorial] = useState<boolean>(false);
+648:  const showTutorialRef = useRef(showTutorial);
+649:  useEffect(() => { showTutorialRef.current = showTutorial; }, [showTutorial]);
+651:  const [isCloudflareVerified, setIsCloudflareVerified] = useState(false);
+652:  const [cloudflareVerificationCount, setCloudflareVerificationCount] = useState(0);
+653:  const [showCloudflareModal, setShowCloudflareModal] = useState(false);
+654:  const [tutorialStep, setTutorialStep] = useState(0);
+656:  useEffect(() => {
+675:  const [isVerified, setIsVerified] = useState(false);
+676:  const [verificationSessionId, setVerificationSessionId] = useState(0);
+677:  const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
+679:  const [showConsentModal, setShowConsentModal] = useState(false);
+680:  const [isCheckingTerms, setIsCheckingTerms] = useState(false);
+681:  const [isSavingConsent, setIsSavingConsent] = useState(false);
+682:  const [hasAcceptedTerms, setHasAcceptedTerms] = useState(() => {
+685:      const savedUser = localStorage.getItem('bg_user');
+695:    if (user) {
+700:        const updatedUser = { ...user, termsAccepted: true };
+702:        localStorage.setItem('bg_user', JSON.stringify(updatedUser));
+746:    if (!user) {
+747:      setError("Please sign in with Google to use AI features.");
+762:  const [user, setUser] = useState<User | null>(() => {
+764:      const saved = localStorage.getItem('bg_user');
+770:  const [isInitialUser] = useState(!!localStorage.getItem('bg_user'));
+771:  const [justSignedIn, setJustSignedIn] = useState(false);
+772:  const userRef = useRef<User | null>(user);
+773:  const justSignedInRef = useRef(justSignedIn);
+774:  const syncingRef = useRef(false);
+776:  useEffect(() => {
+777:    userRef.current = user;
+778:  }, [user]);
+780:  useEffect(() => {
+784:  const isMasterAuthorized = useMemo(() => {
+791:    return user && authorizedEmails.includes(user.email) && isEnglish;
+792:  }, [user, i18n.language]);
+794:  const [isCloudSyncing, setIsCloudSyncing] = useState(false);
+795:  const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
+796:  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+797:  const [isDeletingAccount, setIsDeletingAccount] = useState(false);
+798:  const [cloudDriveUrl, setCloudDriveUrl] = useState<string | null>(() => {
+801:  const [cloudDriveError, setCloudDriveError] = useState<boolean>(false);
+802:  const [showCloudSyncModal, setShowCloudSyncModal] = useState(false);
+803:  const [showRestoreModal, setShowRestoreModal] = useState(false);
+804:  const [cloudSyncMode, setCloudSyncMode] = useState<'setup' | 'backup' | 'restore'>('setup');
+805:  const [wasCloudSyncModalShown, setWasCloudSyncModalShown] = useState(false);
+806:  const [isEnrichingLibrary, setIsEnrichingLibrary] = useState(false);
+807:  const [tutorialPlugin, setTutorialPlugin] = useState<VSTPlugin | null>(null);
+808:  const [tutorialFolder, setTutorialFolder] = useState<string | null>(null);
+809:  const [pendingFile, setPendingFile] = useState<File | null>(null);
+811:  const [m_act, setM_act] = useState(() => localStorage.getItem('_mv') === 'true');
+813:  useEffect(() => {
+820:  const [e_act, setE_act] = useState(() => localStorage.getItem('_ev') === 'true');
+821:  const [showFairy, setShowFairy] = useState(false);
+822:  const [currentVibeExample, setCurrentVibeExample] = useState(VIBE_EXAMPLES[0]);
+823:  const [currentSongExamples, setCurrentSongExamples] = useState([SONG_EXAMPLES[0], SONG_EXAMPLES[1]]);
+824:  const [placeholderArtist, setPlaceholderArtist] = useState(ARTIST_EXAMPLES[0]);
+856:  useEffect(() => {
+867:  useEffect(() => {
+873:  const activeTutorialSteps = useMemo(() => {
+923:      if (!user && localStorage.getItem('bg_skip_auth') !== 'true') {
+1147:  }, [tutorialPhase, isVerified, user, showCloudSyncModal, pendingFile, isEnrichingLibrary, plugins.length, recipes.length, sortBy, m_act, showConsentModal, hasAcceptedTerms, tutorialPlugin]);
+1149:  useEffect(() => {
+1197:  const [enrichProgress, setEnrichProgress] = useState(0);
+1198:  const [enrichEta, setEnrichEta] = useState(0);
+1199:  const [enrichStatus, setEnrichStatus] = useState('');
+1200:  const [searchTerm, setSearchTerm] = useState<string>('');
+1201:  const [typeBeatSearch, setTypeBeatSearch] = useState<string>('');
+1202:  const [songSearch, setSongSearch] = useState<string>('');
+1203:  const [audioAnalysisLoading, setAudioAnalysisLoading] = useState(false);
+1204:  const [generationProgress, setGenerationProgress] = useState(0);
+1205:  const [generationEta, setGenerationEta] = useState(0);
+1206:  const [error, setError] = useState<string | null>(null);
+1207:  const [creditError, setCreditError] = useState<string | null>(null);
+1208:  const [grillStyle, setGrillStyle] = useState<GrillStyle>(activeUI?.grillStyle || 'diamond');
+1209:  const [knifeStyle, setKnifeStyle] = useState<KnifeStyle>(activeUI?.knifeStyle || 'standard');
+1210:  const [duragStyle, setDuragStyle] = useState<DuragStyle>(activeUI?.duragStyle || 'standard');
+1211:  const [pendantStyle, setPendantStyle] = useState<PendantStyle>(activeUI?.pendantStyle || 'silver');
+1212:  const [chainStyle, setChainStyle] = useState<ChainStyle>(activeUI?.chainStyle || 'silver');
+1213:  const [theme, setTheme] = useState<AppTheme>(activeUI?.theme || 'coldest');
+1214:  const [saberColor, setSaberColor] = useState<string>(activeUI?.saberColor || '#a855f7'); 
+1215:  const [mascotColor, setMascotColor] = useState<string>(activeUI?.mascotColor || '#3b82f6');
+1216:  const [showSaberPicker, setShowSaberPicker] = useState(false);
+1217:  const [showMascotColorPicker, setShowMascotColorPicker] = useState(false);
+1218:  const [showChain, setShowChain] = useState(activeUI?.showChain ?? false);
+1219:  const [highEyes, setHighEyes] = useState(activeUI?.highEyes ?? false);
+1220:  const [isCigarEquipped, setIsCigarEquipped] = useState(activeUI?.isCigarEquipped ?? false);
+1221:  const [isTossingCigar, setIsTossingCigar] = useState(activeUI?.isTossingCigar ?? false);
+1222:  const [showSparkles, setShowSparkles] = useState(activeUI?.showSparkles ?? false);
+1223:  const [c_act, setC_act] = useState(() => localStorage.getItem('_cv') === 'true');
+1224:  const [hasUnlockedBluntToggle, setHasUnlockedBluntToggle] = useState(false);
+1225:  const [showDawModal, setShowDawModal] = useState(false);
+1226:  const [dawModalSource, setDawModalSource] = useState<'initial' | 'menu'>('initial');
+1227:  const [showAnalogModal, setShowAnalogModal] = useState(false);
+1228:  const [analogInstruments, setAnalogInstruments] = useState<Hardware[]>([]);
+1229:  const [analogHardware, setAnalogHardware] = useState<Hardware[]>([]);
+1230:  const [drumKits, setDrumKits] = useState<Hardware[]>([]);
+1231:  const [showDrumKitModal, setShowDrumKitModal] = useState(false);
+1232:  const [editingDrumKit, setEditingDrumKit] = useState<Hardware | undefined>(undefined);
+1233:  const [deletedInstruments, setDeletedInstruments] = useState<Hardware[]>([]);
+1234:  const [deletedHardware, setDeletedHardware] = useState<Hardware[]>([]);
+1235:  const [starredHardware, setStarredHardware] = useState<string[]>(() => {
+1243:  const [importedSaveFile, setImportedSaveFile] = useState<FullSaveFile | null>(null);
+1244:  const [showImportDecisionModal, setShowImportDecisionModal] = useState(false);
+1245:  const [friendMode, setFriendMode] = useState(false);
+1246:  const searchInputRef = useRef<HTMLInputElement>(null);
+1247:  const fileInputRef = useRef<HTMLInputElement>(null);
+1248:  const [isDraggingAudio, setIsDraggingAudio] = useState(false);
+1249:  const audioInputRef = useRef<HTMLInputElement>(null);
+1250:  const [showBackupRestored, setShowBackupRestored] = useState(false);
+1251:  const [hasRestoredBackup, setHasRestoredBackup] = useState(false);
+1253:  useEffect(() => {
+1270:  useEffect(() => {
+1307:  useEffect(() => {
+1335:  useEffect(() => {
+1348:  useEffect(() => {
+1352:  useEffect(() => {
+1354:      if (!user || !hasAcceptedTerms) return;
+1382:  }, [user, hasAcceptedTerms]);
+1383:  useEffect(() => {
+1385:      const key = localStorage.getItem('bg_user_api_key');
+1395:  const [excludeAnalog, setExcludeAnalog] = useState(false);
+1396:  const [dawType, setDawType] = useState<string | null>(() => {
+1400:  useEffect(() => {
+1408:  const [showGuide, setShowGuide] = useState(false);
+1409:  const [showVault, setShowVault] = useState(false);
+1410:  const [viewingRecipe, setViewingRecipe] = useState<SavedRecipe | null>(null);
+1411:  const [currentHash, setCurrentHash] = useState(window.location.hash);
+1413:  useEffect(() => {
+1429:  const [activeSession, setActiveSession] = useState<SharedSession | null>(null);
+1430:  const saveFileInputRef = useRef<HTMLInputElement>(null);
+1431:  const [isDragging, setIsDragging] = useState(false);
+1432:  const [showBuyCreditsModal, setShowBuyCreditsModal] = useState(false);
+1433:  const [showApiKeyInput, setShowApiKeyInput] = useState(false);
+1434:  const [userApiKey, setUserApiKey] = useState(localStorage.getItem('bg_user_api_key') || '');
+1435:  const [apiKeyError, setApiKeyError] = useState<string | null>(null);
+1436:  const [isValidatingKey, setIsValidatingKey] = useState(false);
+1437:  const [apiTier, setApiTier] = useState<'TIER_1' | 'FREE'>(() => (localStorage.getItem('bg_api_tier') as 'TIER_1' | 'FREE') || 'FREE');
+1438:  const [showPasscodeModal, setShowPasscodeModal] = useState(false);
+1439:  const [showMasterModeModal, setShowMasterModeModal] = useState(false);
+1440:  const [showPasteModal, setShowPasteModal] = useState(false);
+1441:  const [showAboutModal, setShowAboutModal] = useState(false);
+1442:  const [passcode, setPasscode] = useState('');
+1443:  const [contextMenu, setContextMenu] = useState<{ x: number, y: number } | null>(null);
+1444:  const longPressTimer = useRef<NodeJS.Timeout | null>(null);
+1445:  const isLongPress = useRef(false);
+1446:  const touchStartPos = useRef<{ x: number, y: number } | null>(null);
+1450:      setError("Master Mode is only available for authorized users in English.");
+1481:  const handleContextMenu = (e: React.MouseEvent | React.TouchEvent) => {
+1544:  useEffect(() => {
+1550:  useEffect(() => {
+1584:  const [h_act, setH_act] = useState(() => localStorage.getItem('_hv') === 'true');
+1585:  const [showSignUpModal, setShowSignUpModal] = useState(false);
+1586:  const [tempUsername, setTempUsername] = useState('');
+1588:  const [autoBackupPrefs, setAutoBackupPrefs] = useState<{ gear: boolean; settings: boolean; recipes: boolean; critiques: boolean }>(() => {
+1597:  useEffect(() => {
+1598:    if (user && tutorialPhase === 'cloud_sync' && backupInfo && !backupInfo.hasBackup) {
+1601:  }, [user, tutorialPhase, backupInfo]);
+1603:  useEffect(() => {
+1607:  useEffect(() => {
+1621:    if (tutorialPhase === 'init' && user && isVerified) {
+1622:      // If user is already logged in, decide whether to show cloud_sync or skip it
+1624:        // Returning user, skip cloud_sync
+1665:  }, [user, showCloudSyncModal, pendingFile, isEnrichingLibrary, plugins.length, recipes.length, tutorialPhase, showTutorial, wasCloudSyncModalShown, showConsentModal, tutorialStep, m_act]);
+1668:  useEffect(() => {
+1677:  useEffect(() => {
+1678:    if (user && !cloudDriveUrl && !cloudDriveError) {
+1695:  }, [user, cloudDriveUrl, cloudDriveError]);
+1697:  const checkAuth = useCallback(async () => {
+1703:        setUser(data.user);
+1704:        if (data.user.termsAccepted) {
+1710:          localStorage.setItem('bg_user', JSON.stringify(data.user));
+1712:          console.error("Failed to stringify user data", data.user, e);
+1717:        if (pendingConsent === 'true' && !data.user.termsAccepted) {
+1721:              const updatedUser = { ...data.user, termsAccepted: true };
+1723:              localStorage.setItem('bg_user', JSON.stringify(updatedUser));
+1730:        if (!data.user.termsAccepted && tutorialPhaseRef.current === 'done') {
+1764:        // If the server says we're not authenticated, we should clear the local user
+1766:        localStorage.removeItem('bg_user');
+1774:  const syncAuth = useCallback(async (syncToken: string) => {
+1787:      console.log("[AUTH DEBUG] syncAuth successful, user:", data.user?.name);
+1788:      if (data.user) {
+1789:          setUser(data.user);
+1790:          localStorage.setItem('bg_user', JSON.stringify(data.user));
+1801:                  localStorage.setItem('bg_user', JSON.stringify(updated));
+1832:  useEffect(() => {
+1836:  useEffect(() => {
+1890:      if (!userRef.current && !justSignedInRef.current) {
+1908:      localStorage.removeItem('bg_user');
+1964:          userProfile: {
+1965:            name: user.name,
+1966:            photo: user.photo
+2062:    if (!user) return;
+2100:  useEffect(() => {
+2101:    if (!user || !autoBackupPrefs.settings) return;
+2108:  }, [theme, grillStyle, knifeStyle, duragStyle, pendantStyle, chainStyle, saberColor, mascotColor, showChain, highEyes, isCigarEquipped, isTossingCigar, showSparkles, user, autoBackupPrefs.settings]);
+2110:  useEffect(() => {
+2129:  const [vault, setVault] = useState<SavedRecipe[]>(() => {
+2138:  const [receipts, setReceipts] = useState<ReceiptItem[]>(() => {
+2147:  const prevReceiptsLengthRef = useRef(receipts.length);
+2148:  useEffect(() => {
+2152:    if (user && receipts.length > prevReceiptsLengthRef.current && (autoBackupPrefs.gear || autoBackupPrefs.settings || autoBackupPrefs.recipes || autoBackupPrefs.critiques)) {
+2160:  }, [receipts, user, autoBackupPrefs]);
+2171:    // Refresh user credits from server
+2200:  const [savedCritiques, setSavedCritiques] = useState<SavedCritique[]>(() => {
+2209:  const [folders, setFolders] = useState<Folder[]>(() => {
+2218:  const [history, setHistory] = useState<HistoryItem[]>(() => {
+2227:  useEffect(() => {
+2258:  useEffect(() => {
+2262:  useEffect(() => {
+2263:    if (user) {
+2264:      localStorage.setItem('bg_user', JSON.stringify(user));
+2266:      localStorage.removeItem('bg_user');
+2272:  }, [user, vault, savedCritiques, folders, history]);
+2275:    if (user) return;
+2308:    if (user && autoBackupPrefs.recipes) {
+2314:    if (!user) return;
+2346:    if (user && autoBackupPrefs.critiques) {
+2395:      senderName: user?.name || "BeatGangsta Producer"
+2402:    link.download = `${user?.name || 'Producer'}_BeatGangsta_Rig_${recipeToExport.title.replace(/\s+/g, '_')}.json`;
+2443:      userProfile: {
+2444:        name: user?.name || "BeatGangsta Producer",
+2445:        photo: user?.photo || ""
+2685:  const filteredPlugins = useMemo(() => {
+2715:  const groupedPlugins = useMemo(() => {
+2826:      if (user && autoBackupPrefs.gear) {
+3014:      localStorage.removeItem('bg_user_api_key');
+3024:        localStorage.setItem('bg_user_api_key', result.cleanKey || key.trim());
+3476:          setUser(data.user);
+3877:          {!user ? (
+3900:                  <img src={user.photo} alt={user.name} className="w-full h-full rounded-full object-cover" />
+3902:                <span className="text-[10px] font-black uppercase tracking-wider truncate max-w-[70px] sm:max-w-[120px]">{user.name}</span>
+3958:                                By analyzing your specific VST library and hardware, we generate recipes that use the gear you actually own.
+3990:                        <p className="text-xs font-black uppercase tracking-wider truncate">{user.name}</p>
+3991:                        <p className="text-[9px] font-bold opacity-50 truncate">{user.email}</p>
+3996:                          <span className="text-xs font-black">{user.credits !== undefined ? user.credits : '...'}</span>
+4030:                    {user && (
+4208:                user={user}
+4252:                userName={user?.name || "BeatGangsta Producer"}
+6068:              {t('file_contains_gear')} <strong>{importedSaveFile.userProfile.name}</strong>.
+6141:                    <span className="text-sm font-black">{user?.credits !== undefined ? user.credits : '...'} {t('credits_remaining')}</span>
+6309:            user={user}
