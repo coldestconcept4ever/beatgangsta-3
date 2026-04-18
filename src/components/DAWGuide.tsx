@@ -276,15 +276,11 @@ export const DAWGuide: React.FC<DAWGuideProps> = ({ theme, onClose }) => {
               </div>
               <div className="flex gap-4">
                 <div className="w-8 h-8 rounded-full bg-blue-500/20 flex items-center justify-center font-black flex-shrink-0">2</div>
-                <p className="text-sm leading-relaxed"><Trans i18nKey="daw_mixcraft_step2">Locate the file named <strong className="font-black">vst-inventory.xml</strong> and open it with Notepad.</Trans></p>
+                <p className="text-sm leading-relaxed"><Trans i18nKey="daw_mixcraft_step2">Locate the <strong className="font-black">vst-inventory.xml</strong> file and upload it directly to BeatGangsta using the upload button.</Trans></p>
               </div>
               <div className="flex gap-4">
                 <div className="w-8 h-8 rounded-full bg-blue-500/20 flex items-center justify-center font-black flex-shrink-0">3</div>
-                <p className="text-sm leading-relaxed"><Trans i18nKey="daw_mixcraft_step3">Upload the <strong className="font-black">vst-inventory.xml</strong> file directly to BeatGangsta using the upload button.</Trans></p>
-              </div>
-              <div className="flex gap-4">
-                <div className="w-8 h-8 rounded-full bg-blue-500/20 flex items-center justify-center font-black flex-shrink-0">4</div>
-                <p className="text-sm leading-relaxed"><Trans i18nKey="daw_mixcraft_step4">BeatGangsta will automatically process your XML inventory to build your Gear Rack.</Trans></p>
+                <p className="text-sm leading-relaxed"><Trans i18nKey="daw_mixcraft_step3">BeatGangsta will automatically process your XML inventory to build your Gear Rack.</Trans></p>
               </div>
             </div>
           )}
