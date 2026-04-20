@@ -3,10 +3,8 @@ import React, { useState, useMemo, useEffect, useRef, useCallback } from 'react'
 import { VSTPlugin, BeatRecipe, AppTheme, User, SavedRecipe, HistoryItem, Folder, KnifeStyle, PendantStyle, ChainStyle, SharedSession, DuragStyle, Hardware, FullSaveFile, GrillStyle, MixCritique, SavedCritique, TutorialProgress, ReceiptItem } from './types';
 import { VIBE_EXAMPLES, SONG_EXAMPLES, BANDLAB_PLUGINS_LATEST, BANDLAB_FREE_PLUGINS_LATEST } from './constants';
 import { ARTIST_EXAMPLES } from './constants/artists';
-import { getBeatRecommendations, getCustomBeatRecommendations, getSongBeatRecommendations, getAudioBeatRecommendations, enrichPluginLibrary, validateApiKey, detectAPITier, replicateRecipeWithUserGear, getMixCritique, researchPluginParameters, verifyAndCorrectPlugin, ThinkingLevel } from './services/geminiService';
 import { processAudioForAnalysis } from './utils/audioUtils';
 import { uploadFileChunked, deleteFileFromDrive } from './services/uploadService';
-import { convertWavToMp3 } from './lib/audioConverter';
 import { enrichHardware } from './services/enrichmentService';
 import { initAudio } from './utils/midiPlayer';
 import { fetchWithDetailedError } from './lib/api';
@@ -1471,6 +1469,7 @@ The AI was unable to verify these parameters. Please investigate.`;
       const key = localStorage.getItem('bg_user_api_key');
       const tier = localStorage.getItem('bg_api_tier');
       if (key && !tier) {
+        const { detectAPITier } = await import('./services/geminiService');
         const detected = await detectAPITier(key);
         localStorage.setItem('bg_api_tier', detected);
       }
@@ -2691,6 +2690,7 @@ The AI was unable to verify these parameters. Please investigate.`;
     setLoading(true);
     const progressInterval = simulateGenerationProgress(getEstimatedSeconds('replicate'));
     try {
+      const { replicateRecipeWithUserGear } = await import('./services/geminiService');
       const replicated = await replicateRecipeWithUserGear(recipe, plugins, i18n.language);
       clearInterval(progressInterval);
       setGenerationProgress(100);
@@ -2947,6 +2947,7 @@ The AI was unable to verify these parameters. Please investigate.`;
     setEnrichStatus('Initializing Research...');
 
     try {
+      const { enrichPluginLibrary } = await import('./services/geminiService');
       const enriched = await enrichPluginLibrary(parsed, (progress, eta) => {
         setEnrichProgress(progress);
         setEnrichEta(eta);
@@ -3101,6 +3102,7 @@ The AI was unable to verify these parameters. Please investigate.`;
       }
 
       const userParam = corrections.map(c => `${c.parameter}: ${c.value}`).join(', ');
+      const { verifyAndCorrectPlugin } = await import('./services/geminiService');
       const result = await verifyAndCorrectPlugin(existingPlugin, userParam, version, i18n.language);
       
       if (result.success && result.plugin) {
@@ -3193,6 +3195,7 @@ The AI was unable to verify these parameters. Please investigate.`;
     try {
       let updated: VSTPlugin;
       if (userParameter || userVersion) {
+        const { verifyAndCorrectPlugin, researchPluginParameters } = await import('./services/geminiService');
         const result = await verifyAndCorrectPlugin(plugin, userParameter, userVersion, i18n.language);
         if (!result.success) {
           setError(result.message);
@@ -3200,6 +3203,7 @@ The AI was unable to verify these parameters. Please investigate.`;
         }
         updated = result.plugin;
       } else {
+        const { verifyAndCorrectPlugin, researchPluginParameters } = await import('./services/geminiService');
         updated = await researchPluginParameters(plugin, i18n.language);
       }
       
@@ -3314,6 +3318,7 @@ The AI was unable to verify these parameters. Please investigate.`;
     setIsValidatingKey(true);
     setApiKeyError(null);
     try {
+      const { validateApiKey } = await import('./services/geminiService');
       const result = await validateApiKey(key);
       if (result.valid) {
         localStorage.setItem('bg_user_api_key', result.cleanKey || key.trim());
@@ -3350,6 +3355,7 @@ The AI was unable to verify these parameters. Please investigate.`;
 
     try {
       if (!requireAuth()) return;
+      const { getBeatRecommendations } = await import('./services/geminiService');
       const response = await getBeatRecommendations(plugins, analogInstruments, analogHardware, drumKits, excludeAnalog, dawType, starredPlugins, isGangstaVox, i18n.language);
       clearInterval(progressInterval);
       setGenerationProgress(100);
@@ -3400,6 +3406,7 @@ The AI was unable to verify these parameters. Please investigate.`;
 
     try {
       if (!requireAuth()) return;
+      const { getCustomBeatRecommendations } = await import('./services/geminiService');
       const response = await getCustomBeatRecommendations(plugins, typeBeatSearch.trim(), analogInstruments, analogHardware, drumKits, excludeAnalog, dawType, starredPlugins, isGangstaVox, i18n.language);
       clearInterval(progressInterval);
       setGenerationProgress(100);
@@ -3451,6 +3458,7 @@ The AI was unable to verify these parameters. Please investigate.`;
 
     try {
       if (!requireAuth()) return;
+      const { getSongBeatRecommendations } = await import('./services/geminiService');
       const response = await getSongBeatRecommendations(plugins, songSearch.trim(), analogInstruments, analogHardware, drumKits, excludeAnalog, dawType, starredPlugins, isGangstaVox, i18n.language);
       clearInterval(progressInterval);
       setGenerationProgress(100);
@@ -3541,6 +3549,7 @@ The AI was unable to verify these parameters. Please investigate.`;
         if (fileToUpload.type.includes('wav') || fileToUpload.name.toLowerCase().endsWith('.wav')) {
           setStems(prev => prev.map(s => s.id === stem.id ? { ...s, status: 'converting' as any } : s));
           try {
+            const { convertWavToMp3 } = await import('./lib/audioConverter');
             fileToUpload = await convertWavToMp3(fileToUpload);
           } catch (e) {
             console.error(`Failed to convert ${fileToUpload.name} to MP3, falling back to original file:`, e);
@@ -3580,6 +3589,7 @@ The AI was unable to verify these parameters. Please investigate.`;
       const stemsContext = uploadedStems.map(s => `Stem: ${s.file!.name} (Type: ${s.type === 'Other' && s.customType ? s.customType : s.type}) - URI: ${s.uri}`).join('\n');
       const fullContext = `The user has uploaded ${activeStems.length} stems for analysis.\n\n${stemsContext}\n\nUser Context: ${critiqueContext}`;
 
+      const { getMixCritique } = await import('./services/geminiService');
       const critique = await getMixCritique(plugins, null, null, 'audio/mpeg', isGangstaVox, true, fullContext, null, finalReferenceTrack, referenceAudioBase64, null, referenceGeminiFileUri, i18n.language, uploadedStems, analogInstruments, analogHardware, isBusMode);
       critique.id = Math.random().toString(36).substr(2, 9);
       critique.audioBase64 = null;
@@ -3698,6 +3708,7 @@ The AI was unable to verify these parameters. Please investigate.`;
 
       if (fileToUpload.type.includes('wav') || fileToUpload.name.toLowerCase().endsWith('.wav')) {
         try {
+          const { convertWavToMp3 } = await import('./lib/audioConverter');
           fileToUpload = await convertWavToMp3(fileToUpload);
         } catch (e) {
           console.error(`Failed to convert ${fileToUpload.name} to MP3, falling back to original file:`, e);
@@ -3733,6 +3744,7 @@ The AI was unable to verify these parameters. Please investigate.`;
           let refFileToUpload = referenceTrackFile;
           if (refFileToUpload.type.includes('wav') || refFileToUpload.name.toLowerCase().endsWith('.wav')) {
             try {
+              const { convertWavToMp3 } = await import('./lib/audioConverter');
               refFileToUpload = await convertWavToMp3(refFileToUpload);
             } catch (e) {
               console.error(`Failed to convert ${refFileToUpload.name} to MP3, falling back to original file:`, e);
@@ -3756,6 +3768,7 @@ The AI was unable to verify these parameters. Please investigate.`;
           }
         }
 
+        const { getMixCritique } = await import('./services/geminiService');
         const critique = await getMixCritique(plugins, audioBase64, audioUrl, mimeType, isGangstaVox, hasStems, critiqueContext, null, finalReferenceTrack, referenceAudioBase64, geminiFileUri, referenceGeminiFileUri, i18n.language, undefined, analogInstruments, analogHardware, isBusMode);
         critique.id = Math.random().toString(36).substr(2, 9);
         critique.audioBase64 = audioBase64;
@@ -3784,6 +3797,7 @@ The AI was unable to verify these parameters. Please investigate.`;
         let response;
         try {
           if (!requireAuth()) return;
+          const { getAudioBeatRecommendations } = await import('./services/geminiService');
           response = await getAudioBeatRecommendations(
             plugins,
             audioBase64,
@@ -3805,6 +3819,7 @@ The AI was unable to verify these parameters. Please investigate.`;
           // Retry with a very small plugin list (top 30) to reduce context pressure
           try {
             if (!requireAuth()) return;
+            const { getAudioBeatRecommendations } = await import('./services/geminiService');
             response = await getAudioBeatRecommendations(
               plugins.slice(0, 30),
               audioBase64,

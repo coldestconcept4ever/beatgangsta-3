@@ -98,8 +98,46 @@
     </div>
     <script type="module" src="/src/index.tsx"></script>
     
-    <!-- Deferred Third-Party Scripts -->
-    <script defer src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-8926834722982533" crossorigin="anonymous"></script>
-    <script defer src="https://challenges.cloudflare.com/turnstile/v0/api.js"></script>
+    <!-- Deferred Third-Party Scripts - Lazy loaded on mobile -->
+    <script>
+        (function() {
+            function loadScripts() {
+                var ads = document.createElement('script');
+                ads.src = "https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-8926834722982533";
+                ads.crossOrigin = "anonymous";
+                ads.defer = true;
+                
+                var turnstile = document.createElement('script');
+                turnstile.src = "https://challenges.cloudflare.com/turnstile/v0/api.js";
+                turnstile.defer = true;
+
+                document.body.appendChild(ads);
+                document.body.appendChild(turnstile);
+            }
+
+            if (window.innerWidth >= 768) {
+                // Load immediately on desktop
+                loadScripts();
+            } else {
+                // Delay load on mobile to improve LCP/Performance until first interaction
+                var loaded = false;
+                function onInteract() {
+                    if (!loaded) {
+                        loaded = true;
+                        loadScripts();
+                        ['touchstart', 'scroll', 'click'].forEach(function(e) {
+                            window.removeEventListener(e, onInteract);
+                        });
+                    }
+                }
+                ['touchstart', 'scroll', 'click'].forEach(function(e) {
+                    window.addEventListener(e, onInteract, { passive: true });
+                });
+                
+                // Fallback: load after 5 seconds if no interaction
+                setTimeout(onInteract, 5000);
+            }
+        })();
+    </script>
 </body>
 </html>

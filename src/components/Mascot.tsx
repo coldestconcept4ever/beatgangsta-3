@@ -62,6 +62,13 @@ export const Mascot: React.FC<MascotProps> = React.memo(({
   isTossingCigar = false,
   renderLayer,
 }) => {
+  const isMobileLite = React.useMemo(() => {
+    if (typeof window !== 'undefined') {
+      return window.innerWidth < 768;
+    }
+    return false;
+  }, []);
+
   const baseHeight = 1200;
   const height = showChain ? baseHeight + 500 : baseHeight;
   const displayHeight = size * (height / 1000);
@@ -135,7 +142,12 @@ export const Mascot: React.FC<MascotProps> = React.memo(({
             100% { opacity: 0.95; filter: blur(2px) brightness(1); }
           }
           .saber-blade {
-            animation: flicker 0.15s infinite;
+            /* On mobile, standard flicker is disabled for performance. */
+          }
+          @media (min-width: 768px) {
+            .saber-blade {
+              animation: flicker 0.15s infinite;
+            }
           }
           path, rect, circle, ellipse {
             transition: fill 0.3s ease-in-out, stroke 0.3s ease-in-out, transform 0.3s ease-in-out, opacity 0.3s ease-in-out;
@@ -970,14 +982,14 @@ export const Mascot: React.FC<MascotProps> = React.memo(({
           <g transform="translate(0, -140)">
             {knifeStyle === 'dark-saber' ? (
               <>
-                <rect x="-25" y="-600" width="50" height="600" rx="25" fill="white" opacity="0.6" className="saber-blade" style={{ filter: 'blur(20px)' }} />
-                <rect x="-18" y="-590" width="36" height="590" rx="18" fill="white" opacity="0.8" className="saber-blade" style={{ filter: 'blur(8px)' }} />
+                <rect x="-25" y="-600" width="50" height="600" rx="25" fill="white" opacity="0.6" className="saber-blade" style={{ filter: isMobileLite ? 'none' : 'blur(20px)' }} />
+                <rect x="-18" y="-590" width="36" height="590" rx="18" fill="white" opacity="0.8" className="saber-blade" style={{ filter: isMobileLite ? 'none' : 'blur(8px)' }} />
                 <rect x="-10" y="-580" width="20" height="580" rx="10" fill="black" className="saber-blade" />
               </>
             ) : (
               <>
-                <rect x="-25" y="-600" width="50" height="600" rx="25" fill={saberColor} opacity="0.6" className="saber-blade" style={{ filter: 'blur(20px)' }} />
-                <rect x="-18" y="-590" width="36" height="590" rx="18" fill={saberColor} opacity="0.8" className="saber-blade" style={{ filter: 'blur(8px)' }} />
+                <rect x="-25" y="-600" width="50" height="600" rx="25" fill={saberColor} opacity="0.6" className="saber-blade" style={{ filter: isMobileLite ? 'none' : 'blur(20px)' }} />
+                <rect x="-18" y="-590" width="36" height="590" rx="18" fill={saberColor} opacity="0.8" className="saber-blade" style={{ filter: isMobileLite ? 'none' : 'blur(8px)' }} />
                 <rect x="-10" y="-580" width="20" height="580" rx="10" fill="url(#saberCore)" className="saber-blade" />
               </>
             )}
