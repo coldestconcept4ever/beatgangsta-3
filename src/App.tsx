@@ -9,12 +9,12 @@ import { enrichHardware } from './services/enrichmentService';
 import { initAudio } from './utils/midiPlayer';
 import { fetchWithDetailedError } from './lib/api';
 
-import { AvianField } from './components/RavenField';
+const AvianField = React.lazy(() => import('./components/RavenField').then(m => ({ default: m.AvianField })));
 const PluginCard = React.lazy(() => import('./components/PluginCard').then(m => ({ default: m.PluginCard })));
 const HardwareCard = React.lazy(() => import('./components/HardwareCard').then(m => ({ default: m.HardwareCard })));
 const RecipeCard = React.lazy(() => import('./components/RecipeCard').then(m => ({ default: m.RecipeCard })));
 const CritiqueCard = React.lazy(() => import('./components/CritiqueCard').then(m => ({ default: m.CritiqueCard })));
-const Mascot = React.lazy(() => import('./components/Mascot').then(m => ({ default: m.Mascot })));
+import { Mascot } from './components/Mascot';
 const PaymentMethodModal = React.lazy(() => import('./components/PaymentMethodModal').then(m => ({ default: m.PaymentMethodModal })));
 
 const DAWGuide = React.lazy(() => import('./components/DAWGuide').then(m => ({ default: m.DAWGuide })));
@@ -37,9 +37,9 @@ const CloudSyncModal = React.lazy(() => import('./components/CloudSyncModal').th
 const RestoreBackupModal = React.lazy(() => import('./components/RestoreBackupModal').then(m => ({ default: m.RestoreBackupModal })));
 const LegalConsentBanner = React.lazy(() => import('./components/LegalConsentBanner').then(m => ({ default: m.LegalConsentBanner })));
 const RecipeViewerModal = React.lazy(() => import('./components/RecipeViewerModal').then(m => ({ default: m.RecipeViewerModal })));
-import { TutorialOverlay } from './components/TutorialOverlay';
-import { StatusPage } from './components/StatusPage';
-import { AdminDashboard } from './components/AdminDashboard';
+const TutorialOverlay = React.lazy(() => import('./components/TutorialOverlay').then(m => ({ default: m.TutorialOverlay })));
+const StatusPage = React.lazy(() => import('./components/StatusPage').then(m => ({ default: m.StatusPage })));
+const AdminDashboard = React.lazy(() => import('./components/AdminDashboard').then(m => ({ default: m.AdminDashboard })));
 import { AnimatePresence, motion } from 'motion/react';
 import { useTranslation } from 'react-i18next';
 import { Globe, Languages, Star, X, Cpu, Folder as FolderIcon, ShieldCheck, Check, Zap, Rocket, Eye, EyeOff, AlertTriangle, Lock, Shield, Loader2, Gem, Sword, User as UserIcon, Link, Link2, Palette, Sparkles, Drum, Image as ImageIcon, Crown, CheckCircle2, ExternalLink, Facebook, Instagram, Linkedin, Twitter, Activity, Database, Trash2 } from 'lucide-react';
@@ -392,9 +392,8 @@ const CigarIcon = ({ size = 16, className = "" }: { size?: number, className?: s
   </svg>
 );
 
-import { SnowFlurry } from './components/SnowFlurry';
-
-import { SystemStatus } from './components/SystemStatus';
+const SnowFlurry = React.lazy(() => import('./components/SnowFlurry').then(m => ({ default: m.SnowFlurry })));
+const SystemStatus = React.lazy(() => import('./components/SystemStatus').then(m => ({ default: m.SystemStatus })));
 
 const App: React.FC = () => {
   const [showRigUI, setShowRigUI] = useState(false);
@@ -685,7 +684,18 @@ const App: React.FC = () => {
   const [isCloudflareVerified, setIsCloudflareVerified] = useState(false);
   const [cloudflareVerificationCount, setCloudflareVerificationCount] = useState(0);
   const [showCloudflareModal, setShowCloudflareModal] = useState(false);
-  const [tutorialStep, setTutorialStep] = useState(0);
+  const [showTurnstile, setShowTurnstile] = useState(false);
+  useEffect(() => {
+    // Heavily defer Turnstile initialization on mobile until interaction
+    // On desktop, load faster (500ms). This removes render blocking for LCP.
+    const timer = setTimeout(() => setShowTurnstile(true), window.innerWidth >= 768 ? 500 : 3500);
+    
+    // Quick load if they interact
+    const onInteract = () => setShowTurnstile(true);
+    ['touchstart', 'scroll', 'click'].forEach(e => window.addEventListener(e, onInteract, { once: true, passive: true }));
+    
+    return () => clearTimeout(timer);
+  }, []);
 
   useEffect(() => {
     if (showTutorial && tutorialPhase !== 'done') {
@@ -5485,7 +5495,7 @@ The AI was unable to verify these parameters. Please investigate.`;
                   </label>
                 </div>
               </div>
-              {!isVerified && (
+              {!isVerified && showTurnstile && (
                 <div className="flex justify-center mt-6">
                   <div id="tutorial-turnstile" className="flex items-center justify-center overflow-visible" style={{ width: '260px', height: '52px' }}>
                     <div key={verificationSessionId}>
@@ -7045,7 +7055,7 @@ The AI was unable to verify these parameters. Please investigate.`;
                 ) : null}
                 
                 {/* Always show Turnstile if not verified, or if verified but in tutorial mode */}
-                {(!isCloudflareVerified || showTutorial) && (
+                {(!isCloudflareVerified || showTutorial) && showTurnstile && (
                   <div id="tutorial-turnstile-widget" className={`flex flex-col items-center gap-4 ${isCloudflareVerified && !showTutorial ? 'hidden' : ''}`}>
                     <Turnstile
                       sitekey={typeof import.meta.env.VITE_TURNSTILE_SITE_KEY === 'string' ? import.meta.env.VITE_TURNSTILE_SITE_KEY : '0x4AAAAAACkH6-i-na5YIlP9'}
