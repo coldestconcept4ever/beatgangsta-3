@@ -439,6 +439,9 @@ app.post("/api/payments/nowpayments/create", express.json(), async (req, res) =>
       }
     );
 
+    console.log("[CRYPTO DEBUG] NowPayments response status:", response.status);
+    console.log("[CRYPTO DEBUG] NowPayments response data:", JSON.stringify(response.data));
+
     if (!response.data || !response.data.invoice_url) {
       console.error("[CRYPTO ERROR] NowPayments response missing invoice_url:", response.data);
       return res.status(500).json({ error: "NowPayments failed to generate invoice URL" });

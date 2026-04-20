@@ -146,8 +146,17 @@ export const StatusPage = ({ onBack }: { onBack: () => void }) => {
             >
               <ArrowLeft size={20} />
             </button>
-            <h1 className="font-black tracking-tight text-xl flex items-center gap-2">
+            <h1 className="font-black tracking-tight text-xl flex items-center gap-3">
               <Activity className={theme.primary} />
+              <Logo 
+                size={32} 
+                grillStyle="diamond" 
+                knifeStyle="standard" 
+                duragStyle="standard" 
+                pendantStyle="none" 
+                chainStyle="none" 
+                theme={isOutage ? "crazy-bird" : "coldest"} 
+              />
               BEATGANGSTA <span className="opacity-50 font-medium">STATUS</span>
             </h1>
           </div>

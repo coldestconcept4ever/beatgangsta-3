@@ -6803,7 +6803,6 @@ The AI was unable to verify these parameters. Please investigate.`;
                   >
                     <div className="text-left">
                       <div className="font-bold text-lg">40 {t('credits')}</div>
-                      <div className="text-xs opacity-60">~40 {t('generations')}</div>
                     </div>
                     <div className="font-black text-xl text-yellow-500">$5.00</div>
                   </button>

@@ -391,7 +391,7 @@ export const regeneratePlugin = async (
     
     Suggest an alternative plugin from the user's library that achieves a similar sound and fits well with the rest of the recipe.
     CRITICAL: You MUST choose a DIFFERENT plugin than "${pluginName}" and avoid the excluded plugins list.
-    Return the result as a JSON object with the new plugin name, purpose, and deepDive parameters (AT LEAST 10 parameters, and up to 30 if it is a complex channel strip plugin).
+    Return the result as a JSON object with the new plugin name, purpose, and deepDive parameters (Provide ONLY the actual available parameters that exist for this plugin. Typically 5-15 settings. NEVER invent parameters to reach a minimum count. If the plugin has fewer than 10 valid parameters, provide only those).
   `;
 
   const response = await ai.models.generateContent({
@@ -406,7 +406,7 @@ export const regeneratePlugin = async (
           purpose: { type: Type.STRING },
           deepDive: {
             type: Type.ARRAY,
-            description: "AT LEAST 10 parameter settings (and up to 30 if it is a complex channel strip plugin).",
+            description: "Provide ONLY the actual available parameters that exist for this plugin (typically 5-15). NEVER invent parameters to reach a minimum count. If the plugin has fewer than 10 valid parameters, provide only those.",
             items: {
               type: Type.OBJECT,
               properties: {
@@ -648,7 +648,7 @@ const getUnifiedRecipeSchema = () => {
             },
             deepDive: {
               type: Type.ARRAY,
-              description: "AT LEAST 10 parameter settings (and up to 30 if it is a complex synth or channel strip).",
+            description: "Provide ONLY the actual available parameters that exist for this plugin (typically 5-15). NEVER invent parameters to reach a minimum count. If the plugin has fewer than 10 valid parameters, provide only those.",
               items: {
                 type: Type.OBJECT,
                 properties: {
@@ -668,7 +668,7 @@ const getUnifiedRecipeSchema = () => {
                   purpose: { type: Type.STRING },
                   deepDive: {
                     type: Type.ARRAY,
-                    description: "AT LEAST 10 parameter settings (and up to 30 if it is a complex channel strip plugin).",
+                    description: "Provide ONLY the actual available parameters that exist for this plugin (typically 5-15). NEVER invent parameters to reach a minimum count. If the plugin has fewer than 10 valid parameters, provide only those.",
                     items: {
                       type: Type.OBJECT,
                       properties: {
@@ -703,7 +703,7 @@ const getUnifiedRecipeSchema = () => {
                   purpose: { type: Type.STRING },
                   deepDive: {
                     type: Type.ARRAY,
-                    description: "AT LEAST 10 parameter settings (and up to 30 if it is a complex channel strip plugin).",
+                    description: "Provide ONLY the actual available parameters that exist for this plugin (typically 5-15). NEVER invent parameters to reach a minimum count. If the plugin has fewer than 10 valid parameters, provide only those.",
                     items: {
                       type: Type.OBJECT,
                       properties: {
@@ -754,7 +754,7 @@ const getUnifiedRecipeSchema = () => {
             purpose: { type: Type.STRING },
             deepDive: {
               type: Type.ARRAY,
-              description: "AT LEAST 10 parameter settings (and up to 30 if it is a complex channel strip plugin).",
+              description: "Aim for at least 10 parameter settings (and up to 30 if it is a complex channel strip plugin). If the plugin has fewer than 10 valid parameters, ONLY provide the true ones and do NOT invent unrealistic parameters.",
               items: {
                 type: Type.OBJECT,
                 properties: {
@@ -783,7 +783,7 @@ const getUnifiedRecipeSchema = () => {
                   purpose: { type: Type.STRING },
                   deepDive: {
                     type: Type.ARRAY,
-                    description: "AT LEAST 10 parameter settings (and up to 30 if it is a complex channel strip plugin).",
+                    description: "Aim for at least 10 parameter settings (and up to 30 if it is a complex channel strip plugin). If the plugin has fewer than 10 valid parameters, ONLY provide the true ones and do NOT invent unrealistic parameters.",
                     items: {
                       type: Type.OBJECT,
                       properties: {
@@ -919,7 +919,7 @@ const getUnifiedRecipeSchema = () => {
                   purpose: { type: Type.STRING },
                   deepDive: {
                     type: Type.ARRAY,
-                    description: "AT LEAST 10 parameter settings (and up to 30 if it is a complex channel strip plugin).",
+                    description: "Provide ONLY the actual available parameters that exist for this plugin (typically 5-15). NEVER invent parameters to reach a minimum count. If the plugin has fewer than 10 valid parameters, provide only those.",
                     items: {
                       type: Type.OBJECT,
                       properties: {
@@ -1174,7 +1174,7 @@ export const enrichPluginLibrary = async (
                     reasoning: { type: Type.STRING, description: "Why this category was chosen" },
                     description: { type: Type.STRING },
                     features: { type: Type.ARRAY, items: { type: Type.STRING } },
-                    parameters: { type: Type.ARRAY, items: { type: Type.STRING }, description: "Top 15-20 actual technical parameter names" },
+                    parameters: { type: Type.ARRAY, items: { type: Type.STRING }, description: "Top 15-20 actual technical parameter names found on the plugin's interface." },
                     category: { type: Type.STRING, enum: ['Instruments', 'Dynamics', 'Equalizers', 'Reverb & Delay', 'Modulation', 'Distortion & Saturation', 'Utility & Metering', 'Creative FX'] }
                   },
                   required: ["reasoning", "description", "features", "category", "parameters"]
@@ -1442,7 +1442,7 @@ export const researchPluginParameters = async (plugin: VSTPlugin, language: stri
     1. A highly accurate, professional description of the plugin.
     2. A list of its key features.
     3. The most accurate category (Instruments, Dynamics, Equalizers, Reverb & Delay, Modulation, Distortion & Saturation, Utility & Metering, Creative FX).
-    4. A list of the TOP 20-30 actual technical parameter names found on the plugin's interface. Be extremely precise. For complex plugins like iZotope Ozone or channel strips, provide up to 30 parameters.
+    4. A list of the TOP 15-20 actual technical parameter names found on the plugin's interface. Be precise. For complex plugins, provide up to 30 parameters. If the plugin has fewer than 10 valid parameters, ONLY provide the true ones.
 
     ${getLanguageInstruction(language)}
   `;
@@ -1459,7 +1459,7 @@ export const researchPluginParameters = async (plugin: VSTPlugin, language: stri
         properties: {
           description: { type: Type.STRING },
           features: { type: Type.ARRAY, items: { type: Type.STRING } },
-          parameters: { type: Type.ARRAY, items: { type: Type.STRING }, description: "Top 20-30 actual technical parameter names" },
+          parameters: { type: Type.ARRAY, items: { type: Type.STRING }, description: "Top 15-20 actual technical parameter names found on the interface." },
           category: { type: Type.STRING, enum: ['Instruments', 'Dynamics', 'Equalizers', 'Reverb & Delay', 'Modulation', 'Distortion & Saturation', 'Utility & Metering', 'Creative FX'] }
         },
         required: ["description", "features", "category", "parameters"]
@@ -1577,13 +1577,13 @@ export const getBeatRecommendations = async (plugins: VSTPlugin[], analogInstrum
     Include a recommended BPM, 'recommendedScale', and 'chordProgression' that fits the vibe.
     
     You MUST provide the 'gangstaVox' object in your response.
-    - trackingChain: Include the unisonPlugin (if applicable) and up to 4 inserts. Provide a deep dive for each (AT LEAST 10 parameters per plugin, and up to 30 if it is a complex channel strip plugin).
-    - vocalTracks: Provide multiple vocal layers (Lead, Adlibs, Doubles, etc.). For each, describe the sourceSoundGoal, which bus to send to (busSend), and the fxPlugins (with deep dives - AT LEAST 10 parameters per plugin, and up to 30 if it is a complex channel strip plugin).
+    - trackingChain: Include the unisonPlugin (if applicable) and up to 4 inserts. Provide a deep dive for each (Provide ONLY the actual available parameters that exist for this plugin (typically 5-15). NEVER invent parameters to reach a minimum count).
+    - vocalTracks: Provide multiple vocal layers (Lead, Adlibs, Doubles, etc.). For each, describe the sourceSoundGoal, which bus to send to (busSend), and the fxPlugins (with deep dives - Provide ONLY the actual available parameters that exist for this plugin (typically 5-15). NEVER invent parameters to reach a minimum count).
     - layeringStrategy: Explain how all these vocal layers should sit together in the mix.
 
-    You MUST also provide the 'busses' array. Create busses (e.g., "Vocal Reverb Bus", "Delay Bus") and list which vocal tracks are using them, along with the fxPlugins on the bus and their deep dives (AT LEAST 10 parameters per plugin, and up to 30 if it is a complex channel strip plugin).
+    You MUST also provide the 'busses' array. Create busses (e.g., "Vocal Reverb Bus", "Delay Bus") and list which vocal tracks are using them, along with the fxPlugins on the bus and their deep dives (Provide ONLY the actual available parameters that exist for this plugin (typically 5-15). NEVER invent parameters to reach a minimum count).
     
-    You MUST provide the 'masterPlugins' array with deep dives for the master chain (AT LEAST 10 parameters per plugin, and up to 30 if it is a complex channel strip plugin).
+    You MUST provide the 'masterPlugins' array with deep dives for the master chain (Provide ONLY the actual available parameters that exist for this plugin (typically 5-15). NEVER invent parameters to reach a minimum count).
     You MUST provide 'drumPatterns' and 'arrangement' as context for the beat.
 
     CRITICAL DRUM PATTERN RULES:
@@ -1623,8 +1623,8 @@ export const getBeatRecommendations = async (plugins: VSTPlugin[], analogInstrum
     CRITICAL: DO NOT use vocals as a main instrument in the 'instruments' array. Vocals MUST be separate.
     For each instrument:
     - Provide the exact plugin name to use in the 'plugin' field.
-    - Provide a deep dive on the instrument itself (e.g., oscillator settings, macro tweaks, filter envelopes). Provide AT LEAST 10 parameter settings in the 'deepDive' array (and up to 30 if it is a complex synth or channel strip).
-    - Provide an array of fxPlugins (up to 6) with a deep dive for EACH plugin. Provide AT LEAST 10 parameter settings for each FX plugin (and up to 30 if it is a complex channel strip).
+    - Provide a deep dive on the instrument itself (e.g., oscillator settings, macro tweaks, filter envelopes). Provide ONLY the actual available parameters that exist for this plugin (typically 5-15). NEVER invent parameters to reach a minimum count.
+    - Provide an array of fxPlugins (up to 6) with a deep dive for EACH plugin. Provide ONLY the actual available parameters that exist for this plugin (typically 5-15). NEVER invent parameters to reach a minimum count.
     CRITICAL: If the user has connected pedals or amps to an instrument (as listed in their analog hardware), you MUST include those specific pedals and amps in the fxPlugins array for that instrument and provide real, detailed parameter settings for them to achieve the desired sound.
     - ADVANCED ROUTING (OPTIONAL): If a plugin should be processed in parallel or on a specific frequency band (Multiband Split), use the 'routing' (e.g., "Parallel A (Crush)", "Parallel B (Space)") or 'band' (e.g., "Lows (0-150Hz)", "Highs (2kHz+)") properties in the fxPlugin object.
     - Specify which bus to send to (busSend).
@@ -1747,13 +1747,13 @@ export const getCustomBeatRecommendations = async (plugins: VSTPlugin[], query: 
     Include a recommended BPM, 'recommendedScale', and 'chordProgression' that fits the vibe.
 
     You MUST provide the 'gangstaVox' object in your response.
-    - trackingChain: Include the unisonPlugin (if applicable) and up to 4 inserts. Provide a deep dive for each (AT LEAST 10 parameters per plugin, and up to 30 if it is a complex channel strip plugin).
-    - vocalTracks: Provide multiple vocal layers (Lead, Adlibs, Doubles, etc.). For each, describe the sourceSoundGoal, which bus to send to (busSend), and the fxPlugins (with deep dives - AT LEAST 10 parameters per plugin, and up to 30 if it is a complex channel strip plugin).
+    - trackingChain: Include the unisonPlugin (if applicable) and up to 4 inserts. Provide a deep dive for each (Provide ONLY the actual available parameters that exist for this plugin (typically 5-15). NEVER invent parameters to reach a minimum count).
+    - vocalTracks: Provide multiple vocal layers (Lead, Adlibs, Doubles, etc.). For each, describe the sourceSoundGoal, which bus to send to (busSend), and the fxPlugins (with deep dives - Provide ONLY the actual available parameters that exist for this plugin (typically 5-15). NEVER invent parameters to reach a minimum count).
     - layeringStrategy: Explain how all these vocal layers should sit together in the mix.
 
-    You MUST also provide the 'busses' array. Create busses (e.g., "Vocal Reverb Bus", "Delay Bus") and list which vocal tracks are using them, along with the fxPlugins on the bus and their deep dives (AT LEAST 10 parameters per plugin, and up to 30 if it is a complex channel strip plugin).
+    You MUST also provide the 'busses' array. Create busses (e.g., "Vocal Reverb Bus", "Delay Bus") and list which vocal tracks are using them, along with the fxPlugins on the bus and their deep dives (Provide ONLY the actual available parameters that exist for this plugin (typically 5-15). NEVER invent parameters to reach a minimum count).
     
-    You MUST provide the 'masterPlugins' array with deep dives for the master chain (AT LEAST 10 parameters per plugin, and up to 30 if it is a complex channel strip plugin).
+    You MUST provide the 'masterPlugins' array with deep dives for the master chain (Provide ONLY the actual available parameters that exist for this plugin (typically 5-15). NEVER invent parameters to reach a minimum count).
     You MUST provide 'drumPatterns' and 'arrangement' as context for the beat.
 
     CRITICAL DRUM PATTERN RULES:
@@ -1786,8 +1786,8 @@ export const getCustomBeatRecommendations = async (plugins: VSTPlugin[], query: 
     CRITICAL: DO NOT use vocals as a main instrument in the 'instruments' array. Vocals MUST be separate.
     For each instrument:
     - Provide the exact plugin name to use in the 'plugin' field.
-    - Provide a deep dive on the instrument itself (e.g., oscillator settings, macro tweaks, filter envelopes). Provide AT LEAST 10 parameter settings in the 'deepDive' array (and up to 30 if it is a complex synth or channel strip).
-    - Provide an array of fxPlugins (up to 6) with a deep dive for EACH plugin. Provide AT LEAST 10 parameter settings for each FX plugin (and up to 30 if it is a complex channel strip).
+    - Provide a deep dive on the instrument itself (e.g., oscillator settings, macro tweaks, filter envelopes). Provide ONLY the actual available parameters that exist for this plugin (typically 5-15). NEVER invent parameters to reach a minimum count.
+    - Provide an array of fxPlugins (up to 6) with a deep dive for EACH plugin. Provide ONLY the actual available parameters that exist for this plugin (typically 5-15). NEVER invent parameters to reach a minimum count.
     CRITICAL: If the user has connected pedals or amps to an instrument (as listed in their analog hardware), you MUST include those specific pedals and amps in the fxPlugins array for that instrument and provide real, detailed parameter settings for them to achieve the desired sound.
     - ADVANCED ROUTING (OPTIONAL): If a plugin should be processed in parallel or on a specific frequency band (Multiband Split), use the 'routing' (e.g., "Parallel A (Crush)", "Parallel B (Space)") or 'band' (e.g., "Lows (0-150Hz)", "Highs (2kHz+)") properties in the fxPlugin object.
     - Specify which bus to send to (busSend).
@@ -2302,7 +2302,7 @@ export const getMixCritique = async (
       - 'targetStem': The exact name of the stem this step applies to (if stems were uploaded).
       - 'issue': The specific problem.
       - 'solution': A detailed technical explanation of how to fix it.
-      - 'recommendedChain': A robust chain of plugins from the user's list to use for this fix, with 'name', 'purpose', and 'deepDive' (an array of AT LEAST 15 parameter objects, and up to 40 if it is a complex channel strip plugin, each with 'parameter', 'value', and 'explanation'). You can also optionally include 'band' and 'routing' properties for multiband or parallel processing.
+      - 'recommendedChain': A robust chain of plugins from the user's list to use for this fix, with 'name', 'purpose', and 'deepDive' (an array of parameter objects - Aim for at least 15 parameters, and up to 40 if it is a complex channel strip plugin. If the plugin has fewer than 15 valid parameters, ONLY provide the true ones and do NOT invent unrealistic parameters - each with 'parameter', 'value', and 'explanation'). You can also optionally include 'band' and 'routing' properties for multiband or parallel processing.
   `;
 
   const parts: any[] = [];
@@ -2399,7 +2399,7 @@ export const getMixCritique = async (
                         purpose: { type: Type.STRING },
                         deepDive: {
                           type: Type.ARRAY,
-                          description: "AT LEAST 15 parameter settings (and up to 40 if it is a complex channel strip plugin).",
+                          description: "Provide ONLY the actual available parameters that exist for this plugin (typically 5-15). NEVER invent parameters to reach a minimum count. If the plugin has fewer than 10 valid parameters, provide only those.",
                           items: {
                             type: Type.OBJECT,
                             properties: {
@@ -2462,7 +2462,7 @@ export const getSpecificMixHelp = async (plugins: VSTPlugin[], audioBase64: stri
 
     ${audioUrl ? `The audio file is available at this URL: ${audioUrl}. Please fetch and analyze it.` : ""}
 
-    Respond to the user's latest message. Return the result as a JSON object with 'query', 'advice', and 'recommendedChain' (an array of plugin objects with name, purpose, and deepDive parameters - AT LEAST 15 parameters per plugin, and up to 40 if it is a complex channel strip plugin. You can also optionally include 'band' and 'routing' properties for multiband or parallel processing).
+    Respond to the user's latest message. Return the result as a JSON object with 'query', 'advice', and 'recommendedChain' (an array of plugin objects with name, purpose, and deepDive parameters - Provide ONLY the actual available parameters that exist for this plugin (typically 5-15). NEVER invent parameters to reach a minimum count. If the plugin has fewer than 10 valid parameters, provide only those. You can also optionally include 'band' and 'routing' properties for multiband or parallel processing).
   `;
 
   const firstUserParts: any[] = [];
@@ -2517,7 +2517,7 @@ export const getSpecificMixHelp = async (plugins: VSTPlugin[], audioBase64: stri
                   purpose: { type: Type.STRING },
                   deepDive: {
                     type: Type.ARRAY,
-                    description: "AT LEAST 10 parameter settings (and up to 30 if it is a complex channel strip plugin).",
+                    description: "Provide ONLY the actual available parameters that exist for this plugin (typically 5-15). NEVER invent parameters to reach a minimum count. If the plugin has fewer than 10 valid parameters, provide only those.",
                     items: {
                       type: Type.OBJECT,
                       properties: {
@@ -2599,7 +2599,7 @@ export const getGangstaVoxRecipe = async (recipe: BeatRecipe, plugins: VSTPlugin
       - Provide 'vocalDives': Detailed parameters for the key plugins in this specific layer.
         - 'pluginName': The name of the plugin.
         - 'whyItWorks': Why this plugin is essential for this vocal layer.
-        - 'settings': Array of {parameter, value} pairs (MUST contain AT LEAST 10 parameters, and up to 30 if it is a complex channel strip plugin).
+        - 'settings': Array of {parameter, value} pairs (Provide ONLY the actual available parameters that exist for this plugin (typically 5-15). NEVER invent parameters to reach a minimum count. If the plugin has fewer than 10 valid parameters, provide only those).
         - 'proTip': A professional tip for this plugin on this vocal layer.
     - 'layeringStrategy': How the vocals sit together and in the beat.
     - 'mastering': A mastering chain for the final vocal+beat mix.
@@ -2633,7 +2633,7 @@ export const getGangstaVoxRecipe = async (recipe: BeatRecipe, plugins: VSTPlugin
                     purpose: { type: Type.STRING },
                     settings: {
                       type: Type.ARRAY,
-                      description: "AT LEAST 10 parameters (and up to 30 if it is a complex channel strip plugin).",
+                      description: "Provide ONLY the actual available parameters that exist for this plugin (typically 5-15). NEVER invent parameters to reach a minimum count. If the plugin has fewer than 10 valid parameters, provide only those.",
                       items: {
                         type: Type.OBJECT,
                         properties: {
@@ -2655,7 +2655,7 @@ export const getGangstaVoxRecipe = async (recipe: BeatRecipe, plugins: VSTPlugin
                       purpose: { type: Type.STRING },
                       settings: {
                         type: Type.ARRAY,
-                        description: "AT LEAST 10 parameters (and up to 30 if it is a complex channel strip plugin).",
+                        description: "Provide ONLY the actual available parameters that exist for this plugin (typically 5-15). NEVER invent parameters to reach a minimum count. If the plugin has fewer than 10 valid parameters, provide only those.",
                         items: {
                           type: Type.OBJECT,
                           properties: {
@@ -2713,7 +2713,7 @@ export const getGangstaVoxRecipe = async (recipe: BeatRecipe, plugins: VSTPlugin
                         whyItWorks: { type: Type.STRING },
                         settings: {
                           type: Type.ARRAY,
-                          description: "MUST contain AT LEAST 10 parameters (and up to 30 if it is a complex channel strip plugin).",
+                          description: "Provide ONLY the actual available parameters that exist for this plugin (typically 5-15). NEVER invent parameters to reach a minimum count. If the plugin only has a few parameters, provide only those. MUST be unique parameters.",
                           items: {
                             type: Type.OBJECT,
                             properties: {
