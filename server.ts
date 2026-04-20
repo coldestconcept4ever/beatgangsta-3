@@ -409,8 +409,17 @@ app.post("/api/payments/nowpayments/create", express.json(), async (req, res) =>
 
     const apiKey = process.env.NOWPAYMENTS_API_KEY;
     if (!apiKey) {
+      console.error("[CRYPTO ERROR] NOWPAYMENTS_API_KEY is missing from environment");
       return res.status(500).json({ error: "NowPayments API key not configured" });
     }
+
+    // Determine dynamic APP_URL for redirections
+    const host = req.get('host') || "";
+    const protocol = req.get('x-forwarded-proto') || (host.includes('localhost') ? 'http' : 'https');
+    const dynamicAppUrl = (process.env.APP_URL || `${protocol}://${host}`).replace(/\/$/, "");
+
+    console.log(`[CRYPTO DEBUG] Creating invoice for user ${userId}, amount: ${amount}, credits: ${credits}`);
+    console.log(`[CRYPTO DEBUG] Using dynamicAppUrl: ${dynamicAppUrl}`);
 
     const response = await axios.post(
       "https://api.nowpayments.io/v1/invoice",
@@ -419,8 +428,8 @@ app.post("/api/payments/nowpayments/create", express.json(), async (req, res) =>
         price_currency: "usd",
         order_id: `${userId}_${credits}_${Date.now()}`,
         order_description: `${credits} Beatgangsta Credits`,
-        success_url: `${APP_URL}/?payment=success`,
-        cancel_url: `${APP_URL}/?payment=cancel`,
+        success_url: `${dynamicAppUrl}/?payment=success`,
+        cancel_url: `${dynamicAppUrl}/?payment=cancel`,
       },
       {
         headers: {
@@ -430,10 +439,24 @@ app.post("/api/payments/nowpayments/create", express.json(), async (req, res) =>
       }
     );
 
+    if (!response.data || !response.data.invoice_url) {
+      console.error("[CRYPTO ERROR] NowPayments response missing invoice_url:", response.data);
+      return res.status(500).json({ error: "NowPayments failed to generate invoice URL" });
+    }
+
     res.json(response.data);
   } catch (error: any) {
-    console.error("NowPayments creation error:", error.response?.data || error.message);
-    res.status(500).json({ error: "Failed to create crypto payment" });
+    const errorData = error.response?.data;
+    console.error("NowPayments creation error:", errorData || error.message);
+    
+    let userErrorMessage = "Failed to create crypto payment";
+    if (errorData && errorData.message) {
+      userErrorMessage = `NowPayments Error: ${errorData.message}`;
+    } else if (error.message) {
+      userErrorMessage = `Connection Error: ${error.message}`;
+    }
+
+    res.status(500).json({ error: userErrorMessage, details: errorData });
   }
 });
 

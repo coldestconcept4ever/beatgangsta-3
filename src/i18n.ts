@@ -789,6 +789,7 @@ const resources = {
       "daw_mixcraft_step1": "Press <1>Win + R</1>, type <3>%AppData%\\Acoustica\\Mixcraft\\</3> and hit Enter.",
       "daw_mixcraft_step2": "Locate the <1>vst-inventory.xml</1> file and upload it directly to BeatGangsta using the upload button.",
       "daw_mixcraft_step3": "BeatGangsta will automatically process your XML inventory to build your Gear Rack.",
+      "i_am_ready": "I AM READY",
       "inquiry_submitted": "Thank you! Your inquiry has been submitted. We will get back to you at coldestconcept@beatgangsta.com.",
       "error_log_copied": "Error log copied to clipboard!",
       "need_saved_recipe_export": "You need at least one saved recipe in your vault to export a complete rig file.",
@@ -1511,7 +1512,8 @@ const resources = {
       "failed_export_html": "Error al exportar HTML. Por favor, inténtalo de nuevo.",
       "neural_sort_failed": "Error al analizar los racks. Gemini podría estar ocupado.",
       "api_key_error": "Tu clave API falta o no es válida. Por favor, actualízala en el menú principal.",
-      "credits_needed": "Necesitas más créditos para usar esta función. Por favor, compra créditos en el menú principal."
+      "credits_needed": "Necesitas más créditos para usar esta función. Por favor, compra créditos en el menú principal.",
+      "i_am_ready": "ESTOY LISTO",
     }
   },
   'es-ES': {
@@ -1649,6 +1651,7 @@ const resources = {
       "sober_up": "Sobrio",
       "chain_on": "Cadena Puesta",
       "chain_off": "Quitar Cadena",
+      "i_am_ready": "ESTOY LISTO",
     }
   },
   fr: {
@@ -2197,6 +2200,7 @@ const resources = {
       "tutorial_vault_content_v3": "C'est votre Coffre. Ouvrez-le pour voir vos recettes enregistrées et vos critiques de mixage.",
       "tutorial_close_vault_title": "Fermer le Coffre",
       "tutorial_close_vault_content": "Vous pourrez explorer cela plus tard. Cliquez ici pour fermer le Coffre et continuer la visite.",
+      "i_am_ready": "JE SUIS PRÊT",
     }
   },
   ru: {

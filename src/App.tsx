@@ -3969,7 +3969,7 @@ The AI was unable to verify these parameters. Please investigate.`;
         if (data.invoice_url) {
           window.location.href = data.invoice_url;
         } else {
-          setError("Failed to create crypto invoice. Please try again.");
+          setError(data.error || "Failed to create crypto invoice. Please try again.");
         }
       }
     } catch (err) {
