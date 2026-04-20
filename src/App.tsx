@@ -8,8 +8,11 @@ import { uploadFileChunked, deleteFileFromDrive } from './services/uploadService
 import { enrichHardware } from './services/enrichmentService';
 import { initAudio } from './utils/midiPlayer';
 import { fetchWithDetailedError } from './lib/api';
+import { detectAPITier, replicateRecipeWithUserGear, enrichPluginLibrary, verifyAndCorrectPlugin, researchPluginParameters, validateApiKey, getBeatRecommendations, getCustomBeatRecommendations, getSongBeatRecommendations, getMixCritique, getAudioBeatRecommendations } from './services/geminiService';
+import { generateIndividualMidiFiles } from './utils/exportAllMidi';
+import { convertWavToMp3 } from './lib/audioConverter';
 
-const AvianField = React.lazy(() => import('./components/RavenField').then(m => ({ default: m.AvianField })));
+import { AvianField } from './components/RavenField';
 const PluginCard = React.lazy(() => import('./components/PluginCard').then(m => ({ default: m.PluginCard })));
 const HardwareCard = React.lazy(() => import('./components/HardwareCard').then(m => ({ default: m.HardwareCard })));
 const RecipeCard = React.lazy(() => import('./components/RecipeCard').then(m => ({ default: m.RecipeCard })));
@@ -37,9 +40,9 @@ const CloudSyncModal = React.lazy(() => import('./components/CloudSyncModal').th
 const RestoreBackupModal = React.lazy(() => import('./components/RestoreBackupModal').then(m => ({ default: m.RestoreBackupModal })));
 const LegalConsentBanner = React.lazy(() => import('./components/LegalConsentBanner').then(m => ({ default: m.LegalConsentBanner })));
 const RecipeViewerModal = React.lazy(() => import('./components/RecipeViewerModal').then(m => ({ default: m.RecipeViewerModal })));
-const TutorialOverlay = React.lazy(() => import('./components/TutorialOverlay').then(m => ({ default: m.TutorialOverlay })));
-const StatusPage = React.lazy(() => import('./components/StatusPage').then(m => ({ default: m.StatusPage })));
-const AdminDashboard = React.lazy(() => import('./components/AdminDashboard').then(m => ({ default: m.AdminDashboard })));
+import { TutorialOverlay } from './components/TutorialOverlay';
+import { StatusPage } from './components/StatusPage';
+import { AdminDashboard } from './components/AdminDashboard';
 import { AnimatePresence, motion } from 'motion/react';
 import { useTranslation } from 'react-i18next';
 import { Globe, Languages, Star, X, Cpu, Folder as FolderIcon, ShieldCheck, Check, Zap, Rocket, Eye, EyeOff, AlertTriangle, Lock, Shield, Loader2, Gem, Sword, User as UserIcon, Link, Link2, Palette, Sparkles, Drum, Image as ImageIcon, Crown, CheckCircle2, ExternalLink, Facebook, Instagram, Linkedin, Twitter, Activity, Database, Trash2 } from 'lucide-react';
@@ -392,8 +395,8 @@ const CigarIcon = ({ size = 16, className = "" }: { size?: number, className?: s
   </svg>
 );
 
-const SnowFlurry = React.lazy(() => import('./components/SnowFlurry').then(m => ({ default: m.SnowFlurry })));
-const SystemStatus = React.lazy(() => import('./components/SystemStatus').then(m => ({ default: m.SystemStatus })));
+import { SnowFlurry } from './components/SnowFlurry';
+import { SystemStatus } from './components/SystemStatus';
 
 const App: React.FC = () => {
   const [showRigUI, setShowRigUI] = useState(false);
@@ -684,18 +687,7 @@ const App: React.FC = () => {
   const [isCloudflareVerified, setIsCloudflareVerified] = useState(false);
   const [cloudflareVerificationCount, setCloudflareVerificationCount] = useState(0);
   const [showCloudflareModal, setShowCloudflareModal] = useState(false);
-  const [showTurnstile, setShowTurnstile] = useState(false);
-  useEffect(() => {
-    // Heavily defer Turnstile initialization on mobile until interaction
-    // On desktop, load faster (500ms). This removes render blocking for LCP.
-    const timer = setTimeout(() => setShowTurnstile(true), window.innerWidth >= 768 ? 500 : 3500);
-    
-    // Quick load if they interact
-    const onInteract = () => setShowTurnstile(true);
-    ['touchstart', 'scroll', 'click'].forEach(e => window.addEventListener(e, onInteract, { once: true, passive: true }));
-    
-    return () => clearTimeout(timer);
-  }, []);
+  const [tutorialStep, setTutorialStep] = useState(0);
 
   useEffect(() => {
     if (showTutorial && tutorialPhase !== 'done') {
@@ -1479,7 +1471,6 @@ The AI was unable to verify these parameters. Please investigate.`;
       const key = localStorage.getItem('bg_user_api_key');
       const tier = localStorage.getItem('bg_api_tier');
       if (key && !tier) {
-        const { detectAPITier } = await import('./services/geminiService');
         const detected = await detectAPITier(key);
         localStorage.setItem('bg_api_tier', detected);
       }
@@ -2170,7 +2161,6 @@ The AI was unable to verify these parameters. Please investigate.`;
   const handleCloudBackupRecipe = async (recipe: BeatRecipe) => {
     if (!user) return;
     try {
-      const { generateIndividualMidiFiles } = await import('./utils/exportAllMidi');
       const files = await generateIndividualMidiFiles(recipe);
       const midiFiles = files.filter(f => f.type === 'midi');
       const loopFiles = files.filter(f => f.type === 'loop');
@@ -2700,7 +2690,6 @@ The AI was unable to verify these parameters. Please investigate.`;
     setLoading(true);
     const progressInterval = simulateGenerationProgress(getEstimatedSeconds('replicate'));
     try {
-      const { replicateRecipeWithUserGear } = await import('./services/geminiService');
       const replicated = await replicateRecipeWithUserGear(recipe, plugins, i18n.language);
       clearInterval(progressInterval);
       setGenerationProgress(100);
@@ -2957,7 +2946,6 @@ The AI was unable to verify these parameters. Please investigate.`;
     setEnrichStatus('Initializing Research...');
 
     try {
-      const { enrichPluginLibrary } = await import('./services/geminiService');
       const enriched = await enrichPluginLibrary(parsed, (progress, eta) => {
         setEnrichProgress(progress);
         setEnrichEta(eta);
@@ -3112,7 +3100,6 @@ The AI was unable to verify these parameters. Please investigate.`;
       }
 
       const userParam = corrections.map(c => `${c.parameter}: ${c.value}`).join(', ');
-      const { verifyAndCorrectPlugin } = await import('./services/geminiService');
       const result = await verifyAndCorrectPlugin(existingPlugin, userParam, version, i18n.language);
       
       if (result.success && result.plugin) {
@@ -3205,7 +3192,6 @@ The AI was unable to verify these parameters. Please investigate.`;
     try {
       let updated: VSTPlugin;
       if (userParameter || userVersion) {
-        const { verifyAndCorrectPlugin, researchPluginParameters } = await import('./services/geminiService');
         const result = await verifyAndCorrectPlugin(plugin, userParameter, userVersion, i18n.language);
         if (!result.success) {
           setError(result.message);
@@ -3213,7 +3199,6 @@ The AI was unable to verify these parameters. Please investigate.`;
         }
         updated = result.plugin;
       } else {
-        const { verifyAndCorrectPlugin, researchPluginParameters } = await import('./services/geminiService');
         updated = await researchPluginParameters(plugin, i18n.language);
       }
       
@@ -3328,7 +3313,6 @@ The AI was unable to verify these parameters. Please investigate.`;
     setIsValidatingKey(true);
     setApiKeyError(null);
     try {
-      const { validateApiKey } = await import('./services/geminiService');
       const result = await validateApiKey(key);
       if (result.valid) {
         localStorage.setItem('bg_user_api_key', result.cleanKey || key.trim());
@@ -3365,7 +3349,6 @@ The AI was unable to verify these parameters. Please investigate.`;
 
     try {
       if (!requireAuth()) return;
-      const { getBeatRecommendations } = await import('./services/geminiService');
       const response = await getBeatRecommendations(plugins, analogInstruments, analogHardware, drumKits, excludeAnalog, dawType, starredPlugins, isGangstaVox, i18n.language);
       clearInterval(progressInterval);
       setGenerationProgress(100);
@@ -3416,7 +3399,6 @@ The AI was unable to verify these parameters. Please investigate.`;
 
     try {
       if (!requireAuth()) return;
-      const { getCustomBeatRecommendations } = await import('./services/geminiService');
       const response = await getCustomBeatRecommendations(plugins, typeBeatSearch.trim(), analogInstruments, analogHardware, drumKits, excludeAnalog, dawType, starredPlugins, isGangstaVox, i18n.language);
       clearInterval(progressInterval);
       setGenerationProgress(100);
@@ -3468,7 +3450,6 @@ The AI was unable to verify these parameters. Please investigate.`;
 
     try {
       if (!requireAuth()) return;
-      const { getSongBeatRecommendations } = await import('./services/geminiService');
       const response = await getSongBeatRecommendations(plugins, songSearch.trim(), analogInstruments, analogHardware, drumKits, excludeAnalog, dawType, starredPlugins, isGangstaVox, i18n.language);
       clearInterval(progressInterval);
       setGenerationProgress(100);
@@ -3559,7 +3540,6 @@ The AI was unable to verify these parameters. Please investigate.`;
         if (fileToUpload.type.includes('wav') || fileToUpload.name.toLowerCase().endsWith('.wav')) {
           setStems(prev => prev.map(s => s.id === stem.id ? { ...s, status: 'converting' as any } : s));
           try {
-            const { convertWavToMp3 } = await import('./lib/audioConverter');
             fileToUpload = await convertWavToMp3(fileToUpload);
           } catch (e) {
             console.error(`Failed to convert ${fileToUpload.name} to MP3, falling back to original file:`, e);
@@ -3599,7 +3579,6 @@ The AI was unable to verify these parameters. Please investigate.`;
       const stemsContext = uploadedStems.map(s => `Stem: ${s.file!.name} (Type: ${s.type === 'Other' && s.customType ? s.customType : s.type}) - URI: ${s.uri}`).join('\n');
       const fullContext = `The user has uploaded ${activeStems.length} stems for analysis.\n\n${stemsContext}\n\nUser Context: ${critiqueContext}`;
 
-      const { getMixCritique } = await import('./services/geminiService');
       const critique = await getMixCritique(plugins, null, null, 'audio/mpeg', isGangstaVox, true, fullContext, null, finalReferenceTrack, referenceAudioBase64, null, referenceGeminiFileUri, i18n.language, uploadedStems, analogInstruments, analogHardware, isBusMode);
       critique.id = Math.random().toString(36).substr(2, 9);
       critique.audioBase64 = null;
@@ -3718,7 +3697,6 @@ The AI was unable to verify these parameters. Please investigate.`;
 
       if (fileToUpload.type.includes('wav') || fileToUpload.name.toLowerCase().endsWith('.wav')) {
         try {
-          const { convertWavToMp3 } = await import('./lib/audioConverter');
           fileToUpload = await convertWavToMp3(fileToUpload);
         } catch (e) {
           console.error(`Failed to convert ${fileToUpload.name} to MP3, falling back to original file:`, e);
@@ -3754,7 +3732,6 @@ The AI was unable to verify these parameters. Please investigate.`;
           let refFileToUpload = referenceTrackFile;
           if (refFileToUpload.type.includes('wav') || refFileToUpload.name.toLowerCase().endsWith('.wav')) {
             try {
-              const { convertWavToMp3 } = await import('./lib/audioConverter');
               refFileToUpload = await convertWavToMp3(refFileToUpload);
             } catch (e) {
               console.error(`Failed to convert ${refFileToUpload.name} to MP3, falling back to original file:`, e);
@@ -3778,7 +3755,6 @@ The AI was unable to verify these parameters. Please investigate.`;
           }
         }
 
-        const { getMixCritique } = await import('./services/geminiService');
         const critique = await getMixCritique(plugins, audioBase64, audioUrl, mimeType, isGangstaVox, hasStems, critiqueContext, null, finalReferenceTrack, referenceAudioBase64, geminiFileUri, referenceGeminiFileUri, i18n.language, undefined, analogInstruments, analogHardware, isBusMode);
         critique.id = Math.random().toString(36).substr(2, 9);
         critique.audioBase64 = audioBase64;
@@ -3807,7 +3783,6 @@ The AI was unable to verify these parameters. Please investigate.`;
         let response;
         try {
           if (!requireAuth()) return;
-          const { getAudioBeatRecommendations } = await import('./services/geminiService');
           response = await getAudioBeatRecommendations(
             plugins,
             audioBase64,
@@ -3829,7 +3804,6 @@ The AI was unable to verify these parameters. Please investigate.`;
           // Retry with a very small plugin list (top 30) to reduce context pressure
           try {
             if (!requireAuth()) return;
-            const { getAudioBeatRecommendations } = await import('./services/geminiService');
             response = await getAudioBeatRecommendations(
               plugins.slice(0, 30),
               audioBase64,
@@ -5495,7 +5469,7 @@ The AI was unable to verify these parameters. Please investigate.`;
                   </label>
                 </div>
               </div>
-              {!isVerified && showTurnstile && (
+              {!isVerified && (
                 <div className="flex justify-center mt-6">
                   <div id="tutorial-turnstile" className="flex items-center justify-center overflow-visible" style={{ width: '260px', height: '52px' }}>
                     <div key={verificationSessionId}>
@@ -7055,7 +7029,7 @@ The AI was unable to verify these parameters. Please investigate.`;
                 ) : null}
                 
                 {/* Always show Turnstile if not verified, or if verified but in tutorial mode */}
-                {(!isCloudflareVerified || showTutorial) && showTurnstile && (
+                {(!isCloudflareVerified || showTutorial) && (
                   <div id="tutorial-turnstile-widget" className={`flex flex-col items-center gap-4 ${isCloudflareVerified && !showTutorial ? 'hidden' : ''}`}>
                     <Turnstile
                       sitekey={typeof import.meta.env.VITE_TURNSTILE_SITE_KEY === 'string' ? import.meta.env.VITE_TURNSTILE_SITE_KEY : '0x4AAAAAACkH6-i-na5YIlP9'}

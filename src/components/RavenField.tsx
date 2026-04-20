@@ -236,13 +236,6 @@ const FeatherIcon = ({ className, bend = 'straight' }: { className?: string, ben
 );
 
 export const AvianField: React.FC = () => {  
-  const isMobileLite = React.useMemo(() => {
-    if (typeof window !== 'undefined') {
-      return window.innerWidth < 768;
-    }
-    return false;
-  }, []);
-
   // Define flock members relative to a flock container
   const baseFlock = [
     // Set 1 (Front / Main)
@@ -281,7 +274,7 @@ export const AvianField: React.FC = () => {
     { top: '85%', left: '88%', size: 105, bobDuration: '1.55s', flapDuration: '0.83s' },
   ];
 
-  const flock = isMobileLite ? baseFlock.slice(0, 10) : baseFlock;
+  const flock = baseFlock;
 
   const feathersBase: Array<{ left: string, delay: string, duration: string, size: number, bend: 'straight' | 'left' | 'right', anim: string }> = [
     { left: '15%', delay: '0s', duration: '14s', size: 35, bend: 'left', anim: 'featherSway1' },
@@ -298,7 +291,7 @@ export const AvianField: React.FC = () => {
     { left: '20%', delay: '10s', duration: '14s', size: 27, bend: 'right', anim: 'featherSway4' },
   ];
 
-  const feathers = isMobileLite ? feathersBase.slice(0, 4) : feathersBase;
+  const feathers = feathersBase;
 
   return (
     <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden bg-[radial-gradient(circle_at_center,transparent_0%,rgba(0,0,0,0.8)_100%)]">
@@ -442,7 +435,7 @@ export const AvianField: React.FC = () => {
 
       {/* Wind Gust */}
       <div className="wind-container">
-        {useMemo(() => Array.from({ length: isMobileLite ? 10 : 50 }).map((_, i) => (
+        {useMemo(() => Array.from({ length: 50 }).map((_, i) => (
           <div
             key={`wind-${i}`}
             className="absolute bg-gradient-to-l from-transparent via-white/20 to-transparent rounded-full"
@@ -452,10 +445,10 @@ export const AvianField: React.FC = () => {
               width: `${Math.random() * 100 + 50}vw`,
               height: `${Math.random() * 4 + 1}px`,
               opacity: Math.random() * 0.3 + 0.1,
-              filter: isMobileLite ? 'none' : 'blur(1px)',
+              filter: 'blur(1px)',
             }}
           />
-        )), [isMobileLite])}
+        )), [])}
       </div>
 
       {/* Flock of Ravens */}
