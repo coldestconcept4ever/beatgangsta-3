@@ -901,23 +901,33 @@ app.post("/api/upload-chunk", express.raw({ type: 'application/octet-stream', li
           headers: {
             'X-Goog-Upload-Offset': offset as any,
             'X-Goog-Upload-Command': isLast ? 'upload, finalize' : 'upload',
-            'Content-Type': 'application/octet-stream'
+            'Content-Type': 'application/octet-stream' // In Gemini API, chunks are usually octet-stream
           }
         }
       );
 
       if (isLast) {
-        const geminiFileUri = response.data.file.uri;
+        console.log(`[Gemini Proxy] Final chunk uploaded. Response:`, JSON.stringify(response.data));
+        // The API might return { file: { uri: "..." } } OR directly { uri: "..." }
+        const geminiFileUri = response.data?.file?.uri || response.data?.uri;
+        
+        if (!geminiFileUri) {
+             console.error("[Gemini Proxy] URI missing in response data:", response.data);
+             // We return an error so the frontend knows it failed
+             return res.status(500).json({ error: "Upload finalized but URI was missing in response" });
+        }
         return res.json({ success: true, geminiFileUri });
       }
       return res.json({ success: true });
     } catch (error: any) {
       console.error("Gemini proxy upload failed:", error.response?.data || error.message);
-      // Fallback to local assembly if proxy fails (might still fail on Vercel but worth a shot)
+      // We cannot fallback to local assembly here because previous chunks were not saved locally!
+      return res.status(500).json({ error: "Gemini proxy chunk upload failed", details: error.message });
     }
   }
 
   // Write chunk to temp file directly to avoid memory bloat
+
   const tempFilePath = path.join(os.tmpdir(), `${sessionId}-${fileName}`);
   fs.appendFileSync(tempFilePath, chunkData);
 
