@@ -364,6 +364,7 @@ export interface User {
   firebaseToken?: string;
   credits?: number;
   role?: string;
+  purchasedStemSlots?: number;
 }
 
 export interface MixCritique {

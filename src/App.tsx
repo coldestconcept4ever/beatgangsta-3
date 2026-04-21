@@ -44,7 +44,7 @@ import { StatusPage } from './components/StatusPage';
 import { AdminDashboard } from './components/AdminDashboard';
 import { AnimatePresence, motion } from 'motion/react';
 import { useTranslation } from 'react-i18next';
-import { Globe, Languages, Star, X, Cpu, Folder as FolderIcon, ShieldCheck, Check, Zap, Rocket, Eye, EyeOff, AlertTriangle, Lock, Shield, Loader2, Gem, Sword, User as UserIcon, Link, Link2, Palette, Sparkles, Drum, Image as ImageIcon, Crown, CheckCircle2, ExternalLink, Facebook, Instagram, Linkedin, Twitter, Activity, Database, Trash2 } from 'lucide-react';
+import { Globe, Languages, Star, X, Cpu, Folder as FolderIcon, ShieldCheck, Check, Zap, Rocket, Eye, EyeOff, AlertTriangle, Lock, Shield, Loader2, Gem, Sword, User as UserIcon, Link, Link2, Palette, Sparkles, Drum, Image as ImageIcon, Crown, CheckCircle2, ExternalLink, Facebook, Instagram, Linkedin, Twitter, Activity, Database, Trash2, Music } from 'lucide-react';
 import tinycolor from 'tinycolor2';
 import Turnstile from 'react-turnstile';
 
@@ -817,15 +817,55 @@ const App: React.FC = () => {
     justSignedInRef.current = justSignedIn;
   }, [justSignedIn]);
 
+  const authorizedEmails = useMemo(() => [
+    'coldestconcept@gmail.com',
+    'recognizemiracles@gmail.com',
+    'ruhedramarkprod@gmail.com'
+  ], []);
+
+  const stemsLimit = useMemo(() => {
+    if (!user) return 10;
+    if (authorizedEmails.includes(user.email)) return 30;
+    return Math.min(30, 10 + (user.purchasedStemSlots || 0));
+  }, [user, authorizedEmails]);
+
+  useEffect(() => {
+    setStems(prev => {
+      if (prev.length === stemsLimit) return prev;
+      if (prev.length > stemsLimit) {
+        // Keep files if they exist, but don't strictly truncate if user has already uploaded them.
+        // Actually, let's truncate empty slots if we exceed the limit.
+        const nonEmpties = prev.filter(s => s.status !== 'empty' && s.file);
+        if (nonEmpties.length > stemsLimit) {
+          // If they somehow have more real files, we keep them to prevent data loss?
+          return nonEmpties.slice(0, stemsLimit);
+        }
+        
+        // Otherwise, trim from the end
+        return prev.slice(0, stemsLimit);
+      }
+      
+      // Need to add more
+      const toAdd = stemsLimit - prev.length;
+      const preset = activeUI?.stemTypesPreset || Array(30).fill('Other');
+      const customPreset = activeUI?.stemCustomTypesPreset || Array(30).fill('');
+      
+      const newItems = Array(toAdd).fill(null).map((_, i) => ({
+        id: `stem-${prev.length + i}`, 
+        file: null, 
+        type: preset[prev.length + i] || 'Other', 
+        customType: customPreset[prev.length + i] || '', 
+        mimeType: '', 
+        status: 'empty' as const
+      }));
+      return [...prev, ...newItems];
+    });
+  }, [stemsLimit, activeUI]);
+
   const isMasterAuthorized = useMemo(() => {
-    const authorizedEmails = [
-      'coldestconcept@gmail.com',
-      'recognizemiracles@gmail.com',
-      'ruhedramarkprod@gmail.com'
-    ];
     const isEnglish = i18n.language.startsWith('en');
     return user && authorizedEmails.includes(user.email) && isEnglish;
-  }, [user, i18n.language]);
+  }, [user, i18n.language, authorizedEmails]);
 
   const handleContactSupport = useCallback((pluginInfo: any) => {
     const message = `Developer Investigation Request:
@@ -1517,8 +1557,12 @@ The AI was unable to verify these parameters. Please investigate.`;
   const [isDragging, setIsDragging] = useState(false);
   const [showBuyCreditsModal, setShowBuyCreditsModal] = useState(false);
   const [showPaymentMethodModal, setShowPaymentMethodModal] = useState(false);
+  const [purchaseType, setPurchaseType] = useState<'credits' | 'stem_slots'>('credits');
   const [pendingAmount, setPendingAmount] = useState<number>(0);
   const [pendingCredits, setPendingCredits] = useState<number>(0);
+  const [pendingStemSlots, setPendingStemSlots] = useState<number>(0);
+  const [showBuyStemsModal, setShowBuyStemsModal] = useState(false);
+  const [stemSlotSliderValue, setStemSlotSliderValue] = useState<number>(1);
 
   const [showApiKeyInput, setShowApiKeyInput] = useState(false);
   const [userApiKey, setUserApiKey] = useState(localStorage.getItem('bg_user_api_key') || '');
@@ -3924,9 +3968,19 @@ The AI was unable to verify these parameters. Please investigate.`;
   const handleBuyCredits = (credits: number) => {
     if (!requireAuth()) return;
     const amount = credits === 40 ? 5 : 10;
+    setPurchaseType('credits');
     setPendingAmount(amount);
     setPendingCredits(credits);
     setShowBuyCreditsModal(false);
+    setShowPaymentMethodModal(true);
+  };
+
+  const handleBuyStemSlots = (slotsToBuy: number) => {
+    if (!requireAuth()) return;
+    setPurchaseType('stem_slots');
+    setPendingStemSlots(slotsToBuy);
+    setPendingAmount(slotsToBuy * 3);
+    setShowBuyStemsModal(false);
     setShowPaymentMethodModal(true);
   };
 
@@ -3936,40 +3990,72 @@ The AI was unable to verify these parameters. Please investigate.`;
     setShowPaymentMethodModal(false);
 
     try {
-      if (method === 'card') {
-        const response = await fetch('/api/checkout', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ amount: pendingCredits })
-        });
-        
-        const data = await response.json();
-        if (data.success) {
-          if (data.checkoutUrl) {
-            window.location.href = data.checkoutUrl;
-          } else if (data.simulated) {
-            setUser(data.user);
+      if (purchaseType === 'stem_slots') {
+        if (method === 'card') {
+          const response = await fetch('/api/checkout-stems', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ slots: pendingStemSlots })
+          });
+          
+          const data = await response.json();
+          if (data.success) {
+            if (data.checkoutUrl) window.location.href = data.checkoutUrl;
+            else if (data.simulated) setUser(data.user);
+          } else {
+            setError(data.error || "Failed to initiate stems checkout.");
           }
         } else {
-          setError(data.error || "Failed to initiate checkout.");
+          // Crypto stems
+          const response = await fetch('/api/payments/nowpayments/create-stems', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ slots: pendingStemSlots, userId: user.uid })
+          });
+          const data = await response.json();
+          if (data.checkoutUrl) {
+            window.location.href = data.checkoutUrl;
+          } else {
+            setError(data.error || "Failed to create crypto invoice for stems. Please try again.");
+          }
         }
       } else {
-        // NowPayments Crypto
-        const response = await fetch('/api/payments/nowpayments/create', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ 
-            amount: pendingAmount, 
-            credits: pendingCredits,
-            userId: user.uid
-          })
-        });
-
-        const data = await response.json();
-        if (data.invoice_url) {
-          window.location.href = data.invoice_url;
+        // Credits purchase logic
+        if (method === 'card') {
+          const response = await fetch('/api/checkout', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ amount: pendingCredits })
+          });
+          
+          const data = await response.json();
+          if (data.success) {
+            if (data.checkoutUrl) {
+              window.location.href = data.checkoutUrl;
+            } else if (data.simulated) {
+              setUser(data.user);
+            }
+          } else {
+            setError(data.error || "Failed to initiate checkout.");
+          }
         } else {
-          setError(data.error || "Failed to create crypto invoice. Please try again.");
+          // NowPayments Crypto
+          const response = await fetch('/api/payments/nowpayments/create', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ 
+              amount: pendingAmount, 
+              credits: pendingCredits,
+              userId: user.uid
+            })
+          });
+
+          const data = await response.json();
+          if (data.invoice_url) {
+            window.location.href = data.invoice_url;
+          } else {
+            setError(data.error || "Failed to create crypto invoice. Please try again.");
+          }
         }
       }
     } catch (err) {
@@ -5821,10 +5907,30 @@ The AI was unable to verify these parameters. Please investigate.`;
                 {hasStems ? (
                   <div className="flex flex-col gap-4">
                     <div className="flex justify-between items-center">
-                      <h3 className={`text-sm font-black uppercase tracking-widest ${theme === 'coldest' ? 'text-slate-900' : 'text-white'}`}>Stems ({stems.filter(s => s.file).length}/10)</h3>
+                      <h3 className={`text-sm font-black uppercase tracking-widest ${theme === 'coldest' ? 'text-slate-900' : 'text-white'}`}>Stems ({stems.filter(s => s.file).length}/{stemsLimit})</h3>
                     </div>
-                    
+
                     <div className="flex flex-col gap-2">
+                      <button
+                        onClick={() => {
+                          if (stemsLimit < 30) {
+                            setStemSlotSliderValue(1);
+                            setShowBuyStemsModal(true);
+                          }
+                        }}
+                        className={`w-full p-4 rounded-xl text-center font-black transition-all border-2 ${
+                          stemsLimit < 30
+                            ? theme === 'coldest'
+                              ? 'bg-purple-100/50 hover:bg-purple-100 border-purple-200 text-purple-700 hover:scale-[1.02]'
+                              : 'bg-purple-500/10 hover:bg-purple-500/20 border-purple-500/30 text-purple-300 hover:scale-[1.02]'
+                            : theme === 'coldest'
+                              ? 'bg-slate-100 border-slate-200 text-slate-400 cursor-default'
+                              : 'bg-zinc-800/50 border-zinc-700 text-zinc-500 cursor-default'
+                        }`}
+                      >
+                        {stemsLimit < 30 ? "More than 10 stems?" : "Max Amount of Upload Slots Unlocked"}
+                      </button>
+
                       {stems.map((stem, index) => (
                         <div key={stem.id} className={`flex items-center gap-3 p-3 rounded-xl border ${theme === 'coldest' ? 'bg-white/60 border-purple-100' : 'bg-black/40 border-purple-500/20'}`}>
                           <div className="flex-1 flex items-center gap-2">
@@ -6824,6 +6930,87 @@ The AI was unable to verify these parameters. Please investigate.`;
           </div>
         )}
 
+      </AnimatePresence>
+
+      {/* Buy Stems Modal */}
+      <AnimatePresence>
+        {showBuyStemsModal && (
+          <div className="fixed inset-0 z-[100] overflow-y-auto bg-black/80 backdrop-blur-sm">
+            <div className="min-h-[100dvh] flex items-center justify-center p-4">
+              <motion.div 
+                initial={{ opacity: 0, scale: 0.9, y: 20 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.9, y: 20 }}
+                className={`border rounded-3xl p-6 max-w-md w-full shadow-2xl relative overflow-hidden transition-colors duration-500 ${
+                  theme === 'coldest' 
+                    ? "bg-white border-slate-200 text-slate-900" 
+                    : "bg-zinc-900 border-zinc-800 text-white"
+                }`}
+              >
+                <button 
+                  onClick={() => setShowBuyStemsModal(false)}
+                  className="absolute top-4 right-4 p-2 rounded-full transition-all z-10 opacity-50 hover:opacity-100 hover:bg-black/5"
+                >
+                  <X size={20} />
+                </button>
+
+                <div className="text-center mb-6">
+                  <div className="w-16 h-16 bg-purple-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <Music className="w-8 h-8 text-purple-500" />
+                  </div>
+                  <h2 className="text-2xl font-black mb-2 uppercase tracking-tight">Need More Upload Slots?</h2>
+                  <div className="flex items-center justify-center gap-1 text-purple-500 mb-2">
+                    <span className="text-sm font-black">{stemsLimit} / 30 Slots Unlocked</span>
+                  </div>
+                  <p className="text-sm opacity-70">
+                    Upload more stems forever for just $3 per slot
+                  </p>
+                </div>
+
+                <div className="space-y-6 mb-8">
+                  {30 - stemsLimit > 0 ? (
+                    <>
+                      <div className="px-2">
+                        <input
+                          type="range"
+                          min="1"
+                          max={30 - stemsLimit}
+                          value={stemSlotSliderValue}
+                          onChange={(e) => setStemSlotSliderValue(parseInt(e.target.value))}
+                          className={`w-full h-2 rounded-lg appearance-none cursor-pointer accent-purple-500 ${theme === 'coldest' ? 'bg-purple-100' : 'bg-purple-500/20'}`}
+                        />
+                        <div className="flex justify-between text-xs font-bold text-slate-500 mt-2 px-1">
+                          <span>1</span>
+                          <span>{30 - stemsLimit}</span>
+                        </div>
+                      </div>
+
+                      <div className="bg-purple-500/10 border-2 border-purple-500/30 rounded-2xl p-6 text-center">
+                        <div className="text-xs font-black text-purple-500 uppercase tracking-widest mb-2">Total Cost</div>
+                        <div className="text-5xl font-black text-purple-500">${stemSlotSliderValue * 3}</div>
+                        <div className={`text-xs font-bold mt-3 uppercase tracking-widest ${theme === 'coldest' ? 'text-slate-500' : 'text-slate-400'}`}>
+                          For {stemSlotSliderValue} permanent upload slot{stemSlotSliderValue > 1 ? 's' : ''}
+                        </div>
+                      </div>
+
+                      <button 
+                        disabled={loading}
+                        onClick={() => handleBuyStemSlots(stemSlotSliderValue)}
+                        className={`w-full p-4 rounded-xl font-black text-lg uppercase tracking-widest transition-all text-white bg-purple-600 hover:bg-purple-500 disabled:opacity-50`}
+                      >
+                        Buy Now
+                      </button>
+                    </>
+                  ) : (
+                    <div className="text-center text-lg font-bold text-emerald-500 p-6 bg-emerald-500/10 rounded-2xl border-2 border-emerald-500/20">
+                      You have unlocked the maximum amount of stem slots!
+                    </div>
+                  )}
+                </div>
+              </motion.div>
+            </div>
+          </div>
+        )}
       </AnimatePresence>
 
       <React.Suspense fallback={null}>

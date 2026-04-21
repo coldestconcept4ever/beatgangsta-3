@@ -67,6 +67,11 @@ async function initDb() {
       } catch (e: any) {
         // Ignore if column already exists
       }
+      try {
+        await client.execute("ALTER TABLE users ADD COLUMN purchased_stem_slots INTEGER DEFAULT 0");
+      } catch (e: any) {
+        // Ignore if column already exists
+      }
       
       await client.execute(`
         CREATE TABLE IF NOT EXISTS pending_sessions (
@@ -399,6 +404,60 @@ app.use(cookieSession({
   httpOnly: true,
 }));
 
+// NowPayments Payment Creation for Stem Slots
+app.post("/api/payments/nowpayments/create-stems", express.json(), async (req, res) => {
+  try {
+    const { slots, userId } = req.body;
+    if (!slots || !userId) {
+      return res.status(400).json({ error: "Missing required parameters" });
+    }
+
+    const amount = slots * 3; // $3 per slot
+
+    const apiKey = process.env.NOWPAYMENTS_API_KEY;
+    if (!apiKey) {
+      console.error("[CRYPTO ERROR] NOWPAYMENTS_API_KEY is missing from environment");
+      return res.status(500).json({ error: "NowPayments API key not configured" });
+    }
+
+    // Determine dynamic APP_URL for redirections
+    const host = req.get('host') || "";
+    const protocol = req.get('x-forwarded-proto') || (host.includes('localhost') ? 'http' : 'https');
+    const dynamicAppUrl = (process.env.APP_URL || `${protocol}://${host}`).replace(/\/$/, "");
+
+    console.log(`[CRYPTO DEBUG] Creating invoice for user ${userId}, stem slots: ${slots}, amount: ${amount}`);
+
+    const response = await axios.post(
+      "https://api.nowpayments.io/v1/invoice",
+      {
+        price_amount: amount,
+        price_currency: "usd",
+        order_id: `stem_${userId}_${slots}_${Date.now()}`,
+        order_description: `${slots} Permanent Stem Upload Slots`,
+        success_url: `${dynamicAppUrl}/?payment=success`,
+        cancel_url: `${dynamicAppUrl}/?payment=cancel`,
+      },
+      {
+        headers: {
+          "x-api-key": apiKey,
+          "Content-Type": "application/json",
+        },
+      }
+    );
+
+    if (!response.data || !response.data.invoice_url) {
+      console.error("[CRYPTO ERROR] NowPayments response missing invoice_url:", response.data);
+      return res.status(500).json({ error: "NowPayments failed to generate invoice URL" });
+    }
+
+    res.json({ checkoutUrl: response.data.invoice_url });
+  } catch (error: any) {
+    const errorData = error.response?.data;
+    console.error("NowPayments stems creation error:", errorData || error.message);
+    res.status(500).json({ error: "Failed to create crypto payment" });
+  }
+});
+
 // NowPayments Payment Creation
 app.post("/api/payments/nowpayments/create", express.json(), async (req, res) => {
   try {
@@ -482,22 +541,43 @@ app.post("/api/webhooks/nowpayments", async (req, res) => {
     const { payment_status, order_id, price_amount, price_currency, pay_currency, payment_id } = req.body;
 
     if (payment_status === 'finished' && order_id) {
-      const [userId, amountStr] = order_id.split('_');
-      const amount = parseInt(amountStr, 10);
+      if (order_id.startsWith('stem_')) {
+        const parts = order_id.split('_');
+        const userId = parts[1];
+        const slots = parseInt(parts[2], 10);
+        
+        if (userId && !isNaN(slots)) {
+          await getDb().execute({
+            sql: `UPDATE users SET purchased_stem_slots = purchased_stem_slots + ? WHERE uid = ?`,
+            args: [slots, userId]
+          });
 
-      if (userId && !isNaN(amount)) {
-        await getDb().execute({
-          sql: `UPDATE users SET credits = credits + ? WHERE uid = ?`,
-          args: [amount, userId]
-        });
+          // Log purchase
+          await getDb().execute({
+            sql: `INSERT INTO purchases (id, uid, provider, amount_fiat, currency, pay_currency, credits_awarded, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+            args: [payment_id || `np_${Date.now()}`, userId, 'nowpayments', price_amount, price_currency, pay_currency, slots, 'finished']
+          });
 
-        // Log purchase
-        await getDb().execute({
-          sql: `INSERT INTO purchases (id, uid, provider, amount_fiat, currency, pay_currency, credits_awarded, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
-          args: [payment_id || `np_${Date.now()}`, userId, 'nowpayments', price_amount, price_currency, pay_currency, amount, 'finished']
-        });
+          console.log(`Successfully added ${slots} stem slots to user ${userId} via NowPayments`);
+        }
+      } else {
+        const [userId, amountStr] = order_id.split('_');
+        const amount = parseInt(amountStr, 10);
 
-        console.log(`Successfully added ${amount} credits to user ${userId} via NowPayments webhook`);
+        if (userId && !isNaN(amount)) {
+          await getDb().execute({
+            sql: `UPDATE users SET credits = credits + ? WHERE uid = ?`,
+            args: [amount, userId]
+          });
+
+          // Log purchase
+          await getDb().execute({
+            sql: `INSERT INTO purchases (id, uid, provider, amount_fiat, currency, pay_currency, credits_awarded, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+            args: [payment_id || `np_${Date.now()}`, userId, 'nowpayments', price_amount, price_currency, pay_currency, amount, 'finished']
+          });
+
+          console.log(`Successfully added ${amount} credits to user ${userId} via NowPayments webhook`);
+        }
       }
     }
 
@@ -535,7 +615,7 @@ app.post("/api/webhooks/lemonsqueezy", express.raw({ type: 'application/json' })
     const eventName = payload.meta.event_name;
 
     if (eventName === 'order_created') {
-      let userId, amountStr;
+      let userId, amountStr, isStemPurchase, slotsCount;
       const attributes = payload.data.attributes;
       const orderId = payload.data.id;
       const total = attributes.total / 100; // LS sends in cents
@@ -544,24 +624,43 @@ app.post("/api/webhooks/lemonsqueezy", express.raw({ type: 'application/json' })
       if (payload.meta.custom_data) {
         userId = payload.meta.custom_data.user_id;
         amountStr = payload.meta.custom_data.amount;
+        isStemPurchase = payload.meta.custom_data.type === 'stem_slots';
+        slotsCount = payload.meta.custom_data.slots;
       }
 
-      if (userId && amountStr) {
-        const amount = parseInt(amountStr, 10);
-        if (!isNaN(amount) && amount > 0) {
-          // Add credits to user
-          await getDb().execute({
-            sql: `UPDATE users SET credits = credits + ? WHERE uid = ?`,
-            args: [amount, userId]
-          });
+      if (userId) {
+        if (isStemPurchase && slotsCount) {
+          const slots = parseInt(slotsCount, 10);
+          if (!isNaN(slots) && slots > 0) {
+            await getDb().execute({
+              sql: `UPDATE users SET purchased_stem_slots = purchased_stem_slots + ? WHERE uid = ?`,
+              args: [slots, userId]
+            });
 
-          // Log purchase
-          await getDb().execute({
-            sql: `INSERT INTO purchases (id, uid, provider, amount_fiat, currency, pay_currency, credits_awarded, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
-            args: [orderId || `ls_${Date.now()}`, userId, 'lemonsqueezy', total, currency, currency, amount, 'finished']
-          });
+            await getDb().execute({
+              sql: `INSERT INTO purchases (id, uid, provider, amount_fiat, currency, pay_currency, credits_awarded, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+              args: [orderId || `ls_${Date.now()}`, userId, 'lemonsqueezy', total, currency, currency, slots, 'finished']
+            });
 
-          console.log(`Successfully added ${amount} credits to user ${userId} via Lemon Squeezy webhook`);
+            console.log(`Successfully added ${slots} stem slots to user ${userId} via Lemon Squeezy`);
+          }
+        } else if (amountStr) {
+          const amount = parseInt(amountStr, 10);
+          if (!isNaN(amount) && amount > 0) {
+            // Add credits to user
+            await getDb().execute({
+              sql: `UPDATE users SET credits = credits + ? WHERE uid = ?`,
+              args: [amount, userId]
+            });
+
+            // Log purchase
+            await getDb().execute({
+              sql: `INSERT INTO purchases (id, uid, provider, amount_fiat, currency, pay_currency, credits_awarded, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+              args: [orderId || `ls_${Date.now()}`, userId, 'lemonsqueezy', total, currency, currency, amount, 'finished']
+            });
+
+            console.log(`Successfully added ${amount} credits to user ${userId} via Lemon Squeezy webhook`);
+          }
         }
       }
     }
@@ -1494,9 +1593,9 @@ if (process.env.NODE_ENV !== 'production') {
         args: [userInfo.id, userInfo.email, userInfo.name, userInfo.picture, userInfo.email, userInfo.name, userInfo.picture]
       });
 
-      // 2. Fetch the full user record (to get credits, role, terms_accepted)
+      // 2. Fetch the full user record (to get credits, role, terms_accepted, purchased_stem_slots)
       const userResult = await getDb().execute({
-        sql: `SELECT terms_accepted, credits, role FROM users WHERE uid = ?`,
+        sql: `SELECT terms_accepted, credits, role, purchased_stem_slots FROM users WHERE uid = ?`,
         args: [userInfo.id]
       });
 
@@ -1504,6 +1603,7 @@ if (process.env.NODE_ENV !== 'production') {
       const termsAccepted = dbUser?.terms_accepted === 1;
       const credits = Number(dbUser?.credits ?? 0);
       const role = (dbUser?.role as string) ?? 'user';
+      const purchasedStemSlots = Number(dbUser?.purchased_stem_slots ?? 0);
 
       const syncToken = crypto.randomBytes(32).toString('hex');
       const sessionUser = {
@@ -1513,7 +1613,8 @@ if (process.env.NODE_ENV !== 'production') {
         photo: userInfo.picture,
         termsAccepted,
         credits,
-        role
+        role,
+        purchasedStemSlots
       };
 
       const minimalTokens = {
@@ -1668,15 +1769,16 @@ if (process.env.NODE_ENV !== 'production') {
       try {
         const uid = String(req.session.user.uid);
         console.log("Fetching user from DB for UID:", uid, "Type:", typeof uid);
-        // Fetch terms_accepted, credits, and role from Turso
+        // Fetch terms_accepted, credits, role, and purchased_stem_slots from Turso
         const userResult = await getDb().execute({
-          sql: `SELECT terms_accepted, credits, role FROM users WHERE uid = ?`,
+          sql: `SELECT terms_accepted, credits, role, purchased_stem_slots FROM users WHERE uid = ?`,
           args: [uid]
         });
         const termsAccepted = userResult.rows[0]?.terms_accepted === 1;
         const credits = userResult.rows[0]?.credits ?? 0;
         const role = userResult.rows[0]?.role ?? 'user';
-        const userWithConsent = { ...req.session.user, termsAccepted, credits, role };
+        const purchasedStemSlots = userResult.rows[0]?.purchased_stem_slots ?? 0;
+        const userWithConsent = { ...req.session.user, termsAccepted, credits, role, purchasedStemSlots };
         
         res.json({ authenticated: true, user: userWithConsent });
       } catch (err) {
@@ -2827,14 +2929,15 @@ if (process.env.NODE_ENV !== 'production') {
         });
         
         const userResult = await getDb().execute({
-          sql: `SELECT terms_accepted, credits, role FROM users WHERE uid = ?`,
+          sql: `SELECT terms_accepted, credits, role, purchased_stem_slots FROM users WHERE uid = ?`,
           args: [uid]
         });
         
         const termsAccepted = userResult.rows[0]?.terms_accepted === 1;
         const credits = userResult.rows[0]?.credits ?? 0;
         const role = userResult.rows[0]?.role ?? 'user';
-        const updatedUser = { ...req.session.user, termsAccepted, credits, role };
+        const purchasedStemSlots = userResult.rows[0]?.purchased_stem_slots ?? 0;
+        const updatedUser = { ...req.session.user, termsAccepted, credits, role, purchasedStemSlots };
         req.session.user = updatedUser;
         
         return res.json({ success: true, user: updatedUser, simulated: true });
@@ -2900,6 +3003,100 @@ if (process.env.NODE_ENV !== 'production') {
     } catch (error) {
       console.error("Error creating checkout:", error);
       res.status(500).json({ error: "Failed to process checkout" });
+    }
+  });
+
+  app.post("/api/checkout-stems", checkoutLimiter, async (req, res) => {
+    if (!req.session || !req.session.user || !req.session.user.uid) {
+      return res.status(401).json({ error: "Not authenticated" });
+    }
+
+    const { slots } = req.body;
+    if (typeof slots !== 'number' || slots <= 0) {
+      return res.status(400).json({ error: "Invalid slot count" });
+    }
+
+    try {
+      const uid = String(req.session.user.uid);
+      
+      const apiKey = process.env.LEMON_SQUEEZY_API_KEY;
+      const storeId = process.env.LEMON_SQUEEZY_STORE_ID;
+      const variantId = process.env.LEMON_SQUEEZY_VARIANT_ID_STEM_SLOTS;
+      
+      if (!apiKey || !storeId || !variantId) {
+        console.warn("Lemon Squeezy credentials for stems not configured. Simulating purchase.");
+        // Fallback simulation if not configured
+        await getDb().execute({
+          sql: `UPDATE users SET purchased_stem_slots = purchased_stem_slots + ? WHERE uid = ?`,
+          args: [slots, uid]
+        });
+        
+        const userResult = await getDb().execute({
+          sql: `SELECT terms_accepted, credits, role, purchased_stem_slots FROM users WHERE uid = ?`,
+          args: [uid]
+        });
+        
+        const termsAccepted = userResult.rows[0]?.terms_accepted === 1;
+        const credits = userResult.rows[0]?.credits ?? 0;
+        const role = userResult.rows[0]?.role ?? 'user';
+        const purchasedStemSlots = userResult.rows[0]?.purchased_stem_slots ?? 0;
+        const updatedUser = { ...req.session.user, termsAccepted, credits, role, purchasedStemSlots };
+        req.session.user = updatedUser;
+        
+        return res.json({ success: true, user: updatedUser, simulated: true });
+      }
+
+      // Create checkout session via Lemon Squeezy API
+      const response = await fetch('https://api.lemonsqueezy.com/v1/checkouts', {
+        method: 'POST',
+        headers: {
+          'Accept': 'application/vnd.api+json',
+          'Content-Type': 'application/vnd.api+json',
+          'Authorization': `Bearer ${apiKey}`
+        },
+        body: JSON.stringify({
+          data: {
+            type: "checkouts",
+            attributes: {
+              checkout_data: {
+                custom_price: slots * 300, // Price in cents
+                custom: {
+                  type: 'stem_slots',
+                  user_id: uid,
+                  slots: slots.toString()
+                }
+              }
+            },
+            relationships: {
+              store: {
+                data: {
+                  type: "stores",
+                  id: storeId
+                }
+              },
+              variant: {
+                data: {
+                  type: "variants",
+                  id: variantId
+                }
+              }
+            }
+          }
+        })
+      });
+
+      const data = await response.json();
+      
+      if (!response.ok) {
+        console.error("Lemon Squeezy API error (Stems):", JSON.stringify(data, null, 2));
+        return res.status(500).json({ error: "Failed to create stems checkout session", details: data });
+      }
+
+      const checkoutUrl = data.data.attributes.url;
+      res.json({ success: true, checkoutUrl });
+    } catch (error) {
+      console.error("Error creating stem slots checkout:", error);
+      res.status(500).json({ error: "Failed to process stem checkout" });
     }
   });
 
