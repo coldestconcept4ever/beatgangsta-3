@@ -105,16 +105,27 @@ export const AdminDashboard = ({ onBack, theme }: { onBack: () => void, theme: s
     }
   };
 
+  const [viewMode, setViewMode] = useState<'users' | 'beta'>('users');
+  const [betaApplications, setBetaApplications] = useState<any[]>([]);
+
   const fetchAdminData = async () => {
     setLoading(true);
     setError(null);
     try {
       const masterKey = localStorage.getItem('_master_key_temp') || '';
-      const res = await fetch(`/api/admin/users-data?key=${masterKey}`);
-      if (!res.ok) throw new Error('Failed to fetch admin data');
-      const data = await res.json();
-      setUsers(data.users);
-      setStats(data.stats);
+      
+      if (viewMode === 'users') {
+        const res = await fetch(`/api/admin/users-data?key=${masterKey}`);
+        if (!res.ok) throw new Error('Failed to fetch admin data');
+        const data = await res.json();
+        setUsers(data.users);
+        setStats(data.stats);
+      } else if (viewMode === 'beta') {
+        const res = await fetch(`/api/admin/beta-applications?key=${masterKey}`);
+        if (!res.ok) throw new Error('Failed to fetch beta applications');
+        const data = await res.json();
+        setBetaApplications(data.applications || []);
+      }
     } catch (err: any) {
       setError(err.message);
     } finally {
@@ -124,7 +135,7 @@ export const AdminDashboard = ({ onBack, theme }: { onBack: () => void, theme: s
 
   useEffect(() => {
     fetchAdminData();
-  }, []);
+  }, [viewMode]);
 
   const filteredUsers = users.filter(u => 
     u.name?.toLowerCase().includes(searchTerm.toLowerCase()) || 
@@ -173,13 +184,30 @@ export const AdminDashboard = ({ onBack, theme }: { onBack: () => void, theme: s
 
         <div className="flex items-center gap-2 md:gap-3 shrink-0">
           {!selectedUser && (
-            <button 
-              onClick={fetchAdminData}
-              className={`p-2 rounded-xl ${dashboardTheme.hover} transition-colors`}
-              title="Refresh Data"
-            >
-              <RefreshCw size={18} className={loading ? 'animate-spin' : ''} />
-            </button>
+            <>
+              <div className="flex bg-black/20 rounded-xl overflow-hidden p-1 mr-2 border border-current/5">
+                <button
+                  onClick={() => setViewMode('users')}
+                  className={`px-3 py-1.5 text-xs font-bold uppercase tracking-wider rounded-lg transition-colors ${viewMode === 'users' ? 'bg-current/10' : 'opacity-50 hover:opacity-100'}`}
+                >
+                  Users
+                </button>
+                <button
+                  onClick={() => setViewMode('beta')}
+                  className={`px-3 py-1.5 text-xs font-bold uppercase tracking-wider rounded-lg transition-colors ${viewMode === 'beta' ? 'bg-current/10' : 'opacity-50 hover:opacity-100'}`}
+                >
+                  Beta Apps
+                </button>
+              </div>
+
+              <button 
+                onClick={fetchAdminData}
+                className={`p-2 rounded-xl ${dashboardTheme.hover} transition-colors`}
+                title="Refresh Data"
+              >
+                <RefreshCw size={18} className={loading ? 'animate-spin' : ''} />
+              </button>
+            </>
           )}
           <button 
             onClick={handleDownloadCSV}
@@ -193,59 +221,61 @@ export const AdminDashboard = ({ onBack, theme }: { onBack: () => void, theme: s
       </header>
 
       <div className="flex-1 flex overflow-hidden relative">
-        {/* Sidebar / User List */}
-        <aside className={`${selectedUser ? 'hidden md:flex' : 'flex'} w-full md:w-80 border-r ${dashboardTheme.card} flex-col overflow-hidden z-20`}>
-          <div className="p-4 border-b border-current/5">
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 opacity-30" size={16} />
-              <input 
-                type="text" 
-                placeholder="Search users..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className={`w-full pl-10 pr-4 py-2 rounded-xl text-sm border ${dashboardTheme.card} bg-transparent focus:outline-none focus:ring-2 focus:ring-current/20`}
-              />
-            </div>
-          </div>
-
-          <div className="flex-1 overflow-y-auto p-2 space-y-1">
-            {loading ? (
-              Array(8).fill(0).map((_, i) => (
-                <div key={i} className="h-16 rounded-xl animate-pulse bg-current/5" />
-              ))
-            ) : filteredUsers.length > 0 ? (
-              filteredUsers.map(u => (
-                <button
-                  key={u.uid}
-                  onClick={() => setSelectedUser(u)}
-                  className={`w-full p-3 rounded-xl flex items-center gap-3 transition-all text-left ${selectedUser?.uid === u.uid ? (theme === 'coldest' ? 'bg-sky-50 border-sky-100' : 'bg-red-500/10 border-red-500/20') : dashboardTheme.hover}`}
-                >
-                  <img src={u.photo} alt="" className="w-10 h-10 rounded-full border border-current/10" />
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-black truncate">{u.name}</p>
-                    <p className="text-[10px] opacity-50 truncate">{u.email}</p>
-                  </div>
-                  <div className="flex flex-col items-end">
-                    <div className="flex items-center gap-0.5 text-yellow-500">
-                      <Zap size={10} className="fill-current" />
-                      <span className="text-[10px] font-black">{u.credits}</span>
-                    </div>
-                  </div>
-                </button>
-              ))
-            ) : (
-              <div className="p-8 text-center opacity-30">
-                <Users size={32} className="mx-auto mb-2" />
-                <p className="text-xs font-bold uppercase">No users found</p>
+        {viewMode === 'users' ? (
+          <>
+            {/* Sidebar / User List */}
+            <aside className={`${selectedUser ? 'hidden md:flex' : 'flex'} w-full md:w-80 border-r ${dashboardTheme.card} flex-col overflow-hidden z-20`}>
+              <div className="p-4 border-b border-current/5">
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 opacity-30" size={16} />
+                  <input 
+                    type="text" 
+                    placeholder="Search users..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className={`w-full pl-10 pr-4 py-2 rounded-xl text-sm border ${dashboardTheme.card} bg-transparent focus:outline-none focus:ring-2 focus:ring-current/20`}
+                  />
+                </div>
               </div>
-            )}
-          </div>
-        </aside>
 
-        {/* Main Content */}
-        <main className={`${selectedUser ? 'flex' : 'hidden md:flex'} flex-1 overflow-y-auto p-4 md:p-8 bg-inherit z-10`}>
-          {selectedUser ? (
-            <div className="w-full max-w-4xl mx-auto space-y-6 md:space-y-8">
+              <div className="flex-1 overflow-y-auto p-2 space-y-1">
+                {loading ? (
+                  Array(8).fill(0).map((_, i) => (
+                    <div key={i} className="h-16 rounded-xl animate-pulse bg-current/5" />
+                  ))
+                ) : filteredUsers.length > 0 ? (
+                  filteredUsers.map(u => (
+                    <button
+                      key={u.uid}
+                      onClick={() => setSelectedUser(u)}
+                      className={`w-full p-3 rounded-xl flex items-center gap-3 transition-all text-left ${selectedUser?.uid === u.uid ? (theme === 'coldest' ? 'bg-sky-50 border-sky-100' : 'bg-red-500/10 border-red-500/20') : dashboardTheme.hover}`}
+                    >
+                      <img src={u.photo} alt="" className="w-10 h-10 rounded-full border border-current/10" />
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-black truncate">{u.name}</p>
+                        <p className="text-[10px] opacity-50 truncate">{u.email}</p>
+                      </div>
+                      <div className="flex flex-col items-end">
+                        <div className="flex items-center gap-0.5 text-yellow-500">
+                          <Zap size={10} className="fill-current" />
+                          <span className="text-[10px] font-black">{u.credits}</span>
+                        </div>
+                      </div>
+                    </button>
+                  ))
+                ) : (
+                  <div className="p-8 text-center opacity-30">
+                    <Users size={32} className="mx-auto mb-2" />
+                    <p className="text-xs font-bold uppercase">No users found</p>
+                  </div>
+                )}
+              </div>
+            </aside>
+
+            {/* Main Content */}
+            <main className={`${selectedUser ? 'flex' : 'hidden md:flex'} flex-1 overflow-y-auto p-4 md:p-8 bg-inherit z-10`}>
+              {selectedUser ? (
+                <div className="w-full max-w-4xl mx-auto space-y-6 md:space-y-8">
               {/* User Header */}
               <div className={`p-6 md:p-8 rounded-[2rem] md:rounded-[2.5rem] border ${dashboardTheme.card} flex flex-col md:flex-row items-center gap-6 md:gap-8`}>
                 <img src={selectedUser.photo} alt="" className="w-24 h-24 md:w-32 md:h-32 rounded-[1.5rem] md:rounded-[2rem] shadow-2xl border-4 border-current/5" />
@@ -458,6 +488,50 @@ export const AdminDashboard = ({ onBack, theme }: { onBack: () => void, theme: s
             </div>
           )}
         </main>
+          </>
+        ) : (
+          <main className="flex-1 overflow-y-auto p-4 md:p-8 bg-inherit z-10 w-full">
+            <div className="max-w-6xl mx-auto">
+              <h2 className="text-2xl font-black uppercase tracking-tighter mb-6 flex items-center gap-2"><Check className="text-emerald-500" /> Beta Applications</h2>
+              {betaApplications.length === 0 ? (
+                <div className={`p-12 text-center border-2 border-dashed rounded-3xl ${dashboardTheme.card} opacity-50`}>
+                  <p className="font-bold uppercase tracking-widest text-sm">No beta applications yet.</p>
+                </div>
+              ) : (
+                <div className="grid gap-4">
+                  {betaApplications.map(app => (
+                    <div key={app.id} className={`p-6 rounded-2xl border ${dashboardTheme.card} flex flex-col md:flex-row justify-between items-start md:items-center gap-4 hover:border-current/20 transition-all`}>
+                      <div>
+                        <div className="flex items-center gap-2 mb-2">
+                           <span className="font-black text-lg">{app.daw}</span>
+                           <span className="text-[10px] font-bold uppercase tracking-widest px-2 py-0.5 rounded-full bg-current/10 opacity-70">Exp: {app.experience}</span>
+                        </div>
+                        <div className="text-sm opacity-70 flex items-center gap-2">
+                           <span className="uppercase tracking-widest text-[10px] font-bold">Contact via:</span> {app.contact_method} 
+                           {app.contact_method === 'Instagram' && (
+                             <a href={`https://instagram.com/${app.contact_info.replace('@', '')}`} target="_blank" rel="noreferrer" className="text-blue-500 hover:text-blue-400 hover:underline inline-flex items-center gap-1 font-medium">{app.contact_info}</a>
+                           )}
+                           {app.contact_method === 'TikTok' && (
+                             <a href={`https://tiktok.com/@${app.contact_info.replace('@', '')}`} target="_blank" rel="noreferrer" className="text-blue-500 hover:text-blue-400 hover:underline inline-flex items-center gap-1 font-medium">{app.contact_info}</a>
+                           )}
+                           {app.contact_method === 'Email' && (
+                             <a href={`https://mail.google.com/mail/?view=cm&fs=1&to=${app.contact_info}`} target="_blank" rel="noreferrer" className="text-emerald-500 hover:text-emerald-400 hover:underline inline-flex items-center gap-1 font-medium">{app.contact_info}</a>
+                           )}
+                           {app.contact_method === 'Text Message' && (
+                             <span className="font-mono text-emerald-500">{app.contact_info}</span>
+                           )}
+                        </div>
+                      </div>
+                      <div className="text-[10px] font-bold uppercase tracking-widest opacity-40">
+                        {new Date(app.created_at).toLocaleString()}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </main>
+        )}
       </div>
 
       {error && (

@@ -42,6 +42,7 @@ const RecipeViewerModal = React.lazy(() => import('./components/RecipeViewerModa
 import { TutorialOverlay } from './components/TutorialOverlay';
 import { StatusPage } from './components/StatusPage';
 import { AdminDashboard } from './components/AdminDashboard';
+import { BetaApplicationModal } from './components/BetaApplicationModal';
 import { AnimatePresence, motion } from 'motion/react';
 import { useTranslation } from 'react-i18next';
 import { Globe, Languages, Star, X, Cpu, Folder as FolderIcon, ShieldCheck, Check, Zap, Rocket, Eye, EyeOff, AlertTriangle, Lock, Shield, Loader2, Gem, Sword, User as UserIcon, Link, Link2, Palette, Sparkles, Drum, Image as ImageIcon, Crown, CheckCircle2, ExternalLink, Facebook, Instagram, Linkedin, Twitter, Activity, Database, Trash2, Music } from 'lucide-react';
@@ -423,6 +424,7 @@ const App: React.FC = () => {
     return false;
   });
   const [showAdminDashboard, setShowAdminDashboard] = useState(false);
+  const [showBetaApplyModal, setShowBetaApplyModal] = useState(false);
   const [showInternationalizationModal, setShowInternationalizationModal] = useState(false);
   const [currentCountry, setCurrentCountry] = useState(() => localStorage.getItem('bg_country') || 'US');
   const [systemStatus, setSystemStatus] = useState<'operational' | 'degraded' | 'outage' | 'loading'>('loading');
@@ -5241,9 +5243,11 @@ The AI was unable to verify these parameters. Please investigate.`;
 
       <header className={`sticky top-16 z-50 px-6 py-4 border-b transition-all duration-500 ${mainBlurClass} shadow-lg ${theme === 'coldest' ? 'bg-white/20 border-white/30' : theme === 'crazy-bird' ? 'bg-black/30 border-red-900/40' : theme === 'chef-mode' ? 'bg-white/40 border-white/30' : 'bg-black/30 border-yellow-900/40'}`}>
         <div className="max-w-7xl mx-auto flex flex-col md:flex-row md:items-center justify-between gap-4">
-          <div className="flex items-center gap-4">
+          <div className="flex flex-wrap items-center gap-4">
             <Logo size={42} grillStyle={grillStyle} knifeStyle={knifeStyle} duragStyle={duragStyle} pendantStyle={pendantStyle} chainStyle={chainStyle} theme={theme} saberColor={saberColor} mascotColor={mascotColor} showChain={showChain} highEyes={highEyes} isCigarEquipped={isCigarEquipped} isTossingCigar={isTossingCigar} showSparkles={showSparkles} onClick={cycleGrill} />
             <DownloadableLogoText currentAppName={currentAppName} theme={theme} />
+            <span className="px-2 py-0.5 rounded text-xs font-bold uppercase tracking-wider bg-blue-500/20 text-blue-300 border border-blue-500/30">Beta</span>
+            <button onClick={() => setShowBetaApplyModal(true)} className="px-3 py-1 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded text-sm font-medium hover:from-blue-500 hover:to-indigo-500 transition-all shadow border border-blue-400/20">Apply to be a tester</button>
           </div>
           
           <div className="hidden sm:flex flex-wrap items-center justify-end gap-2">
@@ -7061,6 +7065,9 @@ The AI was unable to verify these parameters. Please investigate.`;
       </AnimatePresence>
 
       <React.Suspense fallback={null}>
+        {showBetaApplyModal && (
+          <BetaApplicationModal onClose={() => setShowBetaApplyModal(false)} theme={theme} />
+        )}
         <InternationalizationModal
           isOpen={showInternationalizationModal}
           onClose={() => setShowInternationalizationModal(false)}

@@ -192,6 +192,18 @@ async function initDb() {
           FOREIGN KEY(uid) REFERENCES users(uid)
         )
       `);
+
+      await client.execute(`
+        CREATE TABLE IF NOT EXISTS beta_applications (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          daw TEXT NOT NULL,
+          experience TEXT NOT NULL,
+          contact_method TEXT NOT NULL,
+          contact_info TEXT NOT NULL,
+          status TEXT DEFAULT 'pending',
+          created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+        )
+      `);
       
       console.log(`Database tables initialized successfully in ${Date.now() - start}ms.`);
       
@@ -1125,6 +1137,43 @@ app.post("/api/verify-master", (req, res) => {
     res.json({ success: true });
   } else {
     res.status(401).json({ success: false, error: "Invalid key" });
+  }
+});
+
+app.post("/api/beta/apply", express.json(), async (req, res) => {
+  const { daw, experience, contactMethod, contactInfo } = req.body;
+  if (!daw || !experience || !contactMethod || !contactInfo) {
+    return res.status(400).json({ error: "All fields are required" });
+  }
+
+  try {
+    const db = getDb();
+    await db.execute({
+      sql: `INSERT INTO beta_applications (daw, experience, contact_method, contact_info) VALUES (?, ?, ?, ?)`,
+      args: [daw, experience, contactMethod, contactInfo]
+    });
+    res.json({ success: true, message: "Application submitted successfully" });
+  } catch (error) {
+    console.error("Failed to submit beta application:", error);
+    res.status(500).json({ error: "Failed to submit application" });
+  }
+});
+
+app.get("/api/admin/beta-applications", async (req, res) => {
+  const key = req.query.key;
+  const correctKey = process.env.MASTER_KEY;
+  
+  if (!correctKey || key !== correctKey) {
+    return res.status(401).send("Unauthorized");
+  }
+  
+  try {
+    const db = getDb();
+    const result = await db.execute(`SELECT * FROM beta_applications ORDER BY created_at DESC`);
+    res.json({ success: true, applications: result.rows });
+  } catch (error) {
+    console.error("Failed to fetch beta applications:", error);
+    res.status(500).json({ error: "Failed to fetch applications" });
   }
 });
 
