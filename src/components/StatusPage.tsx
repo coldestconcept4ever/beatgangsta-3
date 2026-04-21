@@ -160,14 +160,21 @@ export const StatusPage = ({ onBack }: { onBack: () => void }) => {
               BEATGANGSTA <span className="opacity-50 font-medium">STATUS</span>
             </h1>
           </div>
-          <div className="text-sm font-mono opacity-60 font-bold">
+          <div className="hidden md:block text-sm font-mono opacity-60 font-bold whitespace-nowrap">
             Last updated: {data?.current.lastUpdated ? new Date(data.current.lastUpdated).toLocaleTimeString() : 'Just now'}
           </div>
         </div>
       </div>
 
-      <div className="max-w-5xl mx-auto px-6 py-12 space-y-12 relative z-10">
+      <div className="max-w-5xl mx-auto px-6 py-8 space-y-12 relative z-10">
         
+        {/* Mobile Last Updated */}
+        <div className="md:hidden flex justify-center">
+           <div className="text-[10px] font-mono opacity-50 font-bold uppercase tracking-[0.2em] border border-black/10 px-4 py-1 rounded-full bg-black/5">
+             Last updated: {data?.current.lastUpdated ? new Date(data.current.lastUpdated).toLocaleTimeString() : 'Just now'}
+           </div>
+        </div>
+
         {/* Hero Status Banner */}
         <motion.div 
           initial={{ opacity: 0, y: 20 }}
