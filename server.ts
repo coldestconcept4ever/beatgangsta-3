@@ -1350,6 +1350,48 @@ app.post("/api/admin/update-credits", express.json(), async (req, res) => {
   }
 });
 
+app.post("/api/admin/create-placeholder-user", express.json(), async (req, res) => {
+  const authorizedEmails = ['coldestconcept@gmail.com', 'recognizemiracles@gmail.com'];
+  const userEmail = req.session?.user?.email;
+  const key = req.query.key;
+
+  if ((!userEmail || !authorizedEmails.includes(userEmail)) && key !== process.env.MASTER_KEY) {
+    return res.status(403).json({ error: "Unauthorized access to create placeholder user" });
+  }
+
+  const { email, credits } = req.body;
+  if (!email) {
+    return res.status(400).json({ error: "Missing email" });
+  }
+
+  try {
+    const db = getDb();
+    
+    // Check if email already exists in any form
+    const existing = await db.execute({
+      sql: `SELECT uid FROM users WHERE email = ?`,
+      args: [email]
+    });
+    
+    if (existing.rows.length > 0) {
+      return res.status(400).json({ error: "User with this email already exists" });
+    }
+    
+    const placeholderUid = `placeholder:${email}`;
+    const initialCredits = credits || 0;
+    
+    await db.execute({
+      sql: `INSERT INTO users (uid, email, name, photo, credits, role) VALUES (?, ?, ?, ?, ?, ?)`,
+      args: [placeholderUid, email, 'Pre-registered User', 'https://www.gravatar.com/avatar/00000000000000000000000000000000?d=mp&f=y', initialCredits, 'user']
+    });
+    
+    res.json({ success: true, message: `Account pre-created for ${email} with ${initialCredits} credits.` });
+  } catch (err) {
+    console.error("Failed to create placeholder user:", err);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+});
+
 app.post("/api/check-unlocks", (req, res) => {
   const { grillStyle, knifeStyle } = req.body;
   
@@ -1692,11 +1734,38 @@ if (process.env.NODE_ENV !== 'production') {
       // Ensure DB is ready
       await initDb();
 
-      // 1. Upsert user into database
-      await getDb().execute({
-        sql: `INSERT INTO users (uid, email, name, photo) VALUES (?, ?, ?, ?) ON CONFLICT(uid) DO UPDATE SET email = ?, name = ?, photo = ?`,
-        args: [userInfo.id, userInfo.email, userInfo.name, userInfo.picture, userInfo.email, userInfo.name, userInfo.picture]
+      // 1. Check for placeholder merger
+      const db = getDb();
+      const placeholderResult = await db.execute({
+        sql: `SELECT uid, credits FROM users WHERE email = ? AND uid LIKE 'placeholder:%'`,
+        args: [userInfo.email]
       });
+
+      let creditsToCarry = 0;
+      if (placeholderResult.rows.length > 0) {
+        const placeholder = placeholderResult.rows[0];
+        creditsToCarry = Number(placeholder.credits ?? 0);
+        console.log(`[AUTH] Found placeholder for ${userInfo.email}. Merging ${creditsToCarry} credits.`);
+        
+        // Delete placeholder record
+        await db.execute({
+          sql: `DELETE FROM users WHERE uid = ?`,
+          args: [placeholder.uid as string]
+        });
+        
+        // Upsert with carried credits (merge if user already exists)
+        await db.execute({
+          sql: `INSERT INTO users (uid, email, name, photo, credits) VALUES (?, ?, ?, ?, ?) 
+                ON CONFLICT(uid) DO UPDATE SET email = ?, name = ?, photo = ?, credits = credits + ?`,
+          args: [userInfo.id, userInfo.email, userInfo.name, userInfo.picture, creditsToCarry, userInfo.email, userInfo.name, userInfo.picture, creditsToCarry]
+        });
+      } else {
+        // Normal upsert
+        await db.execute({
+          sql: `INSERT INTO users (uid, email, name, photo) VALUES (?, ?, ?, ?) ON CONFLICT(uid) DO UPDATE SET email = ?, name = ?, photo = ?`,
+          args: [userInfo.id, userInfo.email, userInfo.name, userInfo.picture, userInfo.email, userInfo.name, userInfo.picture]
+        });
+      }
 
       // 2. Fetch the full user record (to get credits, role, terms_accepted, purchased_stem_slots)
       const userResult = await getDb().execute({

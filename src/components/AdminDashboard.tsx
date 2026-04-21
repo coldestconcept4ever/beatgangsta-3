@@ -109,6 +109,38 @@ export const AdminDashboard = ({ onBack, theme }: { onBack: () => void, theme: s
   const [viewMode, setViewMode] = useState<'users' | 'beta'>('users');
   const [betaApplications, setBetaApplications] = useState<any[]>([]);
 
+  const [isAddingUser, setIsAddingUser] = useState(false);
+  const [newUserEmail, setNewUserEmail] = useState('');
+  const [newUserCredits, setNewUserCredits] = useState(0);
+  const [creatingUser, setCreatingUser] = useState(false);
+
+  const handleCreatePlaceholder = async () => {
+    if (!newUserEmail) return;
+    setCreatingUser(true);
+    setError(null);
+    try {
+      const masterKey = localStorage.getItem('_master_key_temp') || '';
+      const res = await fetch(`/api/admin/create-placeholder-user?key=${masterKey}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: newUserEmail, credits: newUserCredits })
+      });
+      if (!res.ok) {
+        const data = await res.json();
+        throw new Error(data.error || 'Failed to create user');
+      }
+      
+      setIsAddingUser(false);
+      setNewUserEmail('');
+      setNewUserCredits(0);
+      fetchAdminData();
+    } catch (err: any) {
+      setError(err.message);
+    } finally {
+      setCreatingUser(false);
+    }
+  };
+
   const fetchAdminData = async () => {
     setLoading(true);
     setError(null);
@@ -226,7 +258,54 @@ export const AdminDashboard = ({ onBack, theme }: { onBack: () => void, theme: s
           <>
             {/* Sidebar / User List */}
             <aside className={`${selectedUser ? 'hidden md:flex' : 'flex'} w-full md:w-80 border-r ${dashboardTheme.card} flex-col overflow-hidden z-20`}>
-              <div className="p-4 border-b border-current/5">
+              <div className="p-4 border-b border-current/5 space-y-4">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-[10px] font-black uppercase tracking-widest opacity-40">User Directory</h3>
+                  <button 
+                    onClick={() => setIsAddingUser(!isAddingUser)}
+                    className={`p-1.5 rounded-lg transition-all ${isAddingUser ? 'bg-red-500 text-white' : 'bg-current/5 hover:bg-current/10'}`}
+                    title="Pre-register User"
+                  >
+                    {isAddingUser ? <X size={14} /> : <Users size={14} />}
+                  </button>
+                </div>
+
+                <AnimatePresence>
+                  {isAddingUser && (
+                    <motion.div 
+                      initial={{ opacity: 0, height: 0 }}
+                      animate={{ opacity: 1, height: 'auto' }}
+                      exit={{ opacity: 0, height: 0 }}
+                      className="overflow-hidden space-y-2 pb-2"
+                    >
+                      <input 
+                        type="email" 
+                        placeholder="Friend's Email..."
+                        value={newUserEmail}
+                        onChange={(e) => setNewUserEmail(e.target.value)}
+                        className={`w-full px-3 py-2 rounded-xl text-xs border ${dashboardTheme.card} bg-transparent focus:outline-none focus:ring-1 focus:ring-current/30 font-bold`}
+                      />
+                      <div className="flex items-center gap-2">
+                        <input 
+                          type="number" 
+                          placeholder="Credits"
+                          value={newUserCredits}
+                          onChange={(e) => setNewUserCredits(parseInt(e.target.value) || 0)}
+                          className={`flex-1 px-3 py-2 rounded-xl text-xs border ${dashboardTheme.card} bg-transparent focus:outline-none focus:ring-1 focus:ring-current/30 font-bold`}
+                        />
+                        <button 
+                          onClick={handleCreatePlaceholder}
+                          disabled={creatingUser || !newUserEmail}
+                          className="px-4 py-2 rounded-xl bg-sky-500 text-white text-[10px] font-black uppercase tracking-widest disabled:opacity-50 hover:bg-sky-600 transition-all flex items-center gap-2"
+                        >
+                          {creatingUser ? <RefreshCw size={12} className="animate-spin" /> : <Zap size={12} />}
+                          Add
+                        </button>
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+
                 <div className="relative">
                   <Search className="absolute left-3 top-1/2 -translate-y-1/2 opacity-30" size={16} />
                   <input 
@@ -234,7 +313,7 @@ export const AdminDashboard = ({ onBack, theme }: { onBack: () => void, theme: s
                     placeholder="Search users..."
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
-                    className={`w-full pl-10 pr-4 py-2 rounded-xl text-sm border ${dashboardTheme.card} bg-transparent focus:outline-none focus:ring-2 focus:ring-current/20`}
+                    className={`w-full pl-10 pr-4 py-2 rounded-xl text-sm border ${dashboardTheme.card} bg-transparent focus:outline-none focus:ring-2 focus:ring-current/20 font-bold`}
                   />
                 </div>
               </div>
