@@ -1,6 +1,6 @@
 export const uploadFileChunked = async (uploadFile: File): Promise<{ url: string, fileId: string, geminiFileUri?: string, geminiError?: string } | null> => {
   let uploadedData: { url: string, fileId: string, geminiFileUri?: string, geminiError?: string } | null = null;
-  const chunkSize = 1024 * 1024 * 8; // 8MB chunks to satisfy Google's 8388608 byte granularity requirement
+  const chunkSize = 1024 * 1024 * 4; // 4MB chunks to stay under platform limits (Vercel 4.5MB) while remaining a multiple of 256KB
   const totalChunks = Math.ceil(uploadFile.size / chunkSize);
   const sessionId = Math.random().toString(36).substring(2, 15);
   
@@ -36,22 +36,71 @@ export const uploadFileChunked = async (uploadFile: File): Promise<{ url: string
           url += `&geminiUploadUrl=${encodeURIComponent(geminiUploadUrl)}`;
         }
 
-        const response = await fetch(url, {
-          method: 'POST',
-          body: chunk,
-          headers
-        });
+        let response;
+        const isLast = i === totalChunks - 1;
+        
+        if (geminiUploadUrl) {
+          try {
+            // Step 2a: Attempt DIRECT transfer to Google to bypass platform payload limits (Vercel/Cloud Run Proxy)
+            console.log(`Attempting direct upload of chunk ${i} to Google...`);
+            const googleHeaders: Record<string, string> = {
+              'X-Goog-Upload-Offset': String(offset),
+              'X-Goog-Upload-Command': isLast ? 'upload, finalize' : 'upload',
+              'Content-Type': 'application/octet-stream'
+            };
+            
+            response = await fetch(geminiUploadUrl, {
+              method: 'PUT',
+              body: chunk,
+              headers: googleHeaders
+            });
+            
+            if (!response.ok) {
+              const errorText = await response.text();
+              console.warn(`Direct upload failed with status ${response.status}: ${errorText}. Falling back to server proxy.`);
+              throw new Error("Direct upload failed");
+            }
+          } catch (err) {
+            // Step 2b: Fallback to server proxy if direct upload fails (CORS or other network issues)
+            console.log(`Direct upload chunk ${i} failed or blocked by CORS. Falling back to server proxy...`);
+            response = await fetch(url, {
+              method: 'POST',
+              body: chunk,
+              headers
+            });
+          }
+        } else {
+          // No Gemini URL, standard chunked upload
+          response = await fetch(url, {
+            method: 'POST',
+            body: chunk,
+            headers
+          });
+        }
         
         if (!response.ok) {
           const errorText = await response.text();
           throw new Error(`Server failed to process chunk ${i}: ${errorText}`);
         }
         
-        const data = await response.json();
+        const responseData = await response.json();
         console.log(`Chunk ${i} uploaded successfully.`);
         
-        if (data.fileId || data.geminiFileUri) {
-          uploadedData = { url: data.url || '', fileId: data.fileId || '', geminiFileUri: data.geminiFileUri, geminiError: data.geminiError };
+        // Handle metadata from either the direct upload response or the proxy response
+        if (responseData.geminiFileUri || responseData.fileId) {
+          uploadedData = { 
+            url: responseData.url || uploadedData?.url || '', 
+            fileId: responseData.fileId || uploadedData?.fileId || '', 
+            geminiFileUri: responseData.geminiFileUri || (responseData.file ? responseData.file.uri : responseData.uri),
+            geminiError: responseData.geminiError 
+          };
+        } else if (isLast && responseData.file?.uri) {
+           // Handle Google's direct response format on the last chunk
+           uploadedData = {
+              url: uploadedData?.url || '',
+              fileId: uploadedData?.fileId || '',
+              geminiFileUri: responseData.file.uri
+           };
         }
         success = true;
       } catch (err: any) {
