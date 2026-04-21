@@ -12,6 +12,7 @@ import crypto from "crypto";
 import helmet from "helmet";
 import { rateLimit } from "express-rate-limit";
 import cors from "cors";
+import compression from "compression";
 import { createClient } from "@libsql/client";
 import { getGoogle } from "./src/lib/google.js";
 import axios from "axios";
@@ -281,6 +282,9 @@ const app = express();
 console.log("Express app initialized.");
 
 app.set('trust proxy', 1);
+
+// Enable gzip/brotli compression for much faster asset delivery on mobile
+app.use(compression());
 
 // Force HTTPS and WWW for beatgangsta.com to ensure session consistency
 app.use((req, res, next) => {

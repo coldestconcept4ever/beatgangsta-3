@@ -28,10 +28,21 @@ export default defineConfig(({ mode }) => {
       },
       build: {
         minify: 'esbuild',
-        sourcemap: true,
+        sourcemap: process.env.NODE_ENV !== 'production', // Disable sourcemaps in prod for faster builds + lower memory footprint
         chunkSizeWarningLimit: 2000,
         modulePreload: {
           polyfill: true
+        },
+        rollupOptions: {
+          output: {
+            manualChunks: {
+              'vendor-react': ['react', 'react-dom'],
+              'vendor-motion': ['motion'],
+              'vendor-ui': ['lucide-react', 'recharts', 'react-markdown', 'tinycolor2'],
+              'vendor-genai': ['@google/genai'],
+              'vendor-media': ['jszip', 'html2canvas', 'html-to-image', 'midi-writer-js', 'midi-player-js'],
+            }
+          }
         }
       }
     };
