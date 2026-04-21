@@ -3601,6 +3601,7 @@ The AI was unable to verify these parameters. Please investigate.`;
             ...stem,
             url: uploadData.url,
             uri: uploadData.geminiFileUri,
+            mimeType: fileToUpload.type === 'audio/mp3' ? 'audio/mpeg' : (fileToUpload.type || 'audio/mpeg'),
             status: 'ready' as const
           });
           setStems(prev => prev.map(s => s.id === stem.id ? { ...s, url: uploadData.url, uri: uploadData.geminiFileUri, status: 'ready' } : s));

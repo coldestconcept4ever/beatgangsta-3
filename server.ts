@@ -926,27 +926,27 @@ app.post("/api/upload-chunk", express.raw({ type: 'application/octet-stream', li
         chunkData,
         {
           headers: {
-            'X-Goog-Upload-Protocol': 'resumable',
             'X-Goog-Upload-Offset': String(offset),
             'X-Goog-Upload-Command': isLast ? 'upload, finalize' : 'upload',
-            'Content-Type': finalMimeType,
-            'Content-Length': String(chunkData.length)
+            'Content-Type': finalMimeType
           },
           maxContentLength: Infinity,
-          maxBodyLength: Infinity,
-          validateStatus: (status) => status < 500 // Allow 400s to be handled explicitly
+          maxBodyLength: Infinity
         }
       );
 
       if (isLast) {
-        console.log(`[Gemini Proxy] Final chunk uploaded. Response:`, JSON.stringify(response.data));
-        // The API might return { file: { uri: "..." } } OR directly { uri: "..." }
-        const geminiFileUri = response.data?.file?.uri || response.data?.uri;
+        console.log(`[Gemini Proxy] Final chunk uploaded. Status: ${response.status}. Response:`, JSON.stringify(response.data));
+        // The API might return { file: { uri: "..." } } OR directly { uri: "..." } OR { file: { name: "..." } }
+        const geminiFileUri = response.data?.file?.uri || response.data?.uri || (response.data?.file?.name ? `files/${response.data.file.name.split('/').pop()}` : null);
         
         if (!geminiFileUri) {
-             console.error("[Gemini Proxy] URI missing in response data:", response.data);
+             console.error("[Gemini Proxy] URI/Name missing in response data:", response.data);
              // We return an error so the frontend knows it failed
-             return res.status(500).json({ error: "Upload finalized but URI was missing in response" });
+             return res.status(500).json({ 
+               error: "Upload finalized but URI was missing in response",
+               details: `Status: ${response.status}, Data: ${JSON.stringify(response.data)}`
+             });
         }
         return res.json({ success: true, geminiFileUri });
       }
@@ -955,9 +955,9 @@ app.post("/api/upload-chunk", express.raw({ type: 'application/octet-stream', li
       const errorData = error.response?.data;
       console.error("Gemini proxy upload failed:", JSON.stringify(errorData || error.message));
       // We cannot fallback to local assembly here because previous chunks were not saved locally!
-      return res.status(500).json({ 
+      return res.status(error.response?.status || 500).json({ 
         error: "Gemini proxy chunk upload failed", 
-        details: errorData ? JSON.stringify(errorData) : error.message 
+        details: errorData ? (typeof errorData === 'object' ? JSON.stringify(errorData) : errorData) : error.message 
       });
     }
   }
