@@ -40,9 +40,9 @@ const CloudSyncModal = React.lazy(() => import('./components/CloudSyncModal').th
 const RestoreBackupModal = React.lazy(() => import('./components/RestoreBackupModal').then(m => ({ default: m.RestoreBackupModal })));
 const LegalConsentBanner = React.lazy(() => import('./components/LegalConsentBanner').then(m => ({ default: m.LegalConsentBanner })));
 const RecipeViewerModal = React.lazy(() => import('./components/RecipeViewerModal').then(m => ({ default: m.RecipeViewerModal })));
+const StatusPage = React.lazy(() => import('./components/StatusPage').then(m => ({ default: m.StatusPage })));
+const AdminDashboard = React.lazy(() => import('./components/AdminDashboard').then(m => ({ default: m.AdminDashboard })));
 import { TutorialOverlay } from './components/TutorialOverlay';
-import { StatusPage } from './components/StatusPage';
-import { AdminDashboard } from './components/AdminDashboard';
 import { AnimatePresence, motion } from 'motion/react';
 import { useTranslation } from 'react-i18next';
 import { Globe, Languages, Star, X, Cpu, Folder as FolderIcon, ShieldCheck, Check, Zap, Rocket, Eye, EyeOff, AlertTriangle, Lock, Shield, Loader2, Gem, Sword, User as UserIcon, Link, Link2, Palette, Sparkles, Drum, Image as ImageIcon, Crown, CheckCircle2, ExternalLink, Facebook, Instagram, Linkedin, Twitter, Activity, Database, Trash2 } from 'lucide-react';
@@ -395,8 +395,8 @@ const CigarIcon = ({ size = 16, className = "" }: { size?: number, className?: s
   </svg>
 );
 
-import { SnowFlurry } from './components/SnowFlurry';
-import { SystemStatus } from './components/SystemStatus';
+const SnowFlurry = React.lazy(() => import('./components/SnowFlurry').then(m => ({ default: m.SnowFlurry })));
+const SystemStatus = React.lazy(() => import('./components/SystemStatus').then(m => ({ default: m.SystemStatus })));
 
 const App: React.FC = () => {
   const [showRigUI, setShowRigUI] = useState(false);
@@ -4100,18 +4100,24 @@ The AI was unable to verify these parameters. Please investigate.`;
 
   if (showStatusPage) {
     return (
-      <StatusPage onBack={() => {
-        if (window.location.hostname.startsWith('status.')) {
-          window.location.href = 'https://beatgangsta.com';
-        } else {
-          setShowStatusPage(false);
-        }
-      }} />
+      <React.Suspense fallback={<div className="min-h-screen bg-black flex items-center justify-center p-8"><p className="text-white text-xs font-mono"></p></div>}>
+        <StatusPage onBack={() => {
+          if (window.location.hostname.startsWith('status.')) {
+            window.location.href = 'https://beatgangsta.com';
+          } else {
+            setShowStatusPage(false);
+          }
+        }} />
+      </React.Suspense>
     );
   }
 
   if (showAdminDashboard) {
-    return <AdminDashboard onBack={() => setShowAdminDashboard(false)} theme={theme} />;
+    return (
+      <React.Suspense fallback={<div className="min-h-screen bg-black flex items-center justify-center p-8"><p className="text-white text-xs font-mono"></p></div>}>
+        <AdminDashboard onBack={() => setShowAdminDashboard(false)} theme={theme} />
+      </React.Suspense>
+    );
   }
 
   return (
@@ -4157,7 +4163,9 @@ The AI was unable to verify these parameters. Please investigate.`;
             transition={{ duration: 1.2, ease: "easeInOut" }}
             className="fixed inset-0 z-0 pointer-events-none"
           >
-            <SnowFlurry />
+            <React.Suspense fallback={null}>
+              <SnowFlurry />
+            </React.Suspense>
           </motion.div>
         )}
       </AnimatePresence>
@@ -4932,7 +4940,9 @@ The AI was unable to verify these parameters. Please investigate.`;
       )}
 
       <div className="fixed bottom-4 right-4 z-[100]">
-        <SystemStatus onClick={() => window.location.href = 'https://status.beatgangsta.com'} />
+        <React.Suspense fallback={null}>
+          <SystemStatus onClick={() => window.location.href = 'https://status.beatgangsta.com'} />
+        </React.Suspense>
       </div>
 
       <AnimatePresence>

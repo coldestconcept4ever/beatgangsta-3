@@ -3574,7 +3574,11 @@ if (process.env.NODE_ENV !== "production" && !process.env.VERCEL) {
   app.use(vite.middlewares);
 } else if (process.env.NODE_ENV === "production" && !process.env.VERCEL) {
   // Serve static files in production (only if not on Vercel, as Vercel handles static files)
-  app.use(express.static(path.join(__dirname, "dist")));
+  app.use(express.static(path.join(__dirname, "dist"), {
+    maxAge: '1y',
+    etag: true,
+    lastModified: true
+  }));
   
   // Return 404 for missing assets instead of index.html
   app.get('/assets/*', (req, res) => {

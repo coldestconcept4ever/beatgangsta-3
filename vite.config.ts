@@ -32,17 +32,6 @@ export default defineConfig(({ mode }) => {
         chunkSizeWarningLimit: 2000,
         modulePreload: {
           polyfill: true
-        },
-        rollupOptions: {
-          output: {
-            manualChunks: {
-              'vendor-react': ['react', 'react-dom'],
-              'vendor-motion': ['motion'],
-              'vendor-ui': ['lucide-react', 'recharts', 'react-markdown', 'tinycolor2'],
-              'vendor-genai': ['@google/genai'],
-              'vendor-media': ['jszip', 'html2canvas', 'html-to-image', 'midi-writer-js', 'midi-player-js'],
-            }
-          }
         }
       }
     };
