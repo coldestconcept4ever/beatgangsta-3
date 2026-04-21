@@ -5928,7 +5928,7 @@ The AI was unable to verify these parameters. Please investigate.`;
                               : 'bg-zinc-800/50 border-zinc-700 text-zinc-500 cursor-default'
                         }`}
                       >
-                        {stemsLimit < 30 ? "More than 10 stems?" : "Max Amount of Upload Slots Unlocked"}
+                        {stemsLimit < 30 ? "Maximize Your Mixing Power: Add Additional Upload Slots ⚡" : "Max Amount of Upload Slots Unlocked"}
                       </button>
 
                       {stems.map((stem, index) => (
