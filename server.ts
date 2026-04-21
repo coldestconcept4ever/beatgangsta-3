@@ -283,9 +283,6 @@ console.log("Express app initialized.");
 
 app.set('trust proxy', 1);
 
-// Enable gzip/brotli compression for much faster asset delivery on mobile
-app.use(compression());
-
 // Force HTTPS and WWW for beatgangsta.com to ensure session consistency
 app.use((req, res, next) => {
   const host = req.get('host') || "";
@@ -3574,11 +3571,7 @@ if (process.env.NODE_ENV !== "production" && !process.env.VERCEL) {
   app.use(vite.middlewares);
 } else if (process.env.NODE_ENV === "production" && !process.env.VERCEL) {
   // Serve static files in production (only if not on Vercel, as Vercel handles static files)
-  app.use(express.static(path.join(__dirname, "dist"), {
-    maxAge: '1y',
-    etag: true,
-    lastModified: true
-  }));
+  app.use(express.static(path.join(__dirname, "dist")));
   
   // Return 404 for missing assets instead of index.html
   app.get('/assets/*', (req, res) => {
