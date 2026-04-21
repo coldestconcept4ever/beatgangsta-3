@@ -177,7 +177,7 @@ export const AdminDashboard = ({ onBack, theme }: { onBack: () => void, theme: s
                   <span className="hidden xs:inline">User:</span> {selectedUser.name}
                 </span>
               ) : (
-                <>Turso Admin <span className="hidden sm:inline opacity-50 font-medium">Dashboard</span></>
+                <>Admin <span className="hidden sm:inline opacity-50 font-medium">Dashboard</span></>
               )}
             </h1>
           </div>

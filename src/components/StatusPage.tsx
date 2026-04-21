@@ -121,7 +121,7 @@ export const StatusPage = ({ onBack }: { onBack: () => void }) => {
 
   const services = [
     { id: 'app', name: 'App Core', icon: <Server size={18} /> },
-    { id: 'database', name: 'Turso Database', icon: <Database size={18} /> },
+    { id: 'database', name: 'Database', icon: <Database size={18} /> },
     { id: 'gemini', name: 'Gemini AI Engine', icon: <Brain size={18} /> },
     { id: 'lemonsqueezy', name: 'Payments API', icon: <CreditCard size={18} /> },
   ];

@@ -68,23 +68,26 @@ const ADVANCED_MIDI_PROMPT = `
 
 const PRO_Q_3_LAYOUT_PROMPT = `
     CRITICAL - FABFILTER PRO-Q 3 LAYOUT:
-    When suggesting settings for FabFilter Pro-Q 3, you MUST use the following EXACT layout for the 'deepDive' section:
+    When suggesting settings for FabFilter Pro-Q 3, you MUST use the following EXACT layout for the 'deepDive' section, ensuring each parameter is labeled for readability:
     
-    Layout Structure:
-    - Low End Band: [Freq, Gain, Type, Slope, Q, Stereo Placement, Dynamic Enable, Dynamic Range]
-    - Band 1: [Freq, Gain, Type, Slope, Q, Stereo Placement, Dynamic Enable, Dynamic Range]
-    - Band 2: [Freq, Gain, Type, Slope, Q, Stereo Placement, Dynamic Enable, Dynamic Range]
-    - Band 3: [Freq, Gain, Type, Slope, Q, Stereo Placement, Dynamic Enable, Dynamic Range]
-    - Band 4: [Freq, Gain, Type, Slope, Q, Stereo Placement, Dynamic Enable, Dynamic Range]
-    - Band 5: [Freq, Gain, Type, Slope, Q, Stereo Placement, Dynamic Enable, Dynamic Range]
-    - Band 6: [Freq, Gain, Type, Slope, Q, Stereo Placement, Dynamic Enable, Dynamic Range]
+    Layout Structure (Example for each band):
+    - Low End Band: [Freq: 45Hz, Gain: 0.0dB, Type: Low Shelf, Slope: 12dB/oct, Q: 0.70, Stereo: Stereo, Dynamic: Off]
+    - Band 1-6: [Freq: 250Hz, Gain: -2.5dB, Type: Bell, Slope: 12dB/oct, Q: 1.0, Stereo: Stereo, Dynamic: On, Range: -3.0dB]
+    
+    Required Labels:
+    - Freq: Frequency
+    - Gain: Gain in dB
+    - Type: Filter type
+    - Slope: Slope in dB/oct
+    - Q: Q factor
+    - Stereo: Stereo Placement (Left, Right, Stereo, Mid, Side)
+    - Dynamic: Dynamic Enable (On, Off)
+    - Range: Dynamic Range (Only show if Dynamic is On)
     
     Allowed Values:
     - Type: Bell, Low Shelf, High Shelf, Low Cut, High Cut, Notch, Band Pass, Tilt Shelf, Flat Tilt.
     - Slope: 6dB/oct, 12dB/oct, 18dB/oct, 24dB/oct, 30dB/oct, 36dB/oct, 48dB/oct, 72dB/oct, 96dB/oct.
-    - Stereo Placement: Left, Right, Stereo, Mid, Side.
-    - Dynamic Enable: On, Off.
-    - Dynamic Range: (e.g., -3.0dB, +2.5dB) - Only show if Dynamic Enable is On.
+    - Stereo: Left, Right, Stereo, Mid, Side.
 `;
 
 const GULLFOSS_SPEC_PROMPT = `

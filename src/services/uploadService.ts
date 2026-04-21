@@ -1,6 +1,7 @@
 export const uploadFileChunked = async (uploadFile: File): Promise<{ url: string, fileId: string, geminiFileUri?: string, geminiError?: string } | null> => {
+  console.log("[UPLOAD_VERSION_V3] Starting 1MB chunked upload...");
   let uploadedData: { url: string, fileId: string, geminiFileUri?: string, geminiError?: string } | null = null;
-  const chunkSize = 1024 * 1024; // 1MB chunks - reliable for all platform proxies
+  const chunkSize = 1024 * 1024; // 1MB chunks
   const totalChunks = Math.ceil(uploadFile.size / chunkSize);
   const sessionId = Math.random().toString(36).substring(2, 15);
   

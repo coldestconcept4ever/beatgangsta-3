@@ -161,12 +161,12 @@ export const EQVisualizer: React.FC<EQVisualizerProps> = ({ parameters, theme })
            style={{ backgroundColor: bgColor, borderColor: 'rgba(255,255,255,0.1)' }}>
         
         {/* Pro Metadata Overlays */}
-        <div className="absolute top-3 left-6 flex items-center gap-3 pointer-events-none">
+        <div className="absolute top-3 left-6 hidden sm:flex items-center gap-3 pointer-events-none">
           <div className="text-[10px] font-black uppercase tracking-[0.2em] text-white/40">BeatGen EQ</div>
           <div className="w-1 h-1 rounded-full bg-emerald-500 animate-pulse shadow-[0_0_5px_emerald]" />
         </div>
         
-        <div className="absolute top-3 right-6 flex items-center gap-2 text-[9px] font-bold text-white/20 uppercase tracking-widest">
+        <div className="absolute top-3 right-6 hidden sm:flex items-center gap-2 text-[9px] font-bold text-white/20 uppercase tracking-widest">
            Zero Latency • 64-bit
         </div>
 
@@ -182,10 +182,10 @@ export const EQVisualizer: React.FC<EQVisualizerProps> = ({ parameters, theme })
                       stroke={db === 0 ? 'rgba(255,255,255,0.2)' : gridColorMain} 
                       strokeWidth={db === 0 ? "1.5" : "1"} 
                       strokeDasharray={db === 0 ? "0" : "4 4"} />
-                <text x={width - paddingX + 6} y={y + 3} fontSize="9" fill={labelColor} fontWeight="600" fontFamily="Inter, sans-serif">
+                <text x={width - paddingX + 6} y={y + 3} fontSize="9" fill={labelColor} fontWeight="600" fontFamily="Inter, sans-serif" className="hidden sm:block">
                   {db > 0 ? `+${db}` : db}
                 </text>
-                <text x={6} y={y + 3} fontSize="9" fill={labelColor} fontWeight="600" fontFamily="Inter, sans-serif">
+                <text x={6} y={y + 3} fontSize="9" fill={labelColor} fontWeight="600" fontFamily="Inter, sans-serif" className="hidden sm:block">
                   {db > 0 ? `+${db}` : db}
                 </text>
               </g>
@@ -206,7 +206,7 @@ export const EQVisualizer: React.FC<EQVisualizerProps> = ({ parameters, theme })
             return (
               <g key={`grid-f-${i}`}>
                 <line x1={x} y1={paddingY} x2={x} y2={height - paddingY} stroke={gridColorMain} strokeWidth="1" />
-                <text x={x} y={height - 12} fontSize="9" fill={labelColor} textAnchor="middle" fontWeight="bold" fontFamily="Inter, sans-serif">
+                <text x={x} y={height - 12} fontSize="9" fill={labelColor} textAnchor="middle" fontWeight="bold" fontFamily="Inter, sans-serif" className="hidden sm:block">
                   {f >= 1000 ? `${f/1000}kHz` : `${f}Hz`}
                 </text>
               </g>
@@ -274,7 +274,7 @@ export const EQVisualizer: React.FC<EQVisualizerProps> = ({ parameters, theme })
         </svg>
 
         {/* Bottom Controls Bar (Aesthetic) */}
-        <div className="h-10 border-t border-white/5 bg-white/[0.02] flex items-center px-6 gap-6 relative">
+        <div className="h-10 border-t border-white/5 bg-white/[0.02] hidden sm:flex items-center px-6 gap-6 relative">
              <div className="flex gap-4">
                 <div className="flex items-center gap-1.5 opacity-40">
                     <div className="w-1.5 h-1.5 rounded-full bg-white" />

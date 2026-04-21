@@ -80,13 +80,13 @@ export const getVendorSpecificParameters = (vendor: string, name: string): strin
     if (n.includes('pro-q')) {
       // Pro-Q 3 specific band-based parameters for the AI to fill
       return [
-        'Low End Band (Freq, Gain, Type, Slope, Q, Stereo, Dynamic En, Dynamic Range)',
-        'Band 1 (Freq, Gain, Type, Slope, Q, Stereo, Dynamic En, Dynamic Range)',
-        'Band 2 (Freq, Gain, Type, Slope, Q, Stereo, Dynamic En, Dynamic Range)',
-        'Band 3 (Freq, Gain, Type, Slope, Q, Stereo, Dynamic En, Dynamic Range)',
-        'Band 4 (Freq, Gain, Type, Slope, Q, Stereo, Dynamic En, Dynamic Range)',
-        'Band 5 (Freq, Gain, Type, Slope, Q, Stereo, Dynamic En, Dynamic Range)',
-        'Band 6 (Freq, Gain, Type, Slope, Q, Stereo, Dynamic En, Dynamic Range)',
+        'Low End Band (Freq: 45Hz, Gain: 0.0dB, Type: Low Shelf, Slope: 12dB/oct, Q: 0.70, Stereo: Stereo, Dynamic: Off)',
+        'Band 1 (Freq, Gain, Type, Slope, Q, Stereo, Dynamic, Range)',
+        'Band 2 (Freq, Gain, Type, Slope, Q, Stereo, Dynamic, Range)',
+        'Band 3 (Freq, Gain, Type, Slope, Q, Stereo, Dynamic, Range)',
+        'Band 4 (Freq, Gain, Type, Slope, Q, Stereo, Dynamic, Range)',
+        'Band 5 (Freq, Gain, Type, Slope, Q, Stereo, Dynamic, Range)',
+        'Band 6 (Freq, Gain, Type, Slope, Q, Stereo, Dynamic, Range)',
         'Output Gain', 'Phase Mode (Zero Latency/Natural/Linear)', 'Display Range'
       ];
     }
