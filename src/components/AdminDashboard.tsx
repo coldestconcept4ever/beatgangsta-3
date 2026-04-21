@@ -24,7 +24,8 @@ import {
   Receipt,
   Edit,
   Check,
-  Copy
+  Copy,
+  Trash2
 } from 'lucide-react';
 
 interface Purchase {
@@ -166,6 +167,26 @@ export const AdminDashboard = ({ onBack, theme }: { onBack: () => void, theme: s
     }
   };
 
+  const handleDeleteBetaApplication = async (id: number) => {
+    if (!window.confirm('Are you sure you want to delete this beta application?')) return;
+    
+    try {
+      const masterKey = localStorage.getItem('_master_key_temp') || '';
+      const res = await fetch(`/api/admin/delete-beta-application?key=${masterKey}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id })
+      });
+      
+      if (!res.ok) throw new Error('Failed to delete application');
+      
+      // Update local state
+      setBetaApplications(prev => prev.filter(app => app.id !== id));
+    } catch (err: any) {
+      setError(err.message);
+    }
+  };
+
   useEffect(() => {
     fetchAdminData();
   }, [viewMode]);
@@ -227,7 +248,7 @@ export const AdminDashboard = ({ onBack, theme }: { onBack: () => void, theme: s
                 </button>
                 <button
                   onClick={() => setViewMode('beta')}
-                  className={`px-3 py-1.5 text-xs font-bold uppercase tracking-wider rounded-lg transition-colors ${viewMode === 'beta' ? 'bg-current/10' : 'opacity-50 hover:opacity-100'}`}
+                  className={`px-3 py-1.5 text-xs font-bold uppercase tracking-wider rounded-lg transition-colors ${viewMode === 'beta' ? 'bg-blue-600 text-white shadow-sm' : 'opacity-50 hover:opacity-100'}`}
                 >
                   Beta Apps
                 </button>
@@ -613,8 +634,17 @@ export const AdminDashboard = ({ onBack, theme }: { onBack: () => void, theme: s
                            )}
                         </div>
                       </div>
-                      <div className="text-[10px] font-bold uppercase tracking-widest opacity-40">
-                        {new Date(app.created_at).toLocaleString()}
+                      <div className="flex flex-col items-end gap-2 shrink-0">
+                        <div className="text-[10px] font-bold uppercase tracking-widest opacity-40">
+                          {new Date(app.created_at).toLocaleString()}
+                        </div>
+                        <button
+                          onClick={() => handleDeleteBetaApplication(app.id)}
+                          className="p-2 rounded-lg bg-red-500/10 text-red-500 hover:bg-red-500 hover:text-white transition-all active:scale-90"
+                          title="Delete Application"
+                        >
+                          <Trash2 size={14} />
+                        </button>
                       </div>
                     </div>
                   ))}

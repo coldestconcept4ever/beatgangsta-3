@@ -61,7 +61,7 @@ export const BetaApplicationModal: React.FC<BetaApplicationModalProps> = ({ onCl
       >
         <div className={`flex justify-between items-center p-4 border-b ${isCrazyBird ? 'border-red-900/40 bg-zinc-950' : 'border-white/10 bg-zinc-950/50'}`}>
           <h2 className="text-xl font-bold text-white flex items-center gap-2">
-            Beta Tester Application
+            Beta Tester <span className="px-2 py-0.5 bg-blue-600 text-white text-[10px] rounded uppercase tracking-widest font-black">Apply</span>
           </h2>
           <button onClick={onClose} className="p-1 rounded-full hover:bg-white/10 text-zinc-400 hover:text-white transition-colors">
             <X size={20} />

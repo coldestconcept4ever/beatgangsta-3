@@ -1223,6 +1223,34 @@ app.get("/api/admin/beta-applications", async (req, res) => {
   }
 });
 
+app.post("/api/admin/delete-beta-application", express.json(), async (req, res) => {
+  const authorizedEmails = ['coldestconcept@gmail.com', 'recognizemiracles@gmail.com'];
+  const userEmail = (req as any).session?.user?.email;
+  const key = req.query.key;
+  const correctKey = process.env.MASTER_KEY;
+
+  if (!userEmail || !authorizedEmails.includes(userEmail)) {
+    if (!correctKey || key !== correctKey) {
+      return res.status(401).json({ success: false, error: "Unauthorized" });
+    }
+  }
+
+  const { id } = req.body;
+  if (!id) return res.status(400).json({ error: "ID required" });
+
+  try {
+    const db = getDb();
+    await db.execute({
+      sql: `DELETE FROM beta_applications WHERE id = ?`,
+      args: [id]
+    });
+    res.json({ success: true });
+  } catch (err) {
+    console.error("Failed to delete beta application:", err);
+    res.status(500).json({ error: "Failed to delete" });
+  }
+});
+
 app.get("/api/admin/download-plugin-usage", async (req, res) => {
   const key = req.query.key;
   const correctKey = process.env.MASTER_KEY;
