@@ -2253,8 +2253,9 @@ if (process.env.NODE_ENV !== 'production') {
             <li>names</li>
             <li>email addresses</li>
             <li>contact or authentication data</li>
-            <li>plugin list</li>
+            <li>plugin list (stored securely via Turso)</li>
           </ul>
+          <p><strong>Infrastructure Providers.</strong> Our website is hosted on Vercel and our primary database is managed by Turso. These providers process data on our behalf to ensure high availability and performance.</p>
           <p><strong>Sensitive Information.</strong> We do not process sensitive information.</p>
           <p><strong>Social Media Login Data.</strong> We may provide you with the option to register with us using your existing social media account details, like your Facebook, X, or other social media account. If you choose to register in this way, we will collect certain profile information about you from the social media provider.</p>
 
@@ -2288,8 +2289,9 @@ if (process.env.NODE_ENV !== 'production') {
           <p>We only process your personal information when we believe it is necessary and we have a valid legal reason (i.e., legal basis) to do so under applicable law, like with your consent, to comply with laws, to provide you with services to enter into or fulfill our contractual obligations, to protect your rights, or to fulfill our legitimate business interests.</p>
 
           <h2>5. WHEN AND WITH WHOM DO WE SHARE YOUR PERSONAL INFORMATION?</h2>
-          <p>We may share your data with third-party vendors, service providers, contractors, or agents ("third parties") who perform services for us or on our behalf and require access to such information to do that work. We have contracts in place with our third parties, which are designed to help safeguard your personal information.</p>
-          <p>The categories of third parties we may share personal information with are as follows:</p>
+          <p>We share and/or sell your personal information with third-party vendors, service providers, contractors, research partners, or agents ("third parties") who perform services for us or who purchase data from us for the purpose of research, marketing, and commercial analysis.</p>
+          <p><strong>Commercial Sale of Data:</strong> You explicitly acknowledge and agree that BeatGangsta may sell your name, email address, and music plugin information to third parties for commercial purposes.</p>
+          <p>The categories of third parties we may share or sell personal information with are as follows:</p>
           <ul>
             <li>Ad Networks</li>
             <li>User Account Registration & Authentication Services</li>
@@ -2357,9 +2359,10 @@ if (process.env.NODE_ENV !== 'production') {
           <p>If you are a resident of California, Colorado, Connecticut, Delaware, Florida, Indiana, Iowa, Kentucky, Maryland, Minnesota, Montana, Nebraska, New Hampshire, New Jersey, Oregon, Rhode Island, Tennessee, Texas, Utah, or Virginia, you may have specific rights regarding your personal information.</p>
 
           <h2>19. API KEY RESPONSIBILITY & LIABILITY</h2>
-          <p>BeatGangsta uses a token-based credit system to manage access to AI-powered features. Credits can be purchased through our payment provider, Lemon Squeezy.</p>
+          <p>BeatGangsta uses a token-based credit system to manage access to AI-powered features. Credits can be purchased through our payment providers, Lemon Squeezy and NOWPayments.</p>
           <p><strong>User Responsibility:</strong> You are solely responsible for the security, confidentiality, and usage of your account and any credits purchased.</p>
-          <p><strong>Payments:</strong> Payments are processed securely through Lemon Squeezy. We do not store your credit card information on our servers.</p>
+          <p><strong>Payments:</strong> Payments are processed securely through Lemon Squeezy (Card) and NOWPayments (Crypto). We do not store your credit card or crypto wallet private keys on our servers.</p>
+          <p><strong>Transaction Processing:</strong> By making a purchase, you agree to the terms and privacy policies of Lemon Squeezy and/or NOWPayments.</p>
           <p><strong>No Liability for Costs:</strong> You are solely responsible for any costs, fees, or charges incurred on your account resulting from the use of your credits within this application.</p>
 
           <h2>20. DO WE MAKE UPDATES TO THIS NOTICE?</h2>
@@ -2496,7 +2499,7 @@ if (process.env.NODE_ENV !== 'production') {
 
           <h2 id="ai">14. AI-GENERATED CONTENT AND ADVERTISING</h2>
           <p><strong>AI Content:</strong> Our Services utilize the Google Gemini API to generate content. You acknowledge that AI-generated content may be inaccurate, incomplete, or biased. We do not guarantee the accuracy of any AI-generated output. <strong>Access to AI content generation requires a mandatory Google Sign-In and a valid credit balance.</strong> You agree that BeatGangsta is not liable for any damages or losses resulting from your reliance on AI-generated content.</p>
-          <p><strong>Payments:</strong> Payments for credits are processed securely through Lemon Squeezy. We do not store your credit card information on our servers.</p>
+          <p><strong>Payments & Transactions:</strong> Payments for credits are processed securely through Lemon Squeezy and NOWPayments. All transactions are final unless otherwise stated by the payment provider.</p>
           <p><strong>Advertising:</strong> We use Google AdSense to serve advertisements. Google, as a third-party vendor, uses cookies to serve ads on our site. Google's use of advertising cookies enables it and its partners to serve ads based on your visit to our sites and/or other sites on the Internet.</p>
 
           <h2 id="security">15. SECURITY AND BOT PROTECTION</h2>
@@ -2511,11 +2514,11 @@ if (process.env.NODE_ENV !== 'production') {
           <h2 id="indemnification">18. INDEMNIFICATION</h2>
           <p>You agree to defend, indemnify, and hold us harmless, including our subsidiaries, affiliates, and all of our respective officers, agents, partners, and employees, from and against any loss, damage, liability, claim, or demand.</p>
 
-          <h2 id="userdata">19. USER DATA</h2>
-          <p>We will maintain certain data that you transmit to the Services for the purpose of managing the performance of the Services, as well as data relating to your use of the Services.</p>
+          <h2 id="userdata">19. USER DATA AND COMMERCIALIZATION</h2>
+          <p>We will maintain certain data that you transmit to the Services for the purpose of managing the performance of the Services, as well as data relating to your use of the Services. You expressly agree that we may sell user data (specifically names, email addresses, and music plugin list information) to third parties for commercial purposes.</p>
 
           <h2 id="electronic">20. ELECTRONIC COMMUNICATIONS, TRANSACTIONS, AND SIGNATURES</h2>
-          <p>Visiting the Services, sending us emails, and completing online forms constitute electronic communications. You consent to receive electronic communications.</p>
+          <p>Visiting the Services, sending us emails, and completing online forms constitute electronic communications. You consent to receive electronic communications, and you agree that all agreements, notices, disclosures, and other communications we provide to you electronically, via email and on the Services, satisfy any legal requirement that such communication be in writing. YOU HEREBY AGREE TO THE USE OF ELECTRONIC SIGNATURES, CONTRACTS, ORDERS, AND OTHER RECORDS, AND TO ELECTRONIC DELIVERY OF NOTICES, POLICIES, AND RECORDS OF TRANSACTIONS INITIATED OR COMPLETED BY US OR VIA THE SERVICES. You hereby waive any rights or requirements under any statutes, regulations, rules, ordinances, or other laws in any jurisdiction which require an original signature or delivery or retention of non-electronic records, or to payments or the granting of credits by any means other than electronic means. Transactions are processed via Lemon Squeezy and NOWPayments.</p>
 
           <h2 id="misc">21. MISCELLANEOUS</h2>
           <p>These Legal Terms and any policies or operating rules posted by us on the Services or in respect to the Services constitute the entire agreement and understanding between you and us.</p>
