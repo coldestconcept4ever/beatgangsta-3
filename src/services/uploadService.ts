@@ -1,24 +1,12 @@
 export const uploadFileChunked = async (uploadFile: File): Promise<{ url: string, fileId: string, geminiFileUri?: string, geminiError?: string } | null> => {
   let uploadedData: { url: string, fileId: string, geminiFileUri?: string, geminiError?: string } | null = null;
-  const chunkSize = 1024 * 1024 * 4; // 4MB chunks to stay under platform limits (Vercel 4.5MB) while remaining a multiple of 256KB
+  const chunkSize = 1024 * 1024; // 1MB chunks - reliable for all platform proxies
   const totalChunks = Math.ceil(uploadFile.size / chunkSize);
   const sessionId = Math.random().toString(36).substring(2, 15);
   
-  // Step 1: Initialize Gemini Resumable Upload (Stateless for Vercel)
-  let geminiUploadUrl: string | null = null;
-  try {
-    const initRes = await fetch(`/api/upload/init-gemini?fileName=${encodeURIComponent(uploadFile.name)}&mimeType=${encodeURIComponent(uploadFile.type)}&totalSize=${uploadFile.size}`, {
-      method: 'POST'
-    });
-    if (initRes.ok) {
-      const initData = await initRes.json();
-      geminiUploadUrl = initData.uploadUrl;
-      console.log("Gemini resumable upload initialized.");
-    }
-  } catch (err) {
-    console.warn("Failed to initialize Gemini resumable upload, falling back to standard chunked upload:", err);
-  }
-
+  // PRIMARY METHOD: Simple Server-side assembly (yesterday's working logic)
+  // We send chunks to /api/upload-chunk without geminiUploadUrl to trigger server assembly and SDK-based upload
+  
   for (let i = 0; i < totalChunks; i++) {
     const offset = i * chunkSize;
     const chunk = uploadFile.slice(offset, offset + chunkSize);
@@ -31,52 +19,13 @@ export const uploadFileChunked = async (uploadFile: File): Promise<{ url: string
       try {
         const headers: Record<string, string> = { 'Content-Type': 'application/octet-stream' };
         
-        let url = `/api/upload-chunk?fileName=${encodeURIComponent(uploadFile.name)}&mimeType=${encodeURIComponent(uploadFile.type)}&chunkIndex=${i}&totalChunks=${totalChunks}&sessionId=${sessionId}&offset=${offset}`;
-        if (geminiUploadUrl) {
-          url += `&geminiUploadUrl=${encodeURIComponent(geminiUploadUrl)}`;
-        }
+        const url = `/api/upload-chunk?fileName=${encodeURIComponent(uploadFile.name)}&mimeType=${encodeURIComponent(uploadFile.type)}&chunkIndex=${i}&totalChunks=${totalChunks}&sessionId=${sessionId}&offset=${offset}`;
 
-        let response;
-        const isLast = i === totalChunks - 1;
-        
-        if (geminiUploadUrl) {
-          try {
-            // Step 2a: Attempt DIRECT transfer to Google to bypass platform payload limits (Vercel/Cloud Run Proxy)
-            console.log(`Attempting direct upload of chunk ${i} to Google...`);
-            const googleHeaders: Record<string, string> = {
-              'X-Goog-Upload-Offset': String(offset),
-              'X-Goog-Upload-Command': isLast ? 'upload, finalize' : 'upload',
-              'Content-Type': 'application/octet-stream'
-            };
-            
-            response = await fetch(geminiUploadUrl, {
-              method: 'PUT',
-              body: chunk,
-              headers: googleHeaders
-            });
-            
-            if (!response.ok) {
-              const errorText = await response.text();
-              console.warn(`Direct upload failed with status ${response.status}: ${errorText}. Falling back to server proxy.`);
-              throw new Error("Direct upload failed");
-            }
-          } catch (err) {
-            // Step 2b: Fallback to server proxy if direct upload fails (CORS or other network issues)
-            console.log(`Direct upload chunk ${i} failed or blocked by CORS. Falling back to server proxy...`);
-            response = await fetch(url, {
-              method: 'POST',
-              body: chunk,
-              headers
-            });
-          }
-        } else {
-          // No Gemini URL, standard chunked upload
-          response = await fetch(url, {
-            method: 'POST',
-            body: chunk,
-            headers
-          });
-        }
+        const response = await fetch(url, {
+          method: 'POST',
+          body: chunk,
+          headers
+        });
         
         if (!response.ok) {
           const errorText = await response.text();
@@ -86,21 +35,14 @@ export const uploadFileChunked = async (uploadFile: File): Promise<{ url: string
         const responseData = await response.json();
         console.log(`Chunk ${i} uploaded successfully.`);
         
-        // Handle metadata from either the direct upload response or the proxy response
-        if (responseData.geminiFileUri || responseData.fileId) {
+        // If it was the last chunk, we get the final file metadata
+        if (responseData.geminiFileUri || responseData.fileId || responseData.url) {
           uploadedData = { 
-            url: responseData.url || uploadedData?.url || '', 
-            fileId: responseData.fileId || uploadedData?.fileId || '', 
-            geminiFileUri: responseData.geminiFileUri || (responseData.file ? responseData.file.uri : responseData.uri),
+            url: responseData.url || '', 
+            fileId: responseData.fileId || '', 
+            geminiFileUri: responseData.geminiFileUri,
             geminiError: responseData.geminiError 
           };
-        } else if (isLast && responseData.file?.uri) {
-           // Handle Google's direct response format on the last chunk
-           uploadedData = {
-              url: uploadedData?.url || '',
-              fileId: uploadedData?.fileId || '',
-              geminiFileUri: responseData.file.uri
-           };
         }
         success = true;
       } catch (err: any) {
@@ -120,7 +62,7 @@ export const uploadFileChunked = async (uploadFile: File): Promise<{ url: string
   }
   
   if (!uploadedData) {
-    throw new Error("Upload incomplete. Please try again.");
+    throw new Error("Upload incomplete - no final response from server.");
   }
   
   return uploadedData;
