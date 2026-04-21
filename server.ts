@@ -936,16 +936,34 @@ app.post("/api/upload-chunk", express.raw({ type: 'application/octet-stream', li
       );
 
       if (isLast) {
-        console.log(`[Gemini Proxy] Final chunk uploaded. Status: ${response.status}. Response:`, JSON.stringify(response.data));
+        console.log(`[GEMINI_CRITICAL] Final chunk upload attempted for sessionId: ${sessionId}. Status: ${response.status}`);
+        console.log(`[GEMINI_CRITICAL] Response Data:`, JSON.stringify(response.data));
+        
         // The API might return { file: { uri: "..." } } OR directly { uri: "..." } OR { file: { name: "..." } }
-        const geminiFileUri = response.data?.file?.uri || response.data?.uri || (response.data?.file?.name ? `files/${response.data.file.name.split('/').pop()}` : null);
+        let geminiFileUri = response.data?.file?.uri || response.data?.uri;
+        
+        // Fallback 1: Extract from name
+        if (!geminiFileUri && (response.data?.file?.name || response.data?.name)) {
+          const fileName = response.data?.file?.name || response.data?.name;
+          geminiFileUri = `https://generativelanguage.googleapis.com/v1beta/files/${fileName.split('/').pop()}`;
+        }
+
+        // Fallback 2: Check headers (some GCP APIs return resource info in headers)
+        if (!geminiFileUri && response.headers['x-goog-upload-status'] === 'final') {
+           // If it's finalized but body is empty, we might have a problem, but let's check location
+           geminiFileUri = response.headers['location'] || null;
+        }
         
         if (!geminiFileUri) {
-             console.error("[Gemini Proxy] URI/Name missing in response data:", response.data);
-             // We return an error so the frontend knows it failed
+             console.error("[GEMINI_CRITICAL] Missing URI in successful finalize response! Keys:", Object.keys(response.data || {}));
              return res.status(500).json({ 
-               error: "Upload finalized but URI was missing in response",
-               details: `Status: ${response.status}, Data: ${JSON.stringify(response.data)}`
+               error: "[REFINED_V2] Gemini URI missing after finalization",
+               debug_info: {
+                 status: response.status,
+                 hasData: !!response.data,
+                 dataKeys: response.data ? Object.keys(response.data) : [],
+                 headers: response.headers
+               }
              });
         }
         return res.json({ success: true, geminiFileUri });

@@ -1,6 +1,6 @@
 export const uploadFileChunked = async (uploadFile: File): Promise<{ url: string, fileId: string, geminiFileUri?: string, geminiError?: string } | null> => {
   let uploadedData: { url: string, fileId: string, geminiFileUri?: string, geminiError?: string } | null = null;
-  const chunkSize = 1024 * 1024; // 1MB chunks for better efficiency on Vercel
+  const chunkSize = 1024 * 1024 * 8; // 8MB chunks to satisfy Google's 8388608 byte granularity requirement
   const totalChunks = Math.ceil(uploadFile.size / chunkSize);
   const sessionId = Math.random().toString(36).substring(2, 15);
   
