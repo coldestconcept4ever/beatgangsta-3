@@ -3049,8 +3049,8 @@ if (process.env.NODE_ENV !== 'production') {
       console.log(`[Checkout] Creating stems checkout for User ${uid}, Slots: ${slots}, Variant: ${variantId}`);
 
       // Create checkout session via Lemon Squeezy API
-      // Using variant_quantities at the top level of attributes
-      // Note: variant_quantities replaces the need for relationships.variant
+      // Moving variant_quantities back into checkout_data where it belongs in v1
+      // and restoring the variant relationship.
       const response = await fetch('https://api.lemonsqueezy.com/v1/checkouts', {
         method: 'POST',
         headers: {
@@ -3062,13 +3062,13 @@ if (process.env.NODE_ENV !== 'production') {
           data: {
             type: "checkouts",
             attributes: {
-              variant_quantities: [
-                {
-                  variant_id: parseInt(variantId),
-                  quantity: slots
-                }
-              ],
               checkout_data: {
+                variant_quantities: [
+                  {
+                    variant_id: parseInt(variantId),
+                    quantity: slots
+                  }
+                ],
                 custom: {
                   type: 'stem_slots',
                   user_id: uid,
@@ -3081,6 +3081,12 @@ if (process.env.NODE_ENV !== 'production') {
                 data: {
                   type: "stores",
                   id: storeId
+                }
+              },
+              variant: {
+                data: {
+                  type: "variants",
+                  id: variantId
                 }
               }
             }
