@@ -135,12 +135,7 @@ export const Mascot: React.FC<MascotProps> = React.memo(({
             100% { opacity: 0.95; filter: blur(2px) brightness(1); }
           }
           .saber-blade {
-            /* On mobile, standard flicker is disabled for performance. */
-          }
-          @media (min-width: 768px) {
-            .saber-blade {
-              animation: flicker 0.15s infinite;
-            }
+            animation: flicker 0.15s infinite;
           }
           path, rect, circle, ellipse {
             transition: fill 0.3s ease-in-out, stroke 0.3s ease-in-out, transform 0.3s ease-in-out, opacity 0.3s ease-in-out;

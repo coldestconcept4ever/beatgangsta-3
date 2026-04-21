@@ -235,9 +235,9 @@ const FeatherIcon = ({ className, bend = 'straight' }: { className?: string, ben
   </svg>
 );
 
-export const AvianField: React.FC = () => {  
+export const AvianField: React.FC = () => {
   // Define flock members relative to a flock container
-  const baseFlock = [
+  const flock = [
     // Set 1 (Front / Main)
     { top: '45%', left: '10%', size: 160, bobDuration: '1.5s', flapDuration: '0.8s' },
     { top: '25%', left: '25%', size: 120, bobDuration: '1.4s', flapDuration: '0.85s' },
@@ -274,9 +274,7 @@ export const AvianField: React.FC = () => {
     { top: '85%', left: '88%', size: 105, bobDuration: '1.55s', flapDuration: '0.83s' },
   ];
 
-  const flock = baseFlock;
-
-  const feathersBase: Array<{ left: string, delay: string, duration: string, size: number, bend: 'straight' | 'left' | 'right', anim: string }> = [
+  const feathers: Array<{ left: string, delay: string, duration: string, size: number, bend: 'straight' | 'left' | 'right', anim: string }> = [
     { left: '15%', delay: '0s', duration: '14s', size: 35, bend: 'left', anim: 'featherSway1' },
     { left: '25%', delay: '4s', duration: '16s', size: 28, bend: 'straight', anim: 'featherSway2' },
     { left: '45%', delay: '2s', duration: '18s', size: 40, bend: 'right', anim: 'featherSway3' },
@@ -290,8 +288,6 @@ export const AvianField: React.FC = () => {
     { left: '50%', delay: '11s', duration: '18s', size: 36, bend: 'straight', anim: 'featherSway3' },
     { left: '20%', delay: '10s', duration: '14s', size: 27, bend: 'right', anim: 'featherSway4' },
   ];
-
-  const feathers = feathersBase;
 
   return (
     <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden bg-[radial-gradient(circle_at_center,transparent_0%,rgba(0,0,0,0.8)_100%)]">

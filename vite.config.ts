@@ -28,7 +28,7 @@ export default defineConfig(({ mode }) => {
       },
       build: {
         minify: 'esbuild',
-        sourcemap: process.env.NODE_ENV !== 'production', // Disable sourcemaps in prod for faster builds + lower memory footprint
+        sourcemap: true,
         chunkSizeWarningLimit: 2000,
         modulePreload: {
           polyfill: true

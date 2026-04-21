@@ -3,21 +3,20 @@ import React, { useState, useMemo, useEffect, useRef, useCallback } from 'react'
 import { VSTPlugin, BeatRecipe, AppTheme, User, SavedRecipe, HistoryItem, Folder, KnifeStyle, PendantStyle, ChainStyle, SharedSession, DuragStyle, Hardware, FullSaveFile, GrillStyle, MixCritique, SavedCritique, TutorialProgress, ReceiptItem } from './types';
 import { VIBE_EXAMPLES, SONG_EXAMPLES, BANDLAB_PLUGINS_LATEST, BANDLAB_FREE_PLUGINS_LATEST } from './constants';
 import { ARTIST_EXAMPLES } from './constants/artists';
+import { getBeatRecommendations, getCustomBeatRecommendations, getSongBeatRecommendations, getAudioBeatRecommendations, enrichPluginLibrary, validateApiKey, detectAPITier, replicateRecipeWithUserGear, getMixCritique, researchPluginParameters, verifyAndCorrectPlugin, ThinkingLevel } from './services/geminiService';
 import { processAudioForAnalysis } from './utils/audioUtils';
 import { uploadFileChunked, deleteFileFromDrive } from './services/uploadService';
+import { convertWavToMp3 } from './lib/audioConverter';
 import { enrichHardware } from './services/enrichmentService';
 import { initAudio } from './utils/midiPlayer';
 import { fetchWithDetailedError } from './lib/api';
-import { detectAPITier, replicateRecipeWithUserGear, enrichPluginLibrary, verifyAndCorrectPlugin, researchPluginParameters, validateApiKey, getBeatRecommendations, getCustomBeatRecommendations, getSongBeatRecommendations, getMixCritique, getAudioBeatRecommendations } from './services/geminiService';
-import { generateIndividualMidiFiles } from './utils/exportAllMidi';
-import { convertWavToMp3 } from './lib/audioConverter';
 
 import { AvianField } from './components/RavenField';
 const PluginCard = React.lazy(() => import('./components/PluginCard').then(m => ({ default: m.PluginCard })));
 const HardwareCard = React.lazy(() => import('./components/HardwareCard').then(m => ({ default: m.HardwareCard })));
 const RecipeCard = React.lazy(() => import('./components/RecipeCard').then(m => ({ default: m.RecipeCard })));
 const CritiqueCard = React.lazy(() => import('./components/CritiqueCard').then(m => ({ default: m.CritiqueCard })));
-import { Mascot } from './components/Mascot';
+const Mascot = React.lazy(() => import('./components/Mascot').then(m => ({ default: m.Mascot })));
 const PaymentMethodModal = React.lazy(() => import('./components/PaymentMethodModal').then(m => ({ default: m.PaymentMethodModal })));
 
 const DAWGuide = React.lazy(() => import('./components/DAWGuide').then(m => ({ default: m.DAWGuide })));
@@ -396,6 +395,7 @@ const CigarIcon = ({ size = 16, className = "" }: { size?: number, className?: s
 );
 
 import { SnowFlurry } from './components/SnowFlurry';
+
 import { SystemStatus } from './components/SystemStatus';
 
 const App: React.FC = () => {
@@ -2161,6 +2161,7 @@ The AI was unable to verify these parameters. Please investigate.`;
   const handleCloudBackupRecipe = async (recipe: BeatRecipe) => {
     if (!user) return;
     try {
+      const { generateIndividualMidiFiles } = await import('./utils/exportAllMidi');
       const files = await generateIndividualMidiFiles(recipe);
       const midiFiles = files.filter(f => f.type === 'midi');
       const loopFiles = files.filter(f => f.type === 'loop');

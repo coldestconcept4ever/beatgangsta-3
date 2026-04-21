@@ -9,11 +9,6 @@
     <meta name="description" content="Architect freezing-cold rap and trap signal chains with the official BeatGangsta protocols.">
     <link rel="canonical" href="https://www.beatgangsta.com/" />
     
-    <!-- Mobile App / PWA Enhancements -->
-    <meta name="theme-color" content="#0a0a0a">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-
     <!-- Open Graph / Facebook -->
     <meta property="og:type" content="website">
     <meta property="og:url" content="https://www.beatgangsta.com/">
@@ -28,16 +23,17 @@
     <meta property="twitter:description" content="Architect freezing-cold rap and trap signal chains with the official BeatGangsta protocols.">
     <meta property="twitter:image" content="https://www.beatgangsta.com/og-image.png">
 
-    <link rel="preconnect" href="https://i.imgur.com" crossorigin>
-    <link rel="dns-prefetch" href="https://i.imgur.com">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=UnifrakturMaguntia&family=Outfit:wght@300;400;500;600;700;800;900&display=swap">
+    <link rel="dns-prefetch" href="https://fonts.googleapis.com">
+    <link rel="dns-prefetch" href="https://fonts.gstatic.com">
     <link rel="dns-prefetch" href="https://pagead2.googlesyndication.com">
     <link rel="dns-prefetch" href="https://challenges.cloudflare.com">
-    
-    <script async fetchpriority="low" src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-8926834722982533" crossorigin="anonymous"></script>
-    <script async defer fetchpriority="low" src="https://challenges.cloudflare.com/turnstile/v0/api.js"></script>
+    <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=UnifrakturMaguntia&display=swap">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=UnifrakturMaguntia&display=swap" media="print" onload="this.media='all'">
+    <noscript>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=UnifrakturMaguntia&display=swap">
+    </noscript>
     
     <style>
         .font-script {
@@ -101,5 +97,9 @@
         </div>
     </div>
     <script type="module" src="/src/index.tsx"></script>
+    
+    <!-- Deferred Third-Party Scripts -->
+    <script defer src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-8926834722982533" crossorigin="anonymous"></script>
+    <script defer src="https://challenges.cloudflare.com/turnstile/v0/api.js"></script>
 </body>
 </html>

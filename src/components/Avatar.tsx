@@ -44,7 +44,6 @@ export const Avatar: React.FC<AvatarProps> = ({ username, alt, className = "w-48
             ref={imgRef}
             src={displayUrl} 
             alt={alt} 
-            loading="lazy"
             className={`w-full h-full object-cover origin-center transition-all duration-1000 ${imageClassName} ${loading ? 'opacity-0' : 'opacity-100'}`}
             onLoad={() => setLoading(false)}
             onError={() => {

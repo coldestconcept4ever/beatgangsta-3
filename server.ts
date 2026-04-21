@@ -12,7 +12,6 @@ import crypto from "crypto";
 import helmet from "helmet";
 import { rateLimit } from "express-rate-limit";
 import cors from "cors";
-import compression from "compression";
 import { createClient } from "@libsql/client";
 import { getGoogle } from "./src/lib/google.js";
 import axios from "axios";
