@@ -2136,16 +2136,15 @@ export const getAudioBeatRecommendations = async (plugins: VSTPlugin[], audioBas
   `;
 
   const parts: any[] = [];
-  console.log("Gemini File URI (Beat):", geminiFileUri);
-  console.log("Mime Type (Beat):", mimeType);
+  
   if (geminiFileUri) {
     let uri = geminiFileUri;
-    console.log("Original Gemini File URI (Beat):", uri);
     if (uri.includes('/files/')) {
        const uriParts = uri.split('/files/');
        uri = 'https://generativelanguage.googleapis.com/v1beta/files/' + uriParts[1];
+    } else if (!uri.startsWith('https://')) {
+       uri = 'https://generativelanguage.googleapis.com/v1beta/' + (uri.startsWith('files/') ? uri : 'files/' + uri);
     }
-    console.log("Transformed Gemini File URI (Beat):", uri);
     parts.push({ fileData: { fileUri: uri, mimeType: mimeType } });
   } else if (audioBase64) {
     parts.push({ inlineData: { data: audioBase64, mimeType: mimeType } });
@@ -2304,19 +2303,16 @@ export const getMixCritique = async (
   `;
 
   const parts: any[] = [];
-  console.log("Gemini File URI (Critique):", geminiFileUri);
-  console.log("Mime Type (Critique):", mimeType);
   
   if (uploadedStems && uploadedStems.length > 0) {
     for (const stem of uploadedStems) {
       if (stem.uri) {
-        // Ensure the URI is in the correct format for the Gemini API
-        // The API expects 'https://generativelanguage.googleapis.com/v1beta/files/...' or just the file name 'files/...'
-        // The SDK handles the base URL, so we just need the 'files/...' part or the full v1beta URL if it's already there
         let uri = stem.uri;
         if (uri.includes('/files/')) {
            const uriParts = uri.split('/files/');
            uri = 'https://generativelanguage.googleapis.com/v1beta/files/' + uriParts[1];
+        } else if (!uri.startsWith('https://')) {
+           uri = 'https://generativelanguage.googleapis.com/v1beta/' + (uri.startsWith('files/') ? uri : 'files/' + uri);
         }
         parts.push({ fileData: { fileUri: uri, mimeType: stem.mimeType } });
       } else if (stem.base64) {
@@ -2329,6 +2325,8 @@ export const getMixCritique = async (
       if (uri.includes('/files/')) {
          const uriParts = uri.split('/files/');
          uri = 'https://generativelanguage.googleapis.com/v1beta/files/' + uriParts[1];
+      } else if (!uri.startsWith('https://')) {
+         uri = 'https://generativelanguage.googleapis.com/v1beta/' + (uri.startsWith('files/') ? uri : 'files/' + uri);
       }
       parts.push({ fileData: { fileUri: uri, mimeType: mimeType } });
     } else if (audioBase64) {
@@ -2340,9 +2338,12 @@ export const getMixCritique = async (
   
   if (referenceGeminiFileUri) {
     let uri = referenceGeminiFileUri;
-    const uriParts = uri.split('/');
-    const fileId = uriParts[uriParts.length - 1];
-    uri = 'https://generativelanguage.googleapis.com/files/' + fileId;
+    if (uri.includes('/files/')) {
+       const uriParts = uri.split('/files/');
+       uri = 'https://generativelanguage.googleapis.com/v1beta/files/' + uriParts[1];
+    } else if (!uri.startsWith('https://')) {
+       uri = 'https://generativelanguage.googleapis.com/v1beta/' + (uri.startsWith('files/') ? uri : 'files/' + uri);
+    }
     parts.push({ fileData: { fileUri: uri, mimeType: mimeType } });
   } else if (referenceAudioBase64) {
     parts.push({ inlineData: { data: referenceAudioBase64, mimeType: mimeType } });

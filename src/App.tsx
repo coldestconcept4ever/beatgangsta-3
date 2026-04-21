@@ -3753,7 +3753,7 @@ The AI was unable to verify these parameters. Please investigate.`;
       const audioUploadData = await uploadFileChunked(fileToUpload);
       let audioUrl: string | null = audioUploadData?.url || null;
       let geminiFileUri: string | null = audioUploadData?.geminiFileUri || null;
-      let mimeType = fileToUpload.type || 'audio/mpeg';
+      let mimeType = (fileToUpload.type === 'audio/mp3' || !fileToUpload.type) ? 'audio/mpeg' : fileToUpload.type;
 
       if (!geminiFileUri) {
         console.warn(`Gemini File API upload failed. Debug Info:`, audioUploadData);

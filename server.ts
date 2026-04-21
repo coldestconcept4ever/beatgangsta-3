@@ -198,12 +198,20 @@ async function initDb() {
           id INTEGER PRIMARY KEY AUTOINCREMENT,
           daw TEXT NOT NULL,
           experience TEXT NOT NULL,
+          gmail TEXT NOT NULL DEFAULT '',
           contact_method TEXT NOT NULL,
           contact_info TEXT NOT NULL,
           status TEXT DEFAULT 'pending',
           created_at DATETIME DEFAULT CURRENT_TIMESTAMP
         )
       `);
+      
+      // Migration: Add gmail column if it doesn't exist
+      try {
+        await client.execute(`ALTER TABLE beta_applications ADD COLUMN gmail TEXT NOT NULL DEFAULT ''`);
+      } catch (e) {
+        // Column might already exist
+      }
       
       console.log(`Database tables initialized successfully in ${Date.now() - start}ms.`);
       
@@ -868,17 +876,21 @@ app.post("/api/upload/init-gemini", async (req, res) => {
       return res.status(500).json({ error: "No API key available" });
     }
 
-    let finalMimeType = mimeType as string;
-    if (finalMimeType === 'audio/mp3') finalMimeType = 'audio/mpeg';
+    let finalMimeType = (mimeType as string) || 'audio/mpeg';
+    if (finalMimeType === 'audio/mp3' || !finalMimeType.includes('/')) finalMimeType = 'audio/mpeg';
 
     const response = await axios.post(
       `https://generativelanguage.googleapis.com/upload/v1beta/files?key=${apiKey}`,
-      {},
+      {
+        file: {
+          display_name: (fileName as string) || "upload"
+        }
+      },
       {
         headers: {
           'X-Goog-Upload-Protocol': 'resumable',
           'X-Goog-Upload-Command': 'start',
-          'X-Goog-Upload-Header-Content-Length': totalSize as any,
+          'X-Goog-Upload-Header-Content-Length': String(totalSize),
           'X-Goog-Upload-Header-Content-Type': finalMimeType,
           'Content-Type': 'application/json'
         }
@@ -906,15 +918,23 @@ app.post("/api/upload-chunk", express.raw({ type: 'application/octet-stream', li
   if (geminiUploadUrl) {
     try {
       const isLast = parseInt(chunkIndex as string) === parseInt(totalChunks as string) - 1;
+      let finalMimeType = (mimeType as string) || 'audio/mpeg';
+      if (finalMimeType === 'audio/mp3' || !finalMimeType.includes('/')) finalMimeType = 'audio/mpeg';
+
       const response = await axios.put(
         geminiUploadUrl as string,
         chunkData,
         {
           headers: {
-            'X-Goog-Upload-Offset': offset as any,
+            'X-Goog-Upload-Protocol': 'resumable',
+            'X-Goog-Upload-Offset': String(offset),
             'X-Goog-Upload-Command': isLast ? 'upload, finalize' : 'upload',
-            'Content-Type': 'application/octet-stream' // In Gemini API, chunks are usually octet-stream
-          }
+            'Content-Type': finalMimeType,
+            'Content-Length': String(chunkData.length)
+          },
+          maxContentLength: Infinity,
+          maxBodyLength: Infinity,
+          validateStatus: (status) => status < 500 // Allow 400s to be handled explicitly
         }
       );
 
@@ -932,9 +952,13 @@ app.post("/api/upload-chunk", express.raw({ type: 'application/octet-stream', li
       }
       return res.json({ success: true });
     } catch (error: any) {
-      console.error("Gemini proxy upload failed:", error.response?.data || error.message);
+      const errorData = error.response?.data;
+      console.error("Gemini proxy upload failed:", JSON.stringify(errorData || error.message));
       // We cannot fallback to local assembly here because previous chunks were not saved locally!
-      return res.status(500).json({ error: "Gemini proxy chunk upload failed", details: error.message });
+      return res.status(500).json({ 
+        error: "Gemini proxy chunk upload failed", 
+        details: errorData ? JSON.stringify(errorData) : error.message 
+      });
     }
   }
 
@@ -1141,16 +1165,16 @@ app.post("/api/verify-master", (req, res) => {
 });
 
 app.post("/api/beta/apply", express.json(), async (req, res) => {
-  const { daw, experience, contactMethod, contactInfo } = req.body;
-  if (!daw || !experience || !contactMethod || !contactInfo) {
+  const { daw, experience, gmail, contactMethod, contactInfo } = req.body;
+  if (!daw || !experience || !gmail || !contactMethod || !contactInfo) {
     return res.status(400).json({ error: "All fields are required" });
   }
 
   try {
     const db = getDb();
     await db.execute({
-      sql: `INSERT INTO beta_applications (daw, experience, contact_method, contact_info) VALUES (?, ?, ?, ?)`,
-      args: [daw, experience, contactMethod, contactInfo]
+      sql: `INSERT INTO beta_applications (daw, experience, gmail, contact_method, contact_info) VALUES (?, ?, ?, ?, ?)`,
+      args: [daw, experience, gmail, contactMethod, contactInfo]
     });
     res.json({ success: true, message: "Application submitted successfully" });
   } catch (error) {
@@ -1160,11 +1184,15 @@ app.post("/api/beta/apply", express.json(), async (req, res) => {
 });
 
 app.get("/api/admin/beta-applications", async (req, res) => {
+  const authorizedEmails = ['coldestconcept@gmail.com', 'recognizemiracles@gmail.com'];
+  const userEmail = (req as any).session?.user?.email;
   const key = req.query.key;
   const correctKey = process.env.MASTER_KEY;
-  
-  if (!correctKey || key !== correctKey) {
-    return res.status(401).send("Unauthorized");
+
+  if (!userEmail || !authorizedEmails.includes(userEmail)) {
+    if (!correctKey || key !== correctKey) {
+      return res.status(401).json({ success: false, error: "Unauthorized access" });
+    }
   }
   
   try {
@@ -1173,7 +1201,7 @@ app.get("/api/admin/beta-applications", async (req, res) => {
     res.json({ success: true, applications: result.rows });
   } catch (error) {
     console.error("Failed to fetch beta applications:", error);
-    res.status(500).json({ error: "Failed to fetch applications" });
+    res.status(500).json({ success: false, error: "Failed to fetch applications" });
   }
 });
 

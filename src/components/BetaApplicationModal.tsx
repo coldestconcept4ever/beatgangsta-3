@@ -10,6 +10,7 @@ interface BetaApplicationModalProps {
 export const BetaApplicationModal: React.FC<BetaApplicationModalProps> = ({ onClose, theme }) => {
   const [daw, setDaw] = useState('');
   const [experience, setExperience] = useState('');
+  const [gmail, setGmail] = useState('');
   const [contactMethod, setContactMethod] = useState('Instagram');
   const [contactInfo, setContactInfo] = useState('');
   const [submitted, setSubmitted] = useState(false);
@@ -20,7 +21,7 @@ export const BetaApplicationModal: React.FC<BetaApplicationModalProps> = ({ onCl
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!daw || !experience || !contactInfo) {
+    if (!daw || !experience || !gmail || !contactInfo) {
       setError('Please fill in all fields');
       return;
     }
@@ -34,7 +35,7 @@ export const BetaApplicationModal: React.FC<BetaApplicationModalProps> = ({ onCl
         headers: {
           'Content-Type': 'application/json'
         },
-        body: JSON.stringify({ daw, experience, contactMethod, contactInfo })
+        body: JSON.stringify({ daw, experience, gmail, contactMethod, contactInfo })
       });
 
       const data = await res.json();
@@ -93,7 +94,7 @@ export const BetaApplicationModal: React.FC<BetaApplicationModalProps> = ({ onCl
               )}
               
               <div className="space-y-1">
-                <label className="text-sm font-medium text-zinc-300">What DAW do you use?</label>
+                <label className="text-sm font-medium text-zinc-300">1. What DAW do you use?</label>
                 <input 
                   type="text" 
                   value={daw}
@@ -104,7 +105,7 @@ export const BetaApplicationModal: React.FC<BetaApplicationModalProps> = ({ onCl
               </div>
 
               <div className="space-y-1">
-                <label className="text-sm font-medium text-zinc-300">Years of experience making music</label>
+                <label className="text-sm font-medium text-zinc-300">2. Years of experience making music</label>
                 <input 
                   type="text" 
                   value={experience}
@@ -115,7 +116,18 @@ export const BetaApplicationModal: React.FC<BetaApplicationModalProps> = ({ onCl
               </div>
 
               <div className="space-y-1">
-                <label className="text-sm font-medium text-zinc-300">Preferred contact method</label>
+                <label className="text-sm font-medium text-zinc-300">3. Your Gmail Address (for OAuth Access)</label>
+                <input 
+                  type="email" 
+                  value={gmail}
+                  onChange={e => setGmail(e.target.value)}
+                  placeholder="your-email@gmail.com"
+                  className="w-full bg-black/50 border border-white/10 rounded-lg px-4 py-2 text-white placeholder-zinc-500 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                />
+              </div>
+
+              <div className="space-y-1">
+                <label className="text-sm font-medium text-zinc-300">4. Preferred method of contact</label>
                 <div className="relative">
                   <select 
                     value={contactMethod}
@@ -140,7 +152,7 @@ export const BetaApplicationModal: React.FC<BetaApplicationModalProps> = ({ onCl
                 <label className="text-sm font-medium text-zinc-300">
                   {contactMethod === 'Instagram' ? 'Instagram Username' : 
                    contactMethod === 'TikTok' ? 'TikTok Username' : 
-                   contactMethod === 'Text Message' ? 'Phone Number' : 'Email Address'}
+                   contactMethod === 'Text Message' ? 'Phone Number' : 'Other Email (if different)'}
                 </label>
                 <input 
                   type={contactMethod === 'Email' ? 'email' : contactMethod === 'Text Message' ? 'tel' : 'text'}

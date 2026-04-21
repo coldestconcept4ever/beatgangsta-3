@@ -23,7 +23,8 @@ import {
   TrendingUp,
   Receipt,
   Edit,
-  Check
+  Check,
+  Copy
 } from 'lucide-react';
 
 interface Purchase {
@@ -502,11 +503,22 @@ export const AdminDashboard = ({ onBack, theme }: { onBack: () => void, theme: s
                   {betaApplications.map(app => (
                     <div key={app.id} className={`p-6 rounded-2xl border ${dashboardTheme.card} flex flex-col md:flex-row justify-between items-start md:items-center gap-4 hover:border-current/20 transition-all`}>
                       <div>
-                        <div className="flex items-center gap-2 mb-2">
+                        <div className="flex flex-wrap items-center gap-x-4 gap-y-2 mb-2">
                            <span className="font-black text-lg">{app.daw}</span>
                            <span className="text-[10px] font-bold uppercase tracking-widest px-2 py-0.5 rounded-full bg-current/10 opacity-70">Exp: {app.experience}</span>
+                           <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-blue-500/10 text-blue-400 border border-blue-500/20">
+                             <Mail size={12} />
+                             <span className="text-xs font-bold">{app.gmail}</span>
+                             <button 
+                               onClick={() => navigator.clipboard.writeText(app.gmail)}
+                               className="hover:text-white transition-colors ml-1"
+                               title="Copy Gmail"
+                             >
+                               <Copy size={10} />
+                             </button>
+                           </div>
                         </div>
-                        <div className="text-sm opacity-70 flex items-center gap-2">
+                        <div className="text-sm opacity-70 flex flex-wrap items-center gap-2">
                            <span className="uppercase tracking-widest text-[10px] font-bold">Contact via:</span> {app.contact_method} 
                            {app.contact_method === 'Instagram' && (
                              <a href={`https://instagram.com/${app.contact_info.replace('@', '')}`} target="_blank" rel="noreferrer" className="text-blue-500 hover:text-blue-400 hover:underline inline-flex items-center gap-1 font-medium">{app.contact_info}</a>
