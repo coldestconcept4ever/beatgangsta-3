@@ -3024,7 +3024,7 @@ if (process.env.NODE_ENV !== 'production') {
       const variantId = process.env.LEMON_SQUEEZY_VARIANT_ID_STEM_SLOTS;
       
       if (!apiKey || !storeId || !variantId) {
-        console.warn("Lemon Squeezy credentials for stems not configured. Simulating purchase.");
+        console.warn("Lemon Squeezy credentials for stems not fully configured. API Key:", !!apiKey, "Store ID:", !!storeId, "Variant ID:", !!variantId);
         // Fallback simulation if not configured
         await getDb().execute({
           sql: `UPDATE users SET purchased_stem_slots = purchased_stem_slots + ? WHERE uid = ?`,
@@ -3046,7 +3046,11 @@ if (process.env.NODE_ENV !== 'production') {
         return res.json({ success: true, user: updatedUser, simulated: true });
       }
 
+      console.log(`[Checkout] Creating stems checkout for User ${uid}, Slots: ${slots}, Variant: ${variantId}`);
+
       // Create checkout session via Lemon Squeezy API
+      // Using quantity instead of custom_price as it's more standard for "pay-per-slot" models
+      // Requirement: The LS product variant should be set to $3.00
       const response = await fetch('https://api.lemonsqueezy.com/v1/checkouts', {
         method: 'POST',
         headers: {
@@ -3059,7 +3063,7 @@ if (process.env.NODE_ENV !== 'production') {
             type: "checkouts",
             attributes: {
               checkout_data: {
-                custom_price: slots * 300, // Price in cents
+                quantity: slots,
                 custom: {
                   type: 'stem_slots',
                   user_id: uid,
@@ -3089,7 +3093,12 @@ if (process.env.NODE_ENV !== 'production') {
       
       if (!response.ok) {
         console.error("Lemon Squeezy API error (Stems):", JSON.stringify(data, null, 2));
-        return res.status(500).json({ error: "Failed to create stems checkout session", details: data });
+        const firstError = data.errors ? data.errors[0]?.detail : "Unknown API error";
+        return res.status(500).json({ 
+          error: "Failed to create stems checkout session", 
+          message: firstError,
+          details: data 
+        });
       }
 
       const checkoutUrl = data.data.attributes.url;

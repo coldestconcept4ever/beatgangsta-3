@@ -4003,7 +4003,7 @@ The AI was unable to verify these parameters. Please investigate.`;
             if (data.checkoutUrl) window.location.href = data.checkoutUrl;
             else if (data.simulated) setUser(data.user);
           } else {
-            setError(data.error || "Failed to initiate stems checkout.");
+            setError(data.message || data.error || "Failed to initiate stems checkout.");
           }
         } else {
           // Crypto stems
