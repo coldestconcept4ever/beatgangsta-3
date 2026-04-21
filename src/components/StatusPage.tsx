@@ -146,7 +146,7 @@ export const StatusPage = ({ onBack }: { onBack: () => void }) => {
             >
               <ArrowLeft size={20} />
             </button>
-            <h1 className="font-black tracking-tight text-xl flex items-center gap-3">
+            <h1 className="font-black tracking-tight text-lg sm:text-xl flex items-center gap-2 sm:gap-3">
               <Activity className={theme.primary} />
               <Logo 
                 size={32} 
@@ -157,17 +157,22 @@ export const StatusPage = ({ onBack }: { onBack: () => void }) => {
                 chainStyle="none" 
                 theme={isOutage ? "crazy-bird" : "coldest"} 
               />
-              BEATGANGSTA <span className="opacity-50 font-medium">STATUS</span>
+              <span className="hidden sm:inline">BEATGANGSTA</span> <span className="opacity-50 font-medium">STATUS</span>
             </h1>
           </div>
-          <div className="text-sm font-mono opacity-60 font-bold">
+          <div className="hidden sm:block text-sm font-mono opacity-60 font-bold">
             Last updated: {data?.current.lastUpdated ? new Date(data.current.lastUpdated).toLocaleTimeString() : 'Just now'}
           </div>
         </div>
       </div>
 
-      <div className="max-w-5xl mx-auto px-6 py-12 space-y-12 relative z-10">
+      <div className="max-w-5xl mx-auto px-6 py-6 sm:py-12 space-y-6 sm:space-y-12 relative z-10">
         
+        {/* Mobile Last Updated */}
+        <div className="sm:hidden text-[10px] font-mono opacity-50 font-bold text-center tracking-widest uppercase mb-[-10px]">
+            Last updated: {data?.current.lastUpdated ? new Date(data.current.lastUpdated).toLocaleTimeString() : 'Just now'}
+        </div>
+
         {/* Hero Status Banner */}
         <motion.div 
           initial={{ opacity: 0, y: 20 }}
