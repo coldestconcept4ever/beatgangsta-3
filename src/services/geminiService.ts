@@ -152,6 +152,36 @@ const SONIBLE_SPEC_PROMPT = `
     AI GUIDELINE: Always detect which series the user owns from their plugin list and apply the EXACT parameter names and styles defined above for that specific series.
 `;
 
+const RC20_SPEC_PROMPT = `
+    CRITICAL - XLN AUDIO RC-20 RETRO COLOR SPECIFICATIONS:
+    - Wow/Flutter Parameter: This is a 0-100 slider controlling the balance between Wow and Flutter.
+      - 0% (Slider to far Left): 100% Wow, 0% Flutter.
+      - 100% (Slider to far Right): 0% Wow, 100% Flutter.
+    - Noise & Noise Tone:
+      - Noise: Value MUST be in dB (e.g., -12dB). DO NOT use percentages.
+      - Noise Tone: Value MUST be in dB (e.g., -2dB). DO NOT use percentages.
+    - Mandatory Parameters: You MUST ALWAYS include values for ALL of the following: Noise, Wobble, Distort, Digital Space, Magnetic, and Flux. 
+      - Flux is often an additional parameter you should always check and define for RC-20.
+`;
+
+const NI_RAUM_SPEC_PROMPT = `
+    CRITICAL - NATIVE INSTRUMENTS RAUM SPECIFICATIONS:
+    - Low Cut: MUST be displayed in dB (e.g., -6dB).
+    - Hi Cut: MUST remain in Hz (e.g., 8000Hz).
+`;
+
+const GLOBAL_PARAMETER_STRICTNESS_PROMPT = `
+    CRITICAL - STRICT PARAMETER REALISM, UNITS, & O'CLOCK POSITIONING:
+    1. ZERO HALLUCINATION: You MUST ONLY suggest parameters that actually exist on the real-world interface of the specified plugin as documented in its official manual. NEVER invent, guess, or inject parameters that do not exist on that plugin.
+    2. STRICT UNIT ACCURACY: You MUST use the exact, correct unit of measurement for every parameter:
+       - Frequency: MUST be in Hz or kHz.
+       - Gain/Threshold/Noise/Volume: MUST be in dB (e.g., -6dB, +2dB). DO NOT use percentages (%) for dB values!
+       - Time: MUST be in ms, s, or beat fractions.
+       - Percentage (%): Use ONLY when the plugin explicitly uses % (like Dry/Wet, Mix, or specific saturation amounts).
+    3. 'O'CLOCK' POSITIONING FOR UNLABELED KNOBS: If a plugin features a vintage or analog-style interface with knobs that DO NOT provide numerical value readouts in its UI (e.g., analog compressor clones, guitar pedals, vintage saturators), you MUST use 'o'clock' values (e.g., "10 o'clock", "2 o'clock") instead of inventing exact numerical percentages. STRICTLY apply this ONLY to plugins without numerical readouts. For modern digital plugins with numerical displays, provide the exact numbers.
+`;
+
+
 function postProcessResult(result: any) {
   const processRecipe = (recipe: any) => {
     if (recipe && typeof recipe.drumPatterns === 'object' && recipe.drumPatterns !== null && !Array.isArray(recipe.drumPatterns)) {
@@ -381,6 +411,7 @@ export const regeneratePlugin = async (
     ${GULLFOSS_SPEC_PROMPT}
     ${OZONE_SPEC_PROMPT}
     ${SONIBLE_SPEC_PROMPT}
+    ${RC20_SPEC_PROMPT}
     
     Original Plugin:
     ${pluginContext}
@@ -1559,7 +1590,7 @@ export const getBeatRecommendations = async (plugins: VSTPlugin[], analogInstrum
   const prompt = isGangstaVox ? `
     Analyze my VST plugin list and suggest 1 high-level, extremely detailed "Vocal FX Chain Recipe" for the craziest vocal mix.
     Only use plugins from this list.
-    CRITICAL: For each plugin, I have provided a list of its actual technical parameters in brackets []. You MUST prioritize using these EXACT parameter names in your 'deepDive' settings. If a parameter is not in the list, you may use a standard one, but the provided ones are the source of truth for that specific plugin's interface.
+    CRITICAL: For each plugin, I have provided a list of its actual technical parameters in brackets []. You MUST prioritize using these EXACT parameter names in your 'deepDive' settings. If a parameter is missing, verify its exact existence in the plugin's real-world manual before including it. NEVER hallucinate or invent parameters that do not exist on the plugin's interface.
     
     Only use plugins from this list:
     ${pluginListStr}
@@ -1572,6 +1603,9 @@ export const getBeatRecommendations = async (plugins: VSTPlugin[], analogInstrum
     ${GULLFOSS_SPEC_PROMPT}
     ${OZONE_SPEC_PROMPT}
     ${SONIBLE_SPEC_PROMPT}
+    ${RC20_SPEC_PROMPT}
+    ${NI_RAUM_SPEC_PROMPT}
+    ${GLOBAL_PARAMETER_STRICTNESS_PROMPT}
 
     Focus on modern vocal sub-genres: Melodic Trap, Dark Drill, High-Energy Rage, Ethereal Cloud Rap.
     Identify 2-3 mainstream or commonly known artists who would typically use this specific vocal chain (e.g., "Travis Scott type", "Playboi Carti type").
@@ -1601,7 +1635,7 @@ export const getBeatRecommendations = async (plugins: VSTPlugin[], analogInstrum
   ` : `
     Analyze my VST plugin list and suggest 1 high-level, extremely detailed "Beat Recipe" for the craziest rap beat.
     Only use plugins from this list.
-    CRITICAL: For each plugin, I have provided a list of its actual technical parameters in brackets []. You MUST prioritize using these EXACT parameter names in your 'deepDive' settings. If a parameter is not in the list, you may use a standard one, but the provided ones are the source of truth for that specific plugin's interface.
+    CRITICAL: For each plugin, I have provided a list of its actual technical parameters in brackets []. You MUST prioritize using these EXACT parameter names in your 'deepDive' settings. If a parameter is missing, verify its exact existence in the plugin's real-world manual before including it. NEVER hallucinate or invent parameters that do not exist on the plugin's interface.
 
     Only use plugins from this list:
     ${pluginListStr}
@@ -1614,6 +1648,7 @@ export const getBeatRecommendations = async (plugins: VSTPlugin[], analogInstrum
     ${GULLFOSS_SPEC_PROMPT}
     ${OZONE_SPEC_PROMPT}
     ${SONIBLE_SPEC_PROMPT}
+    ${RC20_SPEC_PROMPT}
 
     Focus on modern sub-genres: Melodic Trap, Dark Drill, High-Energy Rage.
     Identify 2-3 mainstream or commonly known artists who would typically use this specific beat type (e.g., "Lil Wayne type", "Travis Scott type").
@@ -1728,7 +1763,7 @@ export const getCustomBeatRecommendations = async (plugins: VSTPlugin[], query: 
   const prompt = isGangstaVox ? `
     Analyze my VST plugin list and suggest 1 high-level, extremely detailed "Vocal FX Chain Recipe" specifically for a "${query} type vocal".
     Only use plugins from this list.
-    CRITICAL: For each plugin, I have provided a list of its actual technical parameters in brackets []. You MUST prioritize using these EXACT parameter names in your 'deepDive' settings. If a parameter is not in the list, you may use a standard one, but the provided ones are the source of truth for that specific plugin's interface.
+    CRITICAL: For each plugin, I have provided a list of its actual technical parameters in brackets []. You MUST prioritize using these EXACT parameter names in your 'deepDive' settings. If a parameter is missing, verify its exact existence in the plugin's real-world manual before including it. NEVER hallucinate or invent parameters that do not exist on the plugin's interface.
 
     Only use plugins from this list:
     ${pluginListStr}
@@ -1879,7 +1914,7 @@ export const getSongBeatRecommendations = async (plugins: VSTPlugin[], songQuery
   const prompt = isGangstaVox ? `
     Analyze my VST plugin list and suggest 1 high-level, extremely detailed "Vocal FX Chain Recipe" that recreate the vocal production style, effects, and mixing techniques of the song "${songQuery}".
     Only use plugins from this list.
-    CRITICAL: For each plugin, I have provided a list of its actual technical parameters in brackets []. You MUST prioritize using these EXACT parameter names in your 'deepDive' settings. If a parameter is not in the list, you may use a standard one, but the provided ones are the source of truth for that specific plugin's interface.
+    CRITICAL: For each plugin, I have provided a list of its actual technical parameters in brackets []. You MUST prioritize using these EXACT parameter names in your 'deepDive' settings. If a parameter is missing, verify its exact existence in the plugin's real-world manual before including it. NEVER hallucinate or invent parameters that do not exist on the plugin's interface.
 
     Only use plugins from this list:
     ${pluginListStr}
@@ -2015,6 +2050,30 @@ export const getSongBeatRecommendations = async (plugins: VSTPlugin[], songQuery
   }
   
   return result;
+};
+
+export const generateVoiceover = async (text: string): Promise<string> => {
+  const ai = getAI();
+  const prompt = `Say this text in a slowed down, deep, smooth, melodic Houston rap cadence (like Z-Ro, but DO NOT say your name or mention Z-Ro):\n\n${text}`;
+  
+  const response = await ai.models.generateContent({
+    model: "gemini-3.1-flash-tts-preview",
+    contents: [{ parts: [{ text: prompt }] }],
+    config: {
+      responseModalities: ["AUDIO"],
+      speechConfig: {
+          voiceConfig: {
+            prebuiltVoiceConfig: { voiceName: 'Kore' },
+          },
+      },
+    },
+  });
+
+  const base64Audio = response.candidates?.[0]?.content?.parts?.[0]?.inlineData?.data;
+  if (!base64Audio) {
+    throw new Error('Failed to generate voiceover');
+  }
+  return base64Audio;
 };
 
 export const generateContentViaBackend = async (model: string, prompt: string, config: any, _turnstileToken?: string | null, _sessionId?: string | null) => {

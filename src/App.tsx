@@ -45,9 +45,10 @@ import { AdminDashboard } from './components/AdminDashboard';
 import { BetaApplicationModal } from './components/BetaApplicationModal';
 import { AnimatePresence, motion } from 'motion/react';
 import { useTranslation } from 'react-i18next';
-import { Globe, Languages, Star, X, Cpu, Folder as FolderIcon, ShieldCheck, Check, Zap, Rocket, Eye, EyeOff, AlertTriangle, Lock, Shield, Loader2, Gem, Sword, User as UserIcon, Link, Link2, Palette, Sparkles, Drum, Image as ImageIcon, Crown, CheckCircle2, ExternalLink, Facebook, Instagram, Linkedin, Twitter, Activity, Database, Trash2, Music } from 'lucide-react';
+import { Globe, Languages, Star, X, Cpu, Folder as FolderIcon, ShieldCheck, Check, Zap, Rocket, Eye, EyeOff, AlertTriangle, Lock, Shield, Loader2, Gem, Sword, User as UserIcon, Link, Link2, Palette, Sparkles, Drum, Image as ImageIcon, Crown, CheckCircle2, ExternalLink, Facebook, Instagram, Linkedin, Twitter, Activity, Database, Trash2, Music, Video } from 'lucide-react';
 import tinycolor from 'tinycolor2';
 import Turnstile from 'react-turnstile';
+import { useScreenRecorder } from './hooks/useScreenRecorder';
 
 const CustomColorWheel = ({ color, onChange, size = 240 }: { color: string, onChange: (hex: string) => void, size?: number }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -398,8 +399,13 @@ const CigarIcon = ({ size = 16, className = "" }: { size?: number, className?: s
 import { SnowFlurry } from './components/SnowFlurry';
 
 import { SystemStatus } from './components/SystemStatus';
+import { ShowcaseEditorModal } from './components/ShowcaseEditorModal';
 
 const App: React.FC = () => {
+  const [showcaseVideoBlob, setShowcaseVideoBlob] = useState<Blob | null>(null);
+  const { isRecording, startRecording, stopRecording } = useScreenRecorder((blob) => {
+    setShowcaseVideoBlob(blob);
+  });
   const [showRigUI, setShowRigUI] = useState(false);
   const [showBrandMenu, setShowBrandMenu] = useState(false);
   const [showFriendsInfo, setShowFriendsInfo] = useState(false);
@@ -476,9 +482,9 @@ const App: React.FC = () => {
   useEffect(() => {
     const path = window.location.pathname;
     if (path === '/privacy' || path === '/privacy/') {
-      window.location.href = 'https://www.beatgangsta.com/privacy';
+      window.location.pathname = '/privacy';
     } else if (path === '/terms' || path === '/terms/') {
-      window.location.href = 'https://www.beatgangsta.com/terms';
+      window.location.pathname = '/terms';
     } else if (path === '/cookies' || path === '/cookies/') {
       setShowCookiePolicy(true);
       window.history.replaceState({}, document.title, '/');
@@ -4521,6 +4527,9 @@ The AI was unable to verify these parameters. Please investigate.`;
               >
                 <div className="relative w-5 h-5 group">
                   <img src={user.photo} alt={user.name} className="w-full h-full rounded-full object-cover" />
+                  {isRecording && (
+                    <div className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full animate-pulse border-2 border-white shadow-sm" />
+                  )}
                 </div>
                 <span className="text-[10px] font-black uppercase tracking-wider truncate max-w-[70px] sm:max-w-[120px]">{user.name}</span>
                 <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" className={`transition-transform ${isUserMenuOpen ? 'rotate-180' : ''}`}>
@@ -4559,6 +4568,26 @@ The AI was unable to verify these parameters. Please investigate.`;
                     </div>
 
                     <div className={`h-px w-full my-1 ${getDropdownTheme(theme).divider}`} />
+
+                    <button 
+                      onClick={() => {
+                        if (isRecording) {
+                          stopRecording();
+                        } else {
+                          setIsUserMenuOpen(false);
+                          startRecording();
+                        }
+                      }}
+                      className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-left transition-colors group ${getDropdownTheme(theme).itemHover}`}
+                    >
+                      <div className={`w-7 h-7 rounded-full flex items-center justify-center transition-colors ${isRecording ? 'bg-red-500 text-white animate-pulse' : getDropdownTheme(theme).iconBg}`}>
+                        <Video size={14} />
+                      </div>
+                      <div>
+                        <div className="text-xs font-bold uppercase tracking-wider">{isRecording ? 'Stop Recording' : 'Record Showcase'}</div>
+                        <div className="text-[9px] opacity-50 mt-0.5">{isRecording ? 'Click to save video' : 'Capture your app workflow'}</div>
+                      </div>
+                    </button>
 
                     {isMasterAuthorized && (
                       <>
@@ -7286,6 +7315,16 @@ The AI was unable to verify these parameters. Please investigate.`;
           }}
         />
       </React.Suspense>
+
+      {showcaseVideoBlob && (
+        <React.Suspense fallback={null}>
+          <ShowcaseEditorModal
+            videoBlob={showcaseVideoBlob}
+            theme={theme}
+            onClose={() => setShowcaseVideoBlob(null)}
+          />
+        </React.Suspense>
+      )}
 
       {/* Honey Pot for Bots - Hidden from humans */}
       <a 
