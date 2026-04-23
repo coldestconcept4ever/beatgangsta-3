@@ -76,8 +76,14 @@ export const useScreenRecorder = (onComplete?: (blob: Blob) => void) => {
 
     } catch (err) {
       console.error('Error starting screen record:', err);
-      if ((err as any).name !== 'NotAllowedError') {
-        alert('Could not start screen recording. Check permissions.');
+      const errorName = (err as any).name || (err as any).message || String(err);
+      
+      if (errorName === 'NotAllowedError') {
+        alert('Screen recording permission was denied. Please allow permissions in your browser settings.');
+      } else if (errorName === 'NotFoundError' || errorName === 'NotSupportedError' || navigator.userAgent.toLowerCase().includes('android') || navigator.userAgent.toLowerCase().includes('iphone')) {
+        alert('Screen recording via the browser is typically not supported on mobile devices/browsers (like GrapheneOS/Chrome for Android) due to OS-level security constraints. Please run this showcase tool on a Desktop browser for reliable screen capturing.');
+      } else {
+        alert(`Could not start screen recording (Error: ${errorName}). Make sure you are using a supported desktop browser.`);
       }
       setIsRecording(false);
     }
