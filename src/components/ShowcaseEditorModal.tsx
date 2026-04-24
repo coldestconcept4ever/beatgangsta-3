@@ -79,10 +79,12 @@ export const ShowcaseEditorModal: React.FC<ShowcaseEditorModalProps> = ({ videoB
   const handleLoadedMetadata = () => {
     if (videoRef.current) {
       const dur = videoRef.current.duration;
-      setSourceDuration(dur);
-      setSourceOut(dur);
-      if (clips.length === 0) {
-        setClips([{ id: Date.now().toString(), sourceStart: 0, sourceEnd: dur }]);
+      if (Number.isFinite(dur)) {
+        setSourceDuration(dur);
+        setSourceOut(dur);
+        if (clips.length === 0) {
+          setClips([{ id: Date.now().toString(), sourceStart: 0, sourceEnd: dur }]);
+        }
       }
     }
   };
@@ -165,7 +167,7 @@ export const ShowcaseEditorModal: React.FC<ShowcaseEditorModalProps> = ({ videoB
         effects.filter(e => e.trackId === 'voiceover' && e.audioObj).forEach(e => {
            if (sequenceTime >= e.start && sequenceTime <= e.end) {
               const localAudioTime = sequenceTime - e.start;
-              if (e.audioObj) {
+              if (e.audioObj && Number.isFinite(localAudioTime)) {
                 if (Math.abs(e.audioObj.currentTime - localAudioTime) > 0.2) {
                    e.audioObj.currentTime = localAudioTime;
                 }
@@ -178,7 +180,7 @@ export const ShowcaseEditorModal: React.FC<ShowcaseEditorModalProps> = ({ videoB
         });
     }
 
-    if (Math.abs(videoRef.current.currentTime - targetSourceTime) > 0.1) {
+    if (Math.abs(videoRef.current.currentTime - targetSourceTime) > 0.1 && Number.isFinite(targetSourceTime)) {
       videoRef.current.currentTime = targetSourceTime;
     }
 
