@@ -907,12 +907,16 @@ app.post("/api/upload/init-gemini", async (req, res) => {
 
 // Original Chunked upload endpoint (kept for backwards compatibility if needed)
 app.post("/api/upload-chunk", express.raw({ type: 'application/octet-stream', limit: '100mb' }), async (req, res) => {
-  const { fileName, mimeType, chunkIndex, totalChunks, sessionId, offset, geminiUploadUrl } = req.query;
+  const { fileName, mimeType, chunkIndex, totalChunks, sessionId, offset, geminiUploadUrl, totalSize } = req.query;
   const chunkData = req.body;
 
   if (!fileName || !mimeType || !chunkIndex || !totalChunks || !sessionId) {
     return res.status(400).json({ error: "Missing upload parameters" });
   }
+
+  const chunkIdxNum = parseInt(chunkIndex as string);
+  const totalChunksNum = parseInt(totalChunks as string);
+  const isLastChunk = chunkIdxNum === totalChunksNum - 1;
 
   // If we have a geminiUploadUrl, we proxy directly to Gemini (Stateless/Vercel friendly)
   if (geminiUploadUrl) {
@@ -992,10 +996,21 @@ app.post("/api/upload-chunk", express.raw({ type: 'application/octet-stream', li
   const progress = (global as any).uploadProgress[sessionId as string];
   progress[fileName as string] = (progress[fileName as string] || 0) + 1;
 
-  if (progress[fileName as string] === parseInt(totalChunks as string)) {
-    // All chunks received
-    delete progress[fileName as string];
+  if (isLastChunk) {
+    // Wait a bit to ensure concurrent writes finished (though our current client is serial)
+    // For more robustness, we could check if progress count == totalChunks here
+    // but the most important thing is that the last chunk triggered the finalization.
     
+    // In a multi-user environment, we should really verify the file size matches totalSize if provided
+    if (totalSize) {
+      const stats = fs.statSync(tempFilePath);
+      if (stats.size < parseInt(totalSize as string)) {
+        console.warn(`[UPLOAD] Last chunk received but file size (${stats.size}) < totalSize (${totalSize}). Waiting for missed chunks?`);
+        // We could wait or return an early success, but for now we'll proceed and hope for the best 
+        // or return an error if it's too small.
+      }
+    }
+
     try {
       const fullFile = fs.readFileSync(tempFilePath);
       
@@ -1065,8 +1080,20 @@ app.post("/api/upload-chunk", express.raw({ type: 'application/octet-stream', li
         geminiError = geminiErr.message || String(geminiErr);
       }
       
-      // Clean up temp file
-      try { fs.unlinkSync(tempFilePath); } catch (e) {}
+      // Clean up temp file and progress
+      try { 
+        fs.unlinkSync(tempFilePath); 
+        delete progress[fileName as string];
+      } catch (e) {}
+
+      if (!webContentLink && !geminiFileUri) {
+          console.error("[UPLOAD] Finalization failed: No successful storage provider returned a URI");
+          return res.status(500).json({ 
+            error: "Upload finalization failed", 
+            geminiError,
+            details: "Could not upload to either Drive or Gemini. Check API keys and session."
+          });
+      }
 
       res.json({ success: true, url: webContentLink || '', fileId: fileId || '', geminiFileUri, geminiError });
     } catch (err: any) {

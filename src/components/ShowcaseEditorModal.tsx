@@ -869,9 +869,11 @@ export const ShowcaseEditorModal: React.FC<ShowcaseEditorModalProps> = ({ videoB
                 setInstrumentalBpm(bpm);
              }
              
-             const loopDur = (16 * 60) / bpm; 
-             const videoEnd = clips.reduce((acc, c) => acc + (c.sourceEnd - c.sourceStart), 0);
-             const targetDur = videoEnd > sequenceTime ? videoEnd - sequenceTime : loopDur;
+             const loopDur = (16 * 60) / bpm;
+             const clipsDur = clips.reduce((acc, c) => acc + (c.sourceEnd - c.sourceStart), 0);
+             const videoEnd = Math.max(sequenceDuration, clipsDur, 10);
+             const instStart = 0;
+             const targetDur = videoEnd > instStart ? videoEnd - instStart : Math.max(10, loopDur);
              const snappedDur = Math.ceil(targetDur / loopDur) * loopDur;
 
              pushHistory();
@@ -880,8 +882,8 @@ export const ShowcaseEditorModal: React.FC<ShowcaseEditorModalProps> = ({ videoB
                  return [...cleaned, {
                      id: "inst-" + Date.now(),
                      trackId: 'instrumental',
-                     start: sequenceTime,
-                     end: sequenceTime + (snappedDur || loopDur),
+                     start: instStart,
+                     end: instStart + (snappedDur || loopDur),
                      bpm: bpm,
                      loopDur: loopDur,
                      loopStart: loopStart
@@ -1573,6 +1575,12 @@ export const ShowcaseEditorModal: React.FC<ShowcaseEditorModalProps> = ({ videoB
                                         </svg>
 
                                         <span className="text-[10px] font-black text-white z-10 truncate">{e.bpm} BPM BEAT CLIP</span>
+                                        
+                                        {/* Loop Markers */}
+                                        {e.loopDur && e.loopDur > 0 && Array.from({ length: Math.max(0, Math.floor((e.end - e.start) / e.loopDur)) }).map((_, i) => (
+                                            <div key={i} className="absolute top-0 bottom-0 border-r border-white/20 border-dashed pointer-events-none" style={{ left: `${(i * e.loopDur / (e.end - e.start)) * 100}%` }} />
+                                        ))}
+
                                         <div className="absolute left-0 top-0 bottom-0 w-3 cursor-ew-resize hover:bg-white/50 z-20" onPointerDown={ev => { ev.stopPropagation(); startDragAction({ id: e.id, type: 'eff-trim-start' }); }} />
                                         <div className="absolute right-0 top-0 bottom-0 w-3 cursor-ew-resize hover:bg-white/50 z-20" onPointerDown={ev => { ev.stopPropagation(); startDragAction({ id: e.id, type: 'eff-trim-end' }); }} />
                                         <button onClick={() => {
