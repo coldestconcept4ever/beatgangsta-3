@@ -180,7 +180,7 @@ export const ShowcaseEditorModal: React.FC<ShowcaseEditorModalProps> = ({ videoB
         });
     }
 
-    if (Math.abs(videoRef.current.currentTime - targetSourceTime) > 0.1 && Number.isFinite(targetSourceTime)) {
+    if (Number.isFinite(targetSourceTime) && targetSourceTime >= 0 && Math.abs(videoRef.current.currentTime - targetSourceTime) > 0.1) {
       videoRef.current.currentTime = targetSourceTime;
     }
 
@@ -363,8 +363,9 @@ export const ShowcaseEditorModal: React.FC<ShowcaseEditorModalProps> = ({ videoB
   const getTimelineTime = (e: PointerEvent) => {
      if (!timelineContainerRef.current) return 0;
      const rect = timelineContainerRef.current.getBoundingClientRect();
+     if (rect.width === 0) return 0;
      const pos = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
-     return pos * Math.max(sequenceDuration, 10); // Use 10s min scale if empty
+     return (Number.isFinite(pos) ? pos : 0) * Math.max(sequenceDuration, 10); // Use 10s min scale if empty
   };
 
   useEffect(() => {
@@ -682,12 +683,13 @@ export const ShowcaseEditorModal: React.FC<ShowcaseEditorModalProps> = ({ videoB
                              <div className="flex-1 relative h-8 bg-black rounded border border-white/10 cursor-pointer overflow-hidden group"
                                   onPointerDown={e => {
                                       const rect = e.currentTarget.getBoundingClientRect();
+                                      if (rect.width === 0) return;
                                       const p = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
-                                      setSourceTime(p * sourceDuration);
+                                      setSourceTime(Number.isFinite(p) ? p * sourceDuration : 0);
                                       
                                       const moveHandler = (moveEv: PointerEvent) => {
                                          const p = Math.max(0, Math.min(1, (moveEv.clientX - rect.left) / rect.width));
-                                         setSourceTime(p * sourceDuration);
+                                         setSourceTime(Number.isFinite(p) ? p * sourceDuration : 0);
                                       };
                                       const upHandler = () => {
                                          window.removeEventListener('pointermove', moveHandler);
