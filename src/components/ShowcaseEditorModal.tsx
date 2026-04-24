@@ -790,9 +790,21 @@ export const ShowcaseEditorModal: React.FC<ShowcaseEditorModalProps> = ({ videoB
                 return prev.map(eff => {
                     if (eff.id !== dragAction.id) return eff;
                     if (dragAction.type === 'eff-trim-start') {
-                       return { ...eff, start: Math.min(eff.end - 0.2, time) };
+                       if (eff.trackId === 'instrumental' && eff.loopDur) {
+                           const newDur = Math.max(eff.end - time, eff.loopDur);
+                           const snappedDur = Math.round(newDur / eff.loopDur) * eff.loopDur;
+                           return { ...eff, start: eff.end - snappedDur };
+                       } else {
+                           return { ...eff, start: Math.min(eff.end - 0.2, time) };
+                       }
                     } else if (dragAction.type === 'eff-trim-end') {
-                       return { ...eff, end: Math.max(eff.start + 0.2, time) };
+                       if (eff.trackId === 'instrumental' && eff.loopDur) {
+                           const newDur = Math.max(time - eff.start, eff.loopDur);
+                           const snappedDur = Math.round(newDur / eff.loopDur) * eff.loopDur;
+                           return { ...eff, end: eff.start + snappedDur };
+                       } else {
+                           return { ...eff, end: Math.max(eff.start + 0.2, time) };
+                       }
                     } else if (dragAction.type === 'eff-move') {
                        const dur = eff.end - eff.start;
                        const newStart = Math.max(0, time - dur/2); // Center on pointer roughly
@@ -832,7 +844,9 @@ export const ShowcaseEditorModal: React.FC<ShowcaseEditorModalProps> = ({ videoB
           // Use AI to analyze tempo
           try {
              setIsProcessing(true);
-             const buffer = await file.arrayBuffer();
+             // Slice file to 2MB to avoid PAYLOAD_TOO_LARGE
+             const chunk = file.slice(0, Math.min(file.size, 2 * 1024 * 1024));
+             const buffer = await chunk.arrayBuffer();
              const uint8Array = new Uint8Array(buffer);
              // Quick base64 conversion
              let binary = '';
@@ -840,11 +854,17 @@ export const ShowcaseEditorModal: React.FC<ShowcaseEditorModalProps> = ({ videoB
                  binary += String.fromCharCode.apply(null, Array.from(uint8Array.slice(i, i+10000)));
              }
              const base64 = btoa(binary);
-             const result = await analyzeInstrumental(base64, file.type);
-             setInstrumentalBpm(result.bpm);
-             console.log("Instrumental Analysis:", result);
+             let bpm = 90;
+             try {
+                const result = await analyzeInstrumental(base64, file.type);
+                bpm = result.bpm;
+                setInstrumentalBpm(bpm);
+                console.log("Instrumental Analysis:", result);
+             } catch(err) {
+                console.error("Instrumental analysis failed, using default 90 BPM", err);
+                setInstrumentalBpm(bpm);
+             }
              
-             const bpm = result.bpm;
              const loopDur = 16 * 60 / bpm; // perfectly quantized 4-bar loop
              setEffects(prev => {
                  const cleaned = prev.filter(e => e.trackId !== 'instrumental');
@@ -859,7 +879,7 @@ export const ShowcaseEditorModal: React.FC<ShowcaseEditorModalProps> = ({ videoB
              });
              setActiveTool('pointer');
           } catch(err) {
-             console.error("Instrumental analysis failed", err);
+             console.error("Instrumental processing failed completely", err);
           } finally {
              setIsProcessing(false);
           }
