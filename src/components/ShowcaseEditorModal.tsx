@@ -842,16 +842,15 @@ export const ShowcaseEditorModal: React.FC<ShowcaseEditorModalProps> = ({ videoB
           const url = URL.createObjectURL(file);
           const newAudio = new Audio(url);
           newAudio.loop = true;
+          newAudio.preload = 'auto';
           setInstrumentalAudio(newAudio);
           
-          // Use AI to analyze tempo
           try {
              setIsProcessing(true);
-             // Slice file to 512KB to cleanly avoid PAYLOAD_TOO_LARGE while having enough for 4 bars detection
-             const chunk = file.slice(0, Math.min(file.size, 512 * 1024));
+             const chunk = file.slice(0, Math.min(file.size, 1024 * 1024));
              const buffer = await chunk.arrayBuffer();
              const uint8Array = new Uint8Array(buffer);
-             // Quick base64 conversion
+             
              let binary = '';
              for(let i=0; i<uint8Array.length; i+=10000) {
                  binary += String.fromCharCode.apply(null, Array.from(uint8Array.slice(i, i+10000)));
@@ -861,27 +860,28 @@ export const ShowcaseEditorModal: React.FC<ShowcaseEditorModalProps> = ({ videoB
              let loopStart = 0;
              try {
                 const result = await analyzeInstrumental(base64, file.type);
-                bpm = result.bpm;
-                loopStart = result.loopStart;
+                bpm = result.bpm || 90;
+                loopStart = result.loopStart || 0;
                 setInstrumentalBpm(bpm);
-                console.log("Instrumental Analysis:", result);
+                console.log("Instrumental Analysis:", { bpm, loopStart });
              } catch(err) {
-                console.error("Instrumental analysis failed, using default 90 BPM", err);
+                console.error("AI Analysis failed, using fallback.", err);
                 setInstrumentalBpm(bpm);
              }
              
-             const loopDur = 16 * 60 / bpm; // perfectly quantized 4-bar loop
+             const loopDur = (16 * 60) / bpm; 
              const videoEnd = clips.reduce((acc, c) => acc + (c.sourceEnd - c.sourceStart), 0);
              const targetDur = videoEnd > sequenceTime ? videoEnd - sequenceTime : loopDur;
-             const snappedDur = Math.max(loopDur, Math.ceil(targetDur / loopDur) * loopDur);
+             const snappedDur = Math.ceil(targetDur / loopDur) * loopDur;
 
+             pushHistory();
              setEffects(prev => {
                  const cleaned = prev.filter(e => e.trackId !== 'instrumental');
                  return [...cleaned, {
-                     id: Date.now().toString(),
+                     id: "inst-" + Date.now(),
                      trackId: 'instrumental',
                      start: sequenceTime,
-                     end: sequenceTime + snappedDur,
+                     end: sequenceTime + (snappedDur || loopDur),
                      bpm: bpm,
                      loopDur: loopDur,
                      loopStart: loopStart
@@ -889,7 +889,7 @@ export const ShowcaseEditorModal: React.FC<ShowcaseEditorModalProps> = ({ videoB
              });
              setActiveTool('pointer');
           } catch(err) {
-             console.error("Instrumental processing failed completely", err);
+             console.error("Instrumental processing failed", err);
           } finally {
              setIsProcessing(false);
           }
