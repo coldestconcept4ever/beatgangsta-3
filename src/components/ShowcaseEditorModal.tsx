@@ -4,6 +4,8 @@ import { X, Video, Play, Pause, Download, Loader2, Plus, Trash2, Scissors, Type,
 import { generateVoiceover, analyzeInstrumental } from '../services/geminiService';
 import { AppTheme } from '../types';
 import { Logo } from './Logo';
+import { renderToStaticMarkup } from 'react-dom/server';
+import { Mascot } from './Mascot';
 
 interface ShowcaseEditorModalProps {
   videoBlob: Blob;
@@ -19,7 +21,7 @@ interface SequenceClip {
 
 interface SequenceEffect {
   id: string;
-  trackId: 'fx' | 'text' | 'voiceover';
+  trackId: 'fx' | 'text' | 'voiceover' | 'mascot';
   start: number; // Sequence time
   end: number;
   // FX props
@@ -85,6 +87,17 @@ export const ShowcaseEditorModal: React.FC<ShowcaseEditorModalProps> = ({ videoB
   const [instrumentalAudio, setInstrumentalAudio] = useState<HTMLAudioElement | null>(null);
   const [instrumentalBpm, setInstrumentalBpm] = useState<number | null>(null);
 
+  const [mascotImg, setMascotImg] = useState<HTMLImageElement | null>(null);
+
+  useEffect(() => {
+     const svgString = renderToStaticMarkup(<Mascot size={800} />);
+     const blob = new Blob([svgString], { type: 'image/svg+xml' });
+     const url = URL.createObjectURL(blob);
+     const img = new Image();
+     img.onload = () => setMascotImg(img);
+     img.src = url;
+     return () => URL.revokeObjectURL(url);
+  }, []);
 
   const pushHistory = (newClips?: SequenceClip[], newEffects?: SequenceEffect[]) => {
       setHistory(prev => [...prev, { clips: newClips || [...clips], effects: newEffects || [...effects] }].slice(-20)); // Keep last 20 states
@@ -474,6 +487,21 @@ export const ShowcaseEditorModal: React.FC<ShowcaseEditorModalProps> = ({ videoB
                drawOverlayText(ctx, canvas, activeText.text, sequenceTime - activeText.start, theme === 'coldest');
             }
         }
+
+        // 4. Mascot Overlay
+        const activeMascots = effects.filter(e => e.trackId === 'mascot' && sequenceTime >= e.start && sequenceTime <= e.end);
+        if (activeMascots.length > 0 && mascotImg) {
+            for (const m of activeMascots) {
+                const mW = canvas.width * 0.4;
+                const mH = mW * (mascotImg.height / mascotImg.width);
+                const localTime = sequenceTime - m.start;
+                const bounce = Math.sin(localTime * Math.PI * 2) * 20; // gentle bounce
+                ctx.save();
+                ctx.translate(canvas.width - mW - 20, canvas.height - mH - 20 + bounce);
+                ctx.drawImage(mascotImg, 0, 0, mW, mH);
+                ctx.restore();
+            }
+        }
     } else {
         // Scissors Mode visual hint
         ctx.save();
@@ -559,7 +587,7 @@ export const ShowcaseEditorModal: React.FC<ShowcaseEditorModalProps> = ({ videoB
     }
     ctx.scale(scale, scale);
 
-    ctx.font = `900 italic ${baseLineHeight}px "Outfit", "Inter", sans-serif`;
+    ctx.font = `900 ${baseLineHeight}px "Outfit", "Inter", sans-serif`;
     ctx.fillStyle = isColdestTheme ? '#38bdf8' : '#ffffff'; // Tailwind Sky 400
     ctx.shadowColor = isColdestTheme ? 'rgba(56, 189, 248, 1)' : 'rgba(255, 50, 50, 1)';
     ctx.shadowBlur = baseLineHeight * 0.3;
@@ -582,14 +610,18 @@ export const ShowcaseEditorModal: React.FC<ShowcaseEditorModalProps> = ({ videoB
 
         lines.forEach((line, i) => {
             const y = startY + i * baseLineHeight * 1.1;
-            ctx.lineWidth = baseLineHeight * 0.08;
+            ctx.lineWidth = baseLineHeight * 0.1;
             ctx.strokeStyle = '#000000';
-            ctx.fillText(line, 0, y);
+            ctx.lineJoin = 'round';
             
+            // Draw stroke (outline) first to prevent it from overlapping inside the blue fill
             const oldShadow = ctx.shadowColor;
             ctx.shadowColor = 'transparent';
             ctx.strokeText(line, 0, y);
             ctx.shadowColor = oldShadow;
+            
+            // Draw fill (blue colored letters) on top of the black stroke
+            ctx.fillText(line, 0, y);
         });
 
         if (t > 0) {
@@ -865,6 +897,17 @@ export const ShowcaseEditorModal: React.FC<ShowcaseEditorModalProps> = ({ videoB
       setActiveTool('pointer');
   };
 
+  const addMascotOverlay = () => {
+      pushHistory();
+      setEffects(prev => [...prev, {
+          id: Date.now().toString(),
+          trackId: 'mascot',
+          start: sequenceTime,
+          end: sequenceTime + 4
+      }]);
+      setActiveTool('pointer');
+  };
+
   const appendNewClip = () => {
       if (sourceDuration > 0) {
           setClips(prev => [...prev, {
@@ -940,27 +983,82 @@ export const ShowcaseEditorModal: React.FC<ShowcaseEditorModalProps> = ({ videoB
               } catch(e) { console.warn("Failed to fetch voiceover for export", e); }
           }
           
+          const getTextOverlayBlob = (text: string, theme: string): Promise<Blob> => {
+              return new Promise((resolve, reject) => {
+                  try {
+                      const c = document.createElement('canvas');
+                      c.width = canvasRef.current?.width || 1920;
+                      c.height = canvasRef.current?.height || 1080;
+                      const ctx = c.getContext('2d');
+                      if (ctx) {
+                          ctx.clearRect(0, 0, c.width, c.height);
+                          drawOverlayText(ctx, c, text, 2.0, theme === 'coldest', true);
+                          c.toBlob(res => {
+                              if (res) resolve(res);
+                              else reject(new Error("Failed to create blob for text overlay"));
+                          }, 'image/png');
+                      } else {
+                          reject(new Error("Failed to get context for text overlay canvas"));
+                      }
+                  } catch (e) {
+                      reject(e);
+                  }
+              });
+          };
+
           // 3. Text Overlays (Rendered as PNGs)
           const textEffects = effects.filter(e => e.trackId === 'text');
           for (let i = 0; i < textEffects.length; i++) {
               const e = textEffects[i];
               if (e.text) {
-                  const c = document.createElement('canvas');
-                  c.width = canvasRef.current.width || 1920;
-                  c.height = canvasRef.current.height || 1080;
-                  const ctx = c.getContext('2d');
-                  if (ctx) {
-                      ctx.clearRect(0, 0, c.width, c.height);
-                      drawOverlayText(ctx, c, e.text, 2.0, theme === 'coldest', true);
-                      const blob = await new Promise<Blob | null>(res => c.toBlob(res, 'image/png'));
-                      if (blob) {
-                          zip.file(`text_overlay_${i + 1}.png`, blob);
-                      }
+                  try {
+                      const blob = await getTextOverlayBlob(e.text, theme);
+                      zip.file(`text_overlay_${i + 1}.png`, blob);
+                  } catch (err) {
+                      console.error(`Failed to render text overlay blob for text_overlay_${i + 1}.png`, err);
                   }
               }
           }
           
-          // 4. Project timeline details
+          // 4. Mascot Overlay (Rendered as PNG)
+          const mascotEffects = effects.filter(e => e.trackId === 'mascot');
+          
+          const getMascotBlob = (): Promise<Blob> => {
+              return new Promise((resolve, reject) => {
+                  try {
+                      if (!mascotImg) {
+                          reject(new Error("Mascot image not ready"));
+                          return;
+                      }
+                      const c = document.createElement('canvas');
+                      c.width = mascotImg.width;
+                      c.height = mascotImg.height;
+                      const ctx = c.getContext('2d');
+                      if (ctx) {
+                          ctx.drawImage(mascotImg, 0, 0);
+                          c.toBlob(res => {
+                              if (res) resolve(res);
+                              else reject(new Error("Failed to create blob for mascot"));
+                          }, 'image/png');
+                      } else {
+                          reject(new Error("Failed to get context for mascot canvas"));
+                      }
+                  } catch (e) {
+                      reject(e);
+                  }
+              });
+          };
+
+          if (mascotEffects.length > 0 && mascotImg) {
+             try {
+                const blob = await getMascotBlob();
+                zip.file("mascot.png", blob);
+             } catch (e) {
+                console.error("Failed to render mascot blob", e);
+             }
+          }
+          
+          // 5. Project timeline details
           if (instrumentalBlob) {
               zip.file("instrumental.wav", instrumentalBlob); // can be mp3 or wav depending on upload
           }
@@ -984,6 +1082,12 @@ export const ShowcaseEditorModal: React.FC<ShowcaseEditorModalProps> = ({ videoB
                   start: e.start,
                   end: e.end,
                   file: `voiceover_${index + 1}.wav`
+              })),
+              mascots: effects.filter(e => e.trackId === 'mascot').map(e => ({
+                  id: e.id,
+                  start: e.start,
+                  end: e.end,
+                  file: `mascot.png`
               })),
               magnifiers: effects.filter(e => e.trackId === 'fx').map(e => ({
                   id: e.id,
@@ -1010,10 +1114,15 @@ export const ShowcaseEditorModal: React.FC<ShowcaseEditorModalProps> = ({ videoB
           const zipBlob = await zip.generateAsync({ type: "blob" });
           const zipUrl = URL.createObjectURL(zipBlob);
           const a = document.createElement('a');
+          a.style.display = 'none';
           a.href = zipUrl;
           a.download = `NLE_PRO_Export_${Date.now()}.zip`;
+          document.body.appendChild(a);
           a.click();
-          URL.revokeObjectURL(zipUrl);
+          setTimeout(() => {
+              document.body.removeChild(a);
+              URL.revokeObjectURL(zipUrl);
+          }, 100);
           
       } catch(e) {
           console.error(e);
@@ -1057,6 +1166,9 @@ export const ShowcaseEditorModal: React.FC<ShowcaseEditorModalProps> = ({ videoB
                  </button>
                  <button onClick={() => setActiveTool('text')} title="Add Text" className={`p-3 rounded-xl transition-colors ${activeTool === 'text' ? highlightClass : 'text-white/50 hover:bg-white/10'}`}>
                     <Type size={24} />
+                 </button>
+                 <button onClick={addMascotOverlay} title="Add Mascot" className={`p-3 rounded-xl transition-colors text-white/50 hover:bg-white/10`}>
+                    <div className="w-6 h-6 flex items-center justify-center">🐧</div>
                  </button>
              </div>
 
@@ -1229,6 +1341,7 @@ export const ShowcaseEditorModal: React.FC<ShowcaseEditorModalProps> = ({ videoB
                   <div className="w-32 bg-neutral-900 border-r border-white/10 flex flex-col flex-shrink-0">
                       <div className="flex-1 border-b border-white/5 flex items-center px-3 text-[10px] font-black tracking-widest uppercase text-indigo-400">Video</div>
                       <div className="flex-1 border-b border-white/5 flex items-center px-3 text-[10px] font-black tracking-widest uppercase text-pink-400">Text FX</div>
+                      <div className="flex-1 border-b border-white/5 flex items-center px-3 text-[10px] font-black tracking-widest uppercase text-sky-400">Mascot</div>
                       <div className="flex-1 border-b border-white/5 flex items-center px-3 text-[10px] font-black tracking-widest uppercase text-emerald-400">Magnifier</div>
                       <div className="flex-1 border-b border-white/5 flex items-center px-3 text-[10px] font-black tracking-widest uppercase text-yellow-400">Audio (Voice)</div>
                   </div>
@@ -1311,6 +1424,20 @@ export const ShowcaseEditorModal: React.FC<ShowcaseEditorModalProps> = ({ videoB
                                         style={{ left: `${(e.start/tlScale)*100}%`, width: `${((e.end-e.start)/tlScale)*100}%` }}
                                         onPointerDown={ev => { ev.stopPropagation(); startDragAction({ id: e.id, type: 'eff-move' }); }}>
                                         <span className="text-[10px] font-black text-white truncate pointer-events-none block whitespace-pre">{e.text?.replace(/\n|\\n/g, ' ')}</span>
+                                        <div className="absolute left-0 top-0 bottom-0 w-3 cursor-ew-resize hover:bg-white/50 z-20" onPointerDown={ev => { ev.stopPropagation(); startDragAction({ id: e.id, type: 'eff-trim-start' }); }} />
+                                        <div className="absolute right-0 top-0 bottom-0 w-3 cursor-ew-resize hover:bg-white/50 z-20" onPointerDown={ev => { ev.stopPropagation(); startDragAction({ id: e.id, type: 'eff-trim-end' }); }} />
+                                        <button onClick={() => { pushHistory(); setEffects(efs => efs.filter(x => x.id !== e.id)); }} className="absolute inset-x-0 inset-y-0 opacity-0 group-hover:opacity-100 bg-red-500/80 flex items-center justify-center transition-opacity z-10"><Trash2 size={16}/></button>
+                                   </div>
+                               ))}
+                           </div>
+
+                           {/* Mascot Track */}
+                           <div className="flex-1 border-b border-white/5 relative pointer-events-auto flex items-center px-0.5">
+                               {effects.filter(e => e.trackId === 'mascot').map(e => (
+                                   <div key={e.id} className="absolute h-[80%] top-[10%] bg-sky-500/80 border-2 border-sky-300 rounded group shadow-lg cursor-move flex items-center justify-center px-4 overflow-hidden"
+                                        style={{ left: `${(e.start/tlScale)*100}%`, width: `${((e.end-e.start)/tlScale)*100}%` }}
+                                        onPointerDown={ev => { ev.stopPropagation(); startDragAction({ id: e.id, type: 'eff-move' }); }}>
+                                        <span className="text-[10px] font-black text-white truncate pointer-events-none block whitespace-pre">🐧 Mascot</span>
                                         <div className="absolute left-0 top-0 bottom-0 w-3 cursor-ew-resize hover:bg-white/50 z-20" onPointerDown={ev => { ev.stopPropagation(); startDragAction({ id: e.id, type: 'eff-trim-start' }); }} />
                                         <div className="absolute right-0 top-0 bottom-0 w-3 cursor-ew-resize hover:bg-white/50 z-20" onPointerDown={ev => { ev.stopPropagation(); startDragAction({ id: e.id, type: 'eff-trim-end' }); }} />
                                         <button onClick={() => { pushHistory(); setEffects(efs => efs.filter(x => x.id !== e.id)); }} className="absolute inset-x-0 inset-y-0 opacity-0 group-hover:opacity-100 bg-red-500/80 flex items-center justify-center transition-opacity z-10"><Trash2 size={16}/></button>
