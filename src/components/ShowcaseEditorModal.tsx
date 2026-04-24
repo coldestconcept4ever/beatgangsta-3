@@ -78,13 +78,27 @@ export const ShowcaseEditorModal: React.FC<ShowcaseEditorModalProps> = ({ videoB
 
   const handleLoadedMetadata = () => {
     if (videoRef.current) {
-      const dur = videoRef.current.duration;
-      if (Number.isFinite(dur)) {
-        setSourceDuration(dur);
-        setSourceOut(dur);
-        if (clips.length === 0) {
-          setClips([{ id: Date.now().toString(), sourceStart: 0, sourceEnd: dur }]);
-        }
+      if (videoRef.current.duration === Infinity || isNaN(videoRef.current.duration)) {
+          // Fix for WebM from MediaRecorder lacking duration metadata
+          videoRef.current.currentTime = 1e101;
+          videoRef.current.onseeked = () => {
+             if (!videoRef.current) return;
+             videoRef.current.onseeked = null;
+             videoRef.current.currentTime = 0;
+             const dur = videoRef.current.duration;
+             if (Number.isFinite(dur)) {
+                 setSourceDuration(dur);
+                 setSourceOut(dur);
+                 setClips(prev => prev.length === 0 ? [{ id: Date.now().toString(), sourceStart: 0, sourceEnd: dur }] : prev);
+             }
+          };
+      } else {
+          const dur = videoRef.current.duration;
+          if (Number.isFinite(dur)) {
+            setSourceDuration(dur);
+            setSourceOut(dur);
+            setClips(prev => prev.length === 0 ? [{ id: Date.now().toString(), sourceStart: 0, sourceEnd: dur }] : prev);
+          }
       }
     }
   };
@@ -131,11 +145,11 @@ export const ShowcaseEditorModal: React.FC<ShowcaseEditorModalProps> = ({ videoB
     return () => {
       if (requestRef.current) cancelAnimationFrame(requestRef.current);
     };
-  }, [isPlaying, sequenceDuration, clips, effects]); // dependencies that affect rendering
+  }); // run on every render to ensure playLoop has fresh closures
 
   // Sync Video Element with Sequence Time
   useEffect(() => {
-    if (!videoRef.current) return;
+    if (!videoRef.current || sourceDuration === 0) return;
     
     let targetSourceTime = 0;
 
@@ -190,7 +204,7 @@ export const ShowcaseEditorModal: React.FC<ShowcaseEditorModalProps> = ({ videoB
       if (!videoRef.current.paused) videoRef.current.pause();
     }
 
-  }, [sequenceTime, sourceTime, clips, isPlaying, effects, activeTool, sequenceDuration]);
+  }, [sequenceTime, sourceTime, clips, isPlaying, effects, activeTool, sequenceDuration, sourceDuration]);
 
   const drawPreview = () => {
     const canvas = canvasRef.current;
@@ -275,46 +289,102 @@ export const ShowcaseEditorModal: React.FC<ShowcaseEditorModalProps> = ({ videoB
     }
 
     const lines = text.split('\\n');
-    const baseLineHeight = canvas.height * 0.1;
+    const baseLineHeight = canvas.height * 0.12;
     
     ctx.translate(canvas.width / 2, canvas.height / 2);
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
     
-    // Pop up anim
+    // 90s Cartoon Trailer Slam Anim
+    const slamDuration = 0.25;
+    const shakeDuration = 0.8;
     let scale = 1;
-    const animDuration = 0.5;
-    if (localTime < animDuration) {
-      const t = localTime / animDuration;
-      scale = 3 - 2 * Math.sin(t * Math.PI) * Math.exp(-t * 5);
-      if (t < 0.2) scale = 3 - 10 * t;
-      if (scale < 1) scale = 1;
+    let shakeX = 0;
+    let shakeY = 0;
+    let alpha = 1;
+    let zRot = 0;
+
+    if (localTime < slamDuration) {
+        const p = localTime / slamDuration;
+        const pEasy = Math.pow(p, 5); // very fast snap at the end
+        scale = 1 + 25 * (1 - pEasy);
+        alpha = pEasy;
+        zRot = (1 - pEasy) * 0.5;
+    } else if (localTime < slamDuration + shakeDuration) {
+        const sp = (localTime - slamDuration) / shakeDuration;
+        const decay = Math.pow(1 - sp, 3);
+        const intensity = 80 * decay;
+        shakeX = (Math.random() - 0.5) * intensity;
+        shakeY = (Math.random() - 0.5) * intensity;
+
+        // Shockwave effect
+        if (localTime < slamDuration + 0.4) {
+            const swP = (localTime - slamDuration) / 0.4;
+            ctx.save();
+            ctx.beginPath();
+            ctx.ellipse(0, 0, canvas.width * swP, canvas.height * swP * 0.6, 0, 0, Math.PI*2);
+            ctx.lineWidth = 40 * (1 - swP);
+            ctx.strokeStyle = isColdestTheme ? `rgba(56, 189, 248, ${1 - swP})` : `rgba(255, 255, 255, ${1 - swP})`;
+            ctx.stroke();
+            
+            // Action lines
+            for(let a=0; a<16; a++) {
+                ctx.save();
+                ctx.rotate(a * Math.PI/8 + Math.random()*0.1);
+                ctx.beginPath();
+                ctx.moveTo(canvas.width * (swP * 0.3 + 0.1), 0);
+                ctx.lineTo(canvas.width * (swP * 1.5 + 0.2), 0);
+                ctx.lineWidth = 15 * (1 - swP);
+                ctx.stroke();
+                ctx.restore();
+            }
+            ctx.restore();
+        }
+    }
+
+    ctx.translate(shakeX, shakeY);
+    ctx.rotate(zRot);
+
+    // Slow zoom after slam
+    if (localTime > slamDuration) {
+        const slowZoom = 1 + (localTime - slamDuration) * 0.04;
+        ctx.scale(slowZoom, slowZoom);
     }
     ctx.scale(scale, scale);
 
-    if (localTime < 1.0) {
-        const shake = Math.max(0, 1.0 - localTime) * 10;
-        ctx.translate((Math.random() - 0.5) * shake, (Math.random() - 0.5) * shake);
+    ctx.font = `900 italic ${baseLineHeight}px "Outfit", "Inter", sans-serif`;
+    ctx.fillStyle = isColdestTheme ? '#38bdf8' : '#ffffff'; // Tailwind Sky 400
+    ctx.shadowColor = isColdestTheme ? 'rgba(56, 189, 248, 1)' : 'rgba(255, 50, 50, 1)';
+    ctx.shadowBlur = baseLineHeight * 0.3;
+
+    const numTrails = localTime < slamDuration ? 6 : 1;
+    ctx.globalAlpha = alpha;
+
+    const totalHeight = lines.length * baseLineHeight * 1.1;
+    const startY = -totalHeight / 2 + baseLineHeight / 2;
+
+    for (let t = 0; t < numTrails; t++) {
+        if (t > 0) {
+            const trailTime = Math.max(0, localTime - t * 0.03);
+            const tp = trailTime / slamDuration;
+            const trailScale = 1 + 25 * (1 - Math.pow(tp, 5));
+            ctx.save();
+            ctx.scale(trailScale / scale, trailScale / scale);
+            ctx.globalAlpha = alpha * (1 - t/numTrails) * 0.4;
+        }
+
+        lines.forEach((line, i) => {
+            const y = startY + i * baseLineHeight * 1.1;
+            ctx.lineWidth = baseLineHeight * 0.06;
+            ctx.strokeStyle = '#000000';
+            ctx.strokeText(line, 0, y);
+            ctx.fillText(line, 0, y);
+        });
+
+        if (t > 0) {
+            ctx.restore();
+        }
     }
-    
-    ctx.font = `italic 900 ${baseLineHeight}px "Impact", "Arial Black", sans-serif`;
-    
-    lines.forEach((line, i) => {
-      const y = ((i - (lines.length - 1) / 2) * baseLineHeight);
-      ctx.shadowColor = isColdestTheme ? 'rgba(0, 150, 255, 0.8)' : 'rgba(255, 69, 0, 0.8)';
-      ctx.shadowBlur = 30;
-      ctx.strokeStyle = '#000000';
-      ctx.lineWidth = baseLineHeight * 0.2;
-      ctx.strokeText(line, 0, y);
-      
-      ctx.shadowColor = 'transparent';
-      ctx.strokeStyle = isColdestTheme ? '#e0f2fe' : '#fef08a';
-      ctx.lineWidth = baseLineHeight * 0.03;
-      ctx.strokeText(line, 0, y);
-      
-      ctx.fillStyle = '#ffffff';
-      ctx.fillText(line, 0, y);
-    });
     ctx.restore();
   };
 
@@ -699,12 +769,12 @@ export const ShowcaseEditorModal: React.FC<ShowcaseEditorModalProps> = ({ videoB
                                       window.addEventListener('pointerup', upHandler);
                                   }}>
                                  {/* the bar */}
-                                 <div className="absolute top-0 bottom-0 bg-white/20" style={{ left: `${(sourceIn/sourceDuration)*100}%`, width: `${((sourceOut-sourceIn)/sourceDuration)*100}%` }} />
-                                 <div className="absolute top-0 bottom-0 w-px bg-red-500 pointer-events-none group-hover:w-0.5" style={{ left: `${(sourceTime/sourceDuration)*100}%` }} />
+                                 <div className="absolute top-0 bottom-0 bg-white/20" style={{ left: `${(sourceIn/(sourceDuration||1))*100}%`, width: `${((sourceOut-sourceIn)/(sourceDuration||1))*100}%` }} />
+                                 <div className="absolute top-0 bottom-0 w-px bg-red-500 pointer-events-none group-hover:w-0.5" style={{ left: `${(sourceTime/(sourceDuration||1))*100}%` }} />
                                  {/* IN point */}
-                                 <div className="absolute top-0 bottom-0 w-[2px] bg-indigo-500" style={{ left: `${(sourceIn/sourceDuration)*100}%` }} />
+                                 <div className="absolute top-0 bottom-0 w-[2px] bg-indigo-500" style={{ left: `${(sourceIn/(sourceDuration||1))*100}%` }} />
                                  {/* OUT point */}
-                                 <div className="absolute top-0 bottom-0 w-[2px] bg-pink-500" style={{ left: `${(sourceOut/sourceDuration)*100}%` }} />
+                                 <div className="absolute top-0 bottom-0 w-[2px] bg-pink-500" style={{ left: `${(sourceOut/(sourceDuration||1))*100}%` }} />
                              </div>
                              <button onClick={() => setSourceOut(Math.max(sourceTime, sourceIn))} className="px-3 py-1 bg-white/10 hover:bg-white/20 rounded font-bold text-xs whitespace-nowrap text-white">Set Out ]</button>
                          </div>
