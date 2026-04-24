@@ -42,6 +42,11 @@ const ADVANCED_MIDI_PROMPT = `
     You are an elite, top-tier AI music producer. Your MIDI generation MUST reflect professional, humanized, and highly complex musicality. Do NOT generate basic, robotic, or simplistic patterns.
     Always include decent, best-in-class patterns instead of sometimes leaving it simple, so users don't feel cheated.
 
+    CRITICAL - MIDI NOTE COMPLEXITY & REALISM (ANTI 2-NOTE GENERATION):
+    - You MUST generate incredibly realistic, multi-note MIDI patterns. Aim for at least 15-40 notes per sequence for melodies and arps, at least 8-20 notes for chord progressions, and at least 15-30 notes for basslines/808s over 4/8 bars.
+    - NEVER generate simple 2-note or 4-note patterns unless it is literally a static drone. Users complain when the system generates "shitty and unrealistic 2 note" patterns. It MUST be a proper 4 or 8 bar pattern.
+    - If the user requested a specific song, the MIDI notes MUST meticulously recreate the EXACT iconic melodies, rhythms, chords, and basslines of that song note-for-note and perfectly match the BPM.
+
     CRITICAL - NO VOCALS AS INSTRUMENTS:
     Ensure you ALWAYS use VST instruments (synths, keys, bass, guitars, etc.) instead of a vocal or acapella as an instrument in the beat recipe. Users feel cheated by a bad recipe guide if it just says "use a vocal". Only use actual VST instruments or hardware for the beat's instrumentation.
 
@@ -666,7 +671,7 @@ const getUnifiedRecipeSchema = () => {
             loopGuide: { type: Type.STRING },
             midiNotes: {
               type: Type.ARRAY,
-              description: "MIDI pattern for this instrument. The sum of all 'duration' and 'wait' values MUST equal exactly 16 beats (for 4 bars) or 32 beats (for 8 bars).",
+              description: "MIDI pattern for this instrument. You MUST include at least 15-40 notes for melodies/arps, 8-20 for chords, preventing basic 2-note loops. The sum of all 'duration' and 'wait' values MUST equal exactly 16 beats (for 4 bars) or 32 beats (for 8 bars).",
               items: {
                 type: Type.OBJECT,
                 properties: {
@@ -1971,7 +1976,7 @@ export const getSongBeatRecommendations = async (plugins: VSTPlugin[], songQuery
     ${JSON.stringify(blueprint)}
 
     Ensure the recipe captures the signature sound, instrumentation, and mixing techniques of that specific song, while strictly adhering to the structural blueprint provided above.
-    CRITICAL: You MUST use the blueprint's microTiming, velocityDynamics, chordVoicing, and repetitionStrategy to generate the MIDI notes and drum patterns. This is essential for achieving the iconic, high-energy, syncopated "crank dat" style MIDI quality.
+    CRITICAL: You MUST use the blueprint's microTiming, velocityDynamics, chordVoicing, and repetitionStrategy to generate the MIDI notes and drum patterns. This is essential for achieving an iconic, authentic, high-energy, and highly realistic MIDI quality that perfectly encapsulates the requested tracking.
     Identify 2-3 mainstream or commonly known artists who would typically use this specific beat type.
     Include a recommended BPM, 'recommendedScale', and 'chordProgression' that fits the vibe.
 

@@ -17,6 +17,16 @@ interface Clip {
   end: number;
 }
 
+interface VideoEffect {
+  id: string;
+  type: 'magnifier';
+  start: number;
+  end: number;
+  cx: number;
+  cy: number;
+  radius: number;
+}
+
 interface OverlayImage {
   id: string;
   url: string;
@@ -43,7 +53,7 @@ export const ShowcaseEditorModal: React.FC<ShowcaseEditorModalProps> = ({ videoB
   const [bgAudioFile, setBgAudioFile] = useState<File | null>(null);
   const bgAudioInputRef = useRef<HTMLInputElement>(null);
 
-  const [magnifier, setMagnifier] = useState<{ cx: number, cy: number, radius: number } | null>(null);
+
   const [isDrawingMag, setIsDrawingMag] = useState(false);
   const [magStart, setMagStart] = useState<{ x: number, y: number } | null>(null);
   const [magCurrent, setMagCurrent] = useState<{ x: number, y: number } | null>(null);
@@ -59,7 +69,75 @@ export const ShowcaseEditorModal: React.FC<ShowcaseEditorModalProps> = ({ videoB
   const [trimStart, setTrimStart] = useState(0);
   const [trimEnd, setTrimEnd] = useState(0);
   const [clips, setClips] = useState<Clip[]>([]);
+  const [effects, setEffects] = useState<VideoEffect[]>([]);
   const [overlays, setOverlays] = useState<OverlayImage[]>([]);
+
+  // Timeline dragging
+  const [draggingFX, setDraggingFX] = useState<{ id: string, type: 'start' | 'end' } | null>(null);
+  const timelineRef = useRef<HTMLDivElement>(null);
+  const scrubberRef = useRef<HTMLDivElement>(null);
+  const [draggingTrim, setDraggingTrim] = useState<'start' | 'end' | null>(null);
+
+  useEffect(() => {
+    const handlePointerMove = (e: PointerEvent) => {
+      if (!draggingTrim || !scrubberRef.current || duration === 0) return;
+      const rect = scrubberRef.current.getBoundingClientRect();
+      let pos = (e.clientX - rect.left) / rect.width;
+      pos = Math.max(0, Math.min(1, pos));
+      const newTime = pos * duration;
+
+      if (draggingTrim === 'start') {
+         const newStart = Math.min(newTime, trimEnd);
+         setTrimStart(newStart);
+      } else {
+         const newEnd = Math.max(newTime, trimStart);
+         setTrimEnd(newEnd);
+      }
+      
+      if (videoRef.current) {
+        videoRef.current.currentTime = newTime;
+        setCurrentTime(newTime);
+      }
+    };
+    const handlePointerUp = () => setDraggingTrim(null);
+    
+    if (draggingTrim) {
+      window.addEventListener('pointermove', handlePointerMove);
+      window.addEventListener('pointerup', handlePointerUp);
+    }
+    return () => {
+      window.removeEventListener('pointermove', handlePointerMove);
+      window.removeEventListener('pointerup', handlePointerUp);
+    };
+  }, [draggingTrim, duration, trimStart, trimEnd]);
+
+  useEffect(() => {
+    const handlePointerMove = (e: PointerEvent) => {
+      if (!draggingFX || !timelineRef.current || duration === 0) return;
+      const rect = timelineRef.current.getBoundingClientRect();
+      let pos = (e.clientX - rect.left) / rect.width;
+      pos = Math.max(0, Math.min(1, pos));
+      const newTime = pos * duration;
+
+      setEffects(prev => prev.map(ef => {
+        if (ef.id !== draggingFX.id) return ef;
+        if (draggingFX.type === 'start') {
+           return { ...ef, start: Math.min(newTime, ef.end - 0.1) };
+        } else {
+           return { ...ef, end: Math.max(newTime, ef.start + 0.1) };
+        }
+      }));
+    };
+    const handlePointerUp = () => setDraggingFX(null);
+    if (draggingFX) {
+      window.addEventListener('pointermove', handlePointerMove);
+      window.addEventListener('pointerup', handlePointerUp);
+    }
+    return () => {
+      window.removeEventListener('pointermove', handlePointerMove);
+      window.removeEventListener('pointerup', handlePointerUp);
+    };
+  }, [draggingFX, duration]);
   
   // Refs
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -175,7 +253,6 @@ export const ShowcaseEditorModal: React.FC<ShowcaseEditorModalProps> = ({ videoB
     setIsDrawingMag(true);
     setMagStart(coords);
     setMagCurrent(coords);
-    setMagnifier(null);
   };
 
   const handleVideoPointerMove = (e: React.PointerEvent<HTMLDivElement>) => {
@@ -206,7 +283,16 @@ export const ShowcaseEditorModal: React.FC<ShowcaseEditorModalProps> = ({ videoB
       const adjustedRadius = radiusPx / renderW;
 
       if (adjustedRadius > 0.05) {
-         setMagnifier({ cx: magStart.x, cy: magStart.y, radius: adjustedRadius });
+         const newEffect: VideoEffect = {
+           id: Date.now().toString(),
+           type: 'magnifier',
+           start: currentTime,
+           end: Math.min(currentTime + 5, duration),
+           cx: magStart.x,
+           cy: magStart.y,
+           radius: adjustedRadius
+         };
+         setEffects([...effects, newEffect]);
       } else {
          setIsMagMode(false);
       }
@@ -595,14 +681,15 @@ export const ShowcaseEditorModal: React.FC<ShowcaseEditorModalProps> = ({ videoB
              ctx.drawImage(video, fitX, fitY, fitW, fitH); // Changed to preserve aspect ratio
           }
 
-          if (magnifier) {
-              const srcX = magnifier.cx * video.videoWidth;
-              const srcY = magnifier.cy * video.videoHeight;
-              const srcR = magnifier.radius * video.videoWidth;
+          const activeMag = effects.find(e => e.type === 'magnifier' && video.currentTime >= e.start && video.currentTime <= e.end);
+          if (activeMag) {
+              const srcX = activeMag.cx * video.videoWidth;
+              const srcY = activeMag.cy * video.videoHeight;
+              const srcR = activeMag.radius * video.videoWidth;
               const magFactor = 2; // 2x magnification
               
-              const destCx = fitX + magnifier.cx * video.videoWidth * fitScale;
-              const destCy = fitY + magnifier.cy * video.videoHeight * fitScale;
+              const destCx = fitX + activeMag.cx * video.videoWidth * fitScale;
+              const destCy = fitY + activeMag.cy * video.videoHeight * fitScale;
               const destR = srcR * fitScale * magFactor;
               
               ctx.save();
@@ -865,34 +952,46 @@ export const ShowcaseEditorModal: React.FC<ShowcaseEditorModalProps> = ({ videoB
                      }}
                    />
                  )}
-                 {magnifier && !isDrawingMag && (
-                   <div 
-                     className={`absolute border-2 ${highlightClass.replace('bg-', 'border-')} rounded-full bg-white/5 pointer-events-none shadow-lg transition-all`}
-                     style={{
-                        left: `${(magnifier.cx - magnifier.radius)*100}%`,
-                        top: `${(magnifier.cy - magnifier.radius)*100}%`,
-                        width: `${magnifier.radius*200}%`,
-                        height: `${magnifier.radius*200}%`,
-                     }}
-                   />
-                 )}
+                 {(() => {
+                   const activePreviewMag = effects.find(e => e.type === 'magnifier' && currentTime >= e.start && currentTime <= e.end);
+                   return activePreviewMag && !isDrawingMag ? (
+                     <div 
+                       className={`absolute border-2 ${highlightClass.replace('bg-', 'border-')} rounded-full bg-white/5 pointer-events-none shadow-lg transition-all`}
+                       style={{
+                          left: `${(activePreviewMag.cx - activePreviewMag.radius)*100}%`,
+                          top: `${(activePreviewMag.cy - activePreviewMag.radius)*100}%`,
+                          width: `${activePreviewMag.radius*200}%`,
+                          height: `${activePreviewMag.radius*200}%`,
+                       }}
+                     />
+                   ) : null;
+                 })()}
               </div>
               
               {/* Custom Controls Overlay */}
               <div className={`absolute bottom-0 inset-x-0 p-4 sm:p-6 bg-gradient-to-t from-black via-black/60 to-transparent transition-opacity duration-300 ${isPlaying && !isMagMode ? 'opacity-0 group-hover:opacity-100' : 'opacity-100'}`}>
                 
                 {/* Scrubber */}
-                <div className="max-w-4xl mx-auto w-full relative h-4 bg-white/10 rounded-full cursor-pointer flex items-center group/scrubber" onClick={!isMagMode ? handleScrubberClick : undefined}>
-                  <div className="absolute inset-0 rounded-full bg-white/5 opacity-0 group-hover/scrubber:opacity-100 transition-opacity" />
+                <div ref={scrubberRef} className="max-w-4xl mx-auto w-full relative h-4 bg-white/10 rounded-full cursor-pointer flex items-center group/scrubber" onPointerDown={!isMagMode ? handleScrubberClick : undefined}>
+                  <div className="absolute inset-0 rounded-full bg-white/5 opacity-0 group-hover/scrubber:opacity-100 transition-opacity pointer-events-none" />
                   
                   {/* Trim Highlight */}
                   <div 
-                    className={`absolute h-full ${highlightClass}/40 border-y border-x border-white/50 backdrop-blur-sm shadow-[0_0_15px_rgba(255,255,255,0.1)]`} 
+                    className={`absolute h-full ${highlightClass}/40 border-y border-white/50 backdrop-blur-sm shadow-[0_0_15px_rgba(255,255,255,0.1)] pointer-events-none`} 
                     style={{ 
                       left: `${(trimStart / (duration||1)) * 100}%`, 
                       width: `${((trimEnd - trimStart) / (duration||1)) * 100}%` 
                     }} 
-                  />
+                  >
+                     <div className="absolute left-0 top-1/2 -translate-y-1/2 -ml-2 w-4 h-6 cursor-ew-resize bg-white rounded shadow-lg pointer-events-auto flex items-center justify-center hover:scale-110 transition-transform"
+                          onPointerDown={(e) => { e.stopPropagation(); e.preventDefault(); setDraggingTrim('start'); }}>
+                        <div className="w-0.5 h-3 bg-black/40 rounded-full" />
+                     </div>
+                     <div className="absolute right-0 top-1/2 -translate-y-1/2 -mr-2 w-4 h-6 cursor-ew-resize bg-white rounded shadow-lg pointer-events-auto flex items-center justify-center hover:scale-110 transition-transform"
+                          onPointerDown={(e) => { e.stopPropagation(); e.preventDefault(); setDraggingTrim('end'); }}>
+                        <div className="w-0.5 h-3 bg-black/40 rounded-full" />
+                     </div>
+                  </div>
                   
                   {/* Playhead */}
                   <div 
@@ -930,34 +1029,83 @@ export const ShowcaseEditorModal: React.FC<ShowcaseEditorModalProps> = ({ videoB
               </div>
             </div>
 
-            {/* Timeline Clips */}
-            <div className="h-[140px] shrink-0 bg-black/40 rounded-2xl p-4 border border-white/5 flex flex-col shadow-inner relative">
-              <div className="flex items-center justify-between text-[10px] font-black uppercase tracking-widest opacity-60 mb-3 shrink-0">
-                <span>Export Sequence ({clips.length})</span>
-              </div>
+            {/* Timeline Area */}
+            <div className="h-[220px] shrink-0 bg-black/40 rounded-2xl p-4 border border-white/5 flex flex-col shadow-inner relative overflow-hidden gap-4">
               
-              <div className="flex-1 flex gap-3 overflow-x-auto items-center pb-2 custom-scrollbar">
-                {clips.length === 0 ? (
-                  <div className="w-full h-full flex flex-col items-center justify-center opacity-40">
-                    <span className="text-xs font-bold uppercase tracking-widest">No Clips Added</span>
-                    <span className="text-[10px] mt-1">Select sections from the video and add them to the sequence.</span>
-                  </div>
-                ) : (
-                  clips.map((clip, i) => (
-                    <div key={clip.id} className="flex-shrink-0 relative group rounded-xl overflow-hidden border border-white/10 bg-white/5 w-40 h-full flex flex-col justify-center items-center shadow-lg hover:border-white/30 transition-colors">
-                      <span className="text-[10px] font-black text-white/50 tracking-widest mb-1">CLIP {i + 1}</span>
-                      <span className={`text-sm font-mono font-bold ${theme === 'coldest' ? 'text-indigo-400' : 'text-yellow-400'}`}>
-                        {formatTime(clip.start)} <span className="opacity-50 font-sans font-normal mx-1">&rarr;</span> {formatTime(clip.end)}
-                      </span>
+              {/* FX Track */}
+              <div className="flex flex-col flex-shrink-0">
+                <div className="flex items-center justify-between text-[10px] font-black uppercase tracking-widest opacity-60 mb-2 shrink-0">
+                  <span>Effects Timeline ({effects.length})</span>
+                </div>
+                <div 
+                   ref={timelineRef} 
+                   className="h-10 bg-white/5 rounded-lg border border-white/10 relative overflow-hidden flex items-center"
+                >
+                  <div 
+                     className="absolute top-0 bottom-0 w-px bg-white/50 z-20 pointer-events-none" 
+                     style={{ left: `${(currentTime / (duration||1))*100}%` }}
+                  />
+                  {effects.map(effect => (
+                    <div 
+                      key={effect.id}
+                      className={`absolute h-8 top-1 ${highlightClass} opacity-80 border-2 border-white/50 rounded flex items-center px-2 group overflow-hidden`}
+                      style={{
+                        left: `${(effect.start / (duration||1))*100}%`,
+                        width: `${((effect.end - effect.start) / (duration||1))*100}%`
+                      }}
+                    >
+                      <span className="text-[10px] font-black text-black z-10 pointer-events-none truncate uppercase">{effect.type}</span>
+                      
+                      <div className="absolute left-0 top-0 bottom-0 w-4 cursor-ew-resize hover:bg-white/50 z-20" 
+                           onPointerDown={(e) => { e.stopPropagation(); e.preventDefault(); setDraggingFX({ id: effect.id, type: 'start' }); }} />
+                      <div className="absolute right-0 top-0 bottom-0 w-4 cursor-ew-resize hover:bg-white/50 z-20" 
+                           onPointerDown={(e) => { e.stopPropagation(); e.preventDefault(); setDraggingFX({ id: effect.id, type: 'end' }); }} />
+                           
                       <button 
-                        onClick={() => removeClip(clip.id)} 
-                        className="absolute top-1.5 right-1.5 p-1.5 bg-red-500 hover:bg-red-400 rounded opacity-0 group-hover:opacity-100 transition-opacity shadow-lg"
+                         onClick={() => setEffects(efs => efs.filter(e => e.id !== effect.id))}
+                         className="absolute inset-x-0 inset-y-0 opacity-0 group-hover:opacity-100 bg-red-500/80 flex items-center justify-center transition-opacity"
                       >
-                        <Trash2 size={12} className="text-white" />
+                         <Trash2 size={12} className="text-white" />
                       </button>
                     </div>
-                  ))
-                )}
+                  ))}
+                  {effects.length === 0 && <span className="text-[10px] text-white/30 uppercase tracking-widest w-full text-center">No Effects</span>}
+                </div>
+              </div>
+
+              {/* Export Sequence */}
+              <div className="flex flex-col flex-1 min-h-0">
+                <div className="flex items-center justify-between text-[10px] font-black uppercase tracking-widest opacity-60 mb-3 shrink-0">
+                  <span>Export Sequence ({clips.length})</span>
+                </div>
+                
+                <div className="flex-1 flex overflow-x-auto items-center custom-scrollbar h-12 bg-white/5 rounded-lg border border-white/10 p-1">
+                  {clips.length === 0 ? (
+                    <div className="w-full flex items-center justify-center opacity-40">
+                      <span className="text-[10px] font-bold uppercase tracking-widest">No Clips Added</span>
+                    </div>
+                  ) : (
+                    clips.map((clip, i) => {
+                       const durationRaw = Math.max(0.1, clip.end - clip.start);
+                       const widthPx = Math.max(80, durationRaw * 20); // 20px per second, min 80px
+                       
+                       return (
+                        <div key={clip.id} className="relative group overflow-hidden border border-white/20 bg-indigo-500/80 h-full flex flex-col justify-center items-center shadow-lg hover:border-white/50 transition-colors flex-shrink-0" style={{ width: widthPx, marginLeft: i === 0 ? 0 : '-1px' }}>
+                          <span className="text-[8px] font-black text-white/70 tracking-widest absolute top-1 left-1">CLIP {i + 1}</span>
+                          <span className={`text-[10px] font-mono font-bold text-white z-10`}>
+                            {formatTime(clip.start)} <span className="opacity-50 mx-0.5">&rarr;</span> {formatTime(clip.end)}
+                          </span>
+                          <button 
+                            onClick={() => removeClip(clip.id)} 
+                            className="absolute inset-y-0 right-0 w-8 bg-black/50 hover:bg-red-500 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all z-20 backdrop-blur-sm"
+                          >
+                            <Trash2 size={12} className="text-white" />
+                          </button>
+                        </div>
+                      )
+                    })
+                  )}
+                </div>
               </div>
             </div>
 
