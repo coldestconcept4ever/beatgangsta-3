@@ -2059,8 +2059,8 @@ export const getSongBeatRecommendations = async (plugins: VSTPlugin[], songQuery
 
 export const generateVoiceover = async (text: string, bpm?: number | null): Promise<{ base64: string, mimeType: string }> => {
   const ai = getAI();
-  const tempoInstructions = bpm ? `The instrumental beat is exactly ${bpm} BPM. You MUST time your syllables and rhythmic flow to land perfectly on tempo to this ${bpm} BPM beat.` : "Provide a natural Houston style cadence.";
-  const prompt = `Say this text in a severely slowed down, heavily chopped and screwed, extremely deep, slurred, melodic Houston rap cadence (like extremely chopped and screwed Z-Ro, but DO NOT say your name or mention Z-Ro). \n${tempoInstructions}\n\n${text}`;
+  const tempoInstructions = bpm ? `The instrumental beat is exactly ${bpm} BPM. You MUST time your syllables and rhythmic flow to land perfectly on tempo to this ${bpm} BPM beat at a NORMAL, standard playback speed.` : "Provide a natural Houston style cadence at a normal tempo.";
+  const prompt = `Say this text in a natural, smooth, melodic Houston rap cadence at a NORMAL TEMPO (like a professional studio recording by Z-Ro, but DO NOT say your name or mention Z-Ro). DO NOT slow it down, DO NOT chop and screw it. Keep it clear and at standard speed. \n${tempoInstructions}\n\n${text}`;
   
   const response = await ai.models.generateContent({
     model: "gemini-3.1-flash-tts-preview",

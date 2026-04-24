@@ -917,15 +917,10 @@ export const ShowcaseEditorModal: React.FC<ShowcaseEditorModalProps> = ({ videoB
              bytes[i] = binaryString.charCodeAt(i);
          }
          
-         // Z-Ro Chopped and Screwed Effect: Lower the playback sample rate to stretch the sound and drop pitch
-         // Adjust sample rate based on instrumental BPM if available
-         let pitchRatio = 0.8;
-         if (instrumentalBpm) {
-             // For example, map BPM 60-120 to pitch ratio 0.6-0.9
-             pitchRatio = Math.max(0.5, Math.min(0.9, instrumentalBpm / 110));
-         }
-         const choppedRate = 24000 * pitchRatio;
-         const blob = pcmToWav(bytes, choppedRate, 1, 16);
+         // Standard playback speed for voiceover
+         const pitchRatio = 1.0;
+         const sampleRate = 24000;
+         const blob = pcmToWav(bytes, sampleRate, 1, 16);
          
          const audioUrl = URL.createObjectURL(blob);
          const audioObj = new Audio(audioUrl);
@@ -1347,7 +1342,7 @@ export const ShowcaseEditorModal: React.FC<ShowcaseEditorModalProps> = ({ videoB
                   onChange={handleInstrumentalUpload}
                   className={`w-full text-xs text-white/70 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-white/10 file:text-white hover:file:bg-white/20 mb-6 cursor-pointer`}
                 />
-                {instrumentalBpm && <span className="text-xs text-green-400 mb-6 block font-bold">Detected BPM: {instrumentalBpm} (Voice slowed down to match)</span>}
+                {instrumentalBpm && <span className="text-xs text-green-400 mb-6 block font-bold">Detected BPM: {instrumentalBpm} (Voice timed to match)</span>}
 
                 <span className="text-xs font-black uppercase tracking-widest text-white/50 mb-4 block">Z-Ro Voiceover (AI)</span>
                 <textarea 
