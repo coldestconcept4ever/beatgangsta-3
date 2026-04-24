@@ -24,6 +24,7 @@ interface SequenceEffect {
   end: number;
   // FX props
   cx?: number; cy?: number; radius?: number;
+  rectX?: number; rectY?: number; rectW?: number; rectH?: number;
   // Text props
   text?: string;
   // Voiceover props
@@ -79,7 +80,12 @@ export const ShowcaseEditorModal: React.FC<ShowcaseEditorModalProps> = ({ videoB
   const requestRef = useRef<number>(0);
   const lastTimeRef = useRef<number>(0);
 
-  const sequenceDuration = useMemo(() => clips.reduce((acc, c) => acc + (c.sourceEnd - c.sourceStart), 0), [clips]);
+  const sequenceDuration = useMemo(() => {
+     const clipDur = clips.reduce((acc, c) => acc + (c.sourceEnd - c.sourceStart), 0);
+     let maxEff = 0;
+     for (const e of effects) if (e.end > maxEff) maxEff = e.end;
+     return Math.max(clipDur, maxEff);
+  }, [clips, effects]);
 
   const highlightClass = theme === 'coldest' ? 'bg-indigo-500 text-white' : 'bg-yellow-400 text-black';
   const btnClass = theme === 'coldest' ? 'bg-indigo-600 hover:bg-indigo-500' : 'bg-red-600 hover:bg-red-500';
@@ -314,7 +320,55 @@ export const ShowcaseEditorModal: React.FC<ShowcaseEditorModalProps> = ({ videoB
     if (activeTool !== 'scissors') {
         // 2. Active Magnifiers
         const activeMag = effects.find(e => e.trackId === 'fx' && sequenceTime >= e.start && sequenceTime <= e.end);
-        if (activeMag && activeMag.cx !== undefined && activeMag.cy !== undefined && activeMag.radius !== undefined) {
+        if (activeMag && activeMag.rectX !== undefined && activeMag.rectY !== undefined && activeMag.rectW !== undefined && activeMag.rectH !== undefined) {
+          const srcX = activeMag.rectX * canvas.width;
+          const srcY = activeMag.rectY * canvas.height;
+          const srcW = activeMag.rectW * canvas.width;
+          const srcH = activeMag.rectH * canvas.height;
+          const magFactor = 2; // 2x magnification
+          
+          const cx = srcX + srcW / 2;
+          const cy = srcY + srcH / 2;
+          
+          const destW = srcW * magFactor;
+          const destH = srcH * magFactor;
+          const destX = cx - destW / 2;
+          const destY = cy - destH / 2;
+          
+          ctx.save();
+          
+          const r = Math.min(destW, destH) * 0.1; // corner radius
+          const drawRoundRect = (x: number, y: number, w: number, h: number, r: number) => {
+              ctx.beginPath();
+              ctx.moveTo(x + r, y);
+              ctx.lineTo(x + w - r, y);
+              ctx.quadraticCurveTo(x + w, y, x + w, y + r);
+              ctx.lineTo(x + w, y + h - r);
+              ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+              ctx.lineTo(x + r, y + h);
+              ctx.quadraticCurveTo(x, y + h, x, y + h - r);
+              ctx.lineTo(x, y + r);
+              ctx.quadraticCurveTo(x, y, x + r, y);
+              ctx.closePath();
+          };
+          
+          drawRoundRect(destX, destY, destW, destH, r);
+          ctx.shadowColor = 'rgba(0,0,0,0.8)';
+          ctx.shadowBlur = 30;
+          ctx.fill();
+          ctx.shadowColor = 'transparent';
+          ctx.clip(); 
+          
+          // Assuming video has mapping, using canvas width/height ratio if video width does not perfectly match original
+          // but we set canvas width = video width previously!
+          ctx.drawImage(video, srcX, srcY, srcW, srcH, destX, destY, destW, destH);
+          
+          drawRoundRect(destX, destY, destW, destH, r);
+          ctx.lineWidth = 6;
+          ctx.strokeStyle = '#fff';
+          ctx.stroke();
+          ctx.restore();
+        } else if (activeMag && activeMag.cx !== undefined && activeMag.cy !== undefined && activeMag.radius !== undefined) {
           const srcX = activeMag.cx * video.videoWidth;
           const srcY = activeMag.cy * video.videoHeight;
           const srcR = activeMag.radius * video.videoWidth;
@@ -476,38 +530,93 @@ export const ShowcaseEditorModal: React.FC<ShowcaseEditorModalProps> = ({ videoB
   };
 
   // Canvas Interactions (for Magnifier)
-  const [magDrawing, setMagDrawing] = useState<{cx: number, cy: number} | null>(null);
+  const [canvasDrag, setCanvasDrag] = useState<{
+    type: 'draw-mag';
+    startX: number; startY: number; currX: number; currY: number;
+  } | {
+    type: 'move-mag';
+    id: string;
+    origRectX: number; origRectY: number;
+    startX: number; startY: number;
+  } | null>(null);
+
   const handleCanvasPointerDown = (e: React.PointerEvent) => {
-     if (activeTool !== 'magnifier') return;
      const rect = canvasRef.current?.getBoundingClientRect();
-     if (!rect) return;
-     const cx = (e.clientX - rect.left) / rect.width;
-     const cy = (e.clientY - rect.top) / rect.height;
-     setMagDrawing({ cx, cy });
-  };
-  const handleCanvasPointerUp = (e: React.PointerEvent) => {
-     if (!magDrawing || activeTool !== 'magnifier') return;
-     const rect = canvasRef.current?.getBoundingClientRect();
-     if (!rect) return;
+     if (!rect || rect.width === 0 || rect.height === 0) return;
      const x = (e.clientX - rect.left) / rect.width;
      const y = (e.clientY - rect.top) / rect.height;
-     const dx = x - magDrawing.cx;
-     const dy = y - magDrawing.cy;
-     const radius = Math.sqrt(dx*dx + dy*dy);
-     
-     if (radius > 0.05) {
-        setEffects([...effects, {
-           id: Date.now().toString(),
-           trackId: 'fx',
-           start: sequenceTime,
-           end: Math.min(sequenceTime + 4, sequenceDuration),
-           cx: magDrawing.cx,
-           cy: magDrawing.cy,
-           radius
-        }]);
+
+     // 1. Check if clicking on an existing active magnifier
+     const activeMag = effects.find(eff => 
+        eff.trackId === 'fx' && 
+        sequenceTime >= eff.start && sequenceTime <= eff.end &&
+        eff.rectX !== undefined && eff.rectY !== undefined && eff.rectW !== undefined && eff.rectH !== undefined &&
+        x >= eff.rectX && x <= eff.rectX + eff.rectW &&
+        y >= eff.rectY && y <= eff.rectY + eff.rectH
+     );
+
+     if (activeMag && activeMag.rectX !== undefined && activeMag.rectY !== undefined) {
+         if (isPlaying) setIsPlaying(false);
+         setCanvasDrag({
+            type: 'move-mag', id: activeMag.id, 
+            origRectX: activeMag.rectX, origRectY: activeMag.rectY,
+            startX: x, startY: y
+         });
+         e.currentTarget.setPointerCapture(e.pointerId);
+         return;
      }
-     setMagDrawing(null);
-     setActiveTool('pointer'); // reset tool
+
+     if (activeTool === 'magnifier') {
+         setCanvasDrag({ type: 'draw-mag', startX: x, startY: y, currX: x, currY: y });
+         e.currentTarget.setPointerCapture(e.pointerId);
+     }
+  };
+
+  const handleCanvasPointerMove = (e: React.PointerEvent) => {
+     if (!canvasDrag) return;
+     const rect = canvasRef.current?.getBoundingClientRect();
+     if (!rect || rect.width === 0 || rect.height === 0) return;
+     const x = (e.clientX - rect.left) / rect.width;
+     const y = (e.clientY - rect.top) / rect.height;
+
+     if (canvasDrag.type === 'draw-mag') {
+        setCanvasDrag({ ...canvasDrag, currX: x, currY: y });
+     } else if (canvasDrag.type === 'move-mag') {
+        const dx = x - canvasDrag.startX;
+        const dy = y - canvasDrag.startY;
+        setEffects(prev => prev.map(eff => eff.id === canvasDrag.id ? {
+            ...eff, 
+            rectX: Math.max(0, Math.min(1 - (eff.rectW || 0), canvasDrag.origRectX + dx)),
+            rectY: Math.max(0, Math.min(1 - (eff.rectH || 0), canvasDrag.origRectY + dy))
+        } : eff));
+     }
+  };
+
+  const handleCanvasPointerUp = (e: React.PointerEvent) => {
+     if (!canvasDrag) return;
+     e.currentTarget.releasePointerCapture(e.pointerId);
+
+     if (canvasDrag.type === 'draw-mag') {
+         const rx = Math.min(canvasDrag.startX, canvasDrag.currX);
+         const ry = Math.min(canvasDrag.startY, canvasDrag.currY);
+         const rw = Math.abs(canvasDrag.startX - canvasDrag.currX);
+         const rh = Math.abs(canvasDrag.startY - canvasDrag.currY);
+
+         if (rw > 0.02 && rh > 0.02) {
+            pushHistory();
+            setEffects(prev => [...prev, {
+               id: Date.now().toString(),
+               trackId: 'fx',
+               start: sequenceTime,
+               end: sequenceTime + 4,
+               rectX: rx, rectY: ry, rectW: rw, rectH: rh
+            }]);
+         }
+         setActiveTool('pointer');
+     } else if (canvasDrag.type === 'move-mag') {
+         pushHistory(); // Add to history after moving
+     }
+     setCanvasDrag(null);
   };
 
   // Timeline Interactions
@@ -594,11 +703,9 @@ export const ShowcaseEditorModal: React.FC<ShowcaseEditorModalProps> = ({ videoB
   const addVoiceover = async () => {
      try {
          setIsProcessing(true);
-         const base64Audio = await generateVoiceover(voiceoverText);
-         const binary = atob(base64Audio);
-         const bytes = new Uint8Array(binary.length);
-         for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
-         const blob = new Blob([bytes], { type: 'audio/wav' });
+         const { base64, mimeType } = await generateVoiceover(voiceoverText);
+         const res = await fetch(`data:${mimeType};base64,${base64}`);
+         const blob = await res.blob();
          const audioUrl = URL.createObjectURL(blob);
          const audioObj = new Audio(audioUrl);
          
@@ -631,7 +738,7 @@ export const ShowcaseEditorModal: React.FC<ShowcaseEditorModalProps> = ({ videoB
           id: Date.now().toString(),
           trackId: 'text',
           start: sequenceTime,
-          end: Math.min(sequenceTime + 4, sequenceDuration),
+          end: sequenceTime + 4,
           text: addTextValue
       }]);
   };
@@ -758,7 +865,11 @@ export const ShowcaseEditorModal: React.FC<ShowcaseEditorModalProps> = ({ videoB
                   end: e.end,
                   cx: e.cx,
                   cy: e.cy,
-                  radius: e.radius
+                  radius: e.radius,
+                  rectX: e.rectX,
+                  rectY: e.rectY,
+                  rectW: e.rectW,
+                  rectH: e.rectH,
               }))
           };
           
@@ -825,14 +936,18 @@ export const ShowcaseEditorModal: React.FC<ShowcaseEditorModalProps> = ({ videoB
                        ref={canvasRef} 
                        className={`w-full h-full object-contain ${activeTool === 'magnifier' ? 'cursor-crosshair' : 'cursor-default'}`}
                        onPointerDown={handleCanvasPointerDown}
+                       onPointerMove={handleCanvasPointerMove}
                        onPointerUp={handleCanvasPointerUp}
                     />
                     
-                    {magDrawing && activeTool === 'magnifier' && (
-                        <div className="absolute border font-black flex items-center justify-center border-white/50 rounded-full pointer-events-none text-white/50 uppercase tracking-widest text-xs" style={{
-                           left: magDrawing.cx*100 + '%', top: magDrawing.cy*100 + '%', width: 2, height: 2, transform: 'translate(-50%, -50%)', outline: '9999px solid rgba(0,0,0,0.5)'
+                    {canvasDrag && canvasDrag.type === 'draw-mag' && activeTool === 'magnifier' && (
+                        <div className="absolute border-2 font-black flex items-center justify-center border-white rounded pointer-events-none text-white/50 uppercase tracking-widest text-xs" style={{
+                           left: Math.min(canvasDrag.startX, canvasDrag.currX) * 100 + '%',
+                           top: Math.min(canvasDrag.startY, canvasDrag.currY) * 100 + '%',
+                           width: Math.abs(canvasDrag.currX - canvasDrag.startX) * 100 + '%',
+                           height: Math.abs(canvasDrag.currY - canvasDrag.startY) * 100 + '%',
+                           boxShadow: '0 0 0 9999px rgba(0,0,0,0.5)'
                         }}>
-                           DRAW RADIUS
                         </div>
                     )}
                  </div>

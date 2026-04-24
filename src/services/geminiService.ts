@@ -2057,7 +2057,7 @@ export const getSongBeatRecommendations = async (plugins: VSTPlugin[], songQuery
   return result;
 };
 
-export const generateVoiceover = async (text: string): Promise<string> => {
+export const generateVoiceover = async (text: string): Promise<{ base64: string, mimeType: string }> => {
   const ai = getAI();
   const prompt = `Say this text in a slowed down, deep, smooth, melodic Houston rap cadence (like Z-Ro, but DO NOT say your name or mention Z-Ro):\n\n${text}`;
   
@@ -2075,10 +2075,11 @@ export const generateVoiceover = async (text: string): Promise<string> => {
   });
 
   const base64Audio = response.candidates?.[0]?.content?.parts?.[0]?.inlineData?.data;
+  const mimeType = response.candidates?.[0]?.content?.parts?.[0]?.inlineData?.mimeType || 'audio/wav';
   if (!base64Audio) {
     throw new Error('Failed to generate voiceover');
   }
-  return base64Audio;
+  return { base64: base64Audio, mimeType };
 };
 
 export const generateContentViaBackend = async (model: string, prompt: string, config: any, _turnstileToken?: string | null, _sessionId?: string | null) => {
