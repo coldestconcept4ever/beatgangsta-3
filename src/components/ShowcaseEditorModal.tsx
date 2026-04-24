@@ -40,6 +40,38 @@ const formatTime = (secs: number) => {
   return `${m}:${s.toString().padStart(2, '0')}.${ms}`;
 };
 
+function pcmToWav(pcmData: Uint8Array, sampleRate = 24000, numChannels = 1, bitDepth = 16) {
+    const byteRate = sampleRate * numChannels * (bitDepth / 8);
+    const blockAlign = numChannels * (bitDepth / 8);
+    const buffer = new ArrayBuffer(44 + pcmData.length);
+    const view = new DataView(buffer);
+
+    const writeString = (view: DataView, offset: number, string: string) => {
+        for (let i = 0; i < string.length; i++) {
+            view.setUint8(offset + i, string.charCodeAt(i));
+        }
+    };
+
+    writeString(view, 0, 'RIFF');
+    view.setUint32(4, 36 + pcmData.length, true);
+    writeString(view, 8, 'WAVE');
+    writeString(view, 12, 'fmt ');
+    view.setUint32(16, 16, true);
+    view.setUint16(20, 1, true); // PCM format
+    view.setUint16(22, numChannels, true);
+    view.setUint32(24, sampleRate, true);
+    view.setUint32(28, byteRate, true);
+    view.setUint16(32, blockAlign, true);
+    view.setUint16(34, bitDepth, true);
+    writeString(view, 36, 'data');
+    view.setUint32(40, pcmData.length, true);
+
+    const int8View = new Uint8Array(buffer);
+    int8View.set(pcmData, 44);
+
+    return new Blob([buffer], { type: 'audio/wav' });
+}
+
 export const ShowcaseEditorModal: React.FC<ShowcaseEditorModalProps> = ({ videoBlob, onClose, theme }) => {
   const [isProcessing, setIsProcessing] = useState(false);
   const [videoUrl, setVideoUrl] = useState('');
@@ -404,9 +436,11 @@ export const ShowcaseEditorModal: React.FC<ShowcaseEditorModalProps> = ({ videoB
         }
 
         // 3. Active Text Overlays
-        const activeText = effects.find(e => e.trackId === 'text' && sequenceTime >= e.start && sequenceTime <= e.end);
-        if (activeText && activeText.text) {
-           drawOverlayText(ctx, canvas, activeText.text, sequenceTime - activeText.start, theme === 'coldest');
+        const activeTexts = effects.filter(e => e.trackId === 'text' && sequenceTime >= e.start && sequenceTime <= e.end);
+        for (const activeText of activeTexts) {
+            if (activeText.text) {
+               drawOverlayText(ctx, canvas, activeText.text, sequenceTime - activeText.start, theme === 'coldest');
+            }
         }
     } else {
         // Scissors Mode visual hint
@@ -429,7 +463,7 @@ export const ShowcaseEditorModal: React.FC<ShowcaseEditorModalProps> = ({ videoB
        ctx.fillRect(0, 0, canvas.width, canvas.height); // darken
     }
 
-    const lines = text.split('\\n');
+    const lines = text.split(/\n|\\n/);
     const baseLineHeight = canvas.height * 0.12;
     
     ctx.translate(canvas.width / 2, canvas.height / 2);
@@ -703,9 +737,14 @@ export const ShowcaseEditorModal: React.FC<ShowcaseEditorModalProps> = ({ videoB
   const addVoiceover = async () => {
      try {
          setIsProcessing(true);
-         const { base64, mimeType } = await generateVoiceover(voiceoverText);
-         const res = await fetch(`data:${mimeType};base64,${base64}`);
-         const blob = await res.blob();
+         const { base64 } = await generateVoiceover(voiceoverText);
+         const binaryString = atob(base64);
+         const len = binaryString.length;
+         const bytes = new Uint8Array(len);
+         for (let i = 0; i < len; i++) {
+             bytes[i] = binaryString.charCodeAt(i);
+         }
+         const blob = pcmToWav(bytes, 24000, 1, 16);
          const audioUrl = URL.createObjectURL(blob);
          const audioObj = new Audio(audioUrl);
          
@@ -741,6 +780,7 @@ export const ShowcaseEditorModal: React.FC<ShowcaseEditorModalProps> = ({ videoB
           end: sequenceTime + 4,
           text: addTextValue
       }]);
+      setActiveTool('pointer');
   };
 
   const appendNewClip = () => {
@@ -1170,7 +1210,7 @@ export const ShowcaseEditorModal: React.FC<ShowcaseEditorModalProps> = ({ videoB
                                    <div key={e.id} className="absolute h-[80%] top-[10%] bg-pink-500/80 border-2 border-pink-300 rounded group shadow-lg cursor-move flex items-center justify-center px-4 overflow-hidden"
                                         style={{ left: `${(e.start/tlScale)*100}%`, width: `${((e.end-e.start)/tlScale)*100}%` }}
                                         onPointerDown={ev => { ev.stopPropagation(); startDragAction({ id: e.id, type: 'eff-move' }); }}>
-                                        <span className="text-[10px] font-black text-white truncate pointer-events-none block whitespace-pre">{e.text?.replace('\\n', ' ')}</span>
+                                        <span className="text-[10px] font-black text-white truncate pointer-events-none block whitespace-pre">{e.text?.replace(/\n|\\n/g, ' ')}</span>
                                         <div className="absolute left-0 top-0 bottom-0 w-3 cursor-ew-resize hover:bg-white/50 z-20" onPointerDown={ev => { ev.stopPropagation(); startDragAction({ id: e.id, type: 'eff-trim-start' }); }} />
                                         <div className="absolute right-0 top-0 bottom-0 w-3 cursor-ew-resize hover:bg-white/50 z-20" onPointerDown={ev => { ev.stopPropagation(); startDragAction({ id: e.id, type: 'eff-trim-end' }); }} />
                                         <button onClick={() => { pushHistory(); setEffects(efs => efs.filter(x => x.id !== e.id)); }} className="absolute inset-x-0 inset-y-0 opacity-0 group-hover:opacity-100 bg-red-500/80 flex items-center justify-center transition-opacity z-10"><Trash2 size={16}/></button>
