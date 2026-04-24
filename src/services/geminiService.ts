@@ -2068,7 +2068,7 @@ export const generateVoiceover = async (text: string): Promise<{ base64: string,
       responseModalities: ["AUDIO"],
       speechConfig: {
           voiceConfig: {
-            prebuiltVoiceConfig: { voiceName: 'Kore' },
+            prebuiltVoiceConfig: { voiceName: 'Puck' },
           },
       },
     },
