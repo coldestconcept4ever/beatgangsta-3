@@ -8,7 +8,9 @@ export const uploadFileChunked = async (uploadFile: File): Promise<{ url: string
   // Initialize direct Gemini Storage URL immediately so we don't rely on server-side assembly
   let geminiUploadUrl = undefined;
   try {
-    const initRes = await fetch(`/api/upload/init-gemini?fileName=${encodeURIComponent(uploadFile.name)}&mimeType=${encodeURIComponent(uploadFile.type)}&totalSize=${uploadFile.size}`);
+    const initRes = await fetch(`/api/upload/init-gemini?fileName=${encodeURIComponent(uploadFile.name)}&mimeType=${encodeURIComponent(uploadFile.type)}&totalSize=${uploadFile.size}`, {
+        method: 'POST'
+    });
     if (initRes.ok) {
         const initData = await initRes.json();
         geminiUploadUrl = initData.uploadUrl;

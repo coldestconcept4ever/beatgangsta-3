@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect, useMemo } from 'react';
 import { motion } from 'motion/react';
-import { X, Video, Play, Pause, Download, Loader2, Plus, Trash2, Scissors, Type, Mic, Wand2, MousePointer2, ChevronLeft, ChevronRight } from 'lucide-react';
+import { X, Video, Play, Pause, Download, Loader2, Plus, Trash2, Scissors, Type, Mic, Wand2, MousePointer2, ChevronLeft, ChevronRight, Undo2, SkipBack, SkipForward } from 'lucide-react';
 import { generateVoiceover } from '../services/geminiService';
 import { AppTheme } from '../types';
 import { Logo } from './Logo';
@@ -46,6 +46,20 @@ export const ShowcaseEditorModal: React.FC<ShowcaseEditorModalProps> = ({ videoB
 
   const [clips, setClips] = useState<SequenceClip[]>([]);
   const [effects, setEffects] = useState<SequenceEffect[]>([]);
+  const [history, setHistory] = useState<{clips: SequenceClip[]; effects: SequenceEffect[]}[]>([]);
+
+  const pushHistory = (newClips?: SequenceClip[], newEffects?: SequenceEffect[]) => {
+      setHistory(prev => [...prev, { clips: newClips || [...clips], effects: newEffects || [...effects] }].slice(-20)); // Keep last 20 states
+  };
+
+  const undo = () => {
+      if (history.length > 0) {
+          const h = history[history.length - 1];
+          setClips(h.clips);
+          setEffects(h.effects);
+          setHistory(prev => prev.slice(0, prev.length - 1));
+      }
+  };
 
   const [sequenceTime, setSequenceTime] = useState(0);
   const [isPlaying, setIsPlaying] = useState(false);
@@ -105,33 +119,56 @@ export const ShowcaseEditorModal: React.FC<ShowcaseEditorModalProps> = ({ videoB
 
   const [isExporting, setIsExporting] = useState(false);
 
+  const playbackRateRef = useRef(1); // 1 = normal, -3 = rewind, 3 = fast forward
+
   // NLE Playback Loop
   const playLoop = (time: number) => {
     if (lastTimeRef.current !== 0) {
-      if (isPlaying) {
-        const deltaTime = (time - lastTimeRef.current) / 1000;
-        if (activeTool === 'scissors') {
-           setSourceTime(prev => {
-             let next = prev + deltaTime;
-             if (next >= sourceOut) {
-                setIsPlaying(false);
-                return sourceIn;
-             }
-             if (next >= sourceDuration) {
-                setIsPlaying(false);
-                return Math.max(0, sourceDuration - 0.1);
-             }
-             return next;
-           });
-        } else {
-           setSequenceTime(prev => {
-             let next = prev + deltaTime;
-             if (next >= sequenceDuration) {
-                setIsPlaying(false);
-                return sequenceDuration;
-             }
-             return next;
-           });
+      if (isPlaying || playbackRateRef.current !== 1) { // Also update if rewinding/ff
+        const speed = isPlaying ? playbackRateRef.current : (playbackRateRef.current !== 1 ? playbackRateRef.current : 0);
+        if (speed !== 0) {
+          const deltaTime = ((time - lastTimeRef.current) / 1000) * speed;
+          if (activeTool === 'scissors') {
+             setSourceTime(prev => {
+               let next = prev + deltaTime;
+               if (speed > 0 && next >= sourceOut) {
+                  setIsPlaying(false);
+                  playbackRateRef.current = 1;
+                  return sourceIn;
+               }
+               if (speed > 0 && next >= sourceDuration) {
+                  setIsPlaying(false);
+                  playbackRateRef.current = 1;
+                  return Math.max(0, sourceDuration - 0.1);
+               }
+               if (speed < 0 && next <= sourceIn) {
+                  setIsPlaying(false);
+                  playbackRateRef.current = 1;
+                  return sourceIn;
+               }
+               if (speed < 0 && next <= 0) {
+                  setIsPlaying(false);
+                  playbackRateRef.current = 1;
+                  return 0;
+               }
+               return next;
+             });
+          } else {
+             setSequenceTime(prev => {
+               let next = prev + deltaTime;
+               if (speed > 0 && next >= sequenceDuration) {
+                  setIsPlaying(false);
+                  playbackRateRef.current = 1;
+                  return sequenceDuration;
+               }
+               if (speed < 0 && next <= 0) {
+                  setIsPlaying(false);
+                  playbackRateRef.current = 1;
+                  return 0;
+               }
+               return next;
+             });
+          }
         }
       }
     }
@@ -146,6 +183,56 @@ export const ShowcaseEditorModal: React.FC<ShowcaseEditorModalProps> = ({ videoB
       if (requestRef.current) cancelAnimationFrame(requestRef.current);
     };
   }); // run on every render to ensure playLoop has fresh closures
+
+  useEffect(() => {
+     let key1PressTime = 0;
+     let key3PressTime = 0;
+
+     const handleKeyDown = (e: KeyboardEvent) => {
+         if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return;
+         if (e.key === ' ' && !e.repeat) {
+             e.preventDefault();
+             setIsPlaying(p => !p);
+         }
+         if (e.key === '1' && !e.repeat) {
+             key1PressTime = Date.now();
+             playbackRateRef.current = -5; // fast rewind
+         }
+         if (e.key === '3' && !e.repeat) {
+             key3PressTime = Date.now();
+             playbackRateRef.current = 5; // fast forward
+         }
+     };
+
+     const handleKeyUp = (e: KeyboardEvent) => {
+         if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return;
+         if (e.key === '1') {
+             playbackRateRef.current = 1;
+             if (Date.now() - key1PressTime < 200) {
+                 // Tap! Go to start
+                 if (activeTool === 'scissors') setSourceTime(0);
+                 else setSequenceTime(0);
+                 setIsPlaying(false);
+             }
+         }
+         if (e.key === '3') {
+             playbackRateRef.current = 1;
+             if (Date.now() - key3PressTime < 200) {
+                 // Tap! Go to end
+                 if (activeTool === 'scissors') setSourceTime(sourceDuration);
+                 else setSequenceTime(sequenceDuration);
+                 setIsPlaying(false);
+             }
+         }
+     };
+
+     window.addEventListener('keydown', handleKeyDown);
+     window.addEventListener('keyup', handleKeyUp);
+     return () => {
+         window.removeEventListener('keydown', handleKeyDown);
+         window.removeEventListener('keyup', handleKeyUp);
+     };
+  }, [activeTool, sourceDuration, sequenceDuration]);
 
   // Sync Video Element with Sequence Time
   useEffect(() => {
@@ -430,6 +517,11 @@ export const ShowcaseEditorModal: React.FC<ShowcaseEditorModalProps> = ({ videoB
      type: 'clip-trim-start' | 'clip-trim-end' | 'eff-trim-start' | 'eff-trim-end' | 'eff-move';
   } | null>(null);
 
+  const startDragAction = (action: { id: string; type: 'clip-trim-start' | 'clip-trim-end' | 'eff-trim-start' | 'eff-trim-end' | 'eff-move' }) => {
+      pushHistory();
+      setDragAction(action);
+  };
+
   const getTimelineTime = (e: PointerEvent) => {
      if (!timelineContainerRef.current) return 0;
      const rect = timelineContainerRef.current.getBoundingClientRect();
@@ -510,11 +602,13 @@ export const ShowcaseEditorModal: React.FC<ShowcaseEditorModalProps> = ({ videoB
          const audioUrl = URL.createObjectURL(blob);
          const audioObj = new Audio(audioUrl);
          
-         await new Promise<void>(resolve => {
-            audioObj.onloadeddata = () => resolve();
+         await new Promise<void>((resolve, reject) => {
+            audioObj.onloadedmetadata = () => resolve();
+            audioObj.onerror = (e) => reject(new Error("Audio load failed"));
             audioObj.load();
          });
          
+         pushHistory();
          setEffects(prev => [...prev, {
              id: Date.now().toString(),
              trackId: 'voiceover',
@@ -532,6 +626,7 @@ export const ShowcaseEditorModal: React.FC<ShowcaseEditorModalProps> = ({ videoB
   };
 
   const addTextOverlay = () => {
+      pushHistory();
       setEffects(prev => [...prev, {
           id: Date.now().toString(),
           trackId: 'text',
@@ -553,6 +648,7 @@ export const ShowcaseEditorModal: React.FC<ShowcaseEditorModalProps> = ({ videoB
 
   const moveClipLeft = (index: number) => {
       if (index === 0) return;
+      pushHistory();
       setClips(prev => {
           const newClips = [...prev];
           const temp = newClips[index - 1];
@@ -564,6 +660,7 @@ export const ShowcaseEditorModal: React.FC<ShowcaseEditorModalProps> = ({ videoB
 
   const moveClipRight = (index: number) => {
       if (index === clips.length - 1) return;
+      pushHistory();
       setClips(prev => {
           const newClips = [...prev];
           const temp = newClips[index + 1];
@@ -579,6 +676,7 @@ export const ShowcaseEditorModal: React.FC<ShowcaseEditorModalProps> = ({ videoB
           const c = clips[i];
           const dur = c.sourceEnd - c.sourceStart;
           if (time > acc && time < acc + dur) {
+              pushHistory();
               const splitSourceTime = c.sourceStart + (time - acc);
               const clip1 = { ...c, sourceEnd: splitSourceTime };
               const clip2 = { ...c, id: Date.now().toString() + Math.random().toString(36).substr(2, 5), sourceStart: splitSourceTime };
@@ -827,15 +925,44 @@ export const ShowcaseEditorModal: React.FC<ShowcaseEditorModalProps> = ({ videoB
           <div className="flex-shrink-0 h-72 border-t border-white/10 bg-neutral-950 flex flex-col relative z-20 box-border">
               {/* Timeline Header Controller */}
               <div className="h-10 bg-white/5 border-b border-white/10 flex items-center px-4 gap-4 flex-shrink-0">
-                  <button onClick={() => setIsPlaying(!isPlaying)} className="w-8 h-8 rounded bg-white text-black flex items-center justify-center hover:bg-neutral-200">
-                     {isPlaying ? <Pause size={16} className="fill-current" /> : <Play size={16} className="fill-current ml-1" />}
-                  </button>
-                  <span className="font-mono text-sm font-bold text-white tracking-widest">
-                     {formatTime(sequenceTime)} <span className="text-white/30">/ {formatTime(sequenceDuration)}</span>
+                  <div className="flex items-center gap-1">
+                      <button onClick={() => { activeTool === 'scissors' ? setSourceTime(0) : setSequenceTime(0) }} title="Go to Start (Hotkeys: 1)" className="w-8 h-8 flex flex-col justify-center items-center text-white/50 hover:text-white hover:bg-white/10 rounded disabled:opacity-50">
+                          <SkipBack size={14} className="fill-current" />
+                      </button>
+                      <button 
+                          onPointerDown={() => { playbackRateRef.current = -5; }}
+                          onPointerUp={() => { playbackRateRef.current = 1; }}
+                          onPointerLeave={() => { playbackRateRef.current = 1; }}
+                          title="Hold to Rewind (Hotkey: hold 1)"
+                          className="w-8 h-8 flex justify-center items-center text-white/50 hover:text-white hover:bg-white/10 rounded disabled:opacity-50">
+                          <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M11 19L2 12l9-7v14z"/><path d="M22 19l-9-7 9-7v14z"/></svg>
+                      </button>
+                      
+                      <button onClick={() => setIsPlaying(!isPlaying)} className="w-8 h-8 mx-1 rounded bg-white text-black flex items-center justify-center hover:bg-neutral-200">
+                         {isPlaying ? <Pause size={16} className="fill-current" /> : <Play size={16} className="fill-current ml-1" />}
+                      </button>
+
+                      <button 
+                          onPointerDown={() => { playbackRateRef.current = 5; }}
+                          onPointerUp={() => { playbackRateRef.current = 1; }}
+                          onPointerLeave={() => { playbackRateRef.current = 1; }}
+                          title="Hold to Fast Forward (Hotkey: hold 3)"
+                          className="w-8 h-8 flex justify-center items-center text-white/50 hover:text-white hover:bg-white/10 rounded disabled:opacity-50">
+                          <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M13 5l9 7-9 7V5z"/><path d="M2 5l9 7-9 7V5z"/></svg>
+                      </button>
+                      <button onClick={() => { activeTool === 'scissors' ? setSourceTime(sourceDuration) : setSequenceTime(sequenceDuration) }} title="Go to End (Hotkey: 3)" className="w-8 h-8 flex flex-col justify-center items-center text-white/50 hover:text-white hover:bg-white/10 rounded disabled:opacity-50">
+                          <SkipForward size={14} className="fill-current" />
+                      </button>
+                  </div>
+                  <span className="font-mono text-sm font-bold text-white tracking-widest pl-2">
+                     {formatTime(activeTool === 'scissors' ? sourceTime : sequenceTime)} <span className="text-white/30">/ {formatTime(activeTool === 'scissors' ? sourceDuration : sequenceDuration)}</span>
                   </span>
                   
                   <div className="ml-auto flex items-center gap-2">
-                     <button onClick={appendNewClip} className={`px-4 py-1.5 rounded text-xs font-bold uppercase tracking-widest text-white transition-colors flex items-center gap-2 ${btnClass}`}>
+                     <button onClick={undo} disabled={history.length === 0} title="Undo" className="px-3 py-1.5 rounded text-xs font-bold uppercase tracking-widest text-white/80 hover:text-white transition-colors flex items-center gap-2 hover:bg-white/10 disabled:opacity-30 disabled:hover:bg-transparent">
+                         <Undo2 size={14} /> Undo
+                     </button>
+                     <button onClick={() => { pushHistory(); appendNewClip(); }} className={`px-4 py-1.5 rounded text-xs font-bold uppercase tracking-widest text-white transition-colors flex items-center gap-2 ${btnClass}`}>
                          <Plus size={14} /> Add Source Clip
                      </button>
                   </div>
@@ -858,6 +985,17 @@ export const ShowcaseEditorModal: React.FC<ShowcaseEditorModalProps> = ({ videoB
                            if(e.target === timelineContainerRef.current) {
                                const time = getTimelineTime(e.nativeEvent);
                                setSequenceTime(time);
+                               
+                               const moveHandler = (moveEv: PointerEvent) => {
+                                  const t = getTimelineTime(moveEv);
+                                  setSequenceTime(t);
+                               };
+                               const upHandler = () => {
+                                  window.removeEventListener('pointermove', moveHandler);
+                                  window.removeEventListener('pointerup', upHandler);
+                               };
+                               window.addEventListener('pointermove', moveHandler);
+                               window.addEventListener('pointerup', upHandler);
                            }
                        }}
                        >
@@ -898,11 +1036,11 @@ export const ShowcaseEditorModal: React.FC<ShowcaseEditorModalProps> = ({ videoB
                                                  )}
                                                  
                                                  {/* Left Handle */}
-                                                 {activeTool !== 'razor' && <div className="absolute left-0 top-0 bottom-0 w-3 cursor-ew-resize hover:bg-white/50 z-20" onPointerDown={e => { e.stopPropagation(); setDragAction({ id: c.id, type: 'clip-trim-start' }); }} />}
+                                                 {activeTool !== 'razor' && <div className="absolute left-0 top-0 bottom-0 w-3 cursor-ew-resize hover:bg-white/50 z-20" onPointerDown={e => { e.stopPropagation(); startDragAction({ id: c.id, type: 'clip-trim-start' }); }} />}
                                                  {/* Right Handle */}
-                                                 {activeTool !== 'razor' && <div className="absolute right-0 top-0 bottom-0 w-3 cursor-ew-resize hover:bg-white/50 z-20" onPointerDown={e => { e.stopPropagation(); setDragAction({ id: c.id, type: 'clip-trim-end' }); }} />}
+                                                 {activeTool !== 'razor' && <div className="absolute right-0 top-0 bottom-0 w-3 cursor-ew-resize hover:bg-white/50 z-20" onPointerDown={e => { e.stopPropagation(); startDragAction({ id: c.id, type: 'clip-trim-end' }); }} />}
                                                  
-                                                 {activeTool !== 'razor' && <button onClick={() => setClips(cArr => cArr.filter(x => x.id !== c.id))} className="absolute bottom-1 right-2 w-5 h-5 bg-red-500/80 hover:bg-red-500 text-white flex items-center justify-center rounded opacity-0 group-hover:opacity-100 transition-opacity z-10"><Trash2 size={12}/></button>}
+                                                 {activeTool !== 'razor' && <button onClick={() => { pushHistory(); setClips(cArr => cArr.filter(x => x.id !== c.id)); }} className="absolute bottom-1 right-2 w-5 h-5 bg-red-500/80 hover:bg-red-500 text-white flex items-center justify-center rounded opacity-0 group-hover:opacity-100 transition-opacity z-10"><Trash2 size={12}/></button>}
                                             </div>
                                        );
                                        acc += dur;
@@ -916,11 +1054,11 @@ export const ShowcaseEditorModal: React.FC<ShowcaseEditorModalProps> = ({ videoB
                                {effects.filter(e => e.trackId === 'text').map(e => (
                                    <div key={e.id} className="absolute h-[80%] top-[10%] bg-pink-500/80 border-2 border-pink-300 rounded group shadow-lg cursor-move flex items-center justify-center px-4 overflow-hidden"
                                         style={{ left: `${(e.start/tlScale)*100}%`, width: `${((e.end-e.start)/tlScale)*100}%` }}
-                                        onPointerDown={ev => { ev.stopPropagation(); setDragAction({ id: e.id, type: 'eff-move' }); }}>
+                                        onPointerDown={ev => { ev.stopPropagation(); startDragAction({ id: e.id, type: 'eff-move' }); }}>
                                         <span className="text-[10px] font-black text-white truncate pointer-events-none block whitespace-pre">{e.text?.replace('\\n', ' ')}</span>
-                                        <div className="absolute left-0 top-0 bottom-0 w-3 cursor-ew-resize hover:bg-white/50 z-20" onPointerDown={ev => { ev.stopPropagation(); setDragAction({ id: e.id, type: 'eff-trim-start' }); }} />
-                                        <div className="absolute right-0 top-0 bottom-0 w-3 cursor-ew-resize hover:bg-white/50 z-20" onPointerDown={ev => { ev.stopPropagation(); setDragAction({ id: e.id, type: 'eff-trim-end' }); }} />
-                                        <button onClick={() => setEffects(efs => efs.filter(x => x.id !== e.id))} className="absolute inset-x-0 inset-y-0 opacity-0 group-hover:opacity-100 bg-red-500/80 flex items-center justify-center transition-opacity z-10"><Trash2 size={16}/></button>
+                                        <div className="absolute left-0 top-0 bottom-0 w-3 cursor-ew-resize hover:bg-white/50 z-20" onPointerDown={ev => { ev.stopPropagation(); startDragAction({ id: e.id, type: 'eff-trim-start' }); }} />
+                                        <div className="absolute right-0 top-0 bottom-0 w-3 cursor-ew-resize hover:bg-white/50 z-20" onPointerDown={ev => { ev.stopPropagation(); startDragAction({ id: e.id, type: 'eff-trim-end' }); }} />
+                                        <button onClick={() => { pushHistory(); setEffects(efs => efs.filter(x => x.id !== e.id)); }} className="absolute inset-x-0 inset-y-0 opacity-0 group-hover:opacity-100 bg-red-500/80 flex items-center justify-center transition-opacity z-10"><Trash2 size={16}/></button>
                                    </div>
                                ))}
                            </div>
@@ -930,10 +1068,10 @@ export const ShowcaseEditorModal: React.FC<ShowcaseEditorModalProps> = ({ videoB
                                {effects.filter(e => e.trackId === 'fx').map(e => (
                                    <div key={e.id} className="absolute h-[80%] top-[10%] bg-emerald-500/80 border-2 border-emerald-300 rounded group shadow-lg cursor-move flex items-center justify-center"
                                         style={{ left: `${(e.start/tlScale)*100}%`, width: `${((e.end-e.start)/tlScale)*100}%` }}
-                                        onPointerDown={ev => { ev.stopPropagation(); setDragAction({ id: e.id, type: 'eff-move' }); }}>
-                                        <div className="absolute left-0 top-0 bottom-0 w-3 cursor-ew-resize hover:bg-white/50 z-20" onPointerDown={ev => { ev.stopPropagation(); setDragAction({ id: e.id, type: 'eff-trim-start' }); }} />
-                                        <div className="absolute right-0 top-0 bottom-0 w-3 cursor-ew-resize hover:bg-white/50 z-20" onPointerDown={ev => { ev.stopPropagation(); setDragAction({ id: e.id, type: 'eff-trim-end' }); }} />
-                                        <button onClick={() => setEffects(efs => efs.filter(x => x.id !== e.id))} className="absolute inset-x-0 inset-y-0 opacity-0 group-hover:opacity-100 bg-red-500/80 flex items-center justify-center transition-opacity z-10"><Trash2 size={16}/></button>
+                                        onPointerDown={ev => { ev.stopPropagation(); startDragAction({ id: e.id, type: 'eff-move' }); }}>
+                                        <div className="absolute left-0 top-0 bottom-0 w-3 cursor-ew-resize hover:bg-white/50 z-20" onPointerDown={ev => { ev.stopPropagation(); startDragAction({ id: e.id, type: 'eff-trim-start' }); }} />
+                                        <div className="absolute right-0 top-0 bottom-0 w-3 cursor-ew-resize hover:bg-white/50 z-20" onPointerDown={ev => { ev.stopPropagation(); startDragAction({ id: e.id, type: 'eff-trim-end' }); }} />
+                                        <button onClick={() => { pushHistory(); setEffects(efs => efs.filter(x => x.id !== e.id)); }} className="absolute inset-x-0 inset-y-0 opacity-0 group-hover:opacity-100 bg-red-500/80 flex items-center justify-center transition-opacity z-10"><Trash2 size={16}/></button>
                                    </div>
                                ))}
                            </div>
@@ -943,20 +1081,23 @@ export const ShowcaseEditorModal: React.FC<ShowcaseEditorModalProps> = ({ videoB
                                {effects.filter(e => e.trackId === 'voiceover').map(e => (
                                    <div key={e.id} className="absolute h-[80%] top-[10%] bg-yellow-500/80 border-2 border-yellow-300 rounded group shadow-lg cursor-move flex items-center px-2"
                                         style={{ left: `${(e.start/tlScale)*100}%`, width: `${((e.end-e.start)/tlScale)*100}%` }}
-                                        onPointerDown={ev => { ev.stopPropagation(); setDragAction({ id: e.id, type: 'eff-move' }); }}>
+                                        onPointerDown={ev => { ev.stopPropagation(); startDragAction({ id: e.id, type: 'eff-move' }); }}>
                                         
                                         <svg className="w-full h-full absolute inset-0 opacity-30 preserve-aspect-none" viewBox="0 0 100 20" preserveAspectRatio="none">
                                             <path d="M0,10 Q2,0 4,10 T8,10 T12,10 T16,3 T20,10 L100,10" stroke="white" strokeWidth="1" fill="none" vectorEffect="non-scaling-stroke"/>
                                         </svg>
 
                                         <span className="text-[10px] font-black text-black z-10">Z-RO V.O.</span>
-                                        <div className="absolute left-0 top-0 bottom-0 w-3 cursor-ew-resize hover:bg-white/50 z-20" onPointerDown={ev => { ev.stopPropagation(); setDragAction({ id: e.id, type: 'eff-trim-start' }); }} />
-                                        <div className="absolute right-0 top-0 bottom-0 w-3 cursor-ew-resize hover:bg-white/50 z-20" onPointerDown={ev => { ev.stopPropagation(); setDragAction({ id: e.id, type: 'eff-trim-end' }); }} />
-                                        <button onClick={() => setEffects(efs => {
-                                            const removed = efs.find(x => x.id === e.id);
-                                            if (removed?.audioObj) removed.audioObj.pause();
-                                            return efs.filter(x => x.id !== e.id);
-                                        })} className="absolute inset-x-0 inset-y-0 opacity-0 group-hover:opacity-100 bg-red-500/80 flex items-center justify-center transition-opacity z-10"><Trash2 size={16}/></button>
+                                        <div className="absolute left-0 top-0 bottom-0 w-3 cursor-ew-resize hover:bg-white/50 z-20" onPointerDown={ev => { ev.stopPropagation(); startDragAction({ id: e.id, type: 'eff-trim-start' }); }} />
+                                        <div className="absolute right-0 top-0 bottom-0 w-3 cursor-ew-resize hover:bg-white/50 z-20" onPointerDown={ev => { ev.stopPropagation(); startDragAction({ id: e.id, type: 'eff-trim-end' }); }} />
+                                        <button onClick={() => {
+                                            pushHistory();
+                                            setEffects(efs => {
+                                                const removed = efs.find(x => x.id === e.id);
+                                                if (removed?.audioObj) removed.audioObj.pause();
+                                                return efs.filter(x => x.id !== e.id);
+                                            });
+                                        }} className="absolute inset-x-0 inset-y-0 opacity-0 group-hover:opacity-100 bg-red-500/80 flex items-center justify-center transition-opacity z-10"><Trash2 size={16}/></button>
                                    </div>
                                ))}
                            </div>
