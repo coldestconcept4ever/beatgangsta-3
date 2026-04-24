@@ -21,7 +21,7 @@ interface SequenceClip {
 
 interface SequenceEffect {
   id: string;
-  trackId: 'fx' | 'text' | 'voiceover' | 'mascot';
+  trackId: 'fx' | 'text' | 'voiceover' | 'mascot' | 'instrumental';
   start: number; // Sequence time
   end: number;
   // FX props
@@ -32,6 +32,8 @@ interface SequenceEffect {
   // Voiceover props
   audioUrl?: string; 
   audioObj?: HTMLAudioElement;
+  bpm?: number;
+  loopDur?: number;
 }
 
 const formatTime = (secs: number) => {
@@ -355,11 +357,22 @@ export const ShowcaseEditorModal: React.FC<ShowcaseEditorModalProps> = ({ videoB
         
         // Instrumental sync and ducking
         if (instrumentalAudio) {
-           if (isPlaying) {
-             if (instrumentalAudio.paused) instrumentalAudio.play().catch(console.error);
-             instrumentalAudio.volume = isVoiceoverActive ? 0.15 : 1.0;
+           const instEffect = effects.find(e => e.trackId === 'instrumental' && sequenceTime >= e.start && sequenceTime <= e.end);
+           if (instEffect) {
+              const localTime = sequenceTime - instEffect.start;
+              const blockDur = instEffect.loopDur || 1;
+              const loopTime = localTime % blockDur;
+              if (Math.abs(instrumentalAudio.currentTime - Math.max(0, loopTime)) > 0.1) {
+                  instrumentalAudio.currentTime = Math.max(0, loopTime);
+              }
+              if (isPlaying) {
+                if (instrumentalAudio.paused) instrumentalAudio.play().catch(console.error);
+                instrumentalAudio.volume = isVoiceoverActive ? 0.15 : 1.0;
+              } else {
+                if (!instrumentalAudio.paused) instrumentalAudio.pause();
+              }
            } else {
-             if (!instrumentalAudio.paused) instrumentalAudio.pause();
+              if (!instrumentalAudio.paused) instrumentalAudio.pause();
            }
         }
     }
@@ -830,6 +843,21 @@ export const ShowcaseEditorModal: React.FC<ShowcaseEditorModalProps> = ({ videoB
              const result = await analyzeInstrumental(base64, file.type);
              setInstrumentalBpm(result.bpm);
              console.log("Instrumental Analysis:", result);
+             
+             const bpm = result.bpm;
+             const loopDur = 16 * 60 / bpm; // perfectly quantized 4-bar loop
+             setEffects(prev => {
+                 const cleaned = prev.filter(e => e.trackId !== 'instrumental');
+                 return [...cleaned, {
+                     id: Date.now().toString(),
+                     trackId: 'instrumental',
+                     start: sequenceTime,
+                     end: sequenceTime + loopDur,
+                     bpm: bpm,
+                     loopDur: loopDur
+                 }];
+             });
+             setActiveTool('pointer');
           } catch(err) {
              console.error("Instrumental analysis failed", err);
           } finally {
@@ -1101,6 +1129,14 @@ export const ShowcaseEditorModal: React.FC<ShowcaseEditorModalProps> = ({ videoB
                   rectW: e.rectW,
                   rectH: e.rectH,
               })),
+              instrumentalLoops: effects.filter(e => e.trackId === 'instrumental').map(e => ({
+                  id: e.id,
+                  start: e.start,
+                  end: e.end,
+                  bpm: e.bpm,
+                  loopDur: e.loopDur,
+                  file: instrumentalBlob ? "instrumental.wav" : undefined
+              })),
               instrumental: instrumentalBlob ? {
                   file: "instrumental.wav",
                   bpm: instrumentalBpm,
@@ -1344,6 +1380,7 @@ export const ShowcaseEditorModal: React.FC<ShowcaseEditorModalProps> = ({ videoB
                       <div className="flex-1 border-b border-white/5 flex items-center px-3 text-[10px] font-black tracking-widest uppercase text-sky-400">Mascot</div>
                       <div className="flex-1 border-b border-white/5 flex items-center px-3 text-[10px] font-black tracking-widest uppercase text-emerald-400">Magnifier</div>
                       <div className="flex-1 border-b border-white/5 flex items-center px-3 text-[10px] font-black tracking-widest uppercase text-yellow-400">Audio (Voice)</div>
+                      <div className="flex-1 border-b border-white/5 flex items-center px-3 text-[10px] font-black tracking-widest uppercase text-purple-400">Instrumental</div>
                   </div>
                   
                   {/* Tracks Area */}
@@ -1459,7 +1496,7 @@ export const ShowcaseEditorModal: React.FC<ShowcaseEditorModalProps> = ({ videoB
                            </div>
 
                            {/* Audio Track */}
-                           <div className="flex-1 relative pointer-events-auto flex items-center px-0.5">
+                           <div className="flex-1 border-b border-white/5 relative pointer-events-auto flex items-center px-0.5">
                                {effects.filter(e => e.trackId === 'voiceover').map(e => (
                                    <div key={e.id} className="absolute h-[80%] top-[10%] bg-yellow-500/80 border-2 border-yellow-300 rounded group shadow-lg cursor-move flex items-center px-2"
                                         style={{ left: `${(e.start/tlScale)*100}%`, width: `${((e.end-e.start)/tlScale)*100}%` }}
@@ -1479,6 +1516,28 @@ export const ShowcaseEditorModal: React.FC<ShowcaseEditorModalProps> = ({ videoB
                                                 if (removed?.audioObj) removed.audioObj.pause();
                                                 return efs.filter(x => x.id !== e.id);
                                             });
+                                        }} className="absolute inset-x-0 inset-y-0 opacity-0 group-hover:opacity-100 bg-red-500/80 flex items-center justify-center transition-opacity z-10"><Trash2 size={16}/></button>
+                                   </div>
+                               ))}
+                           </div>
+
+                           {/* Instrumental Track */}
+                           <div className="flex-1 relative pointer-events-auto flex items-center px-0.5">
+                               {effects.filter(e => e.trackId === 'instrumental').map(e => (
+                                   <div key={e.id} className="absolute h-[80%] top-[10%] bg-purple-500/80 border-2 border-purple-300 rounded group shadow-lg cursor-move flex items-center px-2"
+                                        style={{ left: `${(e.start/tlScale)*100}%`, width: `${((e.end-e.start)/tlScale)*100}%` }}
+                                        onPointerDown={ev => { ev.stopPropagation(); startDragAction({ id: e.id, type: 'eff-move' }); }}>
+                                        
+                                        <svg className="w-full h-full absolute inset-0 opacity-30 preserve-aspect-none" viewBox="0 0 100 20" preserveAspectRatio="none">
+                                            <path d="M0,10 Q2,0 4,10 T8,10 T12,10 T16,3 T20,10 L100,10" stroke="white" strokeWidth="1" fill="none" vectorEffect="non-scaling-stroke"/>
+                                        </svg>
+
+                                        <span className="text-[10px] font-black text-white z-10 truncate">{e.bpm} BPM BEAT CLIP</span>
+                                        <div className="absolute left-0 top-0 bottom-0 w-3 cursor-ew-resize hover:bg-white/50 z-20" onPointerDown={ev => { ev.stopPropagation(); startDragAction({ id: e.id, type: 'eff-trim-start' }); }} />
+                                        <div className="absolute right-0 top-0 bottom-0 w-3 cursor-ew-resize hover:bg-white/50 z-20" onPointerDown={ev => { ev.stopPropagation(); startDragAction({ id: e.id, type: 'eff-trim-end' }); }} />
+                                        <button onClick={() => {
+                                            pushHistory();
+                                            setEffects(efs => efs.filter(x => x.id !== e.id));
                                         }} className="absolute inset-x-0 inset-y-0 opacity-0 group-hover:opacity-100 bg-red-500/80 flex items-center justify-center transition-opacity z-10"><Trash2 size={16}/></button>
                                    </div>
                                ))}
