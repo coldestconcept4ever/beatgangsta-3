@@ -502,7 +502,7 @@ export const ShowcaseEditorModal: React.FC<ShowcaseEditorModalProps> = ({ videoB
         }
 
         // 3. Active Text Overlays
-        const activeTexts = effects.filter(e => e.trackId === 'text' && sequenceTime >= e.start && sequenceTime <= e.end);
+        const activeTexts = effects.filter(e => e.trackId.startsWith('text') && sequenceTime >= e.start && sequenceTime <= e.end);
         for (const activeText of activeTexts) {
             if (activeText.text) {
                drawOverlayText(ctx, canvas, activeText.text, sequenceTime - activeText.start, theme === 'coldest');
@@ -629,6 +629,20 @@ export const ShowcaseEditorModal: React.FC<ShowcaseEditorModalProps> = ({ videoB
             ctx.globalAlpha = alpha * (1 - t/numTrails) * 0.4;
         }
 
+        // 1. Draw Glow/Blur Layer first for all lines (Objective 1)
+        lines.forEach((line, i) => {
+            const y = startY + i * baseLineHeight * 1.1;
+            ctx.shadowColor = isColdestTheme ? 'rgba(56, 189, 248, 1)' : 'rgba(255, 50, 50, 1)';
+            ctx.shadowBlur = baseLineHeight * 0.4;
+            ctx.fillStyle = 'rgba(0,0,0,0.01)'; // invisible fill to carry the shadow
+            ctx.fillText(line, 0, y);
+        });
+
+        // 2. Disable shadow for the actual font layers
+        ctx.shadowColor = 'transparent';
+        ctx.shadowBlur = 0;
+
+        // 3. Draw Font Layers (Stroke then Fill)
         lines.forEach((line, i) => {
             const y = startY + i * baseLineHeight * 1.1;
             ctx.lineWidth = baseLineHeight * 0.1;
@@ -636,12 +650,10 @@ export const ShowcaseEditorModal: React.FC<ShowcaseEditorModalProps> = ({ videoB
             ctx.lineJoin = 'round';
             
             // Draw stroke (outline) first to prevent it from overlapping inside the blue fill
-            const oldShadow = ctx.shadowColor;
-            ctx.shadowColor = 'transparent';
             ctx.strokeText(line, 0, y);
-            ctx.shadowColor = oldShadow;
             
             // Draw fill (blue colored letters) on top of the black stroke
+            ctx.fillStyle = isColdestTheme ? '#38bdf8' : '#ffffff'; // Tailwind Sky 400
             ctx.fillText(line, 0, y);
         });
 
@@ -781,13 +793,13 @@ export const ShowcaseEditorModal: React.FC<ShowcaseEditorModalProps> = ({ videoB
                     for(let i=0; i<idx; i++) acc += (newClips[i].sourceEnd - newClips[i].sourceStart);
                     // Time delta
                     const delta = time - acc; // How far into original clip
-                    const newSourceStart = Math.min(c.sourceEnd - 0.5, c.sourceStart + delta); // min 0.5s duration
+                    const newSourceStart = Math.min(c.sourceEnd - 0.05, c.sourceStart + delta); // min 0.05s duration
                     c.sourceStart = Math.max(0, newSourceStart);
                 } else if (dragAction.type === 'clip-trim-end') {
                     let acc = 0;
                     for(let i=0; i<idx; i++) acc += (newClips[i].sourceEnd - newClips[i].sourceStart);
                     const delta = time - acc;
-                    const newSourceEnd = Math.max(c.sourceStart + 0.5, c.sourceStart + delta);
+                    const newSourceEnd = Math.max(c.sourceStart + 0.05, c.sourceStart + delta);
                     c.sourceEnd = Math.min(sourceDuration, newSourceEnd);
                 }
                 newClips[idx] = c;
@@ -803,7 +815,7 @@ export const ShowcaseEditorModal: React.FC<ShowcaseEditorModalProps> = ({ videoB
                            const snappedDur = Math.round(newDur / eff.loopDur) * eff.loopDur;
                            return { ...eff, start: eff.end - snappedDur };
                        } else {
-                           return { ...eff, start: Math.min(eff.end - 0.2, time) };
+                           return { ...eff, start: Math.min(eff.end - 0.05, time) };
                        }
                     } else if (dragAction.type === 'eff-trim-end') {
                        if (eff.trackId === 'instrumental' && eff.loopDur) {
@@ -811,7 +823,7 @@ export const ShowcaseEditorModal: React.FC<ShowcaseEditorModalProps> = ({ videoB
                            const snappedDur = Math.round(newDur / eff.loopDur) * eff.loopDur;
                            return { ...eff, end: eff.start + snappedDur };
                        } else {
-                           return { ...eff, end: Math.max(eff.start + 0.2, time) };
+                           return { ...eff, end: Math.max(eff.start + 0.05, time) };
                        }
                     } else if (dragAction.type === 'eff-move') {
                        const dur = eff.end - eff.start;
@@ -953,11 +965,21 @@ export const ShowcaseEditorModal: React.FC<ShowcaseEditorModalProps> = ({ videoB
   const voiceTracksList = Array.from(new Set(effects.filter(e => e.trackId.startsWith('voiceover')).map(e => e.trackId)));
   if (voiceTracksList.length === 0) voiceTracksList.push('voiceover-0');
 
+  const textTracksList = Array.from(new Set(effects.filter(e => e.trackId.startsWith('text')).map(e => e.trackId)));
+  if (textTracksList.length === 0) textTracksList.push('text-0');
+
   const addTextOverlay = () => {
       pushHistory();
+      // Find the next available text track ID
+      const existingTrackIds = effects.filter(e => e.trackId.startsWith('text')).map(e => e.trackId);
+      let nextIdx = 0;
+      while (existingTrackIds.includes(`text-${nextIdx}`)) {
+          nextIdx++;
+      }
+
       setEffects(prev => [...prev, {
           id: Date.now().toString(),
-          trackId: 'text',
+          trackId: `text-${nextIdx}`,
           start: sequenceTime,
           end: sequenceTime + 4,
           text: addTextValue
@@ -1075,7 +1097,7 @@ export const ShowcaseEditorModal: React.FC<ShowcaseEditorModalProps> = ({ videoB
           };
 
           // 3. Text Overlays (Rendered as PNGs)
-          const textEffects = effects.filter(e => e.trackId === 'text');
+          const textEffects = effects.filter(e => e.trackId.startsWith('text'));
           for (let i = 0; i < textEffects.length; i++) {
               const e = textEffects[i];
               if (e.text) {
@@ -1416,7 +1438,10 @@ export const ShowcaseEditorModal: React.FC<ShowcaseEditorModalProps> = ({ videoB
                   {/* Track Headers */}
                   <div className="w-32 bg-neutral-900 border-r border-white/10 flex flex-col flex-shrink-0">
                       <div className="flex-1 border-b border-white/5 flex items-center px-3 text-[10px] font-black tracking-widest uppercase text-indigo-400">Video</div>
-                      <div className="flex-1 border-b border-white/5 flex items-center px-3 text-[10px] font-black tracking-widest uppercase text-pink-400">Text FX</div>
+                      <div className="flex-1 border-b border-white/5 flex items-center px-3 text-[10px] font-black tracking-widest uppercase text-pink-400">Text 1</div>
+                      {textTracksList.slice(1).map((tk, idx) => (
+                          <div key={tk} className="flex-1 border-b border-white/5 flex items-center px-3 text-[10px] font-black tracking-widest uppercase text-pink-400">Text {idx + 2}</div>
+                      ))}
                       <div className="flex-1 border-b border-white/5 flex items-center px-3 text-[10px] font-black tracking-widest uppercase text-sky-400">Mascot</div>
                       <div className="flex-1 border-b border-white/5 flex items-center px-3 text-[10px] font-black tracking-widest uppercase text-emerald-400">Magnifier</div>
                       {voiceTracksList.map((tk, idx) => (
@@ -1496,19 +1521,21 @@ export const ShowcaseEditorModal: React.FC<ShowcaseEditorModalProps> = ({ videoB
                                })()}
                            </div>
                            
-                           {/* Text Track */}
-                           <div className="flex-1 border-b border-white/5 relative pointer-events-auto flex items-center px-0.5">
-                               {effects.filter(e => e.trackId === 'text').map(e => (
-                                   <div key={e.id} className="absolute h-[80%] top-[10%] bg-pink-500/80 border-2 border-pink-300 rounded group shadow-lg cursor-move flex items-center justify-center px-4 overflow-hidden"
-                                        style={{ left: `${(e.start/tlScale)*100}%`, width: `${((e.end-e.start)/tlScale)*100}%` }}
-                                        onPointerDown={ev => { ev.stopPropagation(); startDragAction({ id: e.id, type: 'eff-move' }); }}>
-                                        <span className="text-[10px] font-black text-white truncate pointer-events-none block whitespace-pre">{e.text?.replace(/\n|\\n/g, ' ')}</span>
-                                        <div className="absolute left-0 top-0 bottom-0 w-3 cursor-ew-resize hover:bg-white/50 z-20" onPointerDown={ev => { ev.stopPropagation(); startDragAction({ id: e.id, type: 'eff-trim-start' }); }} />
-                                        <div className="absolute right-0 top-0 bottom-0 w-3 cursor-ew-resize hover:bg-white/50 z-20" onPointerDown={ev => { ev.stopPropagation(); startDragAction({ id: e.id, type: 'eff-trim-end' }); }} />
-                                        <button onClick={() => { pushHistory(); setEffects(efs => efs.filter(x => x.id !== e.id)); }} className="absolute inset-x-0 inset-y-0 opacity-0 group-hover:opacity-100 bg-red-500/80 flex items-center justify-center transition-opacity z-10"><Trash2 size={16}/></button>
-                                   </div>
-                               ))}
-                           </div>
+                           {/* Text Tracks */}
+                           {textTracksList.map(tk => (
+                               <div key={tk} className="flex-1 border-b border-white/5 relative pointer-events-auto flex items-center px-0.5">
+                                   {effects.filter(e => e.trackId === tk).map(e => (
+                                       <div key={e.id} className="absolute h-[80%] top-[10%] bg-pink-500/80 border-2 border-pink-300 rounded group shadow-lg cursor-move flex items-center justify-center px-4 overflow-hidden"
+                                            style={{ left: `${(e.start/tlScale)*100}%`, width: `${((e.end-e.start)/tlScale)*100}%` }}
+                                            onPointerDown={ev => { ev.stopPropagation(); startDragAction({ id: e.id, type: 'eff-move' }); }}>
+                                            <span className="text-[10px] font-black text-white truncate pointer-events-none block whitespace-pre">{e.text?.replace(/\n|\\n/g, ' ')}</span>
+                                            <div className="absolute left-0 top-0 bottom-0 w-3 cursor-ew-resize hover:bg-white/50 z-20" onPointerDown={ev => { ev.stopPropagation(); startDragAction({ id: e.id, type: 'eff-trim-start' }); }} />
+                                            <div className="absolute right-0 top-0 bottom-0 w-3 cursor-ew-resize hover:bg-white/50 z-20" onPointerDown={ev => { ev.stopPropagation(); startDragAction({ id: e.id, type: 'eff-trim-end' }); }} />
+                                            <button onClick={() => { pushHistory(); setEffects(efs => efs.filter(x => x.id !== e.id)); }} className="absolute inset-x-0 inset-y-0 opacity-0 group-hover:opacity-100 bg-red-500/80 flex items-center justify-center transition-opacity z-10"><Trash2 size={16}/></button>
+                                       </div>
+                                   ))}
+                               </div>
+                           ))}
 
                            {/* Mascot Track */}
                            <div className="flex-1 border-b border-white/5 relative pointer-events-auto flex items-center px-0.5">
