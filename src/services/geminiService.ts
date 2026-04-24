@@ -428,7 +428,7 @@ export const regeneratePlugin = async (
     ${libraryContext}
     ${exclusionStr}
     
-    Return the result as a JSON object with the new plugin name, purpose, and deepDive parameters (Provide EVERY available parameter found on the actual plugin interface. Aim for 20-40 settings for complex plugins. NEVER invent fictional parameters, but you MUST be exhaustive and show all real ones).
+    Return the result as a JSON object with the new plugin name, purpose, and deepDive parameters (Provide EVERY available parameter found on the actual plugin interface. Aim for 40-80 settings for complex plugins. NEVER invent fictional parameters, but you MUST be exhaustive and show all real ones. MATCH THE EXTREME DETAIL OF A FULL BEAT RECIPE).
   `;
 
   const response = await ai.models.generateContent({
@@ -443,7 +443,7 @@ export const regeneratePlugin = async (
           purpose: { type: Type.STRING },
           deepDive: {
             type: Type.ARRAY,
-            description: "Provide EVERY available parameter found on the actual plugin interface. Aim for 20-40 settings for complex plugins. NEVER invent fictional parameters, but you MUST be exhaustive and show all real ones.",
+            description: "Provide EVERY available parameter found on the actual plugin interface. Aim for 40-80 settings for complex plugins. NEVER invent fictional parameters, but you MUST be exhaustive and show all real ones. MATCH THE EXTREME DETAIL OF A FULL BEAT RECIPE.",
             items: {
               type: Type.OBJECT,
               properties: {
@@ -685,7 +685,7 @@ const getUnifiedRecipeSchema = () => {
             },
             deepDive: {
               type: Type.ARRAY,
-              description: "Provide EVERY available parameter found on the actual plugin (typically 20-40 for professional plugins). Be exhaustive and do NOT be lazy. If the plugin is complex, show all its settings.",
+              description: "Provide EVERY available parameter found on the actual plugin (typically 40-70 for professional plugins). Be exhaustive and do NOT be lazy. If the plugin is complex, show all its settings.",
               items: {
                 type: Type.OBJECT,
                 properties: {
@@ -705,7 +705,7 @@ const getUnifiedRecipeSchema = () => {
                   purpose: { type: Type.STRING },
                   deepDive: {
                     type: Type.ARRAY,
-                    description: "Provide EVERY available parameter found on the actual plugin (typically 20-40 for professional plugins). Be exhaustive and do NOT be lazy. If the plugin is complex, show all its settings.",
+                    description: "Provide EVERY available parameter found on the actual plugin (typically 40-70 for professional plugins). Be exhaustive and do NOT be lazy. If the plugin is complex, show all its settings.",
                     items: {
                       type: Type.OBJECT,
                       properties: {
@@ -740,7 +740,7 @@ const getUnifiedRecipeSchema = () => {
                   purpose: { type: Type.STRING },
                   deepDive: {
                     type: Type.ARRAY,
-                    description: "Provide EVERY available parameter found on the actual plugin (typically 20-40 for professional plugins). Be exhaustive and do NOT be lazy. If the plugin is complex, show all its settings.",
+                    description: "Provide EVERY available parameter found on the actual plugin (typically 40-70 for professional plugins). Be exhaustive and do NOT be lazy. If the plugin is complex, show all its settings.",
                     items: {
                       type: Type.OBJECT,
                       properties: {
@@ -791,7 +791,7 @@ const getUnifiedRecipeSchema = () => {
             purpose: { type: Type.STRING },
             deepDive: {
               type: Type.ARRAY,
-              description: "Show EVERY parameter available on the plugin (typically 20-40 settings). Do NOT be lazy; if a plugin has many controls, list them all. NEVER invent fake parameters, but be absolutely exhaustive with the real ones.",
+              description: "Show EVERY parameter available on the plugin (typically 40-70 settings). Do NOT be lazy; if a plugin has many controls, list them all. NEVER invent fake parameters, but be absolutely exhaustive with the real ones. MATCH THE EXTREME DETAIL LEVEL OF A FULL BEAT RECIPE.",
               items: {
                 type: Type.OBJECT,
                 properties: {
@@ -820,7 +820,7 @@ const getUnifiedRecipeSchema = () => {
                   purpose: { type: Type.STRING },
                   deepDive: {
                     type: Type.ARRAY,
-                    description: "Show EVERY parameter available on the plugin (typically 20-40 settings). Do NOT be lazy; if a plugin has many controls, list them all. NEVER invent fake parameters, but be absolutely exhaustive with the real ones.",
+                    description: "Show EVERY parameter available on the plugin (typically 40-70 settings). Do NOT be lazy; if a plugin has many controls, list them all. NEVER invent fake parameters, but be absolutely exhaustive with the real ones. MATCH THE EXTREME DETAIL LEVEL OF A FULL BEAT RECIPE.",
                     items: {
                       type: Type.OBJECT,
                       properties: {
@@ -956,7 +956,7 @@ const getUnifiedRecipeSchema = () => {
                   purpose: { type: Type.STRING },
                   deepDive: {
                     type: Type.ARRAY,
-                    description: "Provide EVERY available parameter found on the actual plugin (typically 20-40 for professional plugins). Be exhaustive and do NOT be lazy.",
+                    description: "Provide EVERY available parameter found on the actual plugin (typically 40-70 for professional plugins). Be exhaustive and do NOT be lazy. MATCH THE EXTREME DETAIL LEVEL OF A FULL BEAT RECIPE.",
                     items: {
                       type: Type.OBJECT,
                       properties: {
@@ -1166,7 +1166,7 @@ export const enrichPluginLibrary = async (
       You are a world-class VST plugin expert and audio engineer. 
       I have a list of ${batch.length} audio plugins (VST/AU/AAX).
       
-      For EACH plugin in the list below, provide a detailed description, key features, the most accurate category, and an EXHAUSTIVE list of ALL actual technical parameter names found on the plugin's interface (e.g., Threshold, Ratio, Attack, Release, etc.). Be thorough; aim for 20-40 parameters for professional tools.
+      For EACH plugin in the list below, provide a detailed description, key features, the most accurate category, and an EXHAUSTIVE list of ALL actual technical parameter names found on the plugin's interface (e.g., Threshold, Ratio, Attack, Release, etc.). Be thorough; aim for 20-40+ parameters for professional tools. MATCH THE EXTREME DETAIL LEVEL OF A FULL BEAT RECIPE..
       
       PLUGINS TO ANALYZE:
       ${pluginList}
@@ -2385,7 +2385,7 @@ export const getMixCritique = async (
       - 'targetStem': The exact name of the stem this step applies to (if stems were uploaded).
       - 'issue': The specific problem.
       - 'solution': A detailed technical explanation of how to fix it.
-      - 'recommendedChain': A robust chain of plugins from the user's list to use for this fix, with 'name', 'purpose', and 'deepDive' (an array of parameter objects - Provide EVERY available parameter found on the actual plugin interface, aim for 20-50 settings for complex modules - each with 'parameter', 'value', and 'explanation'). You can also optionally include 'band' and 'routing' properties for multiband or parallel processing.
+      - 'recommendedChain': A robust chain of plugins from the user's list to use for this fix, with 'name', 'purpose', and 'deepDive' (an array of parameter objects - Provide EVERY available parameter found on the actual plugin interface, aim for 40-80 settings for complex modules - each with 'parameter', 'value', and 'explanation'). You can also optionally include 'band' and 'routing' properties for multiband or parallel processing. MATCH THE EXTREME DETAIL LEVEL OF A FULL BEAT RECIPE.
   `;
 
   const parts: any[] = [];
@@ -2484,7 +2484,7 @@ export const getMixCritique = async (
                         purpose: { type: Type.STRING },
                         deepDive: {
                           type: Type.ARRAY,
-                          description: "Provide EVERY available parameter found on the actual plugin interface. Aim for 20-40 settings for complex modules. Do NOT be lazy; ensure every possible control is accounted for.",
+                          description: "Provide EVERY available parameter found on the actual plugin interface. Aim for 40-70 settings for complex modules. Do NOT be lazy; ensure every possible control is accounted for. MATCH THE EXTREME DETAIL LEVEL OF A FULL BEAT RECIPE.",
                           items: {
                             type: Type.OBJECT,
                             properties: {
@@ -2547,7 +2547,7 @@ export const getSpecificMixHelp = async (plugins: VSTPlugin[], audioBase64: stri
 
     ${audioUrl ? `The audio file is available at this URL: ${audioUrl}. Please fetch and analyze it.` : ""}
 
-    Respond to the user's latest message. Return the result as a JSON object with 'query', 'advice', and 'recommendedChain' (an array of plugin objects with name, purpose, and deepDive parameters - Provide EVERY available parameter found on the actual plugin interface. Aim for 20-40 settings for complex modules. Do NOT be lazy; ensure every possible control is accounted for).
+    Respond to the user's latest message. Return the result as a JSON object with 'query', 'advice', and 'recommendedChain' (an array of plugin objects with name, purpose, and deepDive parameters - Provide EVERY available parameter found on the actual plugin interface. Aim for 40-80 settings for complex modules. Do NOT be lazy; ensure every possible control is accounted for. MATCH THE EXTREME DETAIL LEVEL OF A FULL BEAT RECIPE).
   `;
 
   const firstUserParts: any[] = [];
@@ -2602,7 +2602,7 @@ export const getSpecificMixHelp = async (plugins: VSTPlugin[], audioBase64: stri
                   purpose: { type: Type.STRING },
                   deepDive: {
                     type: Type.ARRAY,
-                    description: "Provide EVERY available parameter found on the actual plugin interface. Aim for 20-40 settings for complex modules. Do NOT be lazy; ensure every possible control is accounted for.",
+                    description: "Provide EVERY available parameter found on the actual plugin interface. Aim for 40-70 settings for complex modules. Do NOT be lazy; ensure every possible control is accounted for. MATCH THE EXTREME DETAIL LEVEL OF A FULL BEAT RECIPE.",
                     items: {
                       type: Type.OBJECT,
                       properties: {
@@ -2740,7 +2740,7 @@ export const getGangstaVoxRecipe = async (recipe: BeatRecipe, plugins: VSTPlugin
                       purpose: { type: Type.STRING },
                       settings: {
                         type: Type.ARRAY,
-                        description: "Provide EVERY available parameter found on the actual plugin interface. Aim for 20-40 settings for complex modules. Do NOT be lazy; ensure every possible control is accounted for.",
+                        description: "Provide EVERY available parameter found on the actual plugin interface. Aim for 40-70 settings for complex modules. Do NOT be lazy; ensure every possible control is accounted for. MATCH THE EXTREME DETAIL LEVEL OF A FULL BEAT RECIPE.",
                         items: {
                           type: Type.OBJECT,
                           properties: {
@@ -2798,7 +2798,7 @@ export const getGangstaVoxRecipe = async (recipe: BeatRecipe, plugins: VSTPlugin
                         whyItWorks: { type: Type.STRING },
                         settings: {
                           type: Type.ARRAY,
-                          description: "Provide EVERY available parameter found on the actual plugin interface. Aim for 20-40 settings for complex modules. Do NOT be lazy; ensure every possible control is accounted for.",
+                          description: "Provide EVERY available parameter found on the actual plugin interface. Aim for 40-70 settings for complex modules. Do NOT be lazy; ensure every possible control is accounted for. MATCH THE EXTREME DETAIL LEVEL OF A FULL BEAT RECIPE.",
                           items: {
                             type: Type.OBJECT,
                             properties: {
