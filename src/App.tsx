@@ -1,5 +1,5 @@
 
-import React, { useState, useMemo, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useMemo, useEffect, useRef, useCallback, useTransition } from 'react';
 import { VSTPlugin, BeatRecipe, AppTheme, User, SavedRecipe, HistoryItem, Folder, KnifeStyle, PendantStyle, ChainStyle, SharedSession, DuragStyle, Hardware, FullSaveFile, GrillStyle, MixCritique, SavedCritique, TutorialProgress, ReceiptItem } from './types';
 import { VIBE_EXAMPLES, SONG_EXAMPLES, BANDLAB_PLUGINS_LATEST, BANDLAB_FREE_PLUGINS_LATEST } from './constants';
 import { ARTIST_EXAMPLES } from './constants/artists';
@@ -12,8 +12,8 @@ import { initAudio } from './utils/midiPlayer';
 import { fetchWithDetailedError } from './lib/api';
 
 import { AvianField } from './components/RavenField';
-const PluginCard = React.lazy(() => import('./components/PluginCard').then(m => ({ default: m.PluginCard })));
-const HardwareCard = React.lazy(() => import('./components/HardwareCard').then(m => ({ default: m.HardwareCard })));
+import { PluginCard } from './components/PluginCard';
+import { HardwareCard } from './components/HardwareCard';
 const RecipeCard = React.lazy(() => import('./components/RecipeCard').then(m => ({ default: m.RecipeCard })));
 const CritiqueCard = React.lazy(() => import('./components/CritiqueCard').then(m => ({ default: m.CritiqueCard })));
 const Mascot = React.lazy(() => import('./components/Mascot').then(m => ({ default: m.Mascot })));
@@ -885,6 +885,8 @@ const App: React.FC = () => {
       return [...prev, ...newItems];
     });
   }, [stemsLimit, activeUI]);
+
+  const [isUpdatingSort, startSortTransition] = useTransition();
 
   const isMasterAuthorized = useMemo(() => {
     const isEnglish = i18n.language.startsWith('en');
@@ -6311,8 +6313,14 @@ The AI was unable to verify these parameters. Please investigate.`;
                     <select 
                       id="gear-rack-sort"
                       value={sortBy} 
-                      onChange={(e) => { setSortBy(e.target.value as any); setSelectedFolder(null); }}
-                      className={`py-2 px-4 rounded-full text-xs font-bold focus:outline-none transition-all ${theme === 'coldest' ? 'bg-white/40 text-slate-800' : theme === 'chef-mode' ? 'bg-white/60 text-slate-900' : 'bg-black/60 text-white'}`}
+                      onChange={(e) => { 
+                        const newVal = e.target.value as any;
+                        startSortTransition(() => {
+                          setSortBy(newVal); 
+                          setSelectedFolder(null); 
+                        });
+                      }}
+                      className={`py-2 px-4 rounded-full text-xs font-bold focus:outline-none transition-all ${isUpdatingSort ? 'opacity-50 grayscale' : ''} ${theme === 'coldest' ? 'bg-white/40 text-slate-800' : theme === 'chef-mode' ? 'bg-white/60 text-slate-900' : 'bg-black/60 text-white'}`}
                     >
                       <option value="type">{t('group_by_type')}</option>
                       <option value="vendor">{t('group_by_brand')}</option>
@@ -6587,10 +6595,12 @@ The AI was unable to verify these parameters. Please investigate.`;
                       }
 
                       const plugin = item.plugin;
+                      if (!plugin || !plugin.name) return null;
+                      
                       return (
                         <PluginCard 
-                          id={`plugin-card-${plugin.name.replace(/\s+/g, '-').toLowerCase()}`}
-                          key={`${plugin.vendor}-${plugin.name}`} 
+                          id={`plugin-card-${plugin.name.replace(/[^\w\s-]/g, '').replace(/\s+/g, '-').toLowerCase()}`}
+                          key={`${plugin.vendor}-${plugin.name}-${idx}`} 
                           plugin={plugin} 
                           isFavorite={starredPlugins.includes(plugin.name)}
                           onUpdatePlugin={handleUpdatePlugin}
