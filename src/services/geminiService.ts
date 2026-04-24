@@ -1053,7 +1053,7 @@ const getUnifiedRecipeSchema = () => {
         required: ["vocalTracks", "layeringStrategy"]
       }
     },
-    required: ["title", "style", "bpm", "description", "artistTypes", "instruments", "busses", "drumPatterns", "arrangement", "masterPlugins"]
+    required: ["title", "style", "bpm", "description", "artistTypes", "instruments", "busses", "drumPatterns", "arrangement", "mixingAdvice", "masterPlugins"]
   };
 };
 
