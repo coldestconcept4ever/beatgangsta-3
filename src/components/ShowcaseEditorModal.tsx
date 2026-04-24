@@ -43,6 +43,12 @@ export const ShowcaseEditorModal: React.FC<ShowcaseEditorModalProps> = ({ videoB
   const [bgAudioFile, setBgAudioFile] = useState<File | null>(null);
   const bgAudioInputRef = useRef<HTMLInputElement>(null);
 
+  const [magnifier, setMagnifier] = useState<{ cx: number, cy: number, radius: number } | null>(null);
+  const [isDrawingMag, setIsDrawingMag] = useState(false);
+  const [magStart, setMagStart] = useState<{ x: number, y: number } | null>(null);
+  const [magCurrent, setMagCurrent] = useState<{ x: number, y: number } | null>(null);
+  const [isMagMode, setIsMagMode] = useState(false);
+
   // Video and Playback State
   const [videoUrl, setVideoUrl] = useState('');
   const [duration, setDuration] = useState(0);
@@ -132,6 +138,78 @@ export const ShowcaseEditorModal: React.FC<ShowcaseEditorModalProps> = ({ videoB
   
   const handleDragOver = (e: React.DragEvent) => {
       e.preventDefault();
+  };
+
+  const getVideoRelCoords = (e: React.PointerEvent<HTMLVideoElement>, video: HTMLVideoElement) => {
+    const rect = video.getBoundingClientRect();
+    const videoRatio = video.videoWidth / video.videoHeight;
+    const boxRatio = rect.width / rect.height;
+    
+    let renderW = rect.width;
+    let renderH = rect.height;
+    let offsetX = 0;
+    let offsetY = 0;
+    
+    if (videoRatio > boxRatio) {
+      renderH = rect.width / videoRatio;
+      offsetY = (rect.height - renderH) / 2;
+    } else {
+      renderW = rect.height * videoRatio;
+      offsetX = (rect.width - renderW) / 2;
+    }
+    
+    const clickX = e.clientX - rect.left - offsetX;
+    const clickY = e.clientY - rect.top - offsetY;
+    
+    return {
+      x: Math.max(0, Math.min(1, clickX / renderW)),
+      y: Math.max(0, Math.min(1, clickY / renderH))
+    };
+  };
+
+  const handleVideoPointerDown = (e: React.PointerEvent<HTMLVideoElement>) => {
+    if (!isMagMode) { togglePlay(); return; }
+    e.currentTarget.setPointerCapture(e.pointerId);
+    const coords = getVideoRelCoords(e, e.currentTarget);
+    setIsDrawingMag(true);
+    setMagStart(coords);
+    setMagCurrent(coords);
+    setMagnifier(null);
+  };
+
+  const handleVideoPointerMove = (e: React.PointerEvent<HTMLVideoElement>) => {
+    if (isDrawingMag) {
+      setMagCurrent(getVideoRelCoords(e, e.currentTarget));
+    }
+  };
+
+  const handleVideoPointerUp = (e: React.PointerEvent<HTMLVideoElement>) => {
+    if (isDrawingMag && magStart) {
+      setIsDrawingMag(false);
+      const coords = getVideoRelCoords(e, e.currentTarget);
+      const dx = coords.x - magStart.x;
+      const dy = coords.y - magStart.y;
+      const radius = Math.sqrt(dx*dx + dy*dy);
+      // Wait, since x, y are scaled from 0-1, dx and dy are not in the same scale unit if aspect ratio is not square.
+      // E.g. 1 unit in X = videoWidth, 1 unit in Y = videoHeight.
+      // If we want a perfect circle, we should probably calculate the distance in pixels and then divide by width.
+      const rect = e.currentTarget.getBoundingClientRect();
+      const videoRatio = e.currentTarget.videoWidth / e.currentTarget.videoHeight || 1;
+      const boxRatio = rect.width / rect.height || 1;
+      let renderW = rect.width;
+      if (videoRatio <= boxRatio) { renderW = rect.height * videoRatio; }
+      const dxPx = dx * renderW;
+      const dyPx = dy * (renderW / videoRatio);
+      const radiusPx = Math.sqrt(dxPx*dxPx + dyPx*dyPx);
+      const adjustedRadius = radiusPx / renderW;
+
+      if (adjustedRadius > 0.05) {
+         setMagnifier({ cx: magStart.x, cy: magStart.y, radius: adjustedRadius });
+      } else {
+         setIsMagMode(false);
+      }
+      e.currentTarget.releasePointerCapture(e.pointerId);
+    }
   };
 
   useEffect(() => {
@@ -472,6 +550,7 @@ export const ShowcaseEditorModal: React.FC<ShowcaseEditorModalProps> = ({ videoB
           const clipObj = renderClips[currentClipIdx];
           const localTime = Math.max(0, video.currentTime - clipObj.start);
           
+          let fitX = 0, fitY = 0, fitScale = 1;
           if (exportFormat === '9:16') {
              // 1. Draw heavy dynamically blurred background
              ctx.save();
@@ -483,11 +562,11 @@ export const ShowcaseEditorModal: React.FC<ShowcaseEditorModalProps> = ({ videoB
              ctx.restore();
 
              // 2. Draw crisp centered foreground video
-             const fitScale = Math.min(canvas.width / video.videoWidth, canvas.height / video.videoHeight);
+             fitScale = Math.min(canvas.width / video.videoWidth, canvas.height / video.videoHeight);
              const fitW = video.videoWidth * fitScale;
              const fitH = video.videoHeight * fitScale;
-             const fitX = (canvas.width - fitW) / 2;
-             const fitY = (canvas.height - fitH) / 2;
+             fitX = (canvas.width - fitW) / 2;
+             fitY = (canvas.height - fitH) / 2;
 
              ctx.save();
              ctx.beginPath();
@@ -506,7 +585,55 @@ export const ShowcaseEditorModal: React.FC<ShowcaseEditorModalProps> = ({ videoB
              }
           } else {
              // Normal fullscreen wide video
-             ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+             fitScale = Math.min(canvas.width / video.videoWidth, canvas.height / video.videoHeight);
+             const fitW = video.videoWidth * fitScale;
+             const fitH = video.videoHeight * fitScale;
+             fitX = (canvas.width - fitW) / 2;
+             fitY = (canvas.height - fitH) / 2;
+             ctx.drawImage(video, fitX, fitY, fitW, fitH); // Changed to preserve aspect ratio
+          }
+
+          if (magnifier) {
+              const srcX = magnifier.cx * video.videoWidth;
+              const srcY = magnifier.cy * video.videoHeight;
+              const srcR = magnifier.radius * video.videoWidth;
+              const magFactor = 2; // 2x magnification
+              
+              const destCx = fitX + magnifier.cx * video.videoWidth * fitScale;
+              const destCy = fitY + magnifier.cy * video.videoHeight * fitScale;
+              const destR = srcR * fitScale * magFactor;
+              
+              ctx.save();
+              ctx.beginPath();
+              ctx.arc(destCx, destCy, destR, 0, Math.PI * 2);
+              
+              // Drop shadow for magnifier
+              ctx.shadowColor = 'rgba(0,0,0,0.5)';
+              ctx.shadowBlur = 20;
+              ctx.fill(); // fill to capture shadow
+              ctx.shadowColor = 'transparent'; // reset
+              
+              ctx.clip(); 
+              
+              const targetSrcX = srcX - srcR;
+              const targetSrcY = srcY - srcR;
+              const targetSrcW = srcR * 2;
+              const targetSrcH = srcR * 2;
+              
+              const targetDestX = destCx - destR;
+              const targetDestY = destCy - destR;
+              const targetDestW = destR * 2;
+              const targetDestH = destR * 2;
+              
+              ctx.drawImage(video, targetSrcX, targetSrcY, targetSrcW, targetSrcH, targetDestX, targetDestY, targetDestW, targetDestH);
+              
+              // Magnifier border
+              ctx.beginPath();
+              ctx.arc(destCx, destCy, destR, 0, Math.PI * 2);
+              ctx.lineWidth = 6 * fitScale;
+              ctx.strokeStyle = '#fff';
+              ctx.stroke();
+              ctx.restore();
           }
           
           // Draw the cinematic DBZ impact text
@@ -655,16 +782,16 @@ export const ShowcaseEditorModal: React.FC<ShowcaseEditorModalProps> = ({ videoB
                          'bg-yellow-500';
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-6 pb-20 sm:pb-6">
+    <div className="fixed inset-0 z-[100] flex bg-black p-0 sm:p-0 text-white">
       <div className="absolute inset-0 bg-black/80 backdrop-blur-xl" onClick={!isProcessing ? onClose : undefined} />
       
       <motion.div 
         initial={{ opacity: 0, scale: 0.95 }}
         animate={{ opacity: 1, scale: 1 }}
         exit={{ opacity: 0, scale: 0.95 }}
-        className={`relative w-full max-w-6xl max-h-full ${themeClasses} border rounded-3xl shadow-2xl overflow-hidden flex flex-col`}
+        className={`relative w-full h-full ${themeClasses} overflow-hidden flex flex-col`}
       >
-        <div className="p-4 sm:p-5 border-b border-current/10 flex items-center justify-between z-10 shrink-0">
+        <div className="p-4 sm:p-5 border-b border-current/10 flex items-center justify-between z-10 shrink-0 bg-black/40">
           <div>
             <h2 className="text-xl sm:text-2xl font-black uppercase tracking-tight flex items-center gap-3">
               <Video className="w-6 h-6" />
@@ -672,134 +799,184 @@ export const ShowcaseEditorModal: React.FC<ShowcaseEditorModalProps> = ({ videoB
             </h2>
             <p className="text-xs uppercase tracking-widest opacity-50 mt-1">Timeline Trimming & Custom Compositing</p>
           </div>
-          <button 
-            onClick={onClose}
-            disabled={isProcessing}
-            className="p-2 rounded-full hover:bg-white/5 transition-colors disabled:opacity-50"
-          >
-            <X className="w-5 h-5" />
-          </button>
+          <div className="flex items-center gap-4">
+            <button 
+              onClick={() => setIsMagMode(!isMagMode)}
+              className={`px-4 py-2 rounded font-black uppercase tracking-widest text-[10px] sm:text-xs transition-colors flex items-center gap-2 border ${isMagMode ? `${btnClass} border-transparent text-white` : 'border-white/20 bg-black/20 hover:bg-white/10'}`}
+            >
+              🔍 Draw Magnifier {isMagMode ? '(Active)' : ''}
+            </button>
+            <button 
+              onClick={onClose}
+              disabled={isProcessing}
+              className="p-2 rounded-full hover:bg-white/5 transition-colors disabled:opacity-50"
+            >
+              <X className="w-5 h-5" />
+            </button>
+          </div>
         </div>
 
-        <div className="overflow-y-auto flex-1 p-4 sm:p-6">
-          <div className="flex flex-col lg:flex-row gap-6 h-full">
+        <div className="flex-1 overflow-hidden flex">
+          {/* Main Area: Video + Timeline Container */}
+          <div className="flex-1 flex flex-col min-w-0 p-4 sm:p-6 pb-2 sm:pb-4 gap-4 overflow-hidden border-r border-current/10">
             
-            {/* Left Column: Video Editor */}
-            <div className="flex-1 flex flex-col gap-4">
+            {/* Left Box: Video Editor */}
+            <div className="flex-1 relative bg-black/50 rounded-2xl overflow-hidden border border-white/5 flex flex-col justify-center items-center shadow-2xl group min-h-0">
+              {/* Status Badge */}
+              <div className="absolute top-0 inset-x-0 p-4 bg-gradient-to-b from-black to-transparent z-10 pointer-events-none flex justify-between items-start">
+                <span className="text-[10px] font-bold uppercase tracking-widest bg-white/10 px-2 py-1 rounded backdrop-blur-md">Raw Recording</span>
+                {isMagMode && (
+                   <span className={`text-[10px] animate-pulse font-bold uppercase tracking-widest px-2 py-1 rounded backdrop-blur-md ${highlightClass} text-black shadow-lg`}>
+                     Click & Drag to Zoom Area
+                   </span>
+                )}
+              </div>
               
-              <div className="relative bg-black rounded-2xl overflow-hidden border border-current/10 flex flex-col justify-center items-center h-[50vh] lg:h-[60vh] group">
-                {/* Status Badge */}
-                <div className="absolute top-0 inset-x-0 p-3 bg-gradient-to-b from-black/80 to-transparent z-10 pointer-events-none flex">
-                  <span className="text-[10px] font-bold uppercase tracking-widest bg-black/50 px-2 py-1 rounded backdrop-blur-md">Raw Recording Preview</span>
-                </div>
-                
-                {/* Video */}
-                <video 
+              {/* Video Wrap */}
+              <div className="w-full h-full relative" 
+                  onPointerDown={handleVideoPointerDown}
+                  onPointerMove={handleVideoPointerMove}
+                  onPointerUp={handleVideoPointerUp}
+                  onPointerLeave={handleVideoPointerUp}
+              >
+                 <video 
                   ref={videoRef} 
                   src={videoUrl} 
-                  className="w-full h-full object-contain cursor-pointer"
+                  className={`w-full h-full object-contain ${isMagMode ? 'cursor-crosshair' : 'cursor-pointer'}`}
                   playsInline
                   crossOrigin="anonymous"
                   onLoadedMetadata={handleLoadedMetadata}
                   onTimeUpdate={handleTimeUpdate}
                   onPlay={() => setIsPlaying(true)}
                   onPause={() => setIsPlaying(false)}
-                  onClick={togglePlay}
-                />
+                 />
+
+                 {/* Drawing feedback for magnifier */}
+                 {isDrawingMag && magStart && magCurrent && (
+                   <div 
+                     className={`absolute border-2 border-white rounded-full bg-white/10 pointer-events-none shadow-[0_0_20px_rgba(255,255,255,0.5)]`}
+                     style={{
+                        left: `${Math.min(magStart.x, magCurrent.x)*100}%`,
+                        top: `${Math.min(magStart.y, magCurrent.y)*100}%`,
+                        width: `${Math.abs(magCurrent.x - magStart.x)*100}%`,
+                        height: `${Math.abs(magCurrent.y - magStart.y)*100}%`,
+                     }}
+                   />
+                 )}
+                 {magnifier && !isDrawingMag && (
+                   <div 
+                     className={`absolute border-2 ${highlightClass.replace('bg-', 'border-')} rounded-full bg-white/5 pointer-events-none shadow-lg transition-all`}
+                     style={{
+                        left: `${(magnifier.cx - magnifier.radius)*100}%`,
+                        top: `${(magnifier.cy - magnifier.radius)*100}%`,
+                        width: `${magnifier.radius*200}%`,
+                        height: `${magnifier.radius*200}%`,
+                     }}
+                   />
+                 )}
+              </div>
+              
+              {/* Custom Controls Overlay */}
+              <div className={`absolute bottom-0 inset-x-0 p-4 sm:p-6 bg-gradient-to-t from-black via-black/60 to-transparent transition-opacity duration-300 ${isPlaying && !isMagMode ? 'opacity-0 group-hover:opacity-100' : 'opacity-100'}`}>
                 
-                {/* Custom Controls Overlay */}
-                <div className={`absolute bottom-0 inset-x-0 p-4 bg-gradient-to-t from-black/90 via-black/60 to-transparent transition-opacity duration-300 ${isPlaying ? 'opacity-0 group-hover:opacity-100' : 'opacity-100'}`}>
+                {/* Scrubber */}
+                <div className="max-w-4xl mx-auto w-full relative h-4 bg-white/10 rounded-full cursor-pointer flex items-center group/scrubber" onClick={!isMagMode ? handleScrubberClick : undefined}>
+                  <div className="absolute inset-0 rounded-full bg-white/5 opacity-0 group-hover/scrubber:opacity-100 transition-opacity" />
                   
-                  {/* Scrubber */}
-                  <div className="w-full relative h-4 bg-white/10 rounded-full cursor-pointer flex items-center group/scrubber" onClick={handleScrubberClick}>
-                    {/* Hover Track */}
-                    <div className="absolute inset-0 rounded-full bg-white/5 opacity-0 group-hover/scrubber:opacity-100 transition-opacity" />
-                    
-                    {/* Trim Highlight */}
-                    <div 
-                      className={`absolute h-full ${highlightClass}/40 border-l border-r border-white/50`} 
-                      style={{ 
-                        left: `${(trimStart / duration) * 100}%`, 
-                        width: `${((trimEnd - trimStart) / duration) * 100}%` 
-                      }} 
-                    />
-                    
-                    {/* Playhead */}
-                    <div 
-                      className="absolute h-6 w-2 bg-white rounded shadow-lg -ml-1 flex items-center justify-center pointer-events-none"
-                      style={{ left: `${(currentTime / duration) * 100}%` }}
-                    >
-                      <div className="h-4 w-px bg-black opacity-30" />
-                    </div>
+                  {/* Trim Highlight */}
+                  <div 
+                    className={`absolute h-full ${highlightClass}/40 border-y border-x border-white/50 backdrop-blur-sm shadow-[0_0_15px_rgba(255,255,255,0.1)]`} 
+                    style={{ 
+                      left: `${(trimStart / (duration||1)) * 100}%`, 
+                      width: `${((trimEnd - trimStart) / (duration||1)) * 100}%` 
+                    }} 
+                  />
+                  
+                  {/* Playhead */}
+                  <div 
+                    className="absolute h-6 w-2 bg-white rounded shadow-[0_0_10px_rgba(255,255,255,0.8)] -ml-1 flex items-center justify-center pointer-events-none"
+                    style={{ left: `${(currentTime / (duration||1)) * 100}%` }}
+                  >
+                    <div className="h-4 w-px bg-black opacity-30" />
+                  </div>
+                </div>
+
+                {/* Playback & Trim Controls */}
+                <div className="max-w-4xl mx-auto mt-4 px-2 flex items-center justify-between">
+                  <div className="flex items-center gap-4">
+                    <button onClick={togglePlay} disabled={isMagMode && isDrawingMag} className="w-12 h-12 bg-white text-black rounded-full flex items-center justify-center hover:scale-105 transition-transform shadow-lg disabled:opacity-50">
+                      {isPlaying ? <Pause size={24} className="fill-current" /> : <Play size={24} className="fill-current ml-1" />}
+                    </button>
+                    <span className="text-sm font-mono font-bold tracking-wide opacity-80 bg-black/40 px-3 py-1 rounded">
+                      {formatTime(currentTime)} <span className="opacity-40">/</span> {formatTime(duration)}
+                    </span>
                   </div>
 
-                  {/* Playback & Trim Controls */}
-                  <div className="mt-4 flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      <button onClick={togglePlay} className="w-10 h-10 bg-white text-black rounded-full flex items-center justify-center hover:scale-105 transition-transform">
-                        {isPlaying ? <Pause size={20} className="fill-current" /> : <Play size={20} className="fill-current ml-1" />}
-                      </button>
-                      <span className="text-xs font-mono font-medium tracking-wide">
-                        {formatTime(currentTime)} / {formatTime(duration)}
+                  <div className="flex items-center gap-3">
+                     <button onClick={handleSetStart} disabled={isMagMode} className="px-4 py-2 bg-white/10 hover:bg-white/20 text-xs font-bold uppercase tracking-widest rounded transition-colors flex items-center gap-2">
+                        <Scissors size={14} /> Set Start
+                     </button>
+                     <button onClick={handleSetEnd} disabled={isMagMode} className="px-4 py-2 bg-white/10 hover:bg-white/20 text-xs font-bold uppercase tracking-widest rounded transition-colors flex items-center gap-2">
+                        Set End <Scissors size={14} className="scale-x-[-1]" />
+                     </button>
+                     <div className="w-px h-6 bg-white/10 mx-1"></div>
+                     <button onClick={addClip} disabled={isMagMode} className={`px-5 py-2 ${btnClass} text-white font-black uppercase tracking-widest rounded transition-all flex items-center gap-2 shadow-lg`}>
+                        <Plus size={16} /> Add Clip
+                     </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Timeline Clips */}
+            <div className="h-[140px] shrink-0 bg-black/40 rounded-2xl p-4 border border-white/5 flex flex-col shadow-inner relative">
+              <div className="flex items-center justify-between text-[10px] font-black uppercase tracking-widest opacity-60 mb-3 shrink-0">
+                <span>Export Sequence ({clips.length})</span>
+              </div>
+              
+              <div className="flex-1 flex gap-3 overflow-x-auto items-center pb-2 custom-scrollbar">
+                {clips.length === 0 ? (
+                  <div className="w-full h-full flex flex-col items-center justify-center opacity-40">
+                    <span className="text-xs font-bold uppercase tracking-widest">No Clips Added</span>
+                    <span className="text-[10px] mt-1">Select sections from the video and add them to the sequence.</span>
+                  </div>
+                ) : (
+                  clips.map((clip, i) => (
+                    <div key={clip.id} className="flex-shrink-0 relative group rounded-xl overflow-hidden border border-white/10 bg-white/5 w-40 h-full flex flex-col justify-center items-center shadow-lg hover:border-white/30 transition-colors">
+                      <span className="text-[10px] font-black text-white/50 tracking-widest mb-1">CLIP {i + 1}</span>
+                      <span className={`text-sm font-mono font-bold ${theme === 'coldest' ? 'text-indigo-400' : 'text-yellow-400'}`}>
+                        {formatTime(clip.start)} <span className="opacity-50 font-sans font-normal mx-1">&rarr;</span> {formatTime(clip.end)}
                       </span>
+                      <button 
+                        onClick={() => removeClip(clip.id)} 
+                        className="absolute top-1.5 right-1.5 p-1.5 bg-red-500 hover:bg-red-400 rounded opacity-0 group-hover:opacity-100 transition-opacity shadow-lg"
+                      >
+                        <Trash2 size={12} className="text-white" />
+                      </button>
                     </div>
-
-                    <div className="flex items-center gap-2">
-                       <button onClick={handleSetStart} className="px-3 py-1.5 bg-white/10 hover:bg-white/20 text-xs font-bold uppercase tracking-widest rounded transition-colors flex items-center gap-1">
-                          <Scissors size={14} /> Set Start
-                       </button>
-                       <button onClick={handleSetEnd} className="px-3 py-1.5 bg-white/10 hover:bg-white/20 text-xs font-bold uppercase tracking-widest rounded transition-colors flex items-center gap-1">
-                          Set End <Scissors size={14} className="scale-x-[-1]" />
-                       </button>
-                       <button onClick={addClip} className={`px-4 py-1.5 ${highlightClass} text-black hover:brightness-110 text-xs font-black uppercase tracking-widest rounded transition-all flex items-center gap-2 ml-2`}>
-                          <Plus size={16} /> Add Clip
-                       </button>
-                    </div>
-                  </div>
-                </div>
+                  ))
+                )}
               </div>
+            </div>
 
-              {/* Timeline Clips */}
-              <div className="bg-black/30 rounded-2xl p-4 border border-current/5">
-                <div className="flex items-center justify-between text-[10px] font-black uppercase tracking-widest opacity-60 mb-3">
-                  <span>Export Timeline ({clips.length})</span>
-                  {clips.length > 0 && <span>Render Sequence &rarr;</span>}
-                </div>
-                
-                <div className="h-20 flex gap-3 overflow-x-auto items-center pb-2 custom-scrollbar">
-                  {clips.length === 0 ? (
-                    <div className="w-full h-full flex flex-col items-center justify-center opacity-40">
-                      <span className="text-xs font-bold uppercase tracking-widest">No Clips Added</span>
-                      <span className="text-[10px] mt-1">The current highlighted section ({formatTime(trimStart)} - {formatTime(trimEnd)}) will be exported.</span>
-                    </div>
-                  ) : (
-                    clips.map((clip, i) => (
-                      <div key={clip.id} className="flex-shrink-0 relative group rounded-xl overflow-hidden border border-white/10 bg-white/5 w-40 h-full flex flex-col justify-center items-center shadow-lg hover:border-white/30 transition-colors">
-                        <span className="text-[10px] font-black text-white/50 tracking-widest mb-1">CLIP {i + 1}</span>
-                        <span className={`text-sm font-mono font-bold ${theme === 'coldest' ? 'text-indigo-400' : 'text-yellow-400'}`}>
-                          {formatTime(clip.start)} <span className="opacity-50 font-sans font-normal mx-1">&rarr;</span> {formatTime(clip.end)}
-                        </span>
-                        <button 
-                          onClick={() => removeClip(clip.id)} 
-                          className="absolute top-1.5 right-1.5 p-1.5 bg-red-500 hover:bg-red-400 rounded opacity-0 group-hover:opacity-100 transition-opacity shadow-lg"
-                        >
-                          <Trash2 size={12} className="text-white" />
-                        </button>
-                      </div>
-                    ))
-                  )}
-                </div>
-              </div>
+          </div>
 
-              {/* Overlays / Stickers */}
+          {/* Right Column: AI Gen Constraints + Overlays */}
+          <div className="w-80 md:w-96 xl:w-[400px] flex flex-col p-4 sm:p-6 overflow-y-auto custom-scrollbar shrink-0 bg-black/20 gap-8">
+            
+            {/* Overlays Section */}
+            <div className="flex flex-col">
+              <h3 className="font-black uppercase tracking-widest text-sm mb-4 flex items-center gap-2">
+                Image Overlays
+              </h3>
               <div 
-                className="bg-black/30 rounded-2xl p-4 border border-current/5 transition-colors relative"
+                className="bg-black/40 rounded-2xl p-4 border border-white/5 transition-colors relative shadow-inner"
                 onDrop={handleDrop}
                 onDragOver={handleDragOver}
               >
-                <div className="flex items-center justify-between text-[10px] font-black uppercase tracking-widest opacity-60 mb-3">
-                  <span>Image Overlays ({overlays.length})</span>
-                  <span>Drag & Drop PNGs Here</span>
+                <div className="flex items-center justify-between text-[10px] font-bold uppercase tracking-widest opacity-60 mb-3">
+                  <span>Count ({overlays.length})</span>
+                  <span>Drag PNGs Here</span>
                 </div>
                 
                 <input 
@@ -815,29 +992,29 @@ export const ShowcaseEditorModal: React.FC<ShowcaseEditorModalProps> = ({ videoB
                   }}
                 />
 
-                <div className="flex gap-3 overflow-x-auto items-center pb-2 custom-scrollbar min-h-[5rem]">
+                <div className="grid grid-cols-3 gap-3">
                   <button 
                     onClick={addDefaultMascot}
-                    className="flex-shrink-0 flex flex-col items-center justify-center w-20 h-20 rounded-xl border border-dashed border-current/30 hover:bg-white/5 transition-colors"
+                    className="aspect-square flex flex-col items-center justify-center rounded-xl border border-dashed border-current/30 hover:bg-white/5 transition-colors"
                   >
                     <ImageIcon size={20} className="opacity-50 mb-1" />
-                    <span className="text-[9px] font-bold uppercase tracking-widest opacity-70 text-center leading-tight">Add<br/>Mascot</span>
+                    <span className="text-[9px] font-bold uppercase tracking-widest opacity-70 text-center leading-tight">Mascot</span>
                   </button>
                   <button 
                     onClick={() => fileInputRef.current?.click()}
-                    className="flex-shrink-0 flex flex-col items-center justify-center w-20 h-20 rounded-xl border border-dashed border-current/30 hover:bg-white/5 transition-colors"
+                    className="aspect-square flex flex-col items-center justify-center rounded-xl border border-dashed border-current/30 hover:bg-white/5 transition-colors"
                   >
                     <Plus size={20} className="opacity-50 mb-1" />
-                    <span className="text-[9px] font-bold uppercase tracking-widest opacity-70 text-center leading-tight">Upload<br/>Image</span>
+                    <span className="text-[9px] font-bold uppercase tracking-widest opacity-70 text-center leading-tight">Upload</span>
                   </button>
 
                   {overlays.map((overlay, i) => (
-                    <div key={overlay.id} className="flex-shrink-0 relative group rounded-xl overflow-hidden border border-white/10 bg-black/50 w-20 h-20 flex flex-col justify-center items-center shadow-lg hover:border-white/30 transition-colors">
+                    <div key={overlay.id} className="aspect-square relative group rounded-xl overflow-hidden border border-white/10 bg-black/80 flex flex-col justify-center items-center shadow-lg hover:border-white/30 transition-colors">
                       <img src={overlay.url} alt="Overlay" className="max-w-[80%] max-h-[80%] object-contain" />
                       
                       <button 
                         onClick={() => removeOverlay(overlay.id)}
-                        className="absolute top-1 right-1 p-1 bg-red-500 hover:bg-red-400 rounded-full opacity-0 group-hover:opacity-100 transition-all text-white"
+                        className="absolute top-1 right-1 p-1 bg-red-500 hover:bg-red-400 rounded-full opacity-0 group-hover:opacity-100 transition-all text-white shadow-lg"
                       >
                         <Trash2 size={10} />
                       </button>
@@ -845,133 +1022,127 @@ export const ShowcaseEditorModal: React.FC<ShowcaseEditorModalProps> = ({ videoB
                   ))}
                 </div>
               </div>
-
-              {/* Hidden elements for processing */}
-              <canvas ref={canvasRef} className="hidden" />
             </div>
 
-            {/* Right Column: AI Gen Constraints */}
-            <div className="w-full lg:w-80 xl:w-96 flex flex-col gap-6 shrink-0">
-              <div className="bg-black/20 rounded-2xl p-5 border border-current/5 h-full flex flex-col">
-                <h3 className="font-black uppercase tracking-widest text-sm mb-6 flex items-center gap-2">
-                  <span className={`w-2 h-2 rounded-full ${highlightClass} animate-pulse`} />
-                  AI Synthesis
-                </h3>
-  
-                <div className="space-y-6 flex-1">
-                  <div>
-                    <label className="flex items-center justify-between text-xs font-bold uppercase tracking-widest mb-3 opacity-80">
-                      <span>Generate For Platform</span>
-                      <span className="opacity-40 text-[9px]">CANVAS</span>
-                    </label>
-                    <div className="grid grid-cols-2 gap-3 mb-4">
-                      <button 
-                        onClick={() => setExportFormat('16:9')}
-                        className={`flex flex-col items-center justify-center p-3 rounded-xl border ${exportFormat === '16:9' ? `border-current bg-white/10 ${highlightClass}/20` : 'border-white/5 bg-black/20 hover:bg-white/5'} transition-all`}
-                      >
-                        <Monitor size={24} className="mb-2" />
-                        <span className="text-[10px] font-black uppercase tracking-widest text-center leading-tight">Desktop<br/>(16:9)</span>
-                      </button>
-                      <button 
-                         onClick={() => setExportFormat('9:16')}
-                         className={`flex flex-col items-center justify-center p-3 rounded-xl border ${exportFormat === '9:16' ? `border-current bg-white/10 ${highlightClass}/20` : 'border-white/5 bg-black/20 hover:bg-white/5'} transition-all`}
-                      >
-                        <Smartphone size={24} className="mb-2" />
-                        <span className="text-[10px] font-black uppercase tracking-widest text-center leading-tight">TikTok/Reels<br/>(9:16)</span>
-                      </button>
-                    </div>
-                  </div>
+            {/* AI Settings Section */}
+            <div className="flex flex-col flex-1">
+              <h3 className="font-black uppercase tracking-widest text-sm mb-4 flex items-center gap-2">
+                <span className={`w-2 h-2 rounded-full ${highlightClass} animate-pulse`} />
+                AI Synthesis
+              </h3>
 
-                  <div className="flex flex-col gap-4">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div>
-                        <label className="flex items-center justify-between text-xs font-bold uppercase tracking-widest mb-2 opacity-80">
-                          <span>Z-Ro Voiceover</span>
-                          <span className="opacity-40 text-[9px]">TTS</span>
-                        </label>
-                        <textarea
-                          value={voiceoverText}
-                          onChange={e => setVoiceoverText(e.target.value)}
-                          className="w-full bg-black/40 border border-current/10 rounded-xl p-3 text-sm font-medium focus:outline-none focus:border-current/30 transition-colors h-24 resize-none custom-scrollbar"
-                          placeholder="What do you want the voice to say over the video?"
-                          disabled={isProcessing}
-                        />
-                      </div>
-                      
-                      <div>
-                        <label className="flex items-center justify-between text-xs font-bold uppercase tracking-widest mb-2 opacity-80">
-                          <span>Cinematic Overlay</span>
-                          <span className="opacity-40 text-[9px]">AD COPY</span>
-                        </label>
-                        <textarea
-                          value={adText}
-                          onChange={e => setAdText(e.target.value)}
-                          className="w-full bg-black/40 border border-current/10 rounded-xl p-3 text-sm font-medium focus:outline-none focus:border-current/30 transition-colors h-24 resize-none custom-scrollbar"
-                          placeholder="e.g. BEATGANGSTA\nThe ultimate AI processing assistant."
-                          disabled={isProcessing}
-                        />
-                      </div>
-                    </div>
-
-                    <div>
-                      <label className="flex items-center justify-between text-xs font-bold uppercase tracking-widest mb-2 opacity-80">
-                        <span>Background Beat</span>
-                        <span className="opacity-40 text-[9px]">AUTO-DUCKING</span>
-                      </label>
-                      <input 
-                        type="file" 
-                        accept="audio/mpeg, audio/mp3, audio/wav" 
-                        className="hidden" 
-                        ref={bgAudioInputRef}
-                        onChange={(e) => {
-                          if (e.target.files && e.target.files[0]) {
-                            setBgAudioFile(e.target.files[0]);
-                          }
-                        }}
-                      />
-                      <button 
-                        type="button"
-                        onClick={() => bgAudioInputRef.current?.click()}
-                        className="w-full bg-black/40 border border-current/10 hover:border-current/30 rounded-xl p-3 text-sm font-medium transition-colors flex items-center justify-center gap-2"
-                      >
-                        {bgAudioFile ? (
-                          <span className="text-green-400 font-bold truncate">✓ {bgAudioFile.name} (Ready)</span>
-                        ) : (
-                          <span className="opacity-70">Upload Beat (MP3/WAV)...</span>
-                        )}
-                      </button>
-                      {bgAudioFile && (
-                         <div className="flex justify-between items-center mt-2">
-                             <span className="text-[9px] opacity-60 uppercase tracking-widest font-bold text-yellow-500">Auto-Ducking Active</span>
-                             <button type="button" onClick={() => setBgAudioFile(null)} className="text-[10px] text-red-500 uppercase tracking-widest hover:underline">Remove file</button>
-                         </div>
-                      )}
-                    </div>
+              <div className="bg-black/40 rounded-2xl p-4 border border-white/5 shadow-inner space-y-6">
+                <div>
+                  <label className="flex items-center justify-between text-[11px] font-bold uppercase tracking-widest mb-3 opacity-80">
+                    <span>Export Format</span>
+                  </label>
+                  <div className="grid grid-cols-2 gap-3">
+                    <button 
+                      onClick={() => setExportFormat('16:9')}
+                      className={`flex flex-col items-center justify-center py-4 rounded-xl border transition-all ${exportFormat === '16:9' ? `border-current bg-white/10 ${highlightClass}/20 shadow-lg scale-105` : 'border-white/5 bg-black/40 hover:bg-white/5'}`}
+                    >
+                      <Monitor size={20} className="mb-2" />
+                      <span className="text-[10px] font-black uppercase tracking-widest">16:9 HD</span>
+                    </button>
+                    <button 
+                       onClick={() => setExportFormat('9:16')}
+                       className={`flex flex-col items-center justify-center py-4 rounded-xl border transition-all ${exportFormat === '9:16' ? `border-current bg-white/10 ${highlightClass}/20 shadow-lg scale-105` : 'border-white/5 bg-black/40 hover:bg-white/5'}`}
+                    >
+                      <Smartphone size={20} className="mb-2" />
+                      <span className="text-[10px] font-black uppercase tracking-widest">9:16 Vertical</span>
+                    </button>
                   </div>
                 </div>
-  
+
+                <div>
+                  <label className="flex items-center justify-between text-[11px] font-bold uppercase tracking-widest mb-2 opacity-80">
+                    <span>TTS Voiceover</span>
+                  </label>
+                  <textarea
+                    value={voiceoverText}
+                    onChange={e => setVoiceoverText(e.target.value)}
+                    className="w-full bg-black/60 border border-white/10 rounded-xl p-3 text-sm font-medium focus:outline-none focus:border-white/30 transition-colors h-20 resize-none custom-scrollbar"
+                    placeholder="Auto-generated speech text..."
+                    disabled={isProcessing}
+                  />
+                </div>
+                
+                <div>
+                  <label className="flex items-center justify-between text-[11px] font-bold uppercase tracking-widest mb-2 opacity-80">
+                    <span>Overlay Title Text</span>
+                  </label>
+                  <textarea
+                    value={adText}
+                    onChange={e => setAdText(e.target.value)}
+                    className="w-full bg-black/60 border border-white/10 rounded-xl p-3 text-sm font-medium focus:outline-none focus:border-white/30 transition-colors h-20 resize-none custom-scrollbar"
+                    placeholder="Huge cinematic text..."
+                    disabled={isProcessing}
+                  />
+                </div>
+
+                <div>
+                  <label className="flex items-center justify-between text-[11px] font-bold uppercase tracking-widest mb-2 opacity-80">
+                    <span>Background Audio</span>
+                  </label>
+                  <input 
+                    type="file" 
+                    accept="audio/mpeg, audio/mp3, audio/wav" 
+                    className="hidden" 
+                    ref={bgAudioInputRef}
+                    onChange={(e) => {
+                      if (e.target.files && e.target.files[0]) {
+                        setBgAudioFile(e.target.files[0]);
+                      }
+                    }}
+                  />
+                  <button 
+                    type="button"
+                    onClick={() => bgAudioInputRef.current?.click()}
+                    className="w-full bg-black/60 border border-white/10 hover:border-white/30 rounded-xl p-3 text-sm font-medium transition-colors flex items-center justify-center gap-2"
+                  >
+                    {bgAudioFile ? (
+                      <span className="text-green-400 font-bold truncate text-xs">✓ {bgAudioFile.name}</span>
+                    ) : (
+                      <span className="opacity-70 text-xs">Choose MP3/WAV...</span>
+                    )}
+                  </button>
+                  {bgAudioFile && (
+                     <div className="flex justify-between items-center mt-2">
+                         <span className="text-[9px] opacity-60 uppercase tracking-widest font-bold text-yellow-500">Auto-Ducking On</span>
+                         <button type="button" onClick={() => setBgAudioFile(null)} className="text-[9px] text-red-500 uppercase tracking-widest hover:underline">Remove</button>
+                     </div>
+                  )}
+                </div>
+              </div>
+
+              <div className="mt-8">
                 <button
                   onClick={handleGenerate}
                   disabled={isProcessing}
-                  className={`w-full mt-6 ${btnClass} text-white font-black uppercase tracking-widest py-4 rounded-xl flex items-center justify-center gap-3 transition-opacity disabled:opacity-50 shadow-xl`}
+                  className={`w-full ${btnClass} text-white font-black uppercase tracking-widest py-4 rounded-xl flex items-center justify-center gap-3 transition-opacity disabled:opacity-50 shadow-2xl relative overflow-hidden group`}
                 >
+                  <div className="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300 pointer-events-none" />
                   {isProcessing ? (
                     <>
-                      <Loader2 className="w-5 h-5 animate-spin" />
-                      Rendering Video...
+                      <Loader2 className="w-5 h-5 animate-spin relative z-10" />
+                      <span className="relative z-10">Exporting...</span>
                     </>
                   ) : (
                     <>
-                      <Download className="w-5 h-5" />
-                      Process & Download
+                      <Download className="w-5 h-5 relative z-10" />
+                      <span className="relative z-10">Process Video</span>
                     </>
                   )}
                 </button>
               </div>
-            </div>
 
+            </div>
           </div>
         </div>
+
+        {/* Hidden elements for processing */}
+        <canvas ref={canvasRef} className="hidden" />
+
       </motion.div>
       <style>{`
         .custom-scrollbar::-webkit-scrollbar { height: 6px; width: 6px; }
