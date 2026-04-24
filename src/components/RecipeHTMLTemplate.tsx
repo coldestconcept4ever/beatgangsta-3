@@ -1,9 +1,9 @@
 import React from 'react';
-import { BeatRecipe } from '../types';
+import { BeatRecipe, Hardware } from '../types';
 import { isChannelStrip } from '../lib/pluginUtils';
 import i18n from '../i18n';
 
-export const RecipeHTMLTemplate: React.FC<{ recipe: BeatRecipe, drumKits?: any[] }> = ({ recipe, drumKits = [] }) => {
+export const RecipeHTMLTemplate: React.FC<{ recipe: BeatRecipe, drumKits?: any[], analogHardware?: Hardware[] }> = ({ recipe, drumKits = [], analogHardware = [] }) => {
   const t = i18n.t.bind(i18n);
 
   const renderDrumGrid = (steps: (number | { step: number, velocity: number })[] = [], isDoubleTime?: boolean) => {
@@ -182,7 +182,7 @@ export const RecipeHTMLTemplate: React.FC<{ recipe: BeatRecipe, drumKits?: any[]
       )}
 
       {/* Drum Patterns */}
-      {recipe.drumPatterns && Object.keys(recipe.drumPatterns).length > 0 && (
+      {recipe.drumPatterns && Object.keys(recipe.drumPatterns).length > 0 && !recipe.isGangstaVox && (
         <section className="space-y-8 print-break">
           <h2 className="text-2xl font-black uppercase tracking-widest text-[#38bdf8] border-b border-[#0369a1] pb-4 print:border-slate-300">{t('drum_guide_protocols')}</h2>
           <div className="grid grid-cols-1 gap-8">
@@ -265,7 +265,7 @@ export const RecipeHTMLTemplate: React.FC<{ recipe: BeatRecipe, drumKits?: any[]
             <p className="text-xl font-bold italic text-slate-200 print:text-slate-800">"{recipe.vocalElements.layeringStrategy}"</p>
           </div>
 
-          {recipe.vocalElements.trackingChain && (
+          {recipe.vocalElements.trackingChain && analogHardware.some(h => h.name.toLowerCase().includes('apollo')) && (
             <div className="p-8 bg-[#0c4a6e] rounded-3xl border border-[#0369a1] print:bg-slate-50 print:border-slate-200 mb-8">
               <h3 className="text-sm font-black uppercase tracking-widest text-[#38bdf8] mb-2">{t('apollo_tracking_chain')}</h3>
               <p className="text-xs font-bold text-slate-500 mb-6">{recipe.vocalElements.trackingChain.dspUsageNote}</p>
@@ -353,7 +353,7 @@ export const RecipeHTMLTemplate: React.FC<{ recipe: BeatRecipe, drumKits?: any[]
       )}
 
       {/* Drum Kit Advice */}
-      {recipe.drumKitAdvice && drumKits.length > 0 && (
+      {recipe.drumKitAdvice && drumKits.length > 0 && !recipe.isGangstaVox && (
         <section className="space-y-8 print-break">
           <h2 className="text-2xl font-black uppercase tracking-widest text-[#38bdf8] border-b border-[#0369a1] pb-4 print:border-slate-300">{t('drum_kit_tuning_setup')}</h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">

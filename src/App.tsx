@@ -665,6 +665,22 @@ const App: React.FC = () => {
     setSavedCritiques(prev => prev.map(c => updateCritique(c as any) as SavedCritique));
   };
 
+  const [minimizedItems, setMinimizedItems] = useState<{type: 'recipe' | 'critique', id: string, title: string}[]>([]);
+
+  const handleMinimizeRecipe = (recipe: BeatRecipe) => {
+    setMinimizedItems(prev => [...prev, { type: 'recipe', id: recipe.title, title: recipe.title }]);
+  };
+
+  const handleMinimizeCritique = (critique: MixCritique, index: number) => {
+    const id = critique.id || String(index);
+    const title = critique.overallFeedback ? (critique.overallFeedback.substring(0, 25) + '...') : 'Critique';
+    setMinimizedItems(prev => [...prev, { type: 'critique', id, title }]);
+  };
+
+  const restoreMinimized = (id: string, type: string) => {
+    setMinimizedItems(prev => prev.filter(i => !(i.type === type && i.id === id)));
+  };
+
   const [recipes, setRecipes] = useState<BeatRecipe[]>([]);
   const [critiques, setCritiques] = useState<MixCritique[]>([]);
   const [latestErrorLog, setLatestErrorLog] = useState<string | null>(null);
@@ -6183,7 +6199,9 @@ The AI was unable to verify these parameters. Please investigate.`;
                   transition={{ duration: 0.5 }}
                   className="grid grid-cols-1 gap-6"
                 >
-                  {recipes.map((recipe, idx) => (
+                  {recipes.map((recipe, idx) => {
+                    if (minimizedItems.some(i => i.type === 'recipe' && i.id === recipe.title)) return null;
+                    return (
                     <motion.div 
                       key={`${recipe.title}-${idx}`} 
                       id={`recipe-card-${idx}`}
@@ -6204,9 +6222,10 @@ The AI was unable to verify these parameters. Please investigate.`;
                         onLogReceipt={logReceipt}
                         onCorrectPlugin={handleCorrectPlugin}
                         onContactSupport={handleContactSupport}
+                        onMinimize={() => handleMinimizeRecipe(recipe)}
                       />
                     </motion.div>
-                  ))}
+                  )})}
                 </motion.section>
               )}
             </AnimatePresence>
@@ -6221,9 +6240,12 @@ The AI was unable to verify these parameters. Please investigate.`;
                   transition={{ duration: 0.5 }}
                   className="grid grid-cols-1 gap-6 mt-6"
                 >
-                  {critiques.map((critique, idx) => (
+                  {critiques.map((critique, idx) => {
+                    const cid = critique.id || String(idx);
+                    if (minimizedItems.some(i => i.type === 'critique' && i.id === cid)) return null;
+                    return (
                     <motion.div 
-                      key={critique.id || idx}
+                      key={cid}
                       initial={{ opacity: 0, y: 20 }}
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ delay: idx * 0.1 }}
@@ -6243,9 +6265,10 @@ The AI was unable to verify these parameters. Please investigate.`;
                         onLogReceipt={logReceipt}
                         onCorrectPlugin={handleCorrectPlugin}
                         onContactSupport={handleContactSupport}
+                        onMinimize={() => handleMinimizeCritique(critique, idx)}
                       />
                     </motion.div>
-                  ))}
+                  )})}
                 </motion.section>
               )}
             </AnimatePresence>
@@ -7325,6 +7348,50 @@ The AI was unable to verify these parameters. Please investigate.`;
           />
         </React.Suspense>
       )}
+
+      {/* Minimized Items Tabs */}
+      <AnimatePresence>
+        {minimizedItems.length > 0 && (
+          <motion.div 
+            initial={{ opacity: 0, y: 50 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 50 }}
+            className="fixed bottom-6 left-6 z-[60] flex flex-col gap-2 pointer-events-none"
+          >
+            {minimizedItems.map((item, idx) => (
+              <motion.button
+                key={`${item.type}-${item.id}`}
+                layout
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, scale: 0.8 }}
+                onClick={() => restoreMinimized(item.id, item.type)}
+                className={`pointer-events-auto px-4 py-3 rounded-2xl shadow-2xl border backdrop-blur-xl font-black text-xs uppercase tracking-widest flex items-center gap-3 hover:scale-105 active:scale-95 transition-all text-left flex-row overflow-hidden ${
+                  theme === 'coldest' 
+                    ? 'bg-sky-900/90 border-sky-400/50 text-white shadow-sky-900/50' 
+                    : theme === 'chef-mode'
+                      ? 'bg-orange-900/90 border-orange-500/50 text-white shadow-orange-900/50'
+                      : 'bg-black/90 border-yellow-500/50 text-white shadow-yellow-900/50'
+                }`}
+              >
+                {item.type === 'recipe' ? (
+                  <div className={`p-2 rounded-lg ${theme === 'coldest' ? 'bg-sky-500/20 text-sky-300' : 'bg-yellow-500/20 text-yellow-500'}`}>
+                    <Music className="w-5 h-5" />
+                  </div>
+                ) : (
+                  <div className={`p-2 rounded-lg ${theme === 'coldest' ? 'bg-indigo-500/20 text-indigo-300' : 'bg-purple-500/20 text-purple-500'}`}>
+                    <Activity className="w-5 h-5" />
+                  </div>
+                )}
+                <div className="flex flex-col min-w-[120px] max-w-[200px]">
+                  <span className="text-[9px] opacity-60 leading-tight">RESTORE {item.type}</span>
+                  <span className="truncate opacity-90">{item.title}</span>
+                </div>
+              </motion.button>
+            ))}
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Honey Pot for Bots - Hidden from humans */}
       <a 

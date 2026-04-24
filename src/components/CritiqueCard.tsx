@@ -32,14 +32,14 @@ interface CritiqueCardProps {
   onLogReceipt?: (action: string, cost: number) => void;
   onCorrectPlugin?: (pluginName: string, corrections: { parameter: string, value: string }[], version: string) => Promise<{ success: boolean, message: string, plugin?: VSTPlugin }>;
   onContactSupport?: (pluginInfo: any) => void;
+  onMinimize?: () => void;
 }
 
-export const CritiqueCard: React.FC<CritiqueCardProps> = ({ critique, theme, plugins, audioBase64, audioUrl, geminiFileUri, mimeType, isSaved, onSave, onUpdateCritique, onReCritique, currentAudioInfo, onLogReceipt, onCorrectPlugin, onContactSupport }) => {
+export const CritiqueCard: React.FC<CritiqueCardProps> = ({ critique, theme, plugins, audioBase64, audioUrl, geminiFileUri, mimeType, isSaved, onSave, onUpdateCritique, onReCritique, currentAudioInfo, onLogReceipt, onCorrectPlugin, onContactSupport, onMinimize }) => {
   const { t, i18n } = useTranslation();
   const [specificHelpQuery, setSpecificHelpQuery] = useState('');
   const [isLoadingSpecificHelp, setIsLoadingSpecificHelp] = useState(false);
   const [specificHelpResults, setSpecificHelpResults] = useState<any[]>([]);
-  const [isMinimized, setIsMinimized] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
   const [reCritiqueContext, setReCritiqueContext] = useState("");
   const [isLoadingReCritique, setIsLoadingReCritique] = useState(false);
@@ -262,14 +262,16 @@ export const CritiqueCard: React.FC<CritiqueCardProps> = ({ critique, theme, plu
         </div>
         
         <div className="flex flex-col sm:flex-row gap-3">
-          <button
-            onClick={() => setIsMinimized(!isMinimized)}
-            className={`shrink-0 px-4 py-2 rounded-full font-black text-xs uppercase tracking-widest transition-all ${
-              theme === 'coldest' ? 'bg-slate-200 text-slate-800' : 'bg-white/10 text-white'
-            }`}
-          >
-            {isMinimized ? t('maximize') : t('minimize')}
-          </button>
+          {onMinimize && (
+            <button
+              onClick={onMinimize}
+              className={`shrink-0 px-4 py-2 rounded-full font-black text-xs uppercase tracking-widest transition-all ${
+                theme === 'coldest' ? 'bg-slate-200 text-slate-800 hover:bg-slate-300' : 'bg-white/10 text-white hover:bg-white/20'
+              }`}
+            >
+              {t('minimize')}
+            </button>
+          )}
           <button 
             onClick={handleExportHTML}
             disabled={isExporting}
@@ -307,10 +309,8 @@ export const CritiqueCard: React.FC<CritiqueCardProps> = ({ critique, theme, plu
         </div>
       </div>
 
-      {!isMinimized && (
-        <>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-            <div className={`p-6 rounded-3xl border ${theme === 'coldest' ? 'bg-sky-50 border-sky-100' : 'bg-sky-900/10 border-sky-500/20'}`}>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+        <div className={`p-6 rounded-3xl border ${theme === 'coldest' ? 'bg-sky-50 border-sky-100' : 'bg-sky-900/10 border-sky-500/20'}`}>
               <div className="flex items-center gap-2 mb-4">
                 <CheckCircle2 className="w-5 h-5 text-sky-500" />
                 <h4 className="text-sm font-black uppercase tracking-widest text-sky-600 dark:text-sky-400">{t('strengths')}</h4>
@@ -485,8 +485,6 @@ export const CritiqueCard: React.FC<CritiqueCardProps> = ({ critique, theme, plu
               </label>
             </div>
           </div>
-        </>
-      )}
       
       {/* Hidden Export View Removed */}
     </motion.div>

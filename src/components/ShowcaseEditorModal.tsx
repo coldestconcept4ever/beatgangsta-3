@@ -140,7 +140,7 @@ export const ShowcaseEditorModal: React.FC<ShowcaseEditorModalProps> = ({ videoB
       e.preventDefault();
   };
 
-  const getVideoRelCoords = (e: React.PointerEvent<HTMLVideoElement>, video: HTMLVideoElement) => {
+  const getVideoRelCoords = (e: React.PointerEvent<HTMLDivElement>, video: HTMLVideoElement) => {
     const rect = video.getBoundingClientRect();
     const videoRatio = video.videoWidth / video.videoHeight;
     const boxRatio = rect.width / rect.height;
@@ -167,34 +167,36 @@ export const ShowcaseEditorModal: React.FC<ShowcaseEditorModalProps> = ({ videoB
     };
   };
 
-  const handleVideoPointerDown = (e: React.PointerEvent<HTMLVideoElement>) => {
+  const handleVideoPointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
     if (!isMagMode) { togglePlay(); return; }
+    if (!videoRef.current) return;
     e.currentTarget.setPointerCapture(e.pointerId);
-    const coords = getVideoRelCoords(e, e.currentTarget);
+    const coords = getVideoRelCoords(e, videoRef.current);
     setIsDrawingMag(true);
     setMagStart(coords);
     setMagCurrent(coords);
     setMagnifier(null);
   };
 
-  const handleVideoPointerMove = (e: React.PointerEvent<HTMLVideoElement>) => {
-    if (isDrawingMag) {
-      setMagCurrent(getVideoRelCoords(e, e.currentTarget));
+  const handleVideoPointerMove = (e: React.PointerEvent<HTMLDivElement>) => {
+    if (isDrawingMag && videoRef.current) {
+      setMagCurrent(getVideoRelCoords(e, videoRef.current));
     }
   };
 
-  const handleVideoPointerUp = (e: React.PointerEvent<HTMLVideoElement>) => {
-    if (isDrawingMag && magStart) {
+  const handleVideoPointerUp = (e: React.PointerEvent<HTMLDivElement>) => {
+    if (isDrawingMag && magStart && videoRef.current) {
+      const videoEl = videoRef.current;
       setIsDrawingMag(false);
-      const coords = getVideoRelCoords(e, e.currentTarget);
+      const coords = getVideoRelCoords(e, videoEl);
       const dx = coords.x - magStart.x;
       const dy = coords.y - magStart.y;
       const radius = Math.sqrt(dx*dx + dy*dy);
       // Wait, since x, y are scaled from 0-1, dx and dy are not in the same scale unit if aspect ratio is not square.
       // E.g. 1 unit in X = videoWidth, 1 unit in Y = videoHeight.
       // If we want a perfect circle, we should probably calculate the distance in pixels and then divide by width.
-      const rect = e.currentTarget.getBoundingClientRect();
-      const videoRatio = e.currentTarget.videoWidth / e.currentTarget.videoHeight || 1;
+      const rect = videoEl.getBoundingClientRect();
+      const videoRatio = videoEl.videoWidth / videoEl.videoHeight || 1;
       const boxRatio = rect.width / rect.height || 1;
       let renderW = rect.width;
       if (videoRatio <= boxRatio) { renderW = rect.height * videoRatio; }

@@ -2307,7 +2307,7 @@ export const getMixCritique = async (
   let focusInstruction = "";
   if (isGangstaVox) {
     if (hasStems && uploadedStems && uploadedStems.length > 0) {
-      focusInstruction = `Focus specifically on the VOCALS in this mix. DO NOT focus on the beat or instruments. The user HAS UPLOADED STEMS. ${isBusMode ? "BUS MODE IS ON: Provide advice on how to group these stems into logical busses (e.g., Lead Bus, Backing Bus, Ad-lib Bus) and how to process those busses collectively, in addition to individual track processing." : "Make sure to listen to the ENTIRE length of the audio files, including any intros, bridges, and outros. Provide advice on how to process each individual stem (e.g., EQing the main vocal, compressing the backing vocals, panning ad libs) and how they fit together to improve the overall vocal mix."}`;
+      focusInstruction = `Focus specifically on the VOCALS in this mix. DO NOT focus on the beat or instruments. The user HAS UPLOADED STEMS. You MUST analyze how these stems sound mixed together, rather than just in isolation. Your primary goal is to ensure all the vocals sound completely cohesive together. Suggest plugins that not only improve tone, but strictly level the vocals correctly so the end result has every vocal track (verses, hooks, dubs, etc.) at the perfect consistent volume. ${isBusMode ? "BUS MODE IS ON: Provide advice on how to group these stems into logical busses (e.g., Lead Bus, Backing Bus, Ad-lib Bus) and how to process those busses collectively, in addition to individual track processing." : "Make sure to listen to the ENTIRE length of the audio files, including any intros, bridges, and outros. Provide advice on how to process each individual stem and how they fit together to improve the overall vocal mix."}`;
     } else {
       focusInstruction = "Focus specifically on the VOCALS in this mix. DO NOT focus on the beat or instruments. Make sure to listen to the ENTIRE length of the song, including any intros, bridges, and outros. Analyze vocal consistency, presence, and processing across the entire song.";
     }
@@ -2357,7 +2357,7 @@ export const getMixCritique = async (
     - 'overallFeedback': A detailed analysis summarizing the current state of the mix, the main areas for improvement, and the overall sonic character.
     - 'strengths': An array of 4-6 specific things that sound good (e.g., specific frequency ranges, dynamic control, spatial imaging).
     - 'weaknesses': An array of 4-6 specific issues that need fixing, categorized by their impact on the mix.
-    - 'actionPlan': A comprehensive array of actionable steps to fix the issues. ${hasStems && uploadedStems && uploadedStems.length > 0 ? `CRITICAL: Because the user uploaded ${uploadedStems.length} stems, you MUST provide EXACTLY one step per stem. For EACH stem's step, you MUST provide EXACTLY 3 plugins in the 'recommendedChain'.` : "For each step, provide a robust chain of 2-4 plugins."} For each step, provide:
+    - 'actionPlan': A comprehensive array of actionable steps to fix the issues. ${hasStems && uploadedStems && uploadedStems.length > 0 ? `CRITICAL: Because the user uploaded ${uploadedStems.length} stems, you MUST provide EXACTLY one step per stem. For EACH stem's step, you MUST provide EXACTLY 4 plugins in the 'recommendedChain'. ALWAYS add an extra plugin (the 4th plugin) dedicated specifically to volume leveling/gain structuring so that the resulting stem sounds completely unified strictly in volume with the rest of the stems.` : "For each step, provide a robust chain of 2-4 plugins."} For each step, provide:
       - 'targetStem': The exact name of the stem this step applies to (if stems were uploaded).
       - 'issue': The specific problem.
       - 'solution': A detailed technical explanation of how to fix it.
@@ -2452,7 +2452,7 @@ export const getMixCritique = async (
                   solution: { type: Type.STRING },
                   recommendedChain: {
                     type: Type.ARRAY,
-                    description: hasStems && uploadedStems && uploadedStems.length > 0 ? "CRITICAL: You MUST provide EXACTLY 3 plugins for this stem." : "Chain of 2-4 plugins.",
+                    description: hasStems && uploadedStems && uploadedStems.length > 0 ? "CRITICAL: You MUST provide EXACTLY 4 plugins for this stem, with the 4th explicitly dedicated to volume leveling." : "Chain of 2-4 plugins.",
                     items: {
                       type: Type.OBJECT,
                       properties: {
@@ -2647,12 +2647,12 @@ export const getGangstaVoxRecipe = async (recipe: BeatRecipe, plugins: VSTPlugin
       - Apollo Twin Duo (2 DSP Cores): Moderate. Can handle a Unison pre + 1-2 compressors/EQs.
       - Apollo Twin Quad / x4 (4 DSP Cores): Good. Can handle a full 4-plugin chain (e.g., Neve 1073 + 1176 + LA-2A + Pultec).
       - Apollo x6 / x8 / x8p / x16 (6+ DSP Cores): High. Can handle any 4-plugin chain easily.
-    - CRITICAL DSP LOGIC: ONLY UAD plugins (plugins running on the Apollo hardware) use the Apollo's DSP. UADx (native), Nectar, Waves, FabFilter, or ANY OTHER native plugins run on the computer's CPU, NOT the Apollo DSP. Do NOT say that UADx or Nectar or other native plugins cause heavy DSP usage on the Apollo.
-    - If the DSP limit is reached for the tracking chain, use UADx (native) or other non-UAD plugins from the user's list for the rest of the mixing chain, as they use CPU instead of DSP.
+    - CRITICAL UAD CONSOLE CONSTRAINT: For the 'trackingChain', you MUST ONLY use UAD plugin versions, because UADx or other native plugins CANNOT run in the UAD Console for zero-latency tracking. ONLY use UAD plugins running on the Apollo hardware.
+    - CRITICAL DSP LOGIC: Do NOT say that native plugins cause heavy DSP usage on the Apollo. They use the computer's CPU.
     - Provide a 'dspUsageNote' explaining the DSP management for this specific Apollo model, ensuring you correctly distinguish between DSP (Apollo) and CPU (Native).
     ` : ''}
 
-    For the main vocal mix (after tracking), provide:
+    For the main vocal mix (after tracking in UAD Console), assume the user is back in their DAW editing those recorded vocals. You MUST expand the plugin list to include non-UAD plugins (like UADx, Waves, FabFilter, etc.) that are available in the user's list, as native plugins can now be used. Provide:
     - 'vocalLayers': An array of vocal layers (e.g., Lead Vocal, Background Vocal, Adlibs, Doubles).
       - For each layer, describe the 'sourceSoundGoal' (recording style/performance).
       - Provide a 'loopGuide' (arrangement tip).

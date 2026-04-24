@@ -32,11 +32,12 @@ interface RecipeCardProps {
   onLogReceipt?: (action: string, cost: number) => void;
   onCorrectPlugin?: (pluginName: string, corrections: { parameter: string, value: string }[], version: string) => Promise<{ success: boolean, message: string, plugin?: VSTPlugin }>;
   onContactSupport?: (pluginInfo: any) => void;
+  onMinimize?: () => void;
 }
 
 import { PluginBubble } from './PluginBubble';
 // ...
-export const RecipeCard: React.FC<RecipeCardProps> = ({ recipe: initialRecipe, isSaved, onSave, theme = 'coldest', dawType, plugins = [], analogHardware = [], drumKits = [], onCloudBackupRecipe, geminiFileUri, onLogReceipt, onCorrectPlugin, onContactSupport }) => {
+export const RecipeCard: React.FC<RecipeCardProps> = ({ recipe: initialRecipe, isSaved, onSave, theme = 'coldest', dawType, plugins = [], analogHardware = [], drumKits = [], onCloudBackupRecipe, geminiFileUri, onLogReceipt, onCorrectPlugin, onContactSupport, onMinimize }) => {
   const { t, i18n } = useTranslation();
   const [recipe, setRecipe] = useState(initialRecipe);
   const [regeneratingPluginId, setRegeneratingPluginId] = useState<string | null>(null);
@@ -244,7 +245,7 @@ export const RecipeCard: React.FC<RecipeCardProps> = ({ recipe: initialRecipe, i
     try {
       console.log("Starting HTML Export...");
       const renderToStaticMarkup = await getRenderToStaticMarkup();
-      const htmlContent = renderToStaticMarkup(<RecipeHTMLTemplate recipe={recipe} drumKits={drumKits} />);
+      const htmlContent = renderToStaticMarkup(<RecipeHTMLTemplate recipe={recipe} drumKits={drumKits} analogHardware={analogHardware} />);
       
       const fullHtml = `<!DOCTYPE html>
 <html lang="en">
@@ -361,6 +362,16 @@ export const RecipeCard: React.FC<RecipeCardProps> = ({ recipe: initialRecipe, i
           <p className="text-sm font-bold opacity-90 max-w-2xl leading-relaxed">{recipe.description}</p>
         </div>
         <div className="flex flex-wrap gap-3">
+          {onMinimize && (
+            <button
+              onClick={onMinimize}
+              className={`shrink-0 px-4 py-2 rounded-full font-black text-xs uppercase tracking-widest transition-all ${
+                theme === 'coldest' || theme === 'chef-mode' ? 'bg-slate-200 text-slate-800 hover:bg-slate-300' : 'bg-white/10 text-white hover:bg-white/20'
+              }`}
+            >
+              {t('minimize')}
+            </button>
+          )}
           <div className="relative">
               <button 
               id="btn-export-html"
@@ -674,16 +685,18 @@ export const RecipeCard: React.FC<RecipeCardProps> = ({ recipe: initialRecipe, i
         </div>
       )}
 
-      <div className="space-y-6 mb-8">
-        <h4 className={`text-sm font-black uppercase tracking-widest ${theme === 'coldest' ? 'text-sky-400' : 'opacity-40'}`}>{t('drum_patterns')}</h4>
-        <div className={`p-2 sm:p-6 rounded-[2.5rem] border ${
-          theme === 'coldest' ? 'bg-black/40 border-sky-500/20 shadow-inner' : 'bg-black/20 border-white/5'
-        }`}>
-          <DrumPatternDisplay patterns={recipe.drumPatterns} theme={theme} dawType={dawType} recipeTitle={recipe.title} bpm={recipe.bpm} />
+      {!recipe.isGangstaVox && (
+        <div className="space-y-6 mb-8">
+          <h4 className={`text-sm font-black uppercase tracking-widest ${theme === 'coldest' ? 'text-sky-400' : 'opacity-40'}`}>{t('drum_patterns')}</h4>
+          <div className={`p-2 sm:p-6 rounded-[2.5rem] border ${
+            theme === 'coldest' ? 'bg-black/40 border-sky-500/20 shadow-inner' : 'bg-black/20 border-white/5'
+          }`}>
+            <DrumPatternDisplay patterns={recipe.drumPatterns} theme={theme} dawType={dawType} recipeTitle={recipe.title} bpm={recipe.bpm} />
+          </div>
         </div>
-      </div>
+      )}
 
-      {recipe.drumKitAdvice && drumKits.length > 0 && (
+      {recipe.drumKitAdvice && drumKits.length > 0 && !recipe.isGangstaVox && (
         <div className="space-y-6 mb-8">
           <h4 className={`text-sm font-black uppercase tracking-widest ${theme === 'coldest' ? 'text-sky-400' : 'opacity-40'}`}>{t('drum_kit_advice')}</h4>
           <div className={`p-6 rounded-[2.5rem] border grid grid-cols-1 md:grid-cols-3 gap-6 ${
@@ -767,7 +780,7 @@ export const RecipeCard: React.FC<RecipeCardProps> = ({ recipe: initialRecipe, i
         >
           <h3 className="text-xl font-black mb-6 uppercase tracking-widest text-purple-500">{t('gangstavox_guide')}</h3>
           
-          {recipe.gangstaVox.trackingChain && (
+          {recipe.gangstaVox.trackingChain && analogHardware.some(h => h.name.toLowerCase().includes('apollo')) && (
             <div className="mb-8">
               <h4 className={`text-sm font-black uppercase tracking-widest mb-4 ${theme === 'coldest' ? 'text-sky-400' : 'opacity-40'}`}>{t('apollo_tracking_chain')}</h4>
               <div className={`p-6 rounded-3xl border ${theme === 'coldest' ? 'bg-black/40 border-sky-500/20' : 'bg-black/20 border-white/5'}`}>
