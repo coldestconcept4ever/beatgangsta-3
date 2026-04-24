@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect, useMemo } from 'react';
 import { motion } from 'motion/react';
-import { X, Video, Play, Pause, Download, Loader2, Plus, Trash2, Scissors, Type, Mic, Wand2, MousePointer2 } from 'lucide-react';
+import { X, Video, Play, Pause, Download, Loader2, Plus, Trash2, Scissors, Type, Mic, Wand2, MousePointer2, ChevronLeft, ChevronRight } from 'lucide-react';
 import { generateVoiceover } from '../services/geminiService';
 import { AppTheme } from '../types';
 import { Logo } from './Logo';
@@ -51,9 +51,13 @@ export const ShowcaseEditorModal: React.FC<ShowcaseEditorModalProps> = ({ videoB
   const [isPlaying, setIsPlaying] = useState(false);
 
   // Editor tools
-  const [activeTool, setActiveTool] = useState<'pointer' | 'magnifier' | 'text'>('pointer');
+  const [activeTool, setActiveTool] = useState<'pointer' | 'razor' | 'scissors' | 'magnifier' | 'text'>('pointer');
   const [voiceoverText, setVoiceoverText] = useState("Man, let me show you how BeatGangsta changes the game. Look at this heat.");
   const [addTextValue, setAddTextValue] = useState("BEATGANGSTA\\nWelcome.");
+
+  const [sourceIn, setSourceIn] = useState(0);
+  const [sourceOut, setSourceOut] = useState(10);
+  const [sourceTime, setSourceTime] = useState(0);
 
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -76,6 +80,7 @@ export const ShowcaseEditorModal: React.FC<ShowcaseEditorModalProps> = ({ videoB
     if (videoRef.current) {
       const dur = videoRef.current.duration;
       setSourceDuration(dur);
+      setSourceOut(dur);
       if (clips.length === 0) {
         setClips([{ id: Date.now().toString(), sourceStart: 0, sourceEnd: dur }]);
       }
@@ -89,14 +94,29 @@ export const ShowcaseEditorModal: React.FC<ShowcaseEditorModalProps> = ({ videoB
     if (lastTimeRef.current !== 0) {
       if (isPlaying) {
         const deltaTime = (time - lastTimeRef.current) / 1000;
-        setSequenceTime(prev => {
-          let next = prev + deltaTime;
-          if (next >= sequenceDuration) {
-             setIsPlaying(false);
-             return sequenceDuration;
-          }
-          return next;
-        });
+        if (activeTool === 'scissors') {
+           setSourceTime(prev => {
+             let next = prev + deltaTime;
+             if (next >= sourceOut) {
+                setIsPlaying(false);
+                return sourceIn;
+             }
+             if (next >= sourceDuration) {
+                setIsPlaying(false);
+                return Math.max(0, sourceDuration - 0.1);
+             }
+             return next;
+           });
+        } else {
+           setSequenceTime(prev => {
+             let next = prev + deltaTime;
+             if (next >= sequenceDuration) {
+                setIsPlaying(false);
+                return sequenceDuration;
+             }
+             return next;
+           });
+        }
       }
     }
     lastTimeRef.current = time;
@@ -113,26 +133,49 @@ export const ShowcaseEditorModal: React.FC<ShowcaseEditorModalProps> = ({ videoB
 
   // Sync Video Element with Sequence Time
   useEffect(() => {
-    if (!videoRef.current || sequenceDuration === 0) return;
-    let acc = 0;
-    let targetSourceTime = 0;
-    let found = false;
-    for (const c of clips) {
-      const dur = c.sourceEnd - c.sourceStart;
-      if (sequenceTime >= acc && sequenceTime <= acc + dur) {
-         targetSourceTime = c.sourceStart + (sequenceTime - acc);
-         found = true;
-         break;
-      }
-      acc += dur;
-    }
+    if (!videoRef.current) return;
     
-    // If at the end or empty
-    if (!found) {
-      if (clips.length > 0) {
-        const lastClip = clips[clips.length - 1];
-        targetSourceTime = lastClip.sourceEnd;
-      }
+    let targetSourceTime = 0;
+
+    if (activeTool === 'scissors') {
+        targetSourceTime = sourceTime;
+    } else {
+        if (sequenceDuration === 0) return;
+        let acc = 0;
+        let found = false;
+        for (const c of clips) {
+          const dur = c.sourceEnd - c.sourceStart;
+          if (sequenceTime >= acc && sequenceTime <= acc + dur) {
+             targetSourceTime = c.sourceStart + (sequenceTime - acc);
+             found = true;
+             break;
+          }
+          acc += dur;
+        }
+        
+        // If at the end or empty
+        if (!found) {
+          if (clips.length > 0) {
+            const lastClip = clips[clips.length - 1];
+            targetSourceTime = lastClip.sourceEnd;
+          }
+        }
+        
+        // Audio sync for voiceover
+        effects.filter(e => e.trackId === 'voiceover' && e.audioObj).forEach(e => {
+           if (sequenceTime >= e.start && sequenceTime <= e.end) {
+              const localAudioTime = sequenceTime - e.start;
+              if (e.audioObj) {
+                if (Math.abs(e.audioObj.currentTime - localAudioTime) > 0.2) {
+                   e.audioObj.currentTime = localAudioTime;
+                }
+                if (isPlaying && e.audioObj.paused) e.audioObj.play().catch(console.error);
+                if (!isPlaying && !e.audioObj.paused) e.audioObj.pause();
+              }
+           } else {
+              if (e.audioObj && !e.audioObj.paused) e.audioObj.pause();
+           }
+        });
     }
 
     if (Math.abs(videoRef.current.currentTime - targetSourceTime) > 0.1) {
@@ -144,24 +187,8 @@ export const ShowcaseEditorModal: React.FC<ShowcaseEditorModalProps> = ({ videoB
     } else {
       if (!videoRef.current.paused) videoRef.current.pause();
     }
-    
-    // Audio sync for voiceover
-    effects.filter(e => e.trackId === 'voiceover' && e.audioObj).forEach(e => {
-       if (sequenceTime >= e.start && sequenceTime <= e.end) {
-          const localAudioTime = sequenceTime - e.start;
-          if (e.audioObj) {
-            if (Math.abs(e.audioObj.currentTime - localAudioTime) > 0.2) {
-               e.audioObj.currentTime = localAudioTime;
-            }
-            if (isPlaying && e.audioObj.paused) e.audioObj.play().catch(console.error);
-            if (!isPlaying && !e.audioObj.paused) e.audioObj.pause();
-          }
-       } else {
-          if (e.audioObj && !e.audioObj.paused) e.audioObj.pause();
-       }
-    });
 
-  }, [sequenceTime, clips, isPlaying, effects]);
+  }, [sequenceTime, sourceTime, clips, isPlaying, effects, activeTool, sequenceDuration]);
 
   const drawPreview = () => {
     const canvas = canvasRef.current;
@@ -181,47 +208,60 @@ export const ShowcaseEditorModal: React.FC<ShowcaseEditorModalProps> = ({ videoB
     // 1. Draw Video
     ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
 
-    // 2. Active Magnifiers
-    const activeMag = effects.find(e => e.trackId === 'fx' && sequenceTime >= e.start && sequenceTime <= e.end);
-    if (activeMag && activeMag.cx !== undefined && activeMag.cy !== undefined && activeMag.radius !== undefined) {
-      const srcX = activeMag.cx * video.videoWidth;
-      const srcY = activeMag.cy * video.videoHeight;
-      const srcR = activeMag.radius * video.videoWidth;
-      const magFactor = 2; // 2x magnification
-      
-      ctx.save();
-      ctx.beginPath();
-      ctx.arc(srcX, srcY, srcR * magFactor, 0, Math.PI * 2);
-      ctx.shadowColor = 'rgba(0,0,0,0.8)';
-      ctx.shadowBlur = 30;
-      ctx.fill();
-      ctx.shadowColor = 'transparent';
-      ctx.clip(); 
-      
-      const targetSrcX = srcX - srcR;
-      const targetSrcY = srcY - srcR;
-      const targetSrcW = srcR * 2;
-      const targetSrcH = srcR * 2;
-      
-      const targetDestX = srcX - srcR * magFactor;
-      const targetDestY = srcY - srcR * magFactor;
-      const targetDestW = srcR * 2 * magFactor;
-      const targetDestH = srcR * 2 * magFactor;
-      
-      ctx.drawImage(video, targetSrcX, targetSrcY, targetSrcW, targetSrcH, targetDestX, targetDestY, targetDestW, targetDestH);
-      
-      ctx.beginPath();
-      ctx.arc(srcX, srcY, srcR * magFactor, 0, Math.PI * 2);
-      ctx.lineWidth = 6;
-      ctx.strokeStyle = '#fff';
-      ctx.stroke();
-      ctx.restore();
-    }
+    if (activeTool !== 'scissors') {
+        // 2. Active Magnifiers
+        const activeMag = effects.find(e => e.trackId === 'fx' && sequenceTime >= e.start && sequenceTime <= e.end);
+        if (activeMag && activeMag.cx !== undefined && activeMag.cy !== undefined && activeMag.radius !== undefined) {
+          const srcX = activeMag.cx * video.videoWidth;
+          const srcY = activeMag.cy * video.videoHeight;
+          const srcR = activeMag.radius * video.videoWidth;
+          const magFactor = 2; // 2x magnification
+          
+          ctx.save();
+          ctx.beginPath();
+          ctx.arc(srcX, srcY, srcR * magFactor, 0, Math.PI * 2);
+          ctx.shadowColor = 'rgba(0,0,0,0.8)';
+          ctx.shadowBlur = 30;
+          ctx.fill();
+          ctx.shadowColor = 'transparent';
+          ctx.clip(); 
+          
+          const targetSrcX = srcX - srcR;
+          const targetSrcY = srcY - srcR;
+          const targetSrcW = srcR * 2;
+          const targetSrcH = srcR * 2;
+          
+          const targetDestX = srcX - srcR * magFactor;
+          const targetDestY = srcY - srcR * magFactor;
+          const targetDestW = srcR * 2 * magFactor;
+          const targetDestH = srcR * 2 * magFactor;
+          
+          ctx.drawImage(video, targetSrcX, targetSrcY, targetSrcW, targetSrcH, targetDestX, targetDestY, targetDestW, targetDestH);
+          
+          ctx.beginPath();
+          ctx.arc(srcX, srcY, srcR * magFactor, 0, Math.PI * 2);
+          ctx.lineWidth = 6;
+          ctx.strokeStyle = '#fff';
+          ctx.stroke();
+          ctx.restore();
+        }
 
-    // 3. Active Text Overlays
-    const activeText = effects.find(e => e.trackId === 'text' && sequenceTime >= e.start && sequenceTime <= e.end);
-    if (activeText && activeText.text) {
-       drawOverlayText(ctx, canvas, activeText.text, sequenceTime - activeText.start, theme === 'coldest');
+        // 3. Active Text Overlays
+        const activeText = effects.find(e => e.trackId === 'text' && sequenceTime >= e.start && sequenceTime <= e.end);
+        if (activeText && activeText.text) {
+           drawOverlayText(ctx, canvas, activeText.text, sequenceTime - activeText.start, theme === 'coldest');
+        }
+    } else {
+        // Scissors Mode visual hint
+        ctx.save();
+        ctx.fillStyle = 'rgba(0,0,0,0.5)';
+        ctx.fillRect(0, 0, canvas.width, 40);
+        ctx.fillStyle = 'rgba(255,255,255,1)';
+        ctx.font = 'bold 16px monospace';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText('SOURCE MODE - TRIMMING RAW VIDEO', canvas.width / 2, 20);
+        ctx.restore();
     }
   };
 
@@ -428,14 +468,45 @@ export const ShowcaseEditorModal: React.FC<ShowcaseEditorModalProps> = ({ videoB
       }]);
   };
 
-  const splitClip = () => {
-      // Find active clip
+  const appendNewClip = () => {
+      if (sourceDuration > 0) {
+          setClips(prev => [...prev, {
+              id: Date.now().toString() + Math.random().toString(36).substr(2, 5),
+              sourceStart: 0,
+              sourceEnd: sourceDuration
+          }]);
+      }
+  };
+
+  const moveClipLeft = (index: number) => {
+      if (index === 0) return;
+      setClips(prev => {
+          const newClips = [...prev];
+          const temp = newClips[index - 1];
+          newClips[index - 1] = newClips[index];
+          newClips[index] = temp;
+          return newClips;
+      });
+  };
+
+  const moveClipRight = (index: number) => {
+      if (index === clips.length - 1) return;
+      setClips(prev => {
+          const newClips = [...prev];
+          const temp = newClips[index + 1];
+          newClips[index + 1] = newClips[index];
+          newClips[index] = temp;
+          return newClips;
+      });
+  };
+
+  const splitClipAtTime = (time: number) => {
       let acc = 0;
       for (let i = 0; i < clips.length; i++) {
           const c = clips[i];
           const dur = c.sourceEnd - c.sourceStart;
-          if (sequenceTime > acc && sequenceTime < acc + dur) {
-              const splitSourceTime = c.sourceStart + (sequenceTime - acc);
+          if (time > acc && time < acc + dur) {
+              const splitSourceTime = c.sourceStart + (time - acc);
               const clip1 = { ...c, sourceEnd: splitSourceTime };
               const clip2 = { ...c, id: Date.now().toString() + Math.random().toString(36).substr(2, 5), sourceStart: splitSourceTime };
               const newClips = [...clips];
@@ -562,8 +633,11 @@ export const ShowcaseEditorModal: React.FC<ShowcaseEditorModalProps> = ({ videoB
                  <button onClick={() => setActiveTool('pointer')} className={`p-3 rounded-xl transition-colors ${activeTool === 'pointer' ? highlightClass : 'text-white/50 hover:bg-white/10'}`}>
                     <MousePointer2 size={24} />
                  </button>
-                 <button onClick={splitClip} title="Split Clip at Playhead" className={`p-3 rounded-xl transition-colors text-white/50 hover:bg-white/10`}>
+                 <button onClick={() => setActiveTool('scissors')} title="Source Clip Trimmer" className={`p-3 rounded-xl transition-colors ${activeTool === 'scissors' ? highlightClass : 'text-white/50 hover:bg-white/10'}`}>
                     <Scissors size={24} />
+                 </button>
+                 <button onClick={() => setActiveTool('razor')} title="Razor Tool (Click Timeline to Split)" className={`p-3 rounded-xl transition-colors ${activeTool === 'razor' ? highlightClass : 'text-white/50 hover:bg-white/10'}`}>
+                    <Scissors size={24} className="-rotate-90" />
                  </button>
                  <button onClick={() => setActiveTool('magnifier')} title="Draw Magnifier" className={`p-3 rounded-xl transition-colors ${activeTool === 'magnifier' ? highlightClass : 'text-white/50 hover:bg-white/10'}`}>
                     <Wand2 size={24} />
@@ -593,6 +667,57 @@ export const ShowcaseEditorModal: React.FC<ShowcaseEditorModalProps> = ({ videoB
                  </div>
 
                  {/* Active Tool Panels */}
+                 {activeTool === 'scissors' && (
+                     <div className="absolute bottom-4 left-1/2 -translate-x-1/2 w-[90%] bg-neutral-900 border border-white/10 rounded-xl p-4 shadow-2xl flex flex-col gap-4 z-30">
+                         <span className="text-xs font-black uppercase tracking-widest text-white/50 text-center block">Source Clip Trimmer</span>
+                         <div className="flex justify-between items-center text-xs font-mono text-white/50">
+                             <span className="w-16">IN: {formatTime(sourceIn)}</span>
+                             <span className="text-white text-sm font-bold bg-black px-2 py-1 rounded">POS: {formatTime(sourceTime)}</span>
+                             <span className="w-16 text-right">OUT: {formatTime(sourceOut)}</span>
+                         </div>
+                         <div className="flex items-center gap-4">
+                             <button onClick={() => setSourceIn(Math.min(sourceTime, sourceOut))} className="px-3 py-1 bg-white/10 hover:bg-white/20 rounded font-bold text-xs whitespace-nowrap text-white">Set In [</button>
+                             <div className="flex-1 relative h-8 bg-black rounded border border-white/10 cursor-pointer overflow-hidden group"
+                                  onPointerDown={e => {
+                                      const rect = e.currentTarget.getBoundingClientRect();
+                                      const p = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
+                                      setSourceTime(p * sourceDuration);
+                                      
+                                      const moveHandler = (moveEv: PointerEvent) => {
+                                         const p = Math.max(0, Math.min(1, (moveEv.clientX - rect.left) / rect.width));
+                                         setSourceTime(p * sourceDuration);
+                                      };
+                                      const upHandler = () => {
+                                         window.removeEventListener('pointermove', moveHandler);
+                                         window.removeEventListener('pointerup', upHandler);
+                                      };
+                                      window.addEventListener('pointermove', moveHandler);
+                                      window.addEventListener('pointerup', upHandler);
+                                  }}>
+                                 {/* the bar */}
+                                 <div className="absolute top-0 bottom-0 bg-white/20" style={{ left: `${(sourceIn/sourceDuration)*100}%`, width: `${((sourceOut-sourceIn)/sourceDuration)*100}%` }} />
+                                 <div className="absolute top-0 bottom-0 w-px bg-red-500 pointer-events-none group-hover:w-0.5" style={{ left: `${(sourceTime/sourceDuration)*100}%` }} />
+                                 {/* IN point */}
+                                 <div className="absolute top-0 bottom-0 w-[2px] bg-indigo-500" style={{ left: `${(sourceIn/sourceDuration)*100}%` }} />
+                                 {/* OUT point */}
+                                 <div className="absolute top-0 bottom-0 w-[2px] bg-pink-500" style={{ left: `${(sourceOut/sourceDuration)*100}%` }} />
+                             </div>
+                             <button onClick={() => setSourceOut(Math.max(sourceTime, sourceIn))} className="px-3 py-1 bg-white/10 hover:bg-white/20 rounded font-bold text-xs whitespace-nowrap text-white">Set Out ]</button>
+                         </div>
+                         <div className="flex justify-center mt-2">
+                             <button onClick={() => {
+                                 setClips(prev => [...prev, {
+                                     id: Date.now().toString() + Math.random().toString(36).substr(2, 5),
+                                     sourceStart: sourceIn,
+                                     sourceEnd: sourceOut
+                                 }]);
+                                 setActiveTool('pointer');
+                             }} className={`px-6 py-2 ${btnClass} text-white font-bold uppercase tracking-widest rounded transition-colors`}>
+                                 Add to Timeline
+                             </button>
+                         </div>
+                     </div>
+                 )}
                  {activeTool === 'text' && (
                      <div className="absolute top-4 right-4 w-72 bg-neutral-900 border border-white/10 rounded-xl p-4 shadow-2xl flex flex-col gap-3 z-30">
                          <span className="text-xs font-black uppercase tracking-widest text-white/50">Text Overlay</span>
@@ -634,6 +759,12 @@ export const ShowcaseEditorModal: React.FC<ShowcaseEditorModalProps> = ({ videoB
                   <span className="font-mono text-sm font-bold text-white tracking-widest">
                      {formatTime(sequenceTime)} <span className="text-white/30">/ {formatTime(sequenceDuration)}</span>
                   </span>
+                  
+                  <div className="ml-auto flex items-center gap-2">
+                     <button onClick={appendNewClip} className={`px-4 py-1.5 rounded text-xs font-bold uppercase tracking-widest text-white transition-colors flex items-center gap-2 ${btnClass}`}>
+                         <Plus size={14} /> Add Source Clip
+                     </button>
+                  </div>
               </div>
 
               {/* Timeline Tracks Grid */}
@@ -668,21 +799,37 @@ export const ShowcaseEditorModal: React.FC<ShowcaseEditorModalProps> = ({ videoB
                            <div className="flex-1 border-b border-white/5 relative pointer-events-auto flex items-center px-0.5">
                                {(() => {
                                    let acc = 0;
-                                   return clips.map(c => {
+                                   return clips.map((c, i) => {
                                        const dur = c.sourceEnd - c.sourceStart;
                                        const element = (
-                                           <div key={c.id} className="absolute h-[80%] top-[10%] bg-indigo-500/80 border-2 border-indigo-300 rounded overflow-hidden group shadow-lg"
-                                                style={{ left: `${(acc/tlScale)*100}%`, width: `${(dur/tlScale)*100}%` }}>
-                                                <div className="absolute inset-x-0 inset-y-0 opacity-10 bg-[linear-gradient(45deg,rgba(0,0,0,1)_25%,transparent_25%,transparent_50%,rgba(0,0,0,1)_50%,rgba(0,0,0,1)_75%,transparent_75%,transparent)] bg-[length:10px_10px]" />
-                                                <span className="absolute top-1 left-2 text-[10px] font-black text-white/50 truncate">CLIP {c.sourceStart.toFixed(1)}s-{c.sourceEnd.toFixed(1)}s</span>
-                                                
-                                                {/* Left Handle */}
-                                                <div className="absolute left-0 top-0 bottom-0 w-3 cursor-ew-resize hover:bg-white/50 z-20" onPointerDown={e => { e.stopPropagation(); setDragAction({ id: c.id, type: 'clip-trim-start' }); }} />
-                                                {/* Right Handle */}
-                                                <div className="absolute right-0 top-0 bottom-0 w-3 cursor-ew-resize hover:bg-white/50 z-20" onPointerDown={e => { e.stopPropagation(); setDragAction({ id: c.id, type: 'clip-trim-end' }); }} />
-                                                
-                                                <button onClick={() => setClips(cArr => cArr.filter(x => x.id !== c.id))} className="absolute inset-x-0 inset-y-0 opacity-0 group-hover:opacity-100 bg-red-500/80 flex items-center justify-center transition-opacity z-10"><Trash2 size={16}/></button>
-                                           </div>
+                                            <div key={c.id} className={`absolute h-[80%] top-[10%] bg-indigo-500/80 border-2 border-indigo-300 rounded overflow-hidden group shadow-lg ${activeTool === 'razor' ? 'cursor-crosshair' : 'cursor-default'}`}
+                                                 style={{ left: `${(acc/tlScale)*100}%`, width: `${(dur/tlScale)*100}%` }}
+                                                 onPointerDown={e => {
+                                                     if (activeTool === 'razor') {
+                                                         e.stopPropagation();
+                                                         const time = getTimelineTime(e.nativeEvent);
+                                                         splitClipAtTime(time);
+                                                         setActiveTool('pointer');
+                                                     }
+                                                 }}>
+                                                 <div className="absolute inset-x-0 inset-y-0 opacity-10 bg-[linear-gradient(45deg,rgba(0,0,0,1)_25%,transparent_25%,transparent_50%,rgba(0,0,0,1)_50%,rgba(0,0,0,1)_75%,transparent_75%,transparent)] bg-[length:10px_10px]" />
+                                                 <span className="absolute top-0 bottom-0 left-3 right-3 flex items-center px-2 text-[10px] font-black text-white/50 truncate pointer-events-none">CLIP {c.sourceStart.toFixed(1)}s-{c.sourceEnd.toFixed(1)}s</span>
+                                                 
+                                                 {/* Move Buttons */}
+                                                 {activeTool === 'pointer' && (
+                                                     <div className="absolute top-1 right-2 flex gap-1 z-30 opacity-0 group-hover:opacity-100 transition-opacity">
+                                                        <button onClick={(e) => { e.stopPropagation(); moveClipLeft(i); }} className="w-5 h-5 bg-black/40 hover:bg-black/60 text-white flex items-center justify-center rounded"><ChevronLeft size={12}/></button>
+                                                        <button onClick={(e) => { e.stopPropagation(); moveClipRight(i); }} className="w-5 h-5 bg-black/40 hover:bg-black/60 text-white flex items-center justify-center rounded"><ChevronRight size={12}/></button>
+                                                     </div>
+                                                 )}
+                                                 
+                                                 {/* Left Handle */}
+                                                 {activeTool !== 'razor' && <div className="absolute left-0 top-0 bottom-0 w-3 cursor-ew-resize hover:bg-white/50 z-20" onPointerDown={e => { e.stopPropagation(); setDragAction({ id: c.id, type: 'clip-trim-start' }); }} />}
+                                                 {/* Right Handle */}
+                                                 {activeTool !== 'razor' && <div className="absolute right-0 top-0 bottom-0 w-3 cursor-ew-resize hover:bg-white/50 z-20" onPointerDown={e => { e.stopPropagation(); setDragAction({ id: c.id, type: 'clip-trim-end' }); }} />}
+                                                 
+                                                 {activeTool !== 'razor' && <button onClick={() => setClips(cArr => cArr.filter(x => x.id !== c.id))} className="absolute bottom-1 right-2 w-5 h-5 bg-red-500/80 hover:bg-red-500 text-white flex items-center justify-center rounded opacity-0 group-hover:opacity-100 transition-opacity z-10"><Trash2 size={12}/></button>}
+                                            </div>
                                        );
                                        acc += dur;
                                        return element;
