@@ -1216,7 +1216,7 @@ export const ShowcaseEditorModal: React.FC<ShowcaseEditorModalProps> = ({ videoB
           <div className="flex-shrink-0 h-16 border-b border-white/5 flex items-center justify-between px-6 bg-white/5 relative z-10 box-border">
              <div className="flex items-center gap-4">
                  <Logo size={32} theme={theme} grillStyle="diamond" knifeStyle="standard" duragStyle="standard" chainStyle="gold" pendantStyle="gold" />
-                 <h2 className="text-xl font-black uppercase tracking-widest text-white">NLE PRO</h2>
+                 <h2 className="text-xl font-black uppercase tracking-widest text-white">COLDESCONCEPT COMMERCIAL CREATOR</h2>
              </div>
              <button onClick={onClose} className="p-2 text-white/50 hover:text-white hover:bg-white/10 rounded-full transition-colors"><X size={24} /></button>
           </div>
