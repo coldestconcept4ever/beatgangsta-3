@@ -550,10 +550,14 @@ export const ShowcaseEditorModal: React.FC<ShowcaseEditorModalProps> = ({ videoB
 
         lines.forEach((line, i) => {
             const y = startY + i * baseLineHeight * 1.1;
-            ctx.lineWidth = baseLineHeight * 0.06;
+            ctx.lineWidth = baseLineHeight * 0.08;
             ctx.strokeStyle = '#000000';
-            ctx.strokeText(line, 0, y);
             ctx.fillText(line, 0, y);
+            
+            const oldShadow = ctx.shadowColor;
+            ctx.shadowColor = 'transparent';
+            ctx.strokeText(line, 0, y);
+            ctx.shadowColor = oldShadow;
         });
 
         if (t > 0) {
