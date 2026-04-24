@@ -2086,12 +2086,16 @@ export const generateVoiceover = async (text: string, bpm?: number | null): Prom
 export const analyzeInstrumental = async (audioBase64: string, mimeType: string): Promise<{ bpm: number, loopStart: number }> => {
   const ai = getAI();
   const prompt = "Analyze this instrumental track. Identify its exact BPM (Tempo) and the exact start time (in seconds) of the clearest, most loopable 4-bar or 8-bar section. Output a JSON object with two fields: 'bpm' (a number, the tempo) and 'loopStart' (a number, the start time in seconds). Do not include any other text.";
-  const response = await ai.models.generateContent({
+  const data = await ai.models.generateContent({
     model: "gemini-3.1-pro-preview",
     contents: [{ parts: [{ text: prompt }, { inlineData: { data: audioBase64, mimeType } }] }],
   });
-  const jsonStr = response.text()?.replace(/```json/g, '')?.replace(/```/g, '')?.trim();
-  if (!jsonStr) throw new Error("Could not analyze instrumental.");
+  
+  // The proxy returns raw JSON, so we extract text from candidates
+  const rawText = data.candidates?.[0]?.content?.parts?.[0]?.text;
+  if (!rawText) throw new Error("Could not analyze instrumental: No text in response.");
+  
+  const jsonStr = rawText.replace(/```json/g, '').replace(/```/g, '').trim();
   const result = JSON.parse(jsonStr);
   return { bpm: result.bpm || 85, loopStart: result.loopStart || 0 };
 };

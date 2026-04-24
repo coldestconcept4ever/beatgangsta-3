@@ -147,16 +147,21 @@ export const ShowcaseEditorModal: React.FC<ShowcaseEditorModalProps> = ({ videoB
     return () => {
         if (instrumentalAudio) {
             instrumentalAudio.pause();
-            instrumentalAudio.src = '';
+            URL.revokeObjectURL(instrumentalAudio.src);
         }
+    };
+  }, [instrumentalAudio]);
+
+  useEffect(() => {
+    return () => {
         effects.forEach(e => {
             if (e.audioObj) {
                 e.audioObj.pause();
-                e.audioObj.src = '';
+                URL.revokeObjectURL(e.audioObj.src);
             }
         });
     };
-  }, [instrumentalAudio, effects]);
+  }, []);
 
   useEffect(() => {
     const url = URL.createObjectURL(videoBlob);
@@ -390,7 +395,7 @@ export const ShowcaseEditorModal: React.FC<ShowcaseEditorModalProps> = ({ videoB
       if (!videoRef.current.paused) videoRef.current.pause();
     }
 
-  }, [sequenceTime, sourceTime, clips, isPlaying, effects, activeTool, sequenceDuration, sourceDuration]);
+  }, [sequenceTime, sourceTime, clips, isPlaying, effects, activeTool, sequenceDuration, sourceDuration, instrumentalAudio]);
 
   const drawPreview = () => {
     const canvas = canvasRef.current;
@@ -841,7 +846,9 @@ export const ShowcaseEditorModal: React.FC<ShowcaseEditorModalProps> = ({ videoB
           }
           const url = URL.createObjectURL(file);
           const newAudio = new Audio(url);
-          newAudio.loop = true;
+          newAudio.loop = false;
+          newAudio.volume = 1.0;
+          newAudio.muted = false;
           newAudio.preload = 'auto';
           setInstrumentalAudio(newAudio);
           
