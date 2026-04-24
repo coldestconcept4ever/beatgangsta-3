@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect, useMemo } from 'react';
 import { motion } from 'motion/react';
-import { X, Video, Play, Pause, Download, Loader2, Plus, Trash2, Scissors, Type, Mic, Wand2, MousePointer2, ChevronLeft, ChevronRight, Undo2, SkipBack, SkipForward } from 'lucide-react';
-import { generateVoiceover } from '../services/geminiService';
+import { X, Video, Play, Pause, Download, Loader2, Plus, Trash2, Scissors, Type, Mic, Wand2, MousePointer2, ChevronLeft, ChevronRight, Undo2, SkipBack, SkipForward, Music } from 'lucide-react';
+import { generateVoiceover, analyzeInstrumental } from '../services/geminiService';
 import { AppTheme } from '../types';
 import { Logo } from './Logo';
 
@@ -80,6 +80,11 @@ export const ShowcaseEditorModal: React.FC<ShowcaseEditorModalProps> = ({ videoB
   const [clips, setClips] = useState<SequenceClip[]>([]);
   const [effects, setEffects] = useState<SequenceEffect[]>([]);
   const [history, setHistory] = useState<{clips: SequenceClip[]; effects: SequenceEffect[]}[]>([]);
+  
+  const [instrumentalBlob, setInstrumentalBlob] = useState<Blob | null>(null);
+  const [instrumentalAudio, setInstrumentalAudio] = useState<HTMLAudioElement | null>(null);
+  const [instrumentalBpm, setInstrumentalBpm] = useState<number | null>(null);
+
 
   const pushHistory = (newClips?: SequenceClip[], newEffects?: SequenceEffect[]) => {
       setHistory(prev => [...prev, { clips: newClips || [...clips], effects: newEffects || [...effects] }].slice(-20)); // Keep last 20 states
@@ -121,6 +126,21 @@ export const ShowcaseEditorModal: React.FC<ShowcaseEditorModalProps> = ({ videoB
 
   const highlightClass = theme === 'coldest' ? 'bg-indigo-500 text-white' : 'bg-yellow-400 text-black';
   const btnClass = theme === 'coldest' ? 'bg-indigo-600 hover:bg-indigo-500' : 'bg-red-600 hover:bg-red-500';
+
+  useEffect(() => {
+    return () => {
+        if (instrumentalAudio) {
+            instrumentalAudio.pause();
+            instrumentalAudio.src = '';
+        }
+        effects.forEach(e => {
+            if (e.audioObj) {
+                e.audioObj.pause();
+                e.audioObj.src = '';
+            }
+        });
+    };
+  }, [instrumentalAudio, effects]);
 
   useEffect(() => {
     const url = URL.createObjectURL(videoBlob);
@@ -303,8 +323,10 @@ export const ShowcaseEditorModal: React.FC<ShowcaseEditorModalProps> = ({ videoB
         }
         
         // Audio sync for voiceover
+        let isVoiceoverActive = false;
         effects.filter(e => e.trackId === 'voiceover' && e.audioObj).forEach(e => {
            if (sequenceTime >= e.start && sequenceTime <= e.end) {
+              isVoiceoverActive = true;
               const localAudioTime = sequenceTime - e.start;
               if (e.audioObj && Number.isFinite(localAudioTime)) {
                 if (Math.abs(e.audioObj.currentTime - localAudioTime) > 0.2) {
@@ -317,6 +339,16 @@ export const ShowcaseEditorModal: React.FC<ShowcaseEditorModalProps> = ({ videoB
               if (e.audioObj && !e.audioObj.paused) e.audioObj.pause();
            }
         });
+        
+        // Instrumental sync and ducking
+        if (instrumentalAudio) {
+           if (isPlaying) {
+             if (instrumentalAudio.paused) instrumentalAudio.play().catch(console.error);
+             instrumentalAudio.volume = isVoiceoverActive ? 0.15 : 1.0;
+           } else {
+             if (!instrumentalAudio.paused) instrumentalAudio.pause();
+           }
+        }
     }
 
     if (Number.isFinite(targetSourceTime) && targetSourceTime >= 0 && Math.abs(videoRef.current.currentTime - targetSourceTime) > 0.1) {
@@ -738,6 +770,42 @@ export const ShowcaseEditorModal: React.FC<ShowcaseEditorModalProps> = ({ videoB
      };
   }, [dragAction, sourceDuration, clips]);
 
+  const handleInstrumentalUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+      if (e.target.files && e.target.files[0]) {
+          const file = e.target.files[0];
+          setInstrumentalBlob(file);
+          
+          if (instrumentalAudio) {
+              instrumentalAudio.pause();
+              URL.revokeObjectURL(instrumentalAudio.src);
+          }
+          const url = URL.createObjectURL(file);
+          const newAudio = new Audio(url);
+          newAudio.loop = true;
+          setInstrumentalAudio(newAudio);
+          
+          // Use AI to analyze tempo
+          try {
+             setIsProcessing(true);
+             const buffer = await file.arrayBuffer();
+             const uint8Array = new Uint8Array(buffer);
+             // Quick base64 conversion
+             let binary = '';
+             for(let i=0; i<uint8Array.length; i+=10000) {
+                 binary += String.fromCharCode.apply(null, Array.from(uint8Array.slice(i, i+10000)));
+             }
+             const base64 = btoa(binary);
+             const result = await analyzeInstrumental(base64, file.type);
+             setInstrumentalBpm(result.bpm);
+             console.log("Instrumental Analysis:", result);
+          } catch(err) {
+             console.error("Instrumental analysis failed", err);
+          } finally {
+             setIsProcessing(false);
+          }
+      }
+  };
+
   const addVoiceover = async () => {
      try {
          setIsProcessing(true);
@@ -748,7 +816,17 @@ export const ShowcaseEditorModal: React.FC<ShowcaseEditorModalProps> = ({ videoB
          for (let i = 0; i < len; i++) {
              bytes[i] = binaryString.charCodeAt(i);
          }
-         const blob = pcmToWav(bytes, 24000, 1, 16);
+         
+         // Z-Ro Chopped and Screwed Effect: Lower the playback sample rate to stretch the sound and drop pitch
+         // Adjust sample rate based on instrumental BPM if available
+         let pitchRatio = 0.8;
+         if (instrumentalBpm) {
+             // For example, map BPM 60-120 to pitch ratio 0.6-0.9
+             pitchRatio = Math.max(0.5, Math.min(0.9, instrumentalBpm / 110));
+         }
+         const choppedRate = 24000 * pitchRatio;
+         const blob = pcmToWav(bytes, choppedRate, 1, 16);
+         
          const audioUrl = URL.createObjectURL(blob);
          const audioObj = new Audio(audioUrl);
          
@@ -883,6 +961,10 @@ export const ShowcaseEditorModal: React.FC<ShowcaseEditorModalProps> = ({ videoB
           }
           
           // 4. Project timeline details
+          if (instrumentalBlob) {
+              zip.file("instrumental.wav", instrumentalBlob); // can be mp3 or wav depending on upload
+          }
+          
           const projectData = {
               duration: sequenceDuration,
               clips: clips.map(c => ({
@@ -914,7 +996,12 @@ export const ShowcaseEditorModal: React.FC<ShowcaseEditorModalProps> = ({ videoB
                   rectY: e.rectY,
                   rectW: e.rectW,
                   rectH: e.rectH,
-              }))
+              })),
+              instrumental: instrumentalBlob ? {
+                  file: "instrumental.wav",
+                  bpm: instrumentalBpm,
+                  duckingVolume: 0.15
+              } : null
           };
           
           zip.file("project_timeline.json", JSON.stringify(projectData, null, 2));
@@ -1060,6 +1147,15 @@ export const ShowcaseEditorModal: React.FC<ShowcaseEditorModalProps> = ({ videoB
 
              {/* Right Panel (Export, AI Voice) */}
              <div className="w-80 flex-shrink-0 border-l border-white/5 bg-white/5 p-6 overflow-y-auto z-10 box-border custom-scrollbar flex flex-col">
+                <span className="text-xs font-black uppercase tracking-widest text-white/50 mb-2 block">Background Instrumental</span>
+                <input 
+                  type="file" 
+                  accept="audio/*"
+                  onChange={handleInstrumentalUpload}
+                  className={`w-full text-xs text-white/70 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-white/10 file:text-white hover:file:bg-white/20 mb-6 cursor-pointer`}
+                />
+                {instrumentalBpm && <span className="text-xs text-green-400 mb-6 block font-bold">Detected BPM: {instrumentalBpm} (Voice slowed down to match)</span>}
+
                 <span className="text-xs font-black uppercase tracking-widest text-white/50 mb-4 block">Z-Ro Voiceover (AI)</span>
                 <textarea 
                    value={voiceoverText} 

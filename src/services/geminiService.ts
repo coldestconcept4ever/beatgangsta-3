@@ -2059,7 +2059,7 @@ export const getSongBeatRecommendations = async (plugins: VSTPlugin[], songQuery
 
 export const generateVoiceover = async (text: string): Promise<{ base64: string, mimeType: string }> => {
   const ai = getAI();
-  const prompt = `Say this text in a slowed down, deep, smooth, melodic Houston rap cadence (like Z-Ro, but DO NOT say your name or mention Z-Ro):\n\n${text}`;
+  const prompt = `Say this text in a severely slowed down, heavily chopped and screwed, extremely deep, slurred, melodic Houston rap cadence (like extremely chopped and screwed Z-Ro, but DO NOT say your name or mention Z-Ro):\n\n${text}`;
   
   const response = await ai.models.generateContent({
     model: "gemini-3.1-flash-tts-preview",
@@ -2080,6 +2080,19 @@ export const generateVoiceover = async (text: string): Promise<{ base64: string,
     throw new Error('Failed to generate voiceover');
   }
   return { base64: base64Audio, mimeType };
+};
+
+export const analyzeInstrumental = async (audioBase64: string, mimeType: string): Promise<{ bpm: number, key: string }> => {
+  const ai = getAI();
+  const prompt = "Analyze this instrumental track. Identify its exact BPM (Tempo) and musical Key. Output a JSON object with only two fields: 'bpm' (a number) and 'key' (a string). Do not include any other text.";
+  const response = await ai.models.generateContent({
+    model: "gemini-3.1-pro-preview",
+    contents: [{ parts: [{ text: prompt }, { inlineData: { data: audioBase64, mimeType } }] }],
+  });
+  const jsonStr = response.text()?.replace(/```json/g, '')?.replace(/```/g, '')?.trim();
+  if (!jsonStr) throw new Error("Could not analyze instrumental.");
+  const result = JSON.parse(jsonStr);
+  return { bpm: result.bpm || 85, key: result.key || "C Minor" };
 };
 
 export const generateContentViaBackend = async (model: string, prompt: string, config: any, _turnstileToken?: string | null, _sessionId?: string | null) => {
