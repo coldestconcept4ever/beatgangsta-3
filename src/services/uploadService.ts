@@ -5,21 +5,6 @@ export const uploadFileChunked = async (uploadFile: File): Promise<{ url: string
   const totalChunks = Math.ceil(uploadFile.size / chunkSize);
   const sessionId = Math.random().toString(36).substring(2, 15);
   
-  // Initialize direct Gemini Storage URL immediately so we don't rely on server-side assembly
-  let geminiUploadUrl = undefined;
-  try {
-    const initRes = await fetch(`/api/upload/init-gemini?fileName=${encodeURIComponent(uploadFile.name)}&mimeType=${encodeURIComponent(uploadFile.type)}&totalSize=${uploadFile.size}`, {
-        method: 'POST'
-    });
-    if (initRes.ok) {
-        const initData = await initRes.json();
-        geminiUploadUrl = initData.uploadUrl;
-        console.log("Acquired direct Gemini Upload URL:", geminiUploadUrl);
-    }
-  } catch (err) {
-      console.warn("Could not acquire Gemini Upload URL directly:", err);
-  }
-
   for (let i = 0; i < totalChunks; i++) {
     const offset = i * chunkSize;
     const chunk = uploadFile.slice(offset, offset + chunkSize);
@@ -33,10 +18,6 @@ export const uploadFileChunked = async (uploadFile: File): Promise<{ url: string
         const headers: Record<string, string> = { 'Content-Type': 'application/octet-stream' };
         
         let url = `/api/upload-chunk?fileName=${encodeURIComponent(uploadFile.name)}&mimeType=${encodeURIComponent(uploadFile.type)}&chunkIndex=${i}&totalChunks=${totalChunks}&sessionId=${sessionId}&offset=${offset}`;
-
-        if (geminiUploadUrl) {
-            url += `&geminiUploadUrl=${encodeURIComponent(geminiUploadUrl)}`;
-        }
 
         const response = await fetch(url, {
           method: 'POST',
