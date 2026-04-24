@@ -21,7 +21,7 @@ interface SequenceClip {
 
 interface SequenceEffect {
   id: string;
-  trackId: 'fx' | 'text' | 'voiceover' | 'mascot' | 'instrumental';
+  trackId: string; // Changed from enum string so we can support dynamic track ids like voiceover-1
   start: number; // Sequence time
   end: number;
   // FX props
@@ -34,6 +34,7 @@ interface SequenceEffect {
   audioObj?: HTMLAudioElement;
   bpm?: number;
   loopDur?: number;
+  loopStart?: number;
 }
 
 const formatTime = (secs: number) => {
@@ -339,7 +340,7 @@ export const ShowcaseEditorModal: React.FC<ShowcaseEditorModalProps> = ({ videoB
         
         // Audio sync for voiceover
         let isVoiceoverActive = false;
-        effects.filter(e => e.trackId === 'voiceover' && e.audioObj).forEach(e => {
+        effects.filter(e => e.trackId.startsWith('voiceover') && e.audioObj).forEach(e => {
            if (sequenceTime >= e.start && sequenceTime <= e.end) {
               isVoiceoverActive = true;
               const localAudioTime = sequenceTime - e.start;
@@ -361,9 +362,11 @@ export const ShowcaseEditorModal: React.FC<ShowcaseEditorModalProps> = ({ videoB
            if (instEffect) {
               const localTime = sequenceTime - instEffect.start;
               const blockDur = instEffect.loopDur || 1;
-              const loopTime = localTime % blockDur;
-              if (Math.abs(instrumentalAudio.currentTime - Math.max(0, loopTime)) > 0.1) {
-                  instrumentalAudio.currentTime = Math.max(0, loopTime);
+              const loopStart = instEffect.loopStart || 0;
+              const currentLoopPos = localTime % blockDur;
+              const targetTime = loopStart + currentLoopPos;
+              if (Math.abs(instrumentalAudio.currentTime - Math.max(0, targetTime)) > 0.15) {
+                  instrumentalAudio.currentTime = Math.max(0, targetTime);
               }
               if (isPlaying) {
                 if (instrumentalAudio.paused) instrumentalAudio.play().catch(console.error);
@@ -844,8 +847,8 @@ export const ShowcaseEditorModal: React.FC<ShowcaseEditorModalProps> = ({ videoB
           // Use AI to analyze tempo
           try {
              setIsProcessing(true);
-             // Slice file to 2MB to avoid PAYLOAD_TOO_LARGE
-             const chunk = file.slice(0, Math.min(file.size, 2 * 1024 * 1024));
+             // Slice file to 512KB to cleanly avoid PAYLOAD_TOO_LARGE while having enough for 4 bars detection
+             const chunk = file.slice(0, Math.min(file.size, 512 * 1024));
              const buffer = await chunk.arrayBuffer();
              const uint8Array = new Uint8Array(buffer);
              // Quick base64 conversion
@@ -855,9 +858,11 @@ export const ShowcaseEditorModal: React.FC<ShowcaseEditorModalProps> = ({ videoB
              }
              const base64 = btoa(binary);
              let bpm = 90;
+             let loopStart = 0;
              try {
                 const result = await analyzeInstrumental(base64, file.type);
                 bpm = result.bpm;
+                loopStart = result.loopStart;
                 setInstrumentalBpm(bpm);
                 console.log("Instrumental Analysis:", result);
              } catch(err) {
@@ -866,15 +871,20 @@ export const ShowcaseEditorModal: React.FC<ShowcaseEditorModalProps> = ({ videoB
              }
              
              const loopDur = 16 * 60 / bpm; // perfectly quantized 4-bar loop
+             const videoEnd = clips.reduce((acc, c) => acc + (c.sourceEnd - c.sourceStart), 0);
+             const targetDur = videoEnd > sequenceTime ? videoEnd - sequenceTime : loopDur;
+             const snappedDur = Math.max(loopDur, Math.ceil(targetDur / loopDur) * loopDur);
+
              setEffects(prev => {
                  const cleaned = prev.filter(e => e.trackId !== 'instrumental');
                  return [...cleaned, {
                      id: Date.now().toString(),
                      trackId: 'instrumental',
                      start: sequenceTime,
-                     end: sequenceTime + loopDur,
+                     end: sequenceTime + snappedDur,
                      bpm: bpm,
-                     loopDur: loopDur
+                     loopDur: loopDur,
+                     loopStart: loopStart
                  }];
              });
              setActiveTool('pointer');
@@ -887,9 +897,10 @@ export const ShowcaseEditorModal: React.FC<ShowcaseEditorModalProps> = ({ videoB
   };
 
   const addVoiceover = async () => {
+     if (!voiceoverText.trim()) return;
      try {
          setIsProcessing(true);
-         const { base64 } = await generateVoiceover(voiceoverText);
+         const { base64 } = await generateVoiceover(voiceoverText, instrumentalBpm);
          const binaryString = atob(base64);
          const len = binaryString.length;
          const bytes = new Uint8Array(len);
@@ -917,9 +928,10 @@ export const ShowcaseEditorModal: React.FC<ShowcaseEditorModalProps> = ({ videoB
          });
          
          pushHistory();
+         const newTrackId = `voiceover-${effects.filter(e => e.trackId.startsWith('voiceover')).length}`;
          setEffects(prev => [...prev, {
              id: Date.now().toString(),
-             trackId: 'voiceover',
+             trackId: newTrackId,
              start: sequenceTime,
              end: sequenceTime + audioObj.duration,
              audioUrl,
@@ -930,8 +942,12 @@ export const ShowcaseEditorModal: React.FC<ShowcaseEditorModalProps> = ({ videoB
          alert("Failed to generate voiceover.");
      } finally {
          setIsProcessing(false);
+         setVoiceoverText('');
      }
   };
+
+  const voiceTracksList = Array.from(new Set(effects.filter(e => e.trackId.startsWith('voiceover')).map(e => e.trackId)));
+  if (voiceTracksList.length === 0) voiceTracksList.push('voiceover-0');
 
   const addTextOverlay = () => {
       pushHistory();
@@ -1022,7 +1038,7 @@ export const ShowcaseEditorModal: React.FC<ShowcaseEditorModalProps> = ({ videoB
           zip.file("original_video.mp4", videoBlob);
           
           // 2. Audio Voiceovers
-          const voiceovers = effects.filter(e => e.trackId === 'voiceover' && e.audioUrl);
+          const voiceovers = effects.filter(e => e.trackId.startsWith('voiceover') && e.audioUrl);
           for (let i = 0; i < voiceovers.length; i++) {
               try {
                   const res = await fetch(voiceovers[i].audioUrl!);
@@ -1399,7 +1415,9 @@ export const ShowcaseEditorModal: React.FC<ShowcaseEditorModalProps> = ({ videoB
                       <div className="flex-1 border-b border-white/5 flex items-center px-3 text-[10px] font-black tracking-widest uppercase text-pink-400">Text FX</div>
                       <div className="flex-1 border-b border-white/5 flex items-center px-3 text-[10px] font-black tracking-widest uppercase text-sky-400">Mascot</div>
                       <div className="flex-1 border-b border-white/5 flex items-center px-3 text-[10px] font-black tracking-widest uppercase text-emerald-400">Magnifier</div>
-                      <div className="flex-1 border-b border-white/5 flex items-center px-3 text-[10px] font-black tracking-widest uppercase text-yellow-400">Audio (Voice)</div>
+                      {voiceTracksList.map((tk, idx) => (
+                          <div key={tk} className="flex-1 border-b border-white/5 flex items-center px-3 text-[10px] font-black tracking-widest uppercase text-yellow-400">Voice {idx + 1}</div>
+                      ))}
                       <div className="flex-1 border-b border-white/5 flex items-center px-3 text-[10px] font-black tracking-widest uppercase text-purple-400">Instrumental</div>
                   </div>
                   
@@ -1515,31 +1533,33 @@ export const ShowcaseEditorModal: React.FC<ShowcaseEditorModalProps> = ({ videoB
                                ))}
                            </div>
 
-                           {/* Audio Track */}
-                           <div className="flex-1 border-b border-white/5 relative pointer-events-auto flex items-center px-0.5">
-                               {effects.filter(e => e.trackId === 'voiceover').map(e => (
-                                   <div key={e.id} className="absolute h-[80%] top-[10%] bg-yellow-500/80 border-2 border-yellow-300 rounded group shadow-lg cursor-move flex items-center px-2"
-                                        style={{ left: `${(e.start/tlScale)*100}%`, width: `${((e.end-e.start)/tlScale)*100}%` }}
-                                        onPointerDown={ev => { ev.stopPropagation(); startDragAction({ id: e.id, type: 'eff-move' }); }}>
-                                        
-                                        <svg className="w-full h-full absolute inset-0 opacity-30 preserve-aspect-none" viewBox="0 0 100 20" preserveAspectRatio="none">
-                                            <path d="M0,10 Q2,0 4,10 T8,10 T12,10 T16,3 T20,10 L100,10" stroke="white" strokeWidth="1" fill="none" vectorEffect="non-scaling-stroke"/>
-                                        </svg>
+                           {/* Audio Tracks */}
+                           {voiceTracksList.map(tk => (
+                               <div key={tk} className="flex-1 border-b border-white/5 relative pointer-events-auto flex items-center px-0.5">
+                                   {effects.filter(e => e.trackId === tk).map(e => (
+                                       <div key={e.id} className="absolute h-[80%] top-[10%] bg-yellow-500/80 border-2 border-yellow-300 rounded group shadow-lg cursor-move flex items-center px-2"
+                                            style={{ left: `${(e.start/tlScale)*100}%`, width: `${((e.end-e.start)/tlScale)*100}%` }}
+                                            onPointerDown={ev => { ev.stopPropagation(); startDragAction({ id: e.id, type: 'eff-move' }); }}>
+                                            
+                                            <svg className="w-full h-full absolute inset-0 opacity-30 preserve-aspect-none" viewBox="0 0 100 20" preserveAspectRatio="none">
+                                                <path d="M0,10 Q2,0 4,10 T8,10 T12,10 T16,3 T20,10 L100,10" stroke="white" strokeWidth="1" fill="none" vectorEffect="non-scaling-stroke"/>
+                                            </svg>
 
-                                        <span className="text-[10px] font-black text-black z-10">Z-RO V.O.</span>
-                                        <div className="absolute left-0 top-0 bottom-0 w-3 cursor-ew-resize hover:bg-white/50 z-20" onPointerDown={ev => { ev.stopPropagation(); startDragAction({ id: e.id, type: 'eff-trim-start' }); }} />
-                                        <div className="absolute right-0 top-0 bottom-0 w-3 cursor-ew-resize hover:bg-white/50 z-20" onPointerDown={ev => { ev.stopPropagation(); startDragAction({ id: e.id, type: 'eff-trim-end' }); }} />
-                                        <button onClick={() => {
-                                            pushHistory();
-                                            setEffects(efs => {
-                                                const removed = efs.find(x => x.id === e.id);
-                                                if (removed?.audioObj) removed.audioObj.pause();
-                                                return efs.filter(x => x.id !== e.id);
-                                            });
-                                        }} className="absolute inset-x-0 inset-y-0 opacity-0 group-hover:opacity-100 bg-red-500/80 flex items-center justify-center transition-opacity z-10"><Trash2 size={16}/></button>
-                                   </div>
-                               ))}
-                           </div>
+                                            <span className="text-[10px] font-black text-black z-10">Z-RO V.O.</span>
+                                            <div className="absolute left-0 top-0 bottom-0 w-3 cursor-ew-resize hover:bg-white/50 z-20" onPointerDown={ev => { ev.stopPropagation(); startDragAction({ id: e.id, type: 'eff-trim-start' }); }} />
+                                            <div className="absolute right-0 top-0 bottom-0 w-3 cursor-ew-resize hover:bg-white/50 z-20" onPointerDown={ev => { ev.stopPropagation(); startDragAction({ id: e.id, type: 'eff-trim-end' }); }} />
+                                            <button onClick={() => {
+                                                pushHistory();
+                                                setEffects(efs => {
+                                                    const removed = efs.find(x => x.id === e.id);
+                                                    if (removed?.audioObj) removed.audioObj.pause();
+                                                    return efs.filter(x => x.id !== e.id);
+                                                });
+                                            }} className="absolute inset-x-0 inset-y-0 opacity-0 group-hover:opacity-100 bg-red-500/80 flex items-center justify-center transition-opacity z-10"><Trash2 size={16}/></button>
+                                       </div>
+                                   ))}
+                               </div>
+                           ))}
 
                            {/* Instrumental Track */}
                            <div className="flex-1 relative pointer-events-auto flex items-center px-0.5">

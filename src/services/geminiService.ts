@@ -2057,9 +2057,10 @@ export const getSongBeatRecommendations = async (plugins: VSTPlugin[], songQuery
   return result;
 };
 
-export const generateVoiceover = async (text: string): Promise<{ base64: string, mimeType: string }> => {
+export const generateVoiceover = async (text: string, bpm?: number | null): Promise<{ base64: string, mimeType: string }> => {
   const ai = getAI();
-  const prompt = `Say this text in a severely slowed down, heavily chopped and screwed, extremely deep, slurred, melodic Houston rap cadence (like extremely chopped and screwed Z-Ro, but DO NOT say your name or mention Z-Ro):\n\n${text}`;
+  const tempoInstructions = bpm ? `The instrumental beat is exactly ${bpm} BPM. You MUST time your syllables and rhythmic flow to land perfectly on tempo to this ${bpm} BPM beat.` : "Provide a natural Houston style cadence.";
+  const prompt = `Say this text in a severely slowed down, heavily chopped and screwed, extremely deep, slurred, melodic Houston rap cadence (like extremely chopped and screwed Z-Ro, but DO NOT say your name or mention Z-Ro). \n${tempoInstructions}\n\n${text}`;
   
   const response = await ai.models.generateContent({
     model: "gemini-3.1-flash-tts-preview",
@@ -2082,9 +2083,9 @@ export const generateVoiceover = async (text: string): Promise<{ base64: string,
   return { base64: base64Audio, mimeType };
 };
 
-export const analyzeInstrumental = async (audioBase64: string, mimeType: string): Promise<{ bpm: number, key: string }> => {
+export const analyzeInstrumental = async (audioBase64: string, mimeType: string): Promise<{ bpm: number, loopStart: number }> => {
   const ai = getAI();
-  const prompt = "Analyze this instrumental track. Identify its exact BPM (Tempo) and musical Key. Output a JSON object with only two fields: 'bpm' (a number) and 'key' (a string). Do not include any other text.";
+  const prompt = "Analyze this instrumental track. Identify its exact BPM (Tempo) and the exact start time (in seconds) of the clearest, most loopable 4-bar or 8-bar section. Output a JSON object with two fields: 'bpm' (a number, the tempo) and 'loopStart' (a number, the start time in seconds). Do not include any other text.";
   const response = await ai.models.generateContent({
     model: "gemini-3.1-pro-preview",
     contents: [{ parts: [{ text: prompt }, { inlineData: { data: audioBase64, mimeType } }] }],
@@ -2092,7 +2093,7 @@ export const analyzeInstrumental = async (audioBase64: string, mimeType: string)
   const jsonStr = response.text()?.replace(/```json/g, '')?.replace(/```/g, '')?.trim();
   if (!jsonStr) throw new Error("Could not analyze instrumental.");
   const result = JSON.parse(jsonStr);
-  return { bpm: result.bpm || 85, key: result.key || "C Minor" };
+  return { bpm: result.bpm || 85, loopStart: result.loopStart || 0 };
 };
 
 export const generateContentViaBackend = async (model: string, prompt: string, config: any, _turnstileToken?: string | null, _sessionId?: string | null) => {
