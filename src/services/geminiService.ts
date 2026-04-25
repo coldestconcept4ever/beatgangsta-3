@@ -2125,9 +2125,21 @@ export const getAudioBeatRecommendations = async (plugins: VSTPlugin[], audioBas
 
   const contextStr = userContext ? `\nCRITICAL USER CONTEXT: The user has provided the following information about their track and goals. You MUST incorporate this into your analysis and advice:\n"${userContext}"\n` : "";
 
+  const uadPlugins = plugins.filter(p => 
+    (p.vendor.toLowerCase().includes('universal audio') || p.name.toLowerCase().includes('uad')) && 
+    !p.name.toLowerCase().includes('native') && 
+    !p.name.toLowerCase().includes('uadx')
+  );
+  const uadPluginListStr = uadPlugins.length > 0 
+    ? uadPlugins.map(p => `${p.vendor} - ${p.name} (${p.type})`).join('\n')
+    : 'Universal Audio plugins defaults (e.g. 1176, LA-2A, Pultec EQP-1A, Neve 1073, Townsend Sphere, Ocean Way, etc.)';
+
+  const hasApollo = analogHardware.some(h => h.name.toLowerCase().includes('apollo'));
+  const apolloModel = analogHardware.find(h => h.name.toLowerCase().includes('apollo'))?.name || 'Apollo';
+
   const prompt = isGangstaVox ? `
     Analyze the attached audio file and suggest 1 high-level, extremely detailed "Vocal FX Chain Recipe" that recreate the vocal production style, effects, and mixing techniques heard in the provided audio.
-    Only use plugins from this list:
+    Only use mixing plugins from this list (for DAW processing):
     ${pluginListStr}
     ${analogStr}
     ${dawStr}
@@ -2145,7 +2157,18 @@ export const getAudioBeatRecommendations = async (plugins: VSTPlugin[], audioBas
     Include a recommended BPM, 'recommendedScale', and 'chordProgression' that fits the vibe.
 
     You MUST provide the 'gangstaVox' object in your response.
-    - trackingChain: Include the unisonPlugin (if applicable) and up to 4 inserts. Provide a deep dive for each (EXHAUSTIVE list of all parameters, typically 25-50 settings).
+    
+    ${hasApollo ? `
+    CRITICAL: The user owns a Universal Audio Apollo interface (${apolloModel}).
+    You MUST include a 'trackingChain' specifically for this Apollo, mirroring the UAD Console workflow.
+    
+    FOR THE UAD CONSOLE TRACKING CHAIN, YOU MUST STRICTLY ONLY USE THESE UAD-2 DSP PLUGINS:
+    ${uadPluginListStr}
+    ` : ''}
+
+    - trackingChain: Include the unisonPlugin (if applicable), inserts (up to 4), aux1 (up to 4), and aux2 (up to 4).
+    - Provide a deep dive for each tracking plugin (EXHAUSTIVE list of all parameters, typically 25-50 settings).
+    - Provide dawRoutingInstructions and dspUsageNote for the tracking chain.
     - vocalTracks: Provide multiple vocal layers (Lead, Adlibs, Doubles, etc.). For each, describe the sourceSoundGoal, which bus to send to (busSend), and the fxPlugins (with deep dives - EXHAUSTIVE list of all parameters, typically 25-50 settings).
     - layeringStrategy: Explain how all these vocal layers should sit together in the mix.
 
@@ -2646,6 +2669,15 @@ export const getGangstaVoxRecipe = async (recipe: BeatRecipe, plugins: VSTPlugin
   const ai = getAI();
   const pluginListStr = plugins.map(p => `${p.vendor} - ${p.name} (${p.type})`).join('\n');
   
+  const uadPlugins = plugins.filter(p => 
+    (p.vendor.toLowerCase().includes('universal audio') || p.name.toLowerCase().includes('uad')) && 
+    !p.name.toLowerCase().includes('native') && 
+    !p.name.toLowerCase().includes('uadx')
+  );
+  const uadPluginListStr = uadPlugins.length > 0 
+    ? uadPlugins.map(p => `${p.vendor} - ${p.name} (${p.type})`).join('\n')
+    : 'Universal Audio plugins defaults (e.g. 1176, LA-2A, Pultec EQP-1A, Neve 1073, Townsend Sphere, Ocean Way, etc.)';
+
   const hasApollo = analogHardware.some(h => h.name.toLowerCase().includes('apollo')) || (vocalGoal && (vocalGoal.toLowerCase().includes('apollo') || vocalGoal.toLowerCase().includes('console') || vocalGoal.toLowerCase().includes('uad')));
   const apolloModel = analogHardware.find(h => h.name.toLowerCase().includes('apollo'))?.name || 'Apollo';
   const hasTownsend = analogHardware.some(h => 
@@ -2667,12 +2699,15 @@ export const getGangstaVoxRecipe = async (recipe: BeatRecipe, plugins: VSTPlugin
     ${vocalGoal ? `TARGET VOCAL SOUND GOAL / VIBE: ${vocalGoal}` : 'Provide a matching "GangstaVox" Vocal FX Chain Recipe that perfectly complements this beat.'}
     
     ${getLanguageInstruction(language)}
-    Only use plugins from this list:
+    Only use mixing plugins from this list for the vocalLayers mixing (after tracking in DAW):
     ${pluginListStr}
 
     ${hasApollo ? `
     CRITICAL: The user owns a Universal Audio Apollo interface (${apolloModel}).
     You MUST include a 'trackingChain' specifically for this Apollo, mirroring the UAD Console workflow.
+    
+    FOR THE UAD CONSOLE TRACKING CHAIN, YOU MUST STRICTLY ONLY USE THESE UAD-2 DSP PLUGINS:
+    ${uadPluginListStr}
     ${hasTownsend ? 'The user is using the TOWNSEND LABS / UA SPHERE L22 (or DLX/LX) microphone. You MUST explain that this requires a STEREO LINKED input pair (e.g., Mic 1-2) in UAD Console to process the double capsules. You MUST assign the "Ocean Way Mic Collection" (or Sphere Mic) to the FIRST insert slot on this stereo channel.' : ''}
     ${hasOceanWayMic ? 'The user specifically wants to use the UAD OCEAN WAY MIC COLLECTION. You MUST include this as the first insert. For Ocean Way Mic Collection, you MUST provide these specific parameters: Pattern, Filter, Axis, Proximity, and Output.' : ''}
     
@@ -2988,7 +3023,14 @@ export const regenerateTrackingChain = async (
 ) => {
   try {
     const ai = getAI();
-    const pluginListStr = plugins.map(p => `${p.vendor} - ${p.name} (${p.type})`).join('\n');
+    const uadPlugins = plugins.filter(p => 
+      (p.vendor.toLowerCase().includes('universal audio') || p.name.toLowerCase().includes('uad')) && 
+      !p.name.toLowerCase().includes('native') && 
+      !p.name.toLowerCase().includes('uadx')
+    );
+    const uadPluginListStr = uadPlugins.length > 0 
+      ? uadPlugins.map(p => `${p.vendor} - ${p.name} (${p.type})`).join('\n')
+      : 'Universal Audio plugins defaults (e.g. 1176, LA-2A, Pultec EQP-1A, Neve 1073, Townsend Sphere, Ocean Way, etc.)';
     
     const hasApollo = analogHardware.some(h => h.name.toLowerCase().includes('apollo'));
     const apolloModel = analogHardware.find(h => h.name.toLowerCase().includes('apollo'))?.name || 'Apollo';
@@ -3007,8 +3049,8 @@ export const regenerateTrackingChain = async (
       ${songSearch ? `(Context: They are tracking to a beat similar to: ${songSearch})` : ''}
 
       ${getLanguageInstruction(language)}
-      Only recommend plugins from this list (focus heavily on UAD DSP plugins for tracking):
-      ${pluginListStr}
+      YOU MUST STRICTLY ONLY USE THESE UAD-2 DSP PLUGINS FOR THE UAD CONSOLE TRACKING CHAIN:
+      ${uadPluginListStr}
 
       CRITICAL CONSTRAINTS:
       The user owns a Universal Audio Apollo interface (${apolloModel}).
