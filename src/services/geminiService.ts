@@ -2674,9 +2674,10 @@ export const getGangstaVoxRecipe = async (recipe: BeatRecipe, plugins: VSTPlugin
     CRITICAL: The user owns a Universal Audio Apollo interface (${apolloModel}).
     You MUST include a 'trackingChain' specifically for this Apollo, mirroring the UAD Console workflow.
     ${hasTownsend ? 'The user is using the TOWNSEND LABS / UA SPHERE L22 (or DLX/LX) microphone. You MUST include the Townsend/Sphere plugin in the tracking chain.' : ''}
-    ${hasOceanWayMic ? 'The user specifically wants to use the UAD OCEAN WAY MIC COLLECTION. You MUST include this as the first insert after the Unison preamp.' : ''}
+    ${hasOceanWayMic ? 'The user specifically wants to use the UAD OCEAN WAY MIC COLLECTION. You MUST include this as the first insert after the Unison preamp. For Ocean Way Mic Collection, you MUST provide these specific parameters: Pattern, Filter, Axis, Proximity, and Output.' : ''}
     - The tracking chain consists of 1 UNISON slot and up to 4 INSERT slots.
     - The UNISON plugin MUST be a preamp/channel strip (e.g., Neve 1073, API Vision, Manley Voxbox, Avalon VT-737, UA 610-B). Explain the impedance benefits.
+    - For EVERY plugin in the tracking chain (Unison + Inserts), you MUST provide exhaustive 'settings' (30-60 parameters each). DO NOT be lazy.
     - If the user has Ocean Way Mic Collection or Sphere Mic Modeling plugins, prioritize placing them in the first INSERT slot for the L22 workflow.
     - Consider the DSP limits of the specific Apollo model:
       - Apollo Solo / Arrow (1 DSP Core): Very limited. Use max 1-2 lightweight UAD plugins.
@@ -2727,7 +2728,7 @@ export const getGangstaVoxRecipe = async (recipe: BeatRecipe, plugins: VSTPlugin
                   properties: {
                     name: { type: Type.STRING },
                     purpose: { type: Type.STRING },
-                    settings: {
+                    deepDive: {
                       type: Type.ARRAY,
                       description: "Provide EVERY available parameter found on the actual plugin (typically 20-50 for professional plugins). Be exhaustive and do NOT be lazy.",
                       items: {
@@ -2740,16 +2741,16 @@ export const getGangstaVoxRecipe = async (recipe: BeatRecipe, plugins: VSTPlugin
                       }
                     }
                   },
-                  required: ["name", "purpose", "settings"]
+                  required: ["name", "purpose", "deepDive"]
                 },
                 inserts: {
                   type: Type.ARRAY,
                   items: {
                     type: Type.OBJECT,
                     properties: {
-                      pluginName: { type: Type.STRING },
+                      name: { type: Type.STRING },
                       purpose: { type: Type.STRING },
-                      settings: {
+                      deepDive: {
                         type: Type.ARRAY,
                         description: "Provide EVERY available parameter found on the actual plugin interface. Aim for 40-70 settings for complex modules. Do NOT be lazy; ensure every possible control is accounted for. MATCH THE EXTREME DETAIL LEVEL OF A FULL BEAT RECIPE.",
                         items: {
@@ -2762,7 +2763,7 @@ export const getGangstaVoxRecipe = async (recipe: BeatRecipe, plugins: VSTPlugin
                         }
                       }
                     },
-                    required: ["pluginName", "purpose", "settings"]
+                    required: ["name", "purpose", "deepDive"]
                   }
                 },
                 dspUsageNote: { type: Type.STRING }

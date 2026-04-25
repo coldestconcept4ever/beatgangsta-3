@@ -156,7 +156,7 @@ export interface SignalChainStep {
 export interface ParameterSetting {
   parameter: string;
   value: string;
-  explanation: string;
+  explanation?: string;
 }
 
 export interface DeepDivePlugin {

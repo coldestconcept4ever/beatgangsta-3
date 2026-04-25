@@ -42,6 +42,8 @@ const resources = {
       "help": "Help",
       "vibe_search": "Vibe Search",
       "song_search": "Song Search",
+      "audio_analysis": "Audio Analysis",
+      "audio_analysis_title": "Audio Analysis & Critique",
       "extract_recipe": "Extract Recipe",
       "mix_critique": "Mix Critique",
       "show_deleted_items": "Show Deleted Items",

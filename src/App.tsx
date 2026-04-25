@@ -574,6 +574,7 @@ const App: React.FC = () => {
     mimeType: string | null;
   } | null>(null);
 
+  const [mainTab, setMainTab] = useState<'beat' | 'vox' | 'analysis'>('beat');
   const [isGangstaVox, setIsGangstaVox] = useState<boolean>(false);
   const [csvInput, setCsvInput] = useState<string>('');
   const [plugins, setPlugins] = useState<VSTPlugin[]>(() => {
@@ -5696,9 +5697,12 @@ The AI was unable to verify these parameters. Please investigate.`;
                   }`}>
                     <button 
                       id="btn-mode-beatgangsta"
-                      onClick={() => setIsGangstaVox(false)} 
+                      onClick={() => {
+                        setIsGangstaVox(false);
+                        setMainTab('beat');
+                      }} 
                       className={`py-3 px-6 rounded-full font-black text-xs select-none transition-all ${
-                        !isGangstaVox 
+                        mainTab === 'beat' 
                           ? (theme === 'coldest' ? 'bg-sky-500 text-white shadow-sm' : 
                              theme === 'crazy-bird' ? 'bg-red-600 text-white shadow-sm' : 
                              theme === 'hustle-time' ? 'bg-yellow-500 text-emerald-950 shadow-sm' : 
@@ -5715,9 +5719,12 @@ The AI was unable to verify these parameters. Please investigate.`;
                     </button>
                     <button 
                       id="btn-mode-gangstavox"
-                      onClick={() => setIsGangstaVox(true)} 
+                      onClick={() => {
+                        setIsGangstaVox(true);
+                        setMainTab('vox');
+                      }} 
                       className={`py-3 px-6 rounded-full font-black text-xs select-none transition-all ${
-                        isGangstaVox 
+                        mainTab === 'vox' 
                           ? (theme === 'coldest' ? 'bg-sky-500 text-white shadow-sm' : 
                              theme === 'crazy-bird' ? 'bg-red-600 text-white shadow-sm' : 
                              theme === 'hustle-time' ? 'bg-yellow-500 text-emerald-950 shadow-sm' : 
@@ -5731,6 +5738,25 @@ The AI was unable to verify these parameters. Please investigate.`;
                       }`}
                     >
                       🎤 GangstaVox
+                    </button>
+                    <button 
+                      id="btn-mode-analysis"
+                      onClick={() => setMainTab('analysis')} 
+                      className={`py-3 px-6 rounded-full font-black text-xs select-none transition-all ${
+                        mainTab === 'analysis' 
+                          ? (theme === 'coldest' ? 'bg-sky-500 text-white shadow-sm' : 
+                             theme === 'crazy-bird' ? 'bg-red-600 text-white shadow-sm' : 
+                             theme === 'hustle-time' ? 'bg-yellow-500 text-emerald-950 shadow-sm' : 
+                             theme === 'chef-mode' ? 'bg-orange-500 text-white shadow-sm' : 
+                             'bg-white/20 text-white shadow-sm') 
+                          : (theme === 'coldest' ? 'text-sky-900/60 hover:text-sky-900' : 
+                             theme === 'crazy-bird' ? 'text-red-100/60 hover:text-white' : 
+                             theme === 'hustle-time' ? 'text-yellow-100/60 hover:text-yellow-400' : 
+                             theme === 'chef-mode' ? 'text-orange-900/60 hover:text-orange-900' : 
+                             'text-white/50 hover:text-white')
+                      }`}
+                    >
+                      🔍 Audio Analysis
                     </button>
                     <button 
                       onClick={() => setShowModeInfo(true)}
@@ -5751,8 +5777,9 @@ The AI was unable to verify these parameters. Please investigate.`;
 
               <div className="h-[1px] bg-current opacity-10" />
 
-              <div className={`flex flex-col gap-4 ${showChain ? '-mt-12' : ''}`}>
-                <div className="flex flex-col sm:flex-row gap-4">
+              {mainTab !== 'analysis' ? (
+                <div className={`flex flex-col gap-4 ${showChain ? '-mt-12' : ''}`}>
+                  <div className="flex flex-col sm:flex-row gap-4">
                   <div className="relative flex-1 group overflow-hidden rounded-full">
                     <input 
                       id="input-vibe-search"
@@ -5810,11 +5837,33 @@ The AI was unable to verify these parameters. Please investigate.`;
                   >
                     {loading ? t('searching') : t('search_song')}
                   </button>
+                  </div>
                 </div>
-              </div>
+              ) : (
+                <div className="flex flex-col items-center justify-center py-10 text-center animate-in fade-in zoom-in duration-500 scale-95 hover:scale-100 transition-transform">
+                  <div className={`w-24 h-24 rounded-full flex items-center justify-center mb-6 shadow-lg ${theme === 'coldest' ? 'bg-sky-500/10 text-sky-500 shadow-sky-500/20' : 'bg-purple-500/20 text-purple-400 shadow-purple-500/20'}`}>
+                    <span className="text-5xl text-glow-pulse">🔍</span>
+                  </div>
+                  <h3 className={`text-3xl font-black uppercase tracking-tighter mb-3 ${theme === 'coldest' || theme === 'chef-mode' ? 'text-slate-800' : 'text-white'}`}>
+                    AI Audio Analysis
+                  </h3>
+                  <p className={`text-sm font-bold opacity-60 mb-8 max-w-md px-10 ${theme === 'coldest' || theme === 'chef-mode' ? 'text-slate-600' : 'text-slate-400'}`}>
+                    Drop an MP3 or WAV to reverse-engineer production techniques, extract plugin settings, or get a world-class mix critique.
+                  </p>
+                </div>
+              )}
 
-              {/* Audio Analysis Search - ALWAYS VISIBLE */}
-              <div className="flex flex-col gap-4">
+              {/* Audio Analysis Search - ALWAYS VISIBLE IN ANALYSIS MODE, OR BELOW SEARCH IN OTHER MODES */}
+              <div className={`flex flex-col gap-4 ${mainTab !== 'analysis' ? 'mt-8 pt-10 border-t border-white/5' : ''}`}>
+                {mainTab !== 'analysis' && (
+                  <div className="flex items-center gap-4 mb-4">
+                    <div className={`h-[1px] flex-1 ${theme === 'coldest' ? 'bg-slate-200' : 'bg-white/10'}`} />
+                    <span className={`text-[10px] font-black uppercase tracking-[0.4em] opacity-30 ${theme === 'coldest' ? 'text-slate-900' : 'text-white'}`}>
+                      Audio Analysis & Recipes
+                    </span>
+                    <div className={`h-[1px] flex-1 ${theme === 'coldest' ? 'bg-slate-200' : 'bg-white/10'}`} />
+                  </div>
+                )}
                 <div className="flex justify-center mb-2">
                   <div className={`inline-flex rounded-full p-1 ${theme === 'coldest' ? 'bg-white/40' : 'bg-black/40'}`}>
                     <button
