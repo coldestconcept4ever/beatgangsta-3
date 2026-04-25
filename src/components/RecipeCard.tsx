@@ -895,6 +895,50 @@ export const RecipeCard: React.FC<RecipeCardProps> = ({ recipe: initialRecipe, i
                   </div>
                 </div>
 
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-8 pt-6 border-t border-sky-500/20">
+                  {recipe.gangstaVox.trackingChain.aux1 && (
+                    <div>
+                      <h5 className={`text-[10px] font-black uppercase tracking-widest mb-4 ${theme === 'coldest' ? 'text-sky-400' : 'opacity-30'}`}>AUX 1 (Reverb/Comfort)</h5>
+                      <PluginBubble 
+                        name={recipe.gangstaVox.trackingChain.aux1.name}
+                        purpose={recipe.gangstaVox.trackingChain.aux1.purpose}
+                        deepDive={recipe.gangstaVox.trackingChain.aux1.deepDive}
+                        isRegenerating={regeneratingPluginId === 'tracking-aux1-0-0'}
+                        onRegenerate={() => handleRegenerate(recipe.gangstaVox!.trackingChain!.aux1, 0, 0, 'vocal-track-fx')} 
+                        onCorrect={onCorrectPlugin}
+                        onContactSupport={onContactSupport}
+                        theme={theme}
+                        className={theme === 'coldest' ? 'bg-sky-900/40 border-sky-500/40 shadow-md' : 'bg-white/5 border-white/10'}
+                      />
+                    </div>
+                  )}
+                  {recipe.gangstaVox.trackingChain.aux2 && (
+                    <div>
+                      <h5 className={`text-[10px] font-black uppercase tracking-widest mb-4 ${theme === 'coldest' ? 'text-sky-400' : 'opacity-30'}`}>AUX 2 (Delay/FX)</h5>
+                      <PluginBubble 
+                        name={recipe.gangstaVox.trackingChain.aux2.name}
+                        purpose={recipe.gangstaVox.trackingChain.aux2.purpose}
+                        deepDive={recipe.gangstaVox.trackingChain.aux2.deepDive}
+                        isRegenerating={regeneratingPluginId === 'tracking-aux2-0-0'}
+                        onRegenerate={() => handleRegenerate(recipe.gangstaVox!.trackingChain!.aux2, 0, 0, 'vocal-track-fx')}
+                        onCorrect={onCorrectPlugin}
+                        onContactSupport={onContactSupport}
+                        theme={theme}
+                        className={theme === 'coldest' ? 'bg-sky-900/40 border-sky-500/40 shadow-md' : 'bg-white/5 border-white/10'}
+                      />
+                    </div>
+                  )}
+                </div>
+
+                {recipe.gangstaVox.trackingChain.dawRoutingInstructions && (
+                  <div className="mt-8 pt-6 border-t border-sky-500/20">
+                    <h5 className={`text-[10px] font-black uppercase tracking-widest mb-4 ${theme === 'coldest' ? 'text-sky-400' : 'opacity-30'}`}>DAW I/O Routing Guide</h5>
+                    <div className={`p-4 rounded-2xl text-xs font-bold whitespace-pre-wrap ${theme === 'coldest' ? 'bg-black/40 text-sky-200' : 'bg-white/5 text-white/70'}`}>
+                      {recipe.gangstaVox.trackingChain.dawRoutingInstructions}
+                    </div>
+                  </div>
+                )}
+
                 <div className="mt-8 pt-6 border-t border-sky-500/20">
                   <h5 className={`text-[10px] font-black uppercase tracking-widest mb-4 ${theme === 'coldest' ? 'text-sky-400' : 'opacity-30'}`}>
                     Add UAD Console Inserts (DSP ONLY)

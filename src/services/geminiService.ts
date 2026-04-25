@@ -2673,19 +2673,18 @@ export const getGangstaVoxRecipe = async (recipe: BeatRecipe, plugins: VSTPlugin
     ${hasApollo ? `
     CRITICAL: The user owns a Universal Audio Apollo interface (${apolloModel}).
     You MUST include a 'trackingChain' specifically for this Apollo, mirroring the UAD Console workflow.
-    ${hasTownsend ? 'The user is using the TOWNSEND LABS / UA SPHERE L22 (or DLX/LX) microphone. You MUST include the Townsend/Sphere plugin in the tracking chain.' : ''}
+    ${hasTownsend ? 'The user is using the TOWNSEND LABS / UA SPHERE L22 (or DLX/LX) microphone. You MUST explain that this requires a STEREO LINKED input pair (e.g., Mic 1-2) in UAD Console to process the front and rear capsules.' : ''}
     ${hasOceanWayMic ? 'The user specifically wants to use the UAD OCEAN WAY MIC COLLECTION. You MUST include this as the first insert after the Unison preamp. For Ocean Way Mic Collection, you MUST provide these specific parameters: Pattern, Filter, Axis, Proximity, and Output.' : ''}
-    - The tracking chain consists of 1 UNISON slot and up to 4 INSERT slots.
-    - The UNISON plugin MUST be a preamp/channel strip (e.g., Neve 1073, API Vision, Manley Voxbox, Avalon VT-737, UA 610-B). Explain the impedance benefits.
-    - For EVERY plugin in the tracking chain (Unison + Inserts), you MUST provide exhaustive 'settings' (30-60 parameters each). DO NOT be lazy.
-    - If the user has Ocean Way Mic Collection or Sphere Mic Modeling plugins, prioritize placing them in the first INSERT slot for the L22 workflow.
-    - Consider the DSP limits of the specific Apollo model:
-      - Apollo Solo / Arrow (1 DSP Core): Very limited. Use max 1-2 lightweight UAD plugins.
-      - Apollo Twin Duo (2 DSP Cores): Moderate. Can handle a Unison pre + 1-2 compressors/EQs.
-      - Apollo Twin Quad / x4 (4 DSP Cores): Good. Can handle a full 5-plugin chain (Unison + 4 inserts).
-      - Apollo x6 / x8 / x8p / x16 (6+ DSP Cores): High. Can handle any 5-plugin chain easily.
-    - CRITICAL UAD CONSOLE CONSTRAINT: For the 'trackingChain', you MUST ONLY use UAD-2 (DSP) plugin versions, because native plugins (UADx) CANNOT run in the UAD Console for zero-latency tracking.
-    - Provide a 'dspUsageNote' explaining how to set this up in UAD Console to achieve zero-latency monitoring while recording with the Sphere L22.
+    
+    The tracking chain response MUST include:
+    1. UNISON SLOT: 1 Preamp/Channel Strip. Explain the physical impedance matching.
+    2. INSERTS: Up to 4 UAD-2 plugins (DSP). Focus on dynamics and EQ.
+    3. AUX 1: Typically for comfort reverb (e.g., Pure Plate, Lexicon 224).
+    4. AUX 2: Typically for comfort delay or parallel processing.
+    
+    - For EVERY plugin in the tracking chain, you MUST provide exhaustive 'deepDive' parameters (only those found on the actual hardware emulations).
+    - Provide 'dawRoutingInstructions' explaining which Virtual I/O or physical outputs to select in the DAW to record the processed vs dry signals.
+    - Provide a 'dspUsageNote' explaining how to set this up in UAD Console to achieve zero-latency monitoring.
     ` : ''}
 
     For the main vocal mix (after tracking in UAD Console), assume the user is back in their DAW editing those recorded vocals. You MUST expand the plugin list to include non-UAD plugins (like UADx, Waves, FabFilter, etc.) that are available in the user's list, as native plugins can now be used. Provide:
@@ -2766,9 +2765,28 @@ export const getGangstaVoxRecipe = async (recipe: BeatRecipe, plugins: VSTPlugin
                     required: ["name", "purpose", "deepDive"]
                   }
                 },
+                aux1: {
+                  type: Type.OBJECT,
+                  properties: {
+                    name: { type: Type.STRING },
+                    purpose: { type: Type.STRING },
+                    deepDive: { type: Type.ARRAY, items: { type: Type.OBJECT, properties: { parameter: { type: Type.STRING }, value: { type: Type.STRING } }, required: ["parameter", "value"] } }
+                  },
+                  required: ["name", "purpose", "deepDive"]
+                },
+                aux2: {
+                  type: Type.OBJECT,
+                  properties: {
+                    name: { type: Type.STRING },
+                    purpose: { type: Type.STRING },
+                    deepDive: { type: Type.ARRAY, items: { type: Type.OBJECT, properties: { parameter: { type: Type.STRING }, value: { type: Type.STRING } }, required: ["parameter", "value"] } }
+                  },
+                  required: ["name", "purpose", "deepDive"]
+                },
+                dawRoutingInstructions: { type: Type.STRING },
                 dspUsageNote: { type: Type.STRING }
               },
-              required: ["unisonPlugin", "inserts"]
+              required: ["unisonPlugin", "inserts", "dawRoutingInstructions", "dspUsageNote"]
             },
             vocalLayers: {
               type: Type.ARRAY,

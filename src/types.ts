@@ -202,6 +202,9 @@ export interface GangstaVoxRecipe {
   trackingChain?: {
     unisonPlugin?: DeepDivePlugin;
     inserts: DeepDivePlugin[];
+    aux1?: DeepDivePlugin;
+    aux2?: DeepDivePlugin;
+    dawRoutingInstructions?: string;
     dspUsageNote?: string;
   };
   vocalTracks: {
