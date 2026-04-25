@@ -2343,6 +2343,18 @@ export const getAudioBeatRecommendations = async (plugins: VSTPlugin[], audioBas
     ${ADVANCED_MIDI_PROMPT}
   `;
 
+  const schemaObject = {
+    type: "OBJECT",
+    properties: {
+      recipes: {
+        type: "ARRAY",
+        items: getUnifiedRecipeSchema()
+      }
+    },
+    required: ["recipes"]
+  };
+  prompt += `\n\nCRITICAL: You MUST return a valid JSON object. Your JSON object MUST exactly adhere to the following JSON Schema structure (do NOT deviate):\n${JSON.stringify(schemaObject, null, 2)}`;
+
   const parts: any[] = [];
   
   if (geminiFileUri) {
@@ -2353,9 +2365,15 @@ export const getAudioBeatRecommendations = async (plugins: VSTPlugin[], audioBas
     } else if (!uri.startsWith('https://')) {
        uri = 'https://generativelanguage.googleapis.com/v1beta/' + (uri.startsWith('files/') ? uri : 'files/' + uri);
     }
-    parts.push({ fileData: { fileUri: uri, mimeType: mimeType } });
+    
+    let finalMimeType = mimeType;
+    if (finalMimeType === 'audio/mp3') finalMimeType = 'audio/mpeg';
+    
+    parts.push({ fileData: { fileUri: uri, mimeType: finalMimeType } });
   } else if (audioBase64) {
-    parts.push({ inlineData: { data: audioBase64, mimeType: mimeType } });
+    let finalMimeType = mimeType;
+    if (finalMimeType === 'audio/mp3') finalMimeType = 'audio/mpeg';
+    parts.push({ inlineData: { data: audioBase64, mimeType: finalMimeType } });
   } else {
     throw new Error("No audio file provided for analysis (Beat).");
   }
@@ -2376,17 +2394,7 @@ export const getAudioBeatRecommendations = async (plugins: VSTPlugin[], audioBas
           { category: HarmCategory.HARM_CATEGORY_HATE_SPEECH, threshold: HarmBlockThreshold.OFF },
           { category: HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT, threshold: HarmBlockThreshold.OFF },
           { category: HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT, threshold: HarmBlockThreshold.OFF }
-        ],
-        responseSchema: {
-          type: Type.OBJECT,
-          properties: {
-            recipes: {
-              type: Type.ARRAY,
-              items: getUnifiedRecipeSchema()
-            }
-          },
-          required: ["recipes"]
-        }
+        ]
       }
     });
   } catch (error) {
@@ -2509,6 +2517,55 @@ export const getMixCritique = async (
       - 'solution': A detailed technical explanation of how to fix it.
       - 'recommendedChain': A robust chain of plugins from the user's list to use for this fix, with 'name', 'purpose', and 'deepDive' (an array of parameter objects - Provide EVERY available parameter found on the actual plugin interface, aim for 40-80 settings for complex modules - each with 'parameter', 'value', and 'explanation'). You can also optionally include 'band' and 'routing' properties for multiband or parallel processing. MATCH THE EXTREME DETAIL LEVEL OF A FULL BEAT RECIPE.
   `;
+  const schemaObject = {
+    type: "OBJECT",
+    properties: {
+      title: { type: "STRING" },
+      overallFeedback: { type: "STRING" },
+      strengths: { type: "ARRAY", items: { type: "STRING" } },
+      weaknesses: { type: "ARRAY", items: { type: "STRING" } },
+      actionPlan: {
+        type: "ARRAY",
+        description: hasStems && uploadedStems && uploadedStems.length > 0 ? `CRITICAL: You MUST generate EXACTLY ${uploadedStems.length} items in this array, one for each uploaded stem.` : "Array of actionable steps.",
+        items: {
+          type: "OBJECT",
+          properties: {
+            targetStem: { type: "STRING", description: "The exact name of the stem this step applies to (if stems were uploaded)." },
+            issue: { type: "STRING" },
+            solution: { type: "STRING" },
+            recommendedChain: {
+              type: "ARRAY",
+              description: hasStems && uploadedStems && uploadedStems.length > 0 ? "CRITICAL: You MUST provide EXACTLY 4 plugins for this stem, with the 4th explicitly dedicated to volume leveling." : "Chain of 2-4 plugins.",
+              items: {
+                type: "OBJECT",
+                properties: {
+                  name: { type: "STRING" },
+                  purpose: { type: "STRING" },
+                  deepDive: {
+                    type: "ARRAY",
+                    description: "Provide EVERY available parameter found on the actual plugin interface. Aim for 40-70 settings for complex modules. MATCH THE EXTREME DETAIL LEVEL OF A FULL BEAT RECIPE.",
+                    items: {
+                      type: "OBJECT",
+                      properties: {
+                        parameter: { type: "STRING" },
+                        value: { type: "STRING" },
+                        explanation: { type: "STRING" }
+                      },
+                      required: ["parameter", "value", "explanation"]
+                    }
+                  }
+                },
+                required: ["name", "purpose", "deepDive"]
+              }
+            }
+          },
+          required: hasStems && uploadedStems && uploadedStems.length > 0 ? ["targetStem", "issue", "solution", "recommendedChain"] : ["issue", "solution", "recommendedChain"]
+        }
+      }
+    },
+    required: ["title", "overallFeedback", "strengths", "weaknesses", "actionPlan"]
+  };
+  prompt += `\n\nCRITICAL: You MUST return a valid JSON object EXCLUSIVELY formatted with this exact JSON Schema:\n${JSON.stringify(schemaObject, null, 2)}`;
 
   const parts: any[] = [];
   
@@ -2522,9 +2579,13 @@ export const getMixCritique = async (
         } else if (!uri.startsWith('https://')) {
            uri = 'https://generativelanguage.googleapis.com/v1beta/' + (uri.startsWith('files/') ? uri : 'files/' + uri);
         }
-        parts.push({ fileData: { fileUri: uri, mimeType: stem.mimeType } });
+        let stemMimeType = stem.mimeType;
+        if (stemMimeType === 'audio/mp3') stemMimeType = 'audio/mpeg';
+        parts.push({ fileData: { fileUri: uri, mimeType: stemMimeType } });
       } else if (stem.base64) {
-        parts.push({ inlineData: { data: stem.base64, mimeType: stem.mimeType } });
+        let stemMimeType = stem.mimeType;
+        if (stemMimeType === 'audio/mp3') stemMimeType = 'audio/mpeg';
+        parts.push({ inlineData: { data: stem.base64, mimeType: stemMimeType } });
       }
     }
   } else {
@@ -2536,9 +2597,13 @@ export const getMixCritique = async (
       } else if (!uri.startsWith('https://')) {
          uri = 'https://generativelanguage.googleapis.com/v1beta/' + (uri.startsWith('files/') ? uri : 'files/' + uri);
       }
-      parts.push({ fileData: { fileUri: uri, mimeType: mimeType } });
+      let finalMimeType = mimeType;
+      if (finalMimeType === 'audio/mp3') finalMimeType = 'audio/mpeg';
+      parts.push({ fileData: { fileUri: uri, mimeType: finalMimeType } });
     } else if (audioBase64) {
-      parts.push({ inlineData: { data: audioBase64, mimeType: mimeType } });
+      let finalMimeType = mimeType;
+      if (finalMimeType === 'audio/mp3') finalMimeType = 'audio/mpeg';
+      parts.push({ inlineData: { data: audioBase64, mimeType: finalMimeType } });
     } else {
       throw new Error("No audio file provided for analysis (Critique).");
     }
@@ -2579,55 +2644,7 @@ export const getMixCritique = async (
           { category: HarmCategory.HARM_CATEGORY_HATE_SPEECH, threshold: HarmBlockThreshold.OFF },
           { category: HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT, threshold: HarmBlockThreshold.OFF },
           { category: HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT, threshold: HarmBlockThreshold.OFF }
-        ],
-        responseSchema: {
-          type: Type.OBJECT,
-          properties: {
-            title: { type: Type.STRING },
-            overallFeedback: { type: Type.STRING },
-            strengths: { type: Type.ARRAY, items: { type: Type.STRING } },
-            weaknesses: { type: Type.ARRAY, items: { type: Type.STRING } },
-            actionPlan: {
-              type: Type.ARRAY,
-              description: hasStems && uploadedStems && uploadedStems.length > 0 ? `CRITICAL: You MUST generate EXACTLY ${uploadedStems.length} items in this array, one for each uploaded stem.` : "Array of actionable steps.",
-              items: {
-                type: Type.OBJECT,
-                properties: {
-                  targetStem: { type: Type.STRING, description: "The exact name of the stem this step applies to (if stems were uploaded)." },
-                  issue: { type: Type.STRING },
-                  solution: { type: Type.STRING },
-                  recommendedChain: {
-                    type: Type.ARRAY,
-                    description: hasStems && uploadedStems && uploadedStems.length > 0 ? "CRITICAL: You MUST provide EXACTLY 4 plugins for this stem, with the 4th explicitly dedicated to volume leveling." : "Chain of 2-4 plugins.",
-                    items: {
-                      type: Type.OBJECT,
-                      properties: {
-                        name: { type: Type.STRING },
-                        purpose: { type: Type.STRING },
-                        deepDive: {
-                          type: Type.ARRAY,
-                          description: "Provide EVERY available parameter found on the actual plugin interface. Aim for 40-70 settings for complex modules. Do NOT be lazy; ensure every possible control is accounted for. MATCH THE EXTREME DETAIL LEVEL OF A FULL BEAT RECIPE.",
-                          items: {
-                            type: Type.OBJECT,
-                            properties: {
-                              parameter: { type: Type.STRING },
-                              value: { type: Type.STRING },
-                              explanation: { type: Type.STRING }
-                            },
-                            required: ["parameter", "value", "explanation"]
-                          }
-                        }
-                      },
-                      required: ["name", "purpose", "deepDive"]
-                    }
-                  }
-                },
-                required: hasStems && uploadedStems && uploadedStems.length > 0 ? ["targetStem", "issue", "solution", "recommendedChain"] : ["issue", "solution", "recommendedChain"]
-              }
-            }
-          },
-          required: ["title", "overallFeedback", "strengths", "weaknesses", "actionPlan"]
-        }
+        ]
       }
     });
   } catch (error) {
