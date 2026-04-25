@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { BeatRecipe, AppTheme, VSTPlugin, Hardware } from '../types';
 import { DrumPatternDisplay } from './DrumPatternDisplay';
 import Markdown from 'react-markdown';
-import { regeneratePlugin } from '../services/geminiService';
+import { regeneratePlugin, regenerateTrackingChain } from '../services/geminiService';
 
 // Dynamic import for react-dom/server
 const getRenderToStaticMarkup = () => import('react-dom/server').then(m => m.renderToStaticMarkup);
@@ -328,59 +328,35 @@ export const RecipeCard: React.FC<RecipeCardProps> = ({ recipe: initialRecipe, i
     setExpanded(!expanded);
   };
 
-  const [quadInsertSearch, setQuadInsertSearch] = useState('');
-  const [isSearchingUAD, setIsSearchingUAD] = useState(false);
+  const [trackingVibeSearch, setTrackingVibeSearch] = useState('');
+  const [isRegeneratingTrackingChain, setIsRegeneratingTrackingChain] = useState(false);
 
-  const uadPlugins = plugins.filter(p => 
-    (p.vendor.toLowerCase().includes('universal audio') || p.name.toLowerCase().includes('uad')) && 
-    !p.name.toLowerCase().includes('native') && 
-    !p.name.toLowerCase().includes('uadx')
-  );
-
-  const filteredUADPlugins = uadPlugins.filter(p => 
-    p.name.toLowerCase().includes(quadInsertSearch.toLowerCase()) || 
-    p.vendor.toLowerCase().includes(quadInsertSearch.toLowerCase())
-  );
-
-  const addUADInsert = (plugin: VSTPlugin) => {
-    if (recipe.gangstaVox?.trackingChain) {
-      const currentInserts = recipe.gangstaVox.trackingChain.inserts || [];
-      if (currentInserts.length >= 4) {
-        alert(t('max_inserts_reached') || 'Maximum of 4 inserts reached in UAD Console.');
-        return;
-      }
+  const handleRegenerateTrackingChainSubmit = async () => {
+    if (!trackingVibeSearch.trim()) return;
+    setIsRegeneratingTrackingChain(true);
+    try {
+      const result = await regenerateTrackingChain(
+        trackingVibeSearch,
+        plugins,
+        analogHardware,
+        i18n.language,
+        recipe.title
+      );
       
-      const isOceanWay = plugin.name.toLowerCase().includes('ocean way mic');
-      const defaultDeepDive = isOceanWay ? [
-        { parameter: 'Pattern', value: 'Cardioid' },
-        { parameter: 'Filter', value: 'Flat' },
-        { parameter: 'Axis', value: '0°' },
-        { parameter: 'Proximity', value: '4"' },
-        { parameter: 'Output', value: '-2 dB' }
-      ] : [
-        { parameter: 'Input', value: '0 dB' },
-        { parameter: 'Output', value: '0 dB' },
-        { parameter: 'Mix', value: '100%' }
-      ];
-
-      const newInsert = {
-        name: plugin.name,
-        purpose: isOceanWay ? 'Vocal Mic Modeling' : 'Creative processing',
-        deepDive: defaultDeepDive
-      };
-
       const updatedRecipe = {
         ...recipe,
         gangstaVox: {
           ...recipe.gangstaVox,
-          trackingChain: {
-            ...recipe.gangstaVox.trackingChain,
-            inserts: [...currentInserts, newInsert]
-          }
+          trackingChain: result.trackingChain
         }
       };
       setRecipe(updatedRecipe);
-      setQuadInsertSearch('');
+      setTrackingVibeSearch('');
+    } catch (err) {
+      console.error(err);
+      alert(t('error_regenerating_tracking_chain') || 'Failed to regenerate tracking chain. Please try again.');
+    } finally {
+      setIsRegeneratingTrackingChain(false);
     }
   };
 
@@ -896,36 +872,46 @@ export const RecipeCard: React.FC<RecipeCardProps> = ({ recipe: initialRecipe, i
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-8 pt-6 border-t border-sky-500/20">
-                  {recipe.gangstaVox.trackingChain.aux1 && (
+                  {recipe.gangstaVox.trackingChain.aux1 && recipe.gangstaVox.trackingChain.aux1.length > 0 && (
                     <div>
-                      <h5 className={`text-[10px] font-black uppercase tracking-widest mb-4 ${theme === 'coldest' ? 'text-sky-400' : 'opacity-30'}`}>AUX 1 (Reverb/Comfort)</h5>
-                      <PluginBubble 
-                        name={recipe.gangstaVox.trackingChain.aux1.name}
-                        purpose={recipe.gangstaVox.trackingChain.aux1.purpose}
-                        deepDive={recipe.gangstaVox.trackingChain.aux1.deepDive}
-                        isRegenerating={regeneratingPluginId === 'tracking-aux1-0-0'}
-                        onRegenerate={() => handleRegenerate(recipe.gangstaVox!.trackingChain!.aux1, 0, 0, 'vocal-track-fx')} 
-                        onCorrect={onCorrectPlugin}
-                        onContactSupport={onContactSupport}
-                        theme={theme}
-                        className={theme === 'coldest' ? 'bg-sky-900/40 border-sky-500/40 shadow-md' : 'bg-white/5 border-white/10'}
-                      />
+                      <h5 className={`text-[10px] font-black uppercase tracking-widest mb-4 ${theme === 'coldest' ? 'text-sky-400' : 'opacity-30'}`}>AUX 1 (Reverb/Comfort/Parallel)</h5>
+                      <div className="flex flex-col gap-3">
+                        {recipe.gangstaVox.trackingChain.aux1.map((dive, dIdx) => (
+                          <PluginBubble 
+                            key={dIdx}
+                            name={dive.name}
+                            purpose={dive.purpose}
+                            deepDive={dive.deepDive}
+                            isRegenerating={regeneratingPluginId === `tracking-aux1-0-${dIdx}`}
+                            onRegenerate={() => handleRegenerate(dive, 0, dIdx, 'vocal-track-fx')} 
+                            onCorrect={onCorrectPlugin}
+                            onContactSupport={onContactSupport}
+                            theme={theme}
+                            className={theme === 'coldest' ? 'bg-sky-900/40 border-sky-500/40 shadow-md' : 'bg-white/5 border-white/10'}
+                          />
+                        ))}
+                      </div>
                     </div>
                   )}
-                  {recipe.gangstaVox.trackingChain.aux2 && (
+                  {recipe.gangstaVox.trackingChain.aux2 && recipe.gangstaVox.trackingChain.aux2.length > 0 && (
                     <div>
                       <h5 className={`text-[10px] font-black uppercase tracking-widest mb-4 ${theme === 'coldest' ? 'text-sky-400' : 'opacity-30'}`}>AUX 2 (Delay/FX)</h5>
-                      <PluginBubble 
-                        name={recipe.gangstaVox.trackingChain.aux2.name}
-                        purpose={recipe.gangstaVox.trackingChain.aux2.purpose}
-                        deepDive={recipe.gangstaVox.trackingChain.aux2.deepDive}
-                        isRegenerating={regeneratingPluginId === 'tracking-aux2-0-0'}
-                        onRegenerate={() => handleRegenerate(recipe.gangstaVox!.trackingChain!.aux2, 0, 0, 'vocal-track-fx')}
-                        onCorrect={onCorrectPlugin}
-                        onContactSupport={onContactSupport}
-                        theme={theme}
-                        className={theme === 'coldest' ? 'bg-sky-900/40 border-sky-500/40 shadow-md' : 'bg-white/5 border-white/10'}
-                      />
+                      <div className="flex flex-col gap-3">
+                        {recipe.gangstaVox.trackingChain.aux2.map((dive, dIdx) => (
+                          <PluginBubble 
+                            key={dIdx}
+                            name={dive.name}
+                            purpose={dive.purpose}
+                            deepDive={dive.deepDive}
+                            isRegenerating={regeneratingPluginId === `tracking-aux2-0-${dIdx}`}
+                            onRegenerate={() => handleRegenerate(dive, 0, dIdx, 'vocal-track-fx')}
+                            onCorrect={onCorrectPlugin}
+                            onContactSupport={onContactSupport}
+                            theme={theme}
+                            className={theme === 'coldest' ? 'bg-sky-900/40 border-sky-500/40 shadow-md' : 'bg-white/5 border-white/10'}
+                          />
+                        ))}
+                      </div>
                     </div>
                   )}
                 </div>
@@ -941,46 +927,39 @@ export const RecipeCard: React.FC<RecipeCardProps> = ({ recipe: initialRecipe, i
 
                 <div className="mt-8 pt-6 border-t border-sky-500/20">
                   <h5 className={`text-[10px] font-black uppercase tracking-widest mb-4 ${theme === 'coldest' ? 'text-sky-400' : 'opacity-30'}`}>
-                    Add UAD Console Inserts (DSP ONLY)
+                    Redefine Apollo Tracking Vibe
                   </h5>
                   <div className="relative">
                     <div className="flex gap-2">
                        <div className="relative flex-1">
                         <input
                           type="text"
-                          value={quadInsertSearch}
-                          onChange={(e) => setQuadInsertSearch(e.target.value)}
-                          placeholder="Search UAD-2 Plugins (Universal Audio)..."
+                          value={trackingVibeSearch}
+                          onChange={(e) => setTrackingVibeSearch(e.target.value)}
+                          onKeyDown={(e) => e.key === 'Enter' && handleRegenerateTrackingChainSubmit()}
+                          placeholder="e.g. Z-Ro vocals this time..."
                           className={`w-full px-4 py-3 rounded-xl font-bold text-xs outline-none transition-all ${
                             theme === 'coldest' ? 'bg-black/60 border border-sky-500/30 focus:border-sky-500 text-white' : 'bg-black/20 border border-white/10 text-white'
                           }`}
                         />
                         <Search className="absolute right-3 top-3 w-4 h-4 opacity-30" />
                       </div>
-                    </div>
-
-                    {quadInsertSearch && (
-                      <div className={`absolute z-20 w-full mt-2 max-h-60 overflow-y-auto rounded-2xl border shadow-2xl p-2 ${
-                        theme === 'coldest' ? 'bg-slate-900 border-sky-500/40' : 'bg-slate-800 border-white/20'
-                      }`}>
-                        {filteredUADPlugins.length > 0 ? (
-                          filteredUADPlugins.map((p, pIdx) => (
-                            <button
-                              key={pIdx}
-                              onClick={() => addUADInsert(p)}
-                              className={`w-full text-left p-3 rounded-xl text-xs font-bold transition-all flex justify-between items-center ${
-                                theme === 'coldest' ? 'hover:bg-sky-500/20 text-sky-100' : 'hover:bg-white/10 text-white'
-                              }`}
-                            >
-                              <span>{p.name}</span>
-                              <span className="opacity-40 text-[10px]">{p.vendor}</span>
-                            </button>
-                          ))
+                      <button
+                        onClick={handleRegenerateTrackingChainSubmit}
+                        disabled={isRegeneratingTrackingChain || !trackingVibeSearch.trim()}
+                        className={`px-6 py-3 rounded-xl font-black text-[10px] uppercase tracking-widest transition-all whitespace-nowrap min-w-[120px] flex items-center justify-center ${
+                          theme === 'coldest' 
+                            ? 'bg-sky-500 text-white hover:bg-sky-400 disabled:opacity-50' 
+                            : 'bg-white/10 text-white hover:bg-white/20 disabled:opacity-50'
+                        }`}
+                      >
+                        {isRegeneratingTrackingChain ? (
+                           <Loader2 className="w-4 h-4 animate-spin" />
                         ) : (
-                          <div className="p-4 text-xs font-bold opacity-40 text-center">No UAD-2 plugins found</div>
+                          'Regenerate Chain'
                         )}
-                      </div>
-                    )}
+                      </button>
+                    </div>
                   </div>
                 </div>
               </div>

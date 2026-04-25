@@ -2673,18 +2673,18 @@ export const getGangstaVoxRecipe = async (recipe: BeatRecipe, plugins: VSTPlugin
     ${hasApollo ? `
     CRITICAL: The user owns a Universal Audio Apollo interface (${apolloModel}).
     You MUST include a 'trackingChain' specifically for this Apollo, mirroring the UAD Console workflow.
-    ${hasTownsend ? 'The user is using the TOWNSEND LABS / UA SPHERE L22 (or DLX/LX) microphone. You MUST explain that this requires a STEREO LINKED input pair (e.g., Mic 1-2) in UAD Console to process the front and rear capsules.' : ''}
-    ${hasOceanWayMic ? 'The user specifically wants to use the UAD OCEAN WAY MIC COLLECTION. You MUST include this as the first insert after the Unison preamp. For Ocean Way Mic Collection, you MUST provide these specific parameters: Pattern, Filter, Axis, Proximity, and Output.' : ''}
+    ${hasTownsend ? 'The user is using the TOWNSEND LABS / UA SPHERE L22 (or DLX/LX) microphone. You MUST explain that this requires a STEREO LINKED input pair (e.g., Mic 1-2) in UAD Console to process the double capsules. You MUST assign the "Ocean Way Mic Collection" (or Sphere Mic) to the FIRST insert slot on this stereo channel.' : ''}
+    ${hasOceanWayMic ? 'The user specifically wants to use the UAD OCEAN WAY MIC COLLECTION. You MUST include this as the first insert. For Ocean Way Mic Collection, you MUST provide these specific parameters: Pattern, Filter, Axis, Proximity, and Output.' : ''}
     
     The tracking chain response MUST include:
     1. UNISON SLOT: 1 Preamp/Channel Strip. Explain the physical impedance matching.
-    2. INSERTS: Up to 4 UAD-2 plugins (DSP). Focus on dynamics and EQ.
-    3. AUX 1: Typically for comfort reverb (e.g., Pure Plate, Lexicon 224).
-    4. AUX 2: Typically for comfort delay or parallel processing.
+    2. INSERTS (Stereo Mic Channel): Up to 4 UAD-2 DSP plugins. If L22/Ocean Way applies, that is insert 1. Add up to 3 more plugins to glue/shape the vocal.
+    3. AUX 1: Array of up to 4 UAD-2 plugins. Explain if this is for monitoring only (sent to headphones) or if it's being printed.
+    4. AUX 2: Array of up to 4 UAD-2 plugins. Provide specific routing on how to record this Aux as a separate track in your DAW (like Studio One) alongside the main vocal track.
     
-    - For EVERY plugin in the tracking chain, you MUST provide exhaustive 'deepDive' parameters (only those found on the actual hardware emulations).
-    - Provide 'dawRoutingInstructions' explaining which Virtual I/O or physical outputs to select in the DAW to record the processed vs dry signals.
-    - Provide a 'dspUsageNote' explaining how to set this up in UAD Console to achieve zero-latency monitoring.
+    - For EVERY plugin in the tracking chain, you MUST provide exhaustive 'deepDive' parameters (only those found on the actual hardware emulations. aim for 15-40 settings per plugin).
+    - Provide 'dawRoutingInstructions' explaining which Virtual I/O or physical outputs to select in your DAW to record the processed, dry, and Aux signals properly. Explain the 'UAD REC' vs 'UAD MON' switch logic. Explain the commitment of printing vs monitoring, knowing that the Townsend L22 is unique.
+    - Provide a 'dspUsageNote' explaining how to manage DSP in Console with all these plugins.
     ` : ''}
 
     For the main vocal mix (after tracking in UAD Console), assume the user is back in their DAW editing those recorded vocals. You MUST expand the plugin list to include non-UAD plugins (like UADx, Waves, FabFilter, etc.) that are available in the user's list, as native plugins can now be used. Provide:
@@ -2766,22 +2766,28 @@ export const getGangstaVoxRecipe = async (recipe: BeatRecipe, plugins: VSTPlugin
                   }
                 },
                 aux1: {
-                  type: Type.OBJECT,
-                  properties: {
-                    name: { type: Type.STRING },
-                    purpose: { type: Type.STRING },
-                    deepDive: { type: Type.ARRAY, items: { type: Type.OBJECT, properties: { parameter: { type: Type.STRING }, value: { type: Type.STRING } }, required: ["parameter", "value"] } }
-                  },
-                  required: ["name", "purpose", "deepDive"]
+                  type: Type.ARRAY,
+                  items: {
+                    type: Type.OBJECT,
+                    properties: {
+                      name: { type: Type.STRING },
+                      purpose: { type: Type.STRING },
+                      deepDive: { type: Type.ARRAY, items: { type: Type.OBJECT, properties: { parameter: { type: Type.STRING }, value: { type: Type.STRING } }, required: ["parameter", "value"] } }
+                    },
+                    required: ["name", "purpose", "deepDive"]
+                  }
                 },
                 aux2: {
-                  type: Type.OBJECT,
-                  properties: {
-                    name: { type: Type.STRING },
-                    purpose: { type: Type.STRING },
-                    deepDive: { type: Type.ARRAY, items: { type: Type.OBJECT, properties: { parameter: { type: Type.STRING }, value: { type: Type.STRING } }, required: ["parameter", "value"] } }
-                  },
-                  required: ["name", "purpose", "deepDive"]
+                  type: Type.ARRAY,
+                  items: {
+                    type: Type.OBJECT,
+                    properties: {
+                      name: { type: Type.STRING },
+                      purpose: { type: Type.STRING },
+                      deepDive: { type: Type.ARRAY, items: { type: Type.OBJECT, properties: { parameter: { type: Type.STRING }, value: { type: Type.STRING } }, required: ["parameter", "value"] } }
+                    },
+                    required: ["name", "purpose", "deepDive"]
+                  }
                 },
                 dawRoutingInstructions: { type: Type.STRING },
                 dspUsageNote: { type: Type.STRING }
@@ -2970,5 +2976,100 @@ export const replicateRecipeWithUserGear = async (recipe: SavedRecipe, myPlugins
   } catch (err) {
     console.error("Error in replicateRecipeWithUserGear:", err);
     throw err;
+  }
+};
+
+export const regenerateTrackingChain = async (
+  vibeSearch: string,
+  plugins: VSTPlugin[],
+  analogHardware: Hardware[],
+  language: string,
+  songSearch: string = ''
+) => {
+  try {
+    const ai = getAI();
+    const pluginListStr = plugins.map(p => `${p.vendor} - ${p.name} (${p.type})`).join('\n');
+    
+    const hasApollo = analogHardware.some(h => h.name.toLowerCase().includes('apollo'));
+    const apolloModel = analogHardware.find(h => h.name.toLowerCase().includes('apollo'))?.name || 'Apollo';
+    const hasTownsend = analogHardware.some(h => 
+      h.name.toLowerCase().includes('townsend') || 
+      h.name.toLowerCase().includes('sphere l22') ||
+      h.name.toLowerCase().includes('sphere dlx') ||
+      h.name.toLowerCase().includes('sphere lx')
+    ) || vibeSearch.toLowerCase().includes('l22') || vibeSearch.toLowerCase().includes('townsend') || vibeSearch.toLowerCase().includes('sphere');
+  
+    const hasOceanWayMic = plugins.some(p => p.name.toLowerCase().includes('ocean way mic')) || vibeSearch.toLowerCase().includes('ocean way mic');
+
+    const prompt = `
+      You are an expert audio engineer running UAD Console. 
+      The user has requested a completely new tracking chain for their Apollo, based on this new vibe/artist request: "${vibeSearch}"
+      ${songSearch ? `(Context: They are tracking to a beat similar to: ${songSearch})` : ''}
+
+      ${getLanguageInstruction(language)}
+      Only recommend plugins from this list (focus heavily on UAD DSP plugins for tracking):
+      ${pluginListStr}
+
+      CRITICAL CONSTRAINTS:
+      The user owns a Universal Audio Apollo interface (${apolloModel}).
+      ${hasTownsend ? 'The user is using the TOWNSEND LABS / UA SPHERE L22 (or DLX/LX) microphone. This requires a STEREO LINKED input pair in UAD Console. You MUST assign the "Ocean Way Mic Collection" (or Sphere Mic) to the FIRST insert slot on this stereo channel.' : ''}
+      ${hasOceanWayMic ? 'The user specifically wants to use the UAD OCEAN WAY MIC COLLECTION. Include this as the first insert and provide exact settings: Pattern, Filter, Axis, Proximity, and Output.' : ''}
+
+      Return a JSON object for the completely rebuilt 'trackingChain' following this exact structure:
+      1. UNISON SLOT: 1 Preamp/Channel Strip. Explain impedance matching.
+      2. INSERTS (Stereo Mic Channel): Up to 4 UAD-2 DSP plugins. If L22/Ocean Way applies, that is insert 1. Add up to 3 more.
+      3. AUX 1: Array of up to 4 UAD-2 plugins. Focus on monitoring FX or parallel chains.
+      4. AUX 2: Array of up to 4 UAD-2 plugins. Provide specific DAW routing to record this aux as a separate track.
+      
+      - For EVERY plugin, provide exhaustive 'deepDive' parameters (15-40 settings). DO NOT BE LAZY.
+      - Provide 'dawRoutingInstructions' explaining Virtual I/O, physical outputs, UAD REC vs UAD MON switch, and printing choices vs monitoring choices.
+      - Provide a 'dspUsageNote'.
+    `;
+
+    const schema = {
+      type: Type.OBJECT,
+      properties: {
+        trackingChain: {
+          type: Type.OBJECT,
+          properties: {
+            unisonPlugin: {
+              type: Type.OBJECT,
+              properties: { name: { type: Type.STRING }, purpose: { type: Type.STRING }, deepDive: { type: Type.ARRAY, items: { type: Type.OBJECT, properties: { parameter: { type: Type.STRING }, value: { type: Type.STRING } }, required: ["parameter", "value"] } } },
+              required: ["name", "purpose", "deepDive"]
+            },
+            inserts: {
+              type: Type.ARRAY,
+              items: { type: Type.OBJECT, properties: { name: { type: Type.STRING }, purpose: { type: Type.STRING }, deepDive: { type: Type.ARRAY, items: { type: Type.OBJECT, properties: { parameter: { type: Type.STRING }, value: { type: Type.STRING } }, required: ["parameter", "value"] } } }, required: ["name", "purpose", "deepDive"] }
+            },
+            aux1: {
+              type: Type.ARRAY,
+              items: { type: Type.OBJECT, properties: { name: { type: Type.STRING }, purpose: { type: Type.STRING }, deepDive: { type: Type.ARRAY, items: { type: Type.OBJECT, properties: { parameter: { type: Type.STRING }, value: { type: Type.STRING } }, required: ["parameter", "value"] } } }, required: ["name", "purpose", "deepDive"] }
+            },
+            aux2: {
+              type: Type.ARRAY,
+              items: { type: Type.OBJECT, properties: { name: { type: Type.STRING }, purpose: { type: Type.STRING }, deepDive: { type: Type.ARRAY, items: { type: Type.OBJECT, properties: { parameter: { type: Type.STRING }, value: { type: Type.STRING } }, required: ["parameter", "value"] } } }, required: ["name", "purpose", "deepDive"] }
+            },
+            dawRoutingInstructions: { type: Type.STRING },
+            dspUsageNote: { type: Type.STRING }
+          },
+          required: ["unisonPlugin", "inserts", "dawRoutingInstructions", "dspUsageNote"]
+        }
+      },
+      required: ["trackingChain"]
+    };
+
+    const result = await ai.models.generateContent({
+      model: "gemini-3-flash-preview",
+      contents: prompt,
+      config: {
+        responseMimeType: "application/json",
+        responseSchema: schema as unknown as any,
+      }
+    });
+
+    return JSON.parse(result.text()!);
+  } catch (error) {
+    console.error("Error regenerating tracking chain:", error);
+    throw error;
   }
 };
