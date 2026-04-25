@@ -925,6 +925,15 @@ export const RecipeCard: React.FC<RecipeCardProps> = ({ recipe: initialRecipe, i
                   </div>
                 )}
 
+                {recipe.gangstaVox.trackingChain.dspUsageNote && (
+                  <div className="mt-4 pt-4 border-t border-sky-500/10">
+                    <h5 className={`text-[10px] font-black uppercase tracking-widest mb-3 ${theme === 'coldest' ? 'text-sky-500/60' : 'opacity-30'}`}>DSP Usage Note</h5>
+                    <div className={`p-3 rounded-xl text-[10px] font-medium leading-relaxed ${theme === 'coldest' ? 'bg-sky-950/30 text-sky-300' : 'bg-black/20 text-white/50'}`}>
+                      {recipe.gangstaVox.trackingChain.dspUsageNote}
+                    </div>
+                  </div>
+                )}
+
                 <div className="mt-8 pt-6 border-t border-sky-500/20">
                   <h5 className={`text-[10px] font-black uppercase tracking-widest mb-4 ${theme === 'coldest' ? 'text-sky-400' : 'opacity-30'}`}>
                     Redefine Apollo Tracking Vibe

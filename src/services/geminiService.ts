@@ -858,9 +858,56 @@ const getUnifiedRecipeSchema = () => {
                   required: ["name", "purpose", "deepDive"]
                 }
               },
+              aux1: {
+                type: Type.ARRAY,
+                items: {
+                  type: Type.OBJECT,
+                  properties: {
+                    name: { type: Type.STRING },
+                    purpose: { type: Type.STRING },
+                    deepDive: {
+                      type: Type.ARRAY,
+                      items: {
+                        type: Type.OBJECT,
+                        properties: {
+                          parameter: { type: Type.STRING },
+                          value: { type: Type.STRING },
+                          explanation: { type: Type.STRING }
+                        },
+                        required: ["parameter", "value", "explanation"]
+                      }
+                    }
+                  },
+                  required: ["name", "purpose", "deepDive"]
+                }
+              },
+              aux2: {
+                type: Type.ARRAY,
+                items: {
+                  type: Type.OBJECT,
+                  properties: {
+                    name: { type: Type.STRING },
+                    purpose: { type: Type.STRING },
+                    deepDive: {
+                      type: Type.ARRAY,
+                      items: {
+                        type: Type.OBJECT,
+                        properties: {
+                          parameter: { type: Type.STRING },
+                          value: { type: Type.STRING },
+                          explanation: { type: Type.STRING }
+                        },
+                        required: ["parameter", "value", "explanation"]
+                      }
+                    }
+                  },
+                  required: ["name", "purpose", "deepDive"]
+                }
+              },
+              dawRoutingInstructions: { type: Type.STRING },
               dspUsageNote: { type: Type.STRING }
             },
-            required: ["inserts"]
+            required: ["inserts", "dawRoutingInstructions", "dspUsageNote"]
           },
           vocalTracks: {
             type: Type.ARRAY,
@@ -994,9 +1041,56 @@ const getUnifiedRecipeSchema = () => {
                   required: ["name", "purpose", "deepDive"]
                 }
               },
+              aux1: {
+                type: Type.ARRAY,
+                items: {
+                  type: Type.OBJECT,
+                  properties: {
+                    name: { type: Type.STRING },
+                    purpose: { type: Type.STRING },
+                    deepDive: {
+                      type: Type.ARRAY,
+                      items: {
+                        type: Type.OBJECT,
+                        properties: {
+                          parameter: { type: Type.STRING },
+                          value: { type: Type.STRING },
+                          explanation: { type: Type.STRING }
+                        },
+                        required: ["parameter", "value", "explanation"]
+                      }
+                    }
+                  },
+                  required: ["name", "purpose", "deepDive"]
+                }
+              },
+              aux2: {
+                type: Type.ARRAY,
+                items: {
+                  type: Type.OBJECT,
+                  properties: {
+                    name: { type: Type.STRING },
+                    purpose: { type: Type.STRING },
+                    deepDive: {
+                      type: Type.ARRAY,
+                      items: {
+                        type: Type.OBJECT,
+                        properties: {
+                          parameter: { type: Type.STRING },
+                          value: { type: Type.STRING },
+                          explanation: { type: Type.STRING }
+                        },
+                        required: ["parameter", "value", "explanation"]
+                      }
+                    }
+                  },
+                  required: ["name", "purpose", "deepDive"]
+                }
+              },
+              dawRoutingInstructions: { type: Type.STRING },
               dspUsageNote: { type: Type.STRING }
             },
-            required: ["inserts"]
+            required: ["inserts", "dawRoutingInstructions", "dspUsageNote"]
           },
           vocalTracks: {
             type: Type.ARRAY,
@@ -2225,6 +2319,11 @@ export const getAudioBeatRecommendations = async (plugins: VSTPlugin[], audioBas
       - velocity: (number between 0 and 127)
     
     If vocals are used in the beat (e.g., vocal chops, atmospheric textures), you MUST provide the 'vocalElements' object (same structure as gangstaVox) to describe them. This is the ONLY place vocal elements should be described. Ensure every plugin in the vocalElements chain has an EXHAUSTIVE list of all parameters (typically 25-50 settings).
+    ${hasApollo ? `
+    CRITICAL: For the vocalElements 'trackingChain', since the user owns a Universal Audio Apollo interface (${apolloModel}), you MUST include a 'trackingChain' specifically for this Apollo, mirroring the UAD Console workflow.
+    FOR THE UAD CONSOLE TRACKING CHAIN in 'vocalElements', YOU MUST STRICTLY ONLY USE THESE UAD-2 DSP PLUGINS:
+    ${uadPluginListStr}
+    ` : ''}
     
     You MUST provide the 'busses' array. Create busses (e.g., "Drum Bus", "Melody Bus") and list which instrument tracks are using them, along with the fxPlugins on the bus and their deep dives (EVERY available parameter per plugin, aim for 20-50+).
     
@@ -3109,7 +3208,7 @@ export const regenerateTrackingChain = async (
       }
     });
 
-    return JSON.parse(result.text()!);
+    return JSON.parse(result.text || '{}');
   } catch (error) {
     console.error("Error regenerating tracking chain:", error);
     throw error;

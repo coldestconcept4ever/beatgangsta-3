@@ -170,7 +170,7 @@ export const EQVisualizer: React.FC<EQVisualizerProps> = ({ parameters, theme })
            Zero Latency • 64-bit
         </div>
 
-        <svg width="100%" height="auto" viewBox={`0 0 ${width} ${height}`} preserveAspectRatio="xMidYMid meet" className="block w-full h-full">
+        <svg width="100%" height="100%" viewBox={`0 0 ${width} ${height}`} preserveAspectRatio="xMidYMid meet" className="block w-full h-full">
           <rect width={width} height={height} fill="transparent" />
           
           {/* Vertical dB Grid */}
