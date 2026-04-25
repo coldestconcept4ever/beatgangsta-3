@@ -96,6 +96,8 @@ export const COMMON_PLUGIN_MAPPING: Record<string, { type: string, description: 
   'portal': { type: 'Creative FX', description: 'Granular synthesis effect plugin for transforming audio.' },
   'melodyne': { type: 'Creative FX', description: 'Advanced pitch and time correction with polyphonic capabilities.' },
   'nectar': { type: 'Creative FX', description: 'Complete vocal processing suite with pitch, EQ, and dynamics.' },
+  'sphere': { type: 'Creative FX', description: 'Townsend Labs / UA Sphere microphone modeling system.' },
+  'ocean way mic': { type: 'Creative FX', description: 'Ocean Way Microphone Collection for the Sphere mic system.' },
   'avox': { type: 'Creative FX', description: 'Vocal processing suite for character and texture.' },
   'vocalign': { type: 'Creative FX', description: 'The industry standard for aligning vocal tracks.' },
   'effectrix': { type: 'Creative FX', description: 'Sequenced multi-effects for rhythmic manipulation.' },

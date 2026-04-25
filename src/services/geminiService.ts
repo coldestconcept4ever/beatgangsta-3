@@ -2641,13 +2641,21 @@ export const getSpecificMixHelp = async (plugins: VSTPlugin[], audioBase64: stri
   }
 };
 
-export const getGangstaVoxRecipe = async (recipe: BeatRecipe, plugins: VSTPlugin[], analogHardware: Hardware[], language: string = 'en'): Promise<any> => {
+export const getGangstaVoxRecipe = async (recipe: BeatRecipe, plugins: VSTPlugin[], analogHardware: Hardware[], language: string = 'en', vocalGoal?: string): Promise<any> => {
   // Use Gemini Pro for maximum accuracy on complex vocal chains and DSP logic
   const ai = getAI();
   const pluginListStr = plugins.map(p => `${p.vendor} - ${p.name} (${p.type})`).join('\n');
   
-  const hasApollo = analogHardware.some(h => h.name.toLowerCase().includes('apollo'));
-  const apolloModel = analogHardware.find(h => h.name.toLowerCase().includes('apollo'))?.name || '';
+  const hasApollo = analogHardware.some(h => h.name.toLowerCase().includes('apollo')) || (vocalGoal && (vocalGoal.toLowerCase().includes('apollo') || vocalGoal.toLowerCase().includes('console') || vocalGoal.toLowerCase().includes('uad')));
+  const apolloModel = analogHardware.find(h => h.name.toLowerCase().includes('apollo'))?.name || 'Apollo';
+  const hasTownsend = analogHardware.some(h => 
+    h.name.toLowerCase().includes('townsend') || 
+    h.name.toLowerCase().includes('sphere l22') ||
+    h.name.toLowerCase().includes('sphere dlx') ||
+    h.name.toLowerCase().includes('sphere lx')
+  ) || (vocalGoal && (vocalGoal.toLowerCase().includes('l22') || vocalGoal.toLowerCase().includes('townsend') || vocalGoal.toLowerCase().includes('sphere')));
+
+  const hasOceanWayMic = plugins.some(p => p.name.toLowerCase().includes('ocean way mic')) || (vocalGoal && vocalGoal.toLowerCase().includes('ocean way mic'));
 
   const prompt = `
     Analyze the following Beat Recipe:
@@ -2656,24 +2664,27 @@ export const getGangstaVoxRecipe = async (recipe: BeatRecipe, plugins: VSTPlugin
     BPM: ${recipe.bpm}
     Description: ${recipe.description}
 
-    Provide a matching "GangstaVox" Vocal FX Chain Recipe that perfectly complements this beat.
+    ${vocalGoal ? `TARGET VOCAL SOUND GOAL / VIBE: ${vocalGoal}` : 'Provide a matching "GangstaVox" Vocal FX Chain Recipe that perfectly complements this beat.'}
+    
     ${getLanguageInstruction(language)}
     Only use plugins from this list:
     ${pluginListStr}
 
     ${hasApollo ? `
     CRITICAL: The user owns a Universal Audio Apollo interface (${apolloModel}).
-    You MUST include a 'trackingChain' specifically for this Apollo.
-    - The tracking chain can have a MAXIMUM of 4 UAD plugins.
-    - The FIRST plugin MUST be a Unison-enabled preamp/channel strip (e.g., Neve 1073, API Vision, Manley Voxbox, Avalon VT-737, SSL E Series, UA 610-B, Century Tube Channel Strip).
+    You MUST include a 'trackingChain' specifically for this Apollo, mirroring the UAD Console workflow.
+    ${hasTownsend ? 'The user is using the TOWNSEND LABS / UA SPHERE L22 (or DLX/LX) microphone. You MUST include the Townsend/Sphere plugin in the tracking chain.' : ''}
+    ${hasOceanWayMic ? 'The user specifically wants to use the UAD OCEAN WAY MIC COLLECTION. You MUST include this as the first insert after the Unison preamp.' : ''}
+    - The tracking chain consists of 1 UNISON slot and up to 4 INSERT slots.
+    - The UNISON plugin MUST be a preamp/channel strip (e.g., Neve 1073, API Vision, Manley Voxbox, Avalon VT-737, UA 610-B). Explain the impedance benefits.
+    - If the user has Ocean Way Mic Collection or Sphere Mic Modeling plugins, prioritize placing them in the first INSERT slot for the L22 workflow.
     - Consider the DSP limits of the specific Apollo model:
-      - Apollo Solo / Arrow (1 DSP Core): Very limited. Use max 1-2 lightweight UAD plugins (e.g., UA 610-B + LA-2A Legacy).
+      - Apollo Solo / Arrow (1 DSP Core): Very limited. Use max 1-2 lightweight UAD plugins.
       - Apollo Twin Duo (2 DSP Cores): Moderate. Can handle a Unison pre + 1-2 compressors/EQs.
-      - Apollo Twin Quad / x4 (4 DSP Cores): Good. Can handle a full 4-plugin chain (e.g., Neve 1073 + 1176 + LA-2A + Pultec).
-      - Apollo x6 / x8 / x8p / x16 (6+ DSP Cores): High. Can handle any 4-plugin chain easily.
-    - CRITICAL UAD CONSOLE CONSTRAINT: For the 'trackingChain', you MUST ONLY use UAD plugin versions, because UADx or other native plugins CANNOT run in the UAD Console for zero-latency tracking. ONLY use UAD plugins running on the Apollo hardware.
-    - CRITICAL DSP LOGIC: Do NOT say that native plugins cause heavy DSP usage on the Apollo. They use the computer's CPU.
-    - Provide a 'dspUsageNote' explaining the DSP management for this specific Apollo model, ensuring you correctly distinguish between DSP (Apollo) and CPU (Native).
+      - Apollo Twin Quad / x4 (4 DSP Cores): Good. Can handle a full 5-plugin chain (Unison + 4 inserts).
+      - Apollo x6 / x8 / x8p / x16 (6+ DSP Cores): High. Can handle any 5-plugin chain easily.
+    - CRITICAL UAD CONSOLE CONSTRAINT: For the 'trackingChain', you MUST ONLY use UAD-2 (DSP) plugin versions, because native plugins (UADx) CANNOT run in the UAD Console for zero-latency tracking.
+    - Provide a 'dspUsageNote' explaining how to set this up in UAD Console to achieve zero-latency monitoring while recording with the Sphere L22.
     ` : ''}
 
     For the main vocal mix (after tracking in UAD Console), assume the user is back in their DAW editing those recorded vocals. You MUST expand the plugin list to include non-UAD plugins (like UADx, Waves, FabFilter, etc.) that are available in the user's list, as native plugins can now be used. Provide:
@@ -2731,7 +2742,7 @@ export const getGangstaVoxRecipe = async (recipe: BeatRecipe, plugins: VSTPlugin
                   },
                   required: ["name", "purpose", "settings"]
                 },
-                plugins: {
+                inserts: {
                   type: Type.ARRAY,
                   items: {
                     type: Type.OBJECT,
@@ -2756,7 +2767,7 @@ export const getGangstaVoxRecipe = async (recipe: BeatRecipe, plugins: VSTPlugin
                 },
                 dspUsageNote: { type: Type.STRING }
               },
-              required: ["plugins", "dspUsageNote"]
+              required: ["unisonPlugin", "inserts"]
             },
             vocalLayers: {
               type: Type.ARRAY,

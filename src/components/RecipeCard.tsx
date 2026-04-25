@@ -139,13 +139,14 @@ export const RecipeCard: React.FC<RecipeCardProps> = ({ recipe: initialRecipe, i
   const [isDownloadingAll, setIsDownloadingAll] = useState(false);
   const exportRef = useRef<HTMLDivElement>(null);
 
+  const [vocalVibeGoal, setVocalVibeGoal] = useState('');
   const [isGeneratingGangstaVox, setIsGeneratingGangstaVox] = useState(false);
 
   const toggleGangstaVox = async () => {
     if (!showGangstaVox && !recipe.gangstaVox) {
       setIsGeneratingGangstaVox(true);
       try {
-        const gangstaVoxData = await getGangstaVoxRecipe(recipe, plugins, analogHardware, i18n.language);
+        const gangstaVoxData = await getGangstaVoxRecipe(recipe, plugins, analogHardware, i18n.language, vocalVibeGoal);
         if (onLogReceipt) onLogReceipt('GangstaVox Guide', 2);
         const updatedRecipe = { ...recipe, gangstaVox: gangstaVoxData, isGangstaVox: true };
         setRecipe(updatedRecipe);
@@ -727,11 +728,26 @@ export const RecipeCard: React.FC<RecipeCardProps> = ({ recipe: initialRecipe, i
         {expanded ? t('hide_arrangement_advice') : t('show_arrangement_advice')}
       </button>
 
+      {!recipe.gangstaVox && (
+        <div className="mt-8 pt-4 border-t border-purple-500/20">
+          <label className="block text-[10px] font-black uppercase tracking-widest text-purple-400 mb-2">Vocal Vibe / Goal (Optional)</label>
+          <input 
+            type="text" 
+            value={vocalVibeGoal}
+            onChange={(e) => setVocalVibeGoal(e.target.value)}
+            placeholder="e.g. Modern rap with aggressive autotune, warm vintage soul, airy pop..."
+            className={`w-full p-4 rounded-2xl text-xs font-bold outline-none border transition-all ${
+              theme === 'coldest' ? 'bg-black/60 border-purple-500/30 text-white focus:border-purple-500' : 'bg-white border-purple-200 text-purple-950 focus:border-purple-500'
+            }`}
+          />
+        </div>
+      )}
+
       <button 
         onClick={toggleGangstaVox}
         disabled={isGeneratingGangstaVox}
         className={`w-full mt-4 py-4 rounded-2xl font-black text-xs uppercase tracking-widest transition-all flex items-center justify-center gap-2 ${
-          theme === 'coldest' ? 'bg-purple-100 hover:bg-purple-200 border border-purple-300 text-purple-900' : 'bg-purple-900/30 hover:bg-purple-900/50 border border-purple-500/30 text-purple-100'
+          theme === 'coldest' ? 'bg-purple-100 hover:bg-purple-200 border border-purple-300 text-purple-900 shadow-[0_0_20px_rgba(168,85,247,0.2)]' : 'bg-purple-900/30 hover:bg-purple-900/50 border border-purple-500/30 text-purple-100'
         } ${isGeneratingGangstaVox ? 'opacity-50 cursor-not-allowed' : ''}`}
       >
         {isGeneratingGangstaVox ? (
@@ -780,12 +796,12 @@ export const RecipeCard: React.FC<RecipeCardProps> = ({ recipe: initialRecipe, i
         >
           <h3 className="text-xl font-black mb-6 uppercase tracking-widest text-purple-500">{t('gangstavox_guide')}</h3>
           
-          {recipe.gangstaVox.trackingChain && analogHardware.some(h => h.name.toLowerCase().includes('apollo')) && (
+          {recipe.gangstaVox.trackingChain && (
             <div className="mb-8">
               <h4 className={`text-sm font-black uppercase tracking-widest mb-4 ${theme === 'coldest' ? 'text-sky-400' : 'opacity-40'}`}>{t('apollo_tracking_chain')}</h4>
               <div className={`p-6 rounded-3xl border ${theme === 'coldest' ? 'bg-black/40 border-sky-500/20' : 'bg-black/20 border-white/5'}`}>
                 {recipe.gangstaVox.trackingChain.dspUsageNote && (
-                  <p className="text-xs font-black opacity-100 mb-4 text-orange-500">{recipe.gangstaVox.trackingChain.dspUsageNote}</p>
+                  <p className="text-xs font-bold opacity-100 mb-4 text-orange-500 whitespace-pre-wrap">{recipe.gangstaVox.trackingChain.dspUsageNote}</p>
                 )}
                 {recipe.gangstaVox.trackingChain.unisonPlugin && (
                   <div className="mb-6">
