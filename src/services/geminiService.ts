@@ -907,7 +907,7 @@ const getUnifiedRecipeSchema = () => {
               dawRoutingInstructions: { type: Type.STRING },
               dspUsageNote: { type: Type.STRING }
             },
-            required: ["inserts", "dawRoutingInstructions", "dspUsageNote"]
+            required: ["inserts"]
           },
           vocalTracks: {
             type: Type.ARRAY,
@@ -1090,7 +1090,7 @@ const getUnifiedRecipeSchema = () => {
               dawRoutingInstructions: { type: Type.STRING },
               dspUsageNote: { type: Type.STRING }
             },
-            required: ["inserts", "dawRoutingInstructions", "dspUsageNote"]
+            required: ["inserts"]
           },
           vocalTracks: {
             type: Type.ARRAY,
@@ -1681,8 +1681,8 @@ export const getBeatRecommendations = async (plugins: VSTPlugin[], analogInstrum
   const dawStr = dawType ? `\nThe user is using ${dawType} as their DAW. Include specific instructions or tips for ${dawType} where relevant in the guides or recipes.` : '';
   const starredStr = starredPlugins.length > 0 ? `\nCRITICAL: The user has STARRED (favorited) the following plugins. You MUST prioritize using these plugins in your recipes whenever possible:\n${starredPlugins.join(', ')}` : '';
   
-  const hasSphereMic = analogHardware.some(h => ['Sphere DLX', 'Sphere LX', 'L22'].includes(h.name));
-  const sphereMicStr = hasSphereMic ? `\nCRITICAL: The user owns a Universal Audio Sphere (DLX/LX) or Townsend Labs L22 microphone. If the recipe involves vocals or acoustic instruments, you MUST recommend using the 'UAD Sphere Mic Collection', 'Ocean Way Mic Collection', or 'Bill Putnam Mic Collection' plugins. For these plugins, specify the EXACT 'Mic Model' (e.g., LD-47K, LD-67, OW-47, BP-251E) and other relevant parameters (Pattern, Filter, Proximity, Axis) to achieve the desired sound character.` : '';
+  const hasSphereMic = analogHardware.some(h => ['Sphere DLX', 'Sphere LX', 'L22'].includes(h.name) || h.name.toLowerCase() === 'l22' || h.name.toLowerCase().includes('townsend'));
+  const sphereMicStr = hasSphereMic ? `\nCRITICAL: The user owns a Universal Audio Sphere (DLX/LX) or Townsend Labs L22 microphone. If the recipe involves a vocal tracking chain, you MUST assign the 'UAD Sphere Mic Collection', 'Ocean Way Mic Collection', or 'Bill Putnam Mic Collection' plugin as the VERY FIRST insert plugin on the vocal channel tracking chain. You MUST specifically select a mic model inside it based on the vibe searched. After the mic collection plugin, you can add up to 3 more plugins.` : '';
 
   const languageInstruction = getLanguageInstruction(language);
 
@@ -2783,7 +2783,8 @@ export const getGangstaVoxRecipe = async (recipe: BeatRecipe, plugins: VSTPlugin
     h.name.toLowerCase().includes('townsend') || 
     h.name.toLowerCase().includes('sphere l22') ||
     h.name.toLowerCase().includes('sphere dlx') ||
-    h.name.toLowerCase().includes('sphere lx')
+    h.name.toLowerCase().includes('sphere lx') ||
+    h.name.toLowerCase() === 'l22'
   ) || (vocalGoal && (vocalGoal.toLowerCase().includes('l22') || vocalGoal.toLowerCase().includes('townsend') || vocalGoal.toLowerCase().includes('sphere')));
 
   const hasOceanWayMic = plugins.some(p => p.name.toLowerCase().includes('ocean way mic')) || (vocalGoal && vocalGoal.toLowerCase().includes('ocean way mic'));
@@ -2807,7 +2808,7 @@ export const getGangstaVoxRecipe = async (recipe: BeatRecipe, plugins: VSTPlugin
     
     FOR THE UAD CONSOLE TRACKING CHAIN, YOU MUST STRICTLY ONLY USE THESE UAD-2 DSP PLUGINS:
     ${uadPluginListStr}
-    ${hasTownsend ? 'The user is using the TOWNSEND LABS / UA SPHERE L22 (or DLX/LX) microphone. You MUST explain that this requires a STEREO LINKED input pair (e.g., Mic 1-2) in UAD Console to process the double capsules. You MUST assign the "Ocean Way Mic Collection" (or Sphere Mic) to the FIRST insert slot on this stereo channel.' : ''}
+    ${hasTownsend ? 'CRITICAL: The user is using the TOWNSEND LABS / UA SPHERE L22 (or DLX/LX) microphone. You MUST explain that this requires a STEREO LINKED input pair (e.g., Mic 1-2) in UAD Console to process the double capsules. YOU MUST ABSOLUTELY ASSIGN one of the following plugins ("Ocean Way Mic Collection", "Bill Putnam Mic Collection", or "Sphere Mic Collection") to the FIRST insert slot on this stereo channel. After the mic collection plugin, you can add up to 3 more plugins to the mic channel. YOU MUST ALWAYS USE THE MIC PLUGIN as the first insert, and specifically select a mic model inside it based on the vibe searched.' : ''}
     ${hasOceanWayMic ? 'The user specifically wants to use the UAD OCEAN WAY MIC COLLECTION. You MUST include this as the first insert. For Ocean Way Mic Collection, you MUST provide these specific parameters: Pattern, Filter, Axis, Proximity, and Output.' : ''}
     
     The tracking chain response MUST include:
@@ -2926,7 +2927,7 @@ export const getGangstaVoxRecipe = async (recipe: BeatRecipe, plugins: VSTPlugin
                 dawRoutingInstructions: { type: Type.STRING },
                 dspUsageNote: { type: Type.STRING }
               },
-              required: ["unisonPlugin", "inserts", "dawRoutingInstructions", "dspUsageNote"]
+              required: ["inserts"]
             },
             vocalLayers: {
               type: Type.ARRAY,
@@ -3137,7 +3138,8 @@ export const regenerateTrackingChain = async (
       h.name.toLowerCase().includes('townsend') || 
       h.name.toLowerCase().includes('sphere l22') ||
       h.name.toLowerCase().includes('sphere dlx') ||
-      h.name.toLowerCase().includes('sphere lx')
+      h.name.toLowerCase().includes('sphere lx') ||
+      h.name.toLowerCase() === 'l22'
     ) || vibeSearch.toLowerCase().includes('l22') || vibeSearch.toLowerCase().includes('townsend') || vibeSearch.toLowerCase().includes('sphere');
   
     const hasOceanWayMic = plugins.some(p => p.name.toLowerCase().includes('ocean way mic')) || vibeSearch.toLowerCase().includes('ocean way mic');
@@ -3153,7 +3155,7 @@ export const regenerateTrackingChain = async (
 
       CRITICAL CONSTRAINTS:
       The user owns a Universal Audio Apollo interface (${apolloModel}).
-      ${hasTownsend ? 'The user is using the TOWNSEND LABS / UA SPHERE L22 (or DLX/LX) microphone. This requires a STEREO LINKED input pair in UAD Console. You MUST assign the "Ocean Way Mic Collection" (or Sphere Mic) to the FIRST insert slot on this stereo channel.' : ''}
+      ${hasTownsend ? 'CRITICAL: The user is using the TOWNSEND LABS / UA SPHERE L22 (or DLX/LX) microphone. This requires a STEREO LINKED input pair in UAD Console. YOU MUST ABSOLUTELY ASSIGN one of the following plugins ("Ocean Way Mic Collection", "Bill Putnam Mic Collection", or "Sphere Mic Collection") to the FIRST insert slot on this stereo channel. After the mic collection plugin, you can add up to 3 more plugins to the mic channel. YOU MUST ALWAYS USE THE MIC PLUGIN as the first insert, and specifically select a mic model inside it based on the vibe searched.' : ''}
       ${hasOceanWayMic ? 'The user specifically wants to use the UAD OCEAN WAY MIC COLLECTION. Include this as the first insert and provide exact settings: Pattern, Filter, Axis, Proximity, and Output.' : ''}
 
       Return a JSON object for the completely rebuilt 'trackingChain' following this exact structure:
@@ -3193,7 +3195,7 @@ export const regenerateTrackingChain = async (
             dawRoutingInstructions: { type: Type.STRING },
             dspUsageNote: { type: Type.STRING }
           },
-          required: ["unisonPlugin", "inserts", "dawRoutingInstructions", "dspUsageNote"]
+          required: ["inserts"]
         }
       },
       required: ["trackingChain"]
