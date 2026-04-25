@@ -3766,7 +3766,66 @@ if (process.env.NODE_ENV !== 'production') {
         responseData = result;
       } else {
         // Log the request payload for debugging
-        console.log("Gemini Request Payload:", JSON.stringify({ model, contents, config, safetySettings }, null, 2));
+        // Use a less noisy log if payload is huge
+        const debugPayload = { model, contents, config, safetySettings };
+        console.log("Gemini Request Payload Models:", model);
+
+        // Before calling generateContent, we MUST ensure any uploaded files are in ACTIVE state.
+        // Wait up to 3 minutes for each file.
+        try {
+          const filesToPoll: string[] = [];
+          
+          let partsArr: any[] = [];
+          if (Array.isArray(contents)) {
+            for (const c of contents) {
+               if (c.parts && Array.isArray(c.parts)) {
+                 partsArr.push(...c.parts);
+               }
+            }
+          } else if (contents && contents.parts && Array.isArray(contents.parts)) {
+            partsArr = contents.parts;
+          }
+
+          for (const part of partsArr) {
+            if (part && part.fileData && part.fileData.fileUri) {
+              const match = part.fileData.fileUri.match(/files\/[a-zA-Z0-9_-]+/);
+              if (match) {
+                const fileName = match[0];
+                if (!filesToPoll.includes(fileName)) {
+                  filesToPoll.push(fileName);
+                }
+              }
+            }
+          }
+
+          if (filesToPoll.length > 0) {
+            console.log(`Need to check state for ${filesToPoll.length} file(s):`, filesToPoll);
+            for (const fileName of filesToPoll) {
+              console.log(`Polling state for ${fileName}...`);
+              let isReady = false;
+              for (let i = 0; i < 60; i++) {
+                try {
+                  const metadata = await genAI.files.get({ name: fileName });
+                  console.log(`File ${fileName} state is: ${metadata.state}`);
+                  if (metadata.state === 'ACTIVE') {
+                    isReady = true;
+                    break;
+                  } else if (metadata.state === 'FAILED') {
+                    throw new Error(`File processing failed for ${fileName}`);
+                  }
+                } catch (e: any) {
+                  console.warn(`Error checking file state for ${fileName}:`, e.message || e);
+                }
+                await new Promise(resolve => setTimeout(resolve, 3000));
+              }
+              if (!isReady) {
+                console.warn(`File ${fileName} did not become ACTIVE in time.`);
+              }
+            }
+          }
+        } catch (pollErr: any) {
+          console.error("Error during file state polling:", pollErr);
+        }
         
         const response = await genAI.models.generateContent({
           model: model || "gemini-3-flash-preview",

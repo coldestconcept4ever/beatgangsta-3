@@ -2231,7 +2231,7 @@ export const getAudioBeatRecommendations = async (plugins: VSTPlugin[], audioBas
   const hasApollo = analogHardware.some(h => h.name.toLowerCase().includes('apollo'));
   const apolloModel = analogHardware.find(h => h.name.toLowerCase().includes('apollo'))?.name || 'Apollo';
 
-  const prompt = isGangstaVox ? `
+  let prompt = isGangstaVox ? `
     Analyze the attached audio file and suggest 1 high-level, extremely detailed "Vocal FX Chain Recipe" that recreate the vocal production style, effects, and mixing techniques heard in the provided audio.
     Only use mixing plugins from this list (for DAW processing):
     ${pluginListStr}
@@ -2367,12 +2367,9 @@ export const getAudioBeatRecommendations = async (plugins: VSTPlugin[], audioBas
     }
     
     let finalMimeType = mimeType;
-    if (finalMimeType === 'audio/mp3') finalMimeType = 'audio/mpeg';
-    
     parts.push({ fileData: { fileUri: uri, mimeType: finalMimeType } });
   } else if (audioBase64) {
     let finalMimeType = mimeType;
-    if (finalMimeType === 'audio/mp3') finalMimeType = 'audio/mpeg';
     parts.push({ inlineData: { data: audioBase64, mimeType: finalMimeType } });
   } else {
     throw new Error("No audio file provided for analysis (Beat).");
@@ -2481,7 +2478,7 @@ export const getMixCritique = async (
 
   const languageInstruction = getLanguageInstruction(language);
 
-  const prompt = `
+  let prompt = `
     You are an expert audio engineer and producer. I am uploading an MP3 of a full song project that needs work.
     ${focusInstruction}
     ${contextStr}
@@ -2580,11 +2577,9 @@ export const getMixCritique = async (
            uri = 'https://generativelanguage.googleapis.com/v1beta/' + (uri.startsWith('files/') ? uri : 'files/' + uri);
         }
         let stemMimeType = stem.mimeType;
-        if (stemMimeType === 'audio/mp3') stemMimeType = 'audio/mpeg';
         parts.push({ fileData: { fileUri: uri, mimeType: stemMimeType } });
       } else if (stem.base64) {
         let stemMimeType = stem.mimeType;
-        if (stemMimeType === 'audio/mp3') stemMimeType = 'audio/mpeg';
         parts.push({ inlineData: { data: stem.base64, mimeType: stemMimeType } });
       }
     }
@@ -2598,11 +2593,9 @@ export const getMixCritique = async (
          uri = 'https://generativelanguage.googleapis.com/v1beta/' + (uri.startsWith('files/') ? uri : 'files/' + uri);
       }
       let finalMimeType = mimeType;
-      if (finalMimeType === 'audio/mp3') finalMimeType = 'audio/mpeg';
       parts.push({ fileData: { fileUri: uri, mimeType: finalMimeType } });
     } else if (audioBase64) {
       let finalMimeType = mimeType;
-      if (finalMimeType === 'audio/mp3') finalMimeType = 'audio/mpeg';
       parts.push({ inlineData: { data: audioBase64, mimeType: finalMimeType } });
     } else {
       throw new Error("No audio file provided for analysis (Critique).");
