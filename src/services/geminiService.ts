@@ -907,7 +907,7 @@ const getUnifiedRecipeSchema = () => {
               dawRoutingInstructions: { type: Type.STRING },
               dspUsageNote: { type: Type.STRING }
             },
-            required: ["inserts"]
+            required: ["unisonPlugin", "inserts", "aux1", "aux2", "dawRoutingInstructions", "dspUsageNote"]
           },
           vocalTracks: {
             type: Type.ARRAY,
@@ -1090,7 +1090,7 @@ const getUnifiedRecipeSchema = () => {
               dawRoutingInstructions: { type: Type.STRING },
               dspUsageNote: { type: Type.STRING }
             },
-            required: ["inserts"]
+            required: ["unisonPlugin", "inserts", "aux1", "aux2", "dawRoutingInstructions", "dspUsageNote"]
           },
           vocalTracks: {
             type: Type.ARRAY,
@@ -2927,7 +2927,7 @@ export const getGangstaVoxRecipe = async (recipe: BeatRecipe, plugins: VSTPlugin
                 dawRoutingInstructions: { type: Type.STRING },
                 dspUsageNote: { type: Type.STRING }
               },
-              required: ["inserts"]
+              required: ["unisonPlugin", "inserts", "aux1", "aux2", "dawRoutingInstructions", "dspUsageNote"]
             },
             vocalLayers: {
               type: Type.ARRAY,
@@ -3195,7 +3195,7 @@ export const regenerateTrackingChain = async (
             dawRoutingInstructions: { type: Type.STRING },
             dspUsageNote: { type: Type.STRING }
           },
-          required: ["inserts"]
+          required: ["unisonPlugin", "inserts", "aux1", "aux2", "dawRoutingInstructions", "dspUsageNote"]
         }
       },
       required: ["trackingChain"]
