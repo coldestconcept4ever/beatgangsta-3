@@ -2241,6 +2241,8 @@ export const getAudioBeatRecommendations = async (plugins: VSTPlugin[], audioBas
 
   const hasApollo = analogHardware.some(h => h.name.toLowerCase().includes('apollo'));
   const apolloModel = analogHardware.find(h => h.name.toLowerCase().includes('apollo'))?.name || 'Apollo';
+  const hasTownsend = analogHardware.some(h => h.name.toLowerCase().includes('townsend') || h.name.toLowerCase().includes('sphere'));
+  const hasOceanWayMic = plugins?.some(p => p.name.toLowerCase().includes('ocean way mic')) || false;
 
   let prompt = isGangstaVox ? `
     Analyze the attached audio file and suggest 1 high-level, extremely detailed "Vocal FX Chain Recipe" that recreate the vocal production style, effects, and mixing techniques heard in the provided audio.
@@ -2267,12 +2269,19 @@ export const getAudioBeatRecommendations = async (plugins: VSTPlugin[], audioBas
     CRITICAL: The user owns a Universal Audio Apollo interface (${apolloModel}).
     You MUST include a 'trackingChain' specifically for this Apollo, mirroring the UAD Console workflow.
     
+    MANDATORY UAD CONSOLE TRACKING CHAIN REQUIREMENTS:
+    1. UNISON SLOT: A Unison plugin (e.g., Neve, API, Manley, SSL) is MANDATORY.
+    2. INSERTS: You MUST provide EXACTLY 4 plugins in the inserts array. The 4 slots MUST BE FILLED.
+       ${hasTownsend || hasOceanWayMic ? "The FIRST insert (Plugin 1 of 4) MUST ALWAYS be 'Ocean Way Mic Collection' (or 'Sphere Mic Collection' / 'Bill Putnam Mic Collection' if applicable)." : "The FIRST insert SHOULD ALWAYS be 'Ocean Way Mic Collection' (or similar mic emulation if they have it)."}
+    3. AUX CHANNELS: Both 'aux1' and 'aux2' are MANDATORY. You MUST provide UAD plugins in both to track with 2 aux fx channels.
+    4. ACCURACY: DO NOT BE LAZY. You MUST provide EVERY SINGLE available setting found on the actual plugin GUI for each UAD plugin (aim for 30-50+ exact parameter settings per plugin, capture every knob, switch, and fader).
+
     FOR THE UAD CONSOLE TRACKING CHAIN, YOU MUST STRICTLY ONLY USE THESE UAD-2 DSP PLUGINS:
     ${uadPluginListStr}
     ` : ''}
 
-    - trackingChain: Include the unisonPlugin (if applicable), inserts (up to 4), aux1 (up to 4), and aux2 (up to 4).
-    - Provide a deep dive for each tracking plugin (EXHAUSTIVE list of all parameters, typically 25-50 settings).
+    - trackingChain: Include the unisonPlugin, EXACTLY 4 inserts, aux1, and aux2.
+    - Provide a deep dive for each tracking plugin (EXHAUSTIVE list of EVERY parameter, typically 30-50+ settings. DO NOT BE LAZY).
     - Provide dawRoutingInstructions and dspUsageNote for the tracking chain.
     - vocalTracks: Provide multiple vocal layers (Lead, Adlibs, Doubles, etc.). For each, describe the sourceSoundGoal, which bus to send to (busSend), and the fxPlugins (with deep dives - EXHAUSTIVE list of all parameters, typically 25-50 settings).
     - layeringStrategy: Explain how all these vocal layers should sit together in the mix.
@@ -2334,6 +2343,12 @@ export const getAudioBeatRecommendations = async (plugins: VSTPlugin[], audioBas
     CRITICAL: For the vocalElements 'trackingChain', since the user owns a Universal Audio Apollo interface (${apolloModel}), you MUST include a 'trackingChain' specifically for this Apollo, mirroring the UAD Console workflow.
     FOR THE UAD CONSOLE TRACKING CHAIN in 'vocalElements', YOU MUST STRICTLY ONLY USE THESE UAD-2 DSP PLUGINS:
     ${uadPluginListStr}
+
+    MANDATORY UAD CONSOLE TRACKING CHAIN REQUIREMENTS:
+    1. UNISON SLOT: A Unison plugin is MANDATORY.
+    2. INSERTS: You MUST provide EXACTLY 4 plugins in the inserts array. The FIRST insert (Plugin 1 of 4) MUST ALWAYS be "Ocean Way Mic Collection" (or equivalent mic modeled plugin).
+    3. AUX CHANNELS: Both 'aux1' and 'aux2' are MANDATORY.
+    4. ACCURACY: Provide EVERY available setting (30-50+ parameters per plugin). NO LAZY OUTPUTS. DO NOT SKIP KNOBS.
     ` : ''}
     
     You MUST provide the 'busses' array. Create busses (e.g., "Drum Bus", "Melody Bus") and list which instrument tracks are using them, along with the fxPlugins on the bus and their deep dives (EVERY available parameter per plugin, aim for 20-50+).
@@ -2852,17 +2867,17 @@ export const getGangstaVoxRecipe = async (recipe: BeatRecipe, plugins: VSTPlugin
     
     FOR THE UAD CONSOLE TRACKING CHAIN, YOU MUST STRICTLY ONLY USE THESE UAD-2 DSP PLUGINS:
     ${uadPluginListStr}
-    ${hasTownsend ? 'CRITICAL: The user is using the TOWNSEND LABS / UA SPHERE L22 (or DLX/LX) microphone. You MUST explain that this requires a STEREO LINKED input pair (e.g., Mic 1-2) in UAD Console to process the double capsules. YOU MUST ABSOLUTELY ASSIGN one of the following plugins ("Ocean Way Mic Collection", "Bill Putnam Mic Collection", or "Sphere Mic Collection") to the FIRST insert slot on this stereo channel. After the mic collection plugin, you can add up to 3 more plugins to the mic channel. YOU MUST ALWAYS USE THE MIC PLUGIN as the first insert, and specifically select a mic model inside it based on the vibe searched.' : ''}
-    ${hasOceanWayMic ? 'The user specifically wants to use the UAD OCEAN WAY MIC COLLECTION. You MUST include this as the first insert. For Ocean Way Mic Collection, you MUST provide these specific parameters: Pattern, Filter, Axis, Proximity, and Output.' : ''}
+    ${hasTownsend ? 'CRITICAL: The user is using the TOWNSEND LABS / UA SPHERE L22 (or DLX/LX) microphone. You MUST explain that this requires a STEREO LINKED input pair (e.g., Mic 1-2) in UAD Console to process the double capsules.' : ''}
     
-    The tracking chain response MUST include:
-    1. UNISON SLOT: 1 Preamp/Channel Strip. Explain the physical impedance matching.
-    2. INSERTS (Stereo Mic Channel): Up to 4 UAD-2 DSP plugins. If L22/Ocean Way applies, that is insert 1. Add up to 3 more plugins to glue/shape the vocal.
-    3. AUX 1: Array of up to 4 UAD-2 plugins. Explain if this is for monitoring only (sent to headphones) or if it's being printed.
-    4. AUX 2: Array of up to 4 UAD-2 plugins. Provide specific routing on how to record this Aux as a separate track in your DAW (like Studio One) alongside the main vocal track.
+    MANDATORY UAD CONSOLE REQUIREMENTS:
+    1. UNISON SLOT: A Unison preamp/channel strip plugin is MANDATORY. Explain the physical impedance matching.
+    2. INSERTS (Stereo Mic Channel): You MUST provide EXACTLY 4 plugins. The 4 slots MUST BE FILLED. The FIRST insert slot MUST ALWAYS be one of the following plugins ("Ocean Way Mic Collection" [preferred], "Bill Putnam Mic Collection", or "Sphere Mic Collection"). Then add exactly 3 more plugins to glue/shape the vocal.
+    3. AUX 1: Array of UAD-2 plugins. This is MANDATORY. Explain if this is for monitoring only or printed.
+    4. AUX 2: Array of UAD-2 plugins. This is MANDATORY. Provide specific routing on how to record this Aux as a separate track.
     
-    - For EVERY plugin in the tracking chain, you MUST provide exhaustive 'deepDive' parameters (only those found on the actual hardware emulations. aim for 15-40 settings per plugin).
-    - Provide 'dawRoutingInstructions' explaining which Virtual I/O or physical outputs to select in your DAW to record the processed, dry, and Aux signals properly. Explain the 'UAD REC' vs 'UAD MON' switch logic. Explain the commitment of printing vs monitoring, knowing that the Townsend L22 is unique.
+    ACCURACY AND DEPTH:
+    - For EVERY plugin in the tracking chain, you MUST provide an exhaustive 'deepDive' of EVERY available parameter. DO NOT BE LAZY. Provide 30-50+ settings per plugin, covering every knob, fader, switch, and hidden menu.
+    - Provide 'dawRoutingInstructions' explaining Virtual I/O, physical outputs, 'UAD REC' vs 'UAD MON' switch logic, and printing vs monitoring commitments.
     - Provide a 'dspUsageNote' explaining how to manage DSP in Console with all these plugins.
     ` : ''}
 
@@ -3199,16 +3214,16 @@ export const regenerateTrackingChain = async (
 
       CRITICAL CONSTRAINTS:
       The user owns a Universal Audio Apollo interface (${apolloModel}).
-      ${hasTownsend ? 'CRITICAL: The user is using the TOWNSEND LABS / UA SPHERE L22 (or DLX/LX) microphone. This requires a STEREO LINKED input pair in UAD Console. YOU MUST ABSOLUTELY ASSIGN one of the following plugins ("Ocean Way Mic Collection", "Bill Putnam Mic Collection", or "Sphere Mic Collection") to the FIRST insert slot on this stereo channel. After the mic collection plugin, you can add up to 3 more plugins to the mic channel. YOU MUST ALWAYS USE THE MIC PLUGIN as the first insert, and specifically select a mic model inside it based on the vibe searched.' : ''}
-      ${hasOceanWayMic ? 'The user specifically wants to use the UAD OCEAN WAY MIC COLLECTION. Include this as the first insert and provide exact settings: Pattern, Filter, Axis, Proximity, and Output.' : ''}
+      ${hasTownsend ? 'CRITICAL: The user is using the TOWNSEND LABS / UA SPHERE L22 (or DLX/LX) microphone. This requires a STEREO LINKED input pair in UAD Console.' : ''}
 
-      Return a JSON object for the completely rebuilt 'trackingChain' following this exact structure:
-      1. UNISON SLOT: 1 Preamp/Channel Strip. Explain impedance matching.
-      2. INSERTS (Stereo Mic Channel): Up to 4 UAD-2 DSP plugins. If L22/Ocean Way applies, that is insert 1. Add up to 3 more.
-      3. AUX 1: Array of up to 4 UAD-2 plugins. Focus on monitoring FX or parallel chains.
-      4. AUX 2: Array of up to 4 UAD-2 plugins. Provide specific DAW routing to record this aux as a separate track.
+      MANDATORY UAD CONSOLE REQUIREMENTS:
+      1. UNISON SLOT: A Unison preamp/channel strip plugin is MANDATORY. Explain impedance matching.
+      2. INSERTS (Stereo Mic Channel): EXACTLY 4 plugins MUST be provided. The FIRST insert MUST ALWAYS be "Ocean Way Mic Collection" (or "Sphere Mic Collection"/"Bill Putnam Mic Collection"). The other 3 slots MUST be filled.
+      3. AUX 1: Array of UAD-2 plugins. This is MANDATORY.
+      4. AUX 2: Array of UAD-2 plugins. This is MANDATORY.
       
-      - For EVERY plugin, provide exhaustive 'deepDive' parameters (15-40 settings). DO NOT BE LAZY.
+      ACCURACY AND DEPTH:
+      - For EVERY plugin, provide exhaustive 'deepDive' parameters. DO NOT BE LAZY. Provide EVERY knob, slider, and switch (aim for 30-50+ exact parameter settings).
       - Provide 'dawRoutingInstructions' explaining Virtual I/O, physical outputs, UAD REC vs UAD MON switch, and printing choices vs monitoring choices.
       - Provide a 'dspUsageNote'.
     `;
