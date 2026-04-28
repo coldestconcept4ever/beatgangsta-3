@@ -1582,6 +1582,7 @@ The AI was unable to verify these parameters. Please investigate.`;
   const [activeSession, setActiveSession] = useState<SharedSession | null>(null);
   const saveFileInputRef = useRef<HTMLInputElement>(null);
   const [isDragging, setIsDragging] = useState(false);
+  const [dragOverStemId, setDragOverStemId] = useState<string | null>(null);
   const [showBuyCreditsModal, setShowBuyCreditsModal] = useState(false);
   const [showPaymentMethodModal, setShowPaymentMethodModal] = useState(false);
   const [purchaseType, setPurchaseType] = useState<'credits' | 'stem_slots'>('credits');
@@ -6033,7 +6034,23 @@ The AI was unable to verify these parameters. Please investigate.`;
                       </button>
 
                       {stems.map((stem, index) => (
-                        <div key={stem.id} className={`flex items-center gap-3 p-3 rounded-xl border ${theme === 'coldest' ? 'bg-white/60 border-purple-100' : 'bg-black/40 border-purple-500/20'}`}>
+                        <div 
+                          key={stem.id} 
+                          onDragOver={(e) => { e.preventDefault(); e.stopPropagation(); setDragOverStemId(stem.id); }}
+                          onDragLeave={(e) => { e.preventDefault(); e.stopPropagation(); setDragOverStemId(null); }}
+                          onDrop={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            setDragOverStemId(null);
+                            const file = e.dataTransfer.files?.[0];
+                            if (file) {
+                              const newStems = [...stems];
+                              newStems[index] = { ...newStems[index], file, mimeType: file.type, status: 'pending' };
+                              setStems(newStems);
+                            }
+                          }}
+                          className={`flex items-center gap-3 p-3 rounded-xl border transition-all ${dragOverStemId === stem.id ? 'scale-[1.02] border-sky-500 bg-sky-500/10' : theme === 'coldest' ? 'bg-white/60 border-purple-100' : 'bg-black/40 border-purple-500/20'}`}
+                        >
                           <div className="flex-1 flex items-center gap-2">
                             <span className={`text-xs font-bold opacity-50 w-4 ${theme === 'coldest' ? 'text-slate-500' : 'text-white'}`}>{index + 1}.</span>
                             {stem.file ? (

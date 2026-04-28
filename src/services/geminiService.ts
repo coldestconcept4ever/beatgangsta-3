@@ -1827,7 +1827,8 @@ export const getBeatRecommendations = async (plugins: VSTPlugin[], analogInstrum
 
   const jsonStr = response.text?.trim() || '{"recipes": []}';
   try {
-    const result = postProcessResult(JSON.parse(sanitizeJSON(jsonStr)));
+    let result = postProcessResult(JSON.parse(sanitizeJSON(jsonStr)));
+    if (Array.isArray(result)) result = { recipes: result };
     
     if (isGangstaVox && result.recipes) {
       result.recipes = result.recipes.map((r: any) => ({ ...r, isGangstaVox: true }));
@@ -1993,6 +1994,7 @@ export const getCustomBeatRecommendations = async (plugins: VSTPlugin[], query: 
   let result;
   try {
     result = postProcessResult(JSON.parse(sanitizeJSON(jsonStr)));
+    if (Array.isArray(result)) result = { recipes: result };
   } catch (e) {
     console.error("Failed to parse AI response as JSON in getCustomBeatRecommendations", e);
     throw new Error("The architect's response was not in the correct format. Please try again!");
@@ -2151,6 +2153,7 @@ export const getSongBeatRecommendations = async (plugins: VSTPlugin[], songQuery
   let result;
   try {
     result = postProcessResult(JSON.parse(sanitizeJSON(jsonStr)));
+    if (Array.isArray(result)) result = { recipes: result };
   } catch (e) {
     console.error("Failed to parse AI response as JSON in getSongBeatRecommendations", e);
     throw new Error("The architect's response was not in the correct format. Please try again!");
@@ -2431,6 +2434,7 @@ export const getAudioBeatRecommendations = async (plugins: VSTPlugin[], audioBas
   let result;
   try {
     result = postProcessResult(JSON.parse(sanitizeJSON(jsonStr)));
+    if (Array.isArray(result)) result = { recipes: result };
   } catch (e) {
     console.error("JSON parse error (Beat):", e);
     throw new Error("Failed to parse AI response");

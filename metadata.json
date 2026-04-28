@@ -1,5 +1,10 @@
 {
-  "name": "COLDESCONCEPT COMMERCIAL CREATOR",
+  "name": "BeatGangsta By coldestconcept",
   "description": "Architect freezing-cold rap and trap signal chains with the official BeatGangsta protocols.",
-  "requestFramePermissions": ["display-capture", "microphone", "clipboard-read", "clipboard-write"]
+  "requestFramePermissions": [
+    "display-capture",
+    "microphone",
+    "clipboard-read"
+  ],
+  "majorCapabilities": []
 }

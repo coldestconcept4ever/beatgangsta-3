@@ -4,13 +4,26 @@
 export const sanitizeJSON = (jsonString: string): string => {
   if (!jsonString) return '{}';
   
-  // Remove markdown code blocks (e.g., ```json ... ``` or ``` ... ```)
-  let sanitized = jsonString.replace(/```(?:json)?\s*([\s\S]*?)\s*```/g, '$1');
+  // Try to extract content inside markdown code blocks first
+  const match = jsonString.match(/```(?:json)?\s*([\s\S]*?)\s*```/);
+  let sanitized = '';
+  
+  if (match && match[1]) {
+    sanitized = match[1];
+  } else {
+    // Check for an unclosed code block
+    const unclosedMatch = jsonString.match(/```(?:json)?\s*([\s\S]*)/);
+    if (unclosedMatch && unclosedMatch[1]) {
+      sanitized = unclosedMatch[1];
+    } else {
+      sanitized = jsonString;
+    }
+  }
   
   // Trim whitespace
   sanitized = sanitized.trim();
   
-  // Sometimes LLMs append trailing text. Try to extract the outermost {} or []
+  // Try to extract the outermost {} or []
   const firstBrace = sanitized.indexOf('{');
   const lastBrace = sanitized.lastIndexOf('}');
   const firstBracket = sanitized.indexOf('[');
