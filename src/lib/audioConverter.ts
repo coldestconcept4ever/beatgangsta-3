@@ -1,5 +1,18 @@
 import lamejs from 'lamejs';
 
+// Polyfill for lamejs bug when bundled by Vite where MPEGMode is not defined
+if (typeof window !== 'undefined' && !(window as any).MPEGMode) {
+  const MPEGMode = function (this: any, ordinal: number) {
+    this.ordinal = () => ordinal;
+  } as any;
+  MPEGMode.STEREO = new MPEGMode(0);
+  MPEGMode.JOINT_STEREO = new MPEGMode(1);
+  MPEGMode.DUAL_CHANNEL = new MPEGMode(2);
+  MPEGMode.MONO = new MPEGMode(3);
+  MPEGMode.NOT_SET = new MPEGMode(4);
+  (window as any).MPEGMode = MPEGMode;
+}
+
 export async function convertWavToMp3(file: File, onProgress?: (progress: number) => void): Promise<File> {
   return new Promise(async (resolve, reject) => {
     try {

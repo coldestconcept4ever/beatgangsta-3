@@ -36,6 +36,7 @@ import { VSTPlugin, RecommendationResponse, BeatRecipe, SavedRecipe, Hardware, S
 import { fetchWithDetailedError } from "../lib/api";
 import { keepAlive } from "../lib/keepAlive";
 import { getVendorSpecificParameters, normalizeParameterName } from "../utils/pluginUtils";
+import { sanitizeJSON } from "../utils/jsonUtils";
 
 const ADVANCED_MIDI_PROMPT = `
     CRITICAL - ADVANCED MIDI & DRUM PATTERN GENERATION:
@@ -472,7 +473,7 @@ export const regeneratePlugin = async (
   });
 
   try {
-    return JSON.parse(response.text || '{}');
+    return JSON.parse(sanitizeJSON(response.text || '{}'));
   } catch (e) {
     console.error("Failed to parse AI response as JSON in regeneratePlugin", e);
     return null;
@@ -524,7 +525,7 @@ export const categorizeAndCompareLibraries = async (senderPlugins: VSTPlugin[], 
   });
 
   try {
-    return JSON.parse(response.text || '{"categories": []}');
+    return JSON.parse(sanitizeJSON(response.text || '{"categories": []}'));
   } catch (e) {
     console.error("Failed to parse AI response as JSON in categorizeAndCompareLibraries", e);
     return { categories: [] };
@@ -1330,7 +1331,7 @@ export const enrichPluginLibrary = async (
       const text = response.text?.trim() || '{"plugins": []}';
       let result;
       try {
-        result = JSON.parse(text);
+        result = JSON.parse(sanitizeJSON(text));
       } catch (e) {
         console.error("Failed to parse AI response as JSON in processBatch", e);
         result = { plugins: [] };
@@ -1532,7 +1533,7 @@ export const verifyAndCorrectPlugin = async (
   });
 
   try {
-    const result = JSON.parse(response.text || '{}');
+    const result = JSON.parse(sanitizeJSON(response.text || '{}'));
     
     if (result.isVersionValid || result.isParameterValid) {
       const enriched = {
@@ -1611,7 +1612,7 @@ export const researchPluginParameters = async (plugin: VSTPlugin, language: stri
 
   const text = response.text?.trim() || '{}';
   try {
-    const details = JSON.parse(text);
+    const details = JSON.parse(sanitizeJSON(text));
     const vendorParams = getVendorSpecificParameters(plugin.vendor, plugin.name);
     const rawParams = Array.from(new Set([...(details.parameters || []), ...vendorParams]));
     const combinedParams = rawParams.map(p => normalizeParameterName(plugin.vendor, plugin.name, p));
@@ -1672,7 +1673,7 @@ export const generateStructuralBlueprint = async (searchQuery: string, language:
   });
   
   try {
-    return JSON.parse(response.text || '{}');
+    return JSON.parse(sanitizeJSON(response.text || '{}'));
   } catch (e) {
     console.error("Failed to parse AI response as JSON in generateStructuralBlueprint", e);
     return {} as StructuralBlueprint;
@@ -1826,7 +1827,7 @@ export const getBeatRecommendations = async (plugins: VSTPlugin[], analogInstrum
 
   const jsonStr = response.text?.trim() || '{"recipes": []}';
   try {
-    const result = postProcessResult(JSON.parse(jsonStr));
+    const result = postProcessResult(JSON.parse(sanitizeJSON(jsonStr)));
     
     if (isGangstaVox && result.recipes) {
       result.recipes = result.recipes.map((r: any) => ({ ...r, isGangstaVox: true }));
@@ -1991,7 +1992,7 @@ export const getCustomBeatRecommendations = async (plugins: VSTPlugin[], query: 
   console.log("Gemini response text (Custom Beat Recommendations):", jsonStr);
   let result;
   try {
-    result = postProcessResult(JSON.parse(jsonStr));
+    result = postProcessResult(JSON.parse(sanitizeJSON(jsonStr)));
   } catch (e) {
     console.error("Failed to parse AI response as JSON in getCustomBeatRecommendations", e);
     throw new Error("The architect's response was not in the correct format. Please try again!");
@@ -2149,7 +2150,7 @@ export const getSongBeatRecommendations = async (plugins: VSTPlugin[], songQuery
   console.log("Gemini response text (Song Beat Recommendations):", jsonStr);
   let result;
   try {
-    result = postProcessResult(JSON.parse(jsonStr));
+    result = postProcessResult(JSON.parse(sanitizeJSON(jsonStr)));
   } catch (e) {
     console.error("Failed to parse AI response as JSON in getSongBeatRecommendations", e);
     throw new Error("The architect's response was not in the correct format. Please try again!");
@@ -2201,7 +2202,7 @@ export const analyzeInstrumental = async (audioBase64: string, mimeType: string)
   if (!rawText) throw new Error("Could not analyze instrumental: No text in response.");
   
   const jsonStr = rawText.replace(/```json/g, '').replace(/```/g, '').trim();
-  const result = JSON.parse(jsonStr);
+  const result = JSON.parse(sanitizeJSON(jsonStr));
   return { bpm: result.bpm || 85, loopStart: result.loopStart || 0 };
 };
 
@@ -2429,7 +2430,7 @@ export const getAudioBeatRecommendations = async (plugins: VSTPlugin[], audioBas
   console.log("Gemini response text (Beat):", jsonStr);
   let result;
   try {
-    result = postProcessResult(JSON.parse(jsonStr));
+    result = postProcessResult(JSON.parse(sanitizeJSON(jsonStr)));
   } catch (e) {
     console.error("JSON parse error (Beat):", e);
     throw new Error("Failed to parse AI response");
@@ -2681,7 +2682,7 @@ export const getMixCritique = async (
   const jsonStr = response.text?.trim() || '{}';
   let result;
   try {
-    result = postProcessResult(JSON.parse(jsonStr));
+    result = postProcessResult(JSON.parse(sanitizeJSON(jsonStr)));
   } catch (e) {
     console.error("Failed to parse AI response as JSON in getMixCritique", e);
     throw new Error("The architect's response was not in the correct format. Please try again!");
@@ -2815,7 +2816,7 @@ export const getSpecificMixHelp = async (plugins: VSTPlugin[], audioBase64: stri
   }
 
   try {
-    return JSON.parse(response.text || '{"query": "", "advice": "I\'m sorry, I couldn\'t generate a response.", "recommendedChain": []}');
+    return JSON.parse(sanitizeJSON(response.text || '{"query": "", "advice": "I\'m sorry, I couldn\'t generate a response.", "recommendedChain": []}'));
   } catch (e) {
     console.error("Failed to parse AI response as JSON in getSpecificMixHelp", e);
     return { query, advice: "I'm sorry, I couldn't generate a response.", recommendedChain: [] };
@@ -3083,7 +3084,7 @@ export const getGangstaVoxRecipe = async (recipe: BeatRecipe, plugins: VSTPlugin
 
   const jsonStr = response.text?.trim() || '{}';
   try {
-    return postProcessResult(JSON.parse(jsonStr));
+    return postProcessResult(JSON.parse(sanitizeJSON(jsonStr)));
   } catch (e) {
     console.error("Failed to parse AI response as JSON in getGangstaVoxRecipe", e);
     throw new Error("The architect's response was not in the correct format. Please try again!");
@@ -3146,7 +3147,7 @@ export const replicateRecipeWithUserGear = async (recipe: SavedRecipe, myPlugins
 
     let adapted;
     try {
-      const parsed = JSON.parse(jsonStr);
+      const parsed = JSON.parse(sanitizeJSON(jsonStr));
       adapted = postProcessResult(parsed);
       if (adapted.recipe) {
         adapted = adapted.recipe;
@@ -3269,7 +3270,7 @@ export const regenerateTrackingChain = async (
       }
     });
 
-    return JSON.parse(result.text || '{}');
+    return JSON.parse(sanitizeJSON(result.text || '{}'));
   } catch (error) {
     console.error("Error regenerating tracking chain:", error);
     throw error;
