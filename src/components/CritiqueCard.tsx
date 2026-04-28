@@ -1,6 +1,6 @@
 import React, { useState, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
-import { MixCritique, AppTheme, VSTPlugin } from '../types';
+import { MixCritique, AppTheme, VSTPlugin, Hardware } from '../types';
 import { getSpecificMixHelp, getMixCritique, regeneratePlugin } from '../services/geminiService';
 import { uploadFileChunked, deleteFileFromDrive } from '../services/uploadService';
 import { motion } from 'motion/react';
@@ -15,6 +15,8 @@ interface CritiqueCardProps {
   critique: MixCritique;
   theme: AppTheme;
   plugins: VSTPlugin[];
+  analogInstruments?: Hardware[];
+  analogHardware?: Hardware[];
   audioBase64?: string;
   audioUrl?: string;
   geminiFileUri?: string;
@@ -35,7 +37,7 @@ interface CritiqueCardProps {
   onMinimize?: () => void;
 }
 
-export const CritiqueCard: React.FC<CritiqueCardProps> = ({ critique, theme, plugins, audioBase64, audioUrl, geminiFileUri, mimeType, isSaved, onSave, onUpdateCritique, onReCritique, currentAudioInfo, onLogReceipt, onCorrectPlugin, onContactSupport, onMinimize }) => {
+export const CritiqueCard: React.FC<CritiqueCardProps> = ({ critique, theme, plugins, analogInstruments = [], analogHardware = [], audioBase64, audioUrl, geminiFileUri, mimeType, isSaved, onSave, onUpdateCritique, onReCritique, currentAudioInfo, onLogReceipt, onCorrectPlugin, onContactSupport, onMinimize }) => {
   const { t, i18n } = useTranslation();
   const [specificHelpQuery, setSpecificHelpQuery] = useState('');
   const [isLoadingSpecificHelp, setIsLoadingSpecificHelp] = useState(false);
@@ -54,7 +56,7 @@ export const CritiqueCard: React.FC<CritiqueCardProps> = ({ critique, theme, plu
     setRegeneratingPluginId(pluginId);
     try {
       const currentPool = refreshPools[pluginId] || [plugin.name];
-      const newPlugin = await regeneratePlugin(plugin.name, plugin.deepDive, critique as any, plugins, i18n.language, currentPool);
+      const newPlugin = await regeneratePlugin(plugin.name, plugin.deepDive, critique as any, plugins, i18n.language, currentPool, analogHardware);
       if (onLogReceipt) onLogReceipt('Regenerate Plugin', 2);
       if (newPlugin && onUpdateCritique) {
         setRefreshPools(prev => ({
@@ -141,7 +143,7 @@ export const CritiqueCard: React.FC<CritiqueCardProps> = ({ critique, theme, plu
       const finalGeminiFileUri = geminiFileUri || currentAudioInfo?.geminiFileUri || undefined;
       const finalMimeType = mimeType || currentAudioInfo?.mimeType || undefined;
 
-      const result = await getSpecificMixHelp(plugins, finalAudioBase64, finalMimeType, specificHelpQuery.trim(), critique.isGangstaVox, JSON.stringify(critique), [], finalAudioUrl, finalGeminiFileUri, i18n.language);
+      const result = await getSpecificMixHelp(plugins, finalAudioBase64, finalMimeType, specificHelpQuery.trim(), critique.isGangstaVox, JSON.stringify(critique), [], finalAudioUrl, finalGeminiFileUri, i18n.language, analogHardware);
       
       const isWav = finalMimeType?.includes('audio/wav');
       if (onLogReceipt) onLogReceipt('Specific Mix Help', isWav ? 25 : 10);
@@ -192,8 +194,10 @@ export const CritiqueCard: React.FC<CritiqueCardProps> = ({ critique, theme, plu
         "",
         null,
         null,
-        null,
-        i18n.language
+        i18n.language,
+        undefined,
+        analogInstruments,
+        analogHardware
       );
       const isWav = file.type.includes('audio/wav');
       if (onLogReceipt) onLogReceipt('Re-Critique Mix', isWav ? 25 : 10);

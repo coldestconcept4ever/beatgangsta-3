@@ -57,7 +57,7 @@ export const RecipeCard: React.FC<RecipeCardProps> = ({ recipe: initialRecipe, i
         : plugin.name;
         
       const currentPool = refreshPools[pluginId] || [pluginName];
-      const newPlugin = await regeneratePlugin(pluginName, plugin.deepDive || [], recipe, plugins || [], i18n.language, currentPool);
+      const newPlugin = await regeneratePlugin(pluginName, plugin.deepDive || [], recipe, plugins || [], i18n.language, currentPool, analogHardware);
       if (onLogReceipt) onLogReceipt('Regenerate Plugin', 2);
       
       if (newPlugin) {
@@ -226,7 +226,8 @@ export const RecipeCard: React.FC<RecipeCardProps> = ({ recipe: initialRecipe, i
         chatHistory,
         undefined,
         geminiFileUri || recipe.geminiFileUri,
-        i18n.language
+        i18n.language,
+        analogHardware
       );
       
       const isWav = recipe.mimeType?.includes('audio/wav');

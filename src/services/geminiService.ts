@@ -401,13 +401,21 @@ export const regeneratePlugin = async (
   recipe: BeatRecipe,
   myPlugins: VSTPlugin[],
   language: string = 'en',
-  excludedPlugins: string[] = []
+  excludedPlugins: string[] = [],
+  analogHardware: Hardware[] = []
 ) => {
   const ai = getAI();
   const pluginContext = `Plugin: ${pluginName}\nParameters: ${deepDive.map(d => `${d.parameter}: ${d.value}`).join(', ')}`;
   const recipeContext = `Recipe Title: ${recipe.title}\nStyle: ${recipe.style}\nDescription: ${recipe.description}`;
   const libraryContext = `Available Plugins: ${myPlugins.map(p => `${p.vendor} - ${p.name}`).join(', ')}`;
   const exclusionStr = excludedPlugins.length > 0 ? `\nCRITICAL: DO NOT suggest any of the following plugins (the user has already seen or rejected them): ${excludedPlugins.join(', ')}. You MUST choose a DIFFERENT plugin from the user's library.` : '';
+
+  const hasApollo = analogHardware.some(h => h.name.toLowerCase().includes('apollo'));
+  const apolloInst = analogHardware.find(h => h.name.toLowerCase().includes('apollo'))?.name || 'Apollo';
+  
+  const apolloConstraint = hasApollo ? `
+    CRITICAL: The user has an ${apolloInst} interface. When suggesting a replacement plugin for this vocal chain or mix, you MUST ALWAYS choose a UAD (Universal Audio) plugin from their library if one is available and suitable. Prioritize UAD plugins for all processing if possible to utilize the Apollo's DSP.
+  ` : '';
 
   const prompt = `
     You are an expert music producer. The user wants to replace a plugin in their recipe.
@@ -417,6 +425,9 @@ export const regeneratePlugin = async (
     ${OZONE_SPEC_PROMPT}
     ${SONIBLE_SPEC_PROMPT}
     ${RC20_SPEC_PROMPT}
+    ${GLOBAL_PARAMETER_STRICTNESS_PROMPT}
+    
+    ${apolloConstraint}
     
     Original Plugin:
     ${pluginContext}
@@ -2445,6 +2456,9 @@ export const getMixCritique = async (
     return str;
   }).join('\n');
   
+  const hasApollo = analogHardware.some(h => h.name.toLowerCase().includes('apollo'));
+  const apolloInst = analogHardware.find(h => h.name.toLowerCase().includes('apollo'))?.name || 'Apollo';
+
   const hardwareListStr = [...analogInstruments, ...analogHardware].map(h => {
     const pedalsStr = h.connectedPedals && h.connectedPedals.length > 0 
       ? ` (Connected Pedals: ${h.connectedPedals.map(p => `${p.vendor} ${p.name}`).join(', ')})` 
@@ -2497,6 +2511,10 @@ export const getMixCritique = async (
 
     The user also has the following hardware and instruments:
     ${hardwareListStr}
+
+    ${hasApollo ? `
+    CRITICAL: The user has an ${apolloInst} interface. When suggesting plugins for the action plan, you MUST ALWAYS prioritize UAD (Universal Audio) plugins from their library if they are suitable.
+    ` : ''}
 
     CRITICAL: If a hardware instrument has connected pedals, you MUST provide specific settings for those pedals in your advice. Assume the pedal is connected directly to the instrument. Your research and logic MUST reflect the interaction between the specific instrument and the specific pedal(s) connected to it.
 
@@ -2660,13 +2678,29 @@ export const getMixCritique = async (
   return result;
 };
 
-export const getSpecificMixHelp = async (plugins: VSTPlugin[], audioBase64: string | undefined, mimeType: string | undefined, query: string, isGangstaVox: boolean = false, recipeContext?: string, chatHistory: {role: 'user' | 'model', content: string}[] = [], audioUrl?: string, geminiFileUri?: string, language: string = 'en'): Promise<{query: string, advice: string, recommendedChain: any[]}> => {
+export const getSpecificMixHelp = async (plugins: VSTPlugin[], audioBase64: string | undefined, mimeType: string | undefined, query: string, isGangstaVox: boolean = false, recipeContext?: string, chatHistory: {role: 'user' | 'model', content: string}[] = [], audioUrl?: string, geminiFileUri?: string, language: string = 'en', analogHardware: Hardware[] = []): Promise<{query: string, advice: string, recommendedChain: any[]}> => {
   const ai = getAI();
   const pluginListStr = plugins.map(p => `${p.vendor} - ${p.name} (${p.type})`).join('\n');
+
+  const hasApollo = analogHardware.some(h => h.name.toLowerCase().includes('apollo'));
+  const apolloInst = analogHardware.find(h => h.name.toLowerCase().includes('apollo'))?.name || 'Apollo';
+  
+  const apolloConstraint = hasApollo ? `
+    CRITICAL: The user has an ${apolloInst} interface. When suggesting plugins for this mix, you MUST ALWAYS prioritize UAD (Universal Audio) plugins from their library if they are suitable for the task.
+  ` : '';
 
   const systemPrompt = `
     You are an expert audio engineer and producer. 
     ${getLanguageInstruction(language)}
+    ${PRO_Q_3_LAYOUT_PROMPT}
+    ${GULLFOSS_SPEC_PROMPT}
+    ${OZONE_SPEC_PROMPT}
+    ${SONIBLE_SPEC_PROMPT}
+    ${RC20_SPEC_PROMPT}
+    ${GLOBAL_PARAMETER_STRICTNESS_PROMPT}
+
+    ${apolloConstraint}
+
     ${audioBase64 || audioUrl ? "I am uploading an MP3 of a project that needs work." : "I am providing a recipe for a track."}
     ${isGangstaVox ? "Focus specifically on the VOCALS." : "Focus specifically on the BEAT/INSTRUMENTAL."}
     

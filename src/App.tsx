@@ -6305,6 +6305,8 @@ The AI was unable to verify these parameters. Please investigate.`;
                         critique={critique} 
                         theme={theme} 
                         plugins={plugins} 
+                        analogInstruments={analogInstruments}
+                        analogHardware={analogHardware}
                         audioBase64={critique.audioBase64} 
                         audioUrl={critique.audioUrl}
                         mimeType={critique.mimeType} 
