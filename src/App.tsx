@@ -5824,7 +5824,7 @@ The AI was unable to verify these parameters. Please investigate.`;
               </div>
 
               <div className={`transition-all duration-700 flex justify-center mt-6 mb-8 ${mainTab === null ? 'blur-[8px] pointer-events-none opacity-40' : ''}`}>
-                <div className={`flex flex-wrap sm:flex-nowrap items-center p-1 sm:rounded-full rounded-3xl backdrop-blur-md border ${
+                <div className={`flex flex-wrap sm:flex-nowrap justify-center items-center p-1 sm:rounded-full rounded-3xl backdrop-blur-md border ${
                   theme === 'coldest' ? 'bg-sky-500/10 border-sky-500/20' : 
                   theme === 'crazy-bird' ? 'bg-red-500/20 border-red-500/30' : 
                   theme === 'hustle-time' ? 'bg-emerald-500/20 border-yellow-500/30' : 
