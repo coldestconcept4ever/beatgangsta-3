@@ -3848,7 +3848,7 @@ The AI was unable to verify these parameters. Please investigate.`;
         clearTimeout(timeoutId);
         
         const isWav = mimeType.includes('audio/wav');
-        logReceipt('Mix Critique', isWav ? 25 : 10);
+        logReceipt(isWav ? 'Mix Critique (WAV)' : 'Mix Critique', isWav ? 25 : 10);
         
         setCritiques([critique]);
         setRecipes([]);
@@ -3920,7 +3920,7 @@ The AI was unable to verify these parameters. Please investigate.`;
         setHistory(prev => [...newHistory, ...prev].slice(0, 50));
         
         const isWav = mimeType.includes('audio/wav');
-        logReceipt('Audio Analysis Recipe', isWav ? 25 : 10);
+        logReceipt(isWav ? 'Audio Analysis Recipe (WAV)' : 'Audio Analysis Recipe', isWav ? 25 : 10);
         
         setShowFairy(true);
       }

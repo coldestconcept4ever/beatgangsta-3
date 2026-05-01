@@ -3694,23 +3694,37 @@ if (process.env.NODE_ENV !== 'production') {
     let usingSystemKey = false;
     let creditsToDeduct = 0;
 
-    // Check if the request contains a WAV file
+    // Check if the request contains a WAV file and count stems (audio parts)
     let isWav = false;
+    let audioPartsCount = 0;
+    
     if (contents && contents.parts) {
       for (const part of contents.parts) {
-        if (part.inlineData && part.inlineData.mimeType && part.inlineData.mimeType.includes('wav')) isWav = true;
-        if (part.fileData && part.fileData.mimeType && part.fileData.mimeType.includes('wav')) isWav = true;
+        if (part.inlineData && part.inlineData.mimeType) {
+          if (part.inlineData.mimeType.includes('wav')) isWav = true;
+          if (part.inlineData.mimeType.includes('audio/')) audioPartsCount++;
+        }
+        if (part.fileData && part.fileData.mimeType) {
+          if (part.fileData.mimeType.includes('wav')) isWav = true;
+          if (part.fileData.mimeType.includes('audio/')) audioPartsCount++;
+        }
       }
     }
     if (config.mimeType && config.mimeType.includes('wav')) isWav = true;
 
     // Determine cost based on action
-    if (action === 'critique' || action === 'recipe') {
+    if (action === 'critique' || action === 'recipe' || action === 'audio_analysis_recipe' || action === 'chat') {
       creditsToDeduct = isWav ? 25 : 10;
+    } else if (action === 'stems_critique') {
+      // Dynamic pricing based on stems count: base 10 + 2 per stem + processing cost
+      // Since we don't have exact MB size here easily, we approximate with audioPartsCount * 5
+      creditsToDeduct = 10 + (audioPartsCount * 2) + (audioPartsCount * 5); 
+    } else if (action === 'type_beat_search' || action === 'song_search') {
+      creditsToDeduct = 10;
     } else if (action === 'enrich_library') {
       creditsToDeduct = 5;
-    } else if (action === 'chat') {
-      creditsToDeduct = 2;
+    } else if (action === 'gangsta_vox') {
+      creditsToDeduct = 2; // Default text processing cost
     } else {
       creditsToDeduct = 2; // Default cost for other actions
     }
@@ -3938,10 +3952,20 @@ if (process.env.NODE_ENV !== 'production') {
             const receiptId = `rec_${Math.random().toString(36).substr(2, 9)}_${Date.now()}`;
             let actionName = action;
             if (action === 'critique') actionName = isWav ? 'Mix Critique (WAV)' : 'Mix Critique';
+            if (action === 'stems_critique') actionName = 'Stems Mix Critique';
             if (action === 'recipe') actionName = isWav ? 'Generate Beat Recipe (WAV)' : 'Generate Beat Recipe';
+            if (action === 'audio_analysis_recipe') actionName = isWav ? 'Audio Analysis Recipe (WAV)' : 'Audio Analysis Recipe';
             if (action === 'enrich_library') actionName = 'Enrich Plugin Library';
             if (action === 'chat') actionName = 'Specific Mix Help';
             if (action === 'analog_save') actionName = 'Reimagine Recipe';
+            if (action === 'gangsta_vox') actionName = 'GangstaVox Guide';
+            if (action === 'type_beat_search') actionName = 'Type Beat Search';
+            if (action === 'song_search') actionName = 'Song Search';
+            if (action === 'regenerate_plugin') actionName = 'Regenerate Plugin';
+            if (action === 'compare_libraries') actionName = 'Compare Plugin Libraries';
+            if (action === 'structural_blueprint') actionName = 'Generate Structural Blueprint';
+            if (action === 'analyze_instrumental') actionName = 'Analyze Instrumental';
+            if (action === 'generate_voiceover') actionName = 'Generate Voiceover';
             
             await getDb().execute({
               sql: `INSERT INTO receipts (id, uid, action, cost, date) VALUES (?, ?, ?, ?, ?)`,

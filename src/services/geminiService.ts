@@ -447,6 +447,7 @@ export const regeneratePlugin = async (
     model: "gemini-3-flash-preview",
     contents: prompt,
     config: {
+      customAction: 'regenerate_plugin',
       responseMimeType: "application/json",
       responseSchema: {
         type: Type.OBJECT,
@@ -503,6 +504,7 @@ export const categorizeAndCompareLibraries = async (senderPlugins: VSTPlugin[], 
     model: "gemini-3-flash-preview",
     contents: prompt,
     config: {
+      customAction: 'compare_libraries',
       responseMimeType: "application/json",
       responseSchema: {
         type: Type.OBJECT,
@@ -1668,8 +1670,9 @@ export const generateStructuralBlueprint = async (searchQuery: string, language:
     model: "gemini-3-flash-preview",
     contents: prompt,
     config: {
+      customAction: 'structural_blueprint',
       responseMimeType: "application/json",
-    },
+    }
   });
   
   try {
@@ -1968,7 +1971,7 @@ export const getCustomBeatRecommendations = async (plugins: VSTPlugin[], query: 
     model: 'gemini-3-flash-preview',
     contents: prompt,
     config: {
-      customAction: 'recipe',
+      customAction: 'type_beat_search',
       responseMimeType: "application/json",
       safetySettings: [
         { category: HarmCategory.HARM_CATEGORY_HARASSMENT, threshold: HarmBlockThreshold.OFF },
@@ -2127,7 +2130,7 @@ export const getSongBeatRecommendations = async (plugins: VSTPlugin[], songQuery
     model: 'gemini-3-flash-preview',
     contents: prompt,
     config: {
-      customAction: 'recipe',
+      customAction: 'song_search',
       responseMimeType: "application/json",
       safetySettings: [
         { category: HarmCategory.HARM_CATEGORY_HARASSMENT, threshold: HarmBlockThreshold.OFF },
@@ -2175,6 +2178,7 @@ export const generateVoiceover = async (text: string, bpm?: number | null): Prom
     model: "gemini-3.1-flash-tts-preview",
     contents: [{ parts: [{ text: prompt }] }],
     config: {
+      customAction: 'generate_voiceover',
       responseModalities: ["AUDIO"],
       speechConfig: {
           voiceConfig: {
@@ -2198,6 +2202,9 @@ export const analyzeInstrumental = async (audioBase64: string, mimeType: string)
   const data = await ai.models.generateContent({
     model: "gemini-3.1-pro-preview",
     contents: [{ parts: [{ text: prompt }, { inlineData: { data: audioBase64, mimeType } }] }],
+    config: {
+      customAction: 'analyze_instrumental',
+    }
   });
   
   // The proxy returns raw JSON, so we extract text from candidates
@@ -2414,7 +2421,7 @@ export const getAudioBeatRecommendations = async (plugins: VSTPlugin[], audioBas
         parts: parts
       },
       config: {
-        customAction: 'recipe',
+        customAction: 'audio_analysis_recipe',
         responseMimeType: "application/json",
         safetySettings: [
           { category: HarmCategory.HARM_CATEGORY_HARASSMENT, threshold: HarmBlockThreshold.OFF },
@@ -2667,7 +2674,7 @@ export const getMixCritique = async (
         parts: parts
       },
       config: {
-        customAction: 'critique',
+        customAction: hasStems ? 'stems_critique' : 'critique',
         tools: tools.length > 0 ? tools : undefined,
         responseMimeType: "application/json",
         safetySettings: [
@@ -2906,7 +2913,7 @@ export const getGangstaVoxRecipe = async (recipe: BeatRecipe, plugins: VSTPlugin
       model: "gemini-3-flash-preview",
       contents: prompt,
       config: {
-        customAction: 'chat',
+        customAction: 'gangsta_vox',
         temperature: 0.7,
         responseMimeType: "application/json",
         safetySettings: [
@@ -3269,6 +3276,7 @@ export const regenerateTrackingChain = async (
       model: "gemini-3-flash-preview",
       contents: prompt,
       config: {
+        customAction: 'regenerate_plugin',
         responseMimeType: "application/json",
         responseSchema: schema as unknown as any,
       }
