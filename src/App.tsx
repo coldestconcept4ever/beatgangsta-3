@@ -410,6 +410,7 @@ const App: React.FC = () => {
   const [showBrandMenu, setShowBrandMenu] = useState(false);
   const [showFriendsInfo, setShowFriendsInfo] = useState(false);
   const [showModeInfo, setShowModeInfo] = useState(false);
+  const [showInputModeInfo, setShowInputModeInfo] = useState(false);
   const [showCookieConsent, setShowCookieConsent] = useState(() => {
     // Check for Global Privacy Control (GPC) signal
     // @ts-ignore - navigator.globalPrivacyControl is a non-standard but widely used property
@@ -575,6 +576,7 @@ const App: React.FC = () => {
   } | null>(null);
 
   const [mainTab, setMainTab] = useState<'beat' | 'vox' | null>(null);
+  const [inputMode, setInputMode] = useState<'random' | 'search' | 'upload'>('random');
   const [isGangstaVox, setIsGangstaVox] = useState<boolean>(false);
   const [csvInput, setCsvInput] = useState<string>('');
   const [plugins, setPlugins] = useState<VSTPlugin[]>(() => {
@@ -5163,6 +5165,67 @@ The AI was unable to verify these parameters. Please investigate.`;
       </AnimatePresence>
 
       <AnimatePresence>
+        {showInputModeInfo && (
+          <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[200] flex items-center justify-center p-6 bg-black/60 backdrop-blur-xl"
+          >
+            <motion.div 
+              initial={{ scale: 0.9, y: 20 }}
+              animate={{ scale: 1, y: 0 }}
+              exit={{ scale: 0.9, y: 20 }}
+              className={`w-full max-w-md p-10 rounded-[3rem] border shadow-2xl relative ${theme === 'coldest' ? 'bg-white border-sky-100' : theme === 'chef-mode' ? 'bg-white border-orange-100' : 'bg-[#111] text-white border-white/10'}`}
+            >
+              <button 
+                onClick={() => setShowInputModeInfo(false)}
+                className={`absolute top-6 right-6 p-2 rounded-full transition-colors ${theme === 'coldest' || theme === 'chef-mode' ? 'hover:bg-slate-100' : 'hover:bg-white/10'}`}
+              >
+                <X className="w-5 h-5 opacity-50 hover:opacity-100" />
+              </button>
+              <div className="text-center mb-8">
+                <h2 className={`text-3xl font-black tracking-tighter ${theme === 'coldest' || theme === 'chef-mode' ? 'text-slate-800' : 'text-white'}`}>Input Mode</h2>
+                <p className="text-xs font-bold text-slate-500 uppercase tracking-[0.2em] mt-1">Choose how to generate recipes</p>
+              </div>
+              <div className="space-y-4 max-h-[60vh] overflow-y-auto no-scrollbar pb-6 px-1">
+                <div className={`p-6 rounded-3xl border ${theme === 'coldest' || theme === 'chef-mode' ? 'bg-slate-50 border-slate-200' : 'bg-white/5 border-white/10'}`}>
+                  <h3 className={`text-lg font-black mb-2 flex items-center gap-2 ${theme === 'coldest' || theme === 'chef-mode' ? 'text-slate-800' : 'text-white'}`}>
+                    🎲 Random Recipes
+                  </h3>
+                  <p className={`text-sm font-medium ${theme === 'coldest' || theme === 'chef-mode' ? 'text-slate-600' : 'text-white/70'}`}>
+                    Generate a recipe completely at random based on your currently selected mode (BeatGangsta or GangstaVox). Great for when you need quick, unexpected inspiration.
+                  </p>
+                </div>
+                <div className={`p-6 rounded-3xl border ${theme === 'coldest' || theme === 'chef-mode' ? 'bg-slate-50 border-slate-200' : 'bg-white/5 border-white/10'}`}>
+                  <h3 className={`text-lg font-black mb-2 flex items-center gap-2 ${theme === 'coldest' || theme === 'chef-mode' ? 'text-slate-800' : 'text-white'}`}>
+                    🔍 Search Options
+                  </h3>
+                  <p className={`text-sm font-medium ${theme === 'coldest' || theme === 'chef-mode' ? 'text-slate-600' : 'text-white/70'}`}>
+                    Type in specific keywords, artist names, or song titles. We'll analyze your search and generate a recipe tailored to that exact vibe or style.
+                  </p>
+                </div>
+                <div className={`p-6 rounded-3xl border ${theme === 'coldest' || theme === 'chef-mode' ? 'bg-slate-50 border-slate-200' : 'bg-white/5 border-white/10'}`}>
+                  <h3 className={`text-lg font-black mb-2 flex items-center gap-2 ${theme === 'coldest' || theme === 'chef-mode' ? 'text-slate-800' : 'text-white'}`}>
+                    📎 Upload Files
+                  </h3>
+                  <p className={`text-sm font-medium ${theme === 'coldest' || theme === 'chef-mode' ? 'text-slate-600' : 'text-white/70'}`}>
+                    Upload audio files or stems. We'll analyze the sonic characteristics of your audio and generate a recipe or provide a mix critique based on what we hear.
+                  </p>
+                </div>
+                <button 
+                  onClick={() => setShowInputModeInfo(false)}
+                  className={`w-full mt-4 py-4 rounded-full font-black text-xs uppercase tracking-widest shadow-lg active:scale-95 transition-all ${theme === 'coldest' || theme === 'chef-mode' ? 'bg-slate-800 text-white' : 'bg-white text-black'}`}
+                >
+                  {t('got_it')}
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      <AnimatePresence>
         {showFriendsInfo && (
           <React.Suspense fallback={null}>
             <FriendsInfoModal 
@@ -5757,15 +5820,51 @@ The AI was unable to verify these parameters. Please investigate.`;
                       ?
                     </button>
                   </div>
-                  <button onClick={handleGenerate} disabled={loading || mainTab === null} className={`py-4 px-12 rounded-full font-black text-xs select-none shadow-lg hover:scale-105 active:scale-95 transition-all disabled:scale-100 ${theme === 'coldest' || theme === 'chef-mode' ? 'bg-sky-500 text-white' : 'bg-white text-black'} ${mainTab === null ? 'blur-[8px] opacity-40' : ''}`}>{loading ? t('architecting') : t('get_random_recipes')}</button>
                 </div>
               </div>
 
-              <div className="h-[1px] bg-current opacity-10" />
+              <div className={`transition-all duration-700 flex justify-center mt-6 mb-8 ${mainTab === null ? 'blur-[8px] pointer-events-none opacity-40' : ''}`}>
+                <div className={`flex flex-wrap sm:flex-nowrap items-center p-1 sm:rounded-full rounded-3xl backdrop-blur-md border ${
+                  theme === 'coldest' ? 'bg-sky-500/10 border-sky-500/20' : 
+                  theme === 'crazy-bird' ? 'bg-red-500/20 border-red-500/30' : 
+                  theme === 'hustle-time' ? 'bg-emerald-500/20 border-yellow-500/30' : 
+                  theme === 'chef-mode' ? 'bg-orange-500/10 border-orange-500/20' : 
+                  'bg-white/10 border-white/20'
+                }`}>
+                  <button onClick={() => setInputMode('random')} className={`px-4 sm:px-6 py-2 rounded-full text-[10px] sm:text-xs font-black uppercase tracking-widest transition-all gap-2 flex items-center ${inputMode === 'random' ? (theme === 'coldest' ? 'bg-sky-500 text-white shadow-sm' : theme === 'crazy-bird' ? 'bg-red-600 text-white shadow-sm' : theme === 'hustle-time' ? 'bg-yellow-500 text-emerald-950 shadow-sm' : theme === 'chef-mode' ? 'bg-orange-500 text-white shadow-sm' : 'bg-white/20 text-white shadow-sm') : (theme === 'coldest' ? 'text-sky-900/60 hover:text-sky-900' : theme === 'crazy-bird' ? 'text-red-100/60 hover:text-white' : theme === 'hustle-time' ? 'text-yellow-100/60 hover:text-yellow-400' : theme === 'chef-mode' ? 'text-orange-900/60 hover:text-orange-900' : 'text-white/50 hover:text-white')}`}>
+                    <span className="text-lg">🎲</span> Random Recipes
+                  </button>
+                  <button onClick={() => setInputMode('search')} className={`px-4 sm:px-6 py-2 rounded-full text-[10px] sm:text-xs font-black uppercase tracking-widest transition-all gap-2 flex items-center ${inputMode === 'search' ? (theme === 'coldest' ? 'bg-sky-500 text-white shadow-sm' : theme === 'crazy-bird' ? 'bg-red-600 text-white shadow-sm' : theme === 'hustle-time' ? 'bg-yellow-500 text-emerald-950 shadow-sm' : theme === 'chef-mode' ? 'bg-orange-500 text-white shadow-sm' : 'bg-white/20 text-white shadow-sm') : (theme === 'coldest' ? 'text-sky-900/60 hover:text-sky-900' : theme === 'crazy-bird' ? 'text-red-100/60 hover:text-white' : theme === 'hustle-time' ? 'text-yellow-100/60 hover:text-yellow-400' : theme === 'chef-mode' ? 'text-orange-900/60 hover:text-orange-900' : 'text-white/50 hover:text-white')}`}>
+                    <span className="text-lg">🔍</span> Search Options
+                  </button>
+                  <button onClick={() => setInputMode('upload')} className={`px-4 sm:px-6 py-2 rounded-full text-[10px] sm:text-xs font-black uppercase tracking-widest transition-all gap-2 flex items-center ${inputMode === 'upload' ? (theme === 'coldest' ? 'bg-sky-500 text-white shadow-sm' : theme === 'crazy-bird' ? 'bg-red-600 text-white shadow-sm' : theme === 'hustle-time' ? 'bg-yellow-500 text-emerald-950 shadow-sm' : theme === 'chef-mode' ? 'bg-orange-500 text-white shadow-sm' : 'bg-white/20 text-white shadow-sm') : (theme === 'coldest' ? 'text-sky-900/60 hover:text-sky-900' : theme === 'crazy-bird' ? 'text-red-100/60 hover:text-white' : theme === 'hustle-time' ? 'text-yellow-100/60 hover:text-yellow-400' : theme === 'chef-mode' ? 'text-orange-900/60 hover:text-orange-900' : 'text-white/50 hover:text-white')}`}>
+                    <span className="text-lg">📎</span> Upload Files
+                  </button>
+                  <button 
+                    onClick={() => setShowInputModeInfo(true)}
+                    className={`w-8 h-8 ml-1 mr-1 flex items-center justify-center rounded-full transition-all font-bold text-sm ${
+                      theme === 'coldest' ? 'text-sky-900/60 hover:bg-sky-500/20 hover:text-sky-900' : 
+                      theme === 'crazy-bird' ? 'text-red-100/60 hover:bg-red-500/20 hover:text-white' : 
+                      theme === 'hustle-time' ? 'text-yellow-100/60 hover:bg-yellow-500/20 hover:text-yellow-400' : 
+                      theme === 'chef-mode' ? 'text-orange-900/60 hover:bg-orange-500/20 hover:text-orange-900' : 
+                      'text-white/50 hover:bg-white/20 hover:text-white'
+                    }`}
+                  >
+                    ?
+                  </button>
+                </div>
+              </div>
 
-              <div className={`transition-all duration-700 ${mainTab === null ? 'blur-[8px] pointer-events-none opacity-40' : ''}`}>
+              {inputMode === 'random' && (
+                <div className="animate-in fade-in slide-in-from-bottom-4 duration-300 flex justify-center mt-4 mb-4">
+                  <button onClick={handleGenerate} disabled={loading || mainTab === null} className={`py-4 px-12 rounded-full font-black text-xs select-none shadow-lg hover:scale-105 active:scale-95 transition-all disabled:scale-100 ${theme === 'coldest' || theme === 'chef-mode' ? 'bg-sky-500 text-white' : 'bg-white text-black'} ${mainTab === null ? 'blur-[8px] opacity-40' : ''}`}>{loading ? t('architecting') : t('get_random_recipes')}</button>
+                </div>
+              )}
+
+              {inputMode === 'search' && (
+              <div className={`transition-all duration-700 ${mainTab === null ? 'blur-[8px] pointer-events-none opacity-40' : 'animate-in fade-in slide-in-from-bottom-4 duration-300'}`}>
                 <div className={`flex flex-col gap-4 ${showChain ? '-mt-12' : ''}`}>
-                  <div className="text-center mb-4 mt-6 animate-in fade-in zoom-in duration-500">
+                  <div className="text-center mb-4 mt-6">
                     <div className={`w-20 h-20 mx-auto rounded-full flex items-center justify-center mb-4 shadow-lg ${theme === 'coldest' ? 'bg-sky-500/10 text-sky-500 shadow-sky-500/20' : 'bg-purple-500/20 text-purple-400 shadow-purple-500/20'}`}>
                       <span className="text-4xl text-glow-pulse">🔍</span>
                     </div>
@@ -5833,24 +5932,19 @@ The AI was unable to verify these parameters. Please investigate.`;
                   </button>
                   </div>
                 </div>
+              </div>
+              )}
 
-              {/* Audio Analysis Search - ALWAYS VISIBLE IN ANALYSIS MODE, OR BELOW SEARCH IN OTHER MODES */}
-              <div className={`flex flex-col gap-4 mt-8 pt-10 border-t border-white/5`}>
-                  <div className="flex items-center gap-4 mb-4">
-                    <div className={`h-[1px] flex-1 ${theme === 'coldest' ? 'bg-slate-200' : 'bg-white/10'}`} />
-                    <span className={`text-[10px] font-black uppercase tracking-[0.4em] opacity-30 ${theme === 'coldest' ? 'text-slate-900' : 'text-white'}`}>
-                      Audio Analysis & Recipes
-                    </span>
-                    <div className={`h-[1px] flex-1 ${theme === 'coldest' ? 'bg-slate-200' : 'bg-white/10'}`} />
-                  </div>
-                
-                <div className="text-center mt-2 mb-4 animate-in fade-in zoom-in duration-500">
+              {inputMode === 'upload' && (
+              <div className={`transition-all duration-700 ${mainTab === null ? 'blur-[8px] pointer-events-none opacity-40' : 'animate-in fade-in slide-in-from-bottom-4 duration-300'}`}>
+                <div className={`flex flex-col gap-4 mt-2`}>
+                  <div className="text-center mt-2 mb-4">
                   <div className={`w-20 h-20 mx-auto rounded-full flex items-center justify-center mb-4 shadow-lg ${theme === 'coldest' ? 'bg-sky-500/10 text-sky-500 shadow-sky-500/20' : 'bg-purple-500/20 text-purple-400 shadow-purple-500/20'}`}>
                      <span className="text-4xl text-glow-pulse">📎</span>
                   </div>
                   <h3 className={`text-[12px] font-black uppercase tracking-[0.2em] opacity-80 ${theme === 'coldest' || theme === 'chef-mode' ? 'text-slate-800' : 'text-white'}`}>
                     {audioMode === 'recipe' 
-                      ? 'Generate recipe by uploading music files' 
+                      ? 'Generate recipe, or use mix critique by uploading music files' 
                       : 'Upload music files for suggested improvements'}
                   </h3>
                 </div>
@@ -6180,6 +6274,8 @@ The AI was unable to verify these parameters. Please investigate.`;
                   </div>
                 )}
               </div>
+              </div>
+              )}
 
               {!isVerified && (
                 <div className="flex justify-center mt-4">
@@ -6245,8 +6341,6 @@ The AI was unable to verify these parameters. Please investigate.`;
                   </button>
                 </div>
               </div>
-              
-              </div> {/* Close mainTab overlay blur container */}
             </section>
 
             <AnimatePresence mode="popLayout">
