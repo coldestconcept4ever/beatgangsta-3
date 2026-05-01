@@ -889,6 +889,10 @@ const App: React.FC = () => {
 
   const [isUpdatingSort, startSortTransition] = useTransition();
 
+  const isAdminDashboardAuthorized = useMemo(() => {
+    return user && ['coldestconcept@gmail.com', 'recognizemiracles@gmail.com'].includes(user.email);
+  }, [user]);
+
   const isMasterAuthorized = useMemo(() => {
     const isEnglish = i18n.language.startsWith('en');
     return user && authorizedEmails.includes(user.email) && isEnglish;
@@ -4609,7 +4613,7 @@ The AI was unable to verify these parameters. Please investigate.`;
                       </div>
                     </button>
 
-                    {isMasterAuthorized && (
+                    {isAdminDashboardAuthorized && (
                       <>
                         <button 
                           onClick={() => {

@@ -1346,15 +1346,20 @@ app.get("/api/admin/users-data", async (req, res) => {
     // Get all purchases
     const purchasesResult = await db.execute(`SELECT * FROM purchases ORDER BY created_at DESC`);
     
+    // Get all receipts
+    const allReceiptsResult = await db.execute(`SELECT * FROM receipts ORDER BY date DESC`);
+
     // Map data to users
     const usersWithData = usersResult.rows.map((user: any) => {
       const userPurchases = purchasesResult.rows.filter((p: any) => p.uid === user.uid);
+      const userReceipts = allReceiptsResult.rows.filter((r: any) => r.uid === user.uid);
       const totalSpent = userPurchases.reduce((sum: number, p: any) => sum + (p.amount_fiat || 0), 0);
       
       return {
         ...user,
         gear: gearResult.rows.filter((p: any) => p.uid === user.uid),
         purchases: userPurchases,
+        receipts: userReceipts,
         totalSpent
       };
     });
@@ -1370,6 +1375,34 @@ app.get("/api/admin/users-data", async (req, res) => {
     res.json({ users: usersWithData, stats });
   } catch (err) {
     console.error("Failed to fetch admin users data:", err);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+});
+
+app.post("/api/admin/clear-user-receipts", express.json(), async (req, res) => {
+  const authorizedEmails = ['coldestconcept@gmail.com', 'recognizemiracles@gmail.com'];
+  const userEmail = req.session?.user?.email;
+  const key = req.query.key;
+
+  if ((!userEmail || !authorizedEmails.includes(userEmail)) && key !== process.env.MASTER_KEY) {
+    return res.status(403).json({ error: "Unauthorized access to clear receipts" });
+  }
+
+  const { targetUid } = req.body;
+  if (!targetUid) {
+    return res.status(400).json({ error: "Missing targetUid" });
+  }
+
+  try {
+    const db = getDb();
+    await db.execute({
+      sql: `DELETE FROM receipts WHERE uid = ?`,
+      args: [targetUid]
+    });
+    
+    res.json({ success: true });
+  } catch (err) {
+    console.error("Failed to clear user receipts:", err);
     res.status(500).json({ error: "Internal Server Error" });
   }
 });

@@ -59,6 +59,7 @@ interface UserData {
   role: string;
   gear?: GearItem[];
   purchases?: Purchase[];
+  receipts?: any[];
   totalSpent?: number;
 }
 
@@ -502,6 +503,88 @@ export const AdminDashboard = ({ onBack, theme }: { onBack: () => void, theme: s
                     <div className={`p-8 md:p-12 rounded-2xl md:rounded-3xl border border-dashed ${dashboardTheme.card} text-center opacity-30`}>
                       <DollarSign size={32} className="mx-auto mb-3 md:w-12 md:h-12 md:mb-4" />
                       <p className="font-black uppercase tracking-widest text-[10px] md:text-sm">No transactions yet</p>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Feature Usage (Receipts) Section */}
+              <div className="space-y-4">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                  <h3 className="text-lg md:text-xl font-black uppercase tracking-tighter flex items-center gap-2">
+                    <Zap className="opacity-50" size={20} /> Feature Usage
+                  </h3>
+                  <div className="flex items-center gap-4">
+                    <span className="text-[10px] font-bold opacity-40 uppercase tracking-widest">
+                      {selectedUser.receipts?.length || 0} Receipts Found
+                    </span>
+                    {selectedUser.receipts && selectedUser.receipts.length > 0 && (
+                      <button 
+                        onClick={async () => {
+                          if (!window.confirm("Are you sure you want to clear this user's receipt history?")) return;
+                          try {
+                            const masterKey = localStorage.getItem('_master_key_temp') || '';
+                            const res = await fetch(`/api/admin/clear-user-receipts?key=${masterKey}`, {
+                              method: 'POST',
+                              headers: { 'Content-Type': 'application/json' },
+                              body: JSON.stringify({ targetUid: selectedUser.uid })
+                            });
+                            if (!res.ok) throw new Error('Failed to clear receipts');
+                            
+                            // Update local state
+                            setUsers(prev => prev.map(u => u.uid === selectedUser.uid ? { ...u, receipts: [] } : u));
+                            setSelectedUser(prev => prev ? { ...prev, receipts: [] } : null);
+                          } catch (err: any) {
+                            setError(err.message);
+                          }
+                        }}
+                        className="text-[10px] font-bold text-red-500 hover:text-red-400 uppercase tracking-widest px-2 py-1 bg-red-500/10 rounded-lg transition-colors"
+                      >
+                        Clear Receipts
+                      </button>
+                    )}
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 gap-2 md:gap-3 max-h-80 overflow-y-auto pr-2 custom-scrollbar">
+                  {selectedUser.receipts && selectedUser.receipts.length > 0 ? (
+                    selectedUser.receipts.map((r: any) => (
+                      <div 
+                        key={r.id} 
+                        className={`p-3 md:p-4 rounded-xl md:rounded-2xl border ${dashboardTheme.card} flex items-center justify-between group transition-all hover:bg-yellow-500/5`}
+                      >
+                        <div className="flex items-center gap-3 md:gap-4 min-w-0">
+                          <div className={`w-8 h-8 md:w-10 md:h-10 rounded-lg md:rounded-xl flex items-center justify-center shrink-0 bg-yellow-500/10 text-yellow-500`}>
+                            <Zap size={16} className="md:w-[18px] md:h-[18px]" />
+                          </div>
+                          <div className="min-w-0">
+                            <p className="font-black text-xs md:text-sm uppercase tracking-tight truncate">
+                              {r.action}
+                            </p>
+                            <p className="text-[9px] md:text-[10px] font-bold opacity-40 uppercase tracking-widest truncate">
+                              ID: {r.id.substring(0, 12)}...
+                            </p>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-4 md:gap-8">
+                          <div className="text-right">
+                             <p className="text-sm md:text-lg font-black text-red-500">-{r.cost} 🪙</p>
+                          </div>
+                          <div className="text-right shrink-0 hidden xs:block">
+                            <p className="text-[9px] md:text-[10px] font-bold opacity-40 uppercase tracking-widest">
+                              {new Date(r.date).toLocaleDateString()}
+                            </p>
+                            <p className="text-[8px] md:text-[9px] font-medium opacity-30">
+                              {new Date(r.date).toLocaleTimeString()}
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    ))
+                  ) : (
+                    <div className={`p-8 md:p-12 rounded-2xl md:rounded-3xl border border-dashed ${dashboardTheme.card} text-center opacity-30`}>
+                      <Zap size={32} className="mx-auto mb-3 md:w-12 md:h-12 md:mb-4" />
+                      <p className="font-black uppercase tracking-widest text-[10px] md:text-sm">No feature usage yet</p>
                     </div>
                   )}
                 </div>
