@@ -5761,9 +5761,12 @@ The AI was unable to verify these parameters. Please investigate.`;
 
               <div className={`transition-all duration-700 ${mainTab === null ? 'blur-[8px] pointer-events-none opacity-40' : ''}`}>
                 <div className={`flex flex-col gap-4 ${showChain ? '-mt-12' : ''}`}>
-                  <div className="text-center mb-2 mt-4">
+                  <div className="text-center mb-4 mt-6 animate-in fade-in zoom-in duration-500">
+                    <div className={`w-20 h-20 mx-auto rounded-full flex items-center justify-center mb-4 shadow-lg ${theme === 'coldest' ? 'bg-sky-500/10 text-sky-500 shadow-sky-500/20' : 'bg-purple-500/20 text-purple-400 shadow-purple-500/20'}`}>
+                      <span className="text-4xl text-glow-pulse">🔍</span>
+                    </div>
                     <h3 className={`text-[12px] font-black uppercase tracking-[0.2em] opacity-80 ${theme === 'coldest' || theme === 'chef-mode' ? 'text-slate-800' : 'text-white'}`}>
-                      Generate Recipes using search terms
+                      Generate recipe using search terms
                     </h3>
                   </div>
                   <div className="flex flex-col sm:flex-row gap-4">
@@ -5837,7 +5840,10 @@ The AI was unable to verify these parameters. Please investigate.`;
                     <div className={`h-[1px] flex-1 ${theme === 'coldest' ? 'bg-slate-200' : 'bg-white/10'}`} />
                   </div>
                 
-                <div className="text-center mt-2 mb-2">
+                <div className="text-center mt-2 mb-4 animate-in fade-in zoom-in duration-500">
+                  <div className={`w-20 h-20 mx-auto rounded-full flex items-center justify-center mb-4 shadow-lg ${theme === 'coldest' ? 'bg-sky-500/10 text-sky-500 shadow-sky-500/20' : 'bg-purple-500/20 text-purple-400 shadow-purple-500/20'}`}>
+                     <span className="text-4xl text-glow-pulse">📎</span>
+                  </div>
                   <h3 className={`text-[12px] font-black uppercase tracking-[0.2em] opacity-80 ${theme === 'coldest' || theme === 'chef-mode' ? 'text-slate-800' : 'text-white'}`}>
                     {audioMode === 'recipe' 
                       ? 'Generate recipe by uploading music files' 

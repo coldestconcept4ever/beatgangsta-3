@@ -382,6 +382,11 @@ export const RecipeCard: React.FC<RecipeCardProps> = ({ recipe: initialRecipe, i
             <span className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest ${
               theme === 'coldest' ? 'bg-sky-500 text-white' : 'bg-white/10'
             }`}>{recipe.bpm} BPM</span>
+            {recipe.artistTypes && recipe.artistTypes.length > 0 && (
+              <span className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest ${
+                theme === 'coldest' ? 'bg-indigo-500 text-white' : 'bg-indigo-500/20 text-indigo-400'
+              }`}>Vibe: {recipe.artistTypes.join(', ')}</span>
+            )}
             {recipe.recommendedScale && (
               <span className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest ${
                 theme === 'coldest' ? 'bg-orange-500 text-white' : 'bg-orange-500/20 text-orange-400'
