@@ -1,13 +1,13 @@
 
 export enum Type {
-  TYPE_UNSPECIFIED = "TYPE_UNSPECIFIED",
-  STRING = "STRING",
-  NUMBER = "NUMBER",
-  INTEGER = "INTEGER",
-  BOOLEAN = "BOOLEAN",
-  ARRAY = "ARRAY",
-  OBJECT = "OBJECT",
-  NULL = "NULL" }
+  TYPE_UNSPECIFIED = "unspecified",
+  STRING = "string",
+  NUMBER = "number",
+  INTEGER = "integer",
+  BOOLEAN = "boolean",
+  ARRAY = "array",
+  OBJECT = "object",
+  NULL = "null" }
 export enum HarmCategory {
   HARM_CATEGORY_UNSPECIFIED = "HARM_CATEGORY_UNSPECIFIED",
   HARM_CATEGORY_HARASSMENT = "HARM_CATEGORY_HARASSMENT",
@@ -390,9 +390,8 @@ export const regeneratePlugin = async (
             items: {
               type: Type.OBJECT,
               properties: {
-                parameter: { type: Type.STRING },
-                value: { type: Type.STRING } },
-              required: ["parameter", "value"]
+                parameter: { type: Type.STRING }, value: { type: Type.STRING }, explanation: { type: Type.STRING } },
+              required: ["parameter", "value", "explanation"]
             }
           }
         },
@@ -584,13 +583,12 @@ const getUnifiedRecipeSchema = () => {
             },
             deepDive: {
               type: Type.ARRAY,
-              description: "Provide EVERY available parameter found on the actual plugin (typically 40-70 for professional plugins). Detail parameter name, value, and explanation. Be exhaustive and DO NOT be lazy.",
+              description: "Provide EVERY available parameter found on the actual plugin (typically 40-70 for professional plugins). Detail parameter name, value, and explanation. Be exhaustive and DO NOT be lazy. AT LEAST 10 parameter settings (and up to 30 if it is a complex channel strip plugin).",
               items: {
                 type: Type.OBJECT,
                 properties: {
-                  parameter: { type: Type.STRING },
-                  value: { type: Type.STRING } },
-                required: ["parameter", "value"]
+                  parameter: { type: Type.STRING }, value: { type: Type.STRING }, explanation: { type: Type.STRING } },
+                required: ["parameter", "value", "explanation"]
               }
             },
             fxPlugins: {
@@ -602,13 +600,12 @@ const getUnifiedRecipeSchema = () => {
                   purpose: { type: Type.STRING },
                   deepDive: {
                     type: Type.ARRAY,
-                    description: "Provide EVERY available parameter found on the actual plugin. Detail parameter name, value, and explanation. Be exhaustive.",
+                    description: "Provide EVERY available parameter found on the actual plugin. Detail parameter name, value, and explanation. Be exhaustive. AT LEAST 10 parameter settings (and up to 30 if it is a complex channel strip plugin).",
                     items: {
                       type: Type.OBJECT,
                       properties: {
-                        parameter: { type: Type.STRING },
-                        value: { type: Type.STRING } },
-                      required: ["parameter", "value"]
+                        parameter: { type: Type.STRING }, value: { type: Type.STRING }, explanation: { type: Type.STRING } },
+                      required: ["parameter", "value", "explanation"]
                     }
                   },
                   band: { type: Type.STRING },
@@ -637,13 +634,12 @@ const getUnifiedRecipeSchema = () => {
                   purpose: { type: Type.STRING },
                   deepDive: {
                     type: Type.ARRAY,
-                    description: "Provide EVERY available parameter found on the actual plugin. Detail parameter name, value, and explanation. Be exhaustive.",
+                    description: "Provide EVERY available parameter found on the actual plugin. Detail parameter name, value, and explanation. Be exhaustive. AT LEAST 10 parameter settings (and up to 30 if it is a complex channel strip plugin).",
                     items: {
                       type: Type.OBJECT,
                       properties: {
-                        parameter: { type: Type.STRING },
-                        value: { type: Type.STRING } },
-                      required: ["parameter", "value"]
+                        parameter: { type: Type.STRING }, value: { type: Type.STRING }, explanation: { type: Type.STRING } },
+                      required: ["parameter", "value", "explanation"]
                     }
                   }
                 },
@@ -690,9 +686,8 @@ const getUnifiedRecipeSchema = () => {
               items: {
                 type: Type.OBJECT,
                 properties: {
-                  parameter: { type: Type.STRING },
-                  value: { type: Type.STRING } },
-                required: ["parameter", "value"]
+                  parameter: { type: Type.STRING }, value: { type: Type.STRING }, explanation: { type: Type.STRING } },
+                required: ["parameter", "value", "explanation"]
               }
             }
           },
@@ -717,9 +712,8 @@ const getUnifiedRecipeSchema = () => {
                     items: {
                       type: Type.OBJECT,
                       properties: {
-                        parameter: { type: Type.STRING },
-                        value: { type: Type.STRING } },
-                      required: ["parameter", "value"]
+                        parameter: { type: Type.STRING }, value: { type: Type.STRING }, explanation: { type: Type.STRING } },
+                      required: ["parameter", "value", "explanation"]
                     }
                   }
                 },
@@ -737,9 +731,8 @@ const getUnifiedRecipeSchema = () => {
                       items: {
                         type: Type.OBJECT,
                         properties: {
-                          parameter: { type: Type.STRING },
-                          value: { type: Type.STRING } },
-                        required: ["parameter", "value"]
+                          parameter: { type: Type.STRING }, value: { type: Type.STRING }, explanation: { type: Type.STRING } },
+                        required: ["parameter", "value", "explanation"]
                       }
                     }
                   },
@@ -758,9 +751,8 @@ const getUnifiedRecipeSchema = () => {
                       items: {
                         type: Type.OBJECT,
                         properties: {
-                          parameter: { type: Type.STRING },
-                          value: { type: Type.STRING } },
-                        required: ["parameter", "value"]
+                          parameter: { type: Type.STRING }, value: { type: Type.STRING }, explanation: { type: Type.STRING } },
+                        required: ["parameter", "value", "explanation"]
                       }
                     }
                   },
@@ -779,9 +771,8 @@ const getUnifiedRecipeSchema = () => {
                       items: {
                         type: Type.OBJECT,
                         properties: {
-                          parameter: { type: Type.STRING },
-                          value: { type: Type.STRING } },
-                        required: ["parameter", "value"]
+                          parameter: { type: Type.STRING }, value: { type: Type.STRING }, explanation: { type: Type.STRING } },
+                        required: ["parameter", "value", "explanation"]
                       }
                     }
                   },
@@ -827,9 +818,8 @@ const getUnifiedRecipeSchema = () => {
                         items: {
                           type: Type.OBJECT,
                           properties: {
-                            parameter: { type: Type.STRING },
-                            value: { type: Type.STRING } },
-                          required: ["parameter", "value"]
+                            parameter: { type: Type.STRING }, value: { type: Type.STRING }, explanation: { type: Type.STRING } },
+                          required: ["parameter", "value", "explanation"]
                         }
                       }
                     },
@@ -888,9 +878,8 @@ const getUnifiedRecipeSchema = () => {
                     items: {
                       type: Type.OBJECT,
                       properties: {
-                        parameter: { type: Type.STRING },
-                        value: { type: Type.STRING } },
-                      required: ["parameter", "value"]
+                        parameter: { type: Type.STRING }, value: { type: Type.STRING }, explanation: { type: Type.STRING } },
+                      required: ["parameter", "value", "explanation"]
                     }
                   }
                 },
@@ -908,9 +897,8 @@ const getUnifiedRecipeSchema = () => {
                       items: {
                         type: Type.OBJECT,
                         properties: {
-                          parameter: { type: Type.STRING },
-                          value: { type: Type.STRING } },
-                        required: ["parameter", "value"]
+                          parameter: { type: Type.STRING }, value: { type: Type.STRING }, explanation: { type: Type.STRING } },
+                        required: ["parameter", "value", "explanation"]
                       }
                     }
                   },
@@ -929,9 +917,8 @@ const getUnifiedRecipeSchema = () => {
                       items: {
                         type: Type.OBJECT,
                         properties: {
-                          parameter: { type: Type.STRING },
-                          value: { type: Type.STRING } },
-                        required: ["parameter", "value"]
+                          parameter: { type: Type.STRING }, value: { type: Type.STRING }, explanation: { type: Type.STRING } },
+                        required: ["parameter", "value", "explanation"]
                       }
                     }
                   },
@@ -950,9 +937,8 @@ const getUnifiedRecipeSchema = () => {
                       items: {
                         type: Type.OBJECT,
                         properties: {
-                          parameter: { type: Type.STRING },
-                          value: { type: Type.STRING } },
-                        required: ["parameter", "value"]
+                          parameter: { type: Type.STRING }, value: { type: Type.STRING }, explanation: { type: Type.STRING } },
+                        required: ["parameter", "value", "explanation"]
                       }
                     }
                   },
@@ -998,9 +984,8 @@ const getUnifiedRecipeSchema = () => {
                         items: {
                           type: Type.OBJECT,
                           properties: {
-                            parameter: { type: Type.STRING },
-                            value: { type: Type.STRING } },
-                          required: ["parameter", "value"]
+                            parameter: { type: Type.STRING }, value: { type: Type.STRING }, explanation: { type: Type.STRING } },
+                          required: ["parameter", "value", "explanation"]
                         }
                       }
                     },
@@ -1512,7 +1497,7 @@ export const getBeatRecommendations = async (plugins: VSTPlugin[], analogInstrum
     Focus on modern sub-genres: Melodic Trap, Dark Drill, High-Energy Rage.
     Identify 2-3 mainstream or commonly known artists who would typically use this specific beat type (e.g., "Lil Wayne type", "Travis Scott type").
     Include a recommended BPM, 'recommendedScale', and 'chordProgression'.
-    You MUST provide the 'instruments' array with instruments (e.g., synths, pianos, guitars, strings). 
+    You MUST provide the 'instruments' array with AT LEAST 3 DISTINCT "REAL" instruments (e.g., synths, pianos, guitars, strings). 
     CRITICAL: 808s and Basslines MUST be included in the 'instruments' array with a detailed 'midiNotes' pattern. DO NOT put 808s in 'drumPatterns'.
     CRITICAL: DO NOT use vocals as a main instrument in the 'instruments' array. Vocals MUST be separate.
     For each instrument:
@@ -1528,8 +1513,8 @@ export const getBeatRecommendations = async (plugins: VSTPlugin[], analogInstrum
       - duration: (e.g., '4', '8', '16')
       - wait: (e.g., '0', '4', '8')
       - velocity: (number between 0 and 127)
-    If vocals are used in the beat (e.g., vocal chops, atmospheric textures), you MUST provide the 'vocalElements' object (same structure as gangstaVox) to describe them. This is the ONLY place vocal elements should be described. Ensure every plugin in the vocalElements chain has an EXHAUSTIVE list of all parameters (typically 20-50 settings).
-    You MUST provide the 'busses' array. Create busses (e.g., "Drum Bus", "Melody Bus") and list which instrument tracks are using them, along with the fxPlugins on the bus and their deep dives (EVERY available parameter per plugin, aim for 20-40+).
+    If vocals are used in the beat (e.g., vocal chops, atmospheric textures), you MUST provide the 'vocalElements' object (same structure as gangstaVox) to describe them. This is the ONLY place vocal elements should be described. Ensure every plugin in the vocalElements chain has an EXHAUSTIVE list of all parameters (typically 20-50 settings). Ensure every plugin in the vocalElements chain has AT LEAST 10 parameters in its deepDive (and up to 30 if it is a complex channel strip plugin).
+    You MUST provide the 'busses' array. Create busses (e.g., "Drum Bus", "Melody Bus") and list which instrument tracks are using them, along with the fxPlugins on the bus and their deep dives (AT LEAST 10 parameters per plugin, and up to 30 if it is a complex channel strip plugin) (EVERY available parameter per plugin, aim for 20-40+).
     You MUST provide the 'masterPlugins' array with deep dives for the master chain (EVERY available parameter per plugin, aim for 20-40+).
     You MUST provide 'drumPatterns' and 'arrangement'.
     CRITICAL DRUM PATTERN RULES:
@@ -1648,7 +1633,7 @@ export const getCustomBeatRecommendations = async (plugins: VSTPlugin[], query: 
     Ensure the recipe captures the signature sound, bounce, and atmospheric elements associated with ${query}.
     Identify 2-3 mainstream or commonly known artists who would typically use this specific beat type.
     Include a recommended BPM, 'recommendedScale', and 'chordProgression' that fits the vibe.
-    You MUST provide the 'instruments' array with instruments (e.g., synths, pianos, guitars, strings). 
+    You MUST provide the 'instruments' array with AT LEAST 3 DISTINCT "REAL" instruments (e.g., synths, pianos, guitars, strings). 
     CRITICAL: 808s and Basslines MUST be included in the 'instruments' array with a detailed 'midiNotes' pattern. DO NOT put 808s in 'drumPatterns'.
     CRITICAL: DO NOT use vocals as a main instrument in the 'instruments' array. Vocals MUST be separate.
     For each instrument:
@@ -1779,7 +1764,7 @@ export const getSongBeatRecommendations = async (plugins: VSTPlugin[], songQuery
     CRITICAL: You MUST use the blueprint's microTiming, velocityDynamics, chordVoicing, and repetitionStrategy to generate the MIDI notes and drum patterns. This is essential for achieving an iconic, authentic, high-energy, and highly realistic MIDI quality that perfectly encapsulates the requested tracking.
     Identify 2-3 mainstream or commonly known artists who would typically use this specific beat type.
     Include a recommended BPM, 'recommendedScale', and 'chordProgression' that fits the vibe.
-    You MUST provide the 'instruments' array with instruments (e.g., synths, pianos, guitars, strings). 
+    You MUST provide the 'instruments' array with AT LEAST 3 DISTINCT "REAL" instruments (e.g., synths, pianos, guitars, strings). 
     CRITICAL: 808s and Basslines MUST be included in the 'instruments' array with a detailed 'midiNotes' pattern. DO NOT put 808s in 'drumPatterns'.
     CRITICAL: DO NOT use vocals as a main instrument in the 'instruments' array. Vocals MUST be separate.
     For each instrument:
@@ -1795,8 +1780,8 @@ export const getSongBeatRecommendations = async (plugins: VSTPlugin[], songQuery
       - duration: (e.g., '4', '8', '16')
       - wait: (e.g., '0', '4', '8')
       - velocity: (number between 0 and 127)
-    If vocals are used in the beat (e.g., vocal chops, atmospheric textures), you MUST provide the 'vocalElements' object (same structure as gangstaVox) to describe them. This is the ONLY place vocal elements should be described. Ensure every plugin in the vocalElements chain has an EXHAUSTIVE list of all parameters (typically 25-50 settings).
-    You MUST provide the 'busses' array. Create busses (e.g., "Drum Bus", "Melody Bus") and list which instrument tracks are using them, along with the fxPlugins on the bus and their deep dives (EVERY available parameter per plugin, aim for 20-50+).
+    If vocals are used in the beat (e.g., vocal chops, atmospheric textures), you MUST provide the 'vocalElements' object (same structure as gangstaVox) to describe them. This is the ONLY place vocal elements should be described. Ensure every plugin in the vocalElements chain has an EXHAUSTIVE list of all parameters (typically 25-50 settings). Ensure every plugin in the vocalElements chain has AT LEAST 10 parameters in its deepDive (and up to 30 if it is a complex channel strip plugin).
+    You MUST provide the 'busses' array. Create busses (e.g., "Drum Bus", "Melody Bus") and list which instrument tracks are using them, along with the fxPlugins on the bus and their deep dives (AT LEAST 10 parameters per plugin, and up to 30 if it is a complex channel strip plugin) (EVERY available parameter per plugin, aim for 20-50+).
     You MUST provide the 'masterPlugins' array with deep dives for the master chain (EVERY available parameter per plugin, aim for 20-50+).
     You MUST provide 'drumPatterns' and 'arrangement'.
     CRITICAL DRUM PATTERN RULES:
@@ -1973,7 +1958,7 @@ export const getAudioBeatRecommendations = async (plugins: VSTPlugin[], audioBas
     Ensure the recipe captures the signature sound, instrumentation, and mixing techniques heard in the audio.
     Identify 2-3 mainstream or commonly known artists who would typically use this specific beat type.
     Include a recommended BPM, 'recommendedScale', and 'chordProgression' that fits the vibe.
-    You MUST provide the 'instruments' array with instruments (e.g., synths, pianos, guitars, strings). 
+    You MUST provide the 'instruments' array with AT LEAST 3 DISTINCT "REAL" instruments (e.g., synths, pianos, guitars, strings). 
     CRITICAL: 808s and Basslines MUST be included in the 'instruments' array with a detailed 'midiNotes' pattern. DO NOT put 808s in 'drumPatterns'.
     CRITICAL: DO NOT use vocals as a main instrument in the 'instruments' array. Vocals MUST be separate.
     For each instrument:
@@ -1989,7 +1974,7 @@ export const getAudioBeatRecommendations = async (plugins: VSTPlugin[], audioBas
       - duration: (e.g., '4', '8', '16')
       - wait: (e.g., '0', '4', '8')
       - velocity: (number between 0 and 127)
-    If vocals are used in the beat (e.g., vocal chops, atmospheric textures), you MUST provide the 'vocalElements' object (same structure as gangstaVox) to describe them. This is the ONLY place vocal elements should be described. Ensure every plugin in the vocalElements chain has an EXHAUSTIVE list of all parameters (typically 25-50 settings).
+    If vocals are used in the beat (e.g., vocal chops, atmospheric textures), you MUST provide the 'vocalElements' object (same structure as gangstaVox) to describe them. This is the ONLY place vocal elements should be described. Ensure every plugin in the vocalElements chain has an EXHAUSTIVE list of all parameters (typically 25-50 settings). Ensure every plugin in the vocalElements chain has AT LEAST 10 parameters in its deepDive (and up to 30 if it is a complex channel strip plugin).
     ${hasApollo ? `
     CRITICAL: For the vocalElements 'trackingChain', since the user owns a Universal Audio Apollo interface (${apolloModel}), you MUST include a 'trackingChain' specifically for this Apollo, mirroring the UAD Console workflow.
     FOR THE UAD CONSOLE TRACKING CHAIN in 'vocalElements', YOU MUST STRICTLY ONLY USE THESE UAD-2 DSP PLUGINS:
@@ -2000,7 +1985,7 @@ export const getAudioBeatRecommendations = async (plugins: VSTPlugin[], audioBas
     3. AUX CHANNELS: Both 'aux1' and 'aux2' are MANDATORY.
     4. ACCURACY: Provide EVERY available setting (30-50+ parameters per plugin). NO LAZY OUTPUTS. DO NOT SKIP KNOBS.
     ` : ''}
-    You MUST provide the 'busses' array. Create busses (e.g., "Drum Bus", "Melody Bus") and list which instrument tracks are using them, along with the fxPlugins on the bus and their deep dives (EVERY available parameter per plugin, aim for 20-50+).
+    You MUST provide the 'busses' array. Create busses (e.g., "Drum Bus", "Melody Bus") and list which instrument tracks are using them, along with the fxPlugins on the bus and their deep dives (AT LEAST 10 parameters per plugin, and up to 30 if it is a complex channel strip plugin) (EVERY available parameter per plugin, aim for 20-50+).
     You MUST provide the 'masterPlugins' array with deep dives for the master chain (EVERY available parameter per plugin, aim for 20-50+).
     You MUST provide 'drumPatterns' and 'arrangement'.
     CRITICAL DRUM PATTERN RULES:
@@ -2174,39 +2159,37 @@ export const getMixCritique = async (
       - 'recommendedChain': A robust chain of plugins from the user's list to use for this fix, with 'name', 'purpose', and 'deepDive' (an array of parameter objects - Provide EVERY available parameter found on the actual plugin interface, aim for 40-80 settings for complex modules - each with 'parameter', 'value', and 'explanation'). You can also optionally include 'band' and 'routing' properties for multiband or parallel processing. MATCH THE EXTREME DETAIL LEVEL OF A FULL BEAT RECIPE.
   `;
   const schemaObject = {
-    type: "OBJECT",
+    type: "object",
     properties: {
-      title: { type: "STRING" },
-      overallFeedback: { type: "STRING" },
-      strengths: { type: "ARRAY", items: { type: "STRING" } },
-      weaknesses: { type: "ARRAY", items: { type: "STRING" } },
+      title: { type: "string" },
+      overallFeedback: { type: "string" },
+      strengths: { type: "array", items: { type: "string" } },
+      weaknesses: { type: "array", items: { type: "string" } },
       actionPlan: {
-        type: "ARRAY",
+        type: "array",
         description: hasStems && uploadedStems && uploadedStems.length > 0 ? `CRITICAL: You MUST generate EXACTLY ${uploadedStems.length} items in this array, one for each uploaded stem.` : "Array of actionable steps.",
         items: {
-          type: "OBJECT",
+          type: "object",
           properties: {
-            targetStem: { type: "STRING", description: "The exact name of the stem this step applies to (if stems were uploaded)." },
-            issue: { type: "STRING" },
-            solution: { type: "STRING" },
+            targetStem: { type: "string", description: "The exact name of the stem this step applies to (if stems were uploaded)." },
+            issue: { type: "string" },
+            solution: { type: "string" },
             recommendedChain: {
-              type: "ARRAY",
+              type: "array",
               description: hasStems && uploadedStems && uploadedStems.length > 0 ? "CRITICAL: You MUST provide EXACTLY 4 plugins for this stem, with the 4th explicitly dedicated to volume leveling." : "Chain of 2-4 plugins.",
               items: {
-                type: "OBJECT",
+                type: "object",
                 properties: {
-                  name: { type: "STRING" },
-                  purpose: { type: "STRING" },
+                  name: { type: "string" },
+                  purpose: { type: "string" },
                   deepDive: {
-                    type: "ARRAY",
+                    type: "array",
                     description: "Provide EVERY available parameter found on the actual plugin interface. Aim for 40-70 settings for complex modules. MATCH THE EXTREME DETAIL LEVEL OF A FULL BEAT RECIPE.",
                     items: {
-                      type: "OBJECT",
+                      type: "object",
                       properties: {
-                        parameter: { type: "STRING" },
-                        value: { type: "STRING" }
-                      },
-                      required: ["parameter", "value"]
+                        parameter: { type: "string" }, value: { type: "string" }, explanation: { type: "string" } },
+                      required: ["parameter", "value", "explanation"]
                     }
                   }
                 },
@@ -2558,9 +2541,8 @@ export const regenerateTrackingChain = async (
                   items: { 
                     type: Type.OBJECT, 
                     properties: { 
-                      parameter: { type: Type.STRING }, 
-                      value: { type: Type.STRING } }, 
-                    required: ["parameter", "value"] 
+                      parameter: { type: Type.STRING }, value: { type: Type.STRING }, explanation: { type: Type.STRING } }, 
+                    required: ["parameter", "value", "explanation"] 
                   } 
                 } 
               },
@@ -2578,9 +2560,8 @@ export const regenerateTrackingChain = async (
                     items: { 
                       type: Type.OBJECT, 
                       properties: { 
-                        parameter: { type: Type.STRING }, 
-                        value: { type: Type.STRING } }, 
-                      required: ["parameter", "value"] 
+                        parameter: { type: Type.STRING }, value: { type: Type.STRING }, explanation: { type: Type.STRING } }, 
+                      required: ["parameter", "value", "explanation"] 
                     } 
                   } 
                 }, 
@@ -2599,9 +2580,8 @@ export const regenerateTrackingChain = async (
                     items: { 
                       type: Type.OBJECT, 
                       properties: { 
-                        parameter: { type: Type.STRING }, 
-                        value: { type: Type.STRING } }, 
-                      required: ["parameter", "value"] 
+                        parameter: { type: Type.STRING }, value: { type: Type.STRING }, explanation: { type: Type.STRING } }, 
+                      required: ["parameter", "value", "explanation"] 
                     } 
                   } 
                 }, 
@@ -2620,9 +2600,8 @@ export const regenerateTrackingChain = async (
                     items: { 
                       type: Type.OBJECT, 
                       properties: { 
-                        parameter: { type: Type.STRING }, 
-                        value: { type: Type.STRING } }, 
-                      required: ["parameter", "value"] 
+                        parameter: { type: Type.STRING }, value: { type: Type.STRING }, explanation: { type: Type.STRING } }, 
+                      required: ["parameter", "value", "explanation"] 
                     } 
                   } 
                 }, 
