@@ -5944,7 +5944,7 @@ The AI was unable to verify these parameters. Please investigate.`;
                   </div>
                   <h3 className={`text-[12px] font-black uppercase tracking-[0.2em] opacity-80 ${theme === 'coldest' || theme === 'chef-mode' ? 'text-slate-800' : 'text-white'}`}>
                     {audioMode === 'recipe' 
-                      ? 'Generate recipe, or use mix critique by uploading music files' 
+                      ? 'Generate recipe by uploading music files' 
                       : 'Upload music files for suggested improvements'}
                   </h3>
                 </div>
