@@ -1,13 +1,13 @@
 
 export enum Type {
-  TYPE_UNSPECIFIED = "TYPE_UNSPECIFIED",
-  STRING = "STRING",
-  NUMBER = "NUMBER",
-  INTEGER = "INTEGER",
-  BOOLEAN = "BOOLEAN",
-  ARRAY = "ARRAY",
-  OBJECT = "OBJECT",
-  NULL = "NULL",
+  TYPE_UNSPECIFIED = "unspecified",
+  STRING = "string",
+  NUMBER = "number",
+  INTEGER = "integer",
+  BOOLEAN = "boolean",
+  ARRAY = "array",
+  OBJECT = "object",
+  NULL = "null",
 }
 
 export enum HarmCategory {
@@ -445,7 +445,7 @@ export const regeneratePlugin = async (
 
   const response = await ai.models.generateContent({
     model: "gemini-3-flash-preview",
-    contents: prompt,
+    contents: { parts: [{ text: prompt }] },
     config: {
       customAction: 'regenerate_plugin',
       responseMimeType: "application/json",
@@ -501,7 +501,7 @@ export const categorizeAndCompareLibraries = async (senderPlugins: VSTPlugin[], 
 
   const response = await ai.models.generateContent({
     model: "gemini-3-flash-preview",
-    contents: prompt,
+    contents: { parts: [{ text: prompt }] },
     config: {
       customAction: 'compare_libraries',
       responseMimeType: "application/json"
@@ -1287,7 +1287,7 @@ export const enrichPluginLibrary = async (
     try {
       const response = await ai.models.generateContent({
         model: "gemini-3-flash-preview", // Use standard Flash for high-volume research
-        contents: prompt,
+        contents: { parts: [{ text: prompt }] },
         config: {
           customAction: 'enrich_library',
           temperature: 0.1,
@@ -1491,7 +1491,7 @@ export const verifyAndCorrectPlugin = async (
 
   const response = await ai.models.generateContent({
     model: "gemini-3-flash-preview",
-    contents: prompt,
+    contents: { parts: [{ text: prompt }] },
     config: {
       customAction: 'verify_plugin',
       temperature: 0.1,
@@ -1559,7 +1559,7 @@ export const researchPluginParameters = async (plugin: VSTPlugin, language: stri
 
   const response = await ai.models.generateContent({
     model: "gemini-3-flash-preview",
-    contents: prompt,
+    contents: { parts: [{ text: prompt }] },
     config: {
       customAction: 'research_plugin',
       temperature: 0.1,
@@ -1623,7 +1623,7 @@ export const generateStructuralBlueprint = async (searchQuery: string, language:
   
   const response = await ai.models.generateContent({
     model: "gemini-3-flash-preview",
-    contents: prompt,
+    contents: { parts: [{ text: prompt }] },
     config: {
       customAction: 'structural_blueprint',
       responseMimeType: "application/json",
@@ -1760,7 +1760,7 @@ export const getBeatRecommendations = async (plugins: VSTPlugin[], analogInstrum
 
   const response = await ai.models.generateContent({
     model: 'gemini-3-flash-preview',
-    contents: prompt,
+    contents: { parts: [{ text: prompt }] },
     config: {
       customAction: 'recipe',
       responseMimeType: "application/json",
@@ -1918,7 +1918,7 @@ export const getCustomBeatRecommendations = async (plugins: VSTPlugin[], query: 
 
   const response = await ai.models.generateContent({
     model: 'gemini-3-flash-preview',
-    contents: prompt,
+    contents: { parts: [{ text: prompt }] },
     config: {
       customAction: 'type_beat_search',
       responseMimeType: "application/json",
@@ -2071,7 +2071,7 @@ export const getSongBeatRecommendations = async (plugins: VSTPlugin[], songQuery
 
   const response = await ai.models.generateContent({
     model: 'gemini-3-flash-preview',
-    contents: prompt,
+    contents: { parts: [{ text: prompt }] },
     config: {
       customAction: 'song_search',
       responseMimeType: "application/json",
@@ -2816,7 +2816,7 @@ export const replicateRecipeWithUserGear = async (recipe: SavedRecipe, myPlugins
   try {
     const response = await ai.models.generateContent({
       model: "gemini-3-flash-preview",
-      contents: prompt,
+      contents: { parts: [{ text: prompt }] },
       config: {
         customAction: 'analog_save',
         responseMimeType: "application/json",
@@ -3024,7 +3024,7 @@ export const regenerateTrackingChain = async (
 
     const result = await ai.models.generateContent({
       model: "gemini-3-flash-preview",
-      contents: prompt,
+      contents: { parts: [{ text: prompt }] },
       config: {
         customAction: 'regenerate_tracking_chain',
         responseMimeType: "application/json",
