@@ -1,0 +1,282 @@
+src/components/AnalogEquipmentModal.tsx:41:      const instrumentsWithPedals = selectedInstruments.map(name => ({
+src/components/AnalogEquipmentModal.tsx:45:        connectedPedals: (pedalChainMap[name] || []).map(pName => ({
+src/components/AnalogEquipmentModal.tsx:50:        connectedAmps: (ampChainMap[name] || []).map(aName => ({
+src/components/AnalogEquipmentModal.tsx:57:      const hardwareWithPedals = selectedHardware.map(name => ({
+src/components/AnalogEquipmentModal.tsx:61:        connectedPedals: (pedalChainMap[name] || []).map(pName => ({
+src/components/AnalogEquipmentModal.tsx:66:        connectedAmps: (ampChainMap[name] || []).map(aName => ({
+src/components/AnalogEquipmentModal.tsx:113:        return Object.entries(pedals).flatMap(([brand, models]) => (models as string[]).map(m => `${brand} ${m}`));
+src/components/AnalogEquipmentModal.tsx:126:        return Object.entries(allAmps).flatMap(([brand, models]) => (models as string[]).map(m => `${brand} ${m}`));
+src/components/AnalogEquipmentModal.tsx:212:            {items.map((item, idx) => {
+src/components/RigManagerModal.tsx:164:                {item.parameters.slice(0, 15).map((p: string, i: number) => (
+src/components/RigManagerModal.tsx:385:      ...(activeSession.senderPlugins || []).map(p => ({ ...p, source: 'vst' as const })),
+src/components/RigManagerModal.tsx:386:      ...(activeSession.senderAnalogInstruments || []).map(h => ({ ...h, source: 'analog' as const })),
+src/components/RigManagerModal.tsx:387:      ...(activeSession.senderAnalogHardware || []).map(h => ({ ...h, source: 'analog' as const })),
+src/components/RigManagerModal.tsx:388:      ...(activeSession.senderDrumKits || []).map(h => ({ ...h, source: 'analog' as const }))
+src/components/RigManagerModal.tsx:390:      ...friendPlugins.map(p => ({ ...p, source: 'vst' as const })),
+src/components/RigManagerModal.tsx:391:      ...friendGear.map(h => ({ ...h, source: 'analog' as const }))
+src/components/RigManagerModal.tsx:395:      ...plugins.map(p => ({ ...p, source: 'vst' as const })),
+src/components/RigManagerModal.tsx:396:      ...analogInstruments.map(h => ({ ...h, source: 'analog' as const })),
+src/components/RigManagerModal.tsx:397:      ...analogHardware.map(h => ({ ...h, source: 'analog' as const })),
+src/components/RigManagerModal.tsx:398:      ...drumKits.map(h => ({ ...h, source: 'analog' as const }))
+src/components/RigManagerModal.tsx:448:            {(['options', 'compare', 'reimagine'] as const).map((tab) => (
+src/components/RigManagerModal.tsx:649:                        {(['all', 'type', 'vendor'] as const).map(f => (
+src/components/RigManagerModal.tsx:664:                      {allCategories.map(category => (
+src/components/RigManagerModal.tsx:670:                              {categorizedGear.sender[category]?.map((item: any, i: number) => (
+src/components/RigManagerModal.tsx:676:                              {categorizedGear.local[category]?.map((item: any, i: number) => (
+src/components/RigManagerModal.tsx:707:                      {friendRecipes.map((recipe) => (
+src/components/ShowcaseEditorModal.tsx:722:        setEffects(prev => prev.map(eff => eff.id === canvasDrag.id ? {
+src/components/ShowcaseEditorModal.tsx:810:                return prev.map(eff => {
+src/components/ShowcaseEditorModal.tsx:965:  const voiceTracksList = Array.from(new Set(effects.filter(e => e.trackId.startsWith('voiceover')).map(e => e.trackId)));
+src/components/ShowcaseEditorModal.tsx:968:  const textTracksList = Array.from(new Set(effects.filter(e => e.trackId.startsWith('text')).map(e => e.trackId)));
+src/components/ShowcaseEditorModal.tsx:974:      const existingTrackIds = effects.filter(e => e.trackId.startsWith('text')).map(e => e.trackId);
+src/components/ShowcaseEditorModal.tsx:1158:              clips: clips.map(c => ({
+src/components/ShowcaseEditorModal.tsx:1163:              textOverlays: textEffects.map((e, index) => ({
+src/components/ShowcaseEditorModal.tsx:1170:              voiceovers: voiceovers.map((e, index) => ({
+src/components/ShowcaseEditorModal.tsx:1176:              mascots: effects.filter(e => e.trackId === 'mascot').map(e => ({
+src/components/ShowcaseEditorModal.tsx:1182:              magnifiers: effects.filter(e => e.trackId === 'fx').map(e => ({
+src/components/ShowcaseEditorModal.tsx:1194:              instrumentalLoops: effects.filter(e => e.trackId === 'instrumental').map(e => ({
+src/components/ShowcaseEditorModal.tsx:1442:                      {textTracksList.slice(1).map((tk, idx) => (
+src/components/ShowcaseEditorModal.tsx:1447:                      {voiceTracksList.map((tk, idx) => (
+src/components/ShowcaseEditorModal.tsx:1486:                                   return clips.map((c, i) => {
+src/components/ShowcaseEditorModal.tsx:1525:                           {textTracksList.map(tk => (
+src/components/ShowcaseEditorModal.tsx:1527:                                   {effects.filter(e => e.trackId === tk).map(e => (
+src/components/ShowcaseEditorModal.tsx:1542:                               {effects.filter(e => e.trackId === 'mascot').map(e => (
+src/components/ShowcaseEditorModal.tsx:1556:                               {effects.filter(e => e.trackId === 'fx').map(e => (
+src/components/ShowcaseEditorModal.tsx:1568:                           {voiceTracksList.map(tk => (
+src/components/ShowcaseEditorModal.tsx:1570:                                   {effects.filter(e => e.trackId === tk).map(e => (
+src/components/ShowcaseEditorModal.tsx:1597:                               {effects.filter(e => e.trackId === 'instrumental').map(e => (
+src/components/ShowcaseEditorModal.tsx:1609:                                        {e.loopDur && e.loopDur > 0 && Array.from({ length: Math.max(0, Math.floor((e.end - e.start) / e.loopDur)) }).map((_, i) => (
+src/components/InternationalizationModal.tsx:135:                  {LANGUAGES.map((lang) => (
+src/components/InternationalizationModal.tsx:160:                  {COUNTRIES.map((country) => (
+src/components/AdminDashboard.tsx:101:      setUsers(prev => prev.map(u => u.uid === selectedUser.uid ? { ...u, credits: editCreditsValue } : u));
+src/components/AdminDashboard.tsx:345:                  Array(8).fill(0).map((_, i) => (
+src/components/AdminDashboard.tsx:349:                  filteredUsers.map(u => (
+src/components/AdminDashboard.tsx:466:                    selectedUser.purchases.map((p) => (
+src/components/AdminDashboard.tsx:535:                            setUsers(prev => prev.map(u => u.uid === selectedUser.uid ? { ...u, receipts: [] } : u));
+src/components/AdminDashboard.tsx:551:                    selectedUser.receipts.map((r: any) => (
+src/components/AdminDashboard.tsx:606:                    selectedUser.gear.map((g, i) => (
+src/components/AdminDashboard.tsx:686:                  {betaApplications.map(app => (
+src/components/SnowFlurry.tsx:7:    return Array.from({ length: count }).map((_, i) => {
+src/components/SnowFlurry.tsx:26:      {snowflakes.map((flake) => (
+src/components/DrumKitModal.tsx:42:  const brands = Array.from(new Set(STOCK_DRUM_KITS.map(k => k.brand)));
+src/components/DrumKitModal.tsx:43:  const models = STOCK_DRUM_KITS.filter(k => k.brand === selectedBrand).map(k => k.model);
+src/components/DrumKitModal.tsx:158:                    {DRUM_PART_MODELS[data.label || label]?.map(m => (
+src/components/DrumKitModal.tsx:176:                          {modelEntry.commonSizes.map(s => <option key={s} value={s}>{s}</option>)}
+src/components/DrumKitModal.tsx:357:                        {brands.map(b => <option key={b} value={b}>{b}</option>)}
+src/components/DrumKitModal.tsx:368:                        {models.map(m => <option key={m} value={m}>{m}</option>)}
+src/components/DrumKitModal.tsx:391:                        {DRUM_BRANDS.map(b => <option key={b} value={b}>{b}</option>)}
+src/components/DrumKitModal.tsx:408:                {Array.isArray(drumKitData.additionalParts) && drumKitData.additionalParts.map((part, index) => (
+src/components/DrumKitModal.tsx:422:                      {DRUM_PART_TYPES.map(type => (
+src/components/PluginBubble.tsx:23:    return (deepDive || []).map(d => ({ parameter: d.parameter, value: d.value }));
+src/components/PluginBubble.tsx:27:    setCorrections((deepDive || []).map(d => ({ parameter: d.parameter, value: d.value })));
+src/components/PluginBubble.tsx:86:            {corrections.map((c, idx) => (
+src/components/PluginBubble.tsx:192:          {Array.isArray(deepDive) && deepDive.map((s, sIdx) => (
+src/components/LeprechaunField.tsx:74:            {[10, 75, 140, 205, 270, 335].map((x, i) => {
+src/components/LeprechaunField.tsx:220:            {[10, 75, 140, 205, 270, 335].map((x, i) => {
+src/components/LeprechaunField.tsx:273:  const coins = React.useMemo(() => Array.from({ length: 12 }).map((_, i) => {
+src/components/LeprechaunField.tsx:300:  const bills = React.useMemo(() => Array.from({ length: 8 }).map((_, i) => {
+src/components/LeprechaunField.tsx:321:  const clouds = React.useMemo(() => Array.from({ length: 8 }).map((_, i) => ({
+src/components/LeprechaunField.tsx:394:      {clouds.map((c, i) => (
+src/components/LeprechaunField.tsx:416:        {coins.map((c, i) => (
+src/components/LeprechaunField.tsx:437:      {bills.map((b, i) => (
+src/components/RavenField.tsx:415:      {feathers.map((f, i) => (
+src/components/RavenField.tsx:434:        {useMemo(() => Array.from({ length: 50 }).map((_, i) => (
+src/components/RavenField.tsx:452:        {flock.map((r, i) => (
+src/components/CritiqueHTMLTemplate.tsx:55:              {Array.isArray(critique.strengths) && critique.strengths.map((s, i) => (
+src/components/CritiqueHTMLTemplate.tsx:66:              {Array.isArray(critique.weaknesses) && critique.weaknesses.map((w, i) => (
+src/components/CritiqueHTMLTemplate.tsx:81:          {Array.isArray(critique.actionPlan) && critique.actionPlan.map((action, idx) => (
+src/components/CritiqueHTMLTemplate.tsx:94:                  {Array.isArray(action.recommendedChain) && action.recommendedChain.map((plugin, pIdx) => (
+src/components/CritiqueHTMLTemplate.tsx:101:                        {plugin.deepDive.map((param, dIdx) => (
+src/components/CritiqueHTMLTemplate.tsx:121:            {Array.isArray(critique.specificHelp) && critique.specificHelp.map((help, idx) => (
+src/components/CritiqueHTMLTemplate.tsx:136:                      {Array.isArray(help.recommendedChain) && help.recommendedChain.map((plugin, pIdx) => (
+src/components/CritiqueHTMLTemplate.tsx:147:                            {Array.isArray(plugin.deepDive) && plugin.deepDive.map((param: any, dIdx: number) => (
+src/components/HardwareCard.tsx:89:          {item.connectedPedals.map((pedal, pIdx) => (
+src/components/HardwareCard.tsx:99:          {item.connectedAmps.map((amp, aIdx) => (
+src/components/Mascot.tsx:37:        {stars === 3 && starCoords.slice(0, 3).map(([sx, sy], i) => (
+src/components/Mascot.tsx:40:        {stars === 5 && starCoords.map(([sx, sy], i) => (
+src/components/Mascot.tsx:789:            {[10, 75, 140, 205, 270, 335].map((x, i) => {
+src/components/Mascot.tsx:875:              {[0, 25, 50, 75].map((xOffset) => (
+src/components/Mascot.tsx:951:            {[ -45, -15 ].map((yOffset) => (
+src/components/Mascot.tsx:957:            {[ -100, -80, -60, -40, -20, 0, 20, 40 ].map(y => (
+src/components/Mascot.tsx:966:            {[ 15, 45 ].map((yOffset) => (
+src/components/DrumPatternDisplay.tsx:36:      const secondHalf = safeSteps.map(s => typeof s === 'number' ? s + 16 : { ...s, step: s.step + 16 });
+src/components/DrumPatternDisplay.tsx:49:          {Array.from({ length: totalSteps }).map((_, i) => {
+src/components/DrumPatternDisplay.tsx:257:          {sections.map(section => (
+src/components/TutorialOverlay.tsx:417:            {steps.map((_, i) => (
+src/components/RecipeCard.tsx:180:          content += `\n\n**${t('recommended_fix_chain')}**\n` + res.recommendedChain.map((p: any) => `- **${p.name}** (${p.purpose}): \`${p.deepDive?.map((d: any) => `${d.parameter}: ${d.value}`).join(', ')}\``).join('\n');
+src/components/RecipeCard.tsx:216:        Instruments: ${Array.isArray(recipe.instruments) ? recipe.instruments.map(i => i.name).join(', ') : ''}
+src/components/RecipeCard.tsx:236:      const content = `${result.advice}\n\n${t('recommended_plugins_label')}\n${result.recommendedChain.map(p => p.name).join(', ')}`;
+src/components/RecipeCard.tsx:463:          {(Array.isArray(recipe.isGangstaVox ? recipe.gangstaVox?.vocalTracks : recipe.instruments) ? (recipe.isGangstaVox ? recipe.gangstaVox?.vocalTracks : recipe.instruments) : [])?.map((track, idx) => (
+src/components/RecipeCard.tsx:495:                    {Array.isArray((track as any).midiNotes) && (track as any).midiNotes.map((note: any, nIdx: number) => (
+src/components/RecipeCard.tsx:529:                    {Array.isArray(track.deepDive) && track.deepDive?.map((s, sIdx) => (
+src/components/RecipeCard.tsx:551:                  {Array.isArray(track.fxPlugins) && track.fxPlugins.map((dive, dIdx) => (
+src/components/RecipeCard.tsx:578:            {Array.isArray(recipe.vocalElements.vocalTracks) && recipe.vocalElements.vocalTracks.map((layer, idx) => (
+src/components/RecipeCard.tsx:615:                      {Array.isArray(layer.deepDive) && layer.deepDive?.map((s, sIdx) => (
+src/components/RecipeCard.tsx:627:                  {Array.isArray(layer.fxPlugins) && layer.fxPlugins.map((dive, dIdx) => (
+src/components/RecipeCard.tsx:669:            {Array.isArray(recipe.busses) && recipe.busses.map((bus, idx) => (
+src/components/RecipeCard.tsx:680:                  {Array.isArray(bus.fxPlugins) && bus.fxPlugins.map((dive, dIdx) => (
+src/components/RecipeCard.tsx:707:            {Array.isArray(recipe.masterPlugins) && recipe.masterPlugins.map((dive, idx) => (
+src/components/RecipeCard.tsx:807:              {typeof recipe.arrangement === 'object' && !Array.isArray(recipe.arrangement) && Object.entries(recipe.arrangement || {}).map(([section, guide]) => (
+src/components/RecipeCard.tsx:863:                    {Array.isArray(recipe.gangstaVox.trackingChain.inserts) && recipe.gangstaVox.trackingChain.inserts?.map((dive, dIdx) => (
+src/components/RecipeCard.tsx:885:                        {recipe.gangstaVox.trackingChain.aux1?.map((dive, dIdx) => (
+src/components/RecipeCard.tsx:906:                        {recipe.gangstaVox.trackingChain.aux2?.map((dive, dIdx) => (
+src/components/RecipeCard.tsx:985:            {Array.isArray(recipe.gangstaVox?.vocalTracks) && recipe.gangstaVox.vocalTracks.map((layer, idx) => (
+src/components/RecipeCard.tsx:1022:                        {Array.isArray(layer.deepDive) && layer.deepDive?.map((s, sIdx) => (
+src/components/RecipeCard.tsx:1042:                        {Array.isArray(layer.fxPlugins) && layer.fxPlugins.map((dive, dIdx) => (
+src/components/RecipeCard.tsx:1111:            {chatHistory.map((msg, idx) => (
+src/components/Vault.tsx:171:                      filteredRecipes.map((recipe) => (
+src/components/Vault.tsx:240:                      critiques.map((critique) => (
+src/components/CritiqueCard.tsx:323:                {Array.isArray(critique.strengths) && critique.strengths.map((strength, idx) => (
+src/components/CritiqueCard.tsx:338:                {Array.isArray(critique.weaknesses) && critique.weaknesses.map((weakness, idx) => (
+src/components/CritiqueCard.tsx:351:              {Array.isArray(critique.actionPlan) && critique.actionPlan.map((action, idx) => (
+src/components/CritiqueCard.tsx:365:                    {Array.isArray(action.recommendedChain) && action.recommendedChain?.map((plugin, pIdx) => (
+src/components/CritiqueCard.tsx:415:                {Array.isArray(specificHelpResults) && specificHelpResults.map((result, idx) => (
+src/components/CritiqueCard.tsx:428:                        {Array.isArray(result.recommendedChain) && result.recommendedChain.map((plugin: any, pIdx: number) => (
+src/components/CritiqueCard.tsx:441:                              {Array.isArray(plugin.deepDive) && plugin.deepDive?.map((param: any, dIdx: number) => (
+src/components/EQVisualizer.tsx:146:  const pathData = `M ${paddingX},${getY(0)} ` + curvePoints.map(p => `L ${p[0]},${p[1]}`).join(' ') + ` L ${width - paddingX},${getY(0)}`;
+src/components/EQVisualizer.tsx:177:          {dbLines.map((db, i) => {
+src/components/EQVisualizer.tsx:196:          {minorFreqs.map((f, i) => {
+src/components/EQVisualizer.tsx:204:          {gridFreqs.map((f, i) => {
+src/components/EQVisualizer.tsx:232:            d={`M ${paddingX},${height - paddingY} ` + curvePoints.map((p, i) => `L ${p[0]},${Math.min(height - paddingY, p[1] + 10 + Math.sin(i * 0.1) * 3)}`).join(' ') + ` L ${width - paddingX},${height - paddingY}`}
+src/components/EQVisualizer.tsx:240:          {bands.map((band, idx) => {
+src/components/TrashModal.tsx:72:                {(['plugins', 'instruments', 'hardware'] as const).map(tab => (
+src/components/TrashModal.tsx:102:              {activeTab === 'plugins' && deletedPlugins.map((plugin, idx) => (
+src/components/TrashModal.tsx:122:              {activeTab === 'instruments' && deletedInstruments.map((inst, idx) => (
+src/components/TrashModal.tsx:139:              {activeTab === 'hardware' && deletedHardware.map((hw, idx) => (
+src/components/CollaborationModal.tsx:94:                Array.isArray(categorizedData.categories) && categorizedData.categories.map((cat: any, i: number) => (
+src/components/CollaborationModal.tsx:101:                      {Array.isArray(cat.senderPlugins) && cat.senderPlugins.map((p: string, j: number) => (
+src/components/CollaborationModal.tsx:118:                  {Array.isArray(recipe.instruments) && recipe.instruments.map((ing, i) => (
+src/components/CollaborationModal.tsx:122:                         {Array.isArray(ing.fxPlugins) && ing.fxPlugins.map((proc, j) => (
+src/components/CollaborationModal.tsx:139:                       {Array.isArray(senderPlugins) && senderPlugins.map((p, i) => (
+src/components/CollaborationModal.tsx:159:                {Array.isArray(myPlugins) && myPlugins.map((p, i) => (
+src/components/PluginCard.tsx:132:            {Array.isArray(plugin.features) && plugin.features.map((feature, idx) => (
+src/components/StatusPage.tsx:219:            {services.map(service => {
+src/components/StatusPage.tsx:255:            {uptimeBars.map((bar, i) => (
+src/components/PluginCompareModal.tsx:40:        {filteredPlugins.map((p, i) => {
+src/components/PluginCompareModal.tsx:68:        {filteredGear.map((g, i) => (
+src/components/FoodField.tsx:93:      {items.map(({ Comp, top, left, size, delay, mobileOnly }, i) => (
+src/components/DawSelectionModal.tsx:113:            {daws.filter(d => d.id !== 'Other').map((daw) => (
+src/components/RecipeHTMLTemplate.tsx:14:      ? [...safeSteps, ...safeSteps.map(s => typeof s === 'number' ? s + 16 : { ...s, step: s.step + 16 })]
+src/components/RecipeHTMLTemplate.tsx:19:        {Array.from({ length: totalSteps }).map((_, i) => {
+src/components/RecipeHTMLTemplate.tsx:42:        {Array.isArray(items) && items.map((d, dIdx) => (
+src/components/RecipeHTMLTemplate.tsx:80:              {Array.isArray(recipe.masterPlugins) && recipe.masterPlugins.map((m, i) => (
+src/components/RecipeHTMLTemplate.tsx:95:            {Array.isArray(recipe.instruments) && recipe.instruments.map((inst, idx) => (
+src/components/RecipeHTMLTemplate.tsx:125:                        inst.midiNotes.map((note: any, idx: number) => (
+src/components/RecipeHTMLTemplate.tsx:131:                        typeof inst.midiNotes === 'object' && !Array.isArray(inst.midiNotes) && Object.entries(inst.midiNotes).map(([section, notes]) => (
+src/components/RecipeHTMLTemplate.tsx:136:                                {Array.isArray(notes) && notes.map((note: any, idx: number) => (
+src/components/RecipeHTMLTemplate.tsx:154:                      {Array.isArray(inst.deepDive) && inst.deepDive.map((d, dIdx) => (
+src/components/RecipeHTMLTemplate.tsx:168:                      {Array.isArray(inst.fxPlugins) && inst.fxPlugins.map((fx, fxIdx) => (
+src/components/RecipeHTMLTemplate.tsx:189:            {typeof recipe.drumPatterns === 'object' && !Array.isArray(recipe.drumPatterns) && Object.entries(recipe.drumPatterns).map(([section, pattern]: [string, any]) => (
+src/components/RecipeHTMLTemplate.tsx:240:            {Array.isArray(recipe.busses) && recipe.busses.map((bus, idx) => (
+src/components/RecipeHTMLTemplate.tsx:244:                  {Array.isArray(bus.fxPlugins) && bus.fxPlugins.map((fx, fxIdx) => (
+src/components/RecipeHTMLTemplate.tsx:281:                {Array.isArray(recipe.vocalElements.trackingChain.inserts) && recipe.vocalElements.trackingChain.inserts.map((fx, fxIdx) => (
+src/components/RecipeHTMLTemplate.tsx:294:              {Array.isArray(recipe.vocalElements.vocalTracks) && recipe.vocalElements.vocalTracks.map((track, idx) => (
+src/components/RecipeHTMLTemplate.tsx:318:                        {Array.isArray(track.fxPlugins) && track.fxPlugins.map((fx, fxIdx) => (
+src/components/RecipeHTMLTemplate.tsx:340:            {Array.isArray(recipe.masterPlugins) && recipe.masterPlugins.map((plugin, idx) => (
+src/utils/musicalIntelligence.ts:31:    const secondHalf = firstHalf.map(n => ({ ...n, pitch: transposePitch(n.pitch, 2) }));
+src/utils/musicalIntelligence.ts:68:  return events.map((event, index) => {
+src/utils/musicalIntelligence.ts:76:  return events.map((event, index) => {
+src/utils/musicalIntelligence.ts:92:      Object.entries(p1.densityMap).map(([k, v]) => [k, v * (1 - weight) + (p2.densityMap[k as unknown as TensionLevel] || 0) * weight])
+src/utils/musicalIntelligence.ts:96:      Object.keys(p1.probabilityMap).map(k => [k, p1.probabilityMap[k] * (1 - weight) + (p2.probabilityMap[k] || 0) * weight])
+src/utils/musicalIntelligence.ts:113:  return events.map(event => ({ ...event, pitch: event.pitch })); 
+src/utils/midiGenerator.ts:253:        let pitches = Array.isArray(note.pitch) ? note.pitch : note.pitch.split(',').map(p => p.trim());
+src/utils/midiGenerator.ts:254:        let transposedPitches = pitches.map(p => isDrums ? p : transposePitch(p, transpose));
+src/services/geminiService.ts:201:                section[drum].steps = steps.map((step: number, index: number) => {
+src/services/geminiService.ts:409:  const pluginContext = `Plugin: ${pluginName}\nParameters: ${deepDive.map(d => `${d.parameter}: ${d.value}`).join(', ')}`;
+src/services/geminiService.ts:411:  const libraryContext = `Available Plugins: ${myPlugins.map(p => `${p.vendor} - ${p.name}`).join(', ')}`;
+src/services/geminiService.ts:465:  const senderStr = senderPlugins.map(p => `${p.vendor} - ${p.name}`).join('\n');
+src/services/geminiService.ts:466:  const receiverStr = myPlugins.map(p => `${p.vendor} - ${p.name}`).join('\n');
+src/services/geminiService.ts:523:  const kitDescriptions = kits.map(kit => {
+src/services/geminiService.ts:531:      ...(data.additionalParts || []).map((p, i) => ({ name: p.label || `Part ${i + 1}`, part: p }))
+src/services/geminiService.ts:533:      .map(({ name, part }) => {
+src/services/geminiService.ts:584:      desc += `\n  - Connected Pedals: ${instrument.connectedPedals.map(p => p.name).join(', ')}`;
+src/services/geminiService.ts:587:      desc += `\n  - Connected Amps: ${instrument.connectedAmps.map(a => a.name).join(', ')}`;
+src/services/geminiService.ts:598:      desc += `\n  - Connected Pedals: ${hardware.connectedPedals.map(p => p.name).join(', ')}`;
+src/services/geminiService.ts:601:      desc += `\n  - Connected Amps: ${hardware.connectedAmps.map(a => a.name).join(', ')}`;
+src/services/geminiService.ts:610:    gearStr = `\nThe user has the following analog equipment, but no specific sonic characteristics were provided:\nInstruments: ${analogInstruments.map(h => h.name).join(', ')}\nHardware: ${analogHardware.map(h => h.name).join(', ')}`;
+src/services/geminiService.ts:1155:        body: JSON.stringify({ plugins: batch.map(p => ({ vendor: p.vendor, name: p.name })) })
+src/services/geminiService.ts:1168:    const preMappedBatch = batch.map(p => {
+src/services/geminiService.ts:1206:      const pluginList = pluginsToResearch.map((p, i) => `${i + 1}. ${p.vendor} - ${p.name} ${p.version !== 'N/A' ? `(v${p.version})` : ''}`).join('\n');
+src/services/geminiService.ts:1265:            const combinedParams = rawParams.map(p => normalizeParameterName(plugin.vendor, plugin.name, p));
+src/services/geminiService.ts:1319:      researchResults = pluginsToResearch.map(p => ({
+src/services/geminiService.ts:1330:      const finalBatch = preMappedBatch.map(p => {
+src/services/geminiService.ts:1337:          rest.parameters = rawParams.map(param => normalizeParameterName(rest.vendor, rest.name, param));
+src/services/geminiService.ts:1371:    const results = await Promise.all(activeChunks.map(chunk => processBatch(chunk)));
+src/services/geminiService.ts:1526:    const combinedParams = rawParams.map(p => normalizeParameterName(plugin.vendor, plugin.name, p));
+src/services/geminiService.ts:1594:  const pluginListStr = plugins.map(p => {
+src/services/geminiService.ts:1727:      result.recipes = result.recipes.map((r: any) => ({ ...r, isGangstaVox: true }));
+src/services/geminiService.ts:1740:  const pluginListStr = plugins.map(p => {
+src/services/geminiService.ts:1881:    result.recipes = result.recipes.map((r: any) => ({ ...r, isGangstaVox: true }));
+src/services/geminiService.ts:1890:  const pluginListStr = plugins.map(p => {
+src/services/geminiService.ts:2024:    result.recipes = result.recipes.map((r: any) => ({ ...r, isGangstaVox: true }));
+src/services/geminiService.ts:2091:  const pluginListStr = limitedPlugins.map(p => `${p.vendor} - ${p.name} (${p.type})`).join('\n');
+src/services/geminiService.ts:2108:    ? uadPlugins.map(p => `${p.vendor} - ${p.name} (${p.type})`).join('\n')
+src/services/geminiService.ts:2310:    result.recipes = result.recipes.map((r: any) => ({ ...r, isGangstaVox: true }));
+src/services/geminiService.ts:2336:  const pluginListStr = plugins.map(p => {
+src/services/geminiService.ts:2347:  const hardwareListStr = [...analogInstruments, ...analogHardware].map(h => {
+src/services/geminiService.ts:2349:      ? ` (Connected Pedals: ${h.connectedPedals.map(p => `${p.vendor} ${p.name}`).join(', ')})` 
+src/services/geminiService.ts:2352:      ? ` (Connected Amps: ${h.connectedAmps.map(a => `${a.vendor} ${a.name}`).join(', ')})`
+src/services/geminiService.ts:2568:  const pluginListStr = plugins.map(p => `${p.vendor} - ${p.name} (${p.type})`).join('\n');
+src/services/geminiService.ts:2666:    ? plugins.map(p => `${p.vendor} - ${p.name}`).join('\n')
+src/services/geminiService.ts:2712:    ? myPlugins.map(p => `${p.vendor} - ${p.name}`).join('\n')
+src/services/geminiService.ts:2800:      ? uadPlugins.map(p => `${p.vendor} - ${p.name} (${p.type})`).join('\n')
+src/App.tsx:659:            recommendedChain: (updatedActionPlan[actionIdx].recommendedChain || []).map((p, pIdx) => pIdx === pluginIdx ? newPlugin : p)
+src/App.tsx:667:    setCritiques(prev => prev.map(updateCritique));
+src/App.tsx:668:    setSavedCritiques(prev => prev.map(c => updateCritique(c as any) as SavedCritique));
+src/App.tsx:700:    return Array(10).fill(null).map((_, i) => ({ id: `stem-${i}`, file: null, type: preset[i] || 'Other', customType: customPreset[i] || '', mimeType: '', status: 'empty' }));
+src/App.tsx:880:      const newItems = Array(toAdd).fill(null).map((_, i) => ({
+src/App.tsx:908:${Object.entries(pluginInfo.corrections).map(([p, v]) => `- ${p}: ${v}`).join('\n')}
+src/App.tsx:937:              const existingMap = new Map(prev.map(p => [`${p.vendor}-${p.name}`, p]));
+src/App.tsx:2221:              setStems(prev => prev.map((s, i) => ({ ...s, type: data.uiSettings.stemTypesPreset[i] || 'Other' })));
+src/App.tsx:2225:              setStems(prev => prev.map((s, i) => ({ ...s, customType: data.uiSettings.stemCustomTypesPreset[i] || '' })));
+src/App.tsx:2597:      const existingNames = new Set(prev.map(h => h.name));
+src/App.tsx:2604:      const existingNames = new Set(prev.map(h => h.name));
+src/App.tsx:2610:      const existingNames = new Set(prev.map(h => h.name));
+src/App.tsx:2738:      setStems(prev => prev.map((s, i) => ({ ...s, type: importedSaveFile.ui.stemTypesPreset[i] || 'Other' })));
+src/App.tsx:2742:      setStems(prev => prev.map((s, i) => ({ ...s, customType: importedSaveFile.ui.stemCustomTypesPreset[i] || '' })));
+src/App.tsx:2801:    setVault(vault.map(r => r.id === id ? { ...r, bubbleColor: color } : r));
+src/App.tsx:2805:    setVault(vault.map(r => r.id === id ? { ...r, folderId: folderId || undefined } : r));
+src/App.tsx:2819:    setVault(vault.map(r => r.folderId === id ? { ...r, folderId: undefined } : r));
+src/App.tsx:2823:    setFolders(folders.map(f => f.id === id ? { ...f, color } : f));
+src/App.tsx:2934:      parsed = lines.map(line => {
+src/App.tsx:2973:      parsed = lines.slice(startIndex).map(line => {
+src/App.tsx:2996:          [vendor, cleanName] = name.split(' - ').map(s => s.trim());
+src/App.tsx:2998:          [vendor, cleanName] = name.split(': ').map(s => s.trim());
+src/App.tsx:3154:    const enrichedBandLab: VSTPlugin[] = pluginsToUse.map(p => ({
+src/App.tsx:3181:      const userParam = corrections.map(c => `${c.parameter}: ${c.value}`).join(', ');
+src/App.tsx:3186:          const next = prev.map(p => (p.name === existingPlugin.name && p.vendor === existingPlugin.vendor) ? result.plugin! : p);
+src/App.tsx:3192:        setRecipes(prev => prev.map(recipe => {
+src/App.tsx:3200:                const newDeepDive = (result.plugin!.parameters || []).map(paramName => {
+src/App.tsx:3215:                const newDeepDive = (result.plugin!.parameters || []).map(paramName => {
+src/App.tsx:3232:                const newDeepDive = (result.plugin!.parameters || []).map(paramName => {
+src/App.tsx:3245:                const newDeepDive = (result.plugin!.parameters || []).map(paramName => {
+src/App.tsx:3285:        const next = prev.map(p => (p.name === plugin.name && p.vendor === plugin.vendor) ? updated : p);
+src/App.tsx:3436:      const newHistory: HistoryItem[] = response.recipes.map(r => ({
+src/App.tsx:3486:      const newHistory: HistoryItem[] = response.recipes.map(r => ({
+src/App.tsx:3537:      const newHistory: HistoryItem[] = response.recipes.map(r => ({
+src/App.tsx:3620:          setStems(prev => prev.map(s => s.id === stem.id ? { ...s, status: 'converting' as any } : s));
+src/App.tsx:3628:        setStems(prev => prev.map(s => s.id === stem.id ? { ...s, status: 'uploading' } : s));
+src/App.tsx:3639:          setStems(prev => prev.map(s => s.id === stem.id ? { ...s, url: uploadData.url, uri: uploadData.geminiFileUri, status: 'ready' } : s));
+src/App.tsx:3659:      const stemsContext = uploadedStems.map(s => `Stem: ${s.file!.name} (Type: ${s.type === 'Other' && s.customType ? s.customType : s.type}) - URI: ${s.uri}`).join('\n');
+src/App.tsx:3678:      setStems(prev => prev.map(s => ({ ...s, file: null, status: 'empty' as const, mimeType: '' })));
+src/App.tsx:3714:      const newPreset = newStems.map(s => s.type);
+src/App.tsx:3718:      const newCustomPreset = newStems.map(s => s.customType || '');
+src/App.tsx:3913:        const recipesWithAudio = response.recipes.map(r => ({
+src/App.tsx:3922:        const newHistory: HistoryItem[] = recipesWithAudio.map(r => ({
+src/App.tsx:5031:              {[0, 1, 2, 3, 4, 5].map((i) => (
+src/App.tsx:5042:              {[1, 2, 3, 4, 5, 6, 7, 8, 9, 'C', 0, '✓'].map((val) => (
+src/App.tsx:5507:              receipts.slice(0, 10).map(receipt => (
+src/App.tsx:6120:                      {stems.map((stem, index) => (
+src/App.tsx:6173:                              {['Instrumental Mixdown', 'Lead Vocal', 'Backing Vocal', 'Ad Libs', 'Chorus / Hook', 'Spoken Word', 'Kick', 'Snare', 'Hi-Hat', 'Toms', 'Overheads / Cymbals', 'Drum Room / Bus', 'Bass', 'Guitar (Acoustic)', 'Guitar (Electric)', 'Synth / Keys', 'Strings', 'Brass / Woodwinds', 'Percussion', 'FX / Foley', 'Other'].map(type => (
+src/App.tsx:6356:                  {recipes.map((recipe, idx) => {
+src/App.tsx:6397:                  {critiques.map((critique, idx) => {
+src/App.tsx:6500:                    {[...starredPlugins, ...starredHardware].map((name, index) => {
+src/App.tsx:6577:                    {drumKits.map((kit) => (
+src/App.tsx:6604:                    {[...analogInstruments, ...analogHardware].map((item, idx) => (
+src/App.tsx:6634:                      const items: any[] = Object.entries(groupedPlugins).map(([groupName, groupPlugins]) => ({ type: 'folder', name: groupName, plugins: groupPlugins }));
+src/App.tsx:6640:                    return items.map((item, idx) => {
+src/App.tsx:6695:                                        const names = pluginsInFolder.map(p => p.name);
+src/App.tsx:6730:                    const items: any[] = filteredPlugins.map(p => ({ type: 'plugin', plugin: p }));
+src/App.tsx:6736:                    return items.map((item, idx) => {
+src/App.tsx:7334:              setDrumKits(prev => prev.map(k => k.name === editingDrumKit.name ? kit : k));
+src/App.tsx:7525:            {minimizedItems.map((item, idx) => (

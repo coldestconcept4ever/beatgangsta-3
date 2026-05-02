@@ -1,0 +1,32 @@
+src/components/ShowcaseEditorModal.tsx:157:        effects.forEach(e => {
+src/components/ShowcaseEditorModal.tsx:348:        effects.filter(e => e.trackId.startsWith('voiceover') && e.audioObj).forEach(e => {
+src/components/ShowcaseEditorModal.tsx:633:        lines.forEach((line, i) => {
+src/components/ShowcaseEditorModal.tsx:646:        lines.forEach((line, i) => {
+src/components/PluginBubble.tsx:165:                    corrections.forEach(c => {
+src/components/RecipeCard.tsx:173:    oldResults.forEach((res: any) => {
+src/components/EQVisualizer.tsx:23:    parameters.forEach(d => {
+src/components/EQVisualizer.tsx:115:    bands.forEach(band => {
+src/utils/midiPlayer.ts:262:    activeOscillators.forEach(({ osc, gain, noiseSource }) => {
+src/utils/midiGenerator.ts:252:      notes.forEach(note => {
+src/utils/audioFx.ts:7:  fxPlugins.forEach(plugin => {
+src/services/geminiService.ts:194:      Object.values(recipe.drumPatterns).forEach((section: any) => {
+src/services/geminiService.ts:196:          ['kick', 'snare', 'hiHat'].forEach(drum => {
+src/services/geminiService.ts:218:      result.recipes.forEach(processRecipe);
+src/services/geminiService.ts:220:      result.forEach(processRecipe);
+src/services/geminiService.ts:578:  analogInstruments.forEach(instrument => {
+src/services/geminiService.ts:592:  analogHardware.forEach(hardware => {
+src/services/geminiService.ts:1159:        data.cached.forEach((c: any) => {
+src/services/geminiService.ts:1260:        pluginsToResearch.forEach((plugin, index) => {
+src/services/geminiService.ts:1373:    results.forEach(batchResult => {
+src/App.tsx:938:              data.plugins.forEach((p: VSTPlugin) => {
+src/App.tsx:1433:        elements.forEach((el: any) => {
+src/App.tsx:2915:    filtered.forEach(p => {
+src/App.tsx:3198:            pluginsArray.forEach((p, idx) => {
+src/App.tsx:3213:            updatedRecipe.instruments.forEach((inst: any) => {
+src/App.tsx:3226:            updatedRecipe.busses.forEach((bus: any) => updatePluginArray(bus.fxPlugins));
+src/App.tsx:3230:            updatedRecipe.vocalElements.vocalTracks.forEach((track: any) => {
+src/App.tsx:3243:            updatedRecipe.gangstaVox.vocalTracks.forEach((track: any) => {
+src/App.tsx:6636:                    placeholders.forEach(p => {
+src/App.tsx:6732:                    placeholders.forEach(p => {
+src/hooks/useScreenRecorder.ts:62:        finalStream.getTracks().forEach(track => track.stop());
+src/hooks/useScreenRecorder.ts:63:        displayStream.getTracks().forEach(track => track.stop());

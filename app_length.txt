@@ -1,0 +1,76 @@
+861:      if (prev.length === stemsLimit) return prev;
+862:      if (prev.length > stemsLimit) {
+866:        if (nonEmpties.length > stemsLimit) {
+876:      const toAdd = stemsLimit - prev.length;
+881:        id: `stem-${prev.length + i}`, 
+883:        type: preset[prev.length + i] || 'Other', 
+884:        customType: customPreset[prev.length + i] || '', 
+935:          if (data.plugins && data.plugins.length > 0) {
+1153:            if (!tutorialPlugin && plugins.length > 0) {
+1154:              const randomPlugin = plugins[Math.floor(Math.random() * plugins.length)];
+1304:  }, [tutorialPhase, isVerified, user, showCloudSyncModal, pendingFile, isEnrichingLibrary, plugins.length, recipes.length, sortBy, m_act, showConsentModal, hasAcceptedTerms, tutorialPlugin]);
+1307:    if (showTutorial && activeTutorialSteps.length > 0 && tutorialStep >= activeTutorialSteps.length) {
+1308:      setTutorialStep(activeTutorialSteps.length - 1);
+1311:  }, [activeTutorialSteps.length, tutorialStep, showTutorial]);
+1314:    if (tutorialPhase === 'library_populated' && tutorialStep === activeTutorialSteps.length - 1) {
+1327:    if (tutorialStep < activeTutorialSteps.length - 1) {
+1413:    if ((!isEnrichingLibrary && plugins.length > 0) || hasRestoredBackup) {
+1422:      setCurrentVibeExample(vibeArray[Math.floor(Math.random() * vibeArray.length)]);
+1425:      setPlaceholderArtist(artistArray[Math.floor(Math.random() * artistArray.length)]);
+1427:  }, [isEnrichingLibrary, plugins.length, hasRestoredBackup, i18n.language, t]);
+1464:  }, [theme, plugins.length]);
+1522:          if (instrumentsToMigrate?.length > 0 && typeof instrumentsToMigrate[0] === 'string') {
+1528:          if (hardwareToMigrate?.length > 0 && typeof hardwareToMigrate[0] === 'string') {
+1657:      } else if (e.touches && e.touches.length > 0) {
+1660:      } else if (e.changedTouches && e.changedTouches.length > 0) {
+1731:        if (starredPlugins.length < 10) {
+1738:        if (starredHardware.length < 10) {
+1793:        if (plugins.length > 0) {
+1805:        if (plugins.length > 0) {
+1816:        if (plugins.length > 0) {
+1824:    } else if (tutorialPhase === 'analyzing' && !isEnrichingLibrary && plugins.length > 0) {
+1828:    } else if (tutorialPhase === 'library_populated' && !showTutorial && recipes.length > 0) {
+1833:  }, [user, showCloudSyncModal, pendingFile, isEnrichingLibrary, plugins.length, recipes.length, tutorialPhase, showTutorial, wasCloudSyncModalShown, showConsentModal, tutorialStep, m_act]);
+2327:  const prevReceiptsLengthRef = useRef(receipts.length);
+2332:    if (user && receipts.length > prevReceiptsLengthRef.current && (autoBackupPrefs.gear || autoBackupPrefs.settings || autoBackupPrefs.recipes || autoBackupPrefs.critiques)) {
+2336:      prevReceiptsLengthRef.current = receipts.length;
+2339:    prevReceiptsLengthRef.current = receipts.length;
+2829:    const nextIdx = (currentIdx + 1) % styles.length;
+2851:    const nextIdx = (currentIdx + 1) % styles.length;
+2870:    const nextIdx = (currentIdx + 1) % styles.length;
+2976:        if (parts.length >= 2) {
+3011:    if (parsed.length > 2000) {
+3016:    if (parsed.length === 0) {
+3413:    if (plugins.length === 0) return;
+3464:    if (plugins.length === 0 || !typeBeatSearch.trim()) return;
+3515:    if (plugins.length === 0 || !songSearch.trim()) return;
+3585:    if (plugins.length === 0) return;
+3591:    if (activeStems.length === 0) {
+3606:    const progressInterval = simulateGenerationProgress(getEstimatedSeconds('audio-search') * activeStems.length);
+3612:      for (let i = 0; i < activeStems.length; i++) {
+3660:      const fullContext = `The user has uploaded ${activeStems.length} stems for analysis.\n\n${stemsContext}\n\nUser Context: ${critiqueContext}`;
+3669:      const stemCost = 10 + (activeStems.length * 2) + Math.ceil(totalSizeMB * 0.5);
+3699:      if (filesToDelete.length > 0) {
+3731:    if (plugins.length === 0) return;
+4120:    const nextIdx = (currentIdx + 1) % materials.length;
+4127:    const nextIdx = (currentIdx + 1) % materials.length;
+5034:                  className={`w-12 h-16 rounded-2xl border-4 flex items-center justify-center text-2xl font-black transition-all ${passcode.length > i ? 'border-red-500 bg-red-600 text-white shadow-[0_0_20px_rgba(239,68,68,0.5)]' : 'border-red-900/50 text-red-900/30'}`}
+5036:                  {passcode.length > i ? '🐦' : ''}
+5048:                    else if (passcode.length < 6) setPasscode(prev => prev + val);
+5501:            <span className="text-[10px] font-bold opacity-50">{receipts.length} items</span>
+5504:            {receipts.length === 0 ? (
+5530:               {vault.length > 0 && <span className="absolute -top-1 -right-1 w-4 h-4 bg-sky-500 text-white rounded-full flex items-center justify-center text-[8px] font-black shadow-lg border-2 border-white">{vault.length}</span>}
+5596:        ) : plugins.length === 0 && !isEnrichingLibrary && !hasRestoredBackup ? (
+5745:        ) : (!isEnrichingLibrary && plugins.length > 0) || hasRestoredBackup ? (
+5755:                    <p className="text-sm sm:text-lg font-bold opacity-70 select-none mt-2">{t('loaded_plugins_count', { count: plugins.length })}</p>
+6096:                      <h3 className={`text-sm font-black uppercase tracking-widest ${theme === 'coldest' ? 'text-slate-900' : 'text-white'}`}>Stems ({stems.filter(s => s.file).length}/{stemsLimit})</h3>
+6202:                    {stems.filter(s => s.file).length > 0 && (
+6308:                {(analogInstruments.length > 0 || analogHardware.length > 0 || drumKits.length > 0) && (
+6347:              {recipes.length > 0 && (
+6388:              {critiques.length > 0 && (
+6499:                    <span className="text-[10px] font-black uppercase tracking-widest opacity-50 shrink-0">{t('starred_count', { count: starredPlugins.length + starredHardware.length })}</span>
+6536:                      const colorClass = styles.shades[index % styles.shades.length];
+6570:              {drumKits.length > 0 && (
+6600:              {!selectedFolder && !searchTerm && (analogInstruments.length > 0 || analogHardware.length > 0) && (
+6721:                          <span className="text-[10px] font-bold opacity-50 mt-1 uppercase tracking-widest">{t('items_count', { count: groupPlugins.length })}</span>
+7518:        {minimizedItems.length > 0 && (

@@ -141,7 +141,7 @@ export const Vault: React.FC<VaultProps> = ({
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 sm:mb-12">
                     <header>
                       <h2 className="text-2xl sm:text-4xl font-black tracking-tighter mb-1 sm:mb-2">
-                        {friendMode ? t('friend_vault', { name: importedSaveFile?.userProfile.name }) : t('studio_vault')}
+                        {friendMode ? t('friend_vault', { name: importedSaveFile?.userProfile?.name || 'Friend' }) : t('studio_vault')}
                       </h2>
                       <p className={`text-[10px] sm:text-sm font-black uppercase tracking-[0.3em] ${theme === 'coldest' ? 'text-sky-400' : 'opacity-60'}`}>
                         {friendMode ? t('shared_intelligence') : t('architecture_repository')}

@@ -1,0 +1,13 @@
+179:        if (res.recommendedChain && res.recommendedChain?.length > 0) {
+385:            {recipe.artistTypes && recipe.artistTypes?.length > 0 && (
+516:              {track.deepDive && track.deepDive?.length > 0 && (
+548:              {Array.isArray(track.fxPlugins) && track.fxPlugins?.length > 0 && (
+602:                {layer.deepDive && layer.deepDive?.length > 0 && (
+665:      {Array.isArray(recipe.busses) && recipe.busses?.length > 0 && (
+703:      {Array.isArray(recipe.masterPlugins) && recipe.masterPlugins?.length > 0 && (
+738:      {recipe.drumKitAdvice && drumKits.length > 0 && !recipe.isGangstaVox && (
+881:                  {recipe.gangstaVox.trackingChain.aux1 && recipe.gangstaVox.trackingChain.aux1?.length > 0 && (
+902:                  {recipe.gangstaVox.trackingChain.aux2 && recipe.gangstaVox.trackingChain.aux2?.length > 0 && (
+1009:                  {layer.deepDive && layer.deepDive?.length > 0 && (
+1038:                  {layer.fxPlugins && layer.fxPlugins?.length > 0 && (
+1109:        {chatHistory.length > 0 && (

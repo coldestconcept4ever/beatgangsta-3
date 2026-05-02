@@ -49,7 +49,7 @@ export const StatusPage = ({ onBack }: { onBack: () => void }) => {
     return () => clearInterval(interval);
   }, []);
 
-  const isOutage = data?.current.overall === 'outage' || data?.current.overall === 'degraded';
+  const isOutage = data?.current?.overall === 'outage' || data?.current?.overall === 'degraded';
 
   // Dynamic Theme Colors
   const theme = {
@@ -161,7 +161,7 @@ export const StatusPage = ({ onBack }: { onBack: () => void }) => {
             </h1>
           </div>
           <div className="hidden md:block text-sm font-mono opacity-60 font-bold whitespace-nowrap">
-            Last updated: {data?.current.lastUpdated ? new Date(data.current.lastUpdated).toLocaleTimeString() : 'Just now'}
+            Last updated: {data?.current?.lastUpdated ? new Date(data.current.lastUpdated).toLocaleTimeString() : 'Just now'}
           </div>
         </div>
       </div>
@@ -171,7 +171,7 @@ export const StatusPage = ({ onBack }: { onBack: () => void }) => {
         {/* Mobile Last Updated */}
         <div className="md:hidden flex justify-center">
            <div className="text-[10px] font-mono opacity-50 font-bold uppercase tracking-[0.2em] border border-black/10 px-4 py-1 rounded-full bg-black/5">
-             Last updated: {data?.current.lastUpdated ? new Date(data.current.lastUpdated).toLocaleTimeString() : 'Just now'}
+             Last updated: {data?.current?.lastUpdated ? new Date(data.current.lastUpdated).toLocaleTimeString() : 'Just now'}
            </div>
         </div>
 
@@ -217,7 +217,7 @@ export const StatusPage = ({ onBack }: { onBack: () => void }) => {
           </h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {services.map(service => {
-              const sData = data?.current.services[service.id as keyof typeof data.current.services];
+              const sData = data?.current?.services[service.id as keyof typeof data.current.services];
               return (
                 <div key={service.id} className={`p-5 rounded-2xl border ${theme.border} ${theme.glass} backdrop-blur-lg flex items-center justify-between`}>
                   <div className="flex items-center gap-4">

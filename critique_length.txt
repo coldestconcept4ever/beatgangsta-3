@@ -1,0 +1,2 @@
+413:            {specificHelpResults?.length > 0 && (
+425:                    {result.recommendedChain && result.recommendedChain?.length > 0 && (

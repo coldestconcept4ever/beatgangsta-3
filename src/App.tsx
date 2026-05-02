@@ -656,7 +656,7 @@ const App: React.FC = () => {
         if (updatedActionPlan[actionIdx]) {
           updatedActionPlan[actionIdx] = {
             ...updatedActionPlan[actionIdx],
-            recommendedChain: updatedActionPlan[actionIdx].recommendedChain.map((p, pIdx) => pIdx === pluginIdx ? newPlugin : p)
+            recommendedChain: (updatedActionPlan[actionIdx].recommendedChain || []).map((p, pIdx) => pIdx === pluginIdx ? newPlugin : p)
           };
         }
         return { ...c, actionPlan: updatedActionPlan };

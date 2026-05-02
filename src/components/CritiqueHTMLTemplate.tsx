@@ -98,7 +98,7 @@ export const CritiqueHTMLTemplate: React.FC<CritiqueHTMLTemplateProps> = ({ crit
                         <p className="text-xs font-bold text-[#38bdf8] uppercase tracking-widest">{plugin.purpose}</p>
                       </div>
                       <div className="md:text-right">
-                        {plugin.deepDive.map((param, dIdx) => (
+                        {(Array.isArray(plugin.deepDive) ? plugin.deepDive : []).map((param, dIdx) => (
                           <p key={dIdx} className="font-mono text-xs font-black text-[#38bdf8] bg-[#0369a1]/30 px-2 py-0.5 rounded-lg inline-block mr-1">
                             {param.parameter}: {param.value}
                           </p>

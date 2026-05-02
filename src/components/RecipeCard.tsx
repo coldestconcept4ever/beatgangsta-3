@@ -735,7 +735,7 @@ export const RecipeCard: React.FC<RecipeCardProps> = ({ recipe: initialRecipe, i
         </div>
       )}
 
-      {recipe.drumKitAdvice && drumKits.length > 0 && !recipe.isGangstaVox && (
+      {recipe.drumKitAdvice && drumKits?.length > 0 && !recipe.isGangstaVox && (
         <div className="space-y-6 mb-8">
           <h4 className={`text-sm font-black uppercase tracking-widest ${theme === 'coldest' ? 'text-sky-400' : 'opacity-40'}`}>{t('drum_kit_advice')}</h4>
           <div className={`p-6 rounded-[2.5rem] border grid grid-cols-1 md:grid-cols-3 gap-6 ${
