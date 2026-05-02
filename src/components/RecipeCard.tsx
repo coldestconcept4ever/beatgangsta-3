@@ -385,7 +385,19 @@ export const RecipeCard: React.FC<RecipeCardProps> = ({ recipe: initialRecipe, i
             {recipe.artistTypes && recipe.artistTypes?.length > 0 && (
               <span className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest ${
                 theme === 'coldest' ? 'bg-indigo-500 text-white' : 'bg-indigo-500/20 text-indigo-400'
-              }`}>Vibe: {recipe.artistTypes.join(', ')}</span>
+              }`}>Vibe: {recipe.artistTypes.map((artist, idx) => (
+                <React.Fragment key={idx}>
+                  {idx > 0 && ', '}
+                  <a 
+                    href={`https://music.youtube.com/search?q=${encodeURIComponent(artist)}`} 
+                    target="_blank" 
+                    rel="noopener noreferrer" 
+                    className="hover:underline"
+                  >
+                    {artist}
+                  </a>
+                </React.Fragment>
+              ))}</span>
             )}
             {recipe.recommendedScale && (
               <span className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest ${

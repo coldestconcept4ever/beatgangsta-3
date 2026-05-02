@@ -194,7 +194,22 @@ export const Vault: React.FC<VaultProps> = ({
                               {Array.isArray(recipe.artistTypes) && recipe.artistTypes.length > 0 && (
                                 <>
                                   <span className="w-1 h-1 rounded-full bg-current opacity-20" />
-                                  <span className="italic text-orange-500">{recipe.artistTypes.join(', ')}</span>
+                                  <span className="italic text-orange-500">
+                                    {recipe.artistTypes.map((artist, idx) => (
+                                      <React.Fragment key={idx}>
+                                        {idx > 0 && ', '}
+                                        <a 
+                                          href={`https://music.youtube.com/search?q=${encodeURIComponent(artist)}`} 
+                                          target="_blank" 
+                                          rel="noopener noreferrer" 
+                                          className="hover:underline"
+                                          onClick={(e) => e.stopPropagation()}
+                                        >
+                                          {artist}
+                                        </a>
+                                      </React.Fragment>
+                                    ))}
+                                  </span>
                                 </>
                               )}
                             </div>

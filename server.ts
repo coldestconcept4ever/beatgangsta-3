@@ -3881,7 +3881,7 @@ if (process.env.NODE_ENV !== 'production') {
         }
 
         const response = await genAI.models.generateContent({
-          model: model || "gemini-2.5-flash",
+          model: model || "gemini-1.5-flash",
           contents,
           config: finalConfig
         });
