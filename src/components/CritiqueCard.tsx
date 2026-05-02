@@ -362,7 +362,7 @@ export const CritiqueCard: React.FC<CritiqueCardProps> = ({ critique, theme, plu
                   
                   <div className="space-y-3">
                     <h6 className="text-[10px] font-black uppercase tracking-widest opacity-50">{t('recommended_chain')}</h6>
-                    {Array.isArray(action.recommendedChain) && action.recommendedChain.map((plugin, pIdx) => (
+                    {Array.isArray(action.recommendedChain) && action.recommendedChain?.map((plugin, pIdx) => (
                       <PluginBubble 
                         key={pIdx}
                         name={plugin.name}
@@ -410,7 +410,7 @@ export const CritiqueCard: React.FC<CritiqueCardProps> = ({ critique, theme, plu
               </button>
             </div>
 
-            {specificHelpResults.length > 0 && (
+            {specificHelpResults?.length > 0 && (
               <div className="space-y-6 mt-6 pt-6 border-t border-sky-500/20">
                 {Array.isArray(specificHelpResults) && specificHelpResults.map((result, idx) => (
                   <motion.div 
@@ -422,7 +422,7 @@ export const CritiqueCard: React.FC<CritiqueCardProps> = ({ critique, theme, plu
                     <h5 className="font-black text-sm mb-2 opacity-50">{t('q_label', { query: result.query })}</h5>
                     <p className="text-sm font-bold leading-relaxed mb-4">{result.advice}</p>
                     
-                    {result.recommendedChain && result.recommendedChain.length > 0 && (
+                    {result.recommendedChain && result.recommendedChain?.length > 0 && (
                       <div className="space-y-2">
                         <h6 className="text-[10px] font-black uppercase tracking-widest opacity-50 mb-2">{t('recommended_plugins')}</h6>
                         {Array.isArray(result.recommendedChain) && result.recommendedChain.map((plugin: any, pIdx: number) => (
@@ -438,7 +438,7 @@ export const CritiqueCard: React.FC<CritiqueCardProps> = ({ critique, theme, plu
                               </div>
                             )}
                             <div className="space-y-1">
-                              {Array.isArray(plugin.deepDive) && plugin.deepDive.map((param: any, dIdx: number) => (
+                              {Array.isArray(plugin.deepDive) && plugin.deepDive?.map((param: any, dIdx: number) => (
                                 <div key={dIdx} className="text-[10px] font-bold opacity-70">
                                   <span className="text-sky-500">{param.parameter}:</span> {param.value} - <span className="opacity-60">{param.explanation}</span>
                                 </div>

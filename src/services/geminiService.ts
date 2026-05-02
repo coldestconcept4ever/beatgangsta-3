@@ -2759,7 +2759,7 @@ export const replicateRecipeWithUserGear = async (recipe: SavedRecipe, myPlugins
       adapted = postProcessResult(parsed);
       if (adapted.recipe) {
         adapted = adapted.recipe;
-      } else if (adapted.recipes && adapted.recipes.length > 0) {
+      } else if (adapted.recipes && adapted.recipes?.length > 0) {
         adapted = adapted.recipes[0];
       }
     } catch (parseErr) {

@@ -91,13 +91,15 @@ export class ErrorBoundary extends Component<Props, State> {
               <p className="text-red-400 font-mono text-sm break-words mb-2">
                 {errorMessage}
               </p>
-              {errorDetails && (
+              {(errorDetails || this.state.errorInfo?.componentStack) && (
                 <details className="mt-4">
                   <summary className="text-xs text-gray-500 cursor-pointer hover:text-gray-300 transition-colors uppercase tracking-widest font-bold">
                     Technical Details
                   </summary>
                   <pre className="mt-2 p-4 bg-black rounded-lg text-[10px] text-gray-400 overflow-auto max-h-48 font-mono border border-white/5">
                     {errorDetails}
+                    {this.state.errorInfo?.componentStack}
+                    {this.state.error?.stack}
                   </pre>
                 </details>
               )}

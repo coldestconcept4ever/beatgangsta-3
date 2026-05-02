@@ -1519,13 +1519,13 @@ The AI was unable to verify these parameters. Please investigate.`;
           const instrumentsToMigrate = oldInstruments ? JSON.parse(oldInstruments) : [];
           const hardwareToMigrate = oldHardware ? JSON.parse(oldHardware) : [];
 
-          if (instrumentsToMigrate.length > 0 && typeof instrumentsToMigrate[0] === 'string') {
+          if (instrumentsToMigrate?.length > 0 && typeof instrumentsToMigrate[0] === 'string') {
             const enrichedInstruments = await enrichHardware(instrumentsToMigrate);
             setAnalogInstruments(enrichedInstruments);
             localStorage.removeItem('bg_analog_instruments');
           }
 
-          if (hardwareToMigrate.length > 0 && typeof hardwareToMigrate[0] === 'string') {
+          if (hardwareToMigrate?.length > 0 && typeof hardwareToMigrate[0] === 'string') {
             const enrichedHardware = await enrichHardware(hardwareToMigrate);
             setAnalogHardware(enrichedHardware);
             localStorage.removeItem('bg_analog_hardware');

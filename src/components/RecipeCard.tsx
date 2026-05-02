@@ -176,8 +176,8 @@ export const RecipeCard: React.FC<RecipeCardProps> = ({ recipe: initialRecipe, i
       } else if (res.query) {
         history.push({ role: 'user', content: res.query });
         let content = res.advice;
-        if (res.recommendedChain && res.recommendedChain.length > 0) {
-          content += `\n\n**${t('recommended_fix_chain')}**\n` + res.recommendedChain.map((p: any) => `- **${p.name}** (${p.purpose}): \`${p.deepDive.map((d: any) => `${d.parameter}: ${d.value}`).join(', ')}\``).join('\n');
+        if (res.recommendedChain && res.recommendedChain?.length > 0) {
+          content += `\n\n**${t('recommended_fix_chain')}**\n` + res.recommendedChain.map((p: any) => `- **${p.name}** (${p.purpose}): \`${p.deepDive?.map((d: any) => `${d.parameter}: ${d.value}`).join(', ')}\``).join('\n');
         }
         history.push({ role: 'model', content });
       }
@@ -382,7 +382,7 @@ export const RecipeCard: React.FC<RecipeCardProps> = ({ recipe: initialRecipe, i
             <span className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest ${
               theme === 'coldest' ? 'bg-sky-500 text-white' : 'bg-white/10'
             }`}>{recipe.bpm} BPM</span>
-            {recipe.artistTypes && recipe.artistTypes.length > 0 && (
+            {recipe.artistTypes && recipe.artistTypes?.length > 0 && (
               <span className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest ${
                 theme === 'coldest' ? 'bg-indigo-500 text-white' : 'bg-indigo-500/20 text-indigo-400'
               }`}>Vibe: {recipe.artistTypes.join(', ')}</span>
@@ -513,7 +513,7 @@ export const RecipeCard: React.FC<RecipeCardProps> = ({ recipe: initialRecipe, i
                 </div>
               )}
 
-              {track.deepDive && track.deepDive.length > 0 && (
+              {track.deepDive && track.deepDive?.length > 0 && (
                 <div className={`mt-4 p-4 rounded-2xl border ${
                   theme === 'coldest' ? 'bg-black/40 border-sky-500/20' : 'bg-white/10 border-white/20'
                 } ${regeneratingPluginId === `${recipe.isGangstaVox ? 'vocal-track' : 'instrument'}-${idx}-0` ? 'opacity-50 blur-sm' : ''} relative`}>
@@ -526,7 +526,7 @@ export const RecipeCard: React.FC<RecipeCardProps> = ({ recipe: initialRecipe, i
                     <h5 className={`text-[8px] font-black uppercase tracking-widest ${theme === 'coldest' ? 'text-sky-400' : 'opacity-60'}`}>{t('source_settings')}</h5>
                   </div>
                   <div className="grid grid-cols-2 gap-2">
-                    {Array.isArray(track.deepDive) && track.deepDive.map((s, sIdx) => (
+                    {Array.isArray(track.deepDive) && track.deepDive?.map((s, sIdx) => (
                       <div key={sIdx} className="flex justify-between text-[9px] font-bold">
                         <span className={`${theme === 'coldest' ? 'text-sky-300/70' : 'opacity-60'}`}>{s.parameter}</span>
                         <span className="text-current">{s.value}</span>
@@ -545,7 +545,7 @@ export const RecipeCard: React.FC<RecipeCardProps> = ({ recipe: initialRecipe, i
                 </div>
               )}
 
-              {Array.isArray(track.fxPlugins) && track.fxPlugins.length > 0 && (
+              {Array.isArray(track.fxPlugins) && track.fxPlugins?.length > 0 && (
                 <div className="mt-6 space-y-4">
                   <h5 className={`text-[8px] font-black uppercase tracking-widest ${theme === 'coldest' ? 'text-sky-400' : 'opacity-60'}`}>{t('fx_deep_dive')}</h5>
                   {Array.isArray(track.fxPlugins) && track.fxPlugins.map((dive, dIdx) => (
@@ -599,7 +599,7 @@ export const RecipeCard: React.FC<RecipeCardProps> = ({ recipe: initialRecipe, i
                   <span className={`text-[10px] font-black uppercase tracking-widest px-2 py-1 rounded-md border ${theme === 'coldest' ? 'bg-black/40 border-purple-500/30 text-purple-200' : 'opacity-60 bg-black/5 border-black/10'}`}>{layer.sourceSoundGoal}</span>
                 </div>
 
-                {layer.deepDive && layer.deepDive.length > 0 && (
+                {layer.deepDive && layer.deepDive?.length > 0 && (
                   <div className={`mb-4 p-4 rounded-2xl border ${
                     theme === 'coldest' ? 'bg-black/40 border-sky-500/20' : 'bg-white/5 border-white/10'
                   } ${regeneratingPluginId === `vocal-track-${idx}-0` ? 'opacity-50 blur-sm' : ''} relative`}>
@@ -612,7 +612,7 @@ export const RecipeCard: React.FC<RecipeCardProps> = ({ recipe: initialRecipe, i
                       <h5 className={`text-[8px] font-black uppercase tracking-widest ${theme === 'coldest' ? 'text-purple-400' : 'opacity-60'}`}>{t('source_settings')}</h5>
                     </div>
                     <div className="grid grid-cols-2 gap-2">
-                      {Array.isArray(layer.deepDive) && layer.deepDive.map((s, sIdx) => (
+                      {Array.isArray(layer.deepDive) && layer.deepDive?.map((s, sIdx) => (
                         <div key={sIdx} className="flex justify-between text-[9px] font-bold">
                           <span className={`${theme === 'coldest' ? 'text-sky-300/70' : 'opacity-60'}`}>{s.parameter}</span>
                           <span className="text-current">{s.value}</span>
@@ -662,7 +662,7 @@ export const RecipeCard: React.FC<RecipeCardProps> = ({ recipe: initialRecipe, i
         </div>
       )}
 
-      {Array.isArray(recipe.busses) && recipe.busses.length > 0 && (
+      {Array.isArray(recipe.busses) && recipe.busses?.length > 0 && (
         <div className="space-y-6 mb-8">
           <h4 className={`text-sm font-black uppercase tracking-widest ${theme === 'coldest' ? 'text-sky-400 opacity-100' : 'opacity-60'}`}>{t('busses')}</h4>
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -700,7 +700,7 @@ export const RecipeCard: React.FC<RecipeCardProps> = ({ recipe: initialRecipe, i
         </div>
       )}
 
-      {Array.isArray(recipe.masterPlugins) && recipe.masterPlugins.length > 0 && (
+      {Array.isArray(recipe.masterPlugins) && recipe.masterPlugins?.length > 0 && (
         <div className="space-y-6 mb-8">
           <h4 className={`text-sm font-black uppercase tracking-widest ${theme === 'coldest' ? 'text-emerald-400 opacity-100' : 'opacity-40'}`}>{t('master_chain')}</h4>
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -860,7 +860,7 @@ export const RecipeCard: React.FC<RecipeCardProps> = ({ recipe: initialRecipe, i
                 <div className="space-y-4">
                   <h5 className={`text-[10px] font-black uppercase tracking-widest mb-4 ${theme === 'coldest' ? 'text-sky-400' : 'opacity-30'}`}>{t('tracking_inserts')}</h5>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {Array.isArray(recipe.gangstaVox.trackingChain.inserts) && recipe.gangstaVox.trackingChain.inserts.map((dive, dIdx) => (
+                    {Array.isArray(recipe.gangstaVox.trackingChain.inserts) && recipe.gangstaVox.trackingChain.inserts?.map((dive, dIdx) => (
                       <PluginBubble 
                         key={dIdx}
                         name={dive.name}
@@ -878,11 +878,11 @@ export const RecipeCard: React.FC<RecipeCardProps> = ({ recipe: initialRecipe, i
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-8 pt-6 border-t border-sky-500/20">
-                  {recipe.gangstaVox.trackingChain.aux1 && recipe.gangstaVox.trackingChain.aux1.length > 0 && (
+                  {recipe.gangstaVox.trackingChain.aux1 && recipe.gangstaVox.trackingChain.aux1?.length > 0 && (
                     <div>
                       <h5 className={`text-[10px] font-black uppercase tracking-widest mb-4 ${theme === 'coldest' ? 'text-sky-400' : 'opacity-30'}`}>AUX 1 (Reverb/Comfort/Parallel)</h5>
                       <div className="flex flex-col gap-3">
-                        {recipe.gangstaVox.trackingChain.aux1.map((dive, dIdx) => (
+                        {recipe.gangstaVox.trackingChain.aux1?.map((dive, dIdx) => (
                           <PluginBubble 
                             key={dIdx}
                             name={dive.name}
@@ -899,11 +899,11 @@ export const RecipeCard: React.FC<RecipeCardProps> = ({ recipe: initialRecipe, i
                       </div>
                     </div>
                   )}
-                  {recipe.gangstaVox.trackingChain.aux2 && recipe.gangstaVox.trackingChain.aux2.length > 0 && (
+                  {recipe.gangstaVox.trackingChain.aux2 && recipe.gangstaVox.trackingChain.aux2?.length > 0 && (
                     <div>
                       <h5 className={`text-[10px] font-black uppercase tracking-widest mb-4 ${theme === 'coldest' ? 'text-sky-400' : 'opacity-30'}`}>AUX 2 (Delay/FX)</h5>
                       <div className="flex flex-col gap-3">
-                        {recipe.gangstaVox.trackingChain.aux2.map((dive, dIdx) => (
+                        {recipe.gangstaVox.trackingChain.aux2?.map((dive, dIdx) => (
                           <PluginBubble 
                             key={dIdx}
                             name={dive.name}
@@ -1006,7 +1006,7 @@ export const RecipeCard: React.FC<RecipeCardProps> = ({ recipe: initialRecipe, i
                     )}
                   </div>
 
-                  {layer.deepDive && layer.deepDive.length > 0 && (
+                  {layer.deepDive && layer.deepDive?.length > 0 && (
                     <div className={`mb-6 p-4 rounded-2xl border ${
                       theme === 'coldest' ? 'bg-black/40 border-sky-500/20' : 'bg-white/5 border-white/10'
                     } ${regeneratingPluginId === `vocal-track-${idx}-0` ? 'opacity-50 blur-sm' : ''} relative`}>
@@ -1019,7 +1019,7 @@ export const RecipeCard: React.FC<RecipeCardProps> = ({ recipe: initialRecipe, i
                         <h5 className={`text-[8px] font-black uppercase tracking-widest ${theme === 'coldest' ? 'text-sky-400' : 'opacity-60'}`}>{t('source_settings')}</h5>
                       </div>
                       <div className="grid grid-cols-2 gap-2">
-                        {Array.isArray(layer.deepDive) && layer.deepDive.map((s, sIdx) => (
+                        {Array.isArray(layer.deepDive) && layer.deepDive?.map((s, sIdx) => (
                           <div key={sIdx} className="flex justify-between text-[9px] font-bold">
                             <span className={`${theme === 'coldest' ? 'text-sky-300/70' : 'opacity-60'}`}>{s.parameter}</span>
                             <span className="text-current">{s.value}</span>
@@ -1035,7 +1035,7 @@ export const RecipeCard: React.FC<RecipeCardProps> = ({ recipe: initialRecipe, i
                     </div>
                   )}
                   
-                  {layer.fxPlugins && layer.fxPlugins.length > 0 && (
+                  {layer.fxPlugins && layer.fxPlugins?.length > 0 && (
                     <div className="mb-6">
                       <h5 className={`text-[10px] font-black uppercase tracking-widest mb-4 ${theme === 'coldest' ? 'text-sky-400' : 'opacity-30'}`}>{t('processing_chain')}</h5>
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
