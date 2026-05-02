@@ -3874,13 +3874,12 @@ if (process.env.NODE_ENV !== 'production') {
           console.error("Error during file state polling:", pollErr);
         }
         
+        const finalConfig = safetySettings ? { ...config, safetySettings } : config;
+
         const response = await genAI.models.generateContent({
           model: model || "gemini-3-flash-preview",
           contents,
-          config: {
-            ...config,
-            safetySettings
-          }
+          config: finalConfig
         });
         
         let text = "";
