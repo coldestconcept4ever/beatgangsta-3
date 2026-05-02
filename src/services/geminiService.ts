@@ -448,7 +448,27 @@ export const regeneratePlugin = async (
     contents: prompt,
     config: {
       customAction: 'regenerate_plugin',
-      responseMimeType: "application/json"
+      responseMimeType: "application/json",
+      responseSchema: {
+        type: Type.OBJECT,
+        properties: {
+          name: { type: Type.STRING },
+          purpose: { type: Type.STRING },
+          deepDive: {
+            type: Type.ARRAY,
+            items: {
+              type: Type.OBJECT,
+              properties: {
+                parameter: { type: Type.STRING },
+                value: { type: Type.STRING },
+                explanation: { type: Type.STRING }
+              },
+              required: ["parameter", "value", "explanation"]
+            }
+          }
+        },
+        required: ["name", "purpose", "deepDive"]
+      }
     }
   });
 
@@ -660,8 +680,17 @@ const getUnifiedRecipeSchema = () => {
               }
             },
             deepDive: {
-              type: Type.STRING,
-              description: "Provide EVERY available parameter found on the actual plugin (typically 40-70 for professional plugins). Detail parameter name, value, and explanation in markup."
+              type: Type.ARRAY,
+              description: "Provide EVERY available parameter found on the actual plugin (typically 40-70 for professional plugins). Detail parameter name, value, and explanation. Be exhaustive and DO NOT be lazy.",
+              items: {
+                type: Type.OBJECT,
+                properties: {
+                  parameter: { type: Type.STRING },
+                  value: { type: Type.STRING },
+                  explanation: { type: Type.STRING }
+                },
+                required: ["parameter", "value", "explanation"]
+              }
             },
             fxPlugins: {
               type: Type.ARRAY,
@@ -671,9 +700,20 @@ const getUnifiedRecipeSchema = () => {
                   name: { type: Type.STRING },
                   purpose: { type: Type.STRING },
                   deepDive: {
-                    type: Type.STRING,
-                    description: "Provide EVERY available parameter found on the actual plugin. Detail parameter name, value, and explanation."
-                  }
+                    type: Type.ARRAY,
+                    description: "Provide EVERY available parameter found on the actual plugin. Detail parameter name, value, and explanation. Be exhaustive.",
+                    items: {
+                      type: Type.OBJECT,
+                      properties: {
+                        parameter: { type: Type.STRING },
+                        value: { type: Type.STRING },
+                        explanation: { type: Type.STRING }
+                      },
+                      required: ["parameter", "value", "explanation"]
+                    }
+                  },
+                  band: { type: Type.STRING },
+                  routing: { type: Type.STRING }
                 },
                 required: ["name", "purpose", "deepDive"]
               }
@@ -697,8 +737,17 @@ const getUnifiedRecipeSchema = () => {
                   name: { type: Type.STRING },
                   purpose: { type: Type.STRING },
                   deepDive: {
-                    type: Type.STRING,
-                    description: "Provide EVERY available parameter found on the actual plugin."
+                    type: Type.ARRAY,
+                    description: "Provide EVERY available parameter found on the actual plugin. Detail parameter name, value, and explanation. Be exhaustive.",
+                    items: {
+                      type: Type.OBJECT,
+                      properties: {
+                        parameter: { type: Type.STRING },
+                        value: { type: Type.STRING },
+                        explanation: { type: Type.STRING }
+                      },
+                      required: ["parameter", "value", "explanation"]
+                    }
                   }
                 },
                 required: ["name", "purpose", "deepDive"]
@@ -1714,7 +1763,17 @@ export const getBeatRecommendations = async (plugins: VSTPlugin[], analogInstrum
     contents: prompt,
     config: {
       customAction: 'recipe',
-      responseMimeType: "application/json"
+      responseMimeType: "application/json",
+      responseSchema: {
+        type: Type.OBJECT,
+        properties: {
+          recipes: {
+            type: Type.ARRAY,
+            items: getUnifiedRecipeSchema()
+          }
+        },
+        required: ["recipes"]
+      }
     }
   });
 
@@ -1862,7 +1921,17 @@ export const getCustomBeatRecommendations = async (plugins: VSTPlugin[], query: 
     contents: prompt,
     config: {
       customAction: 'type_beat_search',
-      responseMimeType: "application/json"
+      responseMimeType: "application/json",
+      responseSchema: {
+        type: Type.OBJECT,
+        properties: {
+          recipes: {
+            type: Type.ARRAY,
+            items: getUnifiedRecipeSchema()
+          }
+        },
+        required: ["recipes"]
+      }
     }
   });
 
@@ -2005,7 +2074,17 @@ export const getSongBeatRecommendations = async (plugins: VSTPlugin[], songQuery
     contents: prompt,
     config: {
       customAction: 'song_search',
-      responseMimeType: "application/json"
+      responseMimeType: "application/json",
+      responseSchema: {
+        type: Type.OBJECT,
+        properties: {
+          recipes: {
+            type: Type.ARRAY,
+            items: getUnifiedRecipeSchema()
+          }
+        },
+        required: ["recipes"]
+      }
     }
   });
 
@@ -2239,10 +2318,10 @@ export const getAudioBeatRecommendations = async (plugins: VSTPlugin[], audioBas
   `;
 
   const schemaObject = {
-    type: "OBJECT",
+    type: Type.OBJECT,
     properties: {
       recipes: {
-        type: "ARRAY",
+        type: Type.ARRAY,
         items: getUnifiedRecipeSchema()
       }
     },
@@ -2281,6 +2360,7 @@ export const getAudioBeatRecommendations = async (plugins: VSTPlugin[], audioBas
       config: {
         customAction: 'audio_analysis_recipe',
         responseMimeType: "application/json",
+        responseSchema: schemaObject,
         safetySettings: [
           { category: HarmCategory.HARM_CATEGORY_HARASSMENT, threshold: HarmBlockThreshold.OFF },
           { category: HarmCategory.HARM_CATEGORY_HATE_SPEECH, threshold: HarmBlockThreshold.OFF },
@@ -2739,7 +2819,8 @@ export const replicateRecipeWithUserGear = async (recipe: SavedRecipe, myPlugins
       contents: prompt,
       config: {
         customAction: 'analog_save',
-        responseMimeType: "application/json"
+        responseMimeType: "application/json",
+        responseSchema: getUnifiedRecipeSchema()
       }
     });
 
@@ -2845,20 +2926,92 @@ export const regenerateTrackingChain = async (
           properties: {
             unisonPlugin: {
               type: Type.OBJECT,
-              properties: { name: { type: Type.STRING }, purpose: { type: Type.STRING }, deepDive: { type: Type.ARRAY, items: { type: Type.OBJECT, properties: { parameter: { type: Type.STRING }, value: { type: Type.STRING } }, required: ["parameter", "value"] } } },
+              properties: { 
+                name: { type: Type.STRING }, 
+                purpose: { type: Type.STRING }, 
+                deepDive: { 
+                  type: Type.ARRAY, 
+                  items: { 
+                    type: Type.OBJECT, 
+                    properties: { 
+                      parameter: { type: Type.STRING }, 
+                      value: { type: Type.STRING },
+                      explanation: { type: Type.STRING }
+                    }, 
+                    required: ["parameter", "value", "explanation"] 
+                  } 
+                } 
+              },
               required: ["name", "purpose", "deepDive"]
             },
             inserts: {
               type: Type.ARRAY,
-              items: { type: Type.OBJECT, properties: { name: { type: Type.STRING }, purpose: { type: Type.STRING }, deepDive: { type: Type.ARRAY, items: { type: Type.OBJECT, properties: { parameter: { type: Type.STRING }, value: { type: Type.STRING } }, required: ["parameter", "value"] } } }, required: ["name", "purpose", "deepDive"] }
+              items: { 
+                type: Type.OBJECT, 
+                properties: { 
+                  name: { type: Type.STRING }, 
+                  purpose: { type: Type.STRING }, 
+                  deepDive: { 
+                    type: Type.ARRAY, 
+                    items: { 
+                      type: Type.OBJECT, 
+                      properties: { 
+                        parameter: { type: Type.STRING }, 
+                        value: { type: Type.STRING },
+                        explanation: { type: Type.STRING }
+                      }, 
+                      required: ["parameter", "value", "explanation"] 
+                    } 
+                  } 
+                }, 
+                required: ["name", "purpose", "deepDive"] 
+              }
             },
             aux1: {
               type: Type.ARRAY,
-              items: { type: Type.OBJECT, properties: { name: { type: Type.STRING }, purpose: { type: Type.STRING }, deepDive: { type: Type.ARRAY, items: { type: Type.OBJECT, properties: { parameter: { type: Type.STRING }, value: { type: Type.STRING } }, required: ["parameter", "value"] } } }, required: ["name", "purpose", "deepDive"] }
+              items: { 
+                type: Type.OBJECT, 
+                properties: { 
+                  name: { type: Type.STRING }, 
+                  purpose: { type: Type.STRING }, 
+                  deepDive: { 
+                    type: Type.ARRAY, 
+                    items: { 
+                      type: Type.OBJECT, 
+                      properties: { 
+                        parameter: { type: Type.STRING }, 
+                        value: { type: Type.STRING },
+                        explanation: { type: Type.STRING }
+                      }, 
+                      required: ["parameter", "value", "explanation"] 
+                    } 
+                  } 
+                }, 
+                required: ["name", "purpose", "deepDive"] 
+              }
             },
             aux2: {
               type: Type.ARRAY,
-              items: { type: Type.OBJECT, properties: { name: { type: Type.STRING }, purpose: { type: Type.STRING }, deepDive: { type: Type.ARRAY, items: { type: Type.OBJECT, properties: { parameter: { type: Type.STRING }, value: { type: Type.STRING } }, required: ["parameter", "value"] } } }, required: ["name", "purpose", "deepDive"] }
+              items: { 
+                type: Type.OBJECT, 
+                properties: { 
+                  name: { type: Type.STRING }, 
+                  purpose: { type: Type.STRING }, 
+                  deepDive: { 
+                    type: Type.ARRAY, 
+                    items: { 
+                      type: Type.OBJECT, 
+                      properties: { 
+                        parameter: { type: Type.STRING }, 
+                        value: { type: Type.STRING },
+                        explanation: { type: Type.STRING }
+                      }, 
+                      required: ["parameter", "value", "explanation"] 
+                    } 
+                  } 
+                }, 
+                required: ["name", "purpose", "deepDive"] 
+              }
             },
             dawRoutingInstructions: { type: Type.STRING },
             dspUsageNote: { type: Type.STRING }
@@ -2871,10 +3024,11 @@ export const regenerateTrackingChain = async (
 
     const result = await ai.models.generateContent({
       model: "gemini-3-flash-preview",
-      contents: prompt + `\n\nReturn the result as a raw JSON object exactly following this structure:\n${JSON.stringify(schema, null, 2)}`,
+      contents: prompt,
       config: {
-        customAction: 'regenerate_plugin',
-        responseMimeType: "application/json"
+        customAction: 'regenerate_tracking_chain',
+        responseMimeType: "application/json",
+        responseSchema: schema
       }
     });
 
