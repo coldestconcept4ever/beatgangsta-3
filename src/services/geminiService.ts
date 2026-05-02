@@ -57,10 +57,13 @@ const ADVANCED_MIDI_PROMPT = `
     Your goal is to generate MIDI data that sounds indistinguishable from a master human musician playing a real instrument.
 `;
 const PRO_Q_3_LAYOUT_PROMPT = `
-    CRITICAL - FABFILTER PRO-Q 3 LAYOUT:
-    When suggesting settings for FabFilter Pro-Q 3, you MUST use the following EXACT layout for the 'deepDive' section, ensuring each parameter is labeled for readability:
+    CRITICAL - FABFILTER PRO-Q 3 LAYOUT & COMPLEXITY:
+    When suggesting settings for FabFilter Pro-Q 3, you MUST ALWAYS provide at least 6 processing bands. 
+    Every Pro-Q 3 suggestion MUST include a minimum of 6 bands in the 'deepDive' section.
+    AT LEAST 2 of those bands MUST be dynamic bands (Dynamic: On, with a Range value).
+    You MUST use the following EXACT layout for the 'deepDive' section for each of those 6+ bands, ensuring each parameter is labeled for readability:
     Layout Structure (Example for each band):
-    - Low End Band: [Freq: 45Hz, Gain: 0.0dB, Type: Low Shelf, Slope: 12dB/oct, Q: 0.70, Stereo: Stereo, Dynamic: Off]
+    - Low End Band: [Freq: 45Hz, Gain: 0.0dB, Type: Low Cut, Slope: 12dB/oct, Q: 0.70, Stereo: Stereo, Dynamic: Off]
     - Band 1-6: [Freq: 250Hz, Gain: -2.5dB, Type: Bell, Slope: 12dB/oct, Q: 1.0, Stereo: Stereo, Dynamic: On, Range: -3.0dB]
     Required Labels:
     - Freq: Frequency
@@ -156,6 +159,7 @@ const GLOBAL_PARAMETER_STRICTNESS_PROMPT = `
        - Time: MUST be in ms, s, or beat fractions.
        - Percentage (%): Use ONLY when the plugin explicitly uses % (like Dry/Wet, Mix, or specific saturation amounts).
     3. 'O'CLOCK' POSITIONING FOR UNLABELED KNOBS: If a plugin features a vintage or analog-style interface with knobs that DO NOT provide numerical value readouts in its UI (e.g., analog compressor clones, guitar pedals, vintage saturators), you MUST use 'o'clock' values (e.g., "10 o'clock", "2 o'clock") instead of inventing exact numerical percentages. STRICTLY apply this ONLY to plugins without numerical readouts. For modern digital plugins with numerical displays, provide the exact numbers.
+    4. EXHAUSTIVE COVERAGE: You MUST provide values for ALL parameters known to be in every plugin you recommend. Do not omit any known parameters from the 'deepDive' configuration, be entirely exhaustive and provide all settings available on the plugin.
 `;
 function postProcessResult(result: any) {
   const processRecipe = (recipe: any) => {
@@ -1593,6 +1597,8 @@ export const getCustomBeatRecommendations = async (plugins: VSTPlugin[], query: 
     ${GULLFOSS_SPEC_PROMPT}
     ${OZONE_SPEC_PROMPT}
     ${SONIBLE_SPEC_PROMPT}
+    ${RC20_SPEC_PROMPT}
+    ${GLOBAL_PARAMETER_STRICTNESS_PROMPT}
     Ensure the recipe captures the signature vocal sound, effects, and mixing techniques associated with ${query}.
     Identify 2-3 mainstream or commonly known artists who would typically use this specific vocal chain.
     Include a recommended BPM, 'recommendedScale', and 'chordProgression' that fits the vibe.
@@ -1707,6 +1713,8 @@ export const getSongBeatRecommendations = async (plugins: VSTPlugin[], songQuery
     ${PRO_Q_3_LAYOUT_PROMPT}
     ${OZONE_SPEC_PROMPT}
     ${SONIBLE_SPEC_PROMPT}
+    ${RC20_SPEC_PROMPT}
+    ${GLOBAL_PARAMETER_STRICTNESS_PROMPT}
     Ensure the recipe captures the signature vocal sound of that specific song.
     Identify 2-3 mainstream or commonly known artists who would typically use this specific vocal chain.
     Include a recommended BPM, 'recommendedScale', and 'chordProgression' that fits the vibe.
@@ -1740,6 +1748,8 @@ export const getSongBeatRecommendations = async (plugins: VSTPlugin[], songQuery
     ${GULLFOSS_SPEC_PROMPT}
     ${OZONE_SPEC_PROMPT}
     ${SONIBLE_SPEC_PROMPT}
+    ${RC20_SPEC_PROMPT}
+    ${GLOBAL_PARAMETER_STRICTNESS_PROMPT}
     FOLLOW THIS STRUCTURAL BLUEPRINT:
     ${JSON.stringify(blueprint)}
     Ensure the recipe captures the signature sound, instrumentation, and mixing techniques of that specific song, while strictly adhering to the structural blueprint provided above.
@@ -1878,6 +1888,8 @@ export const getAudioBeatRecommendations = async (plugins: VSTPlugin[], audioBas
     ${GULLFOSS_SPEC_PROMPT}
     ${OZONE_SPEC_PROMPT}
     ${SONIBLE_SPEC_PROMPT}
+    ${RC20_SPEC_PROMPT}
+    ${GLOBAL_PARAMETER_STRICTNESS_PROMPT}
     ${audioUrl ? `The main audio file is available at this URL: ${audioUrl}. Please fetch and analyze it.` : "The main audio file is provided as inline data."}
     Ensure the recipe captures the signature vocal sound of the audio.
     Identify 2-3 mainstream or commonly known artists who would typically use this specific vocal chain.
@@ -1926,6 +1938,8 @@ export const getAudioBeatRecommendations = async (plugins: VSTPlugin[], audioBas
     ${GULLFOSS_SPEC_PROMPT}
     ${OZONE_SPEC_PROMPT}
     ${SONIBLE_SPEC_PROMPT}
+    ${RC20_SPEC_PROMPT}
+    ${GLOBAL_PARAMETER_STRICTNESS_PROMPT}
     ${audioUrl ? `The main audio file is available at this URL: ${audioUrl}. Please fetch and analyze it.` : "The main audio file is provided as inline data."}
     Ensure the recipe captures the signature sound, instrumentation, and mixing techniques heard in the audio.
     Identify 2-3 mainstream or commonly known artists who would typically use this specific beat type.
@@ -2107,6 +2121,8 @@ export const getMixCritique = async (
     ${GULLFOSS_SPEC_PROMPT}
     ${OZONE_SPEC_PROMPT}
     ${SONIBLE_SPEC_PROMPT}
+    ${RC20_SPEC_PROMPT}
+    ${GLOBAL_PARAMETER_STRICTNESS_PROMPT}
     Analyze the audio and provide a detailed mix critique. Since this is a full song, consider the dynamic changes, song structure (intro, verse, chorus, etc.), and how the mix evolves.
     Only recommend plugins from this list:
     ${pluginListStr}
