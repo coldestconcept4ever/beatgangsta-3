@@ -1,0 +1,79 @@
+392-              properties: {
+393:                parameter: { type: Type.STRING }, value: { type: Type.STRING }, explanation: { type: Type.STRING } },
+394-              required: ["parameter", "value", "explanation"]
+--
+589-                properties: {
+590:                  parameter: { type: Type.STRING }, value: { type: Type.STRING }, explanation: { type: Type.STRING } },
+591-                required: ["parameter", "value", "explanation"]
+--
+606-                      properties: {
+607:                        parameter: { type: Type.STRING }, value: { type: Type.STRING }, explanation: { type: Type.STRING } },
+608-                      required: ["parameter", "value", "explanation"]
+--
+640-                      properties: {
+641:                        parameter: { type: Type.STRING }, value: { type: Type.STRING }, explanation: { type: Type.STRING } },
+642-                      required: ["parameter", "value", "explanation"]
+--
+688-                properties: {
+689:                  parameter: { type: Type.STRING }, value: { type: Type.STRING }, explanation: { type: Type.STRING } },
+690-                required: ["parameter", "value", "explanation"]
+--
+714-                      properties: {
+715:                        parameter: { type: Type.STRING }, value: { type: Type.STRING }, explanation: { type: Type.STRING } },
+716-                      required: ["parameter", "value", "explanation"]
+--
+733-                        properties: {
+734:                          parameter: { type: Type.STRING }, value: { type: Type.STRING }, explanation: { type: Type.STRING } },
+735-                        required: ["parameter", "value", "explanation"]
+--
+753-                        properties: {
+754:                          parameter: { type: Type.STRING }, value: { type: Type.STRING }, explanation: { type: Type.STRING } },
+755-                        required: ["parameter", "value", "explanation"]
+--
+773-                        properties: {
+774:                          parameter: { type: Type.STRING }, value: { type: Type.STRING }, explanation: { type: Type.STRING } },
+775-                        required: ["parameter", "value", "explanation"]
+--
+820-                          properties: {
+821:                            parameter: { type: Type.STRING }, value: { type: Type.STRING }, explanation: { type: Type.STRING } },
+822-                          required: ["parameter", "value", "explanation"]
+--
+880-                      properties: {
+881:                        parameter: { type: Type.STRING }, value: { type: Type.STRING }, explanation: { type: Type.STRING } },
+882-                      required: ["parameter", "value", "explanation"]
+--
+899-                        properties: {
+900:                          parameter: { type: Type.STRING }, value: { type: Type.STRING }, explanation: { type: Type.STRING } },
+901-                        required: ["parameter", "value", "explanation"]
+--
+919-                        properties: {
+920:                          parameter: { type: Type.STRING }, value: { type: Type.STRING }, explanation: { type: Type.STRING } },
+921-                        required: ["parameter", "value", "explanation"]
+--
+939-                        properties: {
+940:                          parameter: { type: Type.STRING }, value: { type: Type.STRING }, explanation: { type: Type.STRING } },
+941-                        required: ["parameter", "value", "explanation"]
+--
+986-                          properties: {
+987:                            parameter: { type: Type.STRING }, value: { type: Type.STRING }, explanation: { type: Type.STRING } },
+988-                          required: ["parameter", "value", "explanation"]
+--
+2190-                      properties: {
+2191:                        parameter: { type: "STRING" }, value: { type: "STRING" }, explanation: { type: "STRING" } },
+2192-                      required: ["parameter", "value", "explanation"]
+--
+2543-                    properties: { 
+2544:                      parameter: { type: Type.STRING }, value: { type: Type.STRING }, explanation: { type: Type.STRING } }, 
+2545-                    required: ["parameter", "value", "explanation"] 
+--
+2562-                      properties: { 
+2563:                        parameter: { type: Type.STRING }, value: { type: Type.STRING }, explanation: { type: Type.STRING } }, 
+2564-                      required: ["parameter", "value", "explanation"] 
+--
+2582-                      properties: { 
+2583:                        parameter: { type: Type.STRING }, value: { type: Type.STRING }, explanation: { type: Type.STRING } }, 
+2584-                      required: ["parameter", "value", "explanation"] 
+--
+2602-                      properties: { 
+2603:                        parameter: { type: Type.STRING }, value: { type: Type.STRING }, explanation: { type: Type.STRING } }, 
+2604-                      required: ["parameter", "value", "explanation"] 

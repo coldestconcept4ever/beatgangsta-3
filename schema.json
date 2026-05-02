@@ -1,0 +1,1401 @@
+{
+  "type": "OBJECT",
+  "properties": {
+    "title": {
+      "type": "STRING"
+    },
+    "style": {
+      "type": "STRING"
+    },
+    "bpm": {
+      "type": "NUMBER"
+    },
+    "description": {
+      "type": "STRING"
+    },
+    "artistTypes": {
+      "type": "ARRAY",
+      "items": {
+        "type": "STRING"
+      }
+    },
+    "recommendedScale": {
+      "type": "STRING"
+    },
+    "chordProgression": {
+      "type": "STRING"
+    },
+    "mixingAdvice": {
+      "type": "STRING"
+    },
+    "drumKitAdvice": {
+      "type": "OBJECT",
+      "properties": {
+        "kick": {
+          "type": "STRING"
+        },
+        "snare": {
+          "type": "STRING"
+        },
+        "toms": {
+          "type": "STRING"
+        }
+      },
+      "required": [
+        "kick",
+        "snare",
+        "toms"
+      ]
+    },
+    "instruments": {
+      "type": "ARRAY",
+      "items": {
+        "type": "OBJECT",
+        "properties": {
+          "name": {
+            "type": "STRING"
+          },
+          "plugin": {
+            "type": "STRING"
+          },
+          "type": {
+            "type": "STRING"
+          },
+          "sourceSoundGoal": {
+            "type": "STRING"
+          },
+          "busSend": {
+            "type": "STRING"
+          },
+          "loopGuide": {
+            "type": "STRING"
+          },
+          "midiNotes": {
+            "type": "ARRAY",
+            "description": "MIDI pattern for this instrument. You MUST include at least 15-40 notes for melodies/arps, 8-20 for chords, preventing basic 2-note loops. The sum of all 'duration' and 'wait' values MUST equal exactly 16 beats (for 4 bars) or 32 beats (for 8 bars).",
+            "items": {
+              "type": "OBJECT",
+              "properties": {
+                "pitch": {
+                  "type": "STRING"
+                },
+                "duration": {
+                  "type": "STRING"
+                },
+                "wait": {
+                  "type": "STRING"
+                },
+                "velocity": {
+                  "type": "NUMBER"
+                }
+              },
+              "required": [
+                "pitch",
+                "duration",
+                "wait",
+                "velocity"
+              ]
+            }
+          },
+          "deepDive": {
+            "type": "ARRAY",
+            "description": "Provide EVERY available parameter found on the actual plugin (typically 40-70 for professional plugins). Detail parameter name, value, and explanation. Be exhaustive and DO NOT be lazy. AT LEAST 10 parameter settings (and up to 30 if it is a complex channel strip plugin).",
+            "items": {
+              "type": "OBJECT",
+              "properties": {
+                "parameter": {
+                  "type": "STRING"
+                },
+                "value": {
+                  "type": "STRING"
+                },
+                "explanation": {
+                  "type": "STRING"
+                }
+              },
+              "required": [
+                "parameter",
+                "value",
+                "explanation"
+              ]
+            }
+          },
+          "fxPlugins": {
+            "type": "ARRAY",
+            "items": {
+              "type": "OBJECT",
+              "properties": {
+                "name": {
+                  "type": "STRING"
+                },
+                "purpose": {
+                  "type": "STRING"
+                },
+                "deepDive": {
+                  "type": "ARRAY",
+                  "description": "Provide EVERY available parameter found on the actual plugin. Detail parameter name, value, and explanation. Be exhaustive. AT LEAST 10 parameter settings (and up to 30 if it is a complex channel strip plugin).",
+                  "items": {
+                    "type": "OBJECT",
+                    "properties": {
+                      "parameter": {
+                        "type": "STRING"
+                      },
+                      "value": {
+                        "type": "STRING"
+                      },
+                      "explanation": {
+                        "type": "STRING"
+                      }
+                    },
+                    "required": [
+                      "parameter",
+                      "value",
+                      "explanation"
+                    ]
+                  }
+                },
+                "band": {
+                  "type": "STRING"
+                },
+                "routing": {
+                  "type": "STRING"
+                }
+              },
+              "required": [
+                "name",
+                "purpose",
+                "deepDive"
+              ]
+            }
+          }
+        },
+        "required": [
+          "name",
+          "plugin",
+          "type",
+          "sourceSoundGoal",
+          "deepDive",
+          "fxPlugins",
+          "midiNotes"
+        ]
+      }
+    },
+    "busses": {
+      "type": "ARRAY",
+      "items": {
+        "type": "OBJECT",
+        "properties": {
+          "name": {
+            "type": "STRING"
+          },
+          "tracksUsingBus": {
+            "type": "ARRAY",
+            "items": {
+              "type": "STRING"
+            }
+          },
+          "fxPlugins": {
+            "type": "ARRAY",
+            "items": {
+              "type": "OBJECT",
+              "properties": {
+                "name": {
+                  "type": "STRING"
+                },
+                "purpose": {
+                  "type": "STRING"
+                },
+                "deepDive": {
+                  "type": "ARRAY",
+                  "description": "Provide EVERY available parameter found on the actual plugin. Detail parameter name, value, and explanation. Be exhaustive. AT LEAST 10 parameter settings (and up to 30 if it is a complex channel strip plugin).",
+                  "items": {
+                    "type": "OBJECT",
+                    "properties": {
+                      "parameter": {
+                        "type": "STRING"
+                      },
+                      "value": {
+                        "type": "STRING"
+                      },
+                      "explanation": {
+                        "type": "STRING"
+                      }
+                    },
+                    "required": [
+                      "parameter",
+                      "value",
+                      "explanation"
+                    ]
+                  }
+                }
+              },
+              "required": [
+                "name",
+                "purpose",
+                "deepDive"
+              ]
+            }
+          }
+        },
+        "required": [
+          "name",
+          "tracksUsingBus",
+          "fxPlugins"
+        ]
+      }
+    },
+    "drumPatterns": {
+      "type": "OBJECT",
+      "description": "Drum patterns for each section. Each pattern MUST be exactly 4 or 8 bars long (64 or 128 steps).",
+      "properties": {
+        "intro": {
+          "type": "OBJECT",
+          "properties": {
+            "kick": {
+              "type": "OBJECT",
+              "properties": {
+                "isDoubleTime": {
+                  "type": "BOOLEAN"
+                },
+                "steps": {
+                  "type": "ARRAY",
+                  "items": {
+                    "type": "NUMBER"
+                  },
+                  "description": "Steps 1-64 for 4 bars, 1-128 for 8 bars."
+                },
+                "velocities": {
+                  "type": "ARRAY",
+                  "items": {
+                    "type": "NUMBER"
+                  }
+                }
+              }
+            },
+            "snare": {
+              "type": "OBJECT",
+              "properties": {
+                "isClap": {
+                  "type": "BOOLEAN"
+                },
+                "isDoubleTime": {
+                  "type": "BOOLEAN"
+                },
+                "steps": {
+                  "type": "ARRAY",
+                  "items": {
+                    "type": "NUMBER"
+                  },
+                  "description": "Steps 1-64 for 4 bars, 1-128 for 8 bars."
+                },
+                "velocities": {
+                  "type": "ARRAY",
+                  "items": {
+                    "type": "NUMBER"
+                  }
+                }
+              }
+            },
+            "hiHat": {
+              "type": "OBJECT",
+              "properties": {
+                "isDoubleTime": {
+                  "type": "BOOLEAN"
+                },
+                "steps": {
+                  "type": "ARRAY",
+                  "items": {
+                    "type": "NUMBER"
+                  },
+                  "description": "Steps 1-64 for 4 bars, 1-128 for 8 bars."
+                },
+                "velocities": {
+                  "type": "ARRAY",
+                  "items": {
+                    "type": "NUMBER"
+                  }
+                }
+              }
+            },
+            "velocityHumanized": {
+              "type": "BOOLEAN"
+            },
+            "swing": {
+              "type": "OBJECT",
+              "properties": {
+                "kick": {
+                  "type": "NUMBER"
+                },
+                "snare": {
+                  "type": "NUMBER"
+                },
+                "hiHat": {
+                  "type": "NUMBER"
+                }
+              }
+            }
+          }
+        },
+        "verse": {
+          "type": "OBJECT",
+          "properties": {
+            "kick": {
+              "type": "OBJECT",
+              "properties": {
+                "isDoubleTime": {
+                  "type": "BOOLEAN"
+                },
+                "steps": {
+                  "type": "ARRAY",
+                  "items": {
+                    "type": "NUMBER"
+                  },
+                  "description": "Steps 1-64 for 4 bars, 1-128 for 8 bars."
+                },
+                "velocities": {
+                  "type": "ARRAY",
+                  "items": {
+                    "type": "NUMBER"
+                  }
+                }
+              }
+            },
+            "snare": {
+              "type": "OBJECT",
+              "properties": {
+                "isClap": {
+                  "type": "BOOLEAN"
+                },
+                "isDoubleTime": {
+                  "type": "BOOLEAN"
+                },
+                "steps": {
+                  "type": "ARRAY",
+                  "items": {
+                    "type": "NUMBER"
+                  },
+                  "description": "Steps 1-64 for 4 bars, 1-128 for 8 bars."
+                },
+                "velocities": {
+                  "type": "ARRAY",
+                  "items": {
+                    "type": "NUMBER"
+                  }
+                }
+              }
+            },
+            "hiHat": {
+              "type": "OBJECT",
+              "properties": {
+                "isDoubleTime": {
+                  "type": "BOOLEAN"
+                },
+                "steps": {
+                  "type": "ARRAY",
+                  "items": {
+                    "type": "NUMBER"
+                  },
+                  "description": "Steps 1-64 for 4 bars, 1-128 for 8 bars."
+                },
+                "velocities": {
+                  "type": "ARRAY",
+                  "items": {
+                    "type": "NUMBER"
+                  }
+                }
+              }
+            },
+            "velocityHumanized": {
+              "type": "BOOLEAN"
+            },
+            "swing": {
+              "type": "OBJECT",
+              "properties": {
+                "kick": {
+                  "type": "NUMBER"
+                },
+                "snare": {
+                  "type": "NUMBER"
+                },
+                "hiHat": {
+                  "type": "NUMBER"
+                }
+              }
+            }
+          }
+        },
+        "hook": {
+          "type": "OBJECT",
+          "properties": {
+            "kick": {
+              "type": "OBJECT",
+              "properties": {
+                "isDoubleTime": {
+                  "type": "BOOLEAN"
+                },
+                "steps": {
+                  "type": "ARRAY",
+                  "items": {
+                    "type": "NUMBER"
+                  },
+                  "description": "Steps 1-64 for 4 bars, 1-128 for 8 bars."
+                },
+                "velocities": {
+                  "type": "ARRAY",
+                  "items": {
+                    "type": "NUMBER"
+                  }
+                }
+              }
+            },
+            "snare": {
+              "type": "OBJECT",
+              "properties": {
+                "isClap": {
+                  "type": "BOOLEAN"
+                },
+                "isDoubleTime": {
+                  "type": "BOOLEAN"
+                },
+                "steps": {
+                  "type": "ARRAY",
+                  "items": {
+                    "type": "NUMBER"
+                  },
+                  "description": "Steps 1-64 for 4 bars, 1-128 for 8 bars."
+                },
+                "velocities": {
+                  "type": "ARRAY",
+                  "items": {
+                    "type": "NUMBER"
+                  }
+                }
+              }
+            },
+            "hiHat": {
+              "type": "OBJECT",
+              "properties": {
+                "isDoubleTime": {
+                  "type": "BOOLEAN"
+                },
+                "steps": {
+                  "type": "ARRAY",
+                  "items": {
+                    "type": "NUMBER"
+                  },
+                  "description": "Steps 1-64 for 4 bars, 1-128 for 8 bars."
+                },
+                "velocities": {
+                  "type": "ARRAY",
+                  "items": {
+                    "type": "NUMBER"
+                  }
+                }
+              }
+            },
+            "velocityHumanized": {
+              "type": "BOOLEAN"
+            },
+            "swing": {
+              "type": "OBJECT",
+              "properties": {
+                "kick": {
+                  "type": "NUMBER"
+                },
+                "snare": {
+                  "type": "NUMBER"
+                },
+                "hiHat": {
+                  "type": "NUMBER"
+                }
+              }
+            }
+          }
+        },
+        "bridge": {
+          "type": "OBJECT",
+          "properties": {
+            "kick": {
+              "type": "OBJECT",
+              "properties": {
+                "isDoubleTime": {
+                  "type": "BOOLEAN"
+                },
+                "steps": {
+                  "type": "ARRAY",
+                  "items": {
+                    "type": "NUMBER"
+                  },
+                  "description": "Steps 1-64 for 4 bars, 1-128 for 8 bars."
+                },
+                "velocities": {
+                  "type": "ARRAY",
+                  "items": {
+                    "type": "NUMBER"
+                  }
+                }
+              }
+            },
+            "snare": {
+              "type": "OBJECT",
+              "properties": {
+                "isClap": {
+                  "type": "BOOLEAN"
+                },
+                "isDoubleTime": {
+                  "type": "BOOLEAN"
+                },
+                "steps": {
+                  "type": "ARRAY",
+                  "items": {
+                    "type": "NUMBER"
+                  },
+                  "description": "Steps 1-64 for 4 bars, 1-128 for 8 bars."
+                },
+                "velocities": {
+                  "type": "ARRAY",
+                  "items": {
+                    "type": "NUMBER"
+                  }
+                }
+              }
+            },
+            "hiHat": {
+              "type": "OBJECT",
+              "properties": {
+                "isDoubleTime": {
+                  "type": "BOOLEAN"
+                },
+                "steps": {
+                  "type": "ARRAY",
+                  "items": {
+                    "type": "NUMBER"
+                  },
+                  "description": "Steps 1-64 for 4 bars, 1-128 for 8 bars."
+                },
+                "velocities": {
+                  "type": "ARRAY",
+                  "items": {
+                    "type": "NUMBER"
+                  }
+                }
+              }
+            },
+            "velocityHumanized": {
+              "type": "BOOLEAN"
+            },
+            "swing": {
+              "type": "OBJECT",
+              "properties": {
+                "kick": {
+                  "type": "NUMBER"
+                },
+                "snare": {
+                  "type": "NUMBER"
+                },
+                "hiHat": {
+                  "type": "NUMBER"
+                }
+              }
+            }
+          }
+        },
+        "outro": {
+          "type": "OBJECT",
+          "properties": {
+            "kick": {
+              "type": "OBJECT",
+              "properties": {
+                "isDoubleTime": {
+                  "type": "BOOLEAN"
+                },
+                "steps": {
+                  "type": "ARRAY",
+                  "items": {
+                    "type": "NUMBER"
+                  },
+                  "description": "Steps 1-64 for 4 bars, 1-128 for 8 bars."
+                },
+                "velocities": {
+                  "type": "ARRAY",
+                  "items": {
+                    "type": "NUMBER"
+                  }
+                }
+              }
+            },
+            "snare": {
+              "type": "OBJECT",
+              "properties": {
+                "isClap": {
+                  "type": "BOOLEAN"
+                },
+                "isDoubleTime": {
+                  "type": "BOOLEAN"
+                },
+                "steps": {
+                  "type": "ARRAY",
+                  "items": {
+                    "type": "NUMBER"
+                  },
+                  "description": "Steps 1-64 for 4 bars, 1-128 for 8 bars."
+                },
+                "velocities": {
+                  "type": "ARRAY",
+                  "items": {
+                    "type": "NUMBER"
+                  }
+                }
+              }
+            },
+            "hiHat": {
+              "type": "OBJECT",
+              "properties": {
+                "isDoubleTime": {
+                  "type": "BOOLEAN"
+                },
+                "steps": {
+                  "type": "ARRAY",
+                  "items": {
+                    "type": "NUMBER"
+                  },
+                  "description": "Steps 1-64 for 4 bars, 1-128 for 8 bars."
+                },
+                "velocities": {
+                  "type": "ARRAY",
+                  "items": {
+                    "type": "NUMBER"
+                  }
+                }
+              }
+            },
+            "velocityHumanized": {
+              "type": "BOOLEAN"
+            },
+            "swing": {
+              "type": "OBJECT",
+              "properties": {
+                "kick": {
+                  "type": "NUMBER"
+                },
+                "snare": {
+                  "type": "NUMBER"
+                },
+                "hiHat": {
+                  "type": "NUMBER"
+                }
+              }
+            }
+          }
+        }
+      },
+      "required": [
+        "intro",
+        "verse",
+        "hook",
+        "bridge",
+        "outro"
+      ]
+    },
+    "arrangement": {
+      "type": "OBJECT",
+      "properties": {
+        "intro": {
+          "type": "STRING"
+        },
+        "verse": {
+          "type": "STRING"
+        },
+        "hook": {
+          "type": "STRING"
+        },
+        "bridge": {
+          "type": "STRING"
+        },
+        "outro": {
+          "type": "STRING"
+        }
+      },
+      "required": [
+        "intro",
+        "verse",
+        "hook",
+        "bridge",
+        "outro"
+      ]
+    },
+    "masterPlugins": {
+      "type": "ARRAY",
+      "items": {
+        "type": "OBJECT",
+        "properties": {
+          "name": {
+            "type": "STRING"
+          },
+          "purpose": {
+            "type": "STRING"
+          },
+          "deepDive": {
+            "type": "ARRAY",
+            "description": "Show EVERY parameter available on the plugin (typically 40-70 settings). Do NOT be lazy; if a plugin has many controls, list them all. NEVER invent fake parameters, but be absolutely exhaustive with the real ones. MATCH THE EXTREME DETAIL LEVEL OF A FULL BEAT RECIPE.",
+            "items": {
+              "type": "OBJECT",
+              "properties": {
+                "parameter": {
+                  "type": "STRING"
+                },
+                "value": {
+                  "type": "STRING"
+                },
+                "explanation": {
+                  "type": "STRING"
+                }
+              },
+              "required": [
+                "parameter",
+                "value",
+                "explanation"
+              ]
+            }
+          }
+        },
+        "required": [
+          "name",
+          "purpose",
+          "deepDive"
+        ]
+      }
+    },
+    "isGangstaVox": {
+      "type": "BOOLEAN"
+    },
+    "gangstaVox": {
+      "type": "OBJECT",
+      "properties": {
+        "trackingChain": {
+          "type": "OBJECT",
+          "properties": {
+            "unisonPlugin": {
+              "type": "OBJECT",
+              "properties": {
+                "name": {
+                  "type": "STRING"
+                },
+                "purpose": {
+                  "type": "STRING"
+                },
+                "deepDive": {
+                  "type": "ARRAY",
+                  "description": "Show EVERY parameter available on the plugin (typically 40-70 settings). Do NOT be lazy; if a plugin has many controls, list them all. NEVER invent fake parameters, but be absolutely exhaustive with the real ones. MATCH THE EXTREME DETAIL LEVEL OF A FULL BEAT RECIPE.",
+                  "items": {
+                    "type": "OBJECT",
+                    "properties": {
+                      "parameter": {
+                        "type": "STRING"
+                      },
+                      "value": {
+                        "type": "STRING"
+                      },
+                      "explanation": {
+                        "type": "STRING"
+                      }
+                    },
+                    "required": [
+                      "parameter",
+                      "value",
+                      "explanation"
+                    ]
+                  }
+                }
+              },
+              "required": [
+                "name",
+                "purpose",
+                "deepDive"
+              ]
+            },
+            "inserts": {
+              "type": "ARRAY",
+              "items": {
+                "type": "OBJECT",
+                "properties": {
+                  "name": {
+                    "type": "STRING"
+                  },
+                  "purpose": {
+                    "type": "STRING"
+                  },
+                  "deepDive": {
+                    "type": "ARRAY",
+                    "items": {
+                      "type": "OBJECT",
+                      "properties": {
+                        "parameter": {
+                          "type": "STRING"
+                        },
+                        "value": {
+                          "type": "STRING"
+                        },
+                        "explanation": {
+                          "type": "STRING"
+                        }
+                      },
+                      "required": [
+                        "parameter",
+                        "value",
+                        "explanation"
+                      ]
+                    }
+                  }
+                },
+                "required": [
+                  "name",
+                  "purpose",
+                  "deepDive"
+                ]
+              }
+            },
+            "aux1": {
+              "type": "ARRAY",
+              "items": {
+                "type": "OBJECT",
+                "properties": {
+                  "name": {
+                    "type": "STRING"
+                  },
+                  "purpose": {
+                    "type": "STRING"
+                  },
+                  "deepDive": {
+                    "type": "ARRAY",
+                    "items": {
+                      "type": "OBJECT",
+                      "properties": {
+                        "parameter": {
+                          "type": "STRING"
+                        },
+                        "value": {
+                          "type": "STRING"
+                        },
+                        "explanation": {
+                          "type": "STRING"
+                        }
+                      },
+                      "required": [
+                        "parameter",
+                        "value",
+                        "explanation"
+                      ]
+                    }
+                  }
+                },
+                "required": [
+                  "name",
+                  "purpose",
+                  "deepDive"
+                ]
+              }
+            },
+            "aux2": {
+              "type": "ARRAY",
+              "items": {
+                "type": "OBJECT",
+                "properties": {
+                  "name": {
+                    "type": "STRING"
+                  },
+                  "purpose": {
+                    "type": "STRING"
+                  },
+                  "deepDive": {
+                    "type": "ARRAY",
+                    "items": {
+                      "type": "OBJECT",
+                      "properties": {
+                        "parameter": {
+                          "type": "STRING"
+                        },
+                        "value": {
+                          "type": "STRING"
+                        },
+                        "explanation": {
+                          "type": "STRING"
+                        }
+                      },
+                      "required": [
+                        "parameter",
+                        "value",
+                        "explanation"
+                      ]
+                    }
+                  }
+                },
+                "required": [
+                  "name",
+                  "purpose",
+                  "deepDive"
+                ]
+              }
+            },
+            "dawRoutingInstructions": {
+              "type": "STRING"
+            },
+            "dspUsageNote": {
+              "type": "STRING"
+            }
+          },
+          "required": [
+            "inserts"
+          ]
+        },
+        "vocalTracks": {
+          "type": "ARRAY",
+          "items": {
+            "type": "OBJECT",
+            "properties": {
+              "name": {
+                "type": "STRING"
+              },
+              "sourceSoundGoal": {
+                "type": "STRING"
+              },
+              "busSend": {
+                "type": "STRING"
+              },
+              "loopGuide": {
+                "type": "STRING"
+              },
+              "midiNotes": {
+                "type": "ARRAY",
+                "items": {
+                  "type": "OBJECT",
+                  "properties": {
+                    "pitch": {
+                      "type": "STRING"
+                    },
+                    "duration": {
+                      "type": "STRING"
+                    },
+                    "wait": {
+                      "type": "STRING"
+                    },
+                    "velocity": {
+                      "type": "NUMBER"
+                    }
+                  },
+                  "required": [
+                    "pitch",
+                    "duration",
+                    "wait",
+                    "velocity"
+                  ]
+                }
+              },
+              "fxPlugins": {
+                "type": "ARRAY",
+                "items": {
+                  "type": "OBJECT",
+                  "properties": {
+                    "name": {
+                      "type": "STRING"
+                    },
+                    "purpose": {
+                      "type": "STRING"
+                    },
+                    "deepDive": {
+                      "type": "ARRAY",
+                      "items": {
+                        "type": "OBJECT",
+                        "properties": {
+                          "parameter": {
+                            "type": "STRING"
+                          },
+                          "value": {
+                            "type": "STRING"
+                          },
+                          "explanation": {
+                            "type": "STRING"
+                          }
+                        },
+                        "required": [
+                          "parameter",
+                          "value",
+                          "explanation"
+                        ]
+                      }
+                    }
+                  },
+                  "required": [
+                    "name",
+                    "purpose",
+                    "deepDive"
+                  ]
+                }
+              }
+            },
+            "required": [
+              "name",
+              "sourceSoundGoal",
+              "fxPlugins"
+            ]
+          }
+        },
+        "layeringStrategy": {
+          "type": "STRING"
+        },
+        "midiNotes": {
+          "type": "ARRAY",
+          "items": {
+            "type": "OBJECT",
+            "properties": {
+              "pitch": {
+                "type": "STRING"
+              },
+              "duration": {
+                "type": "STRING"
+              },
+              "wait": {
+                "type": "STRING"
+              },
+              "velocity": {
+                "type": "NUMBER"
+              }
+            },
+            "required": [
+              "pitch",
+              "duration",
+              "wait",
+              "velocity"
+            ]
+          }
+        }
+      },
+      "required": [
+        "vocalTracks",
+        "layeringStrategy"
+      ]
+    },
+    "vocalElements": {
+      "type": "OBJECT",
+      "properties": {
+        "plugin": {
+          "type": "STRING"
+        },
+        "midiNotes": {
+          "type": "ARRAY",
+          "items": {
+            "type": "OBJECT",
+            "properties": {
+              "pitch": {
+                "type": "STRING"
+              },
+              "duration": {
+                "type": "STRING"
+              },
+              "wait": {
+                "type": "STRING"
+              },
+              "velocity": {
+                "type": "NUMBER"
+              }
+            },
+            "required": [
+              "pitch",
+              "duration",
+              "wait",
+              "velocity"
+            ]
+          }
+        },
+        "trackingChain": {
+          "type": "OBJECT",
+          "properties": {
+            "unisonPlugin": {
+              "type": "OBJECT",
+              "properties": {
+                "name": {
+                  "type": "STRING"
+                },
+                "purpose": {
+                  "type": "STRING"
+                },
+                "deepDive": {
+                  "type": "ARRAY",
+                  "description": "Provide EVERY available parameter found on the actual plugin (typically 40-70 for professional plugins). Be exhaustive and do NOT be lazy. MATCH THE EXTREME DETAIL LEVEL OF A FULL BEAT RECIPE.",
+                  "items": {
+                    "type": "OBJECT",
+                    "properties": {
+                      "parameter": {
+                        "type": "STRING"
+                      },
+                      "value": {
+                        "type": "STRING"
+                      },
+                      "explanation": {
+                        "type": "STRING"
+                      }
+                    },
+                    "required": [
+                      "parameter",
+                      "value",
+                      "explanation"
+                    ]
+                  }
+                }
+              },
+              "required": [
+                "name",
+                "purpose",
+                "deepDive"
+              ]
+            },
+            "inserts": {
+              "type": "ARRAY",
+              "items": {
+                "type": "OBJECT",
+                "properties": {
+                  "name": {
+                    "type": "STRING"
+                  },
+                  "purpose": {
+                    "type": "STRING"
+                  },
+                  "deepDive": {
+                    "type": "ARRAY",
+                    "items": {
+                      "type": "OBJECT",
+                      "properties": {
+                        "parameter": {
+                          "type": "STRING"
+                        },
+                        "value": {
+                          "type": "STRING"
+                        },
+                        "explanation": {
+                          "type": "STRING"
+                        }
+                      },
+                      "required": [
+                        "parameter",
+                        "value",
+                        "explanation"
+                      ]
+                    }
+                  }
+                },
+                "required": [
+                  "name",
+                  "purpose",
+                  "deepDive"
+                ]
+              }
+            },
+            "aux1": {
+              "type": "ARRAY",
+              "items": {
+                "type": "OBJECT",
+                "properties": {
+                  "name": {
+                    "type": "STRING"
+                  },
+                  "purpose": {
+                    "type": "STRING"
+                  },
+                  "deepDive": {
+                    "type": "ARRAY",
+                    "items": {
+                      "type": "OBJECT",
+                      "properties": {
+                        "parameter": {
+                          "type": "STRING"
+                        },
+                        "value": {
+                          "type": "STRING"
+                        },
+                        "explanation": {
+                          "type": "STRING"
+                        }
+                      },
+                      "required": [
+                        "parameter",
+                        "value",
+                        "explanation"
+                      ]
+                    }
+                  }
+                },
+                "required": [
+                  "name",
+                  "purpose",
+                  "deepDive"
+                ]
+              }
+            },
+            "aux2": {
+              "type": "ARRAY",
+              "items": {
+                "type": "OBJECT",
+                "properties": {
+                  "name": {
+                    "type": "STRING"
+                  },
+                  "purpose": {
+                    "type": "STRING"
+                  },
+                  "deepDive": {
+                    "type": "ARRAY",
+                    "items": {
+                      "type": "OBJECT",
+                      "properties": {
+                        "parameter": {
+                          "type": "STRING"
+                        },
+                        "value": {
+                          "type": "STRING"
+                        },
+                        "explanation": {
+                          "type": "STRING"
+                        }
+                      },
+                      "required": [
+                        "parameter",
+                        "value",
+                        "explanation"
+                      ]
+                    }
+                  }
+                },
+                "required": [
+                  "name",
+                  "purpose",
+                  "deepDive"
+                ]
+              }
+            },
+            "dawRoutingInstructions": {
+              "type": "STRING"
+            },
+            "dspUsageNote": {
+              "type": "STRING"
+            }
+          },
+          "required": [
+            "inserts"
+          ]
+        },
+        "vocalTracks": {
+          "type": "ARRAY",
+          "items": {
+            "type": "OBJECT",
+            "properties": {
+              "name": {
+                "type": "STRING"
+              },
+              "sourceSoundGoal": {
+                "type": "STRING"
+              },
+              "busSend": {
+                "type": "STRING"
+              },
+              "loopGuide": {
+                "type": "STRING"
+              },
+              "midiNotes": {
+                "type": "ARRAY",
+                "items": {
+                  "type": "OBJECT",
+                  "properties": {
+                    "pitch": {
+                      "type": "STRING"
+                    },
+                    "duration": {
+                      "type": "STRING"
+                    },
+                    "wait": {
+                      "type": "STRING"
+                    },
+                    "velocity": {
+                      "type": "NUMBER"
+                    }
+                  },
+                  "required": [
+                    "pitch",
+                    "duration",
+                    "wait",
+                    "velocity"
+                  ]
+                }
+              },
+              "fxPlugins": {
+                "type": "ARRAY",
+                "items": {
+                  "type": "OBJECT",
+                  "properties": {
+                    "name": {
+                      "type": "STRING"
+                    },
+                    "purpose": {
+                      "type": "STRING"
+                    },
+                    "deepDive": {
+                      "type": "ARRAY",
+                      "items": {
+                        "type": "OBJECT",
+                        "properties": {
+                          "parameter": {
+                            "type": "STRING"
+                          },
+                          "value": {
+                            "type": "STRING"
+                          },
+                          "explanation": {
+                            "type": "STRING"
+                          }
+                        },
+                        "required": [
+                          "parameter",
+                          "value",
+                          "explanation"
+                        ]
+                      }
+                    }
+                  },
+                  "required": [
+                    "name",
+                    "purpose",
+                    "deepDive"
+                  ]
+                }
+              }
+            },
+            "required": [
+              "name",
+              "sourceSoundGoal",
+              "fxPlugins"
+            ]
+          }
+        },
+        "layeringStrategy": {
+          "type": "STRING"
+        }
+      },
+      "required": [
+        "vocalTracks",
+        "layeringStrategy"
+      ]
+    }
+  },
+  "required": [
+    "title",
+    "style",
+    "bpm",
+    "description",
+    "artistTypes",
+    "instruments",
+    "busses",
+    "drumPatterns",
+    "arrangement",
+    "mixingAdvice",
+    "masterPlugins"
+  ]
+}

@@ -1,13 +1,13 @@
 
 export enum Type {
-  TYPE_UNSPECIFIED = "unspecified",
-  STRING = "string",
-  NUMBER = "number",
-  INTEGER = "integer",
-  BOOLEAN = "boolean",
-  ARRAY = "array",
-  OBJECT = "object",
-  NULL = "null" }
+  TYPE_UNSPECIFIED = "TYPE_UNSPECIFIED",
+  STRING = "STRING",
+  NUMBER = "NUMBER",
+  INTEGER = "INTEGER",
+  BOOLEAN = "BOOLEAN",
+  ARRAY = "ARRAY",
+  OBJECT = "OBJECT",
+  NULL = "NULL" }
 export enum HarmCategory {
   HARM_CATEGORY_UNSPECIFIED = "HARM_CATEGORY_UNSPECIFIED",
   HARM_CATEGORY_HARASSMENT = "HARM_CATEGORY_HARASSMENT",
@@ -535,7 +535,7 @@ const generateAnalogStr = (analogInstruments: Hardware[], analogHardware: Hardwa
   }
   return gearStr + drumKitStr;
 };
-const getUnifiedRecipeSchema = () => {
+export const getUnifiedRecipeSchema = () => {
   return {
     type: Type.OBJECT,
     properties: {
@@ -2159,36 +2159,36 @@ export const getMixCritique = async (
       - 'recommendedChain': A robust chain of plugins from the user's list to use for this fix, with 'name', 'purpose', and 'deepDive' (an array of parameter objects - Provide EVERY available parameter found on the actual plugin interface, aim for 40-80 settings for complex modules - each with 'parameter', 'value', and 'explanation'). You can also optionally include 'band' and 'routing' properties for multiband or parallel processing. MATCH THE EXTREME DETAIL LEVEL OF A FULL BEAT RECIPE.
   `;
   const schemaObject = {
-    type: "object",
+    type: "OBJECT",
     properties: {
-      title: { type: "string" },
-      overallFeedback: { type: "string" },
-      strengths: { type: "array", items: { type: "string" } },
-      weaknesses: { type: "array", items: { type: "string" } },
+      title: { type: "STRING" },
+      overallFeedback: { type: "STRING" },
+      strengths: { type: "ARRAY", items: { type: "STRING" } },
+      weaknesses: { type: "ARRAY", items: { type: "STRING" } },
       actionPlan: {
-        type: "array",
+        type: "ARRAY",
         description: hasStems && uploadedStems && uploadedStems.length > 0 ? `CRITICAL: You MUST generate EXACTLY ${uploadedStems.length} items in this array, one for each uploaded stem.` : "Array of actionable steps.",
         items: {
-          type: "object",
+          type: "OBJECT",
           properties: {
-            targetStem: { type: "string", description: "The exact name of the stem this step applies to (if stems were uploaded)." },
-            issue: { type: "string" },
-            solution: { type: "string" },
+            targetStem: { type: "STRING", description: "The exact name of the stem this step applies to (if stems were uploaded)." },
+            issue: { type: "STRING" },
+            solution: { type: "STRING" },
             recommendedChain: {
-              type: "array",
+              type: "ARRAY",
               description: hasStems && uploadedStems && uploadedStems.length > 0 ? "CRITICAL: You MUST provide EXACTLY 4 plugins for this stem, with the 4th explicitly dedicated to volume leveling." : "Chain of 2-4 plugins.",
               items: {
-                type: "object",
+                type: "OBJECT",
                 properties: {
-                  name: { type: "string" },
-                  purpose: { type: "string" },
+                  name: { type: "STRING" },
+                  purpose: { type: "STRING" },
                   deepDive: {
-                    type: "array",
+                    type: "ARRAY",
                     description: "Provide EVERY available parameter found on the actual plugin interface. Aim for 40-70 settings for complex modules. MATCH THE EXTREME DETAIL LEVEL OF A FULL BEAT RECIPE.",
                     items: {
-                      type: "object",
+                      type: "OBJECT",
                       properties: {
-                        parameter: { type: "string" }, value: { type: "string" }, explanation: { type: "string" } },
+                        parameter: { type: "STRING" }, value: { type: "STRING" }, explanation: { type: "STRING" } },
                       required: ["parameter", "value", "explanation"]
                     }
                   }
