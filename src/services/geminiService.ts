@@ -374,29 +374,29 @@ export const regeneratePlugin = async (
     ${exclusionStr}
     Return the result as a JSON object with the new plugin name, purpose, and deepDive parameters (Provide EVERY available parameter found on the actual plugin interface. Aim for 40-80 settings for complex plugins. NEVER invent fictional parameters, but you MUST be exhaustive and show all real ones. MATCH THE EXTREME DETAIL OF A FULL BEAT RECIPE).
   `;
+  const schemaObj = {
+    type: "OBJECT",
+    properties: {
+      name: { type: "STRING" },
+      purpose: { type: "STRING" },
+      deepDive: {
+        type: "ARRAY",
+        items: {
+          type: "OBJECT",
+          properties: {
+            parameter: { type: "STRING" }, value: { type: "STRING" }, explanation: { type: "STRING" } },
+          required: ["parameter", "value", "explanation"]
+        }
+      }
+    },
+    required: ["name", "purpose", "deepDive"]
+  };
   const response = await ai.models.generateContent({
     model: "gemini-3-flash-preview",
-    contents: { parts: [{ text: prompt }] },
+    contents: { parts: [{ text: prompt + "\\n\\nCRITICAL: You MUST return EXACTLY valid JSON matching this schema:\\n" + JSON.stringify(schemaObj, null, 2) }] },
     config: {
       customAction: 'regenerate_plugin',
-      responseMimeType: "application/json",
-      responseSchema: {
-        type: Type.OBJECT,
-        properties: {
-          name: { type: Type.STRING },
-          purpose: { type: Type.STRING },
-          deepDive: {
-            type: Type.ARRAY,
-            items: {
-              type: Type.OBJECT,
-              properties: {
-                parameter: { type: Type.STRING }, value: { type: Type.STRING }, explanation: { type: Type.STRING } },
-              required: ["parameter", "value", "explanation"]
-            }
-          }
-        },
-        required: ["name", "purpose", "deepDive"]
-      }
+      responseMimeType: "application/json"
     }
   });
   try {
@@ -1392,6 +1392,8 @@ export const researchPluginParameters = async (plugin: VSTPlugin, language: stri
     return plugin;
   }
 };
+export const getSchemaInstruction = () => `\n\nCRITICAL: YOU MUST RETURN EXACTLY VALID JSON MATCHING THIS SCHEMA:\n${JSON.stringify({ type: "OBJECT", properties: { recipes: { type: "ARRAY", items: getUnifiedRecipeSchema() } }, required: ["recipes"] }, null, 2)}`;
+
 export const generateStructuralBlueprint = async (searchQuery: string, language: string = 'en'): Promise<StructuralBlueprint> => {
   const ai = getAI();
   const prompt = `
@@ -1528,20 +1530,10 @@ export const getBeatRecommendations = async (plugins: VSTPlugin[], analogInstrum
   `;
   const response = await ai.models.generateContent({
     model: 'gemini-3-flash-preview',
-    contents: { parts: [{ text: prompt }] },
+    contents: { parts: [{ text: prompt + getSchemaInstruction() }] },
     config: {
       customAction: 'recipe',
-      responseMimeType: "application/json",
-      responseSchema: {
-        type: Type.OBJECT,
-        properties: {
-          recipes: {
-            type: Type.ARRAY,
-            items: getUnifiedRecipeSchema()
-          }
-        },
-        required: ["recipes"]
-      }
+      responseMimeType: "application/json"
     }
   });
   const jsonStr = response.text?.trim() || '{"recipes": []}';
@@ -1664,20 +1656,10 @@ export const getCustomBeatRecommendations = async (plugins: VSTPlugin[], query: 
   `;
   const response = await ai.models.generateContent({
     model: 'gemini-3-flash-preview',
-    contents: { parts: [{ text: prompt }] },
+    contents: { parts: [{ text: prompt + getSchemaInstruction() }] },
     config: {
       customAction: 'type_beat_search',
-      responseMimeType: "application/json",
-      responseSchema: {
-        type: Type.OBJECT,
-        properties: {
-          recipes: {
-            type: Type.ARRAY,
-            items: getUnifiedRecipeSchema()
-          }
-        },
-        required: ["recipes"]
-      }
+      responseMimeType: "application/json"
     }
   });
   const jsonStr = response.text?.trim() || '{"recipes": []}';
@@ -1795,20 +1777,10 @@ export const getSongBeatRecommendations = async (plugins: VSTPlugin[], songQuery
   `;
   const response = await ai.models.generateContent({
     model: 'gemini-3-flash-preview',
-    contents: { parts: [{ text: prompt }] },
+    contents: { parts: [{ text: prompt + getSchemaInstruction() }] },
     config: {
       customAction: 'song_search',
-      responseMimeType: "application/json",
-      responseSchema: {
-        type: Type.OBJECT,
-        properties: {
-          recipes: {
-            type: Type.ARRAY,
-            items: getUnifiedRecipeSchema()
-          }
-        },
-        required: ["recipes"]
-      }
+      responseMimeType: "application/json"
     }
   });
   const jsonStr = response.text?.trim() || '{"recipes": []}';
@@ -2038,7 +2010,6 @@ export const getAudioBeatRecommendations = async (plugins: VSTPlugin[], audioBas
       config: {
         customAction: 'audio_analysis_recipe',
         responseMimeType: "application/json",
-        responseSchema: schemaObject,
         safetySettings: [
           { category: HarmCategory.HARM_CATEGORY_HARASSMENT, threshold: HarmBlockThreshold.OFF },
           { category: HarmCategory.HARM_CATEGORY_HATE_SPEECH, threshold: HarmBlockThreshold.OFF },
@@ -2436,11 +2407,10 @@ export const replicateRecipeWithUserGear = async (recipe: SavedRecipe, myPlugins
   try {
     const response = await ai.models.generateContent({
       model: "gemini-3-flash-preview",
-      contents: { parts: [{ text: prompt }] },
+      contents: { parts: [{ text: prompt + "\\n\\nCRITICAL: You MUST return EXACTLY valid JSON matching this schema:\\n" + JSON.stringify(getUnifiedRecipeSchema(), null, 2) }] },
       config: {
         customAction: 'analog_save',
-        responseMimeType: "application/json",
-        responseSchema: getUnifiedRecipeSchema()
+        responseMimeType: "application/json"
       }
     });
     let jsonStr = response.text?.trim();
@@ -2618,11 +2588,10 @@ export const regenerateTrackingChain = async (
     };
     const result = await ai.models.generateContent({
       model: "gemini-3-flash-preview",
-      contents: { parts: [{ text: prompt }] },
+      contents: { parts: [{ text: prompt + "\\n\\nCRITICAL: You MUST return a valid JSON object matching this schema exactly:\\n" + JSON.stringify(schema, null, 2) }] },
       config: {
         customAction: 'regenerate_tracking_chain',
-        responseMimeType: "application/json",
-        responseSchema: schema
+        responseMimeType: "application/json"
       }
     });
     return JSON.parse(sanitizeJSON(result.text || '{}'));

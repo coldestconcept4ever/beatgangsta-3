@@ -478,6 +478,32 @@ app.post("/api/payments/nowpayments/create-stems", express.json(), async (req, r
   }
 });
 
+app.post("/api/test-schema", express.json(), async (req, res) => {
+  try {
+    const { GoogleGenAI } = await import("@google/genai");
+    const genAI = new GoogleGenAI({ 
+      apiKey: process.env.GEMINI_API_KEY
+    });
+    console.log("Using API KEY length:", process.env.GEMINI_API_KEY?.length);
+    
+    // We expect the payload to be EXACTLY the model contents config
+    const response = await genAI.models.generateContent({
+      model: req.body.model || "gemini-3-flash-preview",
+      contents: req.body.contents,
+      config: req.body.config
+    });
+    res.json({ text: response.text });
+  } catch (error: any) {
+    console.error("Test schema error:", error);
+    res.status(400).json({
+      apiKeyLength: process.env.GEMINI_API_KEY?.length,
+      apiKeyPrefix: process.env.GEMINI_API_KEY?.substring(0, 4),
+      error: error.message,
+      details: error.details || []
+    });
+  }
+});
+
 // NowPayments Payment Creation
 app.post("/api/payments/nowpayments/create", express.json(), async (req, res) => {
   try {
