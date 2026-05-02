@@ -1301,7 +1301,7 @@ The AI was unable to verify these parameters. Please investigate.`;
       return steps;
     }
     return [];
-  }, [tutorialPhase, isVerified, user, showCloudSyncModal, pendingFile, isEnrichingLibrary, plugins.length, recipes.length, sortBy, m_act, showConsentModal, hasAcceptedTerms, tutorialPlugin]);
+  }, [tutorialPhase, isVerified, user, showCloudSyncModal, pendingFile, isEnrichingLibrary, plugins?.length || 0, recipes?.length || 0, sortBy, m_act, showConsentModal, hasAcceptedTerms, tutorialPlugin]);
   
   useEffect(() => {
     if (showTutorial && activeTutorialSteps.length > 0 && tutorialStep >= activeTutorialSteps.length) {
@@ -3432,8 +3432,8 @@ The AI was unable to verify these parameters. Please investigate.`;
       clearInterval(progressInterval);
       setGenerationProgress(100);
       clearTimeout(timeoutId);
-      setRecipes(response.recipes);
-      const newHistory: HistoryItem[] = response.recipes.map(r => ({
+      setRecipes(response.recipes || []);
+      const newHistory: HistoryItem[] = (response.recipes || []).map(r => ({
         ...r,
         generatedAt: new Date().toISOString()
       }));
@@ -3482,8 +3482,8 @@ The AI was unable to verify these parameters. Please investigate.`;
       clearInterval(progressInterval);
       setGenerationProgress(100);
       clearTimeout(timeoutId);
-      setRecipes(response.recipes);
-      const newHistory: HistoryItem[] = response.recipes.map(r => ({
+      setRecipes(response.recipes || []);
+      const newHistory: HistoryItem[] = (response.recipes || []).map(r => ({
         ...r,
         generatedAt: new Date().toISOString()
       }));
@@ -3533,8 +3533,8 @@ The AI was unable to verify these parameters. Please investigate.`;
       clearInterval(progressInterval);
       setGenerationProgress(100);
       clearTimeout(timeoutId);
-      setRecipes(response.recipes);
-      const newHistory: HistoryItem[] = response.recipes.map(r => ({
+      setRecipes(response.recipes || []);
+      const newHistory: HistoryItem[] = (response.recipes || []).map(r => ({
         ...r,
         generatedAt: new Date().toISOString()
       }));
