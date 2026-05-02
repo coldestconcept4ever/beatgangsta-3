@@ -308,7 +308,7 @@ export const validateApiKey = async (key: string): Promise<{valid: boolean, mess
     }
 
     const payload = {
-      model: "gemini-3-flash-preview",
+      model: "gemini-2.5-flash",
       contents: "hi",
       userApiKey: cleanKey
     };
@@ -444,32 +444,11 @@ export const regeneratePlugin = async (
   `;
 
   const response = await ai.models.generateContent({
-    model: "gemini-3-flash-preview",
+    model: "gemini-2.5-flash",
     contents: prompt,
     config: {
       customAction: 'regenerate_plugin',
-      responseMimeType: "application/json",
-      responseSchema: {
-        type: Type.OBJECT,
-        properties: {
-          name: { type: Type.STRING },
-          purpose: { type: Type.STRING },
-          deepDive: {
-            type: Type.ARRAY,
-            description: "Provide EVERY available parameter found on the actual plugin interface. Aim for 40-80 settings for complex plugins. NEVER invent fictional parameters, but you MUST be exhaustive and show all real ones. MATCH THE EXTREME DETAIL OF A FULL BEAT RECIPE.",
-            items: {
-              type: Type.OBJECT,
-              properties: {
-                parameter: { type: Type.STRING },
-                value: { type: Type.STRING },
-                explanation: { type: Type.STRING }
-              },
-              required: ["parameter", "value", "explanation"]
-            }
-          }
-        },
-        required: ["name", "purpose", "deepDive"]
-      }
+      responseMimeType: "application/json"
     }
   });
 
@@ -501,28 +480,11 @@ export const categorizeAndCompareLibraries = async (senderPlugins: VSTPlugin[], 
   `;
 
   const response = await ai.models.generateContent({
-    model: "gemini-3-flash-preview",
+    model: "gemini-2.5-flash",
     contents: prompt,
     config: {
       customAction: 'compare_libraries',
-      responseMimeType: "application/json",
-      responseSchema: {
-        type: Type.OBJECT,
-        properties: {
-          categories: {
-            type: Type.ARRAY,
-            items: {
-              type: Type.OBJECT,
-              properties: {
-                categoryName: { type: Type.STRING },
-                senderPlugins: { type: Type.ARRAY, items: { type: Type.STRING } },
-                missingFromReceiver: { type: Type.ARRAY, items: { type: Type.STRING } }
-              },
-              required: ["categoryName", "senderPlugins", "missingFromReceiver"]
-            }
-          }
-        }
-      }
+      responseMimeType: "application/json"
     }
   });
 
@@ -698,17 +660,8 @@ const getUnifiedRecipeSchema = () => {
               }
             },
             deepDive: {
-              type: Type.ARRAY,
-              description: "Provide EVERY available parameter found on the actual plugin (typically 40-70 for professional plugins). Be exhaustive and do NOT be lazy. If the plugin is complex, show all its settings.",
-              items: {
-                type: Type.OBJECT,
-                properties: {
-                  parameter: { type: Type.STRING },
-                  value: { type: Type.STRING },
-                  explanation: { type: Type.STRING }
-                },
-                required: ["parameter", "value", "explanation"]
-              }
+              type: Type.STRING,
+              description: "Provide EVERY available parameter found on the actual plugin (typically 40-70 for professional plugins). Detail parameter name, value, and explanation in markup."
             },
             fxPlugins: {
               type: Type.ARRAY,
@@ -718,17 +671,8 @@ const getUnifiedRecipeSchema = () => {
                   name: { type: Type.STRING },
                   purpose: { type: Type.STRING },
                   deepDive: {
-                    type: Type.ARRAY,
-                    description: "Provide EVERY available parameter found on the actual plugin (typically 40-70 for professional plugins). Be exhaustive and do NOT be lazy. If the plugin is complex, show all its settings.",
-                    items: {
-                      type: Type.OBJECT,
-                      properties: {
-                        parameter: { type: Type.STRING },
-                        value: { type: Type.STRING },
-                        explanation: { type: Type.STRING }
-                      },
-                      required: ["parameter", "value", "explanation"]
-                    }
+                    type: Type.STRING,
+                    description: "Provide EVERY available parameter found on the actual plugin. Detail parameter name, value, and explanation."
                   }
                 },
                 required: ["name", "purpose", "deepDive"]
@@ -753,17 +697,8 @@ const getUnifiedRecipeSchema = () => {
                   name: { type: Type.STRING },
                   purpose: { type: Type.STRING },
                   deepDive: {
-                    type: Type.ARRAY,
-                    description: "Provide EVERY available parameter found on the actual plugin (typically 40-70 for professional plugins). Be exhaustive and do NOT be lazy. If the plugin is complex, show all its settings.",
-                    items: {
-                      type: Type.OBJECT,
-                      properties: {
-                        parameter: { type: Type.STRING },
-                        value: { type: Type.STRING },
-                        explanation: { type: Type.STRING }
-                      },
-                      required: ["parameter", "value", "explanation"]
-                    }
+                    type: Type.STRING,
+                    description: "Provide EVERY available parameter found on the actual plugin."
                   }
                 },
                 required: ["name", "purpose", "deepDive"]
@@ -1302,31 +1237,12 @@ export const enrichPluginLibrary = async (
 
     try {
       const response = await ai.models.generateContent({
-        model: "gemini-3-flash-preview", // Use standard Flash for high-volume research
+        model: "gemini-2.5-flash", // Use standard Flash for high-volume research
         contents: prompt,
         config: {
           customAction: 'enrich_library',
           temperature: 0.1,
-          responseMimeType: "application/json",
-          responseSchema: {
-            type: Type.OBJECT,
-            properties: {
-              plugins: {
-                type: Type.ARRAY,
-                items: {
-                  type: Type.OBJECT,
-                  properties: {
-                    reasoning: { type: Type.STRING, description: "Why this category was chosen" },
-                    description: { type: Type.STRING },
-                    features: { type: Type.ARRAY, items: { type: Type.STRING } },
-                    parameters: { type: Type.ARRAY, items: { type: Type.STRING }, description: "Exhaustive list of ALL actual technical parameter names found on the plugin's interface (aim for 20-40+)." },
-                    category: { type: Type.STRING, enum: ['Instruments', 'Dynamics', 'Equalizers', 'Reverb & Delay', 'Modulation', 'Distortion & Saturation', 'Utility & Metering', 'Creative FX'] }
-                  },
-                  required: ["reasoning", "description", "features", "category", "parameters"]
-                }
-              }
-            }
-          }
+          responseMimeType: "application/json"
         }
       });
 
@@ -1525,7 +1441,7 @@ export const verifyAndCorrectPlugin = async (
   `;
 
   const response = await ai.models.generateContent({
-    model: "gemini-3-flash-preview",
+    model: "gemini-2.5-flash",
     contents: prompt,
     config: {
       customAction: 'verify_plugin',
@@ -1593,22 +1509,12 @@ export const researchPluginParameters = async (plugin: VSTPlugin, language: stri
   `;
 
   const response = await ai.models.generateContent({
-    model: "gemini-3-flash-preview",
+    model: "gemini-2.5-flash",
     contents: prompt,
     config: {
       customAction: 'research_plugin',
       temperature: 0.1,
-      responseMimeType: "application/json",
-      responseSchema: {
-        type: Type.OBJECT,
-        properties: {
-          description: { type: Type.STRING },
-          features: { type: Type.ARRAY, items: { type: Type.STRING } },
-          parameters: { type: Type.ARRAY, items: { type: Type.STRING }, description: "Exhaustive list of all actual technical parameter names found on the interface (typically 20-50)." },
-          category: { type: Type.STRING, enum: ['Instruments', 'Dynamics', 'Equalizers', 'Reverb & Delay', 'Modulation', 'Distortion & Saturation', 'Utility & Metering', 'Creative FX'] }
-        },
-        required: ["description", "features", "category", "parameters"]
-      }
+      responseMimeType: "application/json"
     }
   });
 
@@ -1667,7 +1573,7 @@ export const generateStructuralBlueprint = async (searchQuery: string, language:
   `;
   
   const response = await ai.models.generateContent({
-    model: "gemini-3-flash-preview",
+    model: "gemini-2.5-flash",
     contents: prompt,
     config: {
       customAction: 'structural_blueprint',
@@ -1804,27 +1710,11 @@ export const getBeatRecommendations = async (plugins: VSTPlugin[], analogInstrum
   `;
 
   const response = await ai.models.generateContent({
-    model: 'gemini-3-flash-preview',
+    model: 'gemini-2.5-flash',
     contents: prompt,
     config: {
       customAction: 'recipe',
-      responseMimeType: "application/json",
-      safetySettings: [
-        { category: HarmCategory.HARM_CATEGORY_HARASSMENT, threshold: HarmBlockThreshold.OFF },
-        { category: HarmCategory.HARM_CATEGORY_HATE_SPEECH, threshold: HarmBlockThreshold.OFF },
-        { category: HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT, threshold: HarmBlockThreshold.OFF },
-        { category: HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT, threshold: HarmBlockThreshold.OFF }
-      ],
-      responseSchema: {
-        type: Type.OBJECT,
-        properties: {
-          recipes: {
-            type: Type.ARRAY,
-            items: getUnifiedRecipeSchema()
-          }
-        },
-        required: ["recipes"]
-      }
+      responseMimeType: "application/json"
     }
   });
 
@@ -1968,27 +1858,11 @@ export const getCustomBeatRecommendations = async (plugins: VSTPlugin[], query: 
   `;
 
   const response = await ai.models.generateContent({
-    model: 'gemini-3-flash-preview',
+    model: 'gemini-2.5-flash',
     contents: prompt,
     config: {
       customAction: 'type_beat_search',
-      responseMimeType: "application/json",
-      safetySettings: [
-        { category: HarmCategory.HARM_CATEGORY_HARASSMENT, threshold: HarmBlockThreshold.OFF },
-        { category: HarmCategory.HARM_CATEGORY_HATE_SPEECH, threshold: HarmBlockThreshold.OFF },
-        { category: HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT, threshold: HarmBlockThreshold.OFF },
-        { category: HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT, threshold: HarmBlockThreshold.OFF }
-      ],
-      responseSchema: {
-        type: Type.OBJECT,
-        properties: {
-          recipes: {
-            type: Type.ARRAY,
-            items: getUnifiedRecipeSchema()
-          }
-        },
-        required: ["recipes"]
-      }
+      responseMimeType: "application/json"
     }
   });
 
@@ -2127,27 +2001,11 @@ export const getSongBeatRecommendations = async (plugins: VSTPlugin[], songQuery
   `;
 
   const response = await ai.models.generateContent({
-    model: 'gemini-3-flash-preview',
+    model: 'gemini-2.5-flash',
     contents: prompt,
     config: {
       customAction: 'song_search',
-      responseMimeType: "application/json",
-      safetySettings: [
-        { category: HarmCategory.HARM_CATEGORY_HARASSMENT, threshold: HarmBlockThreshold.OFF },
-        { category: HarmCategory.HARM_CATEGORY_HATE_SPEECH, threshold: HarmBlockThreshold.OFF },
-        { category: HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT, threshold: HarmBlockThreshold.OFF },
-        { category: HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT, threshold: HarmBlockThreshold.OFF }
-      ],
-      responseSchema: {
-        type: Type.OBJECT,
-        properties: {
-          recipes: {
-            type: Type.ARRAY,
-            items: getUnifiedRecipeSchema()
-          }
-        },
-        required: ["recipes"]
-      }
+      responseMimeType: "application/json"
     }
   });
 
@@ -2416,7 +2274,7 @@ export const getAudioBeatRecommendations = async (plugins: VSTPlugin[], audioBas
   let response;
   try {
     response = await ai.models.generateContent({
-      model: "gemini-3-flash-preview",
+      model: "gemini-2.5-flash",
       contents: {
         parts: parts
       },
@@ -2669,7 +2527,7 @@ export const getMixCritique = async (
   let response;
   try {
     response = await ai.models.generateContent({
-      model: "gemini-3-flash-preview",
+      model: "gemini-2.5-flash",
       contents: {
         parts: parts
       },
@@ -2776,43 +2634,11 @@ export const getSpecificMixHelp = async (plugins: VSTPlugin[], audioBase64: stri
   let response;
   try {
     response = await ai.models.generateContent({
-      model: "gemini-3-flash-preview",
+      model: "gemini-2.5-flash",
       contents,
       config: {
         customAction: 'critique',
         responseMimeType: "application/json",
-        responseSchema: {
-          type: Type.OBJECT,
-          properties: {
-            query: { type: Type.STRING },
-            advice: { type: Type.STRING },
-            recommendedChain: {
-              type: Type.ARRAY,
-              items: {
-                type: Type.OBJECT,
-                properties: {
-                  name: { type: Type.STRING },
-                  purpose: { type: Type.STRING },
-                  deepDive: {
-                    type: Type.ARRAY,
-                    description: "Provide EVERY available parameter found on the actual plugin interface. Aim for 40-70 settings for complex modules. Do NOT be lazy; ensure every possible control is accounted for. MATCH THE EXTREME DETAIL LEVEL OF A FULL BEAT RECIPE.",
-                    items: {
-                      type: Type.OBJECT,
-                      properties: {
-                        parameter: { type: Type.STRING },
-                        value: { type: Type.STRING },
-                        explanation: { type: Type.STRING }
-                      },
-                      required: ["parameter", "value", "explanation"]
-                    }
-                  }
-                },
-                required: ["name", "purpose", "deepDive"]
-              }
-            }
-          },
-          required: ["query", "advice", "recommendedChain"]
-        },
         safetySettings: [
           { category: HarmCategory.HARM_CATEGORY_HARASSMENT, threshold: HarmBlockThreshold.OFF },
           { category: HarmCategory.HARM_CATEGORY_HATE_SPEECH, threshold: HarmBlockThreshold.OFF },
@@ -2834,258 +2660,36 @@ export const getSpecificMixHelp = async (plugins: VSTPlugin[], audioBase64: stri
   }
 };
 
-export const getGangstaVoxRecipe = async (recipe: BeatRecipe, plugins: VSTPlugin[], analogHardware: Hardware[], language: string = 'en', vocalGoal?: string): Promise<any> => {
-  // Use Gemini Pro for maximum accuracy on complex vocal chains and DSP logic
+export const getGangstaVoxRecipe = async (recipe: BeatRecipe | SavedRecipe, plugins: VSTPlugin[], analogHardware: Hardware[], language: string = 'en', vocalVibeGoal: string = '') => {
   const ai = getAI();
-  const pluginListStr = plugins.map(p => `${p.vendor} - ${p.name} (${p.type})`).join('\n');
-  
-  const uadPlugins = plugins.filter(p => 
-    (p.vendor.toLowerCase().includes('universal audio') || p.name.toLowerCase().includes('uad')) && 
-    !p.name.toLowerCase().includes('native') && 
-    !p.name.toLowerCase().includes('uadx')
-  );
-  const uadPluginListStr = uadPlugins.length > 0 
-    ? uadPlugins.map(p => `${p.vendor} - ${p.name} (${p.type})`).join('\n')
-    : 'Universal Audio plugins defaults (e.g. 1176, LA-2A, Pultec EQP-1A, Neve 1073, Townsend Sphere, Ocean Way, etc.)';
-
-  const hasApollo = analogHardware.some(h => h.name.toLowerCase().includes('apollo')) || (vocalGoal && (vocalGoal.toLowerCase().includes('apollo') || vocalGoal.toLowerCase().includes('console') || vocalGoal.toLowerCase().includes('uad')));
-  const apolloModel = analogHardware.find(h => h.name.toLowerCase().includes('apollo'))?.name || 'Apollo';
-  const hasTownsend = analogHardware.some(h => 
-    h.name.toLowerCase().includes('townsend') || 
-    h.name.toLowerCase().includes('sphere l22') ||
-    h.name.toLowerCase().includes('sphere dlx') ||
-    h.name.toLowerCase().includes('sphere lx') ||
-    h.name.toLowerCase() === 'l22'
-  ) || (vocalGoal && (vocalGoal.toLowerCase().includes('l22') || vocalGoal.toLowerCase().includes('townsend') || vocalGoal.toLowerCase().includes('sphere')));
-
-  const hasOceanWayMic = plugins.some(p => p.name.toLowerCase().includes('ocean way mic')) || (vocalGoal && vocalGoal.toLowerCase().includes('ocean way mic'));
+  const receiverStr = plugins.length > 0 
+    ? plugins.map(p => `${p.vendor} - ${p.name}`).join('\n')
+    : "No plugins available (default to Waves or FabFilter)";
 
   const prompt = `
-    Analyze the following Beat Recipe:
-    Title: ${recipe.title}
-    Style: ${recipe.style}
-    BPM: ${recipe.bpm}
-    Description: ${recipe.description}
-
-    ${vocalGoal ? `TARGET VOCAL SOUND GOAL / VIBE: ${vocalGoal}` : 'Provide a matching "GangstaVox" Vocal FX Chain Recipe that perfectly complements this beat.'}
-    
     ${getLanguageInstruction(language)}
-    Only use mixing plugins from this list for the vocalLayers mixing (after tracking in DAW):
-    ${pluginListStr}
+    I need an EXTREMELY DETAILED vocal processing chain recipe.
+    Style requested: ${recipe.style}
+    Reference Track Context: ${vocalVibeGoal || recipe.title}
 
-    ${hasApollo ? `
-    CRITICAL: The user owns a Universal Audio Apollo interface (${apolloModel}).
-    You MUST include a 'trackingChain' specifically for this Apollo, mirroring the UAD Console workflow.
-    
-    FOR THE UAD CONSOLE TRACKING CHAIN, YOU MUST STRICTLY ONLY USE THESE UAD-2 DSP PLUGINS:
-    ${uadPluginListStr}
-    ${hasTownsend ? 'CRITICAL: The user is using the TOWNSEND LABS / UA SPHERE L22 (or DLX/LX) microphone. You MUST explain that this requires a STEREO LINKED input pair (e.g., Mic 1-2) in UAD Console to process the double capsules.' : ''}
-    
-    MANDATORY UAD CONSOLE REQUIREMENTS:
-    1. UNISON SLOT: A Unison preamp/channel strip plugin is MANDATORY. Explain the physical impedance matching.
-    2. INSERTS (Stereo Mic Channel): You MUST provide EXACTLY 4 plugins. The 4 slots MUST BE FILLED. The FIRST insert slot MUST ALWAYS be one of the following plugins ("Ocean Way Mic Collection" [preferred], "Bill Putnam Mic Collection", or "Sphere Mic Collection"). Then add exactly 3 more plugins to glue/shape the vocal.
-    3. AUX 1: Array of UAD-2 plugins. This is MANDATORY. Explain if this is for monitoring only or printed.
-    4. AUX 2: Array of UAD-2 plugins. This is MANDATORY. Provide specific routing on how to record this Aux as a separate track.
-    
-    ACCURACY AND DEPTH:
-    - For EVERY plugin in the tracking chain, you MUST provide an exhaustive 'deepDive' of EVERY available parameter. DO NOT BE LAZY. Provide 30-50+ settings per plugin, covering every knob, fader, switch, and hidden menu.
-    - Provide 'dawRoutingInstructions' explaining Virtual I/O, physical outputs, 'UAD REC' vs 'UAD MON' switch logic, and printing vs monitoring commitments.
-    - Provide a 'dspUsageNote' explaining how to manage DSP in Console with all these plugins.
-    ` : ''}
+    My available plugins:
+    ${receiverStr}
 
-    For the main vocal mix (after tracking in UAD Console), assume the user is back in their DAW editing those recorded vocals. You MUST expand the plugin list to include non-UAD plugins (like UADx, Waves, FabFilter, etc.) that are available in the user's list, as native plugins can now be used. Provide:
-    - 'vocalLayers': An array of vocal layers (e.g., Lead Vocal, Background Vocal, Adlibs, Doubles).
-      - For each layer, describe the 'sourceSoundGoal' (recording style/performance).
-      - Provide a 'loopGuide' (arrangement tip).
-      - Provide a 'processing': An array of 8-12 plugins to create a complex, professional vocal chain. For each plugin, provide 'pluginName' and a detailed 'purpose' with specific parameters.
-      - Provide 'vocalDives': Detailed parameters for the key plugins in this specific layer.
-        - 'pluginName': The name of the plugin.
-        - 'whyItWorks': Why this plugin is essential for this vocal layer.
-        - 'settings': Array of {parameter, value} pairs (Provide EVERY available parameter found on the actual plugin interface. Aim for 20-40 settings for complex modules. Do NOT be lazy; ensure every possible control is accounted for).
-        - 'proTip': A professional tip for this plugin on this vocal layer.
-    - 'layeringStrategy': How the vocals sit together and in the beat.
-    - 'mastering': A mastering chain for the final vocal+beat mix.
+    If I am missing crucial plugins (like Autotune or Soothe2), recommend the industry standard alternatives.
+
+    Return the result as a detailed JSON structure perfectly matching the schema provided. 
+    Ensure every layer and every plugin setting is robust and exhaustive.
   `;
-
+  
   let response;
   try {
     response = await ai.models.generateContent({
-      model: "gemini-3-flash-preview",
+      model: "gemini-2.5-flash",
       contents: prompt,
       config: {
         customAction: 'gangsta_vox',
         temperature: 0.7,
-        responseMimeType: "application/json",
-        safetySettings: [
-          { category: HarmCategory.HARM_CATEGORY_HARASSMENT, threshold: HarmBlockThreshold.OFF },
-          { category: HarmCategory.HARM_CATEGORY_HATE_SPEECH, threshold: HarmBlockThreshold.OFF },
-          { category: HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT, threshold: HarmBlockThreshold.OFF },
-          { category: HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT, threshold: HarmBlockThreshold.OFF }
-        ],
-        responseSchema: {
-          type: Type.OBJECT,
-          properties: {
-            trackingChain: {
-              type: Type.OBJECT,
-              properties: {
-                unisonPlugin: {
-                  type: Type.OBJECT,
-                  properties: {
-                    name: { type: Type.STRING },
-                    purpose: { type: Type.STRING },
-                    deepDive: {
-                      type: Type.ARRAY,
-                      description: "Provide EVERY available parameter found on the actual plugin (typically 20-50 for professional plugins). Be exhaustive and do NOT be lazy.",
-                      items: {
-                        type: Type.OBJECT,
-                        properties: {
-                          parameter: { type: Type.STRING },
-                          value: { type: Type.STRING }
-                        },
-                        required: ["parameter", "value"]
-                      }
-                    }
-                  },
-                  required: ["name", "purpose", "deepDive"]
-                },
-                inserts: {
-                  type: Type.ARRAY,
-                  items: {
-                    type: Type.OBJECT,
-                    properties: {
-                      name: { type: Type.STRING },
-                      purpose: { type: Type.STRING },
-                      deepDive: {
-                        type: Type.ARRAY,
-                        description: "Provide EVERY available parameter found on the actual plugin interface. Aim for 40-70 settings for complex modules. Do NOT be lazy; ensure every possible control is accounted for. MATCH THE EXTREME DETAIL LEVEL OF A FULL BEAT RECIPE.",
-                        items: {
-                          type: Type.OBJECT,
-                          properties: {
-                            parameter: { type: Type.STRING },
-                            value: { type: Type.STRING }
-                          },
-                          required: ["parameter", "value"]
-                        }
-                      }
-                    },
-                    required: ["name", "purpose", "deepDive"]
-                  }
-                },
-                aux1: {
-                  type: Type.ARRAY,
-                  items: {
-                    type: Type.OBJECT,
-                    properties: {
-                      name: { type: Type.STRING },
-                      purpose: { type: Type.STRING },
-                      deepDive: { type: Type.ARRAY, items: { type: Type.OBJECT, properties: { parameter: { type: Type.STRING }, value: { type: Type.STRING } }, required: ["parameter", "value"] } }
-                    },
-                    required: ["name", "purpose", "deepDive"]
-                  }
-                },
-                aux2: {
-                  type: Type.ARRAY,
-                  items: {
-                    type: Type.OBJECT,
-                    properties: {
-                      name: { type: Type.STRING },
-                      purpose: { type: Type.STRING },
-                      deepDive: { type: Type.ARRAY, items: { type: Type.OBJECT, properties: { parameter: { type: Type.STRING }, value: { type: Type.STRING } }, required: ["parameter", "value"] } }
-                    },
-                    required: ["name", "purpose", "deepDive"]
-                  }
-                },
-                dawRoutingInstructions: { type: Type.STRING },
-                dspUsageNote: { type: Type.STRING }
-              },
-              required: ["inserts"]
-            },
-            vocalLayers: {
-              type: Type.ARRAY,
-              items: {
-                type: Type.OBJECT,
-                properties: {
-                  layerName: { type: Type.STRING },
-                  sourceSoundGoal: { type: Type.STRING },
-                  loopGuide: { type: Type.STRING },
-                  processing: {
-                    type: Type.ARRAY,
-                    items: {
-                      type: Type.OBJECT,
-                      properties: {
-                        pluginName: { type: Type.STRING },
-                        purpose: { type: Type.STRING },
-                        settings: {
-                          type: Type.ARRAY,
-                          description: "Show EVERY parameter available on the plugin (typically 20-50 settings). Do NOT be lazy; if a plugin has many controls, list them all. NEVER invent fake parameters, but be absolutely exhaustive with the real ones.",
-                          items: {
-                            type: Type.OBJECT,
-                            properties: {
-                              parameter: { type: Type.STRING },
-                              value: { type: Type.STRING }
-                            },
-                            required: ["parameter", "value"]
-                          }
-                        }
-                      },
-                      required: ["pluginName", "purpose", "settings"]
-                    }
-                  },
-                  vocalDives: {
-                    type: Type.ARRAY,
-                    items: {
-                      type: Type.OBJECT,
-                      properties: {
-                        pluginName: { type: Type.STRING },
-                        whyItWorks: { type: Type.STRING },
-                        settings: {
-                          type: Type.ARRAY,
-                          description: "Provide EVERY available parameter found on the actual plugin interface. Aim for 40-70 settings for complex modules. Do NOT be lazy; ensure every possible control is accounted for. MATCH THE EXTREME DETAIL LEVEL OF A FULL BEAT RECIPE.",
-                          items: {
-                            type: Type.OBJECT,
-                            properties: {
-                              parameter: { type: Type.STRING },
-                              value: { type: Type.STRING }
-                            },
-                            required: ["parameter", "value"]
-                          }
-                        },
-                        proTip: { type: Type.STRING }
-                      },
-                      required: ["pluginName", "whyItWorks", "settings", "proTip"]
-                    }
-                  }
-                },
-                required: ["layerName", "sourceSoundGoal", "loopGuide", "processing", "vocalDives"]
-              }
-            },
-            layeringStrategy: { type: Type.STRING },
-            mastering: {
-              type: Type.ARRAY,
-              items: {
-                type: Type.OBJECT,
-                properties: {
-                  pluginName: { type: Type.STRING },
-                  purpose: { type: Type.STRING },
-                  settings: {
-                    type: Type.ARRAY,
-                    description: "AT LEAST 10 parameters (and up to 30 if it is a complex channel strip plugin).",
-                    items: {
-                      type: Type.OBJECT,
-                      properties: {
-                        parameter: { type: Type.STRING },
-                        value: { type: Type.STRING }
-                      },
-                      required: ["parameter", "value"]
-                    }
-                  }
-                },
-                required: ["pluginName", "purpose", "settings"]
-              }
-            }
-          },
-          required: ["vocalLayers", "layeringStrategy", "mastering"]
-        }
+        responseMimeType: "application/json"
       }
     });
   } catch (error) {
@@ -3131,18 +2735,11 @@ export const replicateRecipeWithUserGear = async (recipe: SavedRecipe, myPlugins
 
   try {
     const response = await ai.models.generateContent({
-      model: "gemini-3-flash-preview",
+      model: "gemini-2.5-flash",
       contents: prompt,
       config: {
         customAction: 'analog_save',
-        responseMimeType: "application/json",
-        safetySettings: [
-          { category: HarmCategory.HARM_CATEGORY_HARASSMENT, threshold: HarmBlockThreshold.OFF },
-          { category: HarmCategory.HARM_CATEGORY_HATE_SPEECH, threshold: HarmBlockThreshold.OFF },
-          { category: HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT, threshold: HarmBlockThreshold.OFF },
-          { category: HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT, threshold: HarmBlockThreshold.OFF }
-        ],
-        responseSchema: getUnifiedRecipeSchema()
+        responseMimeType: "application/json"
       }
     });
 
@@ -3273,12 +2870,11 @@ export const regenerateTrackingChain = async (
     };
 
     const result = await ai.models.generateContent({
-      model: "gemini-3-flash-preview",
-      contents: prompt,
+      model: "gemini-2.5-flash",
+      contents: prompt + `\n\nReturn the result as a raw JSON object exactly following this structure:\n${JSON.stringify(schema, null, 2)}`,
       config: {
         customAction: 'regenerate_plugin',
-        responseMimeType: "application/json",
-        responseSchema: schema as unknown as any,
+        responseMimeType: "application/json"
       }
     });
 
