@@ -308,7 +308,7 @@ export const validateApiKey = async (key: string): Promise<{valid: boolean, mess
     }
 
     const payload = {
-      model: "gemini-1.5-flash",
+      model: "gemini-3-flash-preview",
       contents: "hi",
       userApiKey: cleanKey
     };
@@ -444,7 +444,7 @@ export const regeneratePlugin = async (
   `;
 
   const response = await ai.models.generateContent({
-    model: "gemini-1.5-flash",
+    model: "gemini-3-flash-preview",
     contents: prompt,
     config: {
       customAction: 'regenerate_plugin',
@@ -480,7 +480,7 @@ export const categorizeAndCompareLibraries = async (senderPlugins: VSTPlugin[], 
   `;
 
   const response = await ai.models.generateContent({
-    model: "gemini-1.5-flash",
+    model: "gemini-3-flash-preview",
     contents: prompt,
     config: {
       customAction: 'compare_libraries',
@@ -1237,7 +1237,7 @@ export const enrichPluginLibrary = async (
 
     try {
       const response = await ai.models.generateContent({
-        model: "gemini-1.5-flash", // Use standard Flash for high-volume research
+        model: "gemini-3-flash-preview", // Use standard Flash for high-volume research
         contents: prompt,
         config: {
           customAction: 'enrich_library',
@@ -1441,7 +1441,7 @@ export const verifyAndCorrectPlugin = async (
   `;
 
   const response = await ai.models.generateContent({
-    model: "gemini-1.5-flash",
+    model: "gemini-3-flash-preview",
     contents: prompt,
     config: {
       customAction: 'verify_plugin',
@@ -1509,7 +1509,7 @@ export const researchPluginParameters = async (plugin: VSTPlugin, language: stri
   `;
 
   const response = await ai.models.generateContent({
-    model: "gemini-1.5-flash",
+    model: "gemini-3-flash-preview",
     contents: prompt,
     config: {
       customAction: 'research_plugin',
@@ -1573,7 +1573,7 @@ export const generateStructuralBlueprint = async (searchQuery: string, language:
   `;
   
   const response = await ai.models.generateContent({
-    model: "gemini-1.5-flash",
+    model: "gemini-3-flash-preview",
     contents: prompt,
     config: {
       customAction: 'structural_blueprint',
@@ -1710,7 +1710,7 @@ export const getBeatRecommendations = async (plugins: VSTPlugin[], analogInstrum
   `;
 
   const response = await ai.models.generateContent({
-    model: 'gemini-1.5-flash',
+    model: 'gemini-3-flash-preview',
     contents: prompt,
     config: {
       customAction: 'recipe',
@@ -1858,7 +1858,7 @@ export const getCustomBeatRecommendations = async (plugins: VSTPlugin[], query: 
   `;
 
   const response = await ai.models.generateContent({
-    model: 'gemini-1.5-flash',
+    model: 'gemini-3-flash-preview',
     contents: prompt,
     config: {
       customAction: 'type_beat_search',
@@ -2001,7 +2001,7 @@ export const getSongBeatRecommendations = async (plugins: VSTPlugin[], songQuery
   `;
 
   const response = await ai.models.generateContent({
-    model: 'gemini-1.5-flash',
+    model: 'gemini-3-flash-preview',
     contents: prompt,
     config: {
       customAction: 'song_search',
@@ -2274,7 +2274,7 @@ export const getAudioBeatRecommendations = async (plugins: VSTPlugin[], audioBas
   let response;
   try {
     response = await ai.models.generateContent({
-      model: "gemini-1.5-flash",
+      model: "gemini-3-flash-preview",
       contents: {
         parts: parts
       },
@@ -2527,7 +2527,7 @@ export const getMixCritique = async (
   let response;
   try {
     response = await ai.models.generateContent({
-      model: "gemini-1.5-flash",
+      model: "gemini-3-flash-preview",
       contents: {
         parts: parts
       },
@@ -2634,7 +2634,7 @@ export const getSpecificMixHelp = async (plugins: VSTPlugin[], audioBase64: stri
   let response;
   try {
     response = await ai.models.generateContent({
-      model: "gemini-1.5-flash",
+      model: "gemini-3-flash-preview",
       contents,
       config: {
         customAction: 'critique',
@@ -2684,7 +2684,7 @@ export const getGangstaVoxRecipe = async (recipe: BeatRecipe | SavedRecipe, plug
   let response;
   try {
     response = await ai.models.generateContent({
-      model: "gemini-1.5-flash",
+      model: "gemini-3-flash-preview",
       contents: prompt,
       config: {
         customAction: 'gangsta_vox',
@@ -2735,7 +2735,7 @@ export const replicateRecipeWithUserGear = async (recipe: SavedRecipe, myPlugins
 
   try {
     const response = await ai.models.generateContent({
-      model: "gemini-1.5-flash",
+      model: "gemini-3-flash-preview",
       contents: prompt,
       config: {
         customAction: 'analog_save',
@@ -2870,7 +2870,7 @@ export const regenerateTrackingChain = async (
     };
 
     const result = await ai.models.generateContent({
-      model: "gemini-1.5-flash",
+      model: "gemini-3-flash-preview",
       contents: prompt + `\n\nReturn the result as a raw JSON object exactly following this structure:\n${JSON.stringify(schema, null, 2)}`,
       config: {
         customAction: 'regenerate_plugin',

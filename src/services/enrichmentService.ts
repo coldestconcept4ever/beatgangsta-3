@@ -7,7 +7,7 @@ export const enrichHardware = async (items: string[], turnstileToken: string | n
 
   try {
     const response = await generateContentViaBackend(
-      'gemini-1.5-flash',
+      'gemini-3-flash-preview',
       `For the following list of musical instruments and hardware, identify the brand (vendor) and type (instrument or hardware) for each. Here is the list: ${items.join(', ')}`,
       {
         responseMimeType: 'application/json',
