@@ -12,6 +12,11 @@ export const TermsOfService: React.FC = () => {
         </button>
       </div>
       <h1 className="text-4xl font-black mb-8 uppercase tracking-widest text-white">Terms of Service</h1>
+      
+      <p className="text-sm opacity-70 mb-8">
+        <strong>Last Updated:</strong> May 4th, 2026
+      </p>
+
       <p>Welcome to BeatGangsta. By using our service, you agree to these terms.</p>
     </div>
   );
