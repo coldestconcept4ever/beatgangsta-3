@@ -15,20 +15,24 @@ export const PrivacyPolicy: React.FC = () => {
         </button>
       </div>
 
-      <h1 className="text-4xl font-black mb-2 uppercase tracking-widest text-white">{t('privacy_policy_title')}</h1>
+      <h1 className="text-4xl font-black mb-2 uppercase tracking-widest text-white">Privacy Policy</h1>
       
       <p className="text-sm opacity-70 mb-8">
         <strong>Last Updated:</strong> May 4, 2026
       </p>
 
       <section className="flex flex-col gap-4">
-        <h2 className="text-xl font-bold text-white">{t('privacy_section_1_title')}</h2>
-        <p>{t('privacy_section_1_desc')}</p>
+        <h2 className="text-xl font-bold text-white">1. Introduction</h2>
+        <p>
+          Welcome to BeatGangsta. We respect your privacy and are committed to protecting it through this Privacy Policy.
+          This policy describes the types of information we may collect from you or that you may provide when you visit the website
+          and use our services.
+        </p>
       </section>
 
       <section className="flex flex-col gap-4">
-        <h2 className="text-xl font-bold text-white">{t('privacy_section_2_title')}</h2>
-        <p>{t('privacy_section_2_desc')}</p>
+        <h2 className="text-xl font-bold text-white">2. Acceptance of Privacy Policy</h2>
+        <p>By accessing or using BeatGangsta, you acknowledge that you have read, understood, and agree to be bound by the terms of this Privacy Policy.</p>
       </section>
 
       <section className="flex flex-col gap-4">
@@ -83,18 +87,28 @@ export const PrivacyPolicy: React.FC = () => {
       </section>
 
       <section className="flex flex-col gap-4">
-        <h2 className="text-xl font-bold text-white">{t('privacy_section_3_title')}</h2>
-        <p>{t('privacy_section_3_desc')}</p>
+        <h2 className="text-xl font-bold text-white">3. Information We Collect</h2>
+        <p>In addition to Google user data for authentication, we may collect:</p>
+        <ul className="list-disc ml-6">
+          <li><strong>Studio Data:</strong> Information about your VST plugin library, DAW, hardware, and generated recipes when you save them to your vault.</li>
+          <li><strong>Usage Information:</strong> Details of your visits to our application, including interactions, recipe generation metrics, and preferences.</li>
+        </ul>
       </section>
 
       <section className="flex flex-col gap-4">
-        <h2 className="text-xl font-bold text-white">{t('privacy_section_4_title')}</h2>
-        <p>{t('privacy_section_4_desc')}</p>
+        <h2 className="text-xl font-bold text-white">4. Your Rights & Deletion</h2>
+        <p>
+          You have the right to request access to or deletion of your personal data at any time. 
+          To request complete deletion of your account and all associated data (including Google authentication records and saved studio data), please contact us or use the account deletion options provided in the application settings.
+        </p>
       </section>
 
       <section className="flex flex-col gap-4">
-        <h2 className="text-xl font-bold text-white">{t('privacy_section_5_title')}</h2>
-        <p>{t('privacy_section_5_desc')}</p>
+        <h2 className="text-xl font-bold text-white">5. Contact Information</h2>
+        <p>
+          If you have any questions, comments, or concerns about this privacy policy, please contact us at: 
+          <a href="mailto:coldestconcept@gmail.com" className="text-orange-400 hover:text-orange-300 ml-2">coldestconcept@gmail.com</a>
+        </p>
       </section>
     </div>
   );
