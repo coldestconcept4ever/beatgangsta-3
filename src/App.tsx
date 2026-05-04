@@ -43,6 +43,8 @@ import { TutorialOverlay } from './components/TutorialOverlay';
 import { StatusPage } from './components/StatusPage';
 import { AdminDashboard } from './components/AdminDashboard';
 import { BetaApplicationModal } from './components/BetaApplicationModal';
+import { PrivacyPolicy } from './components/PrivacyPolicy';
+import { TermsOfService } from './components/TermsOfService';
 import { AnimatePresence, motion } from 'motion/react';
 import { useTranslation } from 'react-i18next';
 import { Globe, Languages, Star, X, Cpu, Folder as FolderIcon, ShieldCheck, Check, Zap, Rocket, Eye, EyeOff, AlertTriangle, Lock, Shield, Loader2, Gem, Sword, User as UserIcon, Link, Link2, Palette, Sparkles, Drum, Image as ImageIcon, Crown, CheckCircle2, ExternalLink, Facebook, Instagram, Linkedin, Twitter, Activity, Database, Trash2, Music, Video } from 'lucide-react';
@@ -480,13 +482,16 @@ const App: React.FC = () => {
     };
   }, []);
 
+  const [currentPage, setCurrentPage] = useState<'home' | 'privacy' | 'terms'>(() => {
+    const path = window.location.pathname;
+    if (path === '/privacy' || path === '/privacy/') return 'privacy';
+    if (path === '/terms' || path === '/terms/') return 'terms';
+    return 'home';
+  });
+
   useEffect(() => {
     const path = window.location.pathname;
-    if (path === '/privacy' || path === '/privacy/') {
-      window.location.pathname = '/privacy';
-    } else if (path === '/terms' || path === '/terms/') {
-      window.location.pathname = '/terms';
-    } else if (path === '/cookies' || path === '/cookies/') {
+    if (path === '/cookies' || path === '/cookies/') {
       setShowCookiePolicy(true);
       window.history.replaceState({}, document.title, '/');
     }
@@ -4236,6 +4241,22 @@ The AI was unable to verify these parameters. Please investigate.`;
     return <AdminDashboard onBack={() => setShowAdminDashboard(false)} theme={theme} />;
   }
 
+  if (currentPage === 'privacy') {
+    return (
+      <div className={`min-h-[100dvh] w-full bg-[#111] flex flex-col font-sans mb-10`}>
+        <PrivacyPolicy />
+      </div>
+    );
+  }
+
+  if (currentPage === 'terms') {
+    return (
+      <div className={`min-h-[100dvh] w-full bg-[#111] flex flex-col font-sans mb-10`}>
+        <TermsOfService />
+      </div>
+    );
+  }
+
   return (
     <div className={`min-h-[100dvh] w-full overflow-x-hidden transition-colors duration-700 flex flex-col ${themeClasses} font-sans selection:bg-sky-200 pb-20 sm:pb-0`}>
       <AnimatePresence>
@@ -6807,8 +6828,8 @@ The AI was unable to verify these parameters. Please investigate.`;
 
         <div className="flex justify-center gap-6 text-[10px] font-bold tracking-tight">
           <button onClick={() => setShowCookiePolicy(true)} className="hover:opacity-100 transition-opacity cursor-pointer">{t('cookie_policy')}</button>
-          <a href="https://www.beatgangsta.com/privacy" target="_blank" rel="noopener noreferrer" className="hover:opacity-100 transition-opacity cursor-pointer">{t('privacy_policy')}</a>
-          <a href="https://www.beatgangsta.com/terms" target="_blank" rel="noopener noreferrer" className="hover:opacity-100 transition-opacity cursor-pointer">{t('terms_of_service')}</a>
+          <button onClick={() => { window.history.pushState({}, '', '/privacy'); setCurrentPage('privacy'); }} className="hover:opacity-100 transition-opacity cursor-pointer">{t('privacy_policy')}</button>
+          <button onClick={() => { window.history.pushState({}, '', '/terms'); setCurrentPage('terms'); }} className="hover:opacity-100 transition-opacity cursor-pointer">{t('terms_of_service')}</button>
           <button onClick={() => setShowContactForm(true)} className="hover:opacity-100 transition-opacity cursor-pointer">{t('contact_us')}</button>
         </div>
       </footer>

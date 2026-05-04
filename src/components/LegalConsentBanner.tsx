@@ -50,7 +50,7 @@ export const LegalConsentBanner: React.FC<LegalConsentBannerProps> = ({
                       {t('terms')}
                     </button>
                   ) : (
-                    <a href="https://www.beatgangsta.com/terms" target="_blank" rel="noopener noreferrer" className="text-orange-400 hover:text-orange-300 transition-colors inline-flex items-center gap-1">
+                    <a href="/terms" className="text-orange-400 hover:text-orange-300 transition-colors inline-flex items-center gap-1">
                       {t('terms')} <ExternalLink className="w-3 h-3" />
                     </a>
                   )}
@@ -60,7 +60,7 @@ export const LegalConsentBanner: React.FC<LegalConsentBannerProps> = ({
                       {t('privacy_policy')}
                     </button>
                   ) : (
-                    <a href="https://www.beatgangsta.com/privacy" target="_blank" rel="noopener noreferrer" className="text-orange-400 hover:text-orange-300 transition-colors inline-flex items-center gap-1">
+                    <a href="/privacy" className="text-orange-400 hover:text-orange-300 transition-colors inline-flex items-center gap-1">
                       {t('privacy_policy')} <ExternalLink className="w-3 h-3" />
                     </a>
                   )}
