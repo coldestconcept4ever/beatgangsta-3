@@ -2311,7 +2311,7 @@ if (process.env.NODE_ENV !== 'production') {
       </head>
       <body>
           <h1>PRIVACY POLICY</h1>
-          <p>Last updated March 21, 2026</p>
+          <p>Last updated May 4, 2026</p>
           <p>This Privacy Notice for BeatGangsta ("<strong>we</strong>," "<strong>us</strong>," or "<strong>our</strong>"), describes how and why we might access, collect, store, use, and/or share ("<strong>process</strong>") your personal information when you use our services ("<strong>Services</strong>"), including when you:</p>
           <ul>
             <li>Visit our website at <a href="https://www.beatgangsta.com" target="_blank">https://www.beatgangsta.com</a> or any website of ours that links to this Privacy Notice</li>
@@ -2367,9 +2367,30 @@ if (process.env.NODE_ENV !== 'production') {
           </ul>
 
           <h2>3. GOOGLE API SERVICES USER DATA POLICY</h2>
-          <p>BeatGangsta's use and transfer to any other app of information received from Google APIs will adhere to <a href="https://developers.google.com/terms/api-services-user-data-policy#additional_requirements_for_specific_api_scopes" target="_blank">Google API Services User Data Policy</a>, including the Limited Use requirements.</p>
-          <p><strong>Google Sign-In:</strong> We use Google Sign-In to authenticate you and create your account. We access your name, email address, and profile picture to personalize your experience.</p>
-          <p><strong>Google Drive:</strong> We use the <code>drive.file</code> scope to allow you to backup and restore your music plugin configurations and beat recipes. We only access files created or opened by BeatGangsta. We do not scan or access your other private files on Google Drive.</p>
+          <p>BeatGangsta's use and transfer to any other app of information received from Google APIs will adhere to the <a href="https://developers.google.com/terms/api-services-user-data-policy" target="_blank">Google API Services User Data Policy</a>, including the Limited Use requirements. To comply with the Google API Services User Data Policy, and Google APIs Terms of Service, our privacy policy thoroughly and clearly discloses how our application accesses, uses, stores, or shares Google user data:</p>
+          
+          <h3>Data Accessed</h3>
+          <p>When you choose to sign in using Google, our application requests access to the following specific types of Google user data through standard non-sensitive scopes:</p>
+          <ul>
+            <li><strong>Email Address</strong> (<code>email</code> scope): We access the primary email address associated with your Google account.</li>
+            <li><strong>Profile Information</strong> (<code>profile</code> scope): We access your basic public profile information, specifically your Name and Profile Picture.</li>
+            <li><strong>Authentication Data</strong> (<code>openid</code> scope): We access OpenID connect data to securely authenticate your session and verify your identity.</li>
+          </ul>
+          
+          <h3>Data Usage</h3>
+          <p>We process and handle this Google user data solely for the following purposes:</p>
+          <ul>
+            <li><strong>Authentication & Security:</strong> We use your OpenID data and email to securely sign you into our application and verify your identity, eliminating the need for a separate password.</li>
+            <li><strong>Account Creation & Identification:</strong> Your email address serves as your unique, primary account identifier within our system. This is structurally necessary to securely link, store, and retrieve your personal studio data (such as your VST plugin library, saved recipes, hardware configurations, and DAW settings) across different devices and sessions.</li>
+            <li><strong>User Experience Personalization:</strong> We handle your Name and Profile Picture strictly to personalize the user interface within the application (e.g., displaying your name on your dashboard or your avatar in your profile settings).</li>
+          </ul>
+
+          <h3>Data Storage & Sharing</h3>
+          <p>Your Google user data (Email, Name, Profile Picture) is securely stored encrypted at rest within our Firebase Authentication and isolated Turso cloud databases.</p>
+          <p><strong>We do not share, sell, or transfer your Google user data to any third parties whatsoever</strong>, except where strictly necessary to provide the service infrastructure itself (i.e., data stored on our secure Firebase and Turso servers) or as required by law.</p>
+          <p><strong>No data retrieved from Google is used for AI/ML model training or secondary marketing/advertising purposes.</strong></p>
+          
+          <p><strong>Google Drive:</strong> If authorized by you, we use the <code>drive.file</code> scope to allow you to backup and restore your music plugin configurations and beat recipes. We only access files created or opened by BeatGangsta. We do not scan or access your other private files on Google Drive.</p>
 
           <h2>4. WHAT LEGAL BASES DO WE RELY ON TO PROCESS YOUR INFORMATION?</h2>
           <p>We only process your personal information when we believe it is necessary and we have a valid legal reason (i.e., legal basis) to do so under applicable law, like with your consent, to comply with laws, to provide you with services to enter into or fulfill our contractual obligations, to protect your rights, or to fulfill our legitimate business interests.</p>
@@ -2495,7 +2516,7 @@ if (process.env.NODE_ENV !== 'production') {
       </head>
       <body>
           <h1>TERMS OF USE</h1>
-          <p>Last updated March 21, 2026</p>
+          <p>Last updated May 4, 2026</p>
           
           <h2>AGREEMENT TO OUR LEGAL TERMS</h2>
           <p>We are BeatGangsta. We operate the website at <a href="https://www.beatgangsta.com" target="_blank">https://www.beatgangsta.com</a>, as well as any other related products and services that refer or link to these legal terms (the "Legal Terms") (collectively, the "Services").</p>
