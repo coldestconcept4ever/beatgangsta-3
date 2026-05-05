@@ -3736,9 +3736,9 @@ The AI was unable to verify these parameters. Please investigate.`;
       return;
     }
     
-    const MAX_FILE_SIZE = 50 * 1024 * 1024; // 50MB
+    const MAX_FILE_SIZE = 100 * 1024 * 1024; // 100MB
     if (file.size > MAX_FILE_SIZE) {
-      setError("File is too large. Please upload an audio file smaller than 50MB.");
+      setError("File is too large. Please upload an audio file smaller than 100MB.");
       return;
     }
     setLoading(true);
@@ -3942,7 +3942,7 @@ The AI was unable to verify these parameters. Please investigate.`;
       } else if (err?.message?.includes("API_KEY_MISSING") || err?.message?.includes("401") || err?.message?.includes("403")) {
         setError(`Access error: ${err.message}. Please contact support or try again later.`);
       } else if (err?.message?.includes("decode")) {
-        setError("Could not read this audio file. Try a standard MP3 or WAV under 50MB.");
+        setError("Could not read this audio file. Try a standard MP3 or WAV under 100MB.");
       } else {
         const errorMsg = err?.message || err?.toString() || "Unknown error";
         setError(`Failed to analyze audio: ${errorMsg}. The file might be too complex or the AI is at its limit. Try a shorter clip!`);
