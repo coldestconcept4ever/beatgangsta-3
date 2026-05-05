@@ -1398,6 +1398,7 @@ The AI was unable to verify these parameters. Please investigate.`;
   const [importedSaveFile, setImportedSaveFile] = useState<FullSaveFile | null>(null);
   const [showImportDecisionModal, setShowImportDecisionModal] = useState(false);
   const [friendMode, setFriendMode] = useState(false);
+  const [multibandMode, setMultibandMode] = useState(() => localStorage.getItem('bg_multiband') === 'true');
   const searchInputRef = useRef<HTMLInputElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [isDraggingAudio, setIsDraggingAudio] = useState(false);
@@ -2300,7 +2301,8 @@ The AI was unable to verify these parameters. Please investigate.`;
       stemCustomTypesPreset
     };
     localStorage.setItem('bg_active_ui', JSON.stringify(uiSettings));
-  }, [theme, grillStyle, knifeStyle, duragStyle, pendantStyle, chainStyle, saberColor, mascotColor, showChain, highEyes, isCigarEquipped, isTossingCigar, showSparkles, stemTypesPreset, stemCustomTypesPreset]);
+    localStorage.setItem('bg_multiband', multibandMode.toString());
+  }, [theme, grillStyle, knifeStyle, duragStyle, pendantStyle, chainStyle, saberColor, mascotColor, showChain, highEyes, isCigarEquipped, isTossingCigar, showSparkles, stemTypesPreset, stemCustomTypesPreset, multibandMode]);
 
   const [vault, setVault] = useState<SavedRecipe[]>(() => {
     try {
@@ -3424,7 +3426,7 @@ The AI was unable to verify these parameters. Please investigate.`;
 
     try {
       if (!requireAuth()) return;
-      const response = await getBeatRecommendations(plugins, analogInstruments, analogHardware, drumKits, excludeAnalog, dawType, starredPlugins, isGangstaVox, i18n.language);
+      const response = await getBeatRecommendations(plugins, analogInstruments, analogHardware, drumKits, excludeAnalog, dawType, starredPlugins, isGangstaVox, i18n.language, multibandMode);
       clearInterval(progressInterval);
       setGenerationProgress(100);
       clearTimeout(timeoutId);
@@ -3474,7 +3476,7 @@ The AI was unable to verify these parameters. Please investigate.`;
 
     try {
       if (!requireAuth()) return;
-      const response = await getCustomBeatRecommendations(plugins, typeBeatSearch.trim(), analogInstruments, analogHardware, drumKits, excludeAnalog, dawType, starredPlugins, isGangstaVox, i18n.language);
+      const response = await getCustomBeatRecommendations(plugins, typeBeatSearch.trim(), analogInstruments, analogHardware, drumKits, excludeAnalog, dawType, starredPlugins, isGangstaVox, i18n.language, multibandMode);
       clearInterval(progressInterval);
       setGenerationProgress(100);
       clearTimeout(timeoutId);
@@ -3525,7 +3527,7 @@ The AI was unable to verify these parameters. Please investigate.`;
 
     try {
       if (!requireAuth()) return;
-      const response = await getSongBeatRecommendations(plugins, songSearch.trim(), analogInstruments, analogHardware, drumKits, excludeAnalog, dawType, starredPlugins, isGangstaVox, i18n.language);
+      const response = await getSongBeatRecommendations(plugins, songSearch.trim(), analogInstruments, analogHardware, drumKits, excludeAnalog, dawType, starredPlugins, isGangstaVox, i18n.language, multibandMode);
       clearInterval(progressInterval);
       setGenerationProgress(100);
       clearTimeout(timeoutId);
@@ -3873,7 +3875,8 @@ The AI was unable to verify these parameters. Please investigate.`;
             isGangstaVox,
             critiqueContext,
             geminiFileUri,
-            i18n.language
+            i18n.language,
+            multibandMode
           );
         } catch (apiErr: any) {
           console.warn("Initial audio analysis failed, retrying with minimal plugin list...", apiErr);
@@ -3894,7 +3897,8 @@ The AI was unable to verify these parameters. Please investigate.`;
               isGangstaVox,
               critiqueContext,
               geminiFileUri,
-              i18n.language
+              i18n.language,
+              multibandMode
             );
           } catch (retryErr: any) {
             console.error("Retry audio analysis failed:", retryErr);
@@ -5405,6 +5409,13 @@ The AI was unable to verify these parameters. Please investigate.`;
                   <CigarIcon size={16} className={isCigarEquipped ? "animate-pulse" : ""} /> {isCigarEquipped ? t('toss_blunt') : t('got_blunt')}
                 </button>
 
+                <button 
+                  onClick={() => setMultibandMode(!multibandMode)} 
+                  className={`${actionBtnClasses} ${multibandMode ? getThemeActiveClasses(theme) : themedBtnClasses}`}
+                >
+                  <Music size={16} /> Multiband Mode ({multibandMode ? "ON" : "OFF"})
+                </button>
+
                 <button onClick={() => setShowMascotColorPicker(true)} className={`${actionBtnClasses} ${themedBtnClasses}`}>
                   <Palette size={16} /> {t('mascot_hue')}
                 </button>
@@ -5474,6 +5485,12 @@ The AI was unable to verify these parameters. Please investigate.`;
             </button>
             <button onClick={handleCigarToggle} className={`${mobileTrayBtnClasses} select-none ${isCigarEquipped ? getThemeActiveClasses(theme) : themedBtnClasses}`}>
               <CigarIcon size={16} /> {isCigarEquipped ? t('toss_blunt') : t('got_blunt')}
+            </button>
+            <button 
+              onClick={() => setMultibandMode(!multibandMode)} 
+              className={`${mobileTrayBtnClasses} select-none ${multibandMode ? getThemeActiveClasses(theme) : themedBtnClasses}`}
+            >
+              <Music size={16} /> Multiband ({multibandMode ? "ON" : "OFF"})
             </button>
             <button onClick={() => setShowMascotColorPicker(true)} className={`${mobileTrayBtnClasses} ${themedBtnClasses}`}>
               <Palette size={16} /> {t('mascot_hue')}

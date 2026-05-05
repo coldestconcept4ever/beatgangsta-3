@@ -645,7 +645,8 @@ export const getUnifiedRecipeSchema = () => {
                         parameter: { type: Type.STRING }, value: { type: Type.STRING }, explanation: { type: Type.STRING } },
                       required: ["parameter", "value", "explanation"]
                     }
-                  }
+                  },
+                  band: { type: Type.STRING }
                 },
                 required: ["name", "purpose", "deepDive"]
               }
@@ -1431,7 +1432,7 @@ export const generateStructuralBlueprint = async (searchQuery: string, language:
     return {} as StructuralBlueprint;
   }
 };
-export const getBeatRecommendations = async (plugins: VSTPlugin[], analogInstruments: Hardware[] = [], analogHardware: Hardware[] = [], drumKits: Hardware[] = [], excludeAnalog: boolean = false, dawType: string | null = null, starredPlugins: string[] = [], isGangstaVox: boolean = false, language: string = 'en'): Promise<RecommendationResponse> => {
+export const getBeatRecommendations = async (plugins: VSTPlugin[], analogInstruments: Hardware[] = [], analogHardware: Hardware[] = [], drumKits: Hardware[] = [], excludeAnalog: boolean = false, dawType: string | null = null, starredPlugins: string[] = [], isGangstaVox: boolean = false, language: string = 'en', isMultibandMode: boolean = false): Promise<RecommendationResponse> => {
   const ai = getAI();
   const pluginListStr = plugins.map(p => {
     let str = `${p.vendor} - ${p.name} (${p.type})`;
@@ -1445,6 +1446,15 @@ export const getBeatRecommendations = async (plugins: VSTPlugin[], analogInstrum
   const starredStr = starredPlugins.length > 0 ? `\nCRITICAL: The user has STARRED (favorited) the following plugins. You MUST prioritize using these plugins in your recipes whenever possible:\n${starredPlugins.join(', ')}` : '';
   const hasSphereMic = analogHardware.some(h => ['Sphere DLX', 'Sphere LX', 'L22'].includes(h.name) || h.name.toLowerCase() === 'l22' || h.name.toLowerCase().includes('townsend'));
   const sphereMicStr = hasSphereMic ? `\nCRITICAL: The user owns a Universal Audio Sphere (DLX/LX) or Townsend Labs L22 microphone. If the recipe involves a vocal tracking chain, you MUST assign the 'UAD Sphere Mic Collection', 'Ocean Way Mic Collection', or 'Bill Putnam Mic Collection' plugin as the VERY FIRST insert plugin on the vocal channel tracking chain. You MUST specifically select a mic model inside it based on the vibe searched. After the mic collection plugin, you can add up to 3 more plugins.` : '';
+  const klevgrandStr = isMultibandMode ? `
+MULTIBAND PARALLEL PROCESSING INSTRUCTION:
+The user has enabled "Multiband Mode". Consider incorporating advanced multi-band parallel processing ONLY IF it genuinely helps achieve the requested sound (e.g. specialized multiband saturation, intricate frequency-targeted delay/reverb, or precise multiband widening). Do NOT force it if standard EQ/processing is better suited for the style!
+- Analyze the user's plugin list (or DAW native tools like Reaper's ReaEQ/ReaXcomp/Sends, or T-RackS Quad series, Klevgrand Gaffel, etc.) to figure out the best way to split the signal into frequency bands.
+- If applicable, choose 1, 2, or 3 critical channels where band-splitting makes sense for the requested style.
+- First, explicitly add a 'Plugin' bubble in the fxPlugins list describing the crossover/routing method (e.g., "DAW Routing Multiband Split", "ReaEQ Band Split", or "T-RackS Quad Comp"), and provide a detailed guide in its 'deepDive' explaining EXACTLY how the user should route and split the frequencies.
+- Then, list the subsequent processing plugins, setting the 'band' property on each fxPlugin (e.g., "Low", "Mid", "High") to explicitly indicate which frequency split it is processing.
+- Provide tailored parameter settings in the 'deepDive' for the plugins on each individual band to explain the parallel processing strategy.
+` : '';
   const languageInstruction = getLanguageInstruction(language);
   const prompt = isGangstaVox ? `
     Analyze my VST plugin list and suggest 1 high-level, extremely detailed "Vocal FX Chain Recipe" for the craziest vocal mix.
@@ -1456,6 +1466,7 @@ export const getBeatRecommendations = async (plugins: VSTPlugin[], analogInstrum
     ${dawStr}
     ${starredStr}
     ${sphereMicStr}
+    ${klevgrandStr}
     ${languageInstruction}
     ${PRO_Q_3_LAYOUT_PROMPT}
     ${GULLFOSS_SPEC_PROMPT}
@@ -1494,6 +1505,7 @@ export const getBeatRecommendations = async (plugins: VSTPlugin[], analogInstrum
     ${dawStr}
     ${starredStr}
     ${sphereMicStr}
+    ${klevgrandStr}
     ${languageInstruction}
     ${PRO_Q_3_LAYOUT_PROMPT}
     ${GULLFOSS_SPEC_PROMPT}
@@ -1554,7 +1566,7 @@ export const getBeatRecommendations = async (plugins: VSTPlugin[], analogInstrum
     throw new Error("The architect's response was not in the correct format. Please try again!");
   }
 };
-export const getCustomBeatRecommendations = async (plugins: VSTPlugin[], query: string, analogInstruments: Hardware[] = [], analogHardware: Hardware[] = [], drumKits: Hardware[] = [], excludeAnalog: boolean = false, dawType: string | null = null, starredPlugins: string[] = [], isGangstaVox: boolean = false, language: string = 'en'): Promise<RecommendationResponse> => {
+export const getCustomBeatRecommendations = async (plugins: VSTPlugin[], query: string, analogInstruments: Hardware[] = [], analogHardware: Hardware[] = [], drumKits: Hardware[] = [], excludeAnalog: boolean = false, dawType: string | null = null, starredPlugins: string[] = [], isGangstaVox: boolean = false, language: string = 'en', isMultibandMode: boolean = false): Promise<RecommendationResponse> => {
   const ai = getAI();
   const pluginListStr = plugins.map(p => {
     let str = `${p.vendor} - ${p.name} (${p.type})`;
@@ -1581,6 +1593,15 @@ export const getCustomBeatRecommendations = async (plugins: VSTPlugin[], query: 
       - Creative FX: Soundtoys PhaseMistress, Little PrimalTap, BABY Audio Warp.
     - Mixing Techniques: Use parallel compression, heavy saturation on drums and bass, and precise subtractive EQ on vocals to keep them crisp.
   ` : '';
+  const klevgrandStr = isMultibandMode ? `
+MULTIBAND PARALLEL PROCESSING INSTRUCTION:
+The user has enabled "Multiband Mode". Consider incorporating advanced multi-band parallel processing ONLY IF it genuinely helps achieve the requested sound (e.g. specialized multiband saturation, intricate frequency-targeted delay/reverb, or precise multiband widening). Do NOT force it if standard EQ/processing is better suited for the style!
+- Analyze the user's plugin list (or DAW native tools like Reaper's ReaEQ/ReaXcomp/Sends, or T-RackS Quad series, Klevgrand Gaffel, etc.) to figure out the best way to split the signal into frequency bands.
+- If applicable, choose 1, 2, or 3 critical channels where band-splitting makes sense for the requested style.
+- First, explicitly add a 'Plugin' bubble in the fxPlugins list describing the crossover/routing method (e.g., "DAW Routing Multiband Split", "ReaEQ Band Split", or "T-RackS Quad Comp"), and provide a detailed guide in its 'deepDive' explaining EXACTLY how the user should route and split the frequencies.
+- Then, list the subsequent processing plugins, setting the 'band' property on each fxPlugin (e.g., "Low", "Mid", "High") to explicitly indicate which frequency split it is processing.
+- Provide tailored parameter settings in the 'deepDive' for the plugins on each individual band to explain the parallel processing strategy.
+` : '';
   const prompt = isGangstaVox ? `
     Analyze my VST plugin list and suggest 1 high-level, extremely detailed "Vocal FX Chain Recipe" specifically for a "${query} type vocal".
     Only use plugins from this list.
@@ -1591,6 +1612,7 @@ export const getCustomBeatRecommendations = async (plugins: VSTPlugin[], query: 
     ${dawStr}
     ${starredStr}
     ${sphereMicStr}
+    ${klevgrandStr}
     ${ruhedraStyle}
     ${getLanguageInstruction(language)}
     ${PRO_Q_3_LAYOUT_PROMPT}
@@ -1627,6 +1649,7 @@ export const getCustomBeatRecommendations = async (plugins: VSTPlugin[], query: 
     ${dawStr}
     ${starredStr}
     ${sphereMicStr}
+    ${klevgrandStr}
     ${getLanguageInstruction(language)}
     Ensure the recipe captures the signature sound, bounce, and atmospheric elements associated with ${query}.
     Identify 2-3 mainstream or commonly known artists who would typically use this specific beat type.
@@ -1683,7 +1706,7 @@ export const getCustomBeatRecommendations = async (plugins: VSTPlugin[], query: 
   }
   return result;
 };
-export const getSongBeatRecommendations = async (plugins: VSTPlugin[], songQuery: string, analogInstruments: Hardware[] = [], analogHardware: Hardware[] = [], drumKits: Hardware[] = [], excludeAnalog: boolean = false, dawType: string | null = null, starredPlugins: string[] = [], isGangstaVox: boolean = false, language: string = 'en'): Promise<RecommendationResponse> => {
+export const getSongBeatRecommendations = async (plugins: VSTPlugin[], songQuery: string, analogInstruments: Hardware[] = [], analogHardware: Hardware[] = [], drumKits: Hardware[] = [], excludeAnalog: boolean = false, dawType: string | null = null, starredPlugins: string[] = [], isGangstaVox: boolean = false, language: string = 'en', isMultibandMode: boolean = false): Promise<RecommendationResponse> => {
   const blueprint = await generateStructuralBlueprint(songQuery, language);
   const ai = getAI();
   const pluginListStr = plugins.map(p => {
@@ -1698,6 +1721,15 @@ export const getSongBeatRecommendations = async (plugins: VSTPlugin[], songQuery
   const starredStr = starredPlugins.length > 0 ? `\nCRITICAL: The user has STARRED (favorited) the following plugins. You MUST prioritize using these plugins in your recipes whenever possible:\n${starredPlugins.join(', ')}` : '';
   const hasSphereMic = analogHardware.some(h => ['Sphere DLX', 'Sphere LX', 'L22'].includes(h.name) || h.name.toLowerCase() === 'l22' || h.name.toLowerCase().includes('townsend'));
   const sphereMicStr = hasSphereMic ? `\nCRITICAL: The user owns a Universal Audio Sphere (DLX/LX) or Townsend Labs L22 microphone. If the recipe involves a vocal tracking chain, you MUST assign the 'UAD Sphere Mic Collection', 'Ocean Way Mic Collection', or 'Bill Putnam Mic Collection' plugin as the VERY FIRST insert plugin on the vocal channel tracking chain. You MUST specifically select a mic model inside it based on the vibe searched. After the mic collection plugin, you can add up to 3 more plugins.` : '';
+  const klevgrandStr = isMultibandMode ? `
+MULTIBAND PARALLEL PROCESSING INSTRUCTION:
+The user has enabled "Multiband Mode". Consider incorporating advanced multi-band parallel processing ONLY IF it genuinely helps achieve the requested sound (e.g. specialized multiband saturation, intricate frequency-targeted delay/reverb, or precise multiband widening). Do NOT force it if standard EQ/processing is better suited for the style!
+- Analyze the user's plugin list (or DAW native tools like Reaper's ReaEQ/ReaXcomp/Sends, or T-RackS Quad series, Klevgrand Gaffel, etc.) to figure out the best way to split the signal into frequency bands.
+- If applicable, choose 1, 2, or 3 critical channels where band-splitting makes sense for the requested style.
+- First, explicitly add a 'Plugin' bubble in the fxPlugins list describing the crossover/routing method (e.g., "DAW Routing Multiband Split", "ReaEQ Band Split", or "T-RackS Quad Comp"), and provide a detailed guide in its 'deepDive' explaining EXACTLY how the user should route and split the frequencies.
+- Then, list the subsequent processing plugins, setting the 'band' property on each fxPlugin (e.g., "Low", "Mid", "High") to explicitly indicate which frequency split it is processing.
+- Provide tailored parameter settings in the 'deepDive' for the plugins on each individual band to explain the parallel processing strategy.
+` : '';
   const prompt = isGangstaVox ? `
     Analyze my VST plugin list and suggest 1 high-level, extremely detailed "Vocal FX Chain Recipe" that recreate the vocal production style, effects, and mixing techniques of the song "${songQuery}".
     Only use plugins from this list.
@@ -1708,6 +1740,7 @@ export const getSongBeatRecommendations = async (plugins: VSTPlugin[], songQuery
     ${dawStr}
     ${starredStr}
     ${sphereMicStr}
+    ${klevgrandStr}
     ${getLanguageInstruction(language)}
     ${GULLFOSS_SPEC_PROMPT}
     ${PRO_Q_3_LAYOUT_PROMPT}
@@ -1743,6 +1776,7 @@ export const getSongBeatRecommendations = async (plugins: VSTPlugin[], songQuery
     ${dawStr}
     ${starredStr}
     ${sphereMicStr}
+    ${klevgrandStr}
     ${getLanguageInstruction(language)}
     ${PRO_Q_3_LAYOUT_PROMPT}
     ${GULLFOSS_SPEC_PROMPT}
@@ -1852,7 +1886,7 @@ export const generateContentViaBackend = async (model: string, prompt: string, c
     config
   });
 };
-export const getAudioBeatRecommendations = async (plugins: VSTPlugin[], audioBase64: string | null, audioUrl: string | null, mimeType: string, analogInstruments: Hardware[] = [], analogHardware: Hardware[] = [], drumKits: Hardware[] = [], excludeAnalog: boolean = false, dawType: string | null = null, starredPlugins: string[] = [], isGangstaVox: boolean = false, userContext: string = "", geminiFileUri: string | null = null, language: string = 'en'): Promise<RecommendationResponse> => {
+export const getAudioBeatRecommendations = async (plugins: VSTPlugin[], audioBase64: string | null, audioUrl: string | null, mimeType: string, analogInstruments: Hardware[] = [], analogHardware: Hardware[] = [], drumKits: Hardware[] = [], excludeAnalog: boolean = false, dawType: string | null = null, starredPlugins: string[] = [], isGangstaVox: boolean = false, userContext: string = "", geminiFileUri: string | null = null, language: string = 'en', isMultibandMode: boolean = false): Promise<RecommendationResponse> => {
   const ai = getAI();
   // Limit plugin list to 50 most relevant to avoid context/complexity limits
   const limitedPlugins = plugins.slice(0, 50);
@@ -1875,6 +1909,17 @@ export const getAudioBeatRecommendations = async (plugins: VSTPlugin[], audioBas
   const apolloModel = analogHardware.find(h => h.name.toLowerCase().includes('apollo'))?.name || 'Apollo';
   const hasTownsend = analogHardware.some(h => h.name.toLowerCase().includes('townsend') || h.name.toLowerCase().includes('sphere'));
   const hasOceanWayMic = plugins?.some(p => p.name.toLowerCase().includes('ocean way mic')) || false;
+  
+  const klevgrandStr = isMultibandMode ? `
+MULTIBAND PARALLEL PROCESSING INSTRUCTION:
+The user has enabled "Multiband Mode". Consider incorporating advanced multi-band parallel processing ONLY IF it genuinely helps achieve the requested sound (e.g. specialized multiband saturation, intricate frequency-targeted delay/reverb, or precise multiband widening). Do NOT force it if standard EQ/processing is better suited for the style!
+- Analyze the user's plugin list (or DAW native tools like Reaper's ReaEQ/ReaXcomp/Sends, or T-RackS Quad series, Klevgrand Gaffel, etc.) to figure out the best way to split the signal into frequency bands.
+- If applicable, choose 1, 2, or 3 critical channels where band-splitting makes sense for the requested style.
+- First, explicitly add a 'Plugin' bubble in the fxPlugins list describing the crossover/routing method (e.g., "DAW Routing Multiband Split", "ReaEQ Band Split", or "T-RackS Quad Comp"), and provide a detailed guide in its 'deepDive' explaining EXACTLY how the user should route and split the frequencies.
+- Then, list the subsequent processing plugins, setting the 'band' property on each fxPlugin (e.g., "Low", "Mid", "High") to explicitly indicate which frequency split it is processing.
+- Provide tailored parameter settings in the 'deepDive' for the plugins on each individual band to explain the parallel processing strategy.
+` : '';
+
   let prompt = isGangstaVox ? `
     Analyze the attached audio file and suggest 1 high-level, extremely detailed "Vocal FX Chain Recipe" that recreate the vocal production style, effects, and mixing techniques heard in the provided audio.
     Only use mixing plugins from this list (for DAW processing):
@@ -1884,6 +1929,7 @@ export const getAudioBeatRecommendations = async (plugins: VSTPlugin[], audioBas
     ${starredStr}
     ${sphereMicStr}
     ${contextStr}
+    ${klevgrandStr}
     ${getLanguageInstruction(language)}
     ${GULLFOSS_SPEC_PROMPT}
     ${OZONE_SPEC_PROMPT}
@@ -1934,6 +1980,7 @@ export const getAudioBeatRecommendations = async (plugins: VSTPlugin[], audioBas
     ${dawStr}
     ${starredStr}
     ${sphereMicStr}
+    ${klevgrandStr}
     ${getLanguageInstruction(language)}
     ${GULLFOSS_SPEC_PROMPT}
     ${OZONE_SPEC_PROMPT}
