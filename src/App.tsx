@@ -5690,23 +5690,30 @@ The AI was unable to verify these parameters. Please investigate.`;
                   </label>
                 </div>
               </div>
-              {!isVerified && (
-                <div className="flex justify-center mt-6">
-                  <div id="tutorial-turnstile" className="flex items-center justify-center overflow-visible" style={{ width: '260px', height: '52px' }}>
-                    <div key={verificationSessionId}>
-                      <Turnstile
-                        sitekey={typeof import.meta.env.VITE_TURNSTILE_SITE_KEY === 'string' ? import.meta.env.VITE_TURNSTILE_SITE_KEY : '0x4AAAAAACkH6-i-na5YIlP9'}
-                        onVerify={(token) => {
-                          if ((window as any).onUploadSuccess) {
-                            (window as any).onUploadSuccess(token);
-                          }
-                        }}
-                        theme={theme === 'coldest' || theme === 'chef-mode' ? 'light' : 'dark'}
-                      />
+              <AnimatePresence>
+                {!isVerified && (
+                  <motion.div 
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: 'auto' }}
+                    exit={{ opacity: 0, height: 0, overflow: 'hidden' }}
+                    className="flex justify-center mt-6"
+                  >
+                    <div id="tutorial-turnstile" className="flex items-center justify-center overflow-visible" style={{ width: '260px', height: '52px' }}>
+                      <div key={verificationSessionId}>
+                        <Turnstile
+                          sitekey={typeof import.meta.env.VITE_TURNSTILE_SITE_KEY === 'string' ? import.meta.env.VITE_TURNSTILE_SITE_KEY : '0x4AAAAAACkH6-i-na5YIlP9'}
+                          onVerify={(token) => {
+                            if ((window as any).onUploadSuccess) {
+                              (window as any).onUploadSuccess(token);
+                            }
+                          }}
+                          theme={theme === 'coldest' || theme === 'chef-mode' ? 'light' : 'dark'}
+                        />
+                      </div>
                     </div>
-                  </div>
-                </div>
-              )}
+                  </motion.div>
+                )}
+              </AnimatePresence>
               <input type="file" ref={fileInputRef} className="hidden" accept=".csv,.txt,.ini,.xml" onChange={(e) => {
                 handleFileUpload(e);
               }} />
@@ -5768,7 +5775,32 @@ The AI was unable to verify these parameters. Please investigate.`;
                     <p className="text-sm sm:text-lg font-bold opacity-70 select-none mt-2">{t('loaded_plugins_count', { count: plugins.length })}</p>
                   </div>
                 </div>
-                <div className="flex flex-col sm:flex-row items-center gap-4 relative z-30">
+                <div className="flex flex-col items-center sm:items-end gap-4 relative z-30">
+                  <AnimatePresence>
+                    {!isVerified && (
+                      <motion.div
+                        initial={{ opacity: 0, height: 0 }}
+                        animate={{ opacity: 1, height: 'auto' }}
+                        exit={{ opacity: 0, height: 0, overflow: 'hidden' }}
+                        className="flex flex-col items-center"
+                      >
+                        <div id="tutorial-turnstile-studio" className="flex items-center justify-center overflow-visible" style={{ width: '260px', height: '52px' }}>
+                          <div key={verificationSessionId}>
+                            <Turnstile
+                              sitekey={typeof import.meta.env.VITE_TURNSTILE_SITE_KEY === 'string' ? import.meta.env.VITE_TURNSTILE_SITE_KEY : '0x4AAAAAACkH6-i-na5YIlP9'}
+                              onVerify={(token) => {
+                                if ((window as any).onUploadSuccess) {
+                                  (window as any).onUploadSuccess(token);
+                                }
+                              }}
+                              theme={theme === 'coldest' || theme === 'chef-mode' ? 'light' : 'dark'}
+                            />
+                          </div>
+                        </div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                  
                   <div className={`flex items-center p-1 rounded-full backdrop-blur-md border ${
                     theme === 'coldest' ? 'bg-sky-500/10 border-sky-500/20' : 
                     theme === 'crazy-bird' ? 'bg-red-500/20 border-red-500/30' : 
@@ -6288,14 +6320,6 @@ The AI was unable to verify these parameters. Please investigate.`;
                 )}
               </div>
               </div>
-              )}
-
-              {!isVerified && (
-                <div className="flex justify-center mt-4">
-                  <div className="flex items-center justify-center overflow-visible" style={{ width: '260px', height: '52px' }}>
-                    <div className="cf-turnstile origin-center scale-[0.8]"></div>
-                  </div>
-                </div>
               )}
 
               {loading && (
