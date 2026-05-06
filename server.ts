@@ -3644,14 +3644,15 @@ if (process.env.NODE_ENV !== 'production') {
       if (!plugins || !Array.isArray(plugins)) {
         return res.status(400).json({ error: "Invalid plugins array" });
       }
-      if (plugins.length === 0) {
+      const validPlugins = plugins.filter(p => p && p.vendor && p.name);
+      if (validPlugins.length === 0) {
         return res.json({ success: true });
       }
 
       const client = await getDb();
       if (!client) return res.status(500).json({ error: "Database not available" });
 
-      const statements = plugins.map(p => ({
+      const statements = validPlugins.map(p => ({
         sql: `INSERT INTO vst_cache (vendor, name, type, description, features, parameters, version, tier) 
               VALUES (?, ?, ?, ?, ?, ?, ?, ?) 
               ON CONFLICT(vendor, name, tier) DO UPDATE SET 

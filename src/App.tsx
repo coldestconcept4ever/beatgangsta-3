@@ -5767,17 +5767,17 @@ The AI was unable to verify these parameters. Please investigate.`;
         ) : (!isEnrichingLibrary && plugins.length > 0) || hasRestoredBackup ? (
           <div className="space-y-12 mt-12 sm:mt-0">
             <section className={`relative flex flex-col gap-8 p-6 sm:p-10 transition-colors ${mainBlurClass} border rounded-[3rem] sm:rounded-[4rem] shadow-xl ${theme === 'coldest' ? 'bg-white/20 border-white/30' : theme === 'chef-mode' ? 'bg-white/40 border-white/30' : 'bg-black/40 border-white/10'}`}>
-              <div className="flex flex-col lg:flex-row gap-8 items-center justify-between relative z-10">
-                <div className="flex flex-col sm:flex-row items-center gap-0 sm:gap-4 text-center sm:text-left">
+              <div className="flex flex-col gap-8 items-center justify-center relative z-10 w-full text-center">
+                <div className="flex flex-col items-center gap-2">
                   <div className="relative z-30">
                     <Logo size={240} grillStyle={grillStyle} knifeStyle={knifeStyle} duragStyle={duragStyle} pendantStyle={pendantStyle} chainStyle={chainStyle} theme={theme} saberColor={saberColor} mascotColor={mascotColor} showChain={showChain} highEyes={highEyes} isCigarEquipped={isCigarEquipped} isTossingCigar={isTossingCigar} showSparkles={showSparkles} onClick={cycleGrill} />
                   </div>
-                  <div className="flex flex-col justify-center -mt-4 sm:mt-0">
+                  <div className="flex flex-col justify-center -mt-6">
                     <h2 className={`text-4xl sm:text-6xl font-black tracking-tighter select-none ${theme === 'coldest' || theme === 'chef-mode' ? 'text-slate-800' : 'text-white'}`}>{t('studio_info')}</h2>
                     <p className="text-sm sm:text-lg font-bold opacity-70 select-none mt-2">{t('loaded_plugins_count', { count: plugins.length })}</p>
                   </div>
                 </div>
-                <div className="flex flex-col items-center sm:items-end gap-4 relative z-30">
+                <div className="flex flex-col items-center gap-4 relative z-30">
                   <AnimatePresence>
                     {!isVerified && (
                       <motion.div

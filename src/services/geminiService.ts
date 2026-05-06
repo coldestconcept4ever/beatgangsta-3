@@ -1174,7 +1174,6 @@ export const enrichPluginLibrary = async (
         console.error("Failed to parse AI response as JSON in processBatch", e);
         result = { plugins: [] };
       }
-      const researchResults: VSTPlugin[] = [];
       if (result.plugins && Array.isArray(result.plugins)) {
         pluginsToResearch.forEach((plugin, index) => {
           const details = result.plugins[index];
@@ -1284,7 +1283,7 @@ export const enrichPluginLibrary = async (
     }
   }
   // Final check: if more than 80% of plugins failed to analyze, throw an error
-  const failedCount = enrichedPlugins.filter(p => p.description?.includes("Could not analyze")).length;
+  const failedCount = enrichedPlugins.filter(p => p?.description?.includes("Could not analyze")).length;
   if (failedCount > plugins.length * 0.8 && plugins.length > 5) {
     throw new Error("RESEARCH_FAILED: The AI research process failed for most of your plugins. This is usually due to API rate limits. Please try again in a few minutes or use a smaller list.");
   }
