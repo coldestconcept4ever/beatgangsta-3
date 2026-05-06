@@ -4595,25 +4595,27 @@ The AI was unable to verify these parameters. Please investigate.`;
 
                     <div className={`h-px w-full my-1 ${getDropdownTheme(theme).divider}`} />
 
-                    <button 
-                      onClick={() => {
-                        if (isRecording) {
-                          stopRecording();
-                        } else {
-                          setIsUserMenuOpen(false);
-                          startRecording();
-                        }
-                      }}
-                      className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-left transition-colors group ${getDropdownTheme(theme).itemHover}`}
-                    >
-                      <div className={`w-7 h-7 rounded-full flex items-center justify-center transition-colors ${isRecording ? 'bg-red-500 text-white animate-pulse' : getDropdownTheme(theme).iconBg}`}>
-                        <Video size={14} />
-                      </div>
-                      <div>
-                        <div className="text-xs font-bold uppercase tracking-wider">{isRecording ? 'Stop Recording' : 'Record Showcase'}</div>
-                        <div className="text-[9px] opacity-50 mt-0.5">{isRecording ? 'Click to save video' : 'Capture your app workflow'}</div>
-                      </div>
-                    </button>
+                    {isAdminDashboardAuthorized && (
+                      <button 
+                        onClick={() => {
+                          if (isRecording) {
+                            stopRecording();
+                          } else {
+                            setIsUserMenuOpen(false);
+                            startRecording();
+                          }
+                        }}
+                        className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-left transition-colors group ${getDropdownTheme(theme).itemHover}`}
+                      >
+                        <div className={`w-7 h-7 rounded-full flex items-center justify-center transition-colors ${isRecording ? 'bg-red-500 text-white animate-pulse' : getDropdownTheme(theme).iconBg}`}>
+                          <Video size={14} />
+                        </div>
+                        <div>
+                          <div className="text-xs font-bold uppercase tracking-wider">{isRecording ? 'Stop Recording' : 'Record Showcase'}</div>
+                          <div className="text-[9px] opacity-50 mt-0.5">{isRecording ? 'Click to save video' : 'Capture your app workflow'}</div>
+                        </div>
+                      </button>
+                    )}
 
                     {isAdminDashboardAuthorized && (
                       <>

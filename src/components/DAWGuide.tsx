@@ -132,7 +132,7 @@ export const DAWGuide: React.FC<DAWGuideProps> = ({ theme, onClose }) => {
             <div className="space-y-4">
               <div className="flex gap-4">
                 <div className="w-8 h-8 rounded-full bg-indigo-500/20 flex items-center justify-center font-black flex-shrink-0">1</div>
-                <p className="text-sm leading-relaxed"><Trans i18nKey="daw_logic_step1">Go to <strong className="font-black">Logic Pro</strong> &gt; <strong className="font-black">Settings</strong> &gt; <strong className="font-black">Plug-in Manager</strong>.</Trans></p>
+                <p className="text-sm leading-relaxed"><Trans i18nKey="daw_logic_step1">Go to <strong className="font-black">Logic Pro</strong> {'>'} <strong className="font-black">Settings</strong> {'>'} <strong className="font-black">Plug-in Manager</strong>.</Trans></p>
               </div>
               <div className="flex gap-4">
                 <div className="w-8 h-8 rounded-full bg-indigo-500/20 flex items-center justify-center font-black flex-shrink-0">2</div>
@@ -152,7 +152,7 @@ export const DAWGuide: React.FC<DAWGuideProps> = ({ theme, onClose }) => {
             <div className="space-y-4">
               <div className="flex gap-4">
                 <div className="w-8 h-8 rounded-full bg-orange-500/20 flex items-center justify-center font-black flex-shrink-0">1</div>
-                <p className="text-sm leading-relaxed"><Trans i18nKey="daw_bitwig_step1">In Bitwig, go to <strong className="font-black">Settings</strong> &gt; <strong className="font-black">Plug-ins</strong>.</Trans></p>
+                <p className="text-sm leading-relaxed"><Trans i18nKey="daw_bitwig_step1">In Bitwig, go to <strong className="font-black">Settings</strong> {'>'} <strong className="font-black">Plug-ins</strong>.</Trans></p>
               </div>
               <div className="flex gap-4">
                 <div className="w-8 h-8 rounded-full bg-orange-500/20 flex items-center justify-center font-black flex-shrink-0">2</div>
@@ -172,7 +172,7 @@ export const DAWGuide: React.FC<DAWGuideProps> = ({ theme, onClose }) => {
             <div className="space-y-4">
               <div className="flex gap-4">
                 <div className="w-8 h-8 rounded-full bg-sky-500/20 flex items-center justify-center font-black flex-shrink-0">1</div>
-                <p className="text-sm leading-relaxed"><Trans i18nKey="daw_reaper_step1">Go to <strong className="font-black">Options</strong> &gt; <strong className="font-black">Show resource path...</strong> in REAPER.</Trans></p>
+                <p className="text-sm leading-relaxed"><Trans i18nKey="daw_reaper_step1">Go to <strong className="font-black">Options</strong> {'>'} <strong className="font-black">Show resource path...</strong> in REAPER.</Trans></p>
               </div>
               <div className="flex gap-4">
                 <div className="w-8 h-8 rounded-full bg-sky-500/20 flex items-center justify-center font-black flex-shrink-0">2</div>
@@ -212,7 +212,7 @@ export const DAWGuide: React.FC<DAWGuideProps> = ({ theme, onClose }) => {
             <div className="space-y-4">
               <div className="flex gap-4">
                 <div className="w-8 h-8 rounded-full bg-green-500/20 flex items-center justify-center font-black flex-shrink-0">1</div>
-                <p className="text-sm leading-relaxed"><Trans i18nKey="daw_fl_studio_step1">In FL Studio, open the <strong className="font-black">Plugin Manager</strong> (Options &gt; Manage plugins).</Trans></p>
+                <p className="text-sm leading-relaxed"><Trans i18nKey="daw_fl_studio_step1">In FL Studio, open the <strong className="font-black">Plugin Manager</strong> (Options {'>'} Manage plugins).</Trans></p>
               </div>
               <div className="flex gap-4">
                 <div className="w-8 h-8 rounded-full bg-green-500/20 flex items-center justify-center font-black flex-shrink-0">2</div>
@@ -252,7 +252,7 @@ export const DAWGuide: React.FC<DAWGuideProps> = ({ theme, onClose }) => {
             <div className="space-y-4">
               <div className="flex gap-4">
                 <div className="w-8 h-8 rounded-full bg-orange-500/20 flex items-center justify-center font-black flex-shrink-0">1</div>
-                <p className="text-sm leading-relaxed"><Trans i18nKey="daw_cubase_step1">In Cubase, go to <strong className="font-black">Studio</strong> &gt; <strong className="font-black">Plug-in Manager</strong>.</Trans></p>
+                <p className="text-sm leading-relaxed"><Trans i18nKey="daw_cubase_step1">In Cubase, go to <strong className="font-black">Studio</strong> {'>'} <strong className="font-black">Plug-in Manager</strong>.</Trans></p>
               </div>
               <div className="flex gap-4">
                 <div className="w-8 h-8 rounded-full bg-orange-500/20 flex items-center justify-center font-black flex-shrink-0">2</div>
