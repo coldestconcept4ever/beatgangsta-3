@@ -1122,6 +1122,19 @@ export const enrichPluginLibrary = async (
       5. Provide a professional, helpful description for each.
       6. Return the results in the EXACT order of the list provided.
       CRITICAL: You MUST generate the descriptions and features in the following language: ${language}.
+      
+      RETURN YOUR ANSWER AS A VALID JSON OBJECT EXACTLY MATCHING THIS STRUCTURE:
+      {
+        "plugins": [
+          {
+            "reasoning": "Explanation for the category choice",
+            "category": "Creative FX",
+            "description": "...",
+            "features": ["Feature 1", "Feature 2"],
+            "parameters": ["Param 1", "Param 2"]
+          }
+        ]
+      }
     `;
     try {
       const response = await ai.models.generateContent({
@@ -1130,7 +1143,27 @@ export const enrichPluginLibrary = async (
         config: {
           customAction: 'enrich_library',
           temperature: 0.1,
-          responseMimeType: "application/json"
+          responseMimeType: "application/json",
+          responseSchema: {
+            type: "object",
+            properties: {
+              plugins: {
+                type: "array",
+                items: {
+                  type: "object",
+                  properties: {
+                    reasoning: { type: "string" },
+                    category: { type: "string" },
+                    description: { type: "string" },
+                    features: { type: "array", items: { type: "string" } },
+                    parameters: { type: "array", items: { type: "string" } }
+                  },
+                  required: ["reasoning", "category", "description", "features", "parameters"]
+                }
+              }
+            },
+            required: ["plugins"]
+          }
         }
       });
       const text = response.text?.trim() || '{"plugins": []}';
