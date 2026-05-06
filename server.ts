@@ -847,7 +847,8 @@ app.post("/api/upload-chunk-drive", express.raw({ type: 'application/octet-strea
         const userApiKey = req.headers['x-user-api-key'] as string;
         const apiKey = userApiKey || process.env.GEMINI_API_KEY;
         if (apiKey) {
-          tempFilePath = path.join(os.tmpdir(), `gemini-upload-${Date.now()}-${fileName}`);
+          const safeFileName = fileName ? (fileName as string).replace(/[^a-zA-Z0-9.-]/g, '_') : 'audio.mp3';
+          tempFilePath = path.join(os.tmpdir(), `gemini-upload-${Date.now()}-${safeFileName}`);
           
           // Download from Drive
           const driveStream = await drive.files.get({ fileId: fileId, alt: 'media' }, { responseType: 'stream' });
@@ -1012,7 +1013,8 @@ app.post("/api/upload-chunk", express.raw({ type: 'application/octet-stream', li
 
   // Write chunk to temp file directly to avoid memory bloat
 
-  const tempFilePath = path.join(os.tmpdir(), `${sessionId}-${fileName}`);
+  const safeFileName = fileName ? (fileName as string).replace(/[^a-zA-Z0-9.-]/g, '_') : 'audio.mp3';
+  const tempFilePath = path.join(os.tmpdir(), `${sessionId}-${safeFileName}`);
   fs.appendFileSync(tempFilePath, chunkData);
 
   // Track progress
