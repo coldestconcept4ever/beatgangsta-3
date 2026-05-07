@@ -3654,10 +3654,10 @@ The AI was unable to verify these parameters. Please investigate.`;
       }
 
       // Format stems context for Gemini
-      const stemsContext = uploadedStems.map(s => `Stem: ${s.file!.name} (Type: ${s.type === 'Other' && s.customType ? s.customType : s.type}) - URI: ${s.uri}`).join('\n');
+      const stemsContext = uploadedStems.map((s, idx) => `Track ${idx + 1}: ${s.file!.name} (Type: ${s.type === 'Other' && s.customType ? s.customType : s.type}) - URI: ${s.uri}`).join('\n');
       const fullContext = `The user has uploaded ${activeStems.length} stems for analysis.\n\n${stemsContext}\n\nUser Context: ${critiqueContext}`;
 
-      const critique = await getMixCritique(plugins, null, null, 'audio/mpeg', isGangstaVox, true, fullContext, null, finalReferenceTrack, referenceAudioBase64, null, referenceGeminiFileUri, i18n.language, uploadedStems, analogInstruments, analogHardware, isBusMode);
+      const critique = await getMixCritique(plugins, null, null, 'audio/mpeg', isGangstaVox, true, fullContext, null, finalReferenceTrack, referenceAudioBase64, null, referenceGeminiFileUri, i18n.language, uploadedStems, analogInstruments, analogHardware, isBusMode, multibandMode);
       critique.id = Math.random().toString(36).substr(2, 9);
       critique.audioBase64 = null;
       critique.mimeType = 'audio/mpeg';
@@ -3833,7 +3833,7 @@ The AI was unable to verify these parameters. Please investigate.`;
           }
         }
 
-        const critique = await getMixCritique(plugins, audioBase64, audioUrl, mimeType, isGangstaVox, hasStems, critiqueContext, null, finalReferenceTrack, referenceAudioBase64, geminiFileUri, referenceGeminiFileUri, i18n.language, undefined, analogInstruments, analogHardware, isBusMode);
+        const critique = await getMixCritique(plugins, audioBase64, audioUrl, mimeType, isGangstaVox, hasStems, critiqueContext, null, finalReferenceTrack, referenceAudioBase64, geminiFileUri, referenceGeminiFileUri, i18n.language, undefined, analogInstruments, analogHardware, isBusMode, multibandMode);
         critique.id = Math.random().toString(36).substr(2, 9);
         critique.audioBase64 = audioBase64;
         critique.geminiFileUri = geminiFileUri;
@@ -6461,6 +6461,7 @@ The AI was unable to verify these parameters. Please investigate.`;
                         onCorrectPlugin={handleCorrectPlugin}
                         onContactSupport={handleContactSupport}
                         onMinimize={() => handleMinimizeCritique(critique, idx)}
+                        isMultibandMode={multibandMode}
                       />
                     </motion.div>
                   )})}

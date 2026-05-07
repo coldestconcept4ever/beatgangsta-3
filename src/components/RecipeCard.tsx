@@ -13,6 +13,7 @@ import { getSpecificMixHelp, getGangstaVoxRecipe } from '../services/geminiServi
 import { MidiDraggableButton } from './MidiDraggableButton';
 import { isMidiCapable } from '../utils/midiGenerator';
 import { generateAllMidiZip } from '../utils/exportAllMidi';
+import { exportDawProject } from '../services/dawprojectExport';
 import { stopMidiPreview } from '../utils/midiPlayer';
 import { Play, Square } from 'lucide-react';
 import { ErrorModal } from './ErrorModal';
@@ -244,6 +245,31 @@ export const RecipeCard: React.FC<RecipeCardProps> = ({ recipe: initialRecipe, i
     }
   };
 
+
+
+  const handleExportDawProject = async () => {
+    try {
+      console.log("Starting DAW Project Export...");
+      setIsDownloadingAll(true);
+      const blob = await exportDawProject(recipe as unknown as import('../types').SavedRecipe);
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      const cleanTitle = recipe.title.replace(/[^a-z0-9]/gi, '_').toLowerCase();
+      link.download = `${cleanTitle}.dawproject`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+      console.log(`DAW Project Export complete`);
+    } catch (error) {
+      console.error("DAW Project Export failed:", error);
+      alert('Failed to export .dawproject');
+    } finally {
+      setIsDownloadingAll(false);
+    }
+  };
+
   const handleExportHTML = async () => {
     try {
       console.log("Starting HTML Export...");
@@ -425,6 +451,18 @@ export const RecipeCard: React.FC<RecipeCardProps> = ({ recipe: initialRecipe, i
             </button>
           )}
           <div className="relative">
+              <button 
+              id="btn-export-dawproject"
+              onClick={handleExportDawProject}
+              className={`w-full sm:w-auto px-8 py-4 mb-2 sm:mb-0 sm:mr-2 rounded-full font-black text-xs uppercase tracking-widest transition-all shadow-xl hover:scale-105 active:scale-95 flex items-center gap-2 justify-center ${
+                theme === 'coldest' || theme === 'chef-mode'
+                  ? 'bg-indigo-600 text-white hover:bg-indigo-700'
+                  : 'bg-indigo-500/20 text-indigo-400 hover:bg-indigo-500/30'
+              }`}
+            >
+              <FileCode className="w-4 h-4" />
+              DAWPROJECT
+            </button>
               <button 
               id="btn-export-html"
               onClick={handleExportHTML}

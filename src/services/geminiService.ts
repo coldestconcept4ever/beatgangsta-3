@@ -2148,7 +2148,8 @@ export const getMixCritique = async (
   uploadedStems?: any[], 
   analogInstruments: Hardware[] = [], 
   analogHardware: Hardware[] = [],
-  isBusMode: boolean = false
+  isBusMode: boolean = false,
+  isMultibandMode: boolean = false
 ): Promise<any> => {
   const ai = getAI();
   const pluginListStr = plugins.map(p => {
@@ -2160,6 +2161,15 @@ export const getMixCritique = async (
   }).join('\n');
   const hasApollo = analogHardware.some(h => h.name.toLowerCase().includes('apollo'));
   const apolloInst = analogHardware.find(h => h.name.toLowerCase().includes('apollo'))?.name || 'Apollo';
+  
+  const klevgrandStr = isMultibandMode ? `
+MULTIBAND PARALLEL PROCESSING INSTRUCTION (MANDATORY):
+The user has enabled "Multiband Mode" (also known as Gaffel mode). You MUST strictly incorporate advanced multi-band parallel processing for at least one critical channel or bus.
+- Analyze the user's plugin list (or DAW native tools like Klevgrand Gaffel, etc.) to figure out the best way to split the signal into frequency bands.
+- If the user has "Gaffel" or "Klevgrand - Gaffel" in their list, you MUST explicitly use it to split the bands in your FX chain.
+- In the 'actionPlan' -> 'recommendedChain' for the relevant stem/issue, first explicitly add a 'Plugin' bubble describing the crossover/routing method (e.g., "Klevgrand Gaffel Band Split"), and provide a detailed guide in its 'deepDive' explaining EXACTLY how the user should route and split the frequencies.
+- Then, list the subsequent processing plugins, explicitly setting the 'band' property on each plugin (e.g., "Low", "Mid", "High") to indicate which frequency split it is processing.
+` : '';
   const hardwareListStr = [...analogInstruments, ...analogHardware].map(h => {
     const pedalsStr = h.connectedPedals && h.connectedPedals.length > 0 
       ? ` (Connected Pedals: ${h.connectedPedals.map(p => `${p.vendor} ${p.name}`).join(', ')})` 
@@ -2195,6 +2205,7 @@ export const getMixCritique = async (
     ${contextStr}
     ${previousCritiqueStr}
     ${referenceTrackStr}
+    ${klevgrandStr}
     ${languageInstruction}
     ${PRO_Q_3_LAYOUT_PROMPT}
     ${GULLFOSS_SPEC_PROMPT}
@@ -2219,7 +2230,7 @@ export const getMixCritique = async (
     - 'strengths': An array of 4-6 specific things that sound good (e.g., specific frequency ranges, dynamic control, spatial imaging).
     - 'weaknesses': An array of 4-6 specific issues that need fixing, categorized by their impact on the mix.
     - 'actionPlan': A comprehensive array of actionable steps to fix the issues. ${hasStems && uploadedStems && uploadedStems.length > 0 ? `CRITICAL: Because the user uploaded ${uploadedStems.length} stems, you MUST provide EXACTLY one step per stem. For EACH stem's step, you MUST provide EXACTLY 4 plugins in the 'recommendedChain'. ALWAYS add an extra plugin (the 4th plugin) dedicated specifically to volume leveling/gain structuring so that the resulting stem sounds completely unified strictly in volume with the rest of the stems.` : "For each step, provide a robust chain of 2-4 plugins."} For each step, provide:
-      - 'targetStem': The exact name of the stem this step applies to (if stems were uploaded).
+      - 'targetStem': The exact name of the stem and track number this step applies to (e.g., 'Track 1: verse.wav').
       - 'issue': The specific problem.
       - 'solution': A detailed technical explanation of how to fix it.
       - 'recommendedChain': A robust chain of plugins from the user's list to use for this fix, with 'name', 'purpose', and 'deepDive' (an array of parameter objects - Provide EVERY available parameter found on the actual plugin interface, aim for 40-80 settings for complex modules - each with 'parameter', 'value', and 'explanation'). You can also optionally include 'band' and 'routing' properties for multiband or parallel processing. MATCH THE EXTREME DETAIL LEVEL OF A FULL BEAT RECIPE.
@@ -2237,7 +2248,7 @@ export const getMixCritique = async (
         items: {
           type: "OBJECT",
           properties: {
-            targetStem: { type: "STRING", description: "The exact name of the stem this step applies to (if stems were uploaded)." },
+            targetStem: { type: "STRING", description: "The exact name of the stem with its track number (e.g., 'Track 4: verse.wav')." },
             issue: { type: "STRING" },
             solution: { type: "STRING" },
             recommendedChain: {
