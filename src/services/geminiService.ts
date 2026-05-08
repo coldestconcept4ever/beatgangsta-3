@@ -2361,9 +2361,9 @@ The user has enabled "Multiband Mode" (also known as Gaffel mode). You MUST stri
   let result;
   try {
     result = postProcessResult(JSON.parse(sanitizeJSON(jsonStr)));
-  } catch (e) {
+  } catch (e: any) {
     console.error("Failed to parse AI response as JSON in getMixCritique", e);
-    throw new Error("The architect's response was not in the correct format. Please try again!");
+    throw new Error(`The architect's response was not in the correct format. JSON Parse Error: ${e.message}. Raw: ${jsonStr.substring(0, 100)}...`);
   }
   result.id = crypto.randomUUID();
   result.isGangstaVox = isGangstaVox;

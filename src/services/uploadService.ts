@@ -1,25 +1,10 @@
 export const uploadFileChunked = async (uploadFile: File): Promise<{ url: string, fileId: string, geminiFileUri?: string, geminiError?: string } | null> => {
-  console.log("[UPLOAD_VERSION_V4] Starting resumable Gemini upload...");
+  console.log("[UPLOAD_VERSION_V3] Starting 1MB chunked upload...");
   let uploadedData: { url: string, fileId: string, geminiFileUri?: string, geminiError?: string } | null = null;
-  const chunkSize = 1048576 * 4; // 4MB chunks
+  const chunkSize = 1024 * 1024; // 1MB chunks
   const totalChunks = Math.ceil(uploadFile.size / chunkSize);
   const sessionId = Math.random().toString(36).substring(2, 15);
   
-  let geminiUploadUrl = "";
-  try {
-    const userApiKey = localStorage.getItem('userApiKey') || '';
-    const initRes = await fetch(`/api/upload/init-gemini?fileName=${encodeURIComponent(uploadFile.name)}&mimeType=${encodeURIComponent(uploadFile.type || 'audio/mpeg')}&totalSize=${uploadFile.size}`, {
-       method: 'POST',
-       headers: { 'x-user-api-key': userApiKey }
-    });
-    if (initRes.ok) {
-       const initData = await initRes.json();
-       geminiUploadUrl = initData.uploadUrl || "";
-    }
-  } catch (err) {
-    console.warn("Could not init geminiUploadUrl", err);
-  }
-
   for (let i = 0; i < totalChunks; i++) {
     const offset = i * chunkSize;
     const chunk = uploadFile.slice(offset, offset + chunkSize);
@@ -33,9 +18,6 @@ export const uploadFileChunked = async (uploadFile: File): Promise<{ url: string
         const headers: Record<string, string> = { 'Content-Type': 'application/octet-stream' };
         
         let url = `/api/upload-chunk?fileName=${encodeURIComponent(uploadFile.name)}&mimeType=${encodeURIComponent(uploadFile.type || 'audio/mpeg')}&chunkIndex=${i}&totalChunks=${totalChunks}&sessionId=${sessionId}&offset=${offset}&totalSize=${uploadFile.size}`;
-        if (geminiUploadUrl) {
-          url += `&geminiUploadUrl=${encodeURIComponent(geminiUploadUrl)}`;
-        }
 
         const response = await fetch(url, {
           method: 'POST',
@@ -77,12 +59,6 @@ export const uploadFileChunked = async (uploadFile: File): Promise<{ url: string
     }
   }
   
-  // If we used direct Gemini proxy, we won't get fileId/url from Drive, but the upload completed.
-  if (!uploadedData && geminiUploadUrl && totalChunks > 0) {
-     console.warn("Upload finished but uploadedData is null (expected if proxying to Gemini only).");
-     uploadedData = { url: '', fileId: '' }; // Fallback
-  }
-
   if (!uploadedData) {
     throw new Error("Upload incomplete - no final response from server.");
   }

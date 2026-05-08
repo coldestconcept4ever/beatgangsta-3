@@ -3684,7 +3684,7 @@ The AI was unable to verify these parameters. Please investigate.`;
         setCreditError(err.message);
         setShowBuyCreditsModal(true);
       } else {
-        setError("Failed to analyze stems. Please try again.");
+        setError(`Failed to analyze stems: ${err?.message || String(err)}`);
       }
     } finally {
       clearTimeout(timeoutId);
