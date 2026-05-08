@@ -488,7 +488,7 @@ app.post("/api/test-schema", express.json(), async (req, res) => {
     
     // We expect the payload to be EXACTLY the model contents config
     const response = await genAI.models.generateContent({
-      model: req.body.model || "gemini-2.5-flash",
+      model: req.body.model || "gemini-1.5-pro",
       contents: req.body.contents,
       config: req.body.config
     });
@@ -3931,7 +3931,7 @@ if (process.env.NODE_ENV !== 'production') {
         }
 
         const response = await genAI.models.generateContent({
-          model: model || "gemini-3-flash-preview",
+          model: model || "gemini-1.5-pro",
           contents,
           config: finalConfig
         });

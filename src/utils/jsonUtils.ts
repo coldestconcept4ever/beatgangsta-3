@@ -1,5 +1,8 @@
+import { jsonrepair } from 'jsonrepair';
+
 /**
- * Sanitizes a JSON string by removing common LLM artifacts like markdown code blocks.
+ * Sanitizes a JSON string by removing common LLM artifacts like markdown code blocks,
+ * and uses jsonrepair to fix structural issues (like missing commas or truncated elements).
  */
 export const sanitizeJSON = (jsonString: string): string => {
   if (!jsonString) return '{}';
@@ -23,7 +26,7 @@ export const sanitizeJSON = (jsonString: string): string => {
   // Trim whitespace
   sanitized = sanitized.trim();
   
-  // Try to extract the outermost {} or []
+  // Try to extract the outermost {} or [] safely
   const firstBrace = sanitized.indexOf('{');
   const lastBrace = sanitized.lastIndexOf('}');
   const firstBracket = sanitized.indexOf('[');
@@ -32,17 +35,23 @@ export const sanitizeJSON = (jsonString: string): string => {
   let startIdx = -1;
   let endIdx = -1;
 
-  if (firstBrace !== -1 && lastBrace !== -1 && (firstBracket === -1 || firstBrace < firstBracket)) {
+  if (firstBrace !== -1 && (firstBracket === -1 || firstBrace < firstBracket)) {
     startIdx = firstBrace;
-    endIdx = lastBrace;
-  } else if (firstBracket !== -1 && lastBracket !== -1) {
+    endIdx = lastBrace !== -1 ? lastBrace : sanitized.length - 1;
+  } else if (firstBracket !== -1) {
     startIdx = firstBracket;
-    endIdx = lastBracket;
+    endIdx = lastBracket !== -1 ? lastBracket : sanitized.length - 1;
   }
 
-  if (startIdx !== -1 && endIdx !== -1) {
+  if (startIdx !== -1) {
     sanitized = sanitized.substring(startIdx, endIdx + 1);
   }
   
-  return sanitized;
+  try {
+    // Let jsonrepair handle trailing commas, unclosed brackets, etc.
+    return jsonrepair(sanitized);
+  } catch (err) {
+    console.error("jsonrepair failed, returning best effort:", err);
+    return sanitized;
+  }
 };
