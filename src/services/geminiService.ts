@@ -2330,10 +2330,6 @@ The user has enabled "Multiband Mode" (also known as Gaffel mode). You MUST stri
     parts.push({ inlineData: { data: referenceAudioBase64, mimeType: mimeType } });
   }
   parts.push({ text: prompt });
-  const tools: any[] = [];
-  if (referenceTrack && !referenceAudioBase64) {
-    tools.push({ googleSearch: {} });
-  }
   let response;
   try {
     response = await ai.models.generateContent({
@@ -2343,7 +2339,6 @@ The user has enabled "Multiband Mode" (also known as Gaffel mode). You MUST stri
       },
       config: {
         customAction: hasStems ? 'stems_critique' : 'critique',
-        tools: tools.length > 0 ? tools : undefined,
         responseMimeType: "application/json",
         responseSchema: schemaObject,
         maxOutputTokens: 8192,
