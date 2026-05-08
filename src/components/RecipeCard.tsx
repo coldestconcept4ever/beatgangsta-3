@@ -13,7 +13,6 @@ import { getSpecificMixHelp, getGangstaVoxRecipe } from '../services/geminiServi
 import { MidiDraggableButton } from './MidiDraggableButton';
 import { isMidiCapable } from '../utils/midiGenerator';
 import { generateAllMidiZip } from '../utils/exportAllMidi';
-import { exportDawProject } from '../services/dawprojectExport';
 import { stopMidiPreview } from '../utils/midiPlayer';
 import { Play, Square } from 'lucide-react';
 import { ErrorModal } from './ErrorModal';
@@ -37,7 +36,6 @@ interface RecipeCardProps {
 }
 
 import { PluginBubble } from './PluginBubble';
-import { PluginChainRenderer } from './PluginChainRenderer';
 // ...
 export const RecipeCard: React.FC<RecipeCardProps> = ({ recipe: initialRecipe, isSaved, onSave, theme = 'coldest', dawType, plugins = [], analogHardware = [], drumKits = [], onCloudBackupRecipe, geminiFileUri, onLogReceipt, onCorrectPlugin, onContactSupport, onMinimize }) => {
   const { t, i18n } = useTranslation();
@@ -245,31 +243,6 @@ export const RecipeCard: React.FC<RecipeCardProps> = ({ recipe: initialRecipe, i
     }
   };
 
-
-
-  const handleExportDawProject = async () => {
-    try {
-      console.log("Starting DAW Project Export...");
-      setIsDownloadingAll(true);
-      const blob = await exportDawProject(recipe as unknown as import('../types').SavedRecipe);
-      const url = URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      link.href = url;
-      const cleanTitle = recipe.title.replace(/[^a-z0-9]/gi, '_').toLowerCase();
-      link.download = `${cleanTitle}.dawproject`;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      URL.revokeObjectURL(url);
-      console.log(`DAW Project Export complete`);
-    } catch (error) {
-      console.error("DAW Project Export failed:", error);
-      alert('Failed to export .dawproject');
-    } finally {
-      setIsDownloadingAll(false);
-    }
-  };
-
   const handleExportHTML = async () => {
     try {
       console.log("Starting HTML Export...");
@@ -452,18 +425,6 @@ export const RecipeCard: React.FC<RecipeCardProps> = ({ recipe: initialRecipe, i
           )}
           <div className="relative">
               <button 
-              id="btn-export-dawproject"
-              onClick={handleExportDawProject}
-              className={`w-full sm:w-auto px-8 py-4 mb-2 sm:mb-0 sm:mr-2 rounded-full font-black text-xs uppercase tracking-widest transition-all shadow-xl hover:scale-105 active:scale-95 flex items-center gap-2 justify-center ${
-                theme === 'coldest' || theme === 'chef-mode'
-                  ? 'bg-indigo-600 text-white hover:bg-indigo-700'
-                  : 'bg-indigo-500/20 text-indigo-400 hover:bg-indigo-500/30'
-              }`}
-            >
-              <FileCode className="w-4 h-4" />
-              DAWPROJECT
-            </button>
-              <button 
               id="btn-export-html"
               onClick={handleExportHTML}
               className={`w-full sm:w-auto px-8 py-4 rounded-full font-black text-xs uppercase tracking-widest transition-all shadow-xl hover:scale-105 active:scale-95 flex items-center gap-2 justify-center ${
@@ -599,18 +560,22 @@ export const RecipeCard: React.FC<RecipeCardProps> = ({ recipe: initialRecipe, i
               {Array.isArray(track.fxPlugins) && track.fxPlugins?.length > 0 && (
                 <div className="mt-6 space-y-4">
                   <h5 className={`text-[8px] font-black uppercase tracking-widest ${theme === 'coldest' ? 'text-sky-400' : 'opacity-60'}`}>{t('fx_deep_dive')}</h5>
-                  {Array.isArray(track.fxPlugins) && (
-                    <PluginChainRenderer 
-                      plugins={track.fxPlugins}
-                      type="track"
-                      trackIdx={idx}
-                      theme={theme}
-                      regeneratingPluginId={regeneratingPluginId}
-                      handleRegenerate={handleRegenerate}
-                      onCorrectPlugin={onCorrectPlugin}
+                  {Array.isArray(track.fxPlugins) && track.fxPlugins.map((dive, dIdx) => (
+                    <PluginBubble 
+                      key={dIdx}
+                      name={dive.name}
+                      purpose={dive.purpose}
+                      deepDive={dive.deepDive}
+                      band={dive.band}
+                      routing={dive.routing}
+                      isRegenerating={regeneratingPluginId === `track-${idx}-${dIdx}`}
+                      onRegenerate={() => handleRegenerate(dive, idx, dIdx, 'track')}
+                      onCorrect={onCorrectPlugin}
                       onContactSupport={onContactSupport}
+                      theme={theme}
+                      className={theme === 'coldest' ? 'bg-purple-900/40 border-purple-500/40 shadow-md' : 'bg-purple-900/20 border-purple-500/30'}
                     />
-                  )}
+                  ))}
                 </div>
               )}
             </div>
@@ -671,20 +636,21 @@ export const RecipeCard: React.FC<RecipeCardProps> = ({ recipe: initialRecipe, i
                 {layer.loopGuide && <p className="text-xs font-bold opacity-90 mb-4">{layer.loopGuide}</p>}
                 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {Array.isArray(layer.fxPlugins) && (
-                    <div className="col-span-full">
-                      <PluginChainRenderer 
-                        plugins={layer.fxPlugins}
-                        type="layer"
-                        trackIdx={idx}
-                        theme={theme}
-                        regeneratingPluginId={regeneratingPluginId}
-                        handleRegenerate={handleRegenerate}
-                        onCorrectPlugin={onCorrectPlugin}
-                        onContactSupport={onContactSupport}
-                      />
-                    </div>
-                  )}
+                  {Array.isArray(layer.fxPlugins) && layer.fxPlugins.map((dive, dIdx) => (
+                    <PluginBubble 
+                      key={dIdx}
+                      name={dive.name}
+                      purpose={dive.purpose}
+                      deepDive={dive.deepDive}
+                      band={dive.band}
+                      routing={dive.routing}
+                      isRegenerating={regeneratingPluginId === `layer-${idx}-${dIdx}`}
+                      onRegenerate={() => handleRegenerate(dive, idx, dIdx, 'layer')}
+                      onCorrect={onCorrectPlugin}
+                      onContactSupport={onContactSupport}
+                      theme={theme}
+                    />
+                  ))}
                 </div>
                 {layer.busSend && (
                   <div className="mt-4">
@@ -723,18 +689,22 @@ export const RecipeCard: React.FC<RecipeCardProps> = ({ recipe: initialRecipe, i
                 </div>
                 
                 <div className="space-y-4">
-                  {Array.isArray(bus.fxPlugins) && (
-                    <PluginChainRenderer 
-                      plugins={bus.fxPlugins}
-                      type="bus"
-                      trackIdx={idx}
-                      theme={theme}
-                      regeneratingPluginId={regeneratingPluginId}
-                      handleRegenerate={handleRegenerate}
-                      onCorrectPlugin={onCorrectPlugin}
+                  {Array.isArray(bus.fxPlugins) && bus.fxPlugins.map((dive, dIdx) => (
+                    <PluginBubble 
+                      key={dIdx}
+                      name={dive.name}
+                      purpose={dive.purpose}
+                      deepDive={dive.deepDive}
+                      band={dive.band}
+                      routing={dive.routing}
+                      isRegenerating={regeneratingPluginId === `bus-${idx}-${dIdx}`}
+                      onRegenerate={() => handleRegenerate(dive, idx, dIdx, 'bus')}
+                      onCorrect={onCorrectPlugin}
                       onContactSupport={onContactSupport}
+                      theme={theme}
+                      className={theme === 'coldest' ? 'bg-black/40 border-orange-500/20' : 'bg-black/30 border-white/10'}
                     />
-                  )}
+                  ))}
                 </div>
               </div>
             ))}
@@ -746,20 +716,22 @@ export const RecipeCard: React.FC<RecipeCardProps> = ({ recipe: initialRecipe, i
         <div className="space-y-6 mb-8">
           <h4 className={`text-sm font-black uppercase tracking-widest ${theme === 'coldest' ? 'text-emerald-400 opacity-100' : 'opacity-40'}`}>{t('master_chain')}</h4>
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {Array.isArray(recipe.masterPlugins) && (
-              <div className="col-span-full">
-                <PluginChainRenderer 
-                  plugins={recipe.masterPlugins}
-                  type="master"
-                  trackIdx={0}
-                  theme={theme}
-                  regeneratingPluginId={regeneratingPluginId}
-                  handleRegenerate={handleRegenerate}
-                  onCorrectPlugin={onCorrectPlugin}
-                  onContactSupport={onContactSupport}
-                />
-              </div>
-            )}
+            {Array.isArray(recipe.masterPlugins) && recipe.masterPlugins.map((dive, idx) => (
+              <PluginBubble 
+                key={idx}
+                name={dive.name}
+                purpose={dive.purpose}
+                deepDive={dive.deepDive}
+                band={dive.band}
+                routing={dive.routing}
+                isRegenerating={regeneratingPluginId === `master-0-${idx}`}
+                onRegenerate={() => handleRegenerate(dive, 0, idx, 'master')}
+                onCorrect={onCorrectPlugin}
+                onContactSupport={onContactSupport}
+                theme={theme}
+                className={theme === 'coldest' ? 'bg-emerald-950/60 border-emerald-500/40 shadow-md' : 'bg-emerald-900/10 border-emerald-500/20'}
+              />
+            ))}
           </div>
         </div>
       )}
@@ -900,20 +872,20 @@ export const RecipeCard: React.FC<RecipeCardProps> = ({ recipe: initialRecipe, i
                 <div className="space-y-4">
                   <h5 className={`text-[10px] font-black uppercase tracking-widest mb-4 ${theme === 'coldest' ? 'text-sky-400' : 'opacity-30'}`}>{t('tracking_inserts')}</h5>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {Array.isArray(recipe.gangstaVox.trackingChain.inserts) && (
-                      <div className="col-span-full">
-                        <PluginChainRenderer 
-                          plugins={recipe.gangstaVox.trackingChain.inserts}
-                          type="tracking-insert"
-                          trackIdx={0}
-                          theme={theme}
-                          regeneratingPluginId={regeneratingPluginId}
-                          handleRegenerate={handleRegenerate}
-                          onCorrectPlugin={onCorrectPlugin}
-                          onContactSupport={onContactSupport}
-                        />
-                      </div>
-                    )}
+                    {Array.isArray(recipe.gangstaVox.trackingChain.inserts) && recipe.gangstaVox.trackingChain.inserts?.map((dive, dIdx) => (
+                      <PluginBubble 
+                        key={dIdx}
+                        name={dive.name}
+                        purpose={dive.purpose}
+                        deepDive={dive.deepDive}
+                        isRegenerating={regeneratingPluginId === `tracking-insert-0-${dIdx}`}
+                        onRegenerate={() => handleRegenerate(dive, 0, dIdx, 'tracking-insert')}
+                        onCorrect={onCorrectPlugin}
+                        onContactSupport={onContactSupport}
+                        theme={theme}
+                        className={theme === 'coldest' ? 'bg-sky-900/40 border-sky-500/40 shadow-md' : 'bg-white/5 border-white/10'}
+                      />
+                    ))}
                   </div>
                 </div>
 
@@ -922,18 +894,20 @@ export const RecipeCard: React.FC<RecipeCardProps> = ({ recipe: initialRecipe, i
                     <div>
                       <h5 className={`text-[10px] font-black uppercase tracking-widest mb-4 ${theme === 'coldest' ? 'text-sky-400' : 'opacity-30'}`}>AUX 1 (Reverb/Comfort/Parallel)</h5>
                       <div className="flex flex-col gap-3">
-                        {recipe.gangstaVox.trackingChain.aux1 && (
-                          <PluginChainRenderer 
-                            plugins={recipe.gangstaVox.trackingChain.aux1}
-                            type="vocal-track-fx"
-                            trackIdx={0}
-                            theme={theme}
-                            regeneratingPluginId={regeneratingPluginId}
-                            handleRegenerate={handleRegenerate}
-                            onCorrectPlugin={onCorrectPlugin}
+                        {recipe.gangstaVox.trackingChain.aux1?.map((dive, dIdx) => (
+                          <PluginBubble 
+                            key={dIdx}
+                            name={dive.name}
+                            purpose={dive.purpose}
+                            deepDive={dive.deepDive}
+                            isRegenerating={regeneratingPluginId === `tracking-aux1-0-${dIdx}`}
+                            onRegenerate={() => handleRegenerate(dive, 0, dIdx, 'vocal-track-fx')} 
+                            onCorrect={onCorrectPlugin}
                             onContactSupport={onContactSupport}
+                            theme={theme}
+                            className={theme === 'coldest' ? 'bg-sky-900/40 border-sky-500/40 shadow-md' : 'bg-white/5 border-white/10'}
                           />
-                        )}
+                        ))}
                       </div>
                     </div>
                   )}
@@ -941,18 +915,20 @@ export const RecipeCard: React.FC<RecipeCardProps> = ({ recipe: initialRecipe, i
                     <div>
                       <h5 className={`text-[10px] font-black uppercase tracking-widest mb-4 ${theme === 'coldest' ? 'text-sky-400' : 'opacity-30'}`}>AUX 2 (Delay/FX)</h5>
                       <div className="flex flex-col gap-3">
-                        {recipe.gangstaVox.trackingChain.aux2 && (
-                          <PluginChainRenderer 
-                            plugins={recipe.gangstaVox.trackingChain.aux2}
-                            type="vocal-track-fx"
-                            trackIdx={0}
-                            theme={theme}
-                            regeneratingPluginId={regeneratingPluginId}
-                            handleRegenerate={handleRegenerate}
-                            onCorrectPlugin={onCorrectPlugin}
+                        {recipe.gangstaVox.trackingChain.aux2?.map((dive, dIdx) => (
+                          <PluginBubble 
+                            key={dIdx}
+                            name={dive.name}
+                            purpose={dive.purpose}
+                            deepDive={dive.deepDive}
+                            isRegenerating={regeneratingPluginId === `tracking-aux2-0-${dIdx}`}
+                            onRegenerate={() => handleRegenerate(dive, 0, dIdx, 'vocal-track-fx')}
+                            onCorrect={onCorrectPlugin}
                             onContactSupport={onContactSupport}
+                            theme={theme}
+                            className={theme === 'coldest' ? 'bg-sky-900/40 border-sky-500/40 shadow-md' : 'bg-white/5 border-white/10'}
                           />
-                        )}
+                        ))}
                       </div>
                     </div>
                   )}
@@ -1075,20 +1051,20 @@ export const RecipeCard: React.FC<RecipeCardProps> = ({ recipe: initialRecipe, i
                     <div className="mb-6">
                       <h5 className={`text-[10px] font-black uppercase tracking-widest mb-4 ${theme === 'coldest' ? 'text-sky-400' : 'opacity-30'}`}>{t('processing_chain')}</h5>
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                        {Array.isArray(layer.fxPlugins) && (
-                          <div className="col-span-full">
-                            <PluginChainRenderer 
-                              plugins={layer.fxPlugins}
-                              type="vocal-track-fx"
-                              trackIdx={idx}
-                              theme={theme}
-                              regeneratingPluginId={regeneratingPluginId}
-                              handleRegenerate={handleRegenerate}
-                              onCorrectPlugin={onCorrectPlugin}
-                              onContactSupport={onContactSupport}
-                            />
-                          </div>
-                        )}
+                        {Array.isArray(layer.fxPlugins) && layer.fxPlugins.map((dive, dIdx) => (
+                        <PluginBubble 
+                          key={dIdx}
+                          name={dive.name}
+                          purpose={dive.purpose}
+                          deepDive={dive.deepDive}
+                          isRegenerating={regeneratingPluginId === `vocal-track-fx-${idx}-${dIdx}`}
+                          onRegenerate={() => handleRegenerate(dive, idx, dIdx, 'vocal-track-fx')}
+                          onCorrect={onCorrectPlugin}
+                          onContactSupport={onContactSupport}
+                          theme={theme}
+                          className={theme === 'coldest' ? 'bg-purple-900/40 border-purple-500/40 shadow-md' : 'bg-white/5 border-white/10'}
+                        />
+                        ))}
                       </div>
                     </div>
                   )}

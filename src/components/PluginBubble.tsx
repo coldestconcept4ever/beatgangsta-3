@@ -56,16 +56,6 @@ export const PluginBubble: React.FC<PluginBubbleProps> = ({ name, purpose, deepD
       )}
       <div className="flex justify-between items-start mb-2">
         <div className="flex items-center gap-2">
-          {band && (
-            <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
-              band.toLowerCase().includes('low') ? 'bg-indigo-100 text-indigo-700' :
-              band.toLowerCase().includes('mid') ? 'bg-amber-100 text-amber-700' :
-              band.toLowerCase().includes('high') ? 'bg-rose-100 text-rose-700' :
-              'bg-emerald-100 text-emerald-700'
-            }`}>
-              {band}
-            </span>
-          )}
           <h6 className="font-black text-xs">{name}</h6>
           <div className="flex items-center gap-1">
             <button 

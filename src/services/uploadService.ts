@@ -17,7 +17,7 @@ export const uploadFileChunked = async (uploadFile: File): Promise<{ url: string
       try {
         const headers: Record<string, string> = { 'Content-Type': 'application/octet-stream' };
         
-        let url = `/api/upload-chunk?fileName=${encodeURIComponent(uploadFile.name)}&mimeType=${encodeURIComponent(uploadFile.type || 'audio/mpeg')}&chunkIndex=${i}&totalChunks=${totalChunks}&sessionId=${sessionId}&offset=${offset}&totalSize=${uploadFile.size}`;
+        let url = `/api/upload-chunk?fileName=${encodeURIComponent(uploadFile.name)}&mimeType=${encodeURIComponent(uploadFile.type)}&chunkIndex=${i}&totalChunks=${totalChunks}&sessionId=${sessionId}&offset=${offset}&totalSize=${uploadFile.size}`;
 
         const response = await fetch(url, {
           method: 'POST',

@@ -268,7 +268,7 @@ export const validateApiKey = async (key: string): Promise<{valid: boolean, mess
       return { valid: false, message: "Please enter an API key." };
     }
     const payload = {
-      model: "gemini-2.5-flash",
+      model: "gemini-3-flash-preview",
       contents: "hi",
       userApiKey: cleanKey
     };
@@ -396,7 +396,7 @@ export const regeneratePlugin = async (
     required: ["name", "purpose", "deepDive"]
   };
   const response = await ai.models.generateContent({
-    model: "gemini-2.5-flash",
+    model: "gemini-3-flash-preview",
     contents: { parts: [{ text: prompt + "\\n\\nCRITICAL: You MUST return EXACTLY valid JSON matching this schema:\\n" + JSON.stringify(schemaObj, null, 2) }] },
     config: {
       customAction: 'regenerate_plugin',
@@ -425,7 +425,7 @@ export const categorizeAndCompareLibraries = async (senderPlugins: VSTPlugin[], 
     For each category, list the plugins the Sender has that I AM MISSING (similar names don't count as missing).
   `;
   const response = await ai.models.generateContent({
-    model: "gemini-2.5-flash",
+    model: "gemini-3-flash-preview",
     contents: { parts: [{ text: prompt }] },
     config: {
       customAction: 'compare_libraries',
@@ -645,8 +645,7 @@ export const getUnifiedRecipeSchema = () => {
                         parameter: { type: Type.STRING }, value: { type: Type.STRING }, explanation: { type: Type.STRING } },
                       required: ["parameter", "value", "explanation"]
                     }
-                  },
-                  band: { type: Type.STRING }
+                  }
                 },
                 required: ["name", "purpose", "deepDive"]
               }
@@ -1122,48 +1121,15 @@ export const enrichPluginLibrary = async (
       5. Provide a professional, helpful description for each.
       6. Return the results in the EXACT order of the list provided.
       CRITICAL: You MUST generate the descriptions and features in the following language: ${language}.
-      
-      RETURN YOUR ANSWER AS A VALID JSON OBJECT EXACTLY MATCHING THIS STRUCTURE:
-      {
-        "plugins": [
-          {
-            "reasoning": "Explanation for the category choice",
-            "category": "Creative FX",
-            "description": "...",
-            "features": ["Feature 1", "Feature 2"],
-            "parameters": ["Param 1", "Param 2"]
-          }
-        ]
-      }
     `;
     try {
       const response = await ai.models.generateContent({
-        model: "gemini-2.5-flash", // Use standard Flash for high-volume research
+        model: "gemini-3-flash-preview", // Use standard Flash for high-volume research
         contents: { parts: [{ text: prompt }] },
         config: {
           customAction: 'enrich_library',
           temperature: 0.1,
-          responseMimeType: "application/json",
-          responseSchema: {
-            type: "object",
-            properties: {
-              plugins: {
-                type: "array",
-                items: {
-                  type: "object",
-                  properties: {
-                    reasoning: { type: "string" },
-                    category: { type: "string" },
-                    description: { type: "string" },
-                    features: { type: "array", items: { type: "string" } },
-                    parameters: { type: "array", items: { type: "string" } }
-                  },
-                  required: ["reasoning", "category", "description", "features", "parameters"]
-                }
-              }
-            },
-            required: ["plugins"]
-          }
+          responseMimeType: "application/json"
         }
       });
       const text = response.text?.trim() || '{"plugins": []}';
@@ -1174,6 +1140,7 @@ export const enrichPluginLibrary = async (
         console.error("Failed to parse AI response as JSON in processBatch", e);
         result = { plugins: [] };
       }
+      const researchResults: VSTPlugin[] = [];
       if (result.plugins && Array.isArray(result.plugins)) {
         pluginsToResearch.forEach((plugin, index) => {
           const details = result.plugins[index];
@@ -1283,7 +1250,7 @@ export const enrichPluginLibrary = async (
     }
   }
   // Final check: if more than 80% of plugins failed to analyze, throw an error
-  const failedCount = enrichedPlugins.filter(p => p?.description?.includes("Could not analyze")).length;
+  const failedCount = enrichedPlugins.filter(p => p.description?.includes("Could not analyze")).length;
   if (failedCount > plugins.length * 0.8 && plugins.length > 5) {
     throw new Error("RESEARCH_FAILED: The AI research process failed for most of your plugins. This is usually due to API rate limits. Please try again in a few minutes or use a smaller list.");
   }
@@ -1333,7 +1300,7 @@ export const verifyAndCorrectPlugin = async (
     }
   `;
   const response = await ai.models.generateContent({
-    model: "gemini-2.5-flash",
+    model: "gemini-3-flash-preview",
     contents: { parts: [{ text: prompt }] },
     config: {
       customAction: 'verify_plugin',
@@ -1392,7 +1359,7 @@ export const researchPluginParameters = async (plugin: VSTPlugin, language: stri
     ${getLanguageInstruction(language)}
   `;
   const response = await ai.models.generateContent({
-    model: "gemini-2.5-flash",
+    model: "gemini-3-flash-preview",
     contents: { parts: [{ text: prompt }] },
     config: {
       customAction: 'research_plugin',
@@ -1451,7 +1418,7 @@ export const generateStructuralBlueprint = async (searchQuery: string, language:
     Return ONLY the JSON object.
   `;
   const response = await ai.models.generateContent({
-    model: "gemini-2.5-flash",
+    model: "gemini-3-flash-preview",
     contents: { parts: [{ text: prompt }] },
     config: {
       customAction: 'structural_blueprint',
@@ -1464,7 +1431,7 @@ export const generateStructuralBlueprint = async (searchQuery: string, language:
     return {} as StructuralBlueprint;
   }
 };
-export const getBeatRecommendations = async (plugins: VSTPlugin[], analogInstruments: Hardware[] = [], analogHardware: Hardware[] = [], drumKits: Hardware[] = [], excludeAnalog: boolean = false, dawType: string | null = null, starredPlugins: string[] = [], isGangstaVox: boolean = false, language: string = 'en', isMultibandMode: boolean = false): Promise<RecommendationResponse> => {
+export const getBeatRecommendations = async (plugins: VSTPlugin[], analogInstruments: Hardware[] = [], analogHardware: Hardware[] = [], drumKits: Hardware[] = [], excludeAnalog: boolean = false, dawType: string | null = null, starredPlugins: string[] = [], isGangstaVox: boolean = false, language: string = 'en'): Promise<RecommendationResponse> => {
   const ai = getAI();
   const pluginListStr = plugins.map(p => {
     let str = `${p.vendor} - ${p.name} (${p.type})`;
@@ -1478,15 +1445,6 @@ export const getBeatRecommendations = async (plugins: VSTPlugin[], analogInstrum
   const starredStr = starredPlugins.length > 0 ? `\nCRITICAL: The user has STARRED (favorited) the following plugins. You MUST prioritize using these plugins in your recipes whenever possible:\n${starredPlugins.join(', ')}` : '';
   const hasSphereMic = analogHardware.some(h => ['Sphere DLX', 'Sphere LX', 'L22'].includes(h.name) || h.name.toLowerCase() === 'l22' || h.name.toLowerCase().includes('townsend'));
   const sphereMicStr = hasSphereMic ? `\nCRITICAL: The user owns a Universal Audio Sphere (DLX/LX) or Townsend Labs L22 microphone. If the recipe involves a vocal tracking chain, you MUST assign the 'UAD Sphere Mic Collection', 'Ocean Way Mic Collection', or 'Bill Putnam Mic Collection' plugin as the VERY FIRST insert plugin on the vocal channel tracking chain. You MUST specifically select a mic model inside it based on the vibe searched. After the mic collection plugin, you can add up to 3 more plugins.` : '';
-  const klevgrandStr = isMultibandMode ? `
-MULTIBAND PARALLEL PROCESSING INSTRUCTION (MANDATORY):
-The user has enabled "Multiband Mode" (also known as Gaffel mode). You MUST strictly incorporate advanced multi-band parallel processing for at least one critical channel.
-- Analyze the user's plugin list (or DAW native tools like Reaper's ReaEQ/ReaXcomp/Sends, or T-RackS Quad series, Klevgrand Gaffel, etc.) to figure out the best way to split the signal into frequency bands.
-- If the user has "Gaffel" or "Klevgrand - Gaffel" in their list, you MUST explicitly use it to split the bands in your FX chain.
-- First, explicitly add a 'Plugin' bubble in the fxPlugins list describing the crossover/routing method (e.g., "Klevgrand Gaffel Band Split", "DAW Routing Multiband Split", etc.), and provide a detailed guide in its 'deepDive' explaining EXACTLY how the user should route and split the frequencies.
-- Then, list the subsequent processing plugins, setting the 'band' property on each fxPlugin (e.g., "Low", "Mid", "High") to explicitly indicate which frequency split it is processing.
-- Provide tailored parameter settings in the 'deepDive' for the plugins on each individual band to explain the parallel processing strategy.
-` : '';
   const languageInstruction = getLanguageInstruction(language);
   const prompt = isGangstaVox ? `
     Analyze my VST plugin list and suggest 1 high-level, extremely detailed "Vocal FX Chain Recipe" for the craziest vocal mix.
@@ -1498,7 +1456,6 @@ The user has enabled "Multiband Mode" (also known as Gaffel mode). You MUST stri
     ${dawStr}
     ${starredStr}
     ${sphereMicStr}
-    ${klevgrandStr}
     ${languageInstruction}
     ${PRO_Q_3_LAYOUT_PROMPT}
     ${GULLFOSS_SPEC_PROMPT}
@@ -1537,7 +1494,6 @@ The user has enabled "Multiband Mode" (also known as Gaffel mode). You MUST stri
     ${dawStr}
     ${starredStr}
     ${sphereMicStr}
-    ${klevgrandStr}
     ${languageInstruction}
     ${PRO_Q_3_LAYOUT_PROMPT}
     ${GULLFOSS_SPEC_PROMPT}
@@ -1577,7 +1533,7 @@ The user has enabled "Multiband Mode" (also known as Gaffel mode). You MUST stri
     ${ADVANCED_MIDI_PROMPT}
   `;
   const response = await ai.models.generateContent({
-    model: 'gemini-2.5-flash',
+    model: 'gemini-3-flash-preview',
     contents: { parts: [{ text: prompt + getSchemaInstruction() }] },
     config: {
       customAction: 'recipe',
@@ -1592,14 +1548,13 @@ The user has enabled "Multiband Mode" (also known as Gaffel mode). You MUST stri
       result.recipes = result.recipes.map((r: any) => ({ ...r, isGangstaVox: true }));
     }
     return result;
-  } catch (e: any) {
+  } catch (e) {
     console.error("Failed to parse AI response as JSON in getBeatRecommendations", e);
     console.log("Raw response text:", jsonStr);
-    const tailLength = Math.min(jsonStr.length, 1500);
-    throw new Error(`The architect's response was truncated or invalid. Length: ${jsonStr.length}. JSON Parse Error: ${e.message}. Last 1500 chars: ${jsonStr.substring(jsonStr.length - tailLength)}`);
+    throw new Error("The architect's response was not in the correct format. Please try again!");
   }
 };
-export const getCustomBeatRecommendations = async (plugins: VSTPlugin[], query: string, analogInstruments: Hardware[] = [], analogHardware: Hardware[] = [], drumKits: Hardware[] = [], excludeAnalog: boolean = false, dawType: string | null = null, starredPlugins: string[] = [], isGangstaVox: boolean = false, language: string = 'en', isMultibandMode: boolean = false): Promise<RecommendationResponse> => {
+export const getCustomBeatRecommendations = async (plugins: VSTPlugin[], query: string, analogInstruments: Hardware[] = [], analogHardware: Hardware[] = [], drumKits: Hardware[] = [], excludeAnalog: boolean = false, dawType: string | null = null, starredPlugins: string[] = [], isGangstaVox: boolean = false, language: string = 'en'): Promise<RecommendationResponse> => {
   const ai = getAI();
   const pluginListStr = plugins.map(p => {
     let str = `${p.vendor} - ${p.name} (${p.type})`;
@@ -1626,15 +1581,6 @@ export const getCustomBeatRecommendations = async (plugins: VSTPlugin[], query: 
       - Creative FX: Soundtoys PhaseMistress, Little PrimalTap, BABY Audio Warp.
     - Mixing Techniques: Use parallel compression, heavy saturation on drums and bass, and precise subtractive EQ on vocals to keep them crisp.
   ` : '';
-  const klevgrandStr = isMultibandMode ? `
-MULTIBAND PARALLEL PROCESSING INSTRUCTION (MANDATORY):
-The user has enabled "Multiband Mode" (also known as Gaffel mode). You MUST strictly incorporate advanced multi-band parallel processing for at least one critical channel.
-- Analyze the user's plugin list (or DAW native tools like Reaper's ReaEQ/ReaXcomp/Sends, or T-RackS Quad series, Klevgrand Gaffel, etc.) to figure out the best way to split the signal into frequency bands.
-- If the user has "Gaffel" or "Klevgrand - Gaffel" in their list, you MUST explicitly use it to split the bands in your FX chain.
-- First, explicitly add a 'Plugin' bubble in the fxPlugins list describing the crossover/routing method (e.g., "Klevgrand Gaffel Band Split", "DAW Routing Multiband Split", etc.), and provide a detailed guide in its 'deepDive' explaining EXACTLY how the user should route and split the frequencies.
-- Then, list the subsequent processing plugins, setting the 'band' property on each fxPlugin (e.g., "Low", "Mid", "High") to explicitly indicate which frequency split it is processing.
-- Provide tailored parameter settings in the 'deepDive' for the plugins on each individual band to explain the parallel processing strategy.
-` : '';
   const prompt = isGangstaVox ? `
     Analyze my VST plugin list and suggest 1 high-level, extremely detailed "Vocal FX Chain Recipe" specifically for a "${query} type vocal".
     Only use plugins from this list.
@@ -1645,7 +1591,6 @@ The user has enabled "Multiband Mode" (also known as Gaffel mode). You MUST stri
     ${dawStr}
     ${starredStr}
     ${sphereMicStr}
-    ${klevgrandStr}
     ${ruhedraStyle}
     ${getLanguageInstruction(language)}
     ${PRO_Q_3_LAYOUT_PROMPT}
@@ -1682,7 +1627,6 @@ The user has enabled "Multiband Mode" (also known as Gaffel mode). You MUST stri
     ${dawStr}
     ${starredStr}
     ${sphereMicStr}
-    ${klevgrandStr}
     ${getLanguageInstruction(language)}
     Ensure the recipe captures the signature sound, bounce, and atmospheric elements associated with ${query}.
     Identify 2-3 mainstream or commonly known artists who would typically use this specific beat type.
@@ -1717,7 +1661,7 @@ The user has enabled "Multiband Mode" (also known as Gaffel mode). You MUST stri
     ${ADVANCED_MIDI_PROMPT}
   `;
   const response = await ai.models.generateContent({
-    model: 'gemini-2.5-flash',
+    model: 'gemini-3-flash-preview',
     contents: { parts: [{ text: prompt + getSchemaInstruction() }] },
     config: {
       customAction: 'type_beat_search',
@@ -1730,17 +1674,16 @@ The user has enabled "Multiband Mode" (also known as Gaffel mode). You MUST stri
   try {
     result = postProcessResult(JSON.parse(sanitizeJSON(jsonStr)));
     if (Array.isArray(result)) result = { recipes: result };
-  } catch (e: any) {
+  } catch (e) {
     console.error("Failed to parse AI response as JSON in getCustomBeatRecommendations", e);
-    const tailLength = Math.min(jsonStr.length, 1500);
-    throw new Error(`The architect's response was truncated or invalid. Length: ${jsonStr.length}. JSON Parse Error: ${e.message}. Last 1500 chars: ${jsonStr.substring(jsonStr.length - tailLength)}`);
+    throw new Error("The architect's response was not in the correct format. Please try again!");
   }
   if (isGangstaVox && result.recipes) {
     result.recipes = result.recipes.map((r: any) => ({ ...r, isGangstaVox: true }));
   }
   return result;
 };
-export const getSongBeatRecommendations = async (plugins: VSTPlugin[], songQuery: string, analogInstruments: Hardware[] = [], analogHardware: Hardware[] = [], drumKits: Hardware[] = [], excludeAnalog: boolean = false, dawType: string | null = null, starredPlugins: string[] = [], isGangstaVox: boolean = false, language: string = 'en', isMultibandMode: boolean = false): Promise<RecommendationResponse> => {
+export const getSongBeatRecommendations = async (plugins: VSTPlugin[], songQuery: string, analogInstruments: Hardware[] = [], analogHardware: Hardware[] = [], drumKits: Hardware[] = [], excludeAnalog: boolean = false, dawType: string | null = null, starredPlugins: string[] = [], isGangstaVox: boolean = false, language: string = 'en'): Promise<RecommendationResponse> => {
   const blueprint = await generateStructuralBlueprint(songQuery, language);
   const ai = getAI();
   const pluginListStr = plugins.map(p => {
@@ -1755,15 +1698,6 @@ export const getSongBeatRecommendations = async (plugins: VSTPlugin[], songQuery
   const starredStr = starredPlugins.length > 0 ? `\nCRITICAL: The user has STARRED (favorited) the following plugins. You MUST prioritize using these plugins in your recipes whenever possible:\n${starredPlugins.join(', ')}` : '';
   const hasSphereMic = analogHardware.some(h => ['Sphere DLX', 'Sphere LX', 'L22'].includes(h.name) || h.name.toLowerCase() === 'l22' || h.name.toLowerCase().includes('townsend'));
   const sphereMicStr = hasSphereMic ? `\nCRITICAL: The user owns a Universal Audio Sphere (DLX/LX) or Townsend Labs L22 microphone. If the recipe involves a vocal tracking chain, you MUST assign the 'UAD Sphere Mic Collection', 'Ocean Way Mic Collection', or 'Bill Putnam Mic Collection' plugin as the VERY FIRST insert plugin on the vocal channel tracking chain. You MUST specifically select a mic model inside it based on the vibe searched. After the mic collection plugin, you can add up to 3 more plugins.` : '';
-  const klevgrandStr = isMultibandMode ? `
-MULTIBAND PARALLEL PROCESSING INSTRUCTION (MANDATORY):
-The user has enabled "Multiband Mode" (also known as Gaffel mode). You MUST strictly incorporate advanced multi-band parallel processing for at least one critical channel.
-- Analyze the user's plugin list (or DAW native tools like Reaper's ReaEQ/ReaXcomp/Sends, or T-RackS Quad series, Klevgrand Gaffel, etc.) to figure out the best way to split the signal into frequency bands.
-- If the user has "Gaffel" or "Klevgrand - Gaffel" in their list, you MUST explicitly use it to split the bands in your FX chain.
-- First, explicitly add a 'Plugin' bubble in the fxPlugins list describing the crossover/routing method (e.g., "Klevgrand Gaffel Band Split", "DAW Routing Multiband Split", etc.), and provide a detailed guide in its 'deepDive' explaining EXACTLY how the user should route and split the frequencies.
-- Then, list the subsequent processing plugins, setting the 'band' property on each fxPlugin (e.g., "Low", "Mid", "High") to explicitly indicate which frequency split it is processing.
-- Provide tailored parameter settings in the 'deepDive' for the plugins on each individual band to explain the parallel processing strategy.
-` : '';
   const prompt = isGangstaVox ? `
     Analyze my VST plugin list and suggest 1 high-level, extremely detailed "Vocal FX Chain Recipe" that recreate the vocal production style, effects, and mixing techniques of the song "${songQuery}".
     Only use plugins from this list.
@@ -1774,7 +1708,6 @@ The user has enabled "Multiband Mode" (also known as Gaffel mode). You MUST stri
     ${dawStr}
     ${starredStr}
     ${sphereMicStr}
-    ${klevgrandStr}
     ${getLanguageInstruction(language)}
     ${GULLFOSS_SPEC_PROMPT}
     ${PRO_Q_3_LAYOUT_PROMPT}
@@ -1810,7 +1743,6 @@ The user has enabled "Multiband Mode" (also known as Gaffel mode). You MUST stri
     ${dawStr}
     ${starredStr}
     ${sphereMicStr}
-    ${klevgrandStr}
     ${getLanguageInstruction(language)}
     ${PRO_Q_3_LAYOUT_PROMPT}
     ${GULLFOSS_SPEC_PROMPT}
@@ -1854,7 +1786,7 @@ The user has enabled "Multiband Mode" (also known as Gaffel mode). You MUST stri
     ${ADVANCED_MIDI_PROMPT}
   `;
   const response = await ai.models.generateContent({
-    model: 'gemini-2.5-flash',
+    model: 'gemini-3-flash-preview',
     contents: { parts: [{ text: prompt + getSchemaInstruction() }] },
     config: {
       customAction: 'song_search',
@@ -1867,10 +1799,9 @@ The user has enabled "Multiband Mode" (also known as Gaffel mode). You MUST stri
   try {
     result = postProcessResult(JSON.parse(sanitizeJSON(jsonStr)));
     if (Array.isArray(result)) result = { recipes: result };
-  } catch (e: any) {
+  } catch (e) {
     console.error("Failed to parse AI response as JSON in getSongBeatRecommendations", e);
-    const tailLength = Math.min(jsonStr.length, 1500);
-    throw new Error(`The architect's response was truncated or invalid. Length: ${jsonStr.length}. JSON Parse Error: ${e.message}. Last 1500 chars: ${jsonStr.substring(jsonStr.length - tailLength)}`);
+    throw new Error("The architect's response was not in the correct format. Please try again!");
   }
   if (isGangstaVox && result.recipes) {
     result.recipes = result.recipes.map((r: any) => ({ ...r, isGangstaVox: true }));
@@ -1901,7 +1832,7 @@ export const analyzeInstrumental = async (audioBase64: string, mimeType: string)
   const ai = getAI();
   const prompt = "Analyze this instrumental track. Identify its exact BPM (Tempo) and the exact start time (in seconds) of the clearest, most loopable 4-bar or 8-bar section. Output a JSON object with two fields: 'bpm' (a number, the tempo) and 'loopStart' (a number, the start time in seconds). Do not include any other text.";
   const data = await ai.models.generateContent({
-    model: "gemini-2.5-flash",
+    model: "gemini-3.1-pro-preview",
     contents: [{ parts: [{ text: prompt }, { inlineData: { data: audioBase64, mimeType } }] }],
     config: {
       customAction: 'analyze_instrumental' }
@@ -1921,7 +1852,7 @@ export const generateContentViaBackend = async (model: string, prompt: string, c
     config
   });
 };
-export const getAudioBeatRecommendations = async (plugins: VSTPlugin[], audioBase64: string | null, audioUrl: string | null, mimeType: string, analogInstruments: Hardware[] = [], analogHardware: Hardware[] = [], drumKits: Hardware[] = [], excludeAnalog: boolean = false, dawType: string | null = null, starredPlugins: string[] = [], isGangstaVox: boolean = false, userContext: string = "", geminiFileUri: string | null = null, language: string = 'en', isMultibandMode: boolean = false): Promise<RecommendationResponse> => {
+export const getAudioBeatRecommendations = async (plugins: VSTPlugin[], audioBase64: string | null, audioUrl: string | null, mimeType: string, analogInstruments: Hardware[] = [], analogHardware: Hardware[] = [], drumKits: Hardware[] = [], excludeAnalog: boolean = false, dawType: string | null = null, starredPlugins: string[] = [], isGangstaVox: boolean = false, userContext: string = "", geminiFileUri: string | null = null, language: string = 'en'): Promise<RecommendationResponse> => {
   const ai = getAI();
   // Limit plugin list to 50 most relevant to avoid context/complexity limits
   const limitedPlugins = plugins.slice(0, 50);
@@ -1944,17 +1875,6 @@ export const getAudioBeatRecommendations = async (plugins: VSTPlugin[], audioBas
   const apolloModel = analogHardware.find(h => h.name.toLowerCase().includes('apollo'))?.name || 'Apollo';
   const hasTownsend = analogHardware.some(h => h.name.toLowerCase().includes('townsend') || h.name.toLowerCase().includes('sphere'));
   const hasOceanWayMic = plugins?.some(p => p.name.toLowerCase().includes('ocean way mic')) || false;
-  
-  const klevgrandStr = isMultibandMode ? `
-MULTIBAND PARALLEL PROCESSING INSTRUCTION (MANDATORY):
-The user has enabled "Multiband Mode" (also known as Gaffel mode). You MUST strictly incorporate advanced multi-band parallel processing for at least one critical channel.
-- Analyze the user's plugin list (or DAW native tools like Reaper's ReaEQ/ReaXcomp/Sends, or T-RackS Quad series, Klevgrand Gaffel, etc.) to figure out the best way to split the signal into frequency bands.
-- If the user has "Gaffel" or "Klevgrand - Gaffel" in their list, you MUST explicitly use it to split the bands in your FX chain.
-- First, explicitly add a 'Plugin' bubble in the fxPlugins list describing the crossover/routing method (e.g., "Klevgrand Gaffel Band Split", "DAW Routing Multiband Split", etc.), and provide a detailed guide in its 'deepDive' explaining EXACTLY how the user should route and split the frequencies.
-- Then, list the subsequent processing plugins, setting the 'band' property on each fxPlugin (e.g., "Low", "Mid", "High") to explicitly indicate which frequency split it is processing.
-- Provide tailored parameter settings in the 'deepDive' for the plugins on each individual band to explain the parallel processing strategy.
-` : '';
-
   let prompt = isGangstaVox ? `
     Analyze the attached audio file and suggest 1 high-level, extremely detailed "Vocal FX Chain Recipe" that recreate the vocal production style, effects, and mixing techniques heard in the provided audio.
     Only use mixing plugins from this list (for DAW processing):
@@ -1964,7 +1884,6 @@ The user has enabled "Multiband Mode" (also known as Gaffel mode). You MUST stri
     ${starredStr}
     ${sphereMicStr}
     ${contextStr}
-    ${klevgrandStr}
     ${getLanguageInstruction(language)}
     ${GULLFOSS_SPEC_PROMPT}
     ${OZONE_SPEC_PROMPT}
@@ -2015,7 +1934,6 @@ The user has enabled "Multiband Mode" (also known as Gaffel mode). You MUST stri
     ${dawStr}
     ${starredStr}
     ${sphereMicStr}
-    ${klevgrandStr}
     ${getLanguageInstruction(language)}
     ${GULLFOSS_SPEC_PROMPT}
     ${OZONE_SPEC_PROMPT}
@@ -2099,7 +2017,7 @@ The user has enabled "Multiband Mode" (also known as Gaffel mode). You MUST stri
   let response;
   try {
     response = await ai.models.generateContent({
-      model: "gemini-2.5-flash",
+      model: "gemini-3-flash-preview",
       contents: {
         parts: parts
       },
@@ -2151,8 +2069,7 @@ export const getMixCritique = async (
   uploadedStems?: any[], 
   analogInstruments: Hardware[] = [], 
   analogHardware: Hardware[] = [],
-  isBusMode: boolean = false,
-  isMultibandMode: boolean = false
+  isBusMode: boolean = false
 ): Promise<any> => {
   const ai = getAI();
   const pluginListStr = plugins.map(p => {
@@ -2164,15 +2081,6 @@ export const getMixCritique = async (
   }).join('\n');
   const hasApollo = analogHardware.some(h => h.name.toLowerCase().includes('apollo'));
   const apolloInst = analogHardware.find(h => h.name.toLowerCase().includes('apollo'))?.name || 'Apollo';
-  
-  const klevgrandStr = isMultibandMode ? `
-MULTIBAND PARALLEL PROCESSING INSTRUCTION (MANDATORY):
-The user has enabled "Multiband Mode" (also known as Gaffel mode). You MUST strictly incorporate advanced multi-band parallel processing for at least one critical channel or bus.
-- Analyze the user's plugin list (or DAW native tools like Klevgrand Gaffel, etc.) to figure out the best way to split the signal into frequency bands.
-- If the user has "Gaffel" or "Klevgrand - Gaffel" in their list, you MUST explicitly use it to split the bands in your FX chain.
-- In the 'actionPlan' -> 'recommendedChain' for the relevant stem/issue, first explicitly add a 'Plugin' bubble describing the crossover/routing method (e.g., "Klevgrand Gaffel Band Split"), and provide a detailed guide in its 'deepDive' explaining EXACTLY how the user should route and split the frequencies.
-- Then, list the subsequent processing plugins, explicitly setting the 'band' property on each plugin (e.g., "Low", "Mid", "High") to indicate which frequency split it is processing.
-` : '';
   const hardwareListStr = [...analogInstruments, ...analogHardware].map(h => {
     const pedalsStr = h.connectedPedals && h.connectedPedals.length > 0 
       ? ` (Connected Pedals: ${h.connectedPedals.map(p => `${p.vendor} ${p.name}`).join(', ')})` 
@@ -2208,7 +2116,6 @@ The user has enabled "Multiband Mode" (also known as Gaffel mode). You MUST stri
     ${contextStr}
     ${previousCritiqueStr}
     ${referenceTrackStr}
-    ${klevgrandStr}
     ${languageInstruction}
     ${PRO_Q_3_LAYOUT_PROMPT}
     ${GULLFOSS_SPEC_PROMPT}
@@ -2233,7 +2140,7 @@ The user has enabled "Multiband Mode" (also known as Gaffel mode). You MUST stri
     - 'strengths': An array of 4-6 specific things that sound good (e.g., specific frequency ranges, dynamic control, spatial imaging).
     - 'weaknesses': An array of 4-6 specific issues that need fixing, categorized by their impact on the mix.
     - 'actionPlan': A comprehensive array of actionable steps to fix the issues. ${hasStems && uploadedStems && uploadedStems.length > 0 ? `CRITICAL: Because the user uploaded ${uploadedStems.length} stems, you MUST provide EXACTLY one step per stem. For EACH stem's step, you MUST provide EXACTLY 4 plugins in the 'recommendedChain'. ALWAYS add an extra plugin (the 4th plugin) dedicated specifically to volume leveling/gain structuring so that the resulting stem sounds completely unified strictly in volume with the rest of the stems.` : "For each step, provide a robust chain of 2-4 plugins."} For each step, provide:
-      - 'targetStem': The exact name of the stem and track number this step applies to (e.g., 'Track 1: verse.wav').
+      - 'targetStem': The exact name of the stem this step applies to (if stems were uploaded).
       - 'issue': The specific problem.
       - 'solution': A detailed technical explanation of how to fix it.
       - 'recommendedChain': A robust chain of plugins from the user's list to use for this fix, with 'name', 'purpose', and 'deepDive' (an array of parameter objects - Provide EVERY available parameter found on the actual plugin interface, aim for 40-80 settings for complex modules - each with 'parameter', 'value', and 'explanation'). You can also optionally include 'band' and 'routing' properties for multiband or parallel processing. MATCH THE EXTREME DETAIL LEVEL OF A FULL BEAT RECIPE.
@@ -2251,7 +2158,7 @@ The user has enabled "Multiband Mode" (also known as Gaffel mode). You MUST stri
         items: {
           type: "OBJECT",
           properties: {
-            targetStem: { type: "STRING", description: "The exact name of the stem with its track number (e.g., 'Track 4: verse.wav')." },
+            targetStem: { type: "STRING", description: "The exact name of the stem this step applies to (if stems were uploaded)." },
             issue: { type: "STRING" },
             solution: { type: "STRING" },
             recommendedChain: {
@@ -2333,18 +2240,21 @@ The user has enabled "Multiband Mode" (also known as Gaffel mode). You MUST stri
     parts.push({ inlineData: { data: referenceAudioBase64, mimeType: mimeType } });
   }
   parts.push({ text: prompt });
+  const tools: any[] = [];
+  if (referenceTrack && !referenceAudioBase64) {
+    tools.push({ googleSearch: {} });
+  }
   let response;
   try {
     response = await ai.models.generateContent({
-      model: "gemini-2.5-flash",
+      model: "gemini-3-flash-preview",
       contents: {
         parts: parts
       },
       config: {
         customAction: hasStems ? 'stems_critique' : 'critique',
+        tools: tools.length > 0 ? tools : undefined,
         responseMimeType: "application/json",
-        responseSchema: schemaObject,
-        maxOutputTokens: 8192,
         safetySettings: [
           { category: HarmCategory.HARM_CATEGORY_HARASSMENT, threshold: HarmBlockThreshold.OFF },
           { category: HarmCategory.HARM_CATEGORY_HATE_SPEECH, threshold: HarmBlockThreshold.OFF },
@@ -2361,10 +2271,9 @@ The user has enabled "Multiband Mode" (also known as Gaffel mode). You MUST stri
   let result;
   try {
     result = postProcessResult(JSON.parse(sanitizeJSON(jsonStr)));
-  } catch (e: any) {
+  } catch (e) {
     console.error("Failed to parse AI response as JSON in getMixCritique", e);
-    const tailLength = Math.min(jsonStr.length, 1500);
-    throw new Error(`The architect's response was truncated or invalid. Length: ${jsonStr.length}. JSON Parse Error: ${e.message}. Last 1500 chars: ${jsonStr.substring(jsonStr.length - tailLength)}`);
+    throw new Error("The architect's response was not in the correct format. Please try again!");
   }
   result.id = crypto.randomUUID();
   result.isGangstaVox = isGangstaVox;
@@ -2428,7 +2337,7 @@ export const getSpecificMixHelp = async (plugins: VSTPlugin[], audioBase64: stri
   let response;
   try {
     response = await ai.models.generateContent({
-      model: "gemini-2.5-flash",
+      model: "gemini-3-flash-preview",
       contents,
       config: {
         customAction: 'critique',
@@ -2471,7 +2380,7 @@ export const getGangstaVoxRecipe = async (recipe: BeatRecipe | SavedRecipe, plug
   let response;
   try {
     response = await ai.models.generateContent({
-      model: "gemini-2.5-flash",
+      model: "gemini-3-flash-preview",
       contents: prompt,
       config: {
         customAction: 'gangsta_vox',
@@ -2486,10 +2395,9 @@ export const getGangstaVoxRecipe = async (recipe: BeatRecipe | SavedRecipe, plug
   const jsonStr = response.text?.trim() || '{}';
   try {
     return postProcessResult(JSON.parse(sanitizeJSON(jsonStr)));
-  } catch (e: any) {
+  } catch (e) {
     console.error("Failed to parse AI response as JSON in getGangstaVoxRecipe", e);
-    const tailLength = Math.min(jsonStr.length, 1500);
-    throw new Error(`The architect's response was truncated or invalid. Length: ${jsonStr.length}. JSON Parse Error: ${e.message}. Last 1500 chars: ${jsonStr.substring(jsonStr.length - tailLength)}`);
+    throw new Error("The architect's response was not in the correct format. Please try again!");
   }
 };
 export const replicateRecipeWithUserGear = async (recipe: SavedRecipe, myPlugins: VSTPlugin[], language: string = 'en'): Promise<SavedRecipe> => {
@@ -2514,7 +2422,7 @@ export const replicateRecipeWithUserGear = async (recipe: SavedRecipe, myPlugins
   `;
   try {
     const response = await ai.models.generateContent({
-      model: "gemini-2.5-flash",
+      model: "gemini-3-flash-preview",
       contents: { parts: [{ text: prompt + "\\n\\nCRITICAL: You MUST return EXACTLY valid JSON matching this schema:\\n" + JSON.stringify(getUnifiedRecipeSchema(), null, 2) }] },
       config: {
         customAction: 'analog_save',
@@ -2538,10 +2446,9 @@ export const replicateRecipeWithUserGear = async (recipe: SavedRecipe, myPlugins
       } else if (adapted.recipes && adapted.recipes?.length > 0) {
         adapted = adapted.recipes[0];
       }
-    } catch (parseErr: any) {
+    } catch (parseErr) {
       console.error("Failed to parse AI response as JSON:", jsonStr);
-      const tailLength = Math.min(jsonStr.length, 1500);
-      throw new Error(`The AI generated an invalid recipe format or truncated. Length: ${jsonStr.length}. JSON Parse Error: ${parseErr.message}. Last 1500 chars: ${jsonStr.substring(jsonStr.length - tailLength)}`);
+      throw new Error("The AI generated an invalid recipe format. Please try again.");
     }
     // Ensure we merge with the original recipe to preserve any fields the AI might have missed
     // but prioritize the adapted fields for instruments/busses/etc.
@@ -2696,7 +2603,7 @@ export const regenerateTrackingChain = async (
       required: ["trackingChain"]
     };
     const result = await ai.models.generateContent({
-      model: "gemini-2.5-flash",
+      model: "gemini-3-flash-preview",
       contents: { parts: [{ text: prompt + "\\n\\nCRITICAL: You MUST return a valid JSON object matching this schema exactly:\\n" + JSON.stringify(schema, null, 2) }] },
       config: {
         customAction: 'regenerate_tracking_chain',

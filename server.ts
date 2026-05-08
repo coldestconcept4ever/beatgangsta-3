@@ -488,7 +488,7 @@ app.post("/api/test-schema", express.json(), async (req, res) => {
     
     // We expect the payload to be EXACTLY the model contents config
     const response = await genAI.models.generateContent({
-      model: req.body.model || "gemini-2.5-flash",
+      model: req.body.model || "gemini-3-flash-preview",
       contents: req.body.contents,
       config: req.body.config
     });
@@ -847,8 +847,7 @@ app.post("/api/upload-chunk-drive", express.raw({ type: 'application/octet-strea
         const userApiKey = req.headers['x-user-api-key'] as string;
         const apiKey = userApiKey || process.env.GEMINI_API_KEY;
         if (apiKey) {
-          const safeFileName = fileName ? (fileName as string).replace(/[^a-zA-Z0-9.-]/g, '_') : 'audio.mp3';
-          tempFilePath = path.join(os.tmpdir(), `gemini-upload-${Date.now()}-${safeFileName}`);
+          tempFilePath = path.join(os.tmpdir(), `gemini-upload-${Date.now()}-${fileName}`);
           
           // Download from Drive
           const driveStream = await drive.files.get({ fileId: fileId, alt: 'media' }, { responseType: 'stream' });
@@ -1013,8 +1012,7 @@ app.post("/api/upload-chunk", express.raw({ type: 'application/octet-stream', li
 
   // Write chunk to temp file directly to avoid memory bloat
 
-  const safeFileName = fileName ? (fileName as string).replace(/[^a-zA-Z0-9.-]/g, '_') : 'audio.mp3';
-  const tempFilePath = path.join(os.tmpdir(), `${sessionId}-${safeFileName}`);
+  const tempFilePath = path.join(os.tmpdir(), `${sessionId}-${fileName}`);
   fs.appendFileSync(tempFilePath, chunkData);
 
   // Track progress
@@ -3646,15 +3644,14 @@ if (process.env.NODE_ENV !== 'production') {
       if (!plugins || !Array.isArray(plugins)) {
         return res.status(400).json({ error: "Invalid plugins array" });
       }
-      const validPlugins = plugins.filter(p => p && p.vendor && p.name);
-      if (validPlugins.length === 0) {
+      if (plugins.length === 0) {
         return res.json({ success: true });
       }
 
       const client = await getDb();
       if (!client) return res.status(500).json({ error: "Database not available" });
 
-      const statements = validPlugins.map(p => ({
+      const statements = plugins.map(p => ({
         sql: `INSERT INTO vst_cache (vendor, name, type, description, features, parameters, version, tier) 
               VALUES (?, ?, ?, ?, ?, ?, ?, ?) 
               ON CONFLICT(vendor, name, tier) DO UPDATE SET 
@@ -3931,7 +3928,7 @@ if (process.env.NODE_ENV !== 'production') {
         }
 
         const response = await genAI.models.generateContent({
-          model: model || "gemini-2.5-flash",
+          model: model || "gemini-3-flash-preview",
           contents,
           config: finalConfig
         });

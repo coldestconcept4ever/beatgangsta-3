@@ -7,7 +7,6 @@ import { motion } from 'motion/react';
 import { Loader2, Search, CheckCircle2, AlertCircle, Download, RefreshCw } from 'lucide-react';
 import { PluginBubble } from './PluginBubble';
 import { CritiqueHTMLTemplate } from './CritiqueHTMLTemplate';
-import { exportDawProjectFromCritique } from '../services/dawprojectExport';
 
 // Dynamically import heavy libraries
 const getRenderToStaticMarkup = () => import('react-dom/server').then(m => m.renderToStaticMarkup);
@@ -36,10 +35,9 @@ interface CritiqueCardProps {
   onCorrectPlugin?: (pluginName: string, corrections: { parameter: string, value: string }[], version: string) => Promise<{ success: boolean, message: string, plugin?: VSTPlugin }>;
   onContactSupport?: (pluginInfo: any) => void;
   onMinimize?: () => void;
-  isMultibandMode?: boolean;
 }
 
-export const CritiqueCard: React.FC<CritiqueCardProps> = ({ critique, theme, plugins, analogInstruments = [], analogHardware = [], audioBase64, audioUrl, geminiFileUri, mimeType, isSaved, onSave, onUpdateCritique, onReCritique, currentAudioInfo, onLogReceipt, onCorrectPlugin, onContactSupport, onMinimize, isMultibandMode = false }) => {
+export const CritiqueCard: React.FC<CritiqueCardProps> = ({ critique, theme, plugins, analogInstruments = [], analogHardware = [], audioBase64, audioUrl, geminiFileUri, mimeType, isSaved, onSave, onUpdateCritique, onReCritique, currentAudioInfo, onLogReceipt, onCorrectPlugin, onContactSupport, onMinimize }) => {
   const { t, i18n } = useTranslation();
   const [specificHelpQuery, setSpecificHelpQuery] = useState('');
   const [isLoadingSpecificHelp, setIsLoadingSpecificHelp] = useState(false);
@@ -71,29 +69,6 @@ export const CritiqueCard: React.FC<CritiqueCardProps> = ({ critique, theme, plu
       console.error("Failed to regenerate plugin:", error);
     } finally {
       setRegeneratingPluginId(null);
-    }
-  };
-
-  const [isExportingDawProject, setIsExportingDawProject] = useState(false);
-
-  const handleExportDawProject = async () => {
-    setIsExportingDawProject(true);
-    try {
-      const blob = await exportDawProjectFromCritique(critique);
-      const url = URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      link.href = url;
-      const cleanTitle = critique.title.replace(/[^a-z0-9]/gi, '_').toLowerCase();
-      link.download = `${cleanTitle}_critique.dawproject`;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      URL.revokeObjectURL(url);
-    } catch (error) {
-      console.error("DAW Project export failed:", error);
-      alert('Failed to export .dawproject');
-    } finally {
-      setIsExportingDawProject(false);
     }
   };
 
@@ -219,13 +194,10 @@ export const CritiqueCard: React.FC<CritiqueCardProps> = ({ critique, theme, plu
         "",
         null,
         null,
-        null,
         i18n.language,
         undefined,
         analogInstruments,
-        analogHardware,
-        false, // isBusMode
-        isMultibandMode
+        analogHardware
       );
       const isWav = file.type.includes('audio/wav');
       if (onLogReceipt) onLogReceipt('Re-Critique Mix', isWav ? 25 : 10);
@@ -304,41 +276,27 @@ export const CritiqueCard: React.FC<CritiqueCardProps> = ({ critique, theme, plu
               {t('minimize')}
             </button>
           )}
-          <div className="relative flex flex-col sm:flex-row gap-2">
-            <button 
-              onClick={handleExportDawProject}
-              disabled={isExportingDawProject}
-              className={`shrink-0 px-8 py-4 rounded-full font-black text-xs uppercase tracking-widest transition-all shadow-xl hover:scale-105 active:scale-95 flex items-center gap-2 min-w-[160px] justify-center ${
-                theme === 'coldest'
-                  ? 'bg-indigo-600 text-white hover:bg-indigo-700'
-                  : 'bg-indigo-500/20 text-indigo-400 hover:bg-indigo-500/30'
-              }`}
-            >
-              {isExportingDawProject ? <Loader2 className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />}
-              DAWPROJECT
-            </button>
-            <button 
-              onClick={handleExportHTML}
-              disabled={isExporting}
-              className={`shrink-0 px-8 py-4 rounded-full font-black text-xs uppercase tracking-widest transition-all shadow-xl hover:scale-105 active:scale-95 flex items-center gap-2 min-w-[160px] justify-center ${
-                theme === 'coldest'
-                  ? 'bg-slate-800 text-white hover:bg-slate-900'
-                  : 'bg-white/10 text-white hover:bg-white/20'
-              }`}
-            >
-              {isExporting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />}
-              {isExporting ? t('exporting', { progress: exportProgress }) : t('download_html')}
-            </button>
-            {isExporting && (
-              <div className="absolute -bottom-2 left-0 right-0 h-1 bg-black/10 rounded-full overflow-hidden">
-                <motion.div 
-                  initial={{ width: 0 }}
-                  animate={{ width: `${exportProgress}%` }}
-                  className="h-full bg-sky-500"
-                />
-              </div>
-            )}
-          </div>
+          <button 
+            onClick={handleExportHTML}
+            disabled={isExporting}
+            className={`shrink-0 px-8 py-4 rounded-full font-black text-xs uppercase tracking-widest transition-all shadow-xl hover:scale-105 active:scale-95 flex items-center gap-2 min-w-[160px] justify-center ${
+              theme === 'coldest'
+                ? 'bg-slate-800 text-white hover:bg-slate-900'
+                : 'bg-white/10 text-white hover:bg-white/20'
+            }`}
+          >
+            {isExporting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />}
+            {isExporting ? t('exporting', { progress: exportProgress }) : t('download_html')}
+          </button>
+          {isExporting && (
+            <div className="absolute -bottom-2 left-0 right-0 h-1 bg-black/10 rounded-full overflow-hidden">
+              <motion.div 
+                initial={{ width: 0 }}
+                animate={{ width: `${exportProgress}%` }}
+                className="h-full bg-sky-500"
+              />
+            </div>
+          )}
           <button 
             onClick={() => onSave(critique)}
             disabled={isSaved}
@@ -396,7 +354,7 @@ export const CritiqueCard: React.FC<CritiqueCardProps> = ({ critique, theme, plu
                 }`}>
                   {action.targetStem && (
                     <div className="mb-3 inline-block px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest bg-sky-500/20 text-sky-600 dark:text-sky-400">
-                      Stem: {action.targetStem.replace(/\.(wav|mp3|aiff|aif|m4a|flac|ogg)$/i, '')}
+                      Stem: {action.targetStem}
                     </div>
                   )}
                   <h5 className="font-black text-lg mb-2">{action.issue}</h5>

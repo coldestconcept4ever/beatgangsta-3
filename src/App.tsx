@@ -1398,7 +1398,6 @@ The AI was unable to verify these parameters. Please investigate.`;
   const [importedSaveFile, setImportedSaveFile] = useState<FullSaveFile | null>(null);
   const [showImportDecisionModal, setShowImportDecisionModal] = useState(false);
   const [friendMode, setFriendMode] = useState(false);
-  const [multibandMode, setMultibandMode] = useState(() => localStorage.getItem('bg_multiband') === 'true');
   const searchInputRef = useRef<HTMLInputElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [isDraggingAudio, setIsDraggingAudio] = useState(false);
@@ -2301,8 +2300,7 @@ The AI was unable to verify these parameters. Please investigate.`;
       stemCustomTypesPreset
     };
     localStorage.setItem('bg_active_ui', JSON.stringify(uiSettings));
-    localStorage.setItem('bg_multiband', multibandMode.toString());
-  }, [theme, grillStyle, knifeStyle, duragStyle, pendantStyle, chainStyle, saberColor, mascotColor, showChain, highEyes, isCigarEquipped, isTossingCigar, showSparkles, stemTypesPreset, stemCustomTypesPreset, multibandMode]);
+  }, [theme, grillStyle, knifeStyle, duragStyle, pendantStyle, chainStyle, saberColor, mascotColor, showChain, highEyes, isCigarEquipped, isTossingCigar, showSparkles, stemTypesPreset, stemCustomTypesPreset]);
 
   const [vault, setVault] = useState<SavedRecipe[]>(() => {
     try {
@@ -3426,7 +3424,7 @@ The AI was unable to verify these parameters. Please investigate.`;
 
     try {
       if (!requireAuth()) return;
-      const response = await getBeatRecommendations(plugins, analogInstruments, analogHardware, drumKits, excludeAnalog, dawType, starredPlugins, isGangstaVox, i18n.language, multibandMode);
+      const response = await getBeatRecommendations(plugins, analogInstruments, analogHardware, drumKits, excludeAnalog, dawType, starredPlugins, isGangstaVox, i18n.language);
       clearInterval(progressInterval);
       setGenerationProgress(100);
       clearTimeout(timeoutId);
@@ -3476,7 +3474,7 @@ The AI was unable to verify these parameters. Please investigate.`;
 
     try {
       if (!requireAuth()) return;
-      const response = await getCustomBeatRecommendations(plugins, typeBeatSearch.trim(), analogInstruments, analogHardware, drumKits, excludeAnalog, dawType, starredPlugins, isGangstaVox, i18n.language, multibandMode);
+      const response = await getCustomBeatRecommendations(plugins, typeBeatSearch.trim(), analogInstruments, analogHardware, drumKits, excludeAnalog, dawType, starredPlugins, isGangstaVox, i18n.language);
       clearInterval(progressInterval);
       setGenerationProgress(100);
       clearTimeout(timeoutId);
@@ -3527,7 +3525,7 @@ The AI was unable to verify these parameters. Please investigate.`;
 
     try {
       if (!requireAuth()) return;
-      const response = await getSongBeatRecommendations(plugins, songSearch.trim(), analogInstruments, analogHardware, drumKits, excludeAnalog, dawType, starredPlugins, isGangstaVox, i18n.language, multibandMode);
+      const response = await getSongBeatRecommendations(plugins, songSearch.trim(), analogInstruments, analogHardware, drumKits, excludeAnalog, dawType, starredPlugins, isGangstaVox, i18n.language);
       clearInterval(progressInterval);
       setGenerationProgress(100);
       clearTimeout(timeoutId);
@@ -3654,10 +3652,10 @@ The AI was unable to verify these parameters. Please investigate.`;
       }
 
       // Format stems context for Gemini
-      const stemsContext = uploadedStems.map((s, idx) => `Track ${idx + 1}: ${s.file!.name} (Type: ${s.type === 'Other' && s.customType ? s.customType : s.type}) - URI: ${s.uri}`).join('\n');
+      const stemsContext = uploadedStems.map(s => `Stem: ${s.file!.name} (Type: ${s.type === 'Other' && s.customType ? s.customType : s.type}) - URI: ${s.uri}`).join('\n');
       const fullContext = `The user has uploaded ${activeStems.length} stems for analysis.\n\n${stemsContext}\n\nUser Context: ${critiqueContext}`;
 
-      const critique = await getMixCritique(plugins, null, null, 'audio/mpeg', isGangstaVox, true, fullContext, null, finalReferenceTrack, referenceAudioBase64, null, referenceGeminiFileUri, i18n.language, uploadedStems, analogInstruments, analogHardware, isBusMode, multibandMode);
+      const critique = await getMixCritique(plugins, null, null, 'audio/mpeg', isGangstaVox, true, fullContext, null, finalReferenceTrack, referenceAudioBase64, null, referenceGeminiFileUri, i18n.language, uploadedStems, analogInstruments, analogHardware, isBusMode);
       critique.id = Math.random().toString(36).substr(2, 9);
       critique.audioBase64 = null;
       critique.mimeType = 'audio/mpeg';
@@ -3684,7 +3682,7 @@ The AI was unable to verify these parameters. Please investigate.`;
         setCreditError(err.message);
         setShowBuyCreditsModal(true);
       } else {
-        setError(`Failed to analyze stems: ${err?.message || String(err)}`);
+        setError("Failed to analyze stems. Please try again.");
       }
     } finally {
       clearTimeout(timeoutId);
@@ -3736,9 +3734,9 @@ The AI was unable to verify these parameters. Please investigate.`;
       return;
     }
     
-    const MAX_FILE_SIZE = 100 * 1024 * 1024; // 100MB
+    const MAX_FILE_SIZE = 50 * 1024 * 1024; // 50MB
     if (file.size > MAX_FILE_SIZE) {
-      setError("File is too large. Please upload an audio file smaller than 100MB.");
+      setError("File is too large. Please upload an audio file smaller than 50MB.");
       return;
     }
     setLoading(true);
@@ -3833,7 +3831,7 @@ The AI was unable to verify these parameters. Please investigate.`;
           }
         }
 
-        const critique = await getMixCritique(plugins, audioBase64, audioUrl, mimeType, isGangstaVox, hasStems, critiqueContext, null, finalReferenceTrack, referenceAudioBase64, geminiFileUri, referenceGeminiFileUri, i18n.language, undefined, analogInstruments, analogHardware, isBusMode, multibandMode);
+        const critique = await getMixCritique(plugins, audioBase64, audioUrl, mimeType, isGangstaVox, hasStems, critiqueContext, null, finalReferenceTrack, referenceAudioBase64, geminiFileUri, referenceGeminiFileUri, i18n.language, undefined, analogInstruments, analogHardware, isBusMode);
         critique.id = Math.random().toString(36).substr(2, 9);
         critique.audioBase64 = audioBase64;
         critique.geminiFileUri = geminiFileUri;
@@ -3875,8 +3873,7 @@ The AI was unable to verify these parameters. Please investigate.`;
             isGangstaVox,
             critiqueContext,
             geminiFileUri,
-            i18n.language,
-            multibandMode
+            i18n.language
           );
         } catch (apiErr: any) {
           console.warn("Initial audio analysis failed, retrying with minimal plugin list...", apiErr);
@@ -3897,8 +3894,7 @@ The AI was unable to verify these parameters. Please investigate.`;
               isGangstaVox,
               critiqueContext,
               geminiFileUri,
-              i18n.language,
-              multibandMode
+              i18n.language
             );
           } catch (retryErr: any) {
             console.error("Retry audio analysis failed:", retryErr);
@@ -3942,7 +3938,7 @@ The AI was unable to verify these parameters. Please investigate.`;
       } else if (err?.message?.includes("API_KEY_MISSING") || err?.message?.includes("401") || err?.message?.includes("403")) {
         setError(`Access error: ${err.message}. Please contact support or try again later.`);
       } else if (err?.message?.includes("decode")) {
-        setError("Could not read this audio file. Try a standard MP3 or WAV under 100MB.");
+        setError("Could not read this audio file. Try a standard MP3 or WAV under 50MB.");
       } else {
         const errorMsg = err?.message || err?.toString() || "Unknown error";
         setError(`Failed to analyze audio: ${errorMsg}. The file might be too complex or the AI is at its limit. Try a shorter clip!`);
@@ -4595,27 +4591,25 @@ The AI was unable to verify these parameters. Please investigate.`;
 
                     <div className={`h-px w-full my-1 ${getDropdownTheme(theme).divider}`} />
 
-                    {isAdminDashboardAuthorized && (
-                      <button 
-                        onClick={() => {
-                          if (isRecording) {
-                            stopRecording();
-                          } else {
-                            setIsUserMenuOpen(false);
-                            startRecording();
-                          }
-                        }}
-                        className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-left transition-colors group ${getDropdownTheme(theme).itemHover}`}
-                      >
-                        <div className={`w-7 h-7 rounded-full flex items-center justify-center transition-colors ${isRecording ? 'bg-red-500 text-white animate-pulse' : getDropdownTheme(theme).iconBg}`}>
-                          <Video size={14} />
-                        </div>
-                        <div>
-                          <div className="text-xs font-bold uppercase tracking-wider">{isRecording ? 'Stop Recording' : 'Record Showcase'}</div>
-                          <div className="text-[9px] opacity-50 mt-0.5">{isRecording ? 'Click to save video' : 'Capture your app workflow'}</div>
-                        </div>
-                      </button>
-                    )}
+                    <button 
+                      onClick={() => {
+                        if (isRecording) {
+                          stopRecording();
+                        } else {
+                          setIsUserMenuOpen(false);
+                          startRecording();
+                        }
+                      }}
+                      className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-left transition-colors group ${getDropdownTheme(theme).itemHover}`}
+                    >
+                      <div className={`w-7 h-7 rounded-full flex items-center justify-center transition-colors ${isRecording ? 'bg-red-500 text-white animate-pulse' : getDropdownTheme(theme).iconBg}`}>
+                        <Video size={14} />
+                      </div>
+                      <div>
+                        <div className="text-xs font-bold uppercase tracking-wider">{isRecording ? 'Stop Recording' : 'Record Showcase'}</div>
+                        <div className="text-[9px] opacity-50 mt-0.5">{isRecording ? 'Click to save video' : 'Capture your app workflow'}</div>
+                      </div>
+                    </button>
 
                     {isAdminDashboardAuthorized && (
                       <>
@@ -5411,13 +5405,6 @@ The AI was unable to verify these parameters. Please investigate.`;
                   <CigarIcon size={16} className={isCigarEquipped ? "animate-pulse" : ""} /> {isCigarEquipped ? t('toss_blunt') : t('got_blunt')}
                 </button>
 
-                <button 
-                  onClick={() => setMultibandMode(!multibandMode)} 
-                  className={`${actionBtnClasses} ${multibandMode ? getThemeActiveClasses(theme) : themedBtnClasses}`}
-                >
-                  <Music size={16} /> Multiband Mode ({multibandMode ? "ON" : "OFF"})
-                </button>
-
                 <button onClick={() => setShowMascotColorPicker(true)} className={`${actionBtnClasses} ${themedBtnClasses}`}>
                   <Palette size={16} /> {t('mascot_hue')}
                 </button>
@@ -5487,12 +5474,6 @@ The AI was unable to verify these parameters. Please investigate.`;
             </button>
             <button onClick={handleCigarToggle} className={`${mobileTrayBtnClasses} select-none ${isCigarEquipped ? getThemeActiveClasses(theme) : themedBtnClasses}`}>
               <CigarIcon size={16} /> {isCigarEquipped ? t('toss_blunt') : t('got_blunt')}
-            </button>
-            <button 
-              onClick={() => setMultibandMode(!multibandMode)} 
-              className={`${mobileTrayBtnClasses} select-none ${multibandMode ? getThemeActiveClasses(theme) : themedBtnClasses}`}
-            >
-              <Music size={16} /> Multiband ({multibandMode ? "ON" : "OFF"})
             </button>
             <button onClick={() => setShowMascotColorPicker(true)} className={`${mobileTrayBtnClasses} ${themedBtnClasses}`}>
               <Palette size={16} /> {t('mascot_hue')}
@@ -5692,30 +5673,23 @@ The AI was unable to verify these parameters. Please investigate.`;
                   </label>
                 </div>
               </div>
-              <AnimatePresence>
-                {!isVerified && (
-                  <motion.div 
-                    initial={{ opacity: 0, height: 0 }}
-                    animate={{ opacity: 1, height: 'auto' }}
-                    exit={{ opacity: 0, height: 0, overflow: 'hidden' }}
-                    className="flex justify-center mt-6"
-                  >
-                    <div id="tutorial-turnstile" className="flex items-center justify-center overflow-visible" style={{ width: '260px', height: '52px' }}>
-                      <div key={verificationSessionId}>
-                        <Turnstile
-                          sitekey={typeof import.meta.env.VITE_TURNSTILE_SITE_KEY === 'string' ? import.meta.env.VITE_TURNSTILE_SITE_KEY : '0x4AAAAAACkH6-i-na5YIlP9'}
-                          onVerify={(token) => {
-                            if ((window as any).onUploadSuccess) {
-                              (window as any).onUploadSuccess(token);
-                            }
-                          }}
-                          theme={theme === 'coldest' || theme === 'chef-mode' ? 'light' : 'dark'}
-                        />
-                      </div>
+              {!isVerified && (
+                <div className="flex justify-center mt-6">
+                  <div id="tutorial-turnstile" className="flex items-center justify-center overflow-visible" style={{ width: '260px', height: '52px' }}>
+                    <div key={verificationSessionId}>
+                      <Turnstile
+                        sitekey={typeof import.meta.env.VITE_TURNSTILE_SITE_KEY === 'string' ? import.meta.env.VITE_TURNSTILE_SITE_KEY : '0x4AAAAAACkH6-i-na5YIlP9'}
+                        onVerify={(token) => {
+                          if ((window as any).onUploadSuccess) {
+                            (window as any).onUploadSuccess(token);
+                          }
+                        }}
+                        theme={theme === 'coldest' || theme === 'chef-mode' ? 'light' : 'dark'}
+                      />
                     </div>
-                  </motion.div>
-                )}
-              </AnimatePresence>
+                  </div>
+                </div>
+              )}
               <input type="file" ref={fileInputRef} className="hidden" accept=".csv,.txt,.ini,.xml" onChange={(e) => {
                 handleFileUpload(e);
               }} />
@@ -5767,42 +5741,17 @@ The AI was unable to verify these parameters. Please investigate.`;
         ) : (!isEnrichingLibrary && plugins.length > 0) || hasRestoredBackup ? (
           <div className="space-y-12 mt-12 sm:mt-0">
             <section className={`relative flex flex-col gap-8 p-6 sm:p-10 transition-colors ${mainBlurClass} border rounded-[3rem] sm:rounded-[4rem] shadow-xl ${theme === 'coldest' ? 'bg-white/20 border-white/30' : theme === 'chef-mode' ? 'bg-white/40 border-white/30' : 'bg-black/40 border-white/10'}`}>
-              <div className="flex flex-col gap-8 items-center justify-center relative z-10 w-full text-center">
-                <div className="flex flex-col items-center gap-2">
+              <div className="flex flex-col lg:flex-row gap-8 items-center justify-between relative z-10">
+                <div className="flex flex-col sm:flex-row items-center gap-0 sm:gap-4 text-center sm:text-left">
                   <div className="relative z-30">
                     <Logo size={240} grillStyle={grillStyle} knifeStyle={knifeStyle} duragStyle={duragStyle} pendantStyle={pendantStyle} chainStyle={chainStyle} theme={theme} saberColor={saberColor} mascotColor={mascotColor} showChain={showChain} highEyes={highEyes} isCigarEquipped={isCigarEquipped} isTossingCigar={isTossingCigar} showSparkles={showSparkles} onClick={cycleGrill} />
                   </div>
-                  <div className="flex flex-col justify-center -mt-6">
+                  <div className="flex flex-col justify-center -mt-4 sm:mt-0">
                     <h2 className={`text-4xl sm:text-6xl font-black tracking-tighter select-none ${theme === 'coldest' || theme === 'chef-mode' ? 'text-slate-800' : 'text-white'}`}>{t('studio_info')}</h2>
                     <p className="text-sm sm:text-lg font-bold opacity-70 select-none mt-2">{t('loaded_plugins_count', { count: plugins.length })}</p>
                   </div>
                 </div>
-                <div className="flex flex-col items-center gap-4 relative z-30">
-                  <AnimatePresence>
-                    {!isVerified && (
-                      <motion.div
-                        initial={{ opacity: 0, height: 0 }}
-                        animate={{ opacity: 1, height: 'auto' }}
-                        exit={{ opacity: 0, height: 0, overflow: 'hidden' }}
-                        className="flex flex-col items-center"
-                      >
-                        <div id="tutorial-turnstile-studio" className="flex items-center justify-center overflow-visible" style={{ width: '260px', height: '52px' }}>
-                          <div key={verificationSessionId}>
-                            <Turnstile
-                              sitekey={typeof import.meta.env.VITE_TURNSTILE_SITE_KEY === 'string' ? import.meta.env.VITE_TURNSTILE_SITE_KEY : '0x4AAAAAACkH6-i-na5YIlP9'}
-                              onVerify={(token) => {
-                                if ((window as any).onUploadSuccess) {
-                                  (window as any).onUploadSuccess(token);
-                                }
-                              }}
-                              theme={theme === 'coldest' || theme === 'chef-mode' ? 'light' : 'dark'}
-                            />
-                          </div>
-                        </div>
-                      </motion.div>
-                    )}
-                  </AnimatePresence>
-                  
+                <div className="flex flex-col sm:flex-row items-center gap-4 relative z-30">
                   <div className={`flex items-center p-1 rounded-full backdrop-blur-md border ${
                     theme === 'coldest' ? 'bg-sky-500/10 border-sky-500/20' : 
                     theme === 'crazy-bird' ? 'bg-red-500/20 border-red-500/30' : 
@@ -6324,6 +6273,14 @@ The AI was unable to verify these parameters. Please investigate.`;
               </div>
               )}
 
+              {!isVerified && (
+                <div className="flex justify-center mt-4">
+                  <div className="flex items-center justify-center overflow-visible" style={{ width: '260px', height: '52px' }}>
+                    <div className="cf-turnstile origin-center scale-[0.8]"></div>
+                  </div>
+                </div>
+              )}
+
               {loading && (
                 <div className="mt-4 animate-in fade-in slide-in-from-top-4 duration-500">
                   <div className="flex justify-between items-center mb-2">
@@ -6461,7 +6418,6 @@ The AI was unable to verify these parameters. Please investigate.`;
                         onCorrectPlugin={handleCorrectPlugin}
                         onContactSupport={handleContactSupport}
                         onMinimize={() => handleMinimizeCritique(critique, idx)}
-                        isMultibandMode={multibandMode}
                       />
                     </motion.div>
                   )})}
