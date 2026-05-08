@@ -1592,10 +1592,11 @@ The user has enabled "Multiband Mode" (also known as Gaffel mode). You MUST stri
       result.recipes = result.recipes.map((r: any) => ({ ...r, isGangstaVox: true }));
     }
     return result;
-  } catch (e) {
+  } catch (e: any) {
     console.error("Failed to parse AI response as JSON in getBeatRecommendations", e);
     console.log("Raw response text:", jsonStr);
-    throw new Error("The architect's response was not in the correct format. Please try again!");
+    const tailLength = Math.min(jsonStr.length, 1500);
+    throw new Error(`The architect's response was truncated or invalid. Length: ${jsonStr.length}. JSON Parse Error: ${e.message}. Last 1500 chars: ${jsonStr.substring(jsonStr.length - tailLength)}`);
   }
 };
 export const getCustomBeatRecommendations = async (plugins: VSTPlugin[], query: string, analogInstruments: Hardware[] = [], analogHardware: Hardware[] = [], drumKits: Hardware[] = [], excludeAnalog: boolean = false, dawType: string | null = null, starredPlugins: string[] = [], isGangstaVox: boolean = false, language: string = 'en', isMultibandMode: boolean = false): Promise<RecommendationResponse> => {
@@ -1729,9 +1730,10 @@ The user has enabled "Multiband Mode" (also known as Gaffel mode). You MUST stri
   try {
     result = postProcessResult(JSON.parse(sanitizeJSON(jsonStr)));
     if (Array.isArray(result)) result = { recipes: result };
-  } catch (e) {
+  } catch (e: any) {
     console.error("Failed to parse AI response as JSON in getCustomBeatRecommendations", e);
-    throw new Error("The architect's response was not in the correct format. Please try again!");
+    const tailLength = Math.min(jsonStr.length, 1500);
+    throw new Error(`The architect's response was truncated or invalid. Length: ${jsonStr.length}. JSON Parse Error: ${e.message}. Last 1500 chars: ${jsonStr.substring(jsonStr.length - tailLength)}`);
   }
   if (isGangstaVox && result.recipes) {
     result.recipes = result.recipes.map((r: any) => ({ ...r, isGangstaVox: true }));
@@ -1865,9 +1867,10 @@ The user has enabled "Multiband Mode" (also known as Gaffel mode). You MUST stri
   try {
     result = postProcessResult(JSON.parse(sanitizeJSON(jsonStr)));
     if (Array.isArray(result)) result = { recipes: result };
-  } catch (e) {
+  } catch (e: any) {
     console.error("Failed to parse AI response as JSON in getSongBeatRecommendations", e);
-    throw new Error("The architect's response was not in the correct format. Please try again!");
+    const tailLength = Math.min(jsonStr.length, 1500);
+    throw new Error(`The architect's response was truncated or invalid. Length: ${jsonStr.length}. JSON Parse Error: ${e.message}. Last 1500 chars: ${jsonStr.substring(jsonStr.length - tailLength)}`);
   }
   if (isGangstaVox && result.recipes) {
     result.recipes = result.recipes.map((r: any) => ({ ...r, isGangstaVox: true }));
@@ -2360,7 +2363,8 @@ The user has enabled "Multiband Mode" (also known as Gaffel mode). You MUST stri
     result = postProcessResult(JSON.parse(sanitizeJSON(jsonStr)));
   } catch (e: any) {
     console.error("Failed to parse AI response as JSON in getMixCritique", e);
-    throw new Error(`The architect's response was not in the correct format. JSON Parse Error: ${e.message}. Raw: ${jsonStr.substring(0, 100)}...`);
+    const tailLength = Math.min(jsonStr.length, 1500);
+    throw new Error(`The architect's response was truncated or invalid. Length: ${jsonStr.length}. JSON Parse Error: ${e.message}. Last 1500 chars: ${jsonStr.substring(jsonStr.length - tailLength)}`);
   }
   result.id = crypto.randomUUID();
   result.isGangstaVox = isGangstaVox;
@@ -2482,9 +2486,10 @@ export const getGangstaVoxRecipe = async (recipe: BeatRecipe | SavedRecipe, plug
   const jsonStr = response.text?.trim() || '{}';
   try {
     return postProcessResult(JSON.parse(sanitizeJSON(jsonStr)));
-  } catch (e) {
+  } catch (e: any) {
     console.error("Failed to parse AI response as JSON in getGangstaVoxRecipe", e);
-    throw new Error("The architect's response was not in the correct format. Please try again!");
+    const tailLength = Math.min(jsonStr.length, 1500);
+    throw new Error(`The architect's response was truncated or invalid. Length: ${jsonStr.length}. JSON Parse Error: ${e.message}. Last 1500 chars: ${jsonStr.substring(jsonStr.length - tailLength)}`);
   }
 };
 export const replicateRecipeWithUserGear = async (recipe: SavedRecipe, myPlugins: VSTPlugin[], language: string = 'en'): Promise<SavedRecipe> => {
@@ -2533,9 +2538,10 @@ export const replicateRecipeWithUserGear = async (recipe: SavedRecipe, myPlugins
       } else if (adapted.recipes && adapted.recipes?.length > 0) {
         adapted = adapted.recipes[0];
       }
-    } catch (parseErr) {
+    } catch (parseErr: any) {
       console.error("Failed to parse AI response as JSON:", jsonStr);
-      throw new Error("The AI generated an invalid recipe format. Please try again.");
+      const tailLength = Math.min(jsonStr.length, 1500);
+      throw new Error(`The AI generated an invalid recipe format or truncated. Length: ${jsonStr.length}. JSON Parse Error: ${parseErr.message}. Last 1500 chars: ${jsonStr.substring(jsonStr.length - tailLength)}`);
     }
     // Ensure we merge with the original recipe to preserve any fields the AI might have missed
     // but prioritize the adapted fields for instruments/busses/etc.
