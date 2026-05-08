@@ -268,7 +268,7 @@ export const validateApiKey = async (key: string): Promise<{valid: boolean, mess
       return { valid: false, message: "Please enter an API key." };
     }
     const payload = {
-      model: "gemini-1.5-pro",
+      model: "gemini-2.5-flash",
       contents: "hi",
       userApiKey: cleanKey
     };
@@ -396,7 +396,7 @@ export const regeneratePlugin = async (
     required: ["name", "purpose", "deepDive"]
   };
   const response = await ai.models.generateContent({
-    model: "gemini-1.5-pro",
+    model: "gemini-2.5-flash",
     contents: { parts: [{ text: prompt + "\\n\\nCRITICAL: You MUST return EXACTLY valid JSON matching this schema:\\n" + JSON.stringify(schemaObj, null, 2) }] },
     config: {
       customAction: 'regenerate_plugin',
@@ -425,7 +425,7 @@ export const categorizeAndCompareLibraries = async (senderPlugins: VSTPlugin[], 
     For each category, list the plugins the Sender has that I AM MISSING (similar names don't count as missing).
   `;
   const response = await ai.models.generateContent({
-    model: "gemini-1.5-pro",
+    model: "gemini-2.5-flash",
     contents: { parts: [{ text: prompt }] },
     config: {
       customAction: 'compare_libraries',
@@ -1138,7 +1138,7 @@ export const enrichPluginLibrary = async (
     `;
     try {
       const response = await ai.models.generateContent({
-        model: "gemini-1.5-pro", // Use standard Flash for high-volume research
+        model: "gemini-2.5-flash", // Use standard Flash for high-volume research
         contents: { parts: [{ text: prompt }] },
         config: {
           customAction: 'enrich_library',
@@ -1333,7 +1333,7 @@ export const verifyAndCorrectPlugin = async (
     }
   `;
   const response = await ai.models.generateContent({
-    model: "gemini-1.5-pro",
+    model: "gemini-2.5-flash",
     contents: { parts: [{ text: prompt }] },
     config: {
       customAction: 'verify_plugin',
@@ -1392,7 +1392,7 @@ export const researchPluginParameters = async (plugin: VSTPlugin, language: stri
     ${getLanguageInstruction(language)}
   `;
   const response = await ai.models.generateContent({
-    model: "gemini-1.5-pro",
+    model: "gemini-2.5-flash",
     contents: { parts: [{ text: prompt }] },
     config: {
       customAction: 'research_plugin',
@@ -1451,7 +1451,7 @@ export const generateStructuralBlueprint = async (searchQuery: string, language:
     Return ONLY the JSON object.
   `;
   const response = await ai.models.generateContent({
-    model: "gemini-1.5-pro",
+    model: "gemini-2.5-flash",
     contents: { parts: [{ text: prompt }] },
     config: {
       customAction: 'structural_blueprint',
@@ -1577,7 +1577,7 @@ The user has enabled "Multiband Mode" (also known as Gaffel mode). You MUST stri
     ${ADVANCED_MIDI_PROMPT}
   `;
   const response = await ai.models.generateContent({
-    model: 'gemini-1.5-pro',
+    model: 'gemini-2.5-flash',
     contents: { parts: [{ text: prompt + getSchemaInstruction() }] },
     config: {
       customAction: 'recipe',
@@ -1716,7 +1716,7 @@ The user has enabled "Multiband Mode" (also known as Gaffel mode). You MUST stri
     ${ADVANCED_MIDI_PROMPT}
   `;
   const response = await ai.models.generateContent({
-    model: 'gemini-1.5-pro',
+    model: 'gemini-2.5-flash',
     contents: { parts: [{ text: prompt + getSchemaInstruction() }] },
     config: {
       customAction: 'type_beat_search',
@@ -1852,7 +1852,7 @@ The user has enabled "Multiband Mode" (also known as Gaffel mode). You MUST stri
     ${ADVANCED_MIDI_PROMPT}
   `;
   const response = await ai.models.generateContent({
-    model: 'gemini-1.5-pro',
+    model: 'gemini-2.5-flash',
     contents: { parts: [{ text: prompt + getSchemaInstruction() }] },
     config: {
       customAction: 'song_search',
@@ -1898,7 +1898,7 @@ export const analyzeInstrumental = async (audioBase64: string, mimeType: string)
   const ai = getAI();
   const prompt = "Analyze this instrumental track. Identify its exact BPM (Tempo) and the exact start time (in seconds) of the clearest, most loopable 4-bar or 8-bar section. Output a JSON object with two fields: 'bpm' (a number, the tempo) and 'loopStart' (a number, the start time in seconds). Do not include any other text.";
   const data = await ai.models.generateContent({
-    model: "gemini-3.1-pro-preview",
+    model: "gemini-2.5-flash",
     contents: [{ parts: [{ text: prompt }, { inlineData: { data: audioBase64, mimeType } }] }],
     config: {
       customAction: 'analyze_instrumental' }
@@ -2096,7 +2096,7 @@ The user has enabled "Multiband Mode" (also known as Gaffel mode). You MUST stri
   let response;
   try {
     response = await ai.models.generateContent({
-      model: "gemini-1.5-pro",
+      model: "gemini-2.5-flash",
       contents: {
         parts: parts
       },
@@ -2337,7 +2337,7 @@ The user has enabled "Multiband Mode" (also known as Gaffel mode). You MUST stri
   let response;
   try {
     response = await ai.models.generateContent({
-      model: "gemini-1.5-pro",
+      model: "gemini-2.5-flash",
       contents: {
         parts: parts
       },
@@ -2429,7 +2429,7 @@ export const getSpecificMixHelp = async (plugins: VSTPlugin[], audioBase64: stri
   let response;
   try {
     response = await ai.models.generateContent({
-      model: "gemini-1.5-pro",
+      model: "gemini-2.5-flash",
       contents,
       config: {
         customAction: 'critique',
@@ -2472,7 +2472,7 @@ export const getGangstaVoxRecipe = async (recipe: BeatRecipe | SavedRecipe, plug
   let response;
   try {
     response = await ai.models.generateContent({
-      model: "gemini-1.5-pro",
+      model: "gemini-2.5-flash",
       contents: prompt,
       config: {
         customAction: 'gangsta_vox',
@@ -2514,7 +2514,7 @@ export const replicateRecipeWithUserGear = async (recipe: SavedRecipe, myPlugins
   `;
   try {
     const response = await ai.models.generateContent({
-      model: "gemini-1.5-pro",
+      model: "gemini-2.5-flash",
       contents: { parts: [{ text: prompt + "\\n\\nCRITICAL: You MUST return EXACTLY valid JSON matching this schema:\\n" + JSON.stringify(getUnifiedRecipeSchema(), null, 2) }] },
       config: {
         customAction: 'analog_save',
@@ -2695,7 +2695,7 @@ export const regenerateTrackingChain = async (
       required: ["trackingChain"]
     };
     const result = await ai.models.generateContent({
-      model: "gemini-1.5-pro",
+      model: "gemini-2.5-flash",
       contents: { parts: [{ text: prompt + "\\n\\nCRITICAL: You MUST return a valid JSON object matching this schema exactly:\\n" + JSON.stringify(schema, null, 2) }] },
       config: {
         customAction: 'regenerate_tracking_chain',
