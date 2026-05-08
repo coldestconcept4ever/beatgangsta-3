@@ -198,6 +198,27 @@ function postProcessResult(result: any) {
   }
   return result;
 }
+
+function validateRecipeResponse(result: any) {
+  if (!result || !result.recipes || !Array.isArray(result.recipes) || result.recipes.length === 0) {
+    if (result && result.recipe) {
+      result = { recipes: [result.recipe] };
+    } else if (result && result.drumPatterns) {
+      result = { recipes: [result] };
+    } else {
+      throw new Error("No recipes returned in the generated output. The AI might have been interrupted or provided an incomplete response.");
+    }
+  }
+
+  if (result.recipes) {
+    for (const recipe of result.recipes) {
+      if (!recipe.instruments || !Array.isArray(recipe.instruments) || recipe.instruments.length === 0) {
+         throw new Error(`Recipe "${recipe.title || 'Untitled'}" was generated without any instruments or plugins. Please try again.`);
+      }
+    }
+  }
+  return result;
+}
 const getLanguageInstruction = (language: string) => {
   if (language === 'en') {
     return `
@@ -1547,6 +1568,7 @@ export const getBeatRecommendations = async (plugins: VSTPlugin[], analogInstrum
   try {
     let result = postProcessResult(JSON.parse(sanitizeJSON(jsonStr)));
     if (Array.isArray(result)) result = { recipes: result };
+    result = validateRecipeResponse(result);
     if (isGangstaVox && result.recipes) {
       result.recipes = result.recipes.map((r: any) => ({ ...r, isGangstaVox: true }));
     }
@@ -1678,6 +1700,7 @@ export const getCustomBeatRecommendations = async (plugins: VSTPlugin[], query: 
   try {
     result = postProcessResult(JSON.parse(sanitizeJSON(jsonStr)));
     if (Array.isArray(result)) result = { recipes: result };
+    result = validateRecipeResponse(result);
   } catch (e: any) {
     console.error("Detailed Error in getCustomBeatRecommendations:", e);
     console.error("Safety/Blocked:", JSON.stringify(response?.candidates?.[0] || {}));
@@ -1805,6 +1828,7 @@ export const getSongBeatRecommendations = async (plugins: VSTPlugin[], songQuery
   try {
     result = postProcessResult(JSON.parse(sanitizeJSON(jsonStr)));
     if (Array.isArray(result)) result = { recipes: result };
+    result = validateRecipeResponse(result);
   } catch (e: any) {
     console.error("Detailed Error in getSongBeatRecommendations:", e);
     console.error("Safety/Blocked:", JSON.stringify(response?.candidates?.[0] || {}));
@@ -2050,6 +2074,7 @@ export const getAudioBeatRecommendations = async (plugins: VSTPlugin[], audioBas
   try {
     result = postProcessResult(JSON.parse(sanitizeJSON(jsonStr)));
     if (Array.isArray(result)) result = { recipes: result };
+    result = validateRecipeResponse(result);
   } catch (e: any) {
     console.error("Detailed Error in getAudioBeatRecommendations:", e);
     console.error("Safety/Blocked:", JSON.stringify(response?.candidates?.[0] || {}));
