@@ -23,25 +23,61 @@ export const sanitizeJSON = (jsonString: string): string => {
   // Trim whitespace
   sanitized = sanitized.trim();
   
-  // Try to extract the outermost {} or []
+  // Try to extract the outermost balanced {} or []
   const firstBrace = sanitized.indexOf('{');
-  const lastBrace = sanitized.lastIndexOf('}');
   const firstBracket = sanitized.indexOf('[');
-  const lastBracket = sanitized.lastIndexOf(']');
 
   let startIdx = -1;
-  let endIdx = -1;
+  let isOpenBrace = false;
 
-  if (firstBrace !== -1 && lastBrace !== -1 && (firstBracket === -1 || firstBrace < firstBracket)) {
+  if (firstBrace !== -1 && (firstBracket === -1 || firstBrace < firstBracket)) {
     startIdx = firstBrace;
-    endIdx = lastBrace;
-  } else if (firstBracket !== -1 && lastBracket !== -1) {
+    isOpenBrace = true;
+  } else if (firstBracket !== -1) {
     startIdx = firstBracket;
-    endIdx = lastBracket;
+    isOpenBrace = false;
   }
 
-  if (startIdx !== -1 && endIdx !== -1) {
-    sanitized = sanitized.substring(startIdx, endIdx + 1);
+  if (startIdx !== -1) {
+    let depth = 0;
+    let inString = false;
+    let escapeNext = false;
+    
+    for (let i = startIdx; i < sanitized.length; i++) {
+      const char = sanitized[i];
+      
+      if (escapeNext) {
+        escapeNext = false;
+        continue;
+      }
+      if (char === '\\') {
+        escapeNext = true;
+        continue;
+      }
+      if (char === '"') {
+        inString = !inString;
+        continue;
+      }
+      
+      if (!inString) {
+        if (isOpenBrace) {
+          if (char === '{') depth++;
+          else if (char === '}') {
+            depth--;
+            if (depth === 0) return sanitized.substring(startIdx, i + 1);
+          }
+        } else {
+          if (char === '[') depth++;
+          else if (char === ']') {
+            depth--;
+            if (depth === 0) return sanitized.substring(startIdx, i + 1);
+          }
+        }
+      }
+    }
+    
+    // If it never reaches depth 0, fallback to returning from startIdx
+    return sanitized.substring(startIdx);
   }
   
   return sanitized;
