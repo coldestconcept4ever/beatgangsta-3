@@ -2233,7 +2233,7 @@ The user has enabled "Multiband Mode" (also known as Gaffel mode). You MUST stri
       - 'targetStem': The exact name of the stem and track number this step applies to (e.g., 'Track 1: verse.wav').
       - 'issue': The specific problem.
       - 'solution': A detailed technical explanation of how to fix it.
-      - 'recommendedChain': A robust chain of plugins from the user's list to use for this fix, with 'name', 'purpose', and 'deepDive' (an array of parameter objects - Provide EVERY available parameter found on the actual plugin interface, aim for 40-80 settings for complex modules - each with 'parameter', 'value', and 'explanation'). You can also optionally include 'band' and 'routing' properties for multiband or parallel processing. MATCH THE EXTREME DETAIL LEVEL OF A FULL BEAT RECIPE.
+      - 'recommendedChain': A robust chain of plugins from the user's list to use for this fix, with 'name', 'purpose', and 'deepDive' (an array of parameter objects). CRITICAL INSTRUCTION: You MUST provide EVERY available parameter found on the actual plugin interface (e.g., 40-80 parameters if it's a complex plugin). DO NOT be lazy and skip any real parameters. HOWEVER, to prevent JSON truncation and output token limits, you MUST keep the 'explanation' field incredibly brief (e.g., 2-4 words max, like 'Sets gain' or 'Compression ratio'). You can also optionally include 'band' and 'routing' properties for multiband or parallel processing.
   `;
   const schemaObject = {
     type: "OBJECT",
@@ -2261,7 +2261,7 @@ The user has enabled "Multiband Mode" (also known as Gaffel mode). You MUST stri
                   purpose: { type: "STRING" },
                   deepDive: {
                     type: "ARRAY",
-                    description: "Provide EVERY available parameter found on the actual plugin interface. Aim for 40-70 settings for complex modules. MATCH THE EXTREME DETAIL LEVEL OF A FULL BEAT RECIPE.",
+                    description: "Provide EVERY available parameter found on the actual plugin (exhaustively!). Keep the 'explanation' field to 1-3 words max to save tokens.",
                     items: {
                       type: "OBJECT",
                       properties: {
@@ -2345,6 +2345,8 @@ The user has enabled "Multiband Mode" (also known as Gaffel mode). You MUST stri
         customAction: hasStems ? 'stems_critique' : 'critique',
         tools: tools.length > 0 ? tools : undefined,
         responseMimeType: "application/json",
+        responseSchema: schemaObject,
+        maxOutputTokens: 8192,
         safetySettings: [
           { category: HarmCategory.HARM_CATEGORY_HARASSMENT, threshold: HarmBlockThreshold.OFF },
           { category: HarmCategory.HARM_CATEGORY_HATE_SPEECH, threshold: HarmBlockThreshold.OFF },
