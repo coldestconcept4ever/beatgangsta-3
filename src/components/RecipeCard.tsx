@@ -33,11 +33,12 @@ interface RecipeCardProps {
   onCorrectPlugin?: (pluginName: string, corrections: { parameter: string, value: string }[], version: string) => Promise<{ success: boolean, message: string, plugin?: VSTPlugin }>;
   onContactSupport?: (pluginInfo: any) => void;
   onMinimize?: () => void;
+  isMultiBandMode?: boolean;
 }
 
 import { PluginBubble } from './PluginBubble';
 // ...
-export const RecipeCard: React.FC<RecipeCardProps> = ({ recipe: initialRecipe, isSaved, onSave, theme = 'coldest', dawType, plugins = [], analogHardware = [], drumKits = [], onCloudBackupRecipe, geminiFileUri, onLogReceipt, onCorrectPlugin, onContactSupport, onMinimize }) => {
+export const RecipeCard: React.FC<RecipeCardProps> = ({ recipe: initialRecipe, isSaved, onSave, theme = 'coldest', dawType, plugins = [], analogHardware = [], drumKits = [], onCloudBackupRecipe, geminiFileUri, onLogReceipt, onCorrectPlugin, onContactSupport, onMinimize, isMultiBandMode = false }) => {
   const { t, i18n } = useTranslation();
   const [recipe, setRecipe] = useState(initialRecipe);
   const [regeneratingPluginId, setRegeneratingPluginId] = useState<string | null>(null);
@@ -227,7 +228,8 @@ export const RecipeCard: React.FC<RecipeCardProps> = ({ recipe: initialRecipe, i
         undefined,
         geminiFileUri || recipe.geminiFileUri,
         i18n.language,
-        analogHardware
+        analogHardware,
+        isMultiBandMode
       );
       
       const isWav = recipe.mimeType?.includes('audio/wav');

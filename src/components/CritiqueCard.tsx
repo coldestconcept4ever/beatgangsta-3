@@ -35,9 +35,10 @@ interface CritiqueCardProps {
   onCorrectPlugin?: (pluginName: string, corrections: { parameter: string, value: string }[], version: string) => Promise<{ success: boolean, message: string, plugin?: VSTPlugin }>;
   onContactSupport?: (pluginInfo: any) => void;
   onMinimize?: () => void;
+  isMultiBandMode?: boolean;
 }
 
-export const CritiqueCard: React.FC<CritiqueCardProps> = ({ critique, theme, plugins, analogInstruments = [], analogHardware = [], audioBase64, audioUrl, geminiFileUri, mimeType, isSaved, onSave, onUpdateCritique, onReCritique, currentAudioInfo, onLogReceipt, onCorrectPlugin, onContactSupport, onMinimize }) => {
+export const CritiqueCard: React.FC<CritiqueCardProps> = ({ critique, theme, plugins, analogInstruments = [], analogHardware = [], audioBase64, audioUrl, geminiFileUri, mimeType, isSaved, onSave, onUpdateCritique, onReCritique, currentAudioInfo, onLogReceipt, onCorrectPlugin, onContactSupport, onMinimize, isMultiBandMode = false }) => {
   const { t, i18n } = useTranslation();
   const [specificHelpQuery, setSpecificHelpQuery] = useState('');
   const [isLoadingSpecificHelp, setIsLoadingSpecificHelp] = useState(false);
@@ -143,7 +144,7 @@ export const CritiqueCard: React.FC<CritiqueCardProps> = ({ critique, theme, plu
       const finalGeminiFileUri = geminiFileUri || currentAudioInfo?.geminiFileUri || undefined;
       const finalMimeType = mimeType || currentAudioInfo?.mimeType || undefined;
 
-      const result = await getSpecificMixHelp(plugins, finalAudioBase64, finalMimeType, specificHelpQuery.trim(), critique.isGangstaVox, JSON.stringify(critique), [], finalAudioUrl, finalGeminiFileUri, i18n.language, analogHardware);
+      const result = await getSpecificMixHelp(plugins, finalAudioBase64, finalMimeType, specificHelpQuery.trim(), critique.isGangstaVox, JSON.stringify(critique), [], finalAudioUrl, finalGeminiFileUri, i18n.language, analogHardware, isMultiBandMode);
       
       const isWav = finalMimeType?.includes('audio/wav');
       if (onLogReceipt) onLogReceipt('Specific Mix Help', isWav ? 25 : 10);

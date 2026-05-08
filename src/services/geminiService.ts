@@ -1431,7 +1431,7 @@ export const generateStructuralBlueprint = async (searchQuery: string, language:
     return {} as StructuralBlueprint;
   }
 };
-export const getBeatRecommendations = async (plugins: VSTPlugin[], analogInstruments: Hardware[] = [], analogHardware: Hardware[] = [], drumKits: Hardware[] = [], excludeAnalog: boolean = false, dawType: string | null = null, starredPlugins: string[] = [], isGangstaVox: boolean = false, language: string = 'en'): Promise<RecommendationResponse> => {
+export const getBeatRecommendations = async (plugins: VSTPlugin[], analogInstruments: Hardware[] = [], analogHardware: Hardware[] = [], drumKits: Hardware[] = [], excludeAnalog: boolean = false, dawType: string | null = null, starredPlugins: string[] = [], isGangstaVox: boolean = false, language: string = 'en', isMultiBandMode: boolean = false): Promise<RecommendationResponse> => {
   const ai = getAI();
   const pluginListStr = plugins.map(p => {
     let str = `${p.vendor} - ${p.name} (${p.type})`;
@@ -1446,6 +1446,7 @@ export const getBeatRecommendations = async (plugins: VSTPlugin[], analogInstrum
   const hasSphereMic = analogHardware.some(h => ['Sphere DLX', 'Sphere LX', 'L22'].includes(h.name) || h.name.toLowerCase() === 'l22' || h.name.toLowerCase().includes('townsend'));
   const sphereMicStr = hasSphereMic ? `\nCRITICAL: The user owns a Universal Audio Sphere (DLX/LX) or Townsend Labs L22 microphone. If the recipe involves a vocal tracking chain, you MUST assign the 'UAD Sphere Mic Collection', 'Ocean Way Mic Collection', or 'Bill Putnam Mic Collection' plugin as the VERY FIRST insert plugin on the vocal channel tracking chain. You MUST specifically select a mic model inside it based on the vibe searched. After the mic collection plugin, you can add up to 3 more plugins.` : '';
   const languageInstruction = getLanguageInstruction(language);
+  const multiBandInstruction = isMultiBandMode ? `\nMULTI-BAND/GAFFEL MODE ON: Split the processing into 3 or 4 distinct frequency bands (e.g., Lows, Mids, Highs). For every instrument/bus effect, provide separate plugin settings per band using the 'band' property.` : '';
   const prompt = isGangstaVox ? `
     Analyze my VST plugin list and suggest 1 high-level, extremely detailed "Vocal FX Chain Recipe" for the craziest vocal mix.
     Only use plugins from this list.
@@ -1554,7 +1555,7 @@ export const getBeatRecommendations = async (plugins: VSTPlugin[], analogInstrum
     throw new Error("The architect's response was not in the correct format. Please try again!");
   }
 };
-export const getCustomBeatRecommendations = async (plugins: VSTPlugin[], query: string, analogInstruments: Hardware[] = [], analogHardware: Hardware[] = [], drumKits: Hardware[] = [], excludeAnalog: boolean = false, dawType: string | null = null, starredPlugins: string[] = [], isGangstaVox: boolean = false, language: string = 'en'): Promise<RecommendationResponse> => {
+export const getCustomBeatRecommendations = async (plugins: VSTPlugin[], query: string, analogInstruments: Hardware[] = [], analogHardware: Hardware[] = [], drumKits: Hardware[] = [], excludeAnalog: boolean = false, dawType: string | null = null, starredPlugins: string[] = [], isGangstaVox: boolean = false, language: string = 'en', isMultiBandMode: boolean = false): Promise<RecommendationResponse> => {
   const ai = getAI();
   const pluginListStr = plugins.map(p => {
     let str = `${p.vendor} - ${p.name} (${p.type})`;
@@ -1660,9 +1661,10 @@ export const getCustomBeatRecommendations = async (plugins: VSTPlugin[], query: 
     - Use 'swing' values (0-100) to add groove.
     ${ADVANCED_MIDI_PROMPT}
   `;
+  const multiBandInstruction = isMultiBandMode ? '\n\nMULTI-BAND/GAFFEL MODE ON: Split the processing into exactly 3 or 4 distinct frequency bands (e.g., Lows, Mids, Highs). For every instrument/bus effect, provide separate plugin chains per band using the "band" property. Be mathematically precise for each individual band.' : '';
   const response = await ai.models.generateContent({
     model: 'gemini-3-flash-preview',
-    contents: { parts: [{ text: prompt + getSchemaInstruction() }] },
+    contents: { parts: [{ text: prompt + multiBandInstruction + getSchemaInstruction() }] },
     config: {
       customAction: 'type_beat_search',
       responseMimeType: "application/json"
@@ -1683,7 +1685,7 @@ export const getCustomBeatRecommendations = async (plugins: VSTPlugin[], query: 
   }
   return result;
 };
-export const getSongBeatRecommendations = async (plugins: VSTPlugin[], songQuery: string, analogInstruments: Hardware[] = [], analogHardware: Hardware[] = [], drumKits: Hardware[] = [], excludeAnalog: boolean = false, dawType: string | null = null, starredPlugins: string[] = [], isGangstaVox: boolean = false, language: string = 'en'): Promise<RecommendationResponse> => {
+export const getSongBeatRecommendations = async (plugins: VSTPlugin[], songQuery: string, analogInstruments: Hardware[] = [], analogHardware: Hardware[] = [], drumKits: Hardware[] = [], excludeAnalog: boolean = false, dawType: string | null = null, starredPlugins: string[] = [], isGangstaVox: boolean = false, language: string = 'en', isMultiBandMode: boolean = false): Promise<RecommendationResponse> => {
   const blueprint = await generateStructuralBlueprint(songQuery, language);
   const ai = getAI();
   const pluginListStr = plugins.map(p => {
@@ -1785,9 +1787,10 @@ export const getSongBeatRecommendations = async (plugins: VSTPlugin[], songQuery
     - Use 'swing' values (0-100) to add groove.
     ${ADVANCED_MIDI_PROMPT}
   `;
+  const multiBandInstruction = isMultiBandMode ? '\n\nMULTI-BAND/GAFFEL MODE ON: Split the processing into exactly 3 or 4 distinct frequency bands (e.g., Lows, Mids, Highs). For every instrument/bus effect, provide separate plugin chains per band using the "band" property. Be mathematically precise for each individual band.' : '';
   const response = await ai.models.generateContent({
     model: 'gemini-3-flash-preview',
-    contents: { parts: [{ text: prompt + getSchemaInstruction() }] },
+    contents: { parts: [{ text: prompt + multiBandInstruction + getSchemaInstruction() }] },
     config: {
       customAction: 'song_search',
       responseMimeType: "application/json"
@@ -1852,7 +1855,7 @@ export const generateContentViaBackend = async (model: string, prompt: string, c
     config
   });
 };
-export const getAudioBeatRecommendations = async (plugins: VSTPlugin[], audioBase64: string | null, audioUrl: string | null, mimeType: string, analogInstruments: Hardware[] = [], analogHardware: Hardware[] = [], drumKits: Hardware[] = [], excludeAnalog: boolean = false, dawType: string | null = null, starredPlugins: string[] = [], isGangstaVox: boolean = false, userContext: string = "", geminiFileUri: string | null = null, language: string = 'en'): Promise<RecommendationResponse> => {
+export const getAudioBeatRecommendations = async (plugins: VSTPlugin[], audioBase64: string | null, audioUrl: string | null, mimeType: string, analogInstruments: Hardware[] = [], analogHardware: Hardware[] = [], drumKits: Hardware[] = [], excludeAnalog: boolean = false, dawType: string | null = null, starredPlugins: string[] = [], isGangstaVox: boolean = false, userContext: string = "", geminiFileUri: string | null = null, language: string = 'en', isMultiBandMode: boolean = false): Promise<RecommendationResponse> => {
   const ai = getAI();
   // Limit plugin list to 50 most relevant to avoid context/complexity limits
   const limitedPlugins = plugins.slice(0, 50);
@@ -2013,7 +2016,8 @@ export const getAudioBeatRecommendations = async (plugins: VSTPlugin[], audioBas
   } else {
     throw new Error("No audio file provided for analysis (Beat).");
   }
-  parts.push({ text: prompt });
+  const multiBandInstruction = isMultiBandMode ? '\n\nMULTI-BAND/GAFFEL MODE ON: Split the processing into exactly 3 or 4 distinct frequency bands (e.g., Lows, Mids, Highs). For every instrument/bus effect, provide separate plugin chains per band using the "band" property. Be mathematically precise for each individual band.' : '';
+  parts.push({ text: prompt + multiBandInstruction });
   let response;
   try {
     response = await ai.models.generateContent({
@@ -2069,7 +2073,8 @@ export const getMixCritique = async (
   uploadedStems?: any[], 
   analogInstruments: Hardware[] = [], 
   analogHardware: Hardware[] = [],
-  isBusMode: boolean = false
+  isBusMode: boolean = false,
+  isMultiBandMode: boolean = false
 ): Promise<any> => {
   const ai = getAI();
   const pluginListStr = plugins.map(p => {
@@ -2239,7 +2244,8 @@ export const getMixCritique = async (
   } else if (referenceAudioBase64) {
     parts.push({ inlineData: { data: referenceAudioBase64, mimeType: mimeType } });
   }
-  parts.push({ text: prompt });
+  const multiBandInstruction = isMultiBandMode ? '\n\nMULTI-BAND/GAFFEL MODE ON: Split the processing into exactly 3 or 4 distinct frequency bands (e.g., Lows, Mids, Highs). For every instrument/bus effect, provide separate plugin chains per band using the "band" property. Be mathematically precise for each individual band.' : '';
+  parts.push({ text: prompt + multiBandInstruction });
   const tools: any[] = [];
   if (referenceTrack && !referenceAudioBase64) {
     tools.push({ googleSearch: {} });
@@ -2281,7 +2287,7 @@ export const getMixCritique = async (
   result.mimeType = mimeType;
   return result;
 };
-export const getSpecificMixHelp = async (plugins: VSTPlugin[], audioBase64: string | undefined, mimeType: string | undefined, query: string, isGangstaVox: boolean = false, recipeContext?: string, chatHistory: {role: 'user' | 'model', content: string}[] = [], audioUrl?: string, geminiFileUri?: string, language: string = 'en', analogHardware: Hardware[] = []): Promise<{query: string, advice: string, recommendedChain: any[]}> => {
+export const getSpecificMixHelp = async (plugins: VSTPlugin[], audioBase64: string | undefined, mimeType: string | undefined, query: string, isGangstaVox: boolean = false, recipeContext?: string, chatHistory: {role: 'user' | 'model', content: string}[] = [], audioUrl?: string, geminiFileUri?: string, language: string = 'en', analogHardware: Hardware[] = [], isMultiBandMode: boolean = false): Promise<{query: string, advice: string, recommendedChain: any[]}> => {
   const ai = getAI();
   const pluginListStr = plugins.map(p => `${p.vendor} - ${p.name} (${p.type})`).join('\n');
   const hasApollo = analogHardware.some(h => h.name.toLowerCase().includes('apollo'));
@@ -2330,9 +2336,10 @@ export const getSpecificMixHelp = async (plugins: VSTPlugin[], audioBase64: stri
       parts: [{ text: msg.content }]
     });
   }
+  const multiBandInstruction = isMultiBandMode ? '\n\nMULTI-BAND/GAFFEL MODE ON: Split the processing into exactly 3 or 4 distinct frequency bands (e.g., Lows, Mids, Highs). For every instrument/bus effect, provide separate plugin chains per band using the "band" property. Be mathematically precise for each individual band.' : '';
   contents.push({
     role: 'user',
-    parts: [{ text: query }]
+    parts: [{ text: query + multiBandInstruction }]
   });
   let response;
   try {

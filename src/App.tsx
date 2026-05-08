@@ -690,6 +690,7 @@ const App: React.FC = () => {
   const referenceTrackInputRef = useRef<HTMLInputElement>(null);
   const [hasStems, setHasStems] = useState<boolean>(false);
   const [isBusMode, setIsBusMode] = useState<boolean>(false);
+  const [isMultiBandMode, setIsMultiBandMode] = useState<boolean>(false);
   const [stems, setStems] = useState<{ id: string; file: File | null; type: string; customType?: string; base64?: string; url?: string; mimeType: string; fileId?: string; uri?: string; status: 'empty' | 'pending' | 'uploading' | 'ready' | 'error' }[]>(() => {
     const preset = activeUI?.stemTypesPreset || Array(10).fill('Other');
     const customPreset = activeUI?.stemCustomTypesPreset || Array(10).fill('');
@@ -3424,7 +3425,7 @@ The AI was unable to verify these parameters. Please investigate.`;
 
     try {
       if (!requireAuth()) return;
-      const response = await getBeatRecommendations(plugins, analogInstruments, analogHardware, drumKits, excludeAnalog, dawType, starredPlugins, isGangstaVox, i18n.language);
+      const response = await getBeatRecommendations(plugins, analogInstruments, analogHardware, drumKits, excludeAnalog, dawType, starredPlugins, isGangstaVox, i18n.language, isMultiBandMode);
       clearInterval(progressInterval);
       setGenerationProgress(100);
       clearTimeout(timeoutId);
@@ -3474,7 +3475,7 @@ The AI was unable to verify these parameters. Please investigate.`;
 
     try {
       if (!requireAuth()) return;
-      const response = await getCustomBeatRecommendations(plugins, typeBeatSearch.trim(), analogInstruments, analogHardware, drumKits, excludeAnalog, dawType, starredPlugins, isGangstaVox, i18n.language);
+      const response = await getCustomBeatRecommendations(plugins, typeBeatSearch.trim(), analogInstruments, analogHardware, drumKits, excludeAnalog, dawType, starredPlugins, isGangstaVox, i18n.language, isMultiBandMode);
       clearInterval(progressInterval);
       setGenerationProgress(100);
       clearTimeout(timeoutId);
@@ -3525,7 +3526,7 @@ The AI was unable to verify these parameters. Please investigate.`;
 
     try {
       if (!requireAuth()) return;
-      const response = await getSongBeatRecommendations(plugins, songSearch.trim(), analogInstruments, analogHardware, drumKits, excludeAnalog, dawType, starredPlugins, isGangstaVox, i18n.language);
+      const response = await getSongBeatRecommendations(plugins, songSearch.trim(), analogInstruments, analogHardware, drumKits, excludeAnalog, dawType, starredPlugins, isGangstaVox, i18n.language, isMultiBandMode);
       clearInterval(progressInterval);
       setGenerationProgress(100);
       clearTimeout(timeoutId);
@@ -3655,7 +3656,7 @@ The AI was unable to verify these parameters. Please investigate.`;
       const stemsContext = uploadedStems.map(s => `Stem: ${s.file!.name} (Type: ${s.type === 'Other' && s.customType ? s.customType : s.type}) - URI: ${s.uri}`).join('\n');
       const fullContext = `The user has uploaded ${activeStems.length} stems for analysis.\n\n${stemsContext}\n\nUser Context: ${critiqueContext}`;
 
-      const critique = await getMixCritique(plugins, null, null, 'audio/mpeg', isGangstaVox, true, fullContext, null, finalReferenceTrack, referenceAudioBase64, null, referenceGeminiFileUri, i18n.language, uploadedStems, analogInstruments, analogHardware, isBusMode);
+      const critique = await getMixCritique(plugins, null, null, 'audio/mpeg', isGangstaVox, true, fullContext, null, finalReferenceTrack, referenceAudioBase64, null, referenceGeminiFileUri, i18n.language, uploadedStems, analogInstruments, analogHardware, isBusMode, isMultiBandMode);
       critique.id = Math.random().toString(36).substr(2, 9);
       critique.audioBase64 = null;
       critique.mimeType = 'audio/mpeg';
@@ -3831,7 +3832,7 @@ The AI was unable to verify these parameters. Please investigate.`;
           }
         }
 
-        const critique = await getMixCritique(plugins, audioBase64, audioUrl, mimeType, isGangstaVox, hasStems, critiqueContext, null, finalReferenceTrack, referenceAudioBase64, geminiFileUri, referenceGeminiFileUri, i18n.language, undefined, analogInstruments, analogHardware, isBusMode);
+        const critique = await getMixCritique(plugins, audioBase64, audioUrl, mimeType, isGangstaVox, hasStems, critiqueContext, null, finalReferenceTrack, referenceAudioBase64, geminiFileUri, referenceGeminiFileUri, i18n.language, undefined, analogInstruments, analogHardware, isBusMode, isMultiBandMode);
         critique.id = Math.random().toString(36).substr(2, 9);
         critique.audioBase64 = audioBase64;
         critique.geminiFileUri = geminiFileUri;
@@ -3873,7 +3874,8 @@ The AI was unable to verify these parameters. Please investigate.`;
             isGangstaVox,
             critiqueContext,
             geminiFileUri,
-            i18n.language
+            i18n.language,
+            isMultiBandMode
           );
         } catch (apiErr: any) {
           console.warn("Initial audio analysis failed, retrying with minimal plugin list...", apiErr);
@@ -5998,6 +6000,15 @@ The AI was unable to verify these parameters. Please investigate.`;
                         </button>
                         <span className={`text-[10px] font-black uppercase tracking-widest transition-colors ${isBusMode ? (theme === 'coldest' ? 'text-slate-900' : 'text-white') : (theme === 'coldest' ? 'text-slate-500' : 'text-white/50')}`}>Bus Mode</span>
                       </div>
+                      <div className={`inline-flex items-center gap-3 rounded-full px-4 py-2 ${theme === 'coldest' ? 'bg-white/40' : 'bg-black/40'}`}>
+                        <span className={`text-[10px] font-black uppercase tracking-widest transition-colors ${isMultiBandMode ? (theme === 'coldest' ? 'text-slate-900' : 'text-white') : (theme === 'coldest' ? 'text-slate-500' : 'text-white/50')}`}>Multiband (Gaffel)</span>
+                        <button 
+                          onClick={() => setIsMultiBandMode(!isMultiBandMode)}
+                          className={`relative w-10 h-5 rounded-full transition-colors ${isMultiBandMode ? 'bg-purple-500' : 'bg-slate-400/50'}`}
+                        >
+                          <div className={`absolute top-0.5 left-0.5 w-4 h-4 rounded-full bg-white transition-transform ${isMultiBandMode ? 'translate-x-5' : 'translate-x-0'}`} />
+                        </button>
+                      </div>
                     </div>
                   </div>
                 )}
@@ -6373,6 +6384,7 @@ The AI was unable to verify these parameters. Please investigate.`;
                         onCorrectPlugin={handleCorrectPlugin}
                         onContactSupport={handleContactSupport}
                         onMinimize={() => handleMinimizeRecipe(recipe)}
+                        isMultiBandMode={isMultiBandMode}
                       />
                     </motion.div>
                   )})}
@@ -6418,6 +6430,7 @@ The AI was unable to verify these parameters. Please investigate.`;
                         onCorrectPlugin={handleCorrectPlugin}
                         onContactSupport={handleContactSupport}
                         onMinimize={() => handleMinimizeCritique(critique, idx)}
+                        isMultiBandMode={isMultiBandMode}
                       />
                     </motion.div>
                   )})}
