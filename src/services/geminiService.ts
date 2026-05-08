@@ -1549,10 +1549,10 @@ export const getBeatRecommendations = async (plugins: VSTPlugin[], analogInstrum
       result.recipes = result.recipes.map((r: any) => ({ ...r, isGangstaVox: true }));
     }
     return result;
-  } catch (e) {
-    console.error("Failed to parse AI response as JSON in getBeatRecommendations", e);
-    console.log("Raw response text:", jsonStr);
-    throw new Error("The architect's response was not in the correct format. Please try again!");
+  } catch (e: any) {
+    console.error("Detailed Error in getBeatRecommendations:", e);
+    console.error("Safety/Blocked:", JSON.stringify(response?.candidates?.[0] || {}));
+    throw new Error(`Format error in getBeatRecommendations. Details: ${e.message || e}\nRaw: ${typeof jsonStr !== 'undefined' ? jsonStr.substring(0, 500) : "empty"}\nSafety: ${JSON.stringify(response?.candidates?.[0]?.safetyRatings || "none")}`);
   }
 };
 export const getCustomBeatRecommendations = async (plugins: VSTPlugin[], query: string, analogInstruments: Hardware[] = [], analogHardware: Hardware[] = [], drumKits: Hardware[] = [], excludeAnalog: boolean = false, dawType: string | null = null, starredPlugins: string[] = [], isGangstaVox: boolean = false, language: string = 'en', isMultiBandMode: boolean = false): Promise<RecommendationResponse> => {
@@ -1676,9 +1676,10 @@ export const getCustomBeatRecommendations = async (plugins: VSTPlugin[], query: 
   try {
     result = postProcessResult(JSON.parse(sanitizeJSON(jsonStr)));
     if (Array.isArray(result)) result = { recipes: result };
-  } catch (e) {
-    console.error("Failed to parse AI response as JSON in getCustomBeatRecommendations", e);
-    throw new Error("The architect's response was not in the correct format. Please try again!");
+  } catch (e: any) {
+    console.error("Detailed Error in getCustomBeatRecommendations:", e);
+    console.error("Safety/Blocked:", JSON.stringify(response?.candidates?.[0] || {}));
+    throw new Error(`Format error in getCustomBeatRecommendations. Details: ${e.message || e}\nRaw: ${typeof jsonStr !== 'undefined' ? jsonStr.substring(0, 500) : "empty"}\nSafety: ${JSON.stringify(response?.candidates?.[0]?.safetyRatings || "none")}`);
   }
   if (isGangstaVox && result.recipes) {
     result.recipes = result.recipes.map((r: any) => ({ ...r, isGangstaVox: true }));
@@ -1802,9 +1803,10 @@ export const getSongBeatRecommendations = async (plugins: VSTPlugin[], songQuery
   try {
     result = postProcessResult(JSON.parse(sanitizeJSON(jsonStr)));
     if (Array.isArray(result)) result = { recipes: result };
-  } catch (e) {
-    console.error("Failed to parse AI response as JSON in getSongBeatRecommendations", e);
-    throw new Error("The architect's response was not in the correct format. Please try again!");
+  } catch (e: any) {
+    console.error("Detailed Error in getSongBeatRecommendations:", e);
+    console.error("Safety/Blocked:", JSON.stringify(response?.candidates?.[0] || {}));
+    throw new Error(`Format error in getSongBeatRecommendations. Details: ${e.message || e}\nRaw: ${typeof jsonStr !== 'undefined' ? jsonStr.substring(0, 500) : "empty"}\nSafety: ${JSON.stringify(response?.candidates?.[0]?.safetyRatings || "none")}`);
   }
   if (isGangstaVox && result.recipes) {
     result.recipes = result.recipes.map((r: any) => ({ ...r, isGangstaVox: true }));
@@ -2046,9 +2048,10 @@ export const getAudioBeatRecommendations = async (plugins: VSTPlugin[], audioBas
   try {
     result = postProcessResult(JSON.parse(sanitizeJSON(jsonStr)));
     if (Array.isArray(result)) result = { recipes: result };
-  } catch (e) {
-    console.error("JSON parse error (Beat):", e);
-    throw new Error("Failed to parse AI response");
+  } catch (e: any) {
+    console.error("Detailed Error in getAudioBeatRecommendations:", e);
+    console.error("Safety/Blocked:", JSON.stringify(response?.candidates?.[0] || {}));
+    throw new Error(`Format error in getAudioBeatRecommendations. Details: ${e.message || e}\nRaw: ${typeof jsonStr !== 'undefined' ? jsonStr.substring(0, 500) : "empty"}\nSafety: ${JSON.stringify(response?.candidates?.[0]?.safetyRatings || "none")}`);
   }
   console.log("Parsed result (Beat):", result);
   if (isGangstaVox && result.recipes) {
@@ -2277,9 +2280,10 @@ export const getMixCritique = async (
   let result;
   try {
     result = postProcessResult(JSON.parse(sanitizeJSON(jsonStr)));
-  } catch (e) {
-    console.error("Failed to parse AI response as JSON in getMixCritique", e);
-    throw new Error("The architect's response was not in the correct format. Please try again!");
+  } catch (e: any) {
+    console.error("Detailed Error in getMixCritique:", e);
+    console.error("Safety/Blocked:", JSON.stringify(response?.candidates?.[0] || {}));
+    throw new Error(`Format error in getMixCritique. Details: ${e.message || e}\nRaw: ${typeof jsonStr !== 'undefined' ? jsonStr.substring(0, 500) : "empty"}\nSafety: ${JSON.stringify(response?.candidates?.[0]?.safetyRatings || "none")}`);
   }
   result.id = crypto.randomUUID();
   result.isGangstaVox = isGangstaVox;
@@ -2363,9 +2367,10 @@ export const getSpecificMixHelp = async (plugins: VSTPlugin[], audioBase64: stri
   }
   try {
     return JSON.parse(sanitizeJSON(response.text || '{"query": "", "advice": "I\'m sorry, I couldn\'t generate a response.", "recommendedChain": []}'));
-  } catch (e) {
-    console.error("Failed to parse AI response as JSON in getSpecificMixHelp", e);
-    return { query, advice: "I'm sorry, I couldn't generate a response.", recommendedChain: [] };
+  } catch (e: any) {
+    console.error("Detailed Error in getSpecificMixHelp:", e);
+    console.error("Safety/Blocked:", JSON.stringify(response?.candidates?.[0] || {}));
+    return { query, advice: `I'm sorry, I couldn't generate a response. Details: ${e.message || e}`, recommendedChain: [] };
   }
 };
 export const getGangstaVoxRecipe = async (recipe: BeatRecipe | SavedRecipe, plugins: VSTPlugin[], analogHardware: Hardware[], language: string = 'en', vocalVibeGoal: string = '') => {
