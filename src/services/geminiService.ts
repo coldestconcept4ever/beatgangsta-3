@@ -645,7 +645,9 @@ export const getUnifiedRecipeSchema = () => {
                         parameter: { type: Type.STRING }, value: { type: Type.STRING }, explanation: { type: Type.STRING } },
                       required: ["parameter", "value", "explanation"]
                     }
-                  }
+                  },
+                  band: { type: Type.STRING },
+                  routing: { type: Type.STRING }
                 },
                 required: ["name", "purpose", "deepDive"]
               }
@@ -2186,7 +2188,9 @@ export const getMixCritique = async (
                         parameter: { type: "STRING" }, value: { type: "STRING" }, explanation: { type: "STRING" } },
                       required: ["parameter", "value", "explanation"]
                     }
-                  }
+                  },
+                  band: { type: "STRING" },
+                  routing: { type: "STRING" }
                 },
                 required: ["name", "purpose", "deepDive"]
               }
@@ -2316,7 +2320,7 @@ export const getSpecificMixHelp = async (plugins: VSTPlugin[], audioBase64: stri
     Only recommend plugins from this list:
     ${pluginListStr}
     ${audioUrl ? `The audio file is available at this URL: ${audioUrl}. Please fetch and analyze it.` : ""}
-    Respond to the user's latest message. Return the result as a JSON object with 'query', 'advice', and 'recommendedChain' (an array of plugin objects with name, purpose, and deepDive parameters - Provide EVERY available parameter found on the actual plugin interface. Aim for 40-80 settings for complex modules. Do NOT be lazy; ensure every possible control is accounted for. MATCH THE EXTREME DETAIL LEVEL OF A FULL BEAT RECIPE).
+    Respond to the user's latest message. Return the result as a JSON object with 'query', 'advice', and 'recommendedChain' (an array of plugin objects with 'name', 'purpose', 'band', 'routing', and 'deepDive' parameters - Provide EVERY available parameter found on the actual plugin interface. Aim for 40-80 settings for complex modules. Do NOT be lazy; ensure every possible control is accounted for. MATCH THE EXTREME DETAIL LEVEL OF A FULL BEAT RECIPE).
   `;
   const firstUserParts: any[] = [];
   if (geminiFileUri && mimeType) {
