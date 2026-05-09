@@ -39,8 +39,10 @@ For each stem, track, or bus that requires an effect:
    - 'bandCount': the exact number of bands/track duplications needed (e.g., 3 or 4)
    - 'splitFrequencies': an array of exact crossover frequencies in Hz/kHz to split at, e.g. ["150Hz", "2.5kHz"]
    - 'reasoning': a clear explanation of WHY these specific splits are chosen and how to route/duplicate them.
-2. For the plugin chains (fxPlugins, recommendedChain, etc.), you MUST provide entirely different guides per band. Each plugin object MUST use the "band" property to specify which frequency band it applies to AND its specific frequency range (e.g., "Lows/Sub (20Hz - 150Hz)", "Mids (150Hz - 2.5kHz)", "Highs (2.5kHz+)"). It is CRITICAL that the frequency range is included so the user knows exactly where to add the plugin. DO NOT default to a general or pre-split value.
-3. Ensure no two bands are given the exact same processing guide unless it's a utility plugin. Multi-band processing MUST use different settings per frequency band to be effective.
+2. CRITICAL - YOU MUST PROVIDE PLUGINS FOR *EVERY* SINGLE BAND: If bandCount is 3, your plugin array MUST contain some plugins for Band 1, some for Band 2, AND some for Band 3. Do NOT just output a "General" chain.
+3. Each plugin object MUST use the "band" property to explicitly declare its band AND frequency range (e.g., "Lows/Sub (20Hz - 150Hz)", "Mids (150Hz - 2.5kHz)", "Highs (2.5kHz+)"). It is CRITICAL that you do not omit the "band" property for any plugin, otherwise they will be incorrectly grouped as 'General / Pre-Split'.
+4. Multi-band processing MUST use different settings per frequency band. Do not give the same settings to the Lows as you do the Highs.
+5. You may also include a few "General / Pre-Split" plugins for volume levelling BEFORE the multi-band split, but you MUST follow them up with the band-specific plugins.
 ` : '';
 };
 
