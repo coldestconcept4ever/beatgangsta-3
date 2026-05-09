@@ -588,22 +588,64 @@ export const RecipeCard: React.FC<RecipeCardProps> = ({ recipe: initialRecipe, i
               {Array.isArray(track.fxPlugins) && track.fxPlugins?.length > 0 && (
                 <div className="mt-6 space-y-4">
                   <h5 className={`text-[8px] font-black uppercase tracking-widest ${theme === 'coldest' ? 'text-sky-400' : 'opacity-60'}`}>{t('fx_deep_dive')}</h5>
-                  {Array.isArray(track.fxPlugins) && track.fxPlugins.map((dive, dIdx) => (
-                    <PluginBubble 
-                      key={dIdx}
-                      name={dive.name}
-                      purpose={dive.purpose}
-                      deepDive={dive.deepDive}
-                      band={dive.band}
-                      routing={dive.routing}
-                      isRegenerating={regeneratingPluginId === `track-${idx}-${dIdx}`}
-                      onRegenerate={() => handleRegenerate(dive, idx, dIdx, 'track')}
-                      onCorrect={onCorrectPlugin}
-                      onContactSupport={onContactSupport}
-                      theme={theme}
-                      className={theme === 'coldest' ? 'bg-purple-900/40 border-purple-500/40 shadow-md' : 'bg-purple-900/20 border-purple-500/30'}
-                    />
-                  ))}
+                  {(() => {
+                    if (track.multiBandDetails?.isEnabled) {
+                      const grouped = (track.fxPlugins || []).reduce((acc: any, dive: any) => {
+                        const b = dive.band || 'General / Pre-Split';
+                        if (!acc[b]) acc[b] = [];
+                        acc[b].push(dive);
+                        return acc;
+                      }, {});
+                      
+                      return Object.entries(grouped).map(([bandName, plugins]: [string, any], bIdx) => (
+                        <div key={`band-${bIdx}`} className="space-y-4 mb-6 last:mb-0 relative">
+                          <div className="absolute -left-3 top-0 bottom-0 w-0.5 bg-cyan-500/20 rounded-full"></div>
+                          <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-cyan-500/10 border border-cyan-500/20 text-[10px] font-black tracking-widest uppercase text-cyan-300 ml-2 shadow-sm">
+                            <Layers className="w-3 h-3 text-cyan-400" />
+                            {bandName}
+                          </div>
+                          <div className="ml-2 space-y-4">
+                            {plugins.map((dive: any) => {
+                              const originalIdx = track.fxPlugins.indexOf(dive);
+                              return (
+                                <PluginBubble 
+                                  key={originalIdx}
+                                  name={dive.name}
+                                  purpose={dive.purpose}
+                                  deepDive={dive.deepDive}
+                                  band={dive.band}
+                                  routing={dive.routing}
+                                  isRegenerating={regeneratingPluginId === `track-${idx}-${originalIdx}`}
+                                  onRegenerate={() => handleRegenerate(dive, idx, originalIdx, 'track')}
+                                  onCorrect={onCorrectPlugin}
+                                  onContactSupport={onContactSupport}
+                                  theme={theme}
+                                  className={theme === 'coldest' ? 'bg-purple-900/40 border-purple-500/40 shadow-md' : 'bg-purple-900/20 border-purple-500/30'}
+                                />
+                              );
+                            })}
+                          </div>
+                        </div>
+                      ));
+                    }
+                    
+                    return Array.isArray(track.fxPlugins) && track.fxPlugins.map((dive, dIdx) => (
+                      <PluginBubble 
+                        key={dIdx}
+                        name={dive.name}
+                        purpose={dive.purpose}
+                        deepDive={dive.deepDive}
+                        band={dive.band}
+                        routing={dive.routing}
+                        isRegenerating={regeneratingPluginId === `track-${idx}-${dIdx}`}
+                        onRegenerate={() => handleRegenerate(dive, idx, dIdx, 'track')}
+                        onCorrect={onCorrectPlugin}
+                        onContactSupport={onContactSupport}
+                        theme={theme}
+                        className={theme === 'coldest' ? 'bg-purple-900/40 border-purple-500/40 shadow-md' : 'bg-purple-900/20 border-purple-500/30'}
+                      />
+                    ));
+                  })()}
                 </div>
               )}
             </div>
@@ -743,22 +785,64 @@ export const RecipeCard: React.FC<RecipeCardProps> = ({ recipe: initialRecipe, i
                 )}
 
                 <div className="space-y-4">
-                  {Array.isArray(bus.fxPlugins) && bus.fxPlugins.map((dive, dIdx) => (
-                    <PluginBubble 
-                      key={dIdx}
-                      name={dive.name}
-                      purpose={dive.purpose}
-                      deepDive={dive.deepDive}
-                      band={dive.band}
-                      routing={dive.routing}
-                      isRegenerating={regeneratingPluginId === `bus-${idx}-${dIdx}`}
-                      onRegenerate={() => handleRegenerate(dive, idx, dIdx, 'bus')}
-                      onCorrect={onCorrectPlugin}
-                      onContactSupport={onContactSupport}
-                      theme={theme}
-                      className={theme === 'coldest' ? 'bg-black/40 border-orange-500/20' : 'bg-black/30 border-white/10'}
-                    />
-                  ))}
+                  {(() => {
+                    if (bus.multiBandDetails?.isEnabled) {
+                      const grouped = (bus.fxPlugins || []).reduce((acc: any, dive: any) => {
+                        const b = dive.band || 'General / Pre-Split';
+                        if (!acc[b]) acc[b] = [];
+                        acc[b].push(dive);
+                        return acc;
+                      }, {});
+                      
+                      return Object.entries(grouped).map(([bandName, plugins]: [string, any], bIdx) => (
+                        <div key={`band-${bIdx}`} className="space-y-4 mb-6 last:mb-0 relative">
+                          <div className="absolute -left-3 top-0 bottom-0 w-0.5 bg-cyan-500/20 rounded-full"></div>
+                          <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-cyan-500/10 border border-cyan-500/20 text-[10px] font-black tracking-widest uppercase text-cyan-300 ml-2 shadow-sm">
+                            <Layers className="w-3 h-3 text-cyan-400" />
+                            {bandName}
+                          </div>
+                          <div className="ml-2 space-y-4">
+                            {plugins.map((dive: any) => {
+                              const originalIdx = bus.fxPlugins.indexOf(dive);
+                              return (
+                                <PluginBubble 
+                                  key={originalIdx}
+                                  name={dive.name}
+                                  purpose={dive.purpose}
+                                  deepDive={dive.deepDive}
+                                  band={dive.band}
+                                  routing={dive.routing}
+                                  isRegenerating={regeneratingPluginId === `bus-${idx}-${originalIdx}`}
+                                  onRegenerate={() => handleRegenerate(dive, idx, originalIdx, 'bus')}
+                                  onCorrect={onCorrectPlugin}
+                                  onContactSupport={onContactSupport}
+                                  theme={theme}
+                                  className={theme === 'coldest' ? 'bg-black/40 border-orange-500/20' : 'bg-black/30 border-white/10'}
+                                />
+                              );
+                            })}
+                          </div>
+                        </div>
+                      ));
+                    }
+
+                    return Array.isArray(bus.fxPlugins) && bus.fxPlugins.map((dive, dIdx) => (
+                      <PluginBubble 
+                        key={dIdx}
+                        name={dive.name}
+                        purpose={dive.purpose}
+                        deepDive={dive.deepDive}
+                        band={dive.band}
+                        routing={dive.routing}
+                        isRegenerating={regeneratingPluginId === `bus-${idx}-${dIdx}`}
+                        onRegenerate={() => handleRegenerate(dive, idx, dIdx, 'bus')}
+                        onCorrect={onCorrectPlugin}
+                        onContactSupport={onContactSupport}
+                        theme={theme}
+                        className={theme === 'coldest' ? 'bg-black/40 border-orange-500/20' : 'bg-black/30 border-white/10'}
+                      />
+                    ));
+                  })()}
                 </div>
               </div>
             ))}

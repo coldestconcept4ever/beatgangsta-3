@@ -389,22 +389,64 @@ export const CritiqueCard: React.FC<CritiqueCardProps> = ({ critique, theme, plu
 
                   <div className="space-y-3">
                     <h6 className="text-[10px] font-black uppercase tracking-widest opacity-50">{t('recommended_chain')}</h6>
-                    {Array.isArray(action.recommendedChain) && action.recommendedChain?.map((plugin, pIdx) => (
-                      <PluginBubble 
-                        key={pIdx}
-                        name={plugin.name}
-                        purpose={plugin.purpose}
-                        deepDive={plugin.deepDive}
-                        band={plugin.band}
-                        routing={plugin.routing}
-                        isRegenerating={regeneratingPluginId === `critique-${idx}-${pIdx}`}
-                        onRegenerate={() => handleRegenerate(plugin, idx, pIdx)}
-                        onCorrect={onCorrectPlugin}
-                        onContactSupport={onContactSupport}
-                        theme={theme}
-                        className={theme === 'coldest' ? 'bg-white border-sky-100' : 'bg-black/40 border-sky-500/30'}
-                      />
-                    ))}
+                    {(() => {
+                      if (action.multiBandDetails?.isEnabled) {
+                        const grouped = (action.recommendedChain || []).reduce((acc: any, plugin: any) => {
+                          const b = plugin.band || 'General / Pre-Split';
+                          if (!acc[b]) acc[b] = [];
+                          acc[b].push(plugin);
+                          return acc;
+                        }, {});
+                        
+                        return Object.entries(grouped).map(([bandName, plugins]: [string, any], bIdx) => (
+                          <div key={`band-${bIdx}`} className="space-y-4 mb-6 last:mb-0 relative">
+                            <div className="absolute -left-3 top-0 bottom-0 w-0.5 bg-cyan-500/20 rounded-full"></div>
+                            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-cyan-500/10 border border-cyan-500/20 text-[10px] font-black tracking-widest uppercase text-cyan-300 ml-2 shadow-sm">
+                              <Layers className="w-3 h-3 text-cyan-400" />
+                              {bandName}
+                            </div>
+                            <div className="ml-2 space-y-3">
+                              {plugins.map((plugin: any) => {
+                                const originalIdx = action.recommendedChain.indexOf(plugin);
+                                return (
+                                  <PluginBubble 
+                                    key={originalIdx}
+                                    name={plugin.name}
+                                    purpose={plugin.purpose}
+                                    deepDive={plugin.deepDive}
+                                    band={plugin.band}
+                                    routing={plugin.routing}
+                                    isRegenerating={regeneratingPluginId === `critique-${idx}-${originalIdx}`}
+                                    onRegenerate={() => handleRegenerate(plugin, idx, originalIdx)}
+                                    onCorrect={onCorrectPlugin}
+                                    onContactSupport={onContactSupport}
+                                    theme={theme}
+                                    className={theme === 'coldest' ? 'bg-white border-sky-100' : 'bg-black/40 border-sky-500/30'}
+                                  />
+                                );
+                              })}
+                            </div>
+                          </div>
+                        ));
+                      }
+
+                      return Array.isArray(action.recommendedChain) && action.recommendedChain?.map((plugin, pIdx) => (
+                        <PluginBubble 
+                          key={pIdx}
+                          name={plugin.name}
+                          purpose={plugin.purpose}
+                          deepDive={plugin.deepDive}
+                          band={plugin.band}
+                          routing={plugin.routing}
+                          isRegenerating={regeneratingPluginId === `critique-${idx}-${pIdx}`}
+                          onRegenerate={() => handleRegenerate(plugin, idx, pIdx)}
+                          onCorrect={onCorrectPlugin}
+                          onContactSupport={onContactSupport}
+                          theme={theme}
+                          className={theme === 'coldest' ? 'bg-white border-sky-100' : 'bg-black/40 border-sky-500/30'}
+                        />
+                      ));
+                    })()}
                   </div>
                 </div>
               ))}
