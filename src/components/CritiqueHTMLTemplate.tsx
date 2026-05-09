@@ -74,6 +74,24 @@ export const CritiqueHTMLTemplate: React.FC<CritiqueHTMLTemplateProps> = ({ crit
         </div>
       </section>
 
+      {/* Deviation Metrics */}
+      {critique.deviationMetrics && critique.deviationMetrics.length > 0 && (
+        <section className="space-y-8 mb-12 print-break">
+          <div className="p-8 webos-card border-[#d946ef] print:border-fuchsia-300">
+            <h3 className="text-sm font-black uppercase tracking-widest text-[#d946ef] mb-6">Reference Track Deviation</h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {critique.deviationMetrics.map((metric, idx) => (
+                <div key={idx} className="p-6 rounded-2xl bg-black/40 print:bg-slate-50 border border-fuchsia-500/20 print:border-fuchsia-200">
+                  <h5 className="text-xs font-black uppercase tracking-widest text-slate-400 print:text-slate-500 mb-2">{metric.metric}</h5>
+                  <p className="text-xl font-bold text-[#d946ef] mb-3">{metric.deviation}</p>
+                  <p className="text-sm font-medium text-slate-300 print:text-slate-600 leading-relaxed">{metric.description}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
+
       {/* Action Plan */}
       <section className="space-y-8 print-break">
         <h2 className="text-2xl font-black uppercase tracking-widest text-[#38bdf8] border-b border-[#0369a1] pb-4 print:border-slate-300">{t('action_plan_protocols')}</h2>

@@ -4,7 +4,7 @@ import { MixCritique, AppTheme, VSTPlugin, Hardware } from '../types';
 import { getSpecificMixHelp, getMixCritique, regeneratePlugin } from '../services/geminiService';
 import { uploadFileChunked, deleteFileFromDrive } from '../services/uploadService';
 import { motion } from 'motion/react';
-import { Loader2, Search, CheckCircle2, AlertCircle, Download, RefreshCw, Layers } from 'lucide-react';
+import { Loader2, Search, CheckCircle2, AlertCircle, Download, RefreshCw, Layers, BarChart2 } from 'lucide-react';
 import { PluginBubble } from './PluginBubble';
 import { CritiqueHTMLTemplate } from './CritiqueHTMLTemplate';
 
@@ -345,6 +345,24 @@ export const CritiqueCard: React.FC<CritiqueCardProps> = ({ critique, theme, plu
               </ul>
             </div>
           </div>
+
+          {critique.deviationMetrics && critique.deviationMetrics.length > 0 && (
+            <div className={`p-6 rounded-3xl border mb-12 ${theme === 'coldest' ? 'bg-fuchsia-50 border-fuchsia-100' : 'bg-fuchsia-900/10 border-fuchsia-500/20'}`}>
+              <div className="flex items-center gap-2 mb-6">
+                <BarChart2 className="w-5 h-5 text-fuchsia-500" />
+                <h4 className="text-sm font-black uppercase tracking-widest text-fuchsia-600 dark:text-fuchsia-400">Reference Track Deviation</h4>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {critique.deviationMetrics.map((metric, idx) => (
+                  <div key={idx} className={`p-4 rounded-2xl ${theme === 'coldest' ? 'bg-white shadow-sm' : 'bg-black/20'}`}>
+                    <h5 className="text-xs font-black uppercase tracking-widest opacity-60 mb-2">{metric.metric}</h5>
+                    <p className="text-lg font-bold text-fuchsia-600 dark:text-fuchsia-400 mb-2">{metric.deviation}</p>
+                    <p className="text-xs font-medium opacity-80 leading-relaxed">{metric.description}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
 
           <div className="space-y-6 mb-12">
             <h4 className="text-sm font-black uppercase tracking-widest opacity-40">{t('action_plan')}</h4>

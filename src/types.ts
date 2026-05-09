@@ -381,13 +381,30 @@ export interface MixCritique {
     issue: string;
     solution: string;
     recommendedChain: DeepDivePlugin[];
+    multiBandDetails?: {
+      isEnabled: boolean;
+      bandCount: number;
+      splitFrequencies: string[];
+      reasoning: string;
+    };
   }[];
   specificHelp?: {
     query?: string;
     advice?: string;
     recommendedChain?: DeepDivePlugin[];
+    multiBandDetails?: {
+      isEnabled: boolean;
+      bandCount: number;
+      splitFrequencies: string[];
+      reasoning: string;
+    };
     role?: 'user' | 'model';
     content?: string;
+  }[];
+  deviationMetrics?: {
+    metric: string;
+    deviation: string;
+    description: string;
   }[];
   isGangstaVox?: boolean;
   audioBase64?: string;

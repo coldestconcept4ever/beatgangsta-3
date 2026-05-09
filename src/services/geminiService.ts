@@ -39,7 +39,7 @@ For each stem, track, or bus that requires an effect:
    - 'bandCount': the exact number of bands/track duplications needed (e.g., 3 or 4)
    - 'splitFrequencies': an array of exact crossover frequencies in Hz/kHz to split at, e.g. ["150Hz", "2.5kHz"]
    - 'reasoning': a clear explanation of WHY these specific splits are chosen and how to route/duplicate them.
-2. For the plugin chains (fxPlugins, etc.), you MUST provide entirely different guides per band. Each plugin object MUST use the "band" property to specify which frequency band it applies to AND its specific frequency range (e.g., "Lows/Sub (20Hz - 150Hz)", "Mids (150Hz - 2.5kHz)", "Highs (2.5kHz+)"). It is CRITICAL that the frequency range is included so the user knows exactly where to add the plugin.
+2. For the plugin chains (fxPlugins, recommendedChain, etc.), you MUST provide entirely different guides per band. Each plugin object MUST use the "band" property to specify which frequency band it applies to AND its specific frequency range (e.g., "Lows/Sub (20Hz - 150Hz)", "Mids (150Hz - 2.5kHz)", "Highs (2.5kHz+)"). It is CRITICAL that the frequency range is included so the user knows exactly where to add the plugin. DO NOT default to a general or pre-split value.
 3. Ensure no two bands are given the exact same processing guide unless it's a utility plugin. Multi-band processing MUST use different settings per frequency band to be effective.
 ` : '';
 };
@@ -2206,7 +2206,8 @@ export const getMixCritique = async (
     - 'overallFeedback': A detailed analysis summarizing the current state of the mix, the main areas for improvement, and the overall sonic character.
     - 'strengths': An array of 4-6 specific things that sound good (e.g., specific frequency ranges, dynamic control, spatial imaging).
     - 'weaknesses': An array of 4-6 specific issues that need fixing, categorized by their impact on the mix.
-    - 'actionPlan': A comprehensive array of actionable steps to fix the issues. ${hasStems && uploadedStems && uploadedStems.length > 0 ? `CRITICAL: Because the user uploaded ${uploadedStems.length} stems, you MUST provide EXACTLY one step per stem. For EACH stem's step, you MUST provide EXACTLY 4 plugins in the 'recommendedChain'. ALWAYS add an extra plugin (the 4th plugin) dedicated specifically to volume leveling/gain structuring so that the resulting stem sounds completely unified strictly in volume with the rest of the stems.` : "For each step, provide a robust chain of 2-4 plugins."} For each step, provide:
+    - 'deviationMetrics': (ONLY IF A REFERENCE TRACK IS PROVIDED): Generate 2-4 analytical deviation metrics comparing the mix analytically to the reference (e.g. Dynamic Range: 2dB narrower than reference, High-end Air: 15% darker).
+    - 'actionPlan': A comprehensive array of actionable steps to fix the issues. ${hasStems && uploadedStems && uploadedStems.length > 0 ? (isMultiBandMode ? `CRITICAL: Because the user uploaded ${uploadedStems.length} stems, you MUST provide EXACTLY one step per stem. For EACH stem's step, provide the multiBandDetails, then provide an adequate number of plugins to handle all the bands.` : `CRITICAL: Because the user uploaded ${uploadedStems.length} stems, you MUST provide EXACTLY one step per stem. For EACH stem's step, you MUST provide EXACTLY 4 plugins in the 'recommendedChain'. ALWAYS add an extra plugin (the 4th plugin) dedicated specifically to volume leveling/gain structuring so that the resulting stem sounds completely unified strictly in volume with the rest of the stems.`) : "For each step, provide a robust chain of plugins."} For each step, provide:
       - 'targetStem': The exact name of the stem this step applies to (if stems were uploaded).
       - 'issue': The specific problem.
       - 'solution': A detailed technical explanation of how to fix it.
@@ -2219,6 +2220,19 @@ export const getMixCritique = async (
       overallFeedback: { type: "STRING" },
       strengths: { type: "ARRAY", items: { type: "STRING" } },
       weaknesses: { type: "ARRAY", items: { type: "STRING" } },
+      deviationMetrics: {
+        type: "ARRAY",
+        description: "ONLY INCLUDE THIS IF A REFERENCE TRACK WAS PROVIDED. Generate 2-4 analytical deviation metrics comparing the user's mix to the reference track. Be highly technical.",
+        items: {
+          type: "OBJECT",
+          properties: {
+            metric: { type: "STRING", description: "e.g., Dynamic Range, High-end Air, Sub-bass Energy" },
+            deviation: { type: "STRING", description: "e.g., '2dB narrower than reference', '15% darker'" },
+            description: { type: "STRING", description: "Analytical description of the deviation." }
+          },
+          required: ["metric", "deviation", "description"]
+        }
+      },
       actionPlan: {
         type: "ARRAY",
         description: hasStems && uploadedStems && uploadedStems.length > 0 ? `CRITICAL: You MUST generate EXACTLY ${uploadedStems.length} items in this array, one for each uploaded stem.` : "Array of actionable steps.",
@@ -2230,7 +2244,7 @@ export const getMixCritique = async (
             solution: { type: "STRING" },
             recommendedChain: {
               type: "ARRAY",
-              description: hasStems && uploadedStems && uploadedStems.length > 0 ? "CRITICAL: You MUST provide EXACTLY 4 plugins for this stem, with the 4th explicitly dedicated to volume leveling." : "Chain of 2-4 plugins.",
+              description: hasStems && uploadedStems && uploadedStems.length > 0 ? (isMultiBandMode ? "CRITICAL: You MUST provide an adequate number of plugins to handle the multi-band split across all bands. Do NOT limit to 4 plugins." : "CRITICAL: You MUST provide EXACTLY 4 plugins for this stem, with the 4th explicitly dedicated to volume leveling.") : "Chain of 2-4 plugins (or more if multi-band is used).",
               items: {
                 type: "OBJECT",
                 properties: {
