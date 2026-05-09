@@ -491,30 +491,100 @@ export const CritiqueCard: React.FC<CritiqueCardProps> = ({ critique, theme, plu
                     <h5 className="font-black text-sm mb-2 opacity-50">{t('q_label', { query: result.query })}</h5>
                     <p className="text-sm font-bold leading-relaxed mb-4">{result.advice}</p>
                     
+                    {result.multiBandDetails?.isEnabled && (
+                      <div className="mb-6 p-4 rounded-xl relative overflow-hidden group">
+                        <div className="absolute inset-0 bg-gradient-to-r from-teal-500/10 via-cyan-500/10 to-blue-500/10 group-hover:from-teal-500/20 group-hover:via-cyan-500/20 group-hover:to-blue-500/20 transition-all duration-500"></div>
+                        <div className="absolute top-0 left-0 w-1 h-full bg-gradient-to-b from-teal-500 to-cyan-500"></div>
+                        <div className="relative z-10 flex items-start gap-4">
+                          <div className="w-10 h-10 rounded-full bg-cyan-500/20 border border-cyan-400/30 flex items-center justify-center flex-shrink-0">
+                            <Layers className="w-5 h-5 text-cyan-400" />
+                          </div>
+                          <div>
+                            <h5 className="text-[10px] uppercase tracking-widest font-black text-cyan-400 flex items-center gap-2 mb-1">
+                              Gaffel Multiband Split <span className="bg-cyan-500/20 text-cyan-300 px-2 py-0.5 rounded-full">{result.multiBandDetails.bandCount} Bands</span>
+                            </h5>
+                            <div className="flex flex-wrap items-center gap-2 mb-2 text-[10px] font-bold text-cyan-100/70">
+                              Split points: 
+                              {Array.isArray(result.multiBandDetails.splitFrequencies) && result.multiBandDetails.splitFrequencies.map((freq: string, i: number) => (
+                                <span key={i} className="bg-cyan-900/30 border border-cyan-500/30 px-1.5 py-0.5 rounded shadow-sm text-cyan-300">{freq}</span>
+                              ))}
+                            </div>
+                            <p className="text-xs font-medium text-cyan-100/90 leading-relaxed max-w-lg mt-2">
+                              {result.multiBandDetails.reasoning}
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
                     {result.recommendedChain && result.recommendedChain?.length > 0 && (
                       <div className="space-y-2">
                         <h6 className="text-[10px] font-black uppercase tracking-widest opacity-50 mb-2">{t('recommended_plugins')}</h6>
-                        {Array.isArray(result.recommendedChain) && result.recommendedChain.map((plugin: any, pIdx: number) => (
-                          <div key={pIdx} className={`p-3 rounded-xl border ${theme === 'coldest' ? 'bg-sky-50 border-sky-100' : 'bg-sky-900/20 border-sky-500/20'}`}>
-                            <div className="flex justify-between items-start mb-1">
-                              <span className="font-black text-xs text-sky-600 dark:text-sky-400">{plugin.name}</span>
-                              <span className="text-[10px] font-black uppercase tracking-widest opacity-50">{plugin.purpose}</span>
-                            </div>
-                            {(plugin.band || plugin.routing) && (
-                              <div className="flex flex-wrap gap-2 mb-2">
-                                {plugin.band && <span className={`text-[9px] font-black uppercase tracking-widest px-2 py-1 rounded-md ${theme === 'coldest' ? 'bg-sky-500/20 text-sky-600' : 'bg-black/10'}`}>{plugin.band}</span>}
-                                {plugin.routing && <span className={`text-[9px] font-black uppercase tracking-widest px-2 py-1 rounded-md ${theme === 'coldest' ? 'bg-purple-500/20 text-purple-600' : 'bg-black/10'}`}>{plugin.routing}</span>}
-                              </div>
-                            )}
-                            <div className="space-y-1">
-                              {Array.isArray(plugin.deepDive) && plugin.deepDive?.map((param: any, dIdx: number) => (
-                                <div key={dIdx} className="text-[10px] font-bold opacity-70">
-                                  <span className="text-sky-500">{param.parameter}:</span> {param.value} - <span className="opacity-60">{param.explanation}</span>
+                        {(() => {
+                          if (result.multiBandDetails?.isEnabled) {
+                            const grouped = (result.recommendedChain || []).reduce((acc: any, plugin: any) => {
+                              const b = plugin.band || 'General / Pre-Split';
+                              if (!acc[b]) acc[b] = [];
+                              acc[b].push(plugin);
+                              return acc;
+                            }, {});
+                            
+                            return Object.entries(grouped).map(([bandName, plugins]: [string, any], bIdx) => (
+                              <div key={`band-${bIdx}`} className="space-y-4 mb-6 last:mb-0 relative">
+                                <div className="absolute -left-3 top-0 bottom-0 w-0.5 bg-cyan-500/20 rounded-full"></div>
+                                <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-cyan-500/10 border border-cyan-500/20 text-[10px] font-black tracking-widest uppercase text-cyan-300 ml-2 shadow-sm">
+                                  <Layers className="w-3 h-3 text-cyan-400" />
+                                  {bandName}
                                 </div>
-                              ))}
+                                <div className="ml-2 space-y-3">
+                                  {plugins.map((plugin: any, pIdx: number) => (
+                                    <div key={pIdx} className={`p-3 rounded-xl border ${theme === 'coldest' ? 'bg-sky-50 border-sky-100' : 'bg-sky-900/20 border-sky-500/20'}`}>
+                                      <div className="flex justify-between items-start mb-1">
+                                        <span className="font-black text-xs text-sky-600 dark:text-sky-400">{plugin.name}</span>
+                                        <span className="text-[10px] font-black uppercase tracking-widest opacity-50">{plugin.purpose}</span>
+                                      </div>
+                                      {(plugin.band || plugin.routing) && (
+                                        <div className="flex flex-wrap gap-2 mb-2">
+                                          {plugin.band && <span className={`text-[9px] font-black uppercase tracking-widest px-2 py-1 rounded-md ${theme === 'coldest' ? 'bg-sky-500/20 text-sky-600' : 'bg-black/10'}`}>{plugin.band}</span>}
+                                          {plugin.routing && <span className={`text-[9px] font-black uppercase tracking-widest px-2 py-1 rounded-md ${theme === 'coldest' ? 'bg-purple-500/20 text-purple-600' : 'bg-black/10'}`}>{plugin.routing}</span>}
+                                        </div>
+                                      )}
+                                      <div className="space-y-1">
+                                        {Array.isArray(plugin.deepDive) && plugin.deepDive?.map((param: any, dIdx: number) => (
+                                          <div key={dIdx} className="text-[10px] font-bold opacity-70">
+                                            <span className="text-sky-500">{param.parameter}:</span> {param.value} - <span className="opacity-60">{param.explanation}</span>
+                                          </div>
+                                        ))}
+                                      </div>
+                                    </div>
+                                  ))}
+                                </div>
+                              </div>
+                            ));
+                          }
+
+                          return Array.isArray(result.recommendedChain) && result.recommendedChain.map((plugin: any, pIdx: number) => (
+                            <div key={pIdx} className={`p-3 rounded-xl border ${theme === 'coldest' ? 'bg-sky-50 border-sky-100' : 'bg-sky-900/20 border-sky-500/20'}`}>
+                              <div className="flex justify-between items-start mb-1">
+                                <span className="font-black text-xs text-sky-600 dark:text-sky-400">{plugin.name}</span>
+                                <span className="text-[10px] font-black uppercase tracking-widest opacity-50">{plugin.purpose}</span>
+                              </div>
+                              {(plugin.band || plugin.routing) && (
+                                <div className="flex flex-wrap gap-2 mb-2">
+                                  {plugin.band && <span className={`text-[9px] font-black uppercase tracking-widest px-2 py-1 rounded-md ${theme === 'coldest' ? 'bg-sky-500/20 text-sky-600' : 'bg-black/10'}`}>{plugin.band}</span>}
+                                  {plugin.routing && <span className={`text-[9px] font-black uppercase tracking-widest px-2 py-1 rounded-md ${theme === 'coldest' ? 'bg-purple-500/20 text-purple-600' : 'bg-black/10'}`}>{plugin.routing}</span>}
+                                </div>
+                              )}
+                              <div className="space-y-1">
+                                {Array.isArray(plugin.deepDive) && plugin.deepDive?.map((param: any, dIdx: number) => (
+                                  <div key={dIdx} className="text-[10px] font-bold opacity-70">
+                                    <span className="text-sky-500">{param.parameter}:</span> {param.value} - <span className="opacity-60">{param.explanation}</span>
+                                  </div>
+                                ))}
+                              </div>
                             </div>
-                          </div>
-                        ))}
+                          ));
+                        })()}
                       </div>
                     )}
                   </motion.div>

@@ -2246,7 +2246,7 @@ export const getMixCritique = async (
                       required: ["parameter", "value", "explanation"]
                     }
                   },
-                  band: { type: "STRING" },
+                  band: { type: "STRING", description: "CRITICAL IF MULTI-BAND/GAFFEL MODE IS ON: Specify the frequency band this plugin belongs to AND its specific frequency range, e.g. 'Lows/Sub (20Hz - 150Hz)', 'Mids (150Hz - 2.5kHz)'. If mode is off, omit." },
                   routing: { type: "STRING" }
                 },
                 required: ["name", "purpose", "deepDive"]
@@ -2386,7 +2386,7 @@ export const getSpecificMixHelp = async (plugins: VSTPlugin[], audioBase64: stri
     Only recommend plugins from this list:
     ${pluginListStr}
     ${audioUrl ? `The audio file is available at this URL: ${audioUrl}. Please fetch and analyze it.` : ""}
-    Respond to the user's latest message. Return the result as a JSON object with 'query', 'advice', and 'recommendedChain' (an array of plugin objects with 'name', 'purpose', 'band', 'routing', and 'deepDive' parameters - Provide EVERY available parameter found on the actual plugin interface. Aim for 40-80 settings for complex modules. Do NOT be lazy; ensure every possible control is accounted for. MATCH THE EXTREME DETAIL LEVEL OF A FULL BEAT RECIPE).
+    Respond to the user's latest message. Return the result as a JSON object with 'query', 'advice', 'multiBandDetails' (optional object with 'isEnabled', 'bandCount', 'splitFrequencies', 'reasoning' if Gaffel/Multi-band mode is on), and 'recommendedChain' (an array of plugin objects with 'name', 'purpose', 'band', 'routing', and 'deepDive' parameters - Provide EVERY available parameter found on the actual plugin interface. Aim for 40-80 settings for complex modules. Do NOT be lazy; ensure every possible control is accounted for. MATCH THE EXTREME DETAIL LEVEL OF A FULL BEAT RECIPE).
   `;
   const firstUserParts: any[] = [];
   if (geminiFileUri && mimeType) {
