@@ -4,7 +4,7 @@ import { MixCritique, AppTheme, VSTPlugin, Hardware } from '../types';
 import { getSpecificMixHelp, getMixCritique, regeneratePlugin } from '../services/geminiService';
 import { uploadFileChunked, deleteFileFromDrive } from '../services/uploadService';
 import { motion } from 'motion/react';
-import { Loader2, Search, CheckCircle2, AlertCircle, Download, RefreshCw } from 'lucide-react';
+import { Loader2, Search, CheckCircle2, AlertCircle, Download, RefreshCw, Layers } from 'lucide-react';
 import { PluginBubble } from './PluginBubble';
 import { CritiqueHTMLTemplate } from './CritiqueHTMLTemplate';
 
@@ -361,6 +361,32 @@ export const CritiqueCard: React.FC<CritiqueCardProps> = ({ critique, theme, plu
                   <h5 className="font-black text-lg mb-2">{action.issue}</h5>
                   <p className="text-sm font-bold opacity-80 mb-6">{action.solution}</p>
                   
+                  {action.multiBandDetails?.isEnabled && (
+                    <div className="mb-6 p-4 rounded-xl relative overflow-hidden group">
+                      <div className="absolute inset-0 bg-gradient-to-r from-teal-500/10 via-cyan-500/10 to-blue-500/10 group-hover:from-teal-500/20 group-hover:via-cyan-500/20 group-hover:to-blue-500/20 transition-all duration-500"></div>
+                      <div className="absolute top-0 left-0 w-1 h-full bg-gradient-to-b from-teal-500 to-cyan-500"></div>
+                      <div className="relative z-10 flex items-start gap-4">
+                        <div className="w-10 h-10 rounded-full bg-cyan-500/20 border border-cyan-400/30 flex items-center justify-center flex-shrink-0">
+                          <Layers className="w-5 h-5 text-cyan-400" />
+                        </div>
+                        <div>
+                          <h5 className="text-[10px] uppercase tracking-widest font-black text-cyan-400 flex items-center gap-2 mb-1">
+                            Gaffel Multiband Split <span className="bg-cyan-500/20 text-cyan-300 px-2 py-0.5 rounded-full">{action.multiBandDetails.bandCount} Bands</span>
+                          </h5>
+                          <div className="flex flex-wrap items-center gap-2 mb-2 text-[10px] font-bold text-cyan-100/70">
+                            Split points: 
+                            {Array.isArray(action.multiBandDetails.splitFrequencies) && action.multiBandDetails.splitFrequencies.map((freq: string, i: number) => (
+                              <span key={i} className="bg-cyan-900/30 border border-cyan-500/30 px-1.5 py-0.5 rounded shadow-sm text-cyan-300">{freq}</span>
+                            ))}
+                          </div>
+                          <p className="text-xs font-medium text-cyan-100/90 leading-relaxed max-w-lg mt-2">
+                            {action.multiBandDetails.reasoning}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
                   <div className="space-y-3">
                     <h6 className="text-[10px] font-black uppercase tracking-widest opacity-50">{t('recommended_chain')}</h6>
                     {Array.isArray(action.recommendedChain) && action.recommendedChain?.map((plugin, pIdx) => (
