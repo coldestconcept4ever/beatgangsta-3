@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { MixCritique, AppTheme, VSTPlugin, Hardware } from '../types';
 import { getSpecificMixHelp, getMixCritique, regeneratePlugin } from '../services/geminiService';
 import { uploadFileChunked, deleteFileFromDrive } from '../services/uploadService';
+import { generateDawProjectFromMixCritique } from '../utils/dawprojectUtils';
 import { motion } from 'motion/react';
 import { Loader2, Search, CheckCircle2, AlertCircle, Download, RefreshCw, Layers, BarChart2 } from 'lucide-react';
 import { PluginBubble } from './PluginBubble';
@@ -49,6 +50,7 @@ export const CritiqueCard: React.FC<CritiqueCardProps> = ({ critique, theme, plu
   
   const [isExporting, setIsExporting] = useState(false);
   const [exportProgress, setExportProgress] = useState(0);
+  const [isExportingDawProject, setIsExportingDawProject] = useState(false);
   const [regeneratingPluginId, setRegeneratingPluginId] = useState<string | null>(null);
   const [refreshPools, setRefreshPools] = useState<Record<string, string[]>>({});
 
@@ -130,6 +132,26 @@ export const CritiqueCard: React.FC<CritiqueCardProps> = ({ critique, theme, plu
         setIsExporting(false);
         setExportProgress(0);
       }, 500);
+    }
+  };
+
+  const handleExportDawProject = async () => {
+    setIsExportingDawProject(true);
+    try {
+      const blob = await generateDawProjectFromMixCritique(critique, []); // we don't have stems available easily from props unless we add a callback or global context, which we will just ignore for now and create an empty project with the structure
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `${critique.title.replace(/\s+/g, '_')}.dawproject`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error("DAWProject Export failed:", error);
+      alert(t('failed_export_dawproject', 'Failed to export .dawproject'));
+    } finally {
+      setIsExportingDawProject(false);
     }
   };
 
@@ -288,6 +310,18 @@ export const CritiqueCard: React.FC<CritiqueCardProps> = ({ critique, theme, plu
           >
             {isExporting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />}
             {isExporting ? t('exporting', { progress: exportProgress }) : t('download_html')}
+          </button>
+          <button 
+            onClick={handleExportDawProject}
+            disabled={isExportingDawProject}
+            className={`shrink-0 px-8 py-4 rounded-full font-black text-xs uppercase tracking-widest transition-all shadow-xl hover:scale-105 active:scale-95 flex items-center gap-2 min-w-[160px] justify-center ${
+              theme === 'coldest'
+                ? 'bg-sky-600 text-white hover:bg-sky-700'
+                : 'bg-sky-500/20 text-sky-300 hover:bg-sky-500/30'
+            }`}
+          >
+            {isExportingDawProject ? <Loader2 className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />}
+            {isExportingDawProject ? t('exporting', { progress: 100 }) : 'DAWProject'}
           </button>
           {isExporting && (
             <div className="absolute -bottom-2 left-0 right-0 h-1 bg-black/10 rounded-full overflow-hidden">

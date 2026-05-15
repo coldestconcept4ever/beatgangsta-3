@@ -13,6 +13,7 @@ import { getSpecificMixHelp, getGangstaVoxRecipe } from '../services/geminiServi
 import { MidiDraggableButton } from './MidiDraggableButton';
 import { isMidiCapable } from '../utils/midiGenerator';
 import { generateAllMidiZip } from '../utils/exportAllMidi';
+import { generateDawProjectFromBeatRecipe } from '../utils/dawprojectUtils';
 import { stopMidiPreview } from '../utils/midiPlayer';
 import { Play, Square } from 'lucide-react';
 import { ErrorModal } from './ErrorModal';
@@ -138,6 +139,7 @@ export const RecipeCard: React.FC<RecipeCardProps> = ({ recipe: initialRecipe, i
   }, [recipe.isGangstaVox, recipe.gangstaVox]);
 
   const [isDownloadingAll, setIsDownloadingAll] = useState(false);
+  const [isExportingDawProject, setIsExportingDawProject] = useState(false);
   const exportRef = useRef<HTMLDivElement>(null);
 
   const [vocalVibeGoal, setVocalVibeGoal] = useState('');
@@ -327,6 +329,26 @@ export const RecipeCard: React.FC<RecipeCardProps> = ({ recipe: initialRecipe, i
     }
   };
 
+  const handleExportDawProject = async () => {
+    setIsExportingDawProject(true);
+    try {
+      const blob = await generateDawProjectFromBeatRecipe(recipe);
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `${recipe.title.replace(/\s+/g, '_')}.dawproject`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error("DAWProject Export failed:", error);
+      alert(t('failed_export_dawproject', 'Failed to export .dawproject'));
+    } finally {
+      setIsExportingDawProject(false);
+    }
+  };
+
   const toggleExpanded = () => {
     setExpanded(!expanded);
   };
@@ -450,6 +472,18 @@ export const RecipeCard: React.FC<RecipeCardProps> = ({ recipe: initialRecipe, i
           >
             {isDownloadingAll || isLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Music className="w-4 h-4" />}
             {isDownloadingAll || isLoading ? t('preparing') : t('download_midi')}
+          </button>
+          <button 
+            onClick={handleExportDawProject}
+            disabled={isExportingDawProject || isLoading}
+            className={`w-full sm:w-auto px-8 py-4 rounded-full font-black text-xs uppercase tracking-widest transition-all shadow-xl hover:scale-105 active:scale-95 flex items-center gap-2 justify-center ${
+              theme === 'coldest' || theme === 'chef-mode'
+                ? 'bg-purple-600 text-white hover:bg-purple-700'
+                : 'bg-purple-500/20 text-purple-400 hover:bg-purple-500/30'
+            }`}
+          >
+            {isExportingDawProject || isLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />}
+            DAWProject
           </button>
           <button 
             id="btn-save-recipe"

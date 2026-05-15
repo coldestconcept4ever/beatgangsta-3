@@ -5361,8 +5361,9 @@ The AI was unable to verify these parameters. Please investigate.`;
           <div className="flex flex-wrap items-center gap-4">
             <Logo size={42} grillStyle={grillStyle} knifeStyle={knifeStyle} duragStyle={duragStyle} pendantStyle={pendantStyle} chainStyle={chainStyle} theme={theme} saberColor={saberColor} mascotColor={mascotColor} showChain={showChain} highEyes={highEyes} isCigarEquipped={isCigarEquipped} isTossingCigar={isTossingCigar} showSparkles={showSparkles} onClick={cycleGrill} />
             <DownloadableLogoText currentAppName={currentAppName} theme={theme} />
-            <span className="px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-[0.2em] bg-blue-600 text-white border border-blue-400 shadow-[0_0_15px_rgba(37,99,235,0.4)] animate-pulse-slow">Beta</span>
-            <button onClick={() => setShowBetaApplyModal(true)} className="px-3 py-1 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded text-sm font-medium hover:from-blue-500 hover:to-indigo-500 transition-all shadow border border-blue-400/20">Apply to be a tester</button>
+            {user && (
+              <button onClick={() => setShowBetaApplyModal(true)} className="px-3 py-1 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded text-sm font-medium hover:from-blue-500 hover:to-indigo-500 transition-all shadow border border-blue-400/20">Beta Tester</button>
+            )}
           </div>
           
           <div className="hidden sm:flex flex-wrap items-center justify-end gap-2">

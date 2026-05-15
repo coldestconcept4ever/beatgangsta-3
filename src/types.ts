@@ -183,6 +183,12 @@ export interface InstrumentTrack {
   fxPlugins: DeepDivePlugin[];
   busSend?: string;
   loopGuide?: string;
+  multiBandDetails?: {
+    isEnabled: boolean;
+    bandCount: number;
+    splitFrequencies?: string[];
+    reasoning?: string;
+  };
   midiNotes?: {
     intro?: MidiNote[];
     verse?: MidiNote[];
@@ -196,6 +202,12 @@ export interface BusTrack {
   name: string;
   tracksUsingBus: string[];
   fxPlugins: DeepDivePlugin[];
+  multiBandDetails?: {
+    isEnabled: boolean;
+    bandCount: number;
+    splitFrequencies?: string[];
+    reasoning?: string;
+  };
 }
 
 export interface GangstaVoxRecipe {
@@ -207,21 +219,7 @@ export interface GangstaVoxRecipe {
     dawRoutingInstructions?: string;
     dspUsageNote?: string;
   };
-  vocalTracks: {
-    name: string;
-    sourceSoundGoal: string;
-    deepDive?: ParameterSetting[];
-    fxPlugins: DeepDivePlugin[];
-    busSend?: string;
-    loopGuide?: string;
-    midiNotes?: {
-      intro?: MidiNote[];
-      verse?: MidiNote[];
-      hook?: MidiNote[];
-      bridge?: MidiNote[];
-      outro?: MidiNote[];
-    };
-  }[];
+  vocalTracks: InstrumentTrack[];
   layeringStrategy: string;
   // Optional fields for MIDI export when used as vocalElements or gangstaVox
   midiNotes?: {
@@ -376,6 +374,7 @@ export interface MixCritique {
   overallFeedback: string;
   strengths: string[];
   weaknesses: string[];
+  estimatedBPM?: number;
   actionPlan: {
     targetStem?: string;
     issue: string;
