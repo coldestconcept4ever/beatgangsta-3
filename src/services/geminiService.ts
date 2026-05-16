@@ -55,6 +55,8 @@ const ADVANCED_MIDI_PROMPT = `
     - If the user requested a specific song, the MIDI notes MUST meticulously recreate the EXACT iconic melodies, rhythms, chords, and basslines of that song note-for-note and perfectly match the BPM.
     CRITICAL - NO VOCALS AS INSTRUMENTS:
     Ensure you ALWAYS use VST instruments (synths, keys, bass, guitars, etc.) instead of a vocal or acapella as an instrument in the beat recipe. Users feel cheated by a bad recipe guide if it just says "use a vocal". Only use actual VST instruments or hardware for the beat's instrumentation.
+    CRITICAL - GUITAR CAPO RECOMMENDATIONS:
+    When generating recipes that include acoustic or electric guitars (especially for indie, rock, alternative, or bright pop styles), strongly consider recommending the use of a capo in the sourceSoundGoal or deepDive (e.g., placing it on the 2nd, 3rd, or 4th fret) to achieve a brighter, more distinctive and chiming sound without breaking strings. Use references like Johnny Marr, Jingle-Jangle style, and The Smiths as inspiration for these recommendations.
     CRITICAL - MIDI LENGTH & DURATION RULES:
     - You MUST generate EXACTLY 4 or 8 bars of MIDI data for EVERY instrument and drum pattern. Do NOT generate 1, 2, 3, 5, 6, or 7 bars. It MUST be exactly 4 or 8 bars.
     - For Instrument MIDI Notes: The sum of all 'duration' and 'wait' values in the midiNotes array MUST equal exactly 16 beats (for 4 bars) or 32 beats (for 8 bars).
@@ -280,7 +282,11 @@ export const getAI = () => {
           });
           const data = await response.json();
           if (data && data.error) {
-            throw new Error(typeof data.error === 'string' ? data.error : JSON.stringify(data.error));
+            const errorStr = typeof data.error === 'string' ? data.error : JSON.stringify(data.error);
+            if (errorStr.includes('429') || errorStr.includes('RESOURCE_EXHAUSTED') || errorStr.includes('credits are depleted') || errorStr.includes('quota')) {
+              throw new Error('INSUFFICIENT_CREDITS: ' + errorStr);
+            }
+            throw new Error(errorStr);
           }
           return data;
         } catch (e: any) {
@@ -2192,6 +2198,7 @@ export const getMixCritique = async (
     ${SONIBLE_SPEC_PROMPT}
     ${RC20_SPEC_PROMPT}
     ${GLOBAL_PARAMETER_STRICTNESS_PROMPT}
+    CRITICAL: If the user is asking about guitars, acoustic or electric, or if a stem appears to be a guitar, strongly consider recommending the use of a capo (e.g. on the 2nd to 5th fret) to achieve a brighter, more distinctive playing texture without breaking strings. Reference Johnny Marr, Jingle-Jangle styles, and The Smiths if it fits the genre.
     Analyze the audio and provide a detailed mix critique. Since this is a full song, consider the dynamic changes, song structure (intro, verse, chorus, etc.), and how the mix evolves.
     Only recommend plugins from this list:
     ${pluginListStr}
@@ -2343,9 +2350,7 @@ export const getMixCritique = async (
   try {
     response = await ai.models.generateContent({
       model: "gemini-3-flash-preview",
-      contents: {
-        parts: parts
-      },
+      contents: parts,
       config: {
         customAction: hasStems ? 'stems_critique' : 'critique',
         tools: tools.length > 0 ? tools : undefined,
@@ -2388,6 +2393,8 @@ export const getSpecificMixHelp = async (plugins: VSTPlugin[], audioBase64: stri
   const systemPrompt = `
     You are an expert audio engineer and producer. 
     ${getLanguageInstruction(language)}
+    ${query.toLowerCase().includes('guitar') ? "CRITICAL: If the user is asking about guitars, acoustic or electric, strongly consider recommending the use of a capo (e.g. on the 2nd to 5th fret) to achieve a brighter, more distinctive, and chiming sound without breaking strings. Reference Johnny Marr, Jingle-Jangle styles, and The Smiths as examples." : ""}
+
     ${PRO_Q_3_LAYOUT_PROMPT}
     ${GULLFOSS_SPEC_PROMPT}
     ${OZONE_SPEC_PROMPT}
