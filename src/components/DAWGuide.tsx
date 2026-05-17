@@ -10,7 +10,7 @@ interface DAWGuideProps {
 
 export const DAWGuide: React.FC<DAWGuideProps> = ({ theme, onClose }) => {
   const { t } = useTranslation();
-  const [activeTab, setActiveTab] = useState<'reaper' | 'studio-one' | 'pro-tools' | 'cubase' | 'fl-studio' | 'ableton' | 'logic' | 'bitwig' | 'mixcraft'>('ableton');
+  const [activeTab, setActiveTab] = useState<'reaper' | 'studio-one' | 'pro-tools' | 'cubase' | 'fl-studio' | 'ableton' | 'logic' | 'bitwig' | 'mixcraft' | 'garage-band'>('ableton');
 
   const containerClasses = theme === 'coldest' 
     ? "bg-white/95 border-white text-[#0c4a6e]" 
@@ -104,6 +104,12 @@ export const DAWGuide: React.FC<DAWGuideProps> = ({ theme, onClose }) => {
             className={`py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${tabClasses('mixcraft')}`}
           >
             Mixcraft
+          </button>
+          <button 
+            onClick={() => setActiveTab('garage-band')}
+            className={`py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${tabClasses('garage-band')}`}
+          >
+            Garage Band
           </button>
         </div>
 
@@ -281,6 +287,26 @@ export const DAWGuide: React.FC<DAWGuideProps> = ({ theme, onClose }) => {
               <div className="flex gap-4">
                 <div className="w-8 h-8 rounded-full bg-blue-500/20 flex items-center justify-center font-black flex-shrink-0">3</div>
                 <p className="text-sm leading-relaxed"><Trans i18nKey="daw_mixcraft_step3">BeatGangsta will automatically process your XML inventory to build your Gear Rack.</Trans></p>
+              </div>
+            </div>
+          )}
+          {activeTab === 'garage-band' && (
+            <div className="space-y-4">
+              <div className="flex gap-4">
+                <div className="w-8 h-8 rounded-full bg-orange-500/20 flex items-center justify-center font-black flex-shrink-0">1</div>
+                <p className="text-sm leading-relaxed"><Trans i18nKey="daw_garage_band_step1">Open <strong className="font-black">Finder</strong> and press <strong className="font-black">Command + Shift + G</strong>.</Trans></p>
+              </div>
+              <div className="flex gap-4">
+                <div className="w-8 h-8 rounded-full bg-orange-500/20 flex items-center justify-center font-black flex-shrink-0">2</div>
+                <p className="text-sm leading-relaxed"><Trans i18nKey="daw_garage_band_step2">Type <code className="bg-black/5 px-2 py-1 rounded font-mono font-bold">/Library/Audio/Plug-Ins/Components</code> and hit Enter.</Trans></p>
+              </div>
+              <div className="flex gap-4">
+                <div className="w-8 h-8 rounded-full bg-orange-500/20 flex items-center justify-center font-black flex-shrink-0">3</div>
+                <p className="text-sm leading-relaxed"><Trans i18nKey="daw_garage_band_step3">Select the <strong className="font-black">.component</strong> files for your plugins and copy their names.</Trans></p>
+              </div>
+              <div className="flex gap-4">
+                <div className="w-8 h-8 rounded-full bg-orange-500/20 flex items-center justify-center font-black flex-shrink-0">4</div>
+                <p className="text-sm leading-relaxed">{t('daw_garage_band_step4')}</p>
               </div>
             </div>
           )}
