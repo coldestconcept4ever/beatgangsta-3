@@ -755,6 +755,22 @@ app.get("/api/health", (req, res) => {
   res.json({ status: "ok", appUrl: APP_URL });
 });
 
+app.post("/api/proxy-audio", express.json(), async (req, res) => {
+  try {
+    const { url } = req.body;
+    if (!url) return res.status(400).json({ error: "Missing url parameter" });
+    
+    const response = await axios.get(url, { responseType: 'arraybuffer' });
+    const contentType = response.headers['content-type'] || 'audio/mpeg';
+    
+    res.set('Content-Type', contentType);
+    res.send(response.data);
+  } catch (error: any) {
+    console.error("Proxy audio error:", error.message);
+    res.status(500).json({ error: "Failed to fetch audio from URL" });
+  }
+});
+
 // Stateless chunked upload directly to Google Drive
 app.post("/api/upload-chunk-drive", express.raw({ type: 'application/octet-stream', limit: '5mb' }), async (req, res) => {
   try {

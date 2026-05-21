@@ -3801,8 +3801,31 @@ The AI was unable to verify these parameters. Please investigate.`;
       let geminiFileUri: string | null = null;
       let mimeType = 'audio/mpeg';
       
-      if (file) {
-        let fileToUpload = file;
+      let processFile = file;
+
+      if (!processFile && linkUrl) {
+        try {
+          const res = await fetch('/api/proxy-audio', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ url: linkUrl })
+          });
+          if (!res.ok) throw new Error('Failed to fetch audio from link');
+          const blob = await res.blob();
+          
+          let extension = 'mp3';
+          const contentType = res.headers.get('content-type') || '';
+          if (contentType.includes('wav')) extension = 'wav';
+          else if (contentType.includes('flac')) extension = 'flac';
+          
+          processFile = new File([blob], `downloaded_link.${extension}`, { type: contentType || 'audio/mpeg' });
+        } catch (e: any) {
+          throw new Error(`Could not fetch audio link: ${e.message}`);
+        }
+      }
+
+      if (processFile) {
+        let fileToUpload = processFile;
 
         if (fileToUpload.type.includes('wav') || fileToUpload.name.toLowerCase().endsWith('.wav')) {
           try {
@@ -3838,8 +3861,30 @@ The AI was unable to verify these parameters. Please investigate.`;
         let referenceAudioBase64: string | null = null;
         let referenceGeminiFileUri: string | null = null;
         
-        if (referenceTrackFile) {
-          let refFileToUpload = referenceTrackFile;
+        let processRefFile = referenceTrackFile;
+        if (!processRefFile && referenceTrack) {
+          try {
+            const res = await fetch('/api/proxy-audio', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ url: referenceTrack })
+            });
+            if (res.ok) {
+              const blob = await res.blob();
+              let extension = 'mp3';
+              const contentType = res.headers.get('content-type') || '';
+              if (contentType.includes('wav')) extension = 'wav';
+              else if (contentType.includes('flac')) extension = 'flac';
+              
+              processRefFile = new File([blob], `ref_downloaded_link.${extension}`, { type: contentType || 'audio/mpeg' });
+            }
+          } catch (e: any) {
+            console.warn("Could not proxy reference track url:", e);
+          }
+        }
+
+        if (processRefFile) {
+          let refFileToUpload = processRefFile;
           if (refFileToUpload.type.includes('wav') || refFileToUpload.name.toLowerCase().endsWith('.wav')) {
             try {
               refFileToUpload = await convertWavToMp3(refFileToUpload);
