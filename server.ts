@@ -766,8 +766,13 @@ app.post("/api/proxy-audio", express.json(), async (req, res) => {
     res.set('Content-Type', contentType);
     res.send(response.data);
   } catch (error: any) {
-    console.error("Proxy audio error:", error.message);
-    res.status(500).json({ error: "Failed to fetch audio from URL" });
+    if (error.response) {
+      console.error(`Proxy audio error: ${error.response.status} for URL`, req.body.url);
+      res.status(error.response.status).json({ error: `File server returned ${error.response.status}: The link might be expired or protected.` });
+    } else {
+      console.error("Proxy audio network error:", error.message);
+      res.status(500).json({ error: `Network error: ${error.message}` });
+    }
   }
 });
 

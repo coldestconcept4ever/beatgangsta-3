@@ -3804,23 +3804,42 @@ The AI was unable to verify these parameters. Please investigate.`;
       let processFile = file;
 
       if (!processFile && linkUrl) {
+        let res: Response | null = null;
         try {
-          const res = await fetch('/api/proxy-audio', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ url: linkUrl })
-          });
-          if (!res.ok) throw new Error('Failed to fetch audio from link');
+          res = await fetch(linkUrl);
+          if (!res.ok && res.status !== 404 && res.status !== 403) {
+            res = null; // Force proxy fallback if it's not a hard failure
+          }
+        } catch (directErr) {
+          console.warn("Direct fetch failed (likely CORS), falling back to proxy...", directErr);
+        }
+        
+        if (!res || !res.ok) {
+           res = await fetch('/api/proxy-audio', {
+             method: 'POST',
+             headers: { 'Content-Type': 'application/json' },
+             body: JSON.stringify({ url: linkUrl })
+           });
+        }
+        
+        if (!res.ok) {
+           let errMsg = 'Failed to fetch audio from link.';
+           try {
+              const errData = await res.json();
+              errMsg = errData.error || errMsg;
+           } catch(e) { }
+           throw new Error(errMsg);
+        }
+        
+        try {
           const blob = await res.blob();
-          
           let extension = 'mp3';
           const contentType = res.headers.get('content-type') || '';
           if (contentType.includes('wav')) extension = 'wav';
           else if (contentType.includes('flac')) extension = 'flac';
-          
           processFile = new File([blob], `downloaded_link.${extension}`, { type: contentType || 'audio/mpeg' });
         } catch (e: any) {
-          throw new Error(`Could not fetch audio link: ${e.message}`);
+          throw new Error(`Could not process audio data: ${e.message}`);
         }
       }
 
@@ -3863,23 +3882,44 @@ The AI was unable to verify these parameters. Please investigate.`;
         
         let processRefFile = referenceTrackFile;
         if (!processRefFile && referenceTrack) {
+          let res: Response | null = null;
           try {
-            const res = await fetch('/api/proxy-audio', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ url: referenceTrack })
-            });
-            if (res.ok) {
+            res = await fetch(referenceTrack);
+            if (!res.ok && res.status !== 404 && res.status !== 403) {
+              res = null; // force proxy
+            }
+          } catch(e) {
+            console.warn("Direct fetch for ref track failed:", e);
+          }
+          
+          if (!res || !res.ok) {
+            try {
+              res = await fetch('/api/proxy-audio', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ url: referenceTrack })
+              });
+            } catch(e) { }
+          }
+          
+          if (res && res.ok) {
+            try {
               const blob = await res.blob();
               let extension = 'mp3';
               const contentType = res.headers.get('content-type') || '';
               if (contentType.includes('wav')) extension = 'wav';
               else if (contentType.includes('flac')) extension = 'flac';
-              
               processRefFile = new File([blob], `ref_downloaded_link.${extension}`, { type: contentType || 'audio/mpeg' });
+            } catch (e: any) {
+              console.warn("Could not process reference track url:", e);
             }
-          } catch (e: any) {
-            console.warn("Could not proxy reference track url:", e);
+          } else if (res && !res.ok) {
+              let errMsg = 'Failed to fetch reference audio.';
+              try {
+                  const errData = await res.json();
+                  errMsg = errData.error || errMsg;
+              } catch(e) {}
+              throw new Error(errMsg);
           }
         }
 
