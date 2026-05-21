@@ -1587,6 +1587,24 @@ The AI was unable to verify these parameters. Please investigate.`;
   const [isDragging, setIsDragging] = useState(false);
   const [dragOverStemId, setDragOverStemId] = useState<string | null>(null);
   const [showBuyCreditsModal, setShowBuyCreditsModal] = useState(false);
+  const [showPromoPopup, setShowPromoPopup] = useState(false);
+
+  useEffect(() => {
+    if (user && user.justReceivedPromo) {
+      setShowPromoPopup(true);
+      // Remove it from the local state so it doesn't pop up again if something triggers a re-render
+      setUser(prev => prev ? { ...prev, justReceivedPromo: false } : prev);
+      
+      const storedUser = localStorage.getItem('bg_user');
+      if (storedUser) {
+        try {
+          const parsedUser = JSON.parse(storedUser);
+          parsedUser.justReceivedPromo = false;
+          localStorage.setItem('bg_user', JSON.stringify(parsedUser));
+        } catch(e) {}
+      }
+    }
+  }, [user?.justReceivedPromo]);
   const [showPaymentMethodModal, setShowPaymentMethodModal] = useState(false);
   const [purchaseType, setPurchaseType] = useState<'credits' | 'stem_slots'>('credits');
   const [pendingAmount, setPendingAmount] = useState<number>(0);
@@ -3557,6 +3575,8 @@ The AI was unable to verify these parameters. Please investigate.`;
     }
   };
 
+  const [recipeLinkUrl, setRecipeLinkUrl] = useState('');
+
   const handleAudioDragOver = (e: React.DragEvent) => {
     e.preventDefault();
     setIsDraggingAudio(true);
@@ -3722,7 +3742,7 @@ The AI was unable to verify these parameters. Please investigate.`;
     }
   };
 
-  const handleAudioSearch = async (file: File) => {
+  const handleAudioSearch = async (file: File | null, linkUrl?: string) => {
     if (!requireAuth()) return;
     
     if (plugins.length === 0) return;
@@ -3730,16 +3750,23 @@ The AI was unable to verify these parameters. Please investigate.`;
       setError("Please complete the security verification first.");
       return;
     }
-    if (!file.type.includes('mpeg') && !file.type.includes('mp3') && !file.name.toLowerCase().endsWith('.mp3') && !file.type.includes('wav') && !file.name.toLowerCase().endsWith('.wav')) {
-      setError("Only MP3 and WAV files are supported for analysis at this time.");
+
+    if (file) {
+      if (!file.type.includes('mpeg') && !file.type.includes('mp3') && !file.name.toLowerCase().endsWith('.mp3') && !file.type.includes('wav') && !file.name.toLowerCase().endsWith('.wav')) {
+        setError("Only MP3 and WAV files are supported for analysis at this time.");
+        return;
+      }
+      
+      const MAX_FILE_SIZE = 50 * 1024 * 1024; // 50MB
+      if (file.size > MAX_FILE_SIZE) {
+        setError("File is too large. Please upload an audio file smaller than 50MB.");
+        return;
+      }
+    } else if (!linkUrl) {
+      setError("Please provide an audio file or a link.");
       return;
     }
     
-    const MAX_FILE_SIZE = 50 * 1024 * 1024; // 50MB
-    if (file.size > MAX_FILE_SIZE) {
-      setError("File is too large. Please upload an audio file smaller than 50MB.");
-      return;
-    }
     setLoading(true);
     setAudioAnalysisLoading(true);
     setError(null);
@@ -3770,32 +3797,38 @@ The AI was unable to verify these parameters. Please investigate.`;
       };
 
       let audioBase64: string | null = null;
-      let fileToUpload = file;
+      let audioUrl: string | null = linkUrl || null;
+      let geminiFileUri: string | null = null;
+      let mimeType = 'audio/mpeg';
+      
+      if (file) {
+        let fileToUpload = file;
 
-      if (fileToUpload.type.includes('wav') || fileToUpload.name.toLowerCase().endsWith('.wav')) {
-        try {
-          fileToUpload = await convertWavToMp3(fileToUpload);
-        } catch (e) {
-          console.error(`Failed to convert ${fileToUpload.name} to MP3, falling back to original file:`, e);
+        if (fileToUpload.type.includes('wav') || fileToUpload.name.toLowerCase().endsWith('.wav')) {
+          try {
+            fileToUpload = await convertWavToMp3(fileToUpload);
+          } catch (e) {
+            console.error(`Failed to convert ${fileToUpload.name} to MP3, falling back to original file:`, e);
+          }
         }
-      }
 
-      const audioUploadData = await uploadFileChunked(fileToUpload);
-      let audioUrl: string | null = audioUploadData?.url || null;
-      let geminiFileUri: string | null = audioUploadData?.geminiFileUri || null;
-      let mimeType = (fileToUpload.type === 'audio/mp3' || !fileToUpload.type) ? 'audio/mpeg' : fileToUpload.type;
+        const audioUploadData = await uploadFileChunked(fileToUpload);
+        audioUrl = audioUploadData?.url || null;
+        geminiFileUri = audioUploadData?.geminiFileUri || null;
+        mimeType = (fileToUpload.type === 'audio/mp3' || !fileToUpload.type) ? 'audio/mpeg' : fileToUpload.type;
 
-      if (!geminiFileUri) {
-        console.warn(`Gemini File API upload failed. Debug Info:`, audioUploadData);
-        if (fileToUpload.size > 3 * 1024 * 1024) {
-          throw new Error(`File is too large (${(fileToUpload.size / 1024 / 1024).toFixed(2)}MB) for inline analysis on Vercel (limit 4.5MB) and Gemini File Upload failed: ${audioUploadData?.geminiError || 'Unknown error'}`);
+        if (!geminiFileUri) {
+          console.warn(`Gemini File API upload failed. Debug Info:`, audioUploadData);
+          if (fileToUpload.size > 3 * 1024 * 1024) {
+            throw new Error(`File is too large (${(fileToUpload.size / 1024 / 1024).toFixed(2)}MB) for inline analysis on Vercel (limit 4.5MB) and Gemini File Upload failed: ${audioUploadData?.geminiError || 'Unknown error'}`);
+          }
+          console.warn(`Falling back to inline base64 for small file (${(fileToUpload.size / 1024 / 1024).toFixed(2)}MB).`);
+          audioBase64 = await fileToBase64(fileToUpload);
         }
-        console.warn(`Falling back to inline base64 for small file (${(fileToUpload.size / 1024 / 1024).toFixed(2)}MB).`);
-        audioBase64 = await fileToBase64(fileToUpload);
-      }
 
-      if (audioUploadData?.fileId) {
-        filesToDelete.push(audioUploadData.fileId);
+        if (audioUploadData?.fileId) {
+          filesToDelete.push(audioUploadData.fileId);
+        }
       }
 
       if (audioMode === 'critique') {
@@ -3860,6 +3893,12 @@ The AI was unable to verify these parameters. Please investigate.`;
         let response;
         try {
           if (!requireAuth()) return;
+
+          let finalContext = critiqueContext;
+          if (audioUrl || audioBase64 || geminiFileUri) {
+            finalContext = finalContext + (finalContext ? "\n\n" : "") + "CRITICAL SYSTEM INSTRUCTION: The user wants an EXACT REPLICA of this beat. Provide a precise, step-by-step recipe to completely recreate this specific song's beat exactly how it sounds in the provided link/audio. It MUST be an exact replica, do not just make something 'in the style of', make it an EXACT reproduction of the instruments, chords, drum patterns, and sound design of the source audio.";
+          }
+
           response = await getAudioBeatRecommendations(
             plugins,
             audioBase64,
@@ -3872,7 +3911,7 @@ The AI was unable to verify these parameters. Please investigate.`;
             dawType,
             starredPlugins,
             isGangstaVox,
-            critiqueContext,
+            finalContext,
             geminiFileUri,
             i18n.language,
             isMultiBandMode
@@ -3882,6 +3921,12 @@ The AI was unable to verify these parameters. Please investigate.`;
           // Retry with a very small plugin list (top 30) to reduce context pressure
           try {
             if (!requireAuth()) return;
+            
+            let finalContext = critiqueContext;
+            if (audioUrl || audioBase64 || geminiFileUri) {
+              finalContext = finalContext + (finalContext ? "\n\n" : "") + "CRITICAL SYSTEM INSTRUCTION: The user wants an EXACT REPLICA of this beat. Provide a precise, step-by-step recipe to completely recreate this specific song's beat exactly how it sounds in the provided link/audio. It MUST be an exact replica, do not just make something 'in the style of', make it an EXACT reproduction of the instruments, chords, drum patterns, and sound design of the source audio.";
+            }
+
             response = await getAudioBeatRecommendations(
               plugins.slice(0, 30),
               audioBase64,
@@ -3894,7 +3939,7 @@ The AI was unable to verify these parameters. Please investigate.`;
               dawType,
               starredPlugins,
               isGangstaVox,
-              critiqueContext,
+              finalContext,
               geminiFileUri,
               i18n.language
             );
@@ -6219,9 +6264,10 @@ The AI was unable to verify these parameters. Please investigate.`;
                     )}
                   </div>
                 ) : (
-                  <div className="flex flex-col sm:flex-row gap-4">
-                    <div 
-                      id="dropzone-audio"
+                  <div className="flex flex-col w-full gap-4">
+                    <div className="flex flex-col sm:flex-row gap-4">
+                      <div 
+                        id="dropzone-audio"
                       onClick={() => audioInputRef.current?.click()}
                       onDragOver={handleAudioDragOver}
                       onDragLeave={handleAudioDragLeave}
@@ -6280,12 +6326,59 @@ The AI was unable to verify these parameters. Please investigate.`;
                       </button>
                     </div>
                   </div>
+
+                  {!isVerified && (
+                    <div className="flex justify-center mt-4 mb-2">
+                      <div className="flex items-center justify-center overflow-visible" style={{ width: '260px', height: '52px' }}>
+                        <div className="cf-turnstile origin-center scale-[0.8]"></div>
+                      </div>
+                    </div>
+                  )}
+
+                  {!hasStems && (
+                    <div className="w-full mt-4 flex flex-col items-center">
+                      <div className={`text-[10px] font-black uppercase tracking-widest opacity-60 mb-2 ${theme === 'coldest' ? 'text-slate-900' : 'text-white'}`}>
+                        OR PASTE A LINK TO A SONG (YOUTUBE, SPOTIFY, SOUNDCLOUD, ETC.)
+                      </div>
+                      <div className="flex flex-col sm:flex-row gap-2 w-full max-w-xl">
+                        <input
+                          type="text"
+                          value={recipeLinkUrl}
+                          onChange={(e) => setRecipeLinkUrl(e.target.value)}
+                          placeholder="Paste song link here to get an exact recipe..."
+                          className={`flex-1 p-4 text-xs font-medium rounded-2xl w-full sm:w-auto transition-all outline-none border-2 ${
+                            audioMode === 'critique'
+                              ? (theme === 'coldest' ? 'bg-white/60 border-purple-100 focus:border-purple-400 text-slate-900 placeholder:text-slate-400' : 'bg-black/40 border-purple-500/20 focus:border-purple-500/60 text-white placeholder:text-white/20')
+                              : (theme === 'coldest' ? 'bg-white/60 border-emerald-100 focus:border-emerald-400 text-slate-900 placeholder:text-slate-400' : 'bg-black/40 border-emerald-500/20 focus:border-emerald-500/60 text-white placeholder:text-white/20')
+                          }`}
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter' && recipeLinkUrl.trim() && !loading) {
+                              handleAudioSearch(null, recipeLinkUrl.trim());
+                            }
+                          }}
+                        />
+                        <button
+                          onClick={() => handleAudioSearch(null, recipeLinkUrl.trim())}
+                          disabled={!recipeLinkUrl.trim() || loading}
+                          className={`px-6 py-4 rounded-2xl font-black text-[10px] uppercase tracking-widest shadow-lg hover:scale-105 active:scale-95 transition-all disabled:opacity-50 disabled:scale-100 ${
+                            audioMode === 'critique'
+                              ? 'bg-purple-500 text-white'
+                              : 'bg-emerald-500 text-white'
+                          }`}
+                        >
+                          {audioAnalysisLoading ? 'Analyzing...' : 'Analyze Link'}
+                        </button>
+                      </div>
+                    </div>
+                  )}
+
+                  </div>
                 )}
               </div>
               </div>
               )}
 
-              {!isVerified && (
+              {!isVerified && hasStems && (
                 <div className="flex justify-center mt-4">
                   <div className="flex items-center justify-center overflow-visible" style={{ width: '260px', height: '52px' }}>
                     <div className="cf-turnstile origin-center scale-[0.8]"></div>
@@ -7092,6 +7185,39 @@ The AI was unable to verify these parameters. Please investigate.`;
       )}
 
 
+
+      {showPromoPopup && (
+        <div className="fixed inset-0 z-[200] overflow-y-auto bg-black/80 backdrop-blur-md flex items-center justify-center p-4">
+          <motion.div 
+            initial={{ opacity: 0, scale: 0.9, y: 20 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.9, y: 20 }}
+            className={`border rounded-3xl p-6 sm:p-10 max-w-lg w-full shadow-2xl relative overflow-hidden transition-colors duration-500 text-center ${
+              theme === 'coldest' 
+                ? "bg-white border-sky-200 text-sky-950" 
+                : theme === 'chef-mode'
+                ? "bg-[#251000] border-orange-900/50 text-orange-50"
+                : "bg-black border-red-900/50 text-red-50"
+            }`}
+          >
+            <button 
+              onClick={() => setShowPromoPopup(false)}
+              className="absolute top-4 right-4 p-2 rounded-full hover:bg-black/10 hover:dark:bg-white/10 transition-colors"
+            >
+              <X size={20} />
+            </button>
+            <div className="flex justify-center mb-6">
+              <div className="w-16 h-16 rounded-full bg-gradient-to-br from-yellow-400 to-orange-500 flex items-center justify-center shadow-lg shadow-yellow-500/20">
+                <span className="text-2xl">💰</span>
+              </div>
+            </div>
+            <h2 className="text-2xl sm:text-3xl font-black mb-4 uppercase tracking-tighter">Bonus Received!</h2>
+            <p className="text-base sm:text-lg opacity-80 font-medium leading-relaxed">
+              Thank you for trying BeatGangsta.com, you've been given <strong className="font-black">500 credits</strong> to test the app.
+            </p>
+          </motion.div>
+        </div>
+      )}
 
       {/* Buy Credits Modal */}
       <AnimatePresence>

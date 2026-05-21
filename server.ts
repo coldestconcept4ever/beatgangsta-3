@@ -72,6 +72,11 @@ async function initDb() {
       } catch (e: any) {
         // Ignore if column already exists
       }
+      try {
+        await client.execute("ALTER TABLE users ADD COLUMN promo_bonus_received BOOLEAN DEFAULT FALSE");
+      } catch (e: any) {
+        // Ignore if column already exists
+      }
       
       await client.execute(`
         CREATE TABLE IF NOT EXISTS pending_sessions (
@@ -1881,6 +1886,34 @@ if (process.env.NODE_ENV !== 'production') {
         });
       }
 
+      // 1.5 Promo credits logic
+      const promoCheck = await db.execute({
+        sql: `SELECT promo_bonus_received FROM users WHERE uid = ?`,
+        args: [userInfo.id]
+      });
+      const promoBonusReceived = promoCheck.rows[0]?.promo_bonus_received === 1 || promoCheck.rows[0]?.promo_bonus_received === true;
+
+      let justReceivedPromo = false;
+      if (!promoBonusReceived) {
+        const promoCountResult = await db.execute({
+          sql: `SELECT COUNT(*) as count FROM users WHERE promo_bonus_received = TRUE OR promo_bonus_received = 1`
+        });
+        const promoCount = promoCountResult.rows[0]?.count || 0;
+        
+        if (Number(promoCount) < 10) {
+          await db.execute({
+            sql: `UPDATE users SET credits = credits + 500, promo_bonus_received = TRUE WHERE uid = ?`,
+            args: [userInfo.id]
+          });
+          justReceivedPromo = true;
+          
+          await db.execute({
+            sql: `INSERT INTO purchases (id, uid, provider, amount_fiat, currency, pay_currency, credits_awarded, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+            args: [`promo_${Date.now()}`, userInfo.id, 'promo', 0, 'USD', 'USD', 500, 'finished']
+          });
+        }
+      }
+
       // 2. Fetch the full user record (to get credits, role, terms_accepted, purchased_stem_slots)
       const userResult = await getDb().execute({
         sql: `SELECT terms_accepted, credits, role, purchased_stem_slots FROM users WHERE uid = ?`,
@@ -1902,7 +1935,8 @@ if (process.env.NODE_ENV !== 'production') {
         termsAccepted,
         credits,
         role,
-        purchasedStemSlots
+        purchasedStemSlots,
+        justReceivedPromo
       };
 
       const minimalTokens = {
@@ -2068,6 +2102,10 @@ if (process.env.NODE_ENV !== 'production') {
         const purchasedStemSlots = userResult.rows[0]?.purchased_stem_slots ?? 0;
         const userWithConsent = { ...req.session.user, termsAccepted, credits, role, purchasedStemSlots };
         
+        if (req.session.user.justReceivedPromo) {
+          req.session.user.justReceivedPromo = false;
+        }
+
         res.json({ authenticated: true, user: userWithConsent });
       } catch (err) {
         console.error("Error fetching user from DB:", err);

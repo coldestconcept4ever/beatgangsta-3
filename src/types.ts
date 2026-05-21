@@ -366,6 +366,7 @@ export interface User {
   credits?: number;
   role?: string;
   purchasedStemSlots?: number;
+  justReceivedPromo?: boolean;
 }
 
 export interface MixCritique {
