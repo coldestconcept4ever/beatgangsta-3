@@ -437,6 +437,7 @@ export const equipmentDetails: Record<string, string> = {
   "Dragonfly": "A solid-state, large-diaphragm condenser microphone with a unique, rotating head.",
   "Hummingbird": "A small-diaphragm condenser microphone with a rotating head.",
   "Reactor": "A multi-pattern, large-diaphragm condenser microphone with a unique, swiveling head.",
+  "G1 FOUR": "Multi-effects processor for guitar featuring amp emulation, modulators, delays, reverbs, and built-in looper.",
   "Apollo Twin": "A desktop Thunderbolt audio interface with two Unison mic preamps and onboard UAD-2 processing.",
   "Apollo x4": "A rackmount Thunderbolt 3 audio interface with four Unison mic preamps and HEXA Core processing.",
   "Apollo x6": "A rackmount Thunderbolt 3 audio interface with two Unison mic preamps and HEXA Core processing.",

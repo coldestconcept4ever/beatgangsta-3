@@ -208,5 +208,8 @@ export const analogHardware = {
   },
   "Bass Amplifiers": {
     "Ampeg": ["V-4B"]
+  },
+  "Multi-effects Processors": {
+    "Zoom": ["G1 FOUR"]
   }
 };
