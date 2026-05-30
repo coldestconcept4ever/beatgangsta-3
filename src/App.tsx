@@ -3691,8 +3691,8 @@ The AI was unable to verify these parameters. Please investigate.`;
       setCritiqueContext('');
       setReferenceTrack('');
       setReferenceTrackFile(null);
-      // Reset stems to empty state but keep types
-      setStems(prev => prev.map(s => ({ ...s, file: null, status: 'empty' as const, mimeType: '' })));
+      // Wait to clear stems so that DAWProject export can retain the locally uploaded files.
+      // setStems(prev => prev.map(s => ({ ...s, file: null, status: 'empty' as const, mimeType: '' })));
       
       if (user && autoBackupPrefs.critiques) {
         handleExecuteCloudSync('backup', { gear: false, settings: false, recipes: false, critiques: true }, true);
@@ -6597,6 +6597,7 @@ The AI was unable to verify these parameters. Please investigate.`;
                         plugins={plugins} 
                         analogInstruments={analogInstruments}
                         analogHardware={analogHardware}
+                        stems={stems}
                         audioBase64={critique.audioBase64} 
                         audioUrl={critique.audioUrl}
                         mimeType={critique.mimeType} 

@@ -10,7 +10,7 @@ const generateTrackChannels = (parentName: string, multiBandDetails?: { isEnable
     const trackName = isMulti ? `${parentName} (Band ${i + 1})` : parentName;
     const track = Utility.createTrack(
       trackName,
-      new Set([ContentType.AUDIO, ContentType.NOTES]),
+      new Set([ContentType.AUDIO]),
       MixerRole.REGULAR,
       0.8,
       0.5
@@ -31,6 +31,8 @@ const applyPluginsToTrack = (track: Track, fxList: DeepDivePlugin[], instrumentN
     const instrDevice = new Vst3Plugin();
     instrDevice.deviceName = instrumentName;
     instrDevice.deviceRole = DeviceRole.INSTRUMENT;
+    instrDevice.deviceID = "565354506c7567696e56616c69644944";
+    instrDevice.deviceVendor = "Beat Gangsta Platform";
     track.channel.devices.push(instrDevice);
   }
 
@@ -38,8 +40,43 @@ const applyPluginsToTrack = (track: Track, fxList: DeepDivePlugin[], instrumentN
     const fxDevice = new Vst3Plugin();
     fxDevice.deviceName = fx.name;
     fxDevice.deviceRole = DeviceRole.AUDIO_FX;
+    fxDevice.deviceID = "565354506c7567696e56616c69644944";
+    fxDevice.deviceVendor = "Beat Gangsta Platform";
     track.channel.devices.push(fxDevice);
   }
+};
+
+const createDummyWav = (durationSeconds: number): Uint8Array => {
+  const sampleRate = 44100;
+  const numChannels = 2;
+  const bytesPerSample = 2;
+  const numSamples = Math.ceil(durationSeconds * sampleRate);
+  const dataSize = numSamples * numChannels * bytesPerSample;
+  const fileSize = 36 + dataSize;
+  
+  const buffer = new Uint8Array(44 + dataSize);
+  const view = new DataView(buffer.buffer);
+  
+  // RIFF Chunk
+  buffer.set([0x52, 0x49, 0x46, 0x46], 0); // "RIFF"
+  view.setUint32(4, fileSize, true);
+  buffer.set([0x57, 0x41, 0x56, 0x45], 8); // "WAVE"
+  
+  // fmt Chunk
+  buffer.set([0x66, 0x6d, 0x74, 0x20], 12); // "fmt "
+  view.setUint32(16, 16, true); // Size: 16
+  view.setUint16(20, 1, true); // format: PCM
+  view.setUint16(22, numChannels, true);
+  view.setUint32(24, sampleRate, true);
+  view.setUint32(28, sampleRate * numChannels * bytesPerSample, true);
+  view.setUint16(32, numChannels * bytesPerSample, true); // block align
+  view.setUint16(34, bytesPerSample * 8, true); // bits per sample
+  
+  // data Chunk
+  buffer.set([0x64, 0x61, 0x74, 0x61], 36); // "data"
+  view.setUint32(40, dataSize, true);
+  
+  return buffer;
 };
 
 export const generateDawProjectFromMixCritique = async (critique: MixCritique, stems: any[]): Promise<Blob> => {
@@ -58,15 +95,6 @@ export const generateDawProjectFromMixCritique = async (critique: MixCritique, s
   project.arrangement.lanes.lanes = [];
 
   const embeddedFiles: Record<string, Uint8Array> = {};
-  
-  const wavHeader = new Uint8Array([
-      0x52, 0x49, 0x46, 0x46, 0x24, 0x00, 0x00, 0x00, // RIFF size 36
-      0x57, 0x41, 0x56, 0x45, 0x66, 0x6d, 0x74, 0x20, // WAVEfmt 
-      0x10, 0x00, 0x00, 0x00, 0x01, 0x00, 0x02, 0x00, // length 16, PCM, stereo
-      0x44, 0xac, 0x00, 0x00, 0x10, 0xb1, 0x02, 0x00, // 44100 Hz, 176400 bytes/sec
-      0x04, 0x00, 0x10, 0x00, 0x64, 0x61, 0x74, 0x61, // 4 bytes/block, 16 bit/sample, data chunk
-      0x00, 0x00, 0x00, 0x00 // Data size 0
-  ]);
 
   for (const step of critique.actionPlan || []) {
     if (step.targetStem) {
@@ -92,15 +120,15 @@ export const generateDawProjectFromMixCritique = async (critique: MixCritique, s
         }
         
         // Use dummy header if file data doesn't exist so Studio One correctly plots tracks
+        const duration = fileBuffer ? 120.0 : 8.0;
         if (!fileBuffer) {
            relativePath = `audio/dummy_${step.targetStem.replace(/[^a-z0-9]/gi, '_').toLowerCase()}.wav`;
-           fileBuffer = wavHeader;
+           fileBuffer = createDummyWav(8.0);
         }
 
         embeddedFiles[relativePath] = fileBuffer;
         
         // Assume 120 beats length for visualization if we don't know the exact duration
-        const duration = fileBuffer === wavHeader ? 8.0 : 120.0;
         const audio = Utility.createAudio(relativePath, 44100, 2, duration);
         const clip = Utility.createClip(audio, 0, duration);
         const clips = Utility.createClips(clip);
@@ -140,17 +168,8 @@ export const generateDawProjectFromBeatRecipe = async (recipe: SavedRecipe): Pro
     const dummyAudioName = `dummy_${instr.name.replace(/[^a-z0-9]/gi, '_').toLowerCase()}.wav`;
     const relativePath = `audio/${dummyAudioName}`;
     
-    // Create an empty, minimal valid WAV header. (44 bytes for standard 16-bit PCM, 44100Hz, stereo)
-    const wavHeader = new Uint8Array([
-        0x52, 0x49, 0x46, 0x46, 0x24, 0x00, 0x00, 0x00, // RIFF size 36
-        0x57, 0x41, 0x56, 0x45, 0x66, 0x6d, 0x74, 0x20, // WAVEfmt 
-        0x10, 0x00, 0x00, 0x00, 0x01, 0x00, 0x02, 0x00, // length 16, PCM, stereo
-        0x44, 0xac, 0x00, 0x00, 0x10, 0xb1, 0x02, 0x00, // 44100 Hz, 176400 bytes/sec
-        0x04, 0x00, 0x10, 0x00, 0x64, 0x61, 0x74, 0x61, // 4 bytes/block, 16 bit/sample, data chunk
-        0x00, 0x00, 0x00, 0x00 // Data size 0
-    ]);
-    
-    embeddedFiles[relativePath] = wavHeader;
+    // Create an empty, minimal valid WAV header.
+    embeddedFiles[relativePath] = createDummyWav(8.0);
     
     for (const track of tracks) {
       if (!project.structure) project.structure = [];
