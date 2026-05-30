@@ -1382,7 +1382,14 @@ The AI was unable to verify these parameters. Please investigate.`;
   const [dawModalSource, setDawModalSource] = useState<'initial' | 'menu'>('initial');
   const [showAnalogModal, setShowAnalogModal] = useState(false);
   const [analogInstruments, setAnalogInstruments] = useState<Hardware[]>([]);
-  const [analogHardware, setAnalogHardware] = useState<Hardware[]>([]);
+  const [analogHardware, setAnalogHardware] = useState<Hardware[]>([
+    {
+      vendor: 'Zoom',
+      name: 'G1 FOUR',
+      type: 'hardware',
+      description: 'Multi-effects processor for guitar featuring amp emulation, modulators, delays, reverbs, and built-in looper.'
+    }
+  ]);
   const [drumKits, setDrumKits] = useState<Hardware[]>([]);
   const [showDrumKitModal, setShowDrumKitModal] = useState(false);
   const [editingDrumKit, setEditingDrumKit] = useState<Hardware | undefined>(undefined);
