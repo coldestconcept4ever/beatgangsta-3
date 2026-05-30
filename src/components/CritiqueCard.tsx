@@ -18,6 +18,7 @@ interface CritiqueCardProps {
   plugins: VSTPlugin[];
   analogInstruments?: Hardware[];
   analogHardware?: Hardware[];
+  stems?: any[];
   audioBase64?: string;
   audioUrl?: string;
   geminiFileUri?: string;
@@ -39,7 +40,7 @@ interface CritiqueCardProps {
   isMultiBandMode?: boolean;
 }
 
-export const CritiqueCard: React.FC<CritiqueCardProps> = ({ critique, theme, plugins, analogInstruments = [], analogHardware = [], audioBase64, audioUrl, geminiFileUri, mimeType, isSaved, onSave, onUpdateCritique, onReCritique, currentAudioInfo, onLogReceipt, onCorrectPlugin, onContactSupport, onMinimize, isMultiBandMode = false }) => {
+export const CritiqueCard: React.FC<CritiqueCardProps> = ({ critique, stems = [], theme, plugins, analogInstruments = [], analogHardware = [], audioBase64, audioUrl, geminiFileUri, mimeType, isSaved, onSave, onUpdateCritique, onReCritique, currentAudioInfo, onLogReceipt, onCorrectPlugin, onContactSupport, onMinimize, isMultiBandMode = false }) => {
   const { t, i18n } = useTranslation();
   const [specificHelpQuery, setSpecificHelpQuery] = useState('');
   const [isLoadingSpecificHelp, setIsLoadingSpecificHelp] = useState(false);
@@ -138,7 +139,7 @@ export const CritiqueCard: React.FC<CritiqueCardProps> = ({ critique, theme, plu
   const handleExportDawProject = async () => {
     setIsExportingDawProject(true);
     try {
-      const blob = await generateDawProjectFromMixCritique(critique, []); // we don't have stems available easily from props unless we add a callback or global context, which we will just ignore for now and create an empty project with the structure
+      const blob = await generateDawProjectFromMixCritique(critique, stems);
       const url = URL.createObjectURL(blob);
       const link = document.createElement('a');
       link.href = url;
