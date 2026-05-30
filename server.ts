@@ -369,7 +369,7 @@ app.use(cors({
 // Global Rate Limiting
 const globalLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  limit: 1000, // Limit each IP to 1000 requests per windowMs
+  limit: 10000, // Increased to 10000 to accommodate large multi-file chunked uploads
   standardHeaders: 'draft-7',
   legacyHeaders: false,
   message: { error: "Too many requests, please try again later." }
@@ -760,19 +760,25 @@ app.post("/api/proxy-audio", express.json(), async (req, res) => {
     const { url } = req.body;
     if (!url) return res.status(400).json({ error: "Missing url parameter" });
     
-    const response = await axios.get(url, { responseType: 'arraybuffer' });
-    const contentType = response.headers['content-type'] || 'audio/mpeg';
+    let targetUrl = url.trim();
+    if (!targetUrl.startsWith('http://') && !targetUrl.startsWith('https://')) {
+        targetUrl = 'https://' + targetUrl;
+    }
+
+    const response = await fetch(targetUrl);
+    if (!response.ok) {
+       console.error(`Proxy audio error: ${response.status} for URL`, targetUrl);
+       return res.status(response.status).json({ error: `File server returned ${response.status}: The link might be expired or protected.` });
+    }
+
+    const contentType = response.headers.get('content-type') || 'audio/mpeg';
+    const arrayBuffer = await response.arrayBuffer();
     
     res.set('Content-Type', contentType);
-    res.send(response.data);
+    res.send(Buffer.from(arrayBuffer));
   } catch (error: any) {
-    if (error.response) {
-      console.error(`Proxy audio error: ${error.response.status} for URL`, req.body.url);
-      res.status(error.response.status).json({ error: `File server returned ${error.response.status}: The link might be expired or protected.` });
-    } else {
-      console.error("Proxy audio network error:", error.message);
-      res.status(500).json({ error: `Network error: ${error.message}` });
-    }
+    console.error("Proxy audio network error:", error.message);
+    res.status(500).json({ error: `Network error: ${error.message}` });
   }
 });
 
