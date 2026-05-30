@@ -10,11 +10,13 @@ interface AnalogEquipmentModalProps {
   onClose: () => void;
   theme: string;
   onSave: (instruments: Hardware[], hardware: Hardware[]) => Promise<boolean>;
+  initialInstruments?: Hardware[];
+  initialHardware?: Hardware[];
 }
 
 type MenuLevel = 'type' | 'category' | 'brand' | 'model' | 'pedal_selection' | 'amp_selection';
 
-export const AnalogEquipmentModal: React.FC<AnalogEquipmentModalProps> = ({ isOpen, onClose, theme, onSave }) => {
+export const AnalogEquipmentModal: React.FC<AnalogEquipmentModalProps> = ({ isOpen, onClose, theme, onSave, initialInstruments = [], initialHardware = [] }) => {
   const { t } = useTranslation();
   const [level, setLevel] = useState<MenuLevel>('type');
   const [selectedType, setSelectedType] = useState<'instruments' | 'hardware' | null>(null);
@@ -32,6 +34,36 @@ export const AnalogEquipmentModal: React.FC<AnalogEquipmentModalProps> = ({ isOp
 
   const [activeIndex, setActiveIndex] = useState(0);
   const listRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (isOpen) {
+      setSelectedInstruments(initialInstruments.map(i => i.name));
+      setSelectedHardware(initialHardware.map(h => h.name));
+      
+      const newPedalMap: Record<string, string[]> = {};
+      const newAmpMap: Record<string, string[]> = {};
+      
+      initialInstruments.forEach(i => {
+        if (i.connectedPedals) newPedalMap[i.name] = i.connectedPedals.map(p => p.name);
+        if (i.connectedAmps) newAmpMap[i.name] = i.connectedAmps.map(a => a.name);
+      });
+      initialHardware.forEach(h => {
+        if (h.connectedPedals) newPedalMap[h.name] = h.connectedPedals.map(p => p.name);
+        if (h.connectedAmps) newAmpMap[h.name] = h.connectedAmps.map(a => a.name);
+      });
+      
+      setPedalChainMap(newPedalMap);
+      setAmpChainMap(newAmpMap);
+
+      // Reset state
+      setLevel('type');
+      setSelectedType(null);
+      setSelectedCategory(null);
+      setSelectedBrand(null);
+      setExpandedItem(null);
+      setActiveIndex(0);
+    }
+  }, [isOpen]);
 
   if (!isOpen) return null;
 

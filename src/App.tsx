@@ -3131,7 +3131,6 @@ The AI was unable to verify these parameters. Please investigate.`;
   };
 
   const handleAnalogSave = async (instruments: Hardware[], hardware: Hardware[]): Promise<boolean> => {
-    if (!requireAuth()) return false;
     try {
       // Enrich only if needed, but we already have the basic info from the modal.
       // To keep it simple and preserve connectedPedals, we'll use the objects directly.
@@ -3427,6 +3426,7 @@ The AI was unable to verify these parameters. Please investigate.`;
     
     if (plugins.length === 0) return;
     if (!isVerified) {
+      setShowCloudflareModal(true);
       setError("Please complete the security verification first.");
       return;
     }
@@ -3478,6 +3478,7 @@ The AI was unable to verify these parameters. Please investigate.`;
     
     if (plugins.length === 0 || !typeBeatSearch.trim()) return;
     if (!isVerified) {
+      setShowCloudflareModal(true);
       setError("Please complete the security verification first.");
       return;
     }
@@ -3529,6 +3530,7 @@ The AI was unable to verify these parameters. Please investigate.`;
     
     if (plugins.length === 0 || !songSearch.trim()) return;
     if (!isVerified) {
+      setShowCloudflareModal(true);
       setError("Please complete the security verification first.");
       return;
     }
@@ -3601,6 +3603,7 @@ The AI was unable to verify these parameters. Please investigate.`;
     if (!requireAuth()) return;
     if (plugins.length === 0) return;
     if (!isVerified) {
+      setShowCloudflareModal(true);
       setError("Please complete the security verification first.");
       return;
     }
@@ -3747,6 +3750,7 @@ The AI was unable to verify these parameters. Please investigate.`;
     
     if (plugins.length === 0) return;
     if (!isVerified) {
+      setShowCloudflareModal(true);
       setError("Please complete the security verification first.");
       return;
     }
@@ -7560,6 +7564,8 @@ The AI was unable to verify these parameters. Please investigate.`;
           onClose={() => setShowAnalogModal(false)} 
           theme={theme}
           onSave={handleAnalogSave}
+          initialInstruments={analogInstruments}
+          initialHardware={analogHardware}
         />
       </React.Suspense>
 
