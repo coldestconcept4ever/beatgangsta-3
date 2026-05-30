@@ -6235,25 +6235,45 @@ The AI was unable to verify these parameters. Please investigate.`;
                     </div>
 
                     <div className="flex flex-col gap-2">
-                      <button
-                        onClick={() => {
-                          if (stemsLimit < 30) {
-                            setStemSlotSliderValue(1);
-                            setShowBuyStemsModal(true);
-                          }
-                        }}
-                        className={`w-full p-4 rounded-xl text-center font-black transition-all border-2 ${
-                          stemsLimit < 30
-                            ? theme === 'coldest'
-                              ? 'bg-purple-100/50 hover:bg-purple-100 border-purple-200 text-purple-700 hover:scale-[1.02]'
-                              : 'bg-purple-500/10 hover:bg-purple-500/20 border-purple-500/30 text-purple-300 hover:scale-[1.02]'
-                            : theme === 'coldest'
-                              ? 'bg-slate-100 border-slate-200 text-slate-400 cursor-default'
-                              : 'bg-zinc-800/50 border-zinc-700 text-zinc-500 cursor-default'
-                        }`}
-                      >
-                        {stemsLimit < 30 ? "Maximize Your Mixing Power: Add Additional Upload Slots ⚡" : "Max Amount of Upload Slots Unlocked"}
-                      </button>
+                      <div className="flex justify-between gap-2">
+                        <button
+                          onClick={() => {
+                            if (stemsLimit < 30) {
+                              setStemSlotSliderValue(1);
+                              setShowBuyStemsModal(true);
+                            }
+                          }}
+                          className={`flex-1 p-4 rounded-xl text-center font-black transition-all border-2 ${
+                            stemsLimit < 30
+                              ? theme === 'coldest'
+                                ? 'bg-purple-100/50 hover:bg-purple-100 border-purple-200 text-purple-700 hover:scale-[1.02]'
+                                : 'bg-purple-500/10 hover:bg-purple-500/20 border-purple-500/30 text-purple-300 hover:scale-[1.02]'
+                              : theme === 'coldest'
+                                ? 'bg-slate-100 border-slate-200 text-slate-400 cursor-default'
+                                : 'bg-zinc-800/50 border-zinc-700 text-zinc-500 cursor-default'
+                          }`}
+                        >
+                          {stemsLimit < 30 ? "Maximize Your Mixing Power: Add Additional Upload Slots ⚡" : "Max Amount of Upload Slots Unlocked"}
+                        </button>
+                        
+                        {stems.some(s => s.file) && (
+                          <button
+                            onClick={() => {
+                              setStems(prev => prev.map(s => ({ ...s, file: null, status: 'empty' as const, mimeType: '' })));
+                              setHasStems(false);
+                            }}
+                            className={`p-4 rounded-xl text-center font-black transition-all border-2 ${
+                              theme === 'coldest' 
+                                ? 'bg-red-50 hover:bg-red-100 border-red-200 text-red-600' 
+                                : 'bg-red-500/10 hover:bg-red-500/20 border-red-500/30 text-red-400'
+                            }`}
+                            title="Clear All Stems"
+                          >
+                           <X className="w-5 h-5 mx-auto" />
+                           <span className="text-[10px] uppercase">Clear Stems</span>
+                          </button>
+                        )}
+                      </div>
 
                       {stems.map((stem, index) => (
                         <div 
