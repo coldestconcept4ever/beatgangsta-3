@@ -13,6 +13,11 @@ if (typeof window !== 'undefined' && !(window as any).MPEGMode) {
   (window as any).MPEGMode = MPEGMode;
 }
 
+// Polyfill for Lame object required by BitStream.js internally
+if (typeof window !== 'undefined' && !(window as any).Lame) {
+  (window as any).Lame = { LAME_MAXMP3BUFFER: 16384 };
+}
+
 export async function convertWavToMp3(file: File, onProgress?: (progress: number) => void): Promise<File> {
   return new Promise(async (resolve, reject) => {
     try {

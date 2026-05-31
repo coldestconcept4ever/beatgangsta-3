@@ -3655,6 +3655,12 @@ The AI was unable to verify these parameters. Please investigate.`;
         const stem = activeStems[i];
         if (!stem.file) continue;
         
+        if (stem.uri && stem.status === 'ready') {
+          // Skip re-uploading if already uploaded successfully in a previous failed attempt
+          uploadedStems.push(stem);
+          continue;
+        }
+
         let fileToUpload = stem.file;
         
         // Convert WAV to MP3 if necessary

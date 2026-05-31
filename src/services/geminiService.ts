@@ -2226,7 +2226,7 @@ export const getMixCritique = async (
       - 'targetStem': The exact name of the stem this step applies to (if stems were uploaded).
       - 'issue': The specific problem.
       - 'solution': A detailed technical explanation of how to fix it.
-      - 'recommendedChain': A robust chain of plugins from the user's list to use for this fix, with 'name', 'purpose', and 'deepDive' (an array of parameter objects - Provide EVERY available parameter found on the actual plugin interface, aim for 40-80 settings for complex modules - each with 'parameter', 'value', and 'explanation'). You can also optionally include 'band' and 'routing' properties for multiband or parallel processing. MATCH THE EXTREME DETAIL LEVEL OF A FULL BEAT RECIPE.
+      - 'recommendedChain': A robust chain of plugins from the user's list to use for this fix, with 'name', 'purpose', and 'deepDive' (an array of parameter objects - Provide EVERY available parameter found on the actual plugin interface, aim for 40-80 settings for complex modules - each with 'parameter', 'value', and 'explanation'. MATCH THE EXTREME DETAIL LEVEL OF A FULL BEAT RECIPE.). You can also optionally include 'band' and 'routing' properties for multiband or parallel processing.
   `;
   const schemaObject = {
     type: "OBJECT",
@@ -2259,7 +2259,7 @@ export const getMixCritique = async (
             solution: { type: "STRING" },
             recommendedChain: {
               type: "ARRAY",
-              description: hasStems && uploadedStems && uploadedStems.length > 0 ? (isMultiBandMode ? "CRITICAL: You MUST provide an adequate number of plugins to handle the multi-band split across all bands. Do NOT limit to 4 plugins." : "CRITICAL: You MUST provide EXACTLY 4 plugins for this stem, with the 4th explicitly dedicated to volume leveling.") : "Chain of 2-4 plugins (or more if multi-band is used).",
+              description: hasStems && uploadedStems && uploadedStems.length > 0 ? (isMultiBandMode ? "CRITICAL: You MUST provide an adequate number of plugins to handle the multi-band split across all bands. Do NOT limit to 4 plugins." : "CRITICAL: You MUST provide EXACTLY 4 plugins for this stem, with the 4th explicitly dedicated to volume leveling.") : "Chain of 2-4 plugins.",
               items: {
                 type: "OBJECT",
                 properties: {
@@ -2352,35 +2352,96 @@ export const getMixCritique = async (
   if (referenceTrack && !referenceAudioBase64) {
     tools.push({ googleSearch: {} });
   }
-  let response;
-  try {
-    response = await ai.models.generateContent({
-      model: "gemini-3-flash-preview",
-      contents: parts,
-      config: {
-        customAction: hasStems ? 'stems_critique' : 'critique',
-        tools: tools.length > 0 ? tools : undefined,
-        responseMimeType: "application/json",
-        safetySettings: [
-          { category: HarmCategory.HARM_CATEGORY_HARASSMENT, threshold: HarmBlockThreshold.OFF },
-          { category: HarmCategory.HARM_CATEGORY_HATE_SPEECH, threshold: HarmBlockThreshold.OFF },
-          { category: HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT, threshold: HarmBlockThreshold.OFF },
-          { category: HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT, threshold: HarmBlockThreshold.OFF }
-        ]
-      }
-    });
-  } catch (error) {
-    console.error("Gemini API Error (Critique):", error);
-    throw new Error(`Gemini API Error (Critique): ${error instanceof Error ? error.message : String(error)}. Debug Info: parts=${JSON.stringify(parts)}`);
-  }
-  const jsonStr = response.text?.trim() || '{}';
-  let result;
-  try {
-    result = postProcessResult(JSON.parse(sanitizeJSON(jsonStr)));
-  } catch (e: any) {
-    console.error("Detailed Error in getMixCritique:", e);
-    console.error("Safety/Blocked:", JSON.stringify(response?.candidates?.[0] || {}));
-    throw new Error(`Format error in getMixCritique. Details: ${e.message || e}\nRaw: ${typeof jsonStr !== 'undefined' ? jsonStr.substring(0, 500) : "empty"}\nSafety: ${JSON.stringify(response?.candidates?.[0]?.safetyRatings || "none")}`);
+  
+  let result: any = null;
+  const chunkingEnabled = hasStems && uploadedStems && uploadedStems.length > 5;
+  const chunkSize = 5;
+
+  if (chunkingEnabled) {
+     const chunks: any[][] = [];
+     for(let i=0; i<uploadedStems!.length; i+=chunkSize) {
+        chunks.push(uploadedStems!.slice(i, i+chunkSize));
+     }
+
+     for(let i=0; i<chunks.length; i++) {
+        const currentStems = chunks[i];
+        const stemNames = currentStems.map((s:any) => s.name || s.file?.name || 'Unknown Stem').join(', ');
+        
+        let chunkPrompt = prompt + multiBandInstruction;
+        
+        if (i > 0) {
+           chunkPrompt += `\n\nCRITICAL MULTI-PART REQUEST: You are analyzing part ${i+1} out of ${chunks.length}. For this phase, ONLY provide action plan steps for the following stems: ${stemNames}. Do NOT provide overall feedback or strengths/weaknesses again (just return simple dummy strings for those fields), but you MUST provide the exhaustive actionPlan array for these specific stems.`;
+        } else {
+           chunkPrompt += `\n\nCRITICAL MULTI-PART REQUEST: You are analyzing part ${i+1} out of ${chunks.length}. For this phase, provide the comprehensive overall feedback, strengths, weaknesses, AND the exhaustive action plan steps ONLY for the following stems: ${stemNames}.`;
+        }
+        
+        const chunkParts = [...parts.slice(0, parts.length - 1), { text: chunkPrompt }];
+        
+        let response;
+        try {
+          response = await ai.models.generateContent({
+             model: "gemini-3-flash-preview",
+             contents: chunkParts,
+             config: {
+               customAction: 'stems_critique',
+               tools: tools.length > 0 ? tools : undefined,
+               responseMimeType: "application/json",
+               safetySettings: [
+                 { category: HarmCategory.HARM_CATEGORY_HARASSMENT, threshold: HarmBlockThreshold.OFF },
+                 { category: HarmCategory.HARM_CATEGORY_HATE_SPEECH, threshold: HarmBlockThreshold.OFF },
+                 { category: HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT, threshold: HarmBlockThreshold.OFF },
+                 { category: HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT, threshold: HarmBlockThreshold.OFF }
+               ]
+             }
+          });
+        } catch (error) {
+          console.error(`Gemini API Error (Critique Chunk ${i+1}):`, error);
+          throw new Error(`Gemini API Error (Critique Chunk ${i+1}): ${error instanceof Error ? error.message : String(error)}`);
+        }
+        
+        const jsonStr = response.text?.trim() || '{}';
+        try {
+           const parsed = postProcessResult(JSON.parse(sanitizeJSON(jsonStr)));
+           if (i === 0) {
+              result = parsed;
+           } else {
+              result.actionPlan = [...(result.actionPlan || []), ...(parsed.actionPlan || [])];
+           }
+        } catch (e: any) {
+           console.error(`Detailed Error in getMixCritique chunk ${i+1}:`, e);
+           throw new Error(`Format error in getMixCritique chunk ${i+1}. Details: ${e.message || e}`);
+        }
+     }
+  } else {
+    let response;
+    try {
+      response = await ai.models.generateContent({
+        model: "gemini-3-flash-preview",
+        contents: parts,
+        config: {
+          customAction: hasStems ? 'stems_critique' : 'critique',
+          tools: tools.length > 0 ? tools : undefined,
+          responseMimeType: "application/json",
+          safetySettings: [
+            { category: HarmCategory.HARM_CATEGORY_HARASSMENT, threshold: HarmBlockThreshold.OFF },
+            { category: HarmCategory.HARM_CATEGORY_HATE_SPEECH, threshold: HarmBlockThreshold.OFF },
+            { category: HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT, threshold: HarmBlockThreshold.OFF },
+            { category: HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT, threshold: HarmBlockThreshold.OFF }
+          ]
+        }
+      });
+    } catch (error) {
+      console.error("Gemini API Error (Critique):", error);
+      throw new Error(`Gemini API Error (Critique): ${error instanceof Error ? error.message : String(error)}. Debug Info: parts=${JSON.stringify(parts)}`);
+    }
+    const jsonStr = response.text?.trim() || '{}';
+    try {
+      result = postProcessResult(JSON.parse(sanitizeJSON(jsonStr)));
+    } catch (e: any) {
+      console.error("Detailed Error in getMixCritique:", e);
+      console.error("Safety/Blocked:", JSON.stringify(response?.candidates?.[0] || {}));
+      throw new Error(`Format error in getMixCritique. Details: ${e.message || e}\nRaw: ${typeof jsonStr !== 'undefined' ? jsonStr.substring(0, 500) : "empty"}\nSafety: ${JSON.stringify(response?.candidates?.[0]?.safetyRatings || "none")}`);
+    }
   }
   result.id = crypto.randomUUID();
   result.isGangstaVox = isGangstaVox;
