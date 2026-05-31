@@ -616,7 +616,7 @@ export const getUnifiedRecipeSchema = () => {
             loopGuide: { type: Type.STRING },
             midiNotes: {
               type: Type.ARRAY,
-              description: "MIDI pattern for this instrument. You MUST include at least 15-40 notes for melodies/arps, 8-20 for chords, preventing basic 2-note loops. The sum of all 'duration' and 'wait' values MUST equal exactly 16 beats (for 4 bars) or 32 beats (for 8 bars).",
+              description: "MANDATORY. MIDI pattern for this instrument. You MUST include at least 15-40 notes for melodies/arps, 8-20 for chords, preventing basic 2-note loops. The sum of all 'duration' and 'wait' values MUST equal exactly 16 beats (for 4 bars) or 32 beats (for 8 bars).",
               items: {
                 type: Type.OBJECT,
                 properties: {
@@ -630,7 +630,7 @@ export const getUnifiedRecipeSchema = () => {
             },
             deepDive: {
               type: Type.ARRAY,
-              description: "Provide EVERY available parameter found on the actual plugin (typically 40-70 for professional plugins). Detail parameter name, value, and explanation. Be exhaustive and DO NOT be lazy. AT LEAST 10 parameter settings (and up to 30 if it is a complex channel strip plugin).",
+              description: "MANDATORY. Provide EVERY available parameter found on the actual plugin (typically 40-70 for professional plugins). Detail parameter name, value, and explanation. Be exhaustive and DO NOT be lazy. AT LEAST 10 parameter settings (and up to 30 if it is a complex channel strip plugin).",
               items: {
                 type: Type.OBJECT,
                 properties: {
@@ -640,6 +640,7 @@ export const getUnifiedRecipeSchema = () => {
             },
             fxPlugins: {
               type: Type.ARRAY,
+              description: "MANDATORY. You MUST include at least 2-4 FX plugins per instrument to drastically shape the sound.",
               items: {
                 type: Type.OBJECT,
                 properties: {
@@ -647,7 +648,7 @@ export const getUnifiedRecipeSchema = () => {
                   purpose: { type: Type.STRING },
                   deepDive: {
                     type: Type.ARRAY,
-                    description: "Provide EVERY available parameter found on the actual plugin. Detail parameter name, value, and explanation. Be exhaustive. AT LEAST 10 parameter settings (and up to 30 if it is a complex channel strip plugin).",
+                    description: "MANDATORY. Provide EVERY available parameter found on the actual plugin. Detail parameter name, value, and explanation. Be exhaustive. AT LEAST 10 parameter settings (and up to 30 if it is a complex channel strip plugin).",
                     items: {
                       type: Type.OBJECT,
                       properties: {
@@ -719,7 +720,7 @@ export const getUnifiedRecipeSchema = () => {
       },
       drumPatterns: {
         type: Type.OBJECT,
-        description: "Drum patterns for each section. Each pattern MUST be exactly 4 or 8 bars long (64 or 128 steps).",
+        description: "MANDATORY. Drum patterns for each section. Each pattern MUST be exactly 4 or 8 bars long (64 or 128 steps).",
         properties: {
           intro: { type: Type.OBJECT, properties: { kick: { type: Type.OBJECT, properties: { isDoubleTime: { type: Type.BOOLEAN }, steps: { type: Type.ARRAY, items: { type: Type.NUMBER }, description: "Steps 1-64 for 4 bars, 1-128 for 8 bars." }, velocities: { type: Type.ARRAY, items: { type: Type.NUMBER } } } }, snare: { type: Type.OBJECT, properties: { isClap: { type: Type.BOOLEAN }, isDoubleTime: { type: Type.BOOLEAN }, steps: { type: Type.ARRAY, items: { type: Type.NUMBER }, description: "Steps 1-64 for 4 bars, 1-128 for 8 bars." }, velocities: { type: Type.ARRAY, items: { type: Type.NUMBER } } } }, hiHat: { type: Type.OBJECT, properties: { isDoubleTime: { type: Type.BOOLEAN }, steps: { type: Type.ARRAY, items: { type: Type.NUMBER }, description: "Steps 1-64 for 4 bars, 1-128 for 8 bars." }, velocities: { type: Type.ARRAY, items: { type: Type.NUMBER } } } }, velocityHumanized: { type: Type.BOOLEAN }, swing: { type: Type.OBJECT, properties: { kick: { type: Type.NUMBER }, snare: { type: Type.NUMBER }, hiHat: { type: Type.NUMBER } } } } },
           verse: { type: Type.OBJECT, properties: { kick: { type: Type.OBJECT, properties: { isDoubleTime: { type: Type.BOOLEAN }, steps: { type: Type.ARRAY, items: { type: Type.NUMBER }, description: "Steps 1-64 for 4 bars, 1-128 for 8 bars." }, velocities: { type: Type.ARRAY, items: { type: Type.NUMBER } } } }, snare: { type: Type.OBJECT, properties: { isClap: { type: Type.BOOLEAN }, isDoubleTime: { type: Type.BOOLEAN }, steps: { type: Type.ARRAY, items: { type: Type.NUMBER }, description: "Steps 1-64 for 4 bars, 1-128 for 8 bars." }, velocities: { type: Type.ARRAY, items: { type: Type.NUMBER } } } }, hiHat: { type: Type.OBJECT, properties: { isDoubleTime: { type: Type.BOOLEAN }, steps: { type: Type.ARRAY, items: { type: Type.NUMBER }, description: "Steps 1-64 for 4 bars, 1-128 for 8 bars." }, velocities: { type: Type.ARRAY, items: { type: Type.NUMBER } } } }, velocityHumanized: { type: Type.BOOLEAN }, swing: { type: Type.OBJECT, properties: { kick: { type: Type.NUMBER }, snare: { type: Type.NUMBER }, hiHat: { type: Type.NUMBER } } } } },
@@ -731,6 +732,7 @@ export const getUnifiedRecipeSchema = () => {
       },
       arrangement: {
         type: Type.OBJECT,
+        description: "MANDATORY. Detailed arrangement notes for each section.",
         properties: {
           intro: { type: Type.STRING },
           verse: { type: Type.STRING },
@@ -742,6 +744,7 @@ export const getUnifiedRecipeSchema = () => {
       },
             masterPlugins: {
         type: Type.ARRAY,
+        description: "MANDATORY. Plugins on the master track to finalize the mix.",
         items: {
           type: Type.OBJECT,
           properties: {
@@ -1568,6 +1571,7 @@ export const getBeatRecommendations = async (plugins: VSTPlugin[], analogInstrum
     Identify 2-3 mainstream or commonly known artists who would typically use this specific beat type (e.g., "Lil Wayne type", "Travis Scott type").
     Include a recommended BPM, 'recommendedScale', and 'chordProgression'.
     You MUST provide the 'instruments' array with AT LEAST 3 DISTINCT "REAL" instruments (e.g., synths, pianos, guitars, strings). 
+    CRITICAL: NO SHORTCUTS. You MUST provide exhaustive 'fxPlugins' for every instrument, 'midiNotes' for every instrument, full 'drumPatterns', and full 'masterPlugins'. DO NOT skip anything!
     CRITICAL: 808s and Basslines MUST be included in the 'instruments' array with a detailed 'midiNotes' pattern. DO NOT put 808s in 'drumPatterns'.
     CRITICAL: DO NOT use vocals as a main instrument in the 'instruments' array. Vocals MUST be separate.
     For each instrument:
@@ -1697,6 +1701,7 @@ export const getCustomBeatRecommendations = async (plugins: VSTPlugin[], query: 
     Identify 2-3 mainstream or commonly known artists who would typically use this specific beat type.
     Include a recommended BPM, 'recommendedScale', and 'chordProgression' that fits the vibe.
     You MUST provide the 'instruments' array with AT LEAST 3 DISTINCT "REAL" instruments (e.g., synths, pianos, guitars, strings). 
+    CRITICAL: NO SHORTCUTS. You MUST provide exhaustive 'fxPlugins' for every instrument, 'midiNotes' for every instrument, full 'drumPatterns', and full 'masterPlugins'. DO NOT skip anything!
     CRITICAL: 808s and Basslines MUST be included in the 'instruments' array with a detailed 'midiNotes' pattern. DO NOT put 808s in 'drumPatterns'.
     CRITICAL: DO NOT use vocals as a main instrument in the 'instruments' array. Vocals MUST be separate.
     For each instrument:
@@ -1821,6 +1826,7 @@ export const getSongBeatRecommendations = async (plugins: VSTPlugin[], songQuery
     FOLLOW THIS STRUCTURAL BLUEPRINT:
     ${JSON.stringify(blueprint)}
     Ensure the recipe captures the signature sound, instrumentation, and mixing techniques of that specific song, while strictly adhering to the structural blueprint provided above.
+    CRITICAL: NO SHORTCUTS. You MUST provide exhaustive 'fxPlugins' for every instrument, 'midiNotes' for every instrument, full 'drumPatterns', and full 'masterPlugins'. DO NOT skip anything!
     CRITICAL: You MUST use the blueprint's microTiming, velocityDynamics, chordVoicing, and repetitionStrategy to generate the MIDI notes and drum patterns. This is essential for achieving an iconic, authentic, high-energy, and highly realistic MIDI quality that perfectly encapsulates the requested tracking.
     Identify 2-3 mainstream or commonly known artists who would typically use this specific beat type.
     Include a recommended BPM, 'recommendedScale', and 'chordProgression' that fits the vibe.
