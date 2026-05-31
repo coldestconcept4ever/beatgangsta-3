@@ -2250,7 +2250,7 @@ export const getMixCritique = async (
       },
       actionPlan: {
         type: "ARRAY",
-        description: hasStems && uploadedStems && uploadedStems.length > 0 ? `CRITICAL: You MUST generate EXACTLY ${uploadedStems.length} items in this array, one for each uploaded stem.` : "Array of actionable steps.",
+        description: "Array of actionable steps.",
         items: {
           type: "OBJECT",
           properties: {
@@ -2297,7 +2297,8 @@ export const getMixCritique = async (
     },
     required: ["title", "overallFeedback", "strengths", "weaknesses", "actionPlan"]
   };
-  prompt += `\n\nCRITICAL: You MUST return a valid JSON object EXCLUSIVELY formatted with this exact JSON Schema:\n${JSON.stringify(schemaObject, null, 2)}`;
+  // Do NOT append the schema immediately, we'll append it later per branch to respect chunking stem counts.
+  
   const parts: any[] = [];
   if (uploadedStems && uploadedStems.length > 0) {
     for (const stem of uploadedStems) {
@@ -2367,6 +2368,9 @@ export const getMixCritique = async (
         const currentStems = chunks[i];
         const stemNames = currentStems.map((s:any) => s.name || s.file?.name || 'Unknown Stem').join(', ');
         
+        let chunkSchema = JSON.parse(JSON.stringify(schemaObject));
+        chunkSchema.properties.actionPlan.description = `CRITICAL: You MUST generate EXACTLY ${currentStems.length} items in this array, one for each specific stem assigned to this phase.`;
+        
         let chunkPrompt = prompt + multiBandInstruction;
         
         if (i > 0) {
@@ -2374,6 +2378,8 @@ export const getMixCritique = async (
         } else {
            chunkPrompt += `\n\nCRITICAL MULTI-PART REQUEST: You are analyzing part ${i+1} out of ${chunks.length}. For this phase, provide the comprehensive overall feedback, strengths, weaknesses, AND the exhaustive action plan steps ONLY for the following stems: ${stemNames}.`;
         }
+        
+        chunkPrompt += `\n\nCRITICAL: You MUST return a valid JSON object EXCLUSIVELY formatted with this exact JSON Schema:\n${JSON.stringify(chunkSchema, null, 2)}`;
         
         const chunkParts = [...parts.slice(0, parts.length - 1), { text: chunkPrompt }];
         
@@ -2413,11 +2419,18 @@ export const getMixCritique = async (
         }
      }
   } else {
+    let schema = JSON.parse(JSON.stringify(schemaObject));
+    if (hasStems && uploadedStems && uploadedStems.length > 0) {
+      schema.properties.actionPlan.description = `CRITICAL: You MUST generate EXACTLY ${uploadedStems.length} items in this array, one for each uploaded stem.`;
+    }
+    const finalPrompt = prompt + multiBandInstruction + `\n\nCRITICAL: You MUST return a valid JSON object EXCLUSIVELY formatted with this exact JSON Schema:\n${JSON.stringify(schema, null, 2)}`;
+    const finalParts = [...parts.slice(0, parts.length - 1), { text: finalPrompt }];
+    
     let response;
     try {
       response = await ai.models.generateContent({
         model: "gemini-3-flash-preview",
-        contents: parts,
+        contents: finalParts,
         config: {
           customAction: hasStems ? 'stems_critique' : 'critique',
           tools: tools.length > 0 ? tools : undefined,

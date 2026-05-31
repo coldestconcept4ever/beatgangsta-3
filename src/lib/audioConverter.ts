@@ -1,4 +1,5 @@
 import lamejs from 'lamejs';
+import BitStream from 'lamejs/src/js/BitStream.js';
 
 // Polyfill for lamejs bug when bundled by Vite where MPEGMode is not defined
 if (typeof window !== 'undefined' && !(window as any).MPEGMode) {
@@ -16,6 +17,11 @@ if (typeof window !== 'undefined' && !(window as any).MPEGMode) {
 // Polyfill for Lame object required by BitStream.js internally
 if (typeof window !== 'undefined' && !(window as any).Lame) {
   (window as any).Lame = { LAME_MAXMP3BUFFER: 16384 };
+}
+
+// Polyfill for BitStream object required by QuantizePVT.js internally
+if (typeof window !== 'undefined' && !(window as any).BitStream) {
+  (window as any).BitStream = BitStream;
 }
 
 export async function convertWavToMp3(file: File, onProgress?: (progress: number) => void): Promise<File> {
