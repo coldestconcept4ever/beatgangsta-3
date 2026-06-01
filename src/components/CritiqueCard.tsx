@@ -44,7 +44,7 @@ export const CritiqueCard: React.FC<CritiqueCardProps> = ({ critique, stems = []
   const { t, i18n } = useTranslation();
   const [specificHelpQuery, setSpecificHelpQuery] = useState('');
   const [isLoadingSpecificHelp, setIsLoadingSpecificHelp] = useState(false);
-  const [specificHelpResults, setSpecificHelpResults] = useState<any[]>([]);
+  const [specificHelpResults, setSpecificHelpResults] = useState<any[]>(() => critique.specificHelp || []);
   const [isDragging, setIsDragging] = useState(false);
   const [reCritiqueContext, setReCritiqueContext] = useState("");
   const [isLoadingReCritique, setIsLoadingReCritique] = useState(false);

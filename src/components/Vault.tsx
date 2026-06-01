@@ -271,7 +271,7 @@ export const Vault: React.FC<VaultProps> = ({
                             <div className="flex flex-wrap items-center gap-3 mt-1 text-[8px] sm:text-[10px] font-black uppercase tracking-widest opacity-90">
                               <span className={`${theme === 'coldest' ? 'text-sky-500' : theme === 'crazy-bird' ? 'text-red-500' : theme === 'hustle-time' ? 'text-emerald-500' : 'text-orange-500'}`}>{critique.isGangstaVox ? t('vocal_critique') : t('beat_critique')}</span>
                               <span className="w-1 h-1 rounded-full bg-current opacity-20" />
-                              <span>{new Date(critique.savedAt).toLocaleDateString()}</span>
+                              <span>{critique.savedAt ? new Date(critique.savedAt).toLocaleDateString() : t('unknown_date', 'Unknown Date')}</span>
                             </div>
                           </div>
 

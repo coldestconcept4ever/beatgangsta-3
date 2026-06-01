@@ -26,5 +26,21 @@
     },
     "allowImportingTsExtensions": true,
     "noEmit": true
-  }
+  },
+  "exclude": [
+    "node_modules",
+    "dist",
+    "app",
+    "test*.ts",
+    "test*.cjs",
+    "test*.js",
+    "test*.mjs",
+    "check*.ts",
+    "check*.js",
+    "validate*.ts",
+    "fix*.js",
+    "fix*.cjs",
+    "generate_banner.ts",
+    "temp-check*.ts"
+  ]
 }
