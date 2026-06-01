@@ -95,10 +95,10 @@ export const Vault: React.FC<VaultProps> = ({
     : activeRecipes.filter(r => r.folderId === activeFolderId);
 
   return (
-    <div className="fixed inset-0 z-[200] flex items-center justify-center p-2 sm:p-6 bg-black/60 backdrop-blur-xl animate-in fade-in duration-300">
-      <div className={`w-full max-w-6xl h-[95vh] lg:max-h-[90vh] overflow-hidden flex flex-col rounded-[2rem] sm:rounded-[4rem] border shadow-2xl relative ${containerClasses} transition-colors duration-700`}>
-        <button id="btn-close-vault" onClick={onClose} className="absolute top-4 right-4 sm:top-8 sm:right-8 p-2 rounded-full hover:bg-black/5 transition-all z-20">
-           <svg className="w-6 h-6 sm:w-8 sm:h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M6 18L18 6M6 6l12 12" /></svg>
+    <div className="fixed inset-0 z-[200] flex items-center justify-center p-2 sm:p-6 bg-black/60 backdrop-blur-xl animate-in fade-in duration-300" onClick={(e) => { e.stopPropagation(); onClose(); }}>
+      <div className={`w-full max-w-6xl h-[95vh] lg:max-h-[90vh] overflow-hidden flex flex-col rounded-[2rem] sm:rounded-[4rem] border shadow-2xl relative ${containerClasses} transition-colors duration-700`} onClick={(e) => e.stopPropagation()}>
+        <button id="btn-close-vault" type="button" onClick={(e) => { e.stopPropagation(); onClose(); }} className="absolute top-4 right-4 sm:top-8 sm:right-8 p-2 rounded-full hover:bg-black/5 transition-all z-20">
+           <svg className="w-6 h-6 sm:w-8 sm:h-8 pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M6 18L18 6M6 6l12 12" /></svg>
         </button>
 
         <div className="flex flex-col lg:flex-row flex-1 overflow-hidden">
@@ -169,10 +169,9 @@ export const Vault: React.FC<VaultProps> = ({
                       </div>
                     ) : (
                       filteredRecipes.map((recipe) => (
-                        <div key={recipe.id} className={`group relative flex items-center gap-4 sm:gap-6 p-4 sm:p-6 rounded-[1.5rem] sm:rounded-[2.5rem] border transition-all duration-300 ${rStyle}`}>
+                        <div key={recipe.id} onClick={() => onOpen(recipe)} className={`group relative flex items-center gap-4 sm:gap-6 p-4 sm:p-6 rounded-[1.5rem] sm:rounded-[2.5rem] border transition-all duration-300 cursor-pointer ${rStyle}`}>
                           <div 
-                            onClick={() => onOpen(recipe)}
-                            className="w-12 h-12 sm:w-16 sm:h-16 rounded-full flex-shrink-0 cursor-pointer transition-transform hover:scale-110 shadow-xl border-4 border-white/40 flex items-center justify-center"
+                            className="w-12 h-12 sm:w-16 sm:h-16 rounded-full flex-shrink-0 transition-transform group-hover:scale-110 shadow-xl border-4 border-white/40 flex items-center justify-center"
                             style={{ backgroundColor: recipe.bubbleColor }}
                           >
                             <span className="text-sm sm:text-xl font-black" style={{ color: getContrastColor(recipe.bubbleColor) }}>
@@ -182,7 +181,7 @@ export const Vault: React.FC<VaultProps> = ({
 
                           <div className="flex-1 overflow-hidden">
                             <div className="flex items-center gap-2">
-                              <h3 onClick={() => onOpen(recipe)} className="text-sm sm:text-lg font-black tracking-tight truncate cursor-pointer hover:underline">
+                              <h3 className="text-sm sm:text-lg font-black tracking-tight truncate cursor-pointer hover:underline">
                                 {recipe.title}
                               </h3>
                             </div>
@@ -216,7 +215,7 @@ export const Vault: React.FC<VaultProps> = ({
                             
                             <div className="flex items-center gap-3 mt-3">
                               <div className="relative w-5 h-5 rounded-full overflow-hidden border border-black/20">
-                                <input type="color" value={recipe.bubbleColor} onChange={(e) => onUpdateColor(recipe.id, e.target.value)} className="absolute inset-[-10px] w-[200%] h-[200%] cursor-pointer bg-transparent border-none p-0" />
+                                <input type="color" value={recipe.bubbleColor} onClick={(e) => e.stopPropagation()} onChange={(e) => onUpdateColor(recipe.id, e.target.value)} className="absolute inset-[-10px] w-[200%] h-[200%] cursor-pointer bg-transparent border-none p-0" />
                               </div>
                               <span className={`text-[7px] sm:text-[9px] font-black uppercase tracking-widest ${theme === 'coldest' ? 'text-sky-400/70' : 'opacity-60'}`}>{t('rgb_shift')}</span>
                             </div>
@@ -253,10 +252,9 @@ export const Vault: React.FC<VaultProps> = ({
                       </div>
                     ) : (
                       critiques.map((critique) => (
-                        <div key={critique.id} className={`group relative flex items-center gap-4 sm:gap-6 p-4 sm:p-6 rounded-[1.5rem] sm:rounded-[2.5rem] border transition-all duration-300 ${rStyle}`}>
+                        <div key={critique.id} onClick={() => onOpenCritique(critique)} className={`group relative flex items-center gap-4 sm:gap-6 p-4 sm:p-6 rounded-[1.5rem] sm:rounded-[2.5rem] border transition-all duration-300 cursor-pointer ${rStyle}`}>
                           <div 
-                            onClick={() => onOpenCritique(critique)}
-                            className={`w-12 h-12 sm:w-16 sm:h-16 rounded-full flex-shrink-0 cursor-pointer transition-transform hover:scale-110 shadow-xl border-4 border-white/40 flex items-center justify-center ${theme === 'coldest' ? 'bg-sky-500' : theme === 'crazy-bird' ? 'bg-red-500' : theme === 'hustle-time' ? 'bg-emerald-500' : 'bg-orange-500'}`}
+                            className={`w-12 h-12 sm:w-16 sm:h-16 rounded-full flex-shrink-0 transition-transform group-hover:scale-110 shadow-xl border-4 border-white/40 flex items-center justify-center ${theme === 'coldest' ? 'bg-sky-500' : theme === 'crazy-bird' ? 'bg-red-500' : theme === 'hustle-time' ? 'bg-emerald-500' : 'bg-orange-500'}`}
                           >
                             <span className="text-sm sm:text-xl font-black text-white">
                               🎧
@@ -265,7 +263,7 @@ export const Vault: React.FC<VaultProps> = ({
 
                           <div className="flex-1 overflow-hidden">
                             <div className="flex items-center gap-2">
-                              <h3 onClick={() => onOpenCritique(critique)} className="text-sm sm:text-lg font-black tracking-tight truncate cursor-pointer hover:underline">
+                              <h3 className="text-sm sm:text-lg font-black tracking-tight truncate cursor-pointer hover:underline">
                                 {critique.title}
                               </h3>
                             </div>
