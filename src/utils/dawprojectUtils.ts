@@ -94,7 +94,7 @@ export const generateDawProjectFromMixCritique = async (critique: MixCritique, s
   project.arrangement.lanes = new Lanes();
   project.arrangement.lanes.lanes = [];
 
-  const embeddedFiles: Record<string, Uint8Array> = {};
+  const embeddedFiles: Record<string, Uint8Array | Blob> = {};
 
   for (const step of critique.actionPlan || []) {
     if (step.targetStem) {
@@ -107,20 +107,16 @@ export const generateDawProjectFromMixCritique = async (critique: MixCritique, s
         
         applyPluginsToTrack(track, step.recommendedChain);
         
-        let fileBuffer: Uint8Array | null = null;
+        let fileBuffer: Uint8Array | Blob | null = null;
         let relativePath = `audio/${step.targetStem}`;
 
         if (stemData && stemData.file) {
-          try {
-            const buffer = await stemData.file.arrayBuffer();
-            fileBuffer = new Uint8Array(buffer);
-          } catch (err) {
-            console.error("Failed to read stem data", err);
-          }
+          // Pass the file Blob directly to avoid RangeError on large allocations
+          fileBuffer = stemData.file;
         }
         
         // Use dummy header if file data doesn't exist so Studio One correctly plots tracks
-        const duration = fileBuffer ? 120.0 : 8.0;
+        const duration = fileBuffer ? (fileBuffer instanceof File ? 120.0 : 8.0) : 8.0;
         if (!fileBuffer) {
            relativePath = `audio/dummy_${step.targetStem.replace(/[^a-z0-9]/gi, '_').toLowerCase()}.wav`;
            fileBuffer = createDummyWav(8.0);
@@ -138,8 +134,17 @@ export const generateDawProjectFromMixCritique = async (critique: MixCritique, s
     }
   }
   
-  const zipData = await DawProject.save(project, metadata, embeddedFiles);
-  return new Blob([zipData], { type: 'application/octet-stream' });
+  const zip = new JSZip();
+  // @ts-ignore
+  zip.file('metadata.xml', new TextEncoder().encode(metadata.toXml()));
+  // @ts-ignore
+  zip.file('project.xml', new TextEncoder().encode(project.toXml()));
+  
+  for (const [path, data] of Object.entries(embeddedFiles)) {
+      zip.file(path, data);
+  }
+  
+  return await zip.generateAsync({ type: 'blob', compression: 'STORE' });
 };
 
 export const generateDawProjectFromBeatRecipe = async (recipe: SavedRecipe): Promise<Blob> => {
@@ -157,7 +162,7 @@ export const generateDawProjectFromBeatRecipe = async (recipe: SavedRecipe): Pro
   project.arrangement.lanes = new Lanes();
   project.arrangement.lanes.lanes = [];
   
-  const embeddedFiles: Record<string, Uint8Array> = {};
+  const embeddedFiles: Record<string, Uint8Array | Blob> = {};
   
   const instrList = recipe.isGangstaVox ? recipe.gangstaVox?.vocalTracks || [] : recipe.instruments || [];
   
@@ -197,6 +202,15 @@ export const generateDawProjectFromBeatRecipe = async (recipe: SavedRecipe): Pro
     project.structure.push(track);
   }
   
-  const zipData = await DawProject.save(project, metadata, embeddedFiles);
-  return new Blob([zipData], { type: 'application/octet-stream' });
+  const zip = new JSZip();
+  // @ts-ignore
+  zip.file('metadata.xml', new TextEncoder().encode(metadata.toXml()));
+  // @ts-ignore
+  zip.file('project.xml', new TextEncoder().encode(project.toXml()));
+  
+  for (const [path, data] of Object.entries(embeddedFiles)) {
+      zip.file(path, data);
+  }
+  
+  return await zip.generateAsync({ type: 'blob', compression: 'STORE' });
 };

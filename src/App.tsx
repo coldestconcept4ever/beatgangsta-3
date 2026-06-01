@@ -3407,15 +3407,23 @@ The AI was unable to verify these parameters. Please investigate.`;
     return interval;
   };
 
-  const getEstimatedSeconds = (type: 'replicate' | 'generate' | 'type-beat' | 'song-search' | 'audio-search') => {
+  const getEstimatedSeconds = (type: 'replicate' | 'generate' | 'type-beat' | 'song-search' | 'audio-search', files?: File[]) => {
+    let baseTime = 90;
     switch (type) {
-      case 'replicate': return 45;
-      case 'generate': return 60;
-      case 'type-beat': return 75;
-      case 'song-search': return 80;
-      case 'audio-search': return 120;
-      default: return 90;
+      case 'replicate': baseTime = 45; break;
+      case 'generate': baseTime = 60; break;
+      case 'type-beat': baseTime = 75; break;
+      case 'song-search': baseTime = 80; break;
+      case 'audio-search': baseTime = 120; break;
     }
+
+    if (files && files.length > 0) {
+      // Add extra time based on file size and count
+      const totalSizeMB = files.reduce((acc, file) => acc + file.size, 0) / (1024 * 1024);
+      // Rough estimate: add 5 seconds per MB, plus 25 seconds per extra stem file
+      baseTime += Math.round(totalSizeMB * 5) + (files.length * 25);
+    }
+    return baseTime;
   };
 
   const handleApiKeySave = async (key: string) => {
@@ -3640,12 +3648,12 @@ The AI was unable to verify these parameters. Please investigate.`;
     setError(null);
 
     const timeoutId = setTimeout(() => {
-      setLoading(false);
-      setAudioAnalysisLoading(false);
-      setError("Audio analysis is taking longer than expected. The files might be very complex, but we're still trying...");
+      // Don't kill loading, just notify user it's taking a while.
+      setError("Audio analysis is taking longer than expected. The files are quite large, but we're still processing...");
     }, 900000); 
 
-    const progressInterval = simulateGenerationProgress(getEstimatedSeconds('audio-search') * activeStems.length);
+    const validFiles = activeStems.map(s => s.file).filter((f): f is File => f !== null);
+    const progressInterval = simulateGenerationProgress(getEstimatedSeconds('audio-search', validFiles));
     const filesToDelete: string[] = [];
 
     try {
@@ -3803,14 +3811,12 @@ The AI was unable to verify these parameters. Please investigate.`;
     setAudioAnalysisLoading(true);
     setError(null);
 
-    // Run even if it takes a long time - increased to 15 mins
+    // Warn user but do not stop loading if it crosses 15 minutes.
     const timeoutId = setTimeout(() => {
-      setLoading(false);
-      setAudioAnalysisLoading(false);
       setError("Audio analysis is taking longer than expected. The file might be very complex, but we're still trying...");
     }, 900000); 
 
-    const progressInterval = simulateGenerationProgress(getEstimatedSeconds('audio-search'));
+    const progressInterval = simulateGenerationProgress(getEstimatedSeconds('audio-search', file ? [file] : undefined));
     const filesToDelete: string[] = [];
 
     try {
