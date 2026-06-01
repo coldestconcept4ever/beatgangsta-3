@@ -2041,6 +2041,11 @@ The AI was unable to verify these parameters. Please investigate.`;
 
   useEffect(() => {
     const handleMessage = async (event: MessageEvent) => {
+      // Validate data is an object
+      if (!event.data || typeof event.data !== 'object') {
+        return;
+      }
+
       // Validate origin
       const origin = event.origin;
       console.log("[AUTH DEBUG] Received postMessage from origin:", origin, "data:", event.data?.type);
@@ -5061,6 +5066,15 @@ The AI was unable to verify these parameters. Please investigate.`;
                       mimeType: c.mimeType || null
                     });
                   }
+                  // Smoothly scroll down so the opened critique details are visible
+                  setTimeout(() => {
+                    const el = document.getElementById('critiques-section');
+                    if (el) {
+                      el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                    } else {
+                      window.scrollTo({ top: document.body.scrollHeight / 2, behavior: 'smooth' });
+                    }
+                  }, 300);
                 }}
               />
           </motion.div>
@@ -6652,6 +6666,7 @@ The AI was unable to verify these parameters. Please investigate.`;
               {critiques.length > 0 && (
                 <motion.section 
                   key="critiques-section"
+                  id="critiques-section"
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, scale: 0.95 }}
