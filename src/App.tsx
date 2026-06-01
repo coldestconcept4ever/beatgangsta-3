@@ -2100,7 +2100,7 @@ The AI was unable to verify these parameters. Please investigate.`;
         console.log("[AUTH DEBUG] Polling checkAuth...");
         checkAuth();
       }
-    }, 15000); // Increased interval to be safer
+    }, 4000); // Poll every 4 seconds for responsive sign-in sync
 
     return () => {
       window.removeEventListener('message', handleMessage);
@@ -5048,6 +5048,7 @@ The AI was unable to verify these parameters. Please investigate.`;
                 isReplicating={loading}
                 onOpen={(r) => {
                   setViewingRecipe(r);
+                  setShowVault(false);
                 }}
                 onOpenCritique={(c) => {
                   setCritiques([c]);
@@ -5058,6 +5059,8 @@ The AI was unable to verify these parameters. Please investigate.`;
                   setMainTab(c.isGangstaVox ? 'vox' : 'beat');
                   setIsGangstaVox(!!c.isGangstaVox);
                   setShowVault(false);
+                  setFriendMode(false);
+                  setImportedSaveFile(null);
                   // Update currentAudioInfo if the opened critique has audio
                   if (c.audioBase64 || c.audioUrl || c.geminiFileUri) {
                     setCurrentAudioInfo({

@@ -396,7 +396,7 @@ app.use((req, res, next) => {
   res.setHeader = function(name: string, value: any) {
     if (name.toLowerCase() === 'set-cookie') {
       const processCookie = (v: string) => {
-        if (typeof v === 'string' && v.includes('session=')) {
+        if (typeof v === 'string' && (v.includes('session=') || v.includes('session.sig='))) {
           let newValue = v;
           if (!v.includes('Partitioned')) {
             newValue = `${newValue}; Partitioned`;
