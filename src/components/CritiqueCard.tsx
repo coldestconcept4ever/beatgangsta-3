@@ -388,7 +388,7 @@ export const CritiqueCard: React.FC<CritiqueCardProps> = ({ critique, stems = []
                 <h4 className="text-sm font-black uppercase tracking-widest text-fuchsia-600 dark:text-fuchsia-400">Reference Track Deviation</h4>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {critique.deviationMetrics.map((metric, idx) => (
+                {Array.isArray(critique.deviationMetrics) && critique.deviationMetrics.map((metric, idx) => (
                   <div key={idx} className={`p-4 rounded-2xl ${theme === 'coldest' ? 'bg-white shadow-sm' : 'bg-black/20'}`}>
                     <h5 className="text-xs font-black uppercase tracking-widest opacity-60 mb-2">{metric.metric}</h5>
                     <p className="text-lg font-bold text-fuchsia-600 dark:text-fuchsia-400 mb-2">{metric.deviation}</p>
