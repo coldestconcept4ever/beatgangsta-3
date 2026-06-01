@@ -147,7 +147,7 @@ export const generateDawProjectFromMixCritique = async (critique: MixCritique, s
   return await zip.generateAsync({ type: 'blob', compression: 'STORE' });
 };
 
-export const generateDawProjectFromBeatRecipe = async (recipe: SavedRecipe): Promise<Blob> => {
+export const generateDawProjectFromBeatRecipe = async (recipe: any): Promise<Blob> => {
   const project = new Project();
   project.application = new Application("BeatGangsta", "1.0.0");
   
@@ -194,7 +194,7 @@ export const generateDawProjectFromBeatRecipe = async (recipe: SavedRecipe): Pro
     const track = Utility.createTrack(
       bus.name,
       new Set([ContentType.AUDIO]),
-      MixerRole.EFFECT,
+      'return' as any,
       0.8,
       0.5
     );

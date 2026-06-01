@@ -14,6 +14,7 @@ import { fetchWithDetailedError } from './lib/api';
 import { AvianField } from './components/RavenField';
 import { PluginCard } from './components/PluginCard';
 import { HardwareCard } from './components/HardwareCard';
+import { ErrorBoundary } from './components/ErrorBoundary';
 const RecipeCard = React.lazy(() => import('./components/RecipeCard').then(m => ({ default: m.RecipeCard })));
 const CritiqueCard = React.lazy(() => import('./components/CritiqueCard').then(m => ({ default: m.CritiqueCard })));
 const Mascot = React.lazy(() => import('./components/Mascot').then(m => ({ default: m.Mascot })));
@@ -5009,13 +5010,13 @@ The AI was unable to verify these parameters. Please investigate.`;
       <AnimatePresence>
         {showVault && (
           <motion.div
+            key="vault-modal"
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.95 }}
             className="fixed inset-0 z-[150] flex items-center justify-center p-6 bg-black/60 backdrop-blur-xl"
           >
-            <React.Suspense fallback={null}>
-              <Vault 
+            <Vault 
                 theme={theme === 'chef-mode' ? 'coldest' : theme} 
                 recipes={vault} 
                 critiques={savedCritiques}
@@ -5062,7 +5063,6 @@ The AI was unable to verify these parameters. Please investigate.`;
                   }
                 }}
               />
-            </React.Suspense>
           </motion.div>
         )}
       </AnimatePresence>
@@ -6624,22 +6624,24 @@ The AI was unable to verify these parameters. Please investigate.`;
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ delay: idx * 0.1 }}
                     >
-                      <RecipeCard 
-                        recipe={recipe} 
-                        isSaved={vault.some(r => r.title === recipe.title)} 
-                        onSave={saveToVault} 
-                        theme={theme} 
-                        dawType={dawType} 
-                        plugins={plugins} 
-                        analogHardware={analogHardware} 
-                        drumKits={drumKits} 
-                        onCloudBackupRecipe={handleCloudBackupRecipe} 
-                        onLogReceipt={logReceipt}
-                        onCorrectPlugin={handleCorrectPlugin}
-                        onContactSupport={handleContactSupport}
-                        onMinimize={() => handleMinimizeRecipe(recipe)}
-                        isMultiBandMode={isMultiBandMode}
-                      />
+                      <ErrorBoundary fallback={<div className="p-8 text-center text-red-500 font-bold border rounded-3xl bg-black/40 border-red-500/20 shadow-2xl">Could not render this recipe. The saved data might be corrupted.</div>}>
+                        <RecipeCard 
+                          recipe={recipe} 
+                          isSaved={vault.some(r => r.title === recipe.title)} 
+                          onSave={saveToVault} 
+                          theme={theme} 
+                          dawType={dawType} 
+                          plugins={plugins} 
+                          analogHardware={analogHardware} 
+                          drumKits={drumKits} 
+                          onCloudBackupRecipe={handleCloudBackupRecipe} 
+                          onLogReceipt={logReceipt}
+                          onCorrectPlugin={handleCorrectPlugin}
+                          onContactSupport={handleContactSupport}
+                          onMinimize={() => handleMinimizeRecipe(recipe)}
+                          isMultiBandMode={isMultiBandMode}
+                        />
+                      </ErrorBoundary>
                     </motion.div>
                   )})}
                 </motion.section>
@@ -6666,27 +6668,29 @@ The AI was unable to verify these parameters. Please investigate.`;
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ delay: idx * 0.1 }}
                     >
-                      <CritiqueCard 
-                        critique={critique} 
-                        theme={theme} 
-                        plugins={plugins} 
-                        analogInstruments={analogInstruments}
-                        analogHardware={analogHardware}
-                        stems={stems}
-                        audioBase64={critique.audioBase64} 
-                        audioUrl={critique.audioUrl}
-                        mimeType={critique.mimeType} 
-                        isSaved={savedCritiques.some(c => c.id === critique.id)}
-                        onSave={saveCritiqueToVault}
-                        onUpdateCritique={handleUpdateCritique}
-                        onReCritique={handleReCritique}
-                        currentAudioInfo={currentAudioInfo}
-                        onLogReceipt={logReceipt}
-                        onCorrectPlugin={handleCorrectPlugin}
-                        onContactSupport={handleContactSupport}
-                        onMinimize={() => handleMinimizeCritique(critique, idx)}
-                        isMultiBandMode={isMultiBandMode}
-                      />
+                      <ErrorBoundary fallback={<div className="p-8 text-center text-red-500 font-bold border rounded-3xl bg-black/40 border-red-500/20 shadow-2xl">Could not render this critique. The saved data might be corrupted or in an older format.</div>}>
+                        <CritiqueCard 
+                          critique={critique} 
+                          theme={theme} 
+                          plugins={plugins} 
+                          analogInstruments={analogInstruments}
+                          analogHardware={analogHardware}
+                          stems={stems}
+                          audioBase64={critique.audioBase64} 
+                          audioUrl={critique.audioUrl}
+                          mimeType={critique.mimeType} 
+                          isSaved={savedCritiques.some(c => c.id === critique.id)}
+                          onSave={saveCritiqueToVault}
+                          onUpdateCritique={handleUpdateCritique}
+                          onReCritique={handleReCritique}
+                          currentAudioInfo={currentAudioInfo}
+                          onLogReceipt={logReceipt}
+                          onCorrectPlugin={handleCorrectPlugin}
+                          onContactSupport={handleContactSupport}
+                          onMinimize={() => handleMinimizeCritique(critique, idx)}
+                          isMultiBandMode={isMultiBandMode}
+                        />
+                      </ErrorBoundary>
                     </motion.div>
                   )})}
                 </motion.section>
