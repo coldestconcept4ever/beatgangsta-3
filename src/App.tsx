@@ -2041,8 +2041,8 @@ The AI was unable to verify these parameters. Please investigate.`;
 
   useEffect(() => {
     const handleMessage = async (event: MessageEvent) => {
-      // Validate data is an object
-      if (!event.data || typeof event.data !== 'object') {
+      // Validate data is an object and is our own authentication message
+      if (!event.data || typeof event.data !== 'object' || event.data.type !== 'OAUTH_AUTH_SUCCESS') {
         return;
       }
 
@@ -2055,14 +2055,12 @@ The AI was unable to verify these parameters. Please investigate.`;
         return;
       }
 
-      if (event.data?.type === 'OAUTH_AUTH_SUCCESS') {
-        console.log("[AUTH DEBUG] OAUTH_AUTH_SUCCESS received via postMessage");
-        if (event.data.syncToken) {
-          await syncAuth(event.data.syncToken);
-        } else {
-          console.log("[AUTH DEBUG] No syncToken in message, calling checkAuth");
-          checkAuth();
-        }
+      console.log("[AUTH DEBUG] OAUTH_AUTH_SUCCESS received via postMessage");
+      if (event.data.syncToken) {
+        await syncAuth(event.data.syncToken);
+      } else {
+        console.log("[AUTH DEBUG] No syncToken in message, calling checkAuth");
+        checkAuth();
       }
     };
 
@@ -5056,6 +5054,9 @@ The AI was unable to verify these parameters. Please investigate.`;
                   setRecipes([]);
                   setViewingRecipe(null);
                   setAudioMode('critique');
+                  setInputMode('upload');
+                  setMainTab(c.isGangstaVox ? 'vox' : 'beat');
+                  setIsGangstaVox(!!c.isGangstaVox);
                   setShowVault(false);
                   // Update currentAudioInfo if the opened critique has audio
                   if (c.audioBase64 || c.audioUrl || c.geminiFileUri) {
