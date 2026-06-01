@@ -5051,34 +5051,50 @@ The AI was unable to verify these parameters. Please investigate.`;
                   setShowVault(false);
                 }}
                 onOpenCritique={(c) => {
-                  setCritiques([c]);
-                  setRecipes([]);
-                  setViewingRecipe(null);
-                  setAudioMode('critique');
-                  setInputMode('upload');
-                  setMainTab(c.isGangstaVox ? 'vox' : 'beat');
-                  setIsGangstaVox(!!c.isGangstaVox);
-                  setShowVault(false);
-                  setFriendMode(false);
-                  setImportedSaveFile(null);
-                  // Update currentAudioInfo if the opened critique has audio
-                  if (c.audioBase64 || c.audioUrl || c.geminiFileUri) {
-                    setCurrentAudioInfo({
-                      audioBase64: c.audioBase64 || null,
-                      audioUrl: c.audioUrl || null,
-                      geminiFileUri: c.geminiFileUri || null,
-                      mimeType: c.mimeType || null
-                    });
-                  }
-                  // Smoothly scroll down so the opened critique details are visible
-                  setTimeout(() => {
-                    const el = document.getElementById('critiques-section');
-                    if (el) {
-                      el.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                    } else {
-                      window.scrollTo({ top: document.body.scrollHeight / 2, behavior: 'smooth' });
+                  try {
+                    setError(null); // Clear any previous errors
+                    if (!c) {
+                      throw new Error("Unable to open critique: the critique record is null or undefined.");
                     }
-                  }, 300);
+                    if (!c.id) {
+                      throw new Error("Unable to open critique: the critique is missing its unique identifier (ID). The record might be corrupted.");
+                    }
+                    if (!c.overallFeedback && !c.title) {
+                      throw new Error(`Unable to open critique (ID: ${c.id}): The critique data is corrupted or incomplete (missing primary feedback text and title).`);
+                    }
+
+                    setCritiques([c]);
+                    setRecipes([]);
+                    setViewingRecipe(null);
+                    setAudioMode('critique');
+                    setInputMode('upload');
+                    setMainTab(c.isGangstaVox ? 'vox' : 'beat');
+                    setIsGangstaVox(!!c.isGangstaVox);
+                    setShowVault(false);
+                    setFriendMode(false);
+                    setImportedSaveFile(null);
+                    // Update currentAudioInfo if the opened critique has audio
+                    if (c.audioBase64 || c.audioUrl || c.geminiFileUri) {
+                      setCurrentAudioInfo({
+                        audioBase64: c.audioBase64 || null,
+                        audioUrl: c.audioUrl || null,
+                        geminiFileUri: c.geminiFileUri || null,
+                        mimeType: c.mimeType || null
+                      });
+                    }
+                    // Smoothly scroll down so the opened critique details are visible
+                    setTimeout(() => {
+                      const el = document.getElementById('critiques-section');
+                      if (el) {
+                        el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                      } else {
+                        window.scrollTo({ top: document.body.scrollHeight / 2, behavior: 'smooth' });
+                      }
+                    }, 300);
+                  } catch (err: any) {
+                    console.error("Failed to open critique:", err);
+                    setError(err.message || "An unexpected error occurred while loading this critique.");
+                  }
                 }}
               />
           </motion.div>
