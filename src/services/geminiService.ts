@@ -183,6 +183,7 @@ const GLOBAL_PARAMETER_STRICTNESS_PROMPT = `
     3. 'O'CLOCK' POSITIONING FOR UNLABELED KNOBS: If a plugin features a vintage or analog-style interface with knobs that DO NOT provide numerical value readouts in its UI (e.g., analog compressor clones, guitar pedals, vintage saturators), you MUST use 'o'clock' values (e.g., "10 o'clock", "2 o'clock") instead of inventing exact numerical percentages. STRICTLY apply this ONLY to plugins without numerical readouts. For modern digital plugins with numerical displays, provide the exact numbers.
     4. EXHAUSTIVE COVERAGE: Provide the real parameters available on the plugin's UI. Do not generate fake parameters just to inflate the count. Only provide the parameters the plugin actually has.
     5. DO NOT recommend metering-only plugins (like PreSonus VU Meter or BL VU Meter) because they do not process audio and cannot be adjusted.
+    6. GAIN MATCHING & MAINTAINING LOUDNESS: Anytime you use a plugin that reduces volume (like EQ cuts, compression, tape saturation, limiters, etc.), you MUST explicitly include the parameter to compensate for it (e.g., Output/Makeup Gain, Trim, Level). The resulting sound MUST always maintain or improve loudness. Never output settings that significantly reduce the overall volume.
     CRITICAL WARNING: NEVER RETURN AN EMPTY RECIPES ARRAY. You MUST ALWAYS generate at least one complete recipe that fulfills the user's request, regardless of strictness constraints.
 `;
 function postProcessResult(result: any) {
@@ -1951,7 +1952,7 @@ export const getAudioBeatRecommendations = async (plugins: VSTPlugin[], audioBas
   const starredStr = starredPlugins.length > 0 ? `\nCRITICAL: The user has STARRED (favorited) the following plugins. You MUST prioritize using these plugins in your recipes whenever possible:\n${starredPlugins.join(', ')}` : '';
   const hasSphereMic = analogHardware.some(h => ['Sphere DLX', 'Sphere LX', 'L22'].includes(h.name) || h.name.toLowerCase() === 'l22' || h.name.toLowerCase().includes('townsend'));
   const sphereMicStr = hasSphereMic ? `\nCRITICAL: The user owns a Universal Audio Sphere (DLX/LX) or Townsend Labs L22 microphone. If the recipe involves a vocal tracking chain, you MUST assign the 'UAD Sphere Mic Collection', 'Ocean Way Mic Collection', or 'Bill Putnam Mic Collection' plugin as the VERY FIRST insert plugin on the vocal channel tracking chain. You MUST specifically select a mic model inside it based on the vibe searched. After the mic collection plugin, you can add up to 3 more plugins.` : '';
-  const contextStr = userContext ? `\nCRITICAL USER CONTEXT: The user has provided the following information about their track and goals. You MUST incorporate this into your analysis and advice ALWAYS, IT IS THE MOST IMPORTANT INSTRUCTION:\n"${userContext}"\n` : "";
+  const contextStr = userContext ? `\nCRITICAL USER CONTEXT: The user has provided the following information about their track and goals. You MUST incorporate this into your analysis and advice ALWAYS, IT IS THE MOST IMPORTANT INSTRUCTION. Your suggestions MUST explicitly align with and aim to achieve these exact goals, and NOT ruin the mix/volume:\n"${userContext}"\n` : "";
   const uadPlugins = plugins.filter(p => 
     (p.vendor.toLowerCase().includes('universal audio') || p.name.toLowerCase().includes('uad')) && 
     !p.name.toLowerCase().includes('native') && 
@@ -2201,15 +2202,17 @@ export const getMixCritique = async (
       focusInstruction = "Focus specifically on the BEAT/INSTRUMENTAL in this mix. DO NOT focus on the vocals. The user ONLY HAS THIS MP3 (a single stereo file). Make sure to listen to the ENTIRE length of the song, including any intros, bridges, and outros. Provide advice on mastering and stereo bus processing (e.g., dynamic EQ, mid-side processing, stem separation tools, overall EQ balance, limiting) to improve the sound without access to individual tracks.";
     }
   }
-  const contextStr = userContext ? `\nCRITICAL USER CONTEXT: The user has provided the following information about their track and goals. You MUST incorporate this into your analysis and advice ALWAYS, IT IS THE MOST IMPORTANT INSTRUCTION:\n"${userContext}"\n` : "";
+  const contextStr = userContext ? `\nCRITICAL USER CONTEXT: The user has provided the following information about their track and goals. You MUST incorporate this into your analysis and advice ALWAYS, IT IS THE MOST IMPORTANT INSTRUCTION. Your suggestions MUST explicitly align with and aim to achieve these exact goals, and NOT ruin the mix/volume:\n"${userContext}"\n` : "";
   const previousCritiqueStr = previousCritique ? `\nPREVIOUS CRITIQUE CONTEXT: The user is uploading a new version of the track based on a previous critique. Here are the details of the previous critique:\nTitle: ${previousCritique.title}\nFeedback: ${previousCritique.overallFeedback}\nStrengths: ${JSON.stringify(previousCritique.strengths)}\nWeaknesses: ${JSON.stringify(previousCritique.weaknesses)}\nAction Plan: ${JSON.stringify(previousCritique.actionPlan)}\n\nPlease analyze the new audio, compare it with the previous critique, and provide further guidance to help the user achieve their desired sound. Focus on what has improved, what still needs work, and suggest further parameter adjustments or new plugins if necessary.\n` : "";
   const referenceTrackStr = referenceTrack ? `\nREFERENCE TRACK: The user wants their mix to sound like this reference track: "${referenceTrack}". Please provide a guide for the critiqued MP3 to sound as accurately as possible like this reference track. If the reference track is a known song, use your knowledge to compare the sonic characteristics. If it's a URL, try to understand the context.\n` : "";
   const languageInstruction = getLanguageInstruction(language);
   let prompt = `
-    You are an expert audio engineer and producer. I am uploading an MP3 of a full song project that needs work.
+    You are an expert audio engineer and producer.
+    CRITICAL RULE FOR IMPROVEMENT: The end result MUST ALWAYS be a concrete improvement to the audio. You must apply proper gain staging and makeup gain on every step that involves compression, saturation, or equalization that reduces peak levels. NEVER reduce the overall volume unintentionally.
+I am uploading an MP3 of a full song project that needs work.
     ${focusInstruction}
     ${contextStr}
-    ${previousCritiqueStr}
+${previousCritiqueStr}
     ${referenceTrackStr}
     ${languageInstruction}
     ${PRO_Q_3_LAYOUT_PROMPT}
@@ -2231,7 +2234,7 @@ export const getMixCritique = async (
     CRITICAL: If a hardware instrument has connected pedals, you MUST provide specific settings for those pedals in your advice. Assume the pedal is connected directly to the instrument. Your research and logic MUST reflect the interaction between the specific instrument and the specific pedal(s) connected to it.
     ${audioUrl ? `The main audio file is available at this URL: ${audioUrl}. Please fetch and analyze it.` : "The main audio file is provided as inline data."}
     ${referenceAudioBase64 ? "The second inline audio file is the reference track. Please analyze both and compare them." : ""}
-    Provide:
+    Provide (CRITICAL: You MUST ALWAYS guarantee every single real parameter is provided exhaustively, even if it takes longer. You MUST ALWAYS perfectly align with the User Context string. You MUST ALWAYS ensure the resulting settings provide a concrete sonic improvement and NEVER reduce the overall volume unintentionally):
     - 'title': A short title for this critique.
     - 'overallFeedback': A detailed analysis summarizing the current state of the mix, the main areas for improvement, and the overall sonic character.
     - 'strengths': An array of 4-6 specific things that sound good (e.g., specific frequency ranges, dynamic control, spatial imaging).
@@ -2284,7 +2287,7 @@ export const getMixCritique = async (
                   purpose: { type: "STRING" },
                   deepDive: {
                     type: "ARRAY",
-                    description: "List every parameter that exists on the actual plugin interface. Take your time to be complete and thorough. Only include the real parameters this plugin actually has.",
+                    description: "List EVERY EXHAUSTIVE parameter that exists on the actual plugin interface. Take your time to be complete and thorough, EVEN IF IT TAKES LONGER. Only include the real parameters this plugin actually has. You MUST compensate for gain reduction and guarantee a concrete improvement.",
                     minItems: 1,
                     items: {
                       type: "OBJECT",
@@ -2318,7 +2321,26 @@ export const getMixCritique = async (
   // Do NOT append the schema immediately, we'll append it later per branch to respect chunking stem counts.
   
   const parts: any[] = [];
+  
+  if (geminiFileUri && geminiFileUri.trim() !== '') {
+    let uri = geminiFileUri;
+    if (uri.includes('/files/')) {
+       const uriParts = uri.split('/files/');
+       uri = 'https://generativelanguage.googleapis.com/v1beta/files/' + uriParts[1];
+    } else if (!uri.startsWith('https://')) {
+       uri = 'https://generativelanguage.googleapis.com/v1beta/' + (uri.startsWith('files/') ? uri : 'files/' + uri);
+    }
+    parts.push({ text: "This is the FULL MIX/MASTER stereo audio for global context:" });
+    parts.push({ fileData: { fileUri: uri, mimeType: mimeType } });
+  } else if (audioBase64 && audioBase64.trim() !== '') {
+    parts.push({ text: "This is the FULL MIX/MASTER stereo audio for global context:" });
+    parts.push({ inlineData: { data: audioBase64, mimeType: mimeType } });
+  } else if (!uploadedStems || uploadedStems.length === 0) {
+    throw new Error("No audio file provided for analysis (Critique).");
+  }
+
   if (uploadedStems && uploadedStems.length > 0) {
+    parts.push({ text: "These are the INDIVIDUAL STEMS that make up the mix:" });
     for (const stem of uploadedStems) {
       if (stem.uri && stem.uri.trim() !== '') {
         let uri = stem.uri;
@@ -2329,28 +2351,13 @@ export const getMixCritique = async (
            uri = 'https://generativelanguage.googleapis.com/v1beta/' + (uri.startsWith('files/') ? uri : 'files/' + uri);
         }
         let stemMimeType = stem.mimeType || 'audio/mpeg';
+        parts.push({ text: `Stem Name: ${stem.name || stem.file?.name || 'Unknown Stem'}` });
         parts.push({ fileData: { fileUri: uri, mimeType: stemMimeType } });
       } else if (stem.base64 && stem.base64.trim() !== '') {
         let stemMimeType = stem.mimeType || 'audio/mpeg';
+        parts.push({ text: `Stem Name: ${stem.name || stem.file?.name || 'Unknown Stem'}` });
         parts.push({ inlineData: { data: stem.base64, mimeType: stemMimeType } });
       }
-    }
-  } else {
-    if (geminiFileUri && geminiFileUri.trim() !== '') {
-      let uri = geminiFileUri;
-      if (uri.includes('/files/')) {
-         const uriParts = uri.split('/files/');
-         uri = 'https://generativelanguage.googleapis.com/v1beta/files/' + uriParts[1];
-      } else if (!uri.startsWith('https://')) {
-         uri = 'https://generativelanguage.googleapis.com/v1beta/' + (uri.startsWith('files/') ? uri : 'files/' + uri);
-      }
-      let finalMimeType = mimeType;
-      parts.push({ fileData: { fileUri: uri, mimeType: finalMimeType } });
-    } else if (audioBase64 && audioBase64.trim() !== '') {
-      let finalMimeType = mimeType;
-      parts.push({ inlineData: { data: audioBase64, mimeType: finalMimeType } });
-    } else {
-      throw new Error("No audio file provided for analysis (Critique).");
     }
   }
   if (referenceGeminiFileUri && referenceGeminiFileUri.trim() !== '') {
@@ -2497,8 +2504,9 @@ export const getSpecificMixHelp = async (plugins: VSTPlugin[], audioBase64: stri
     CRITICAL: The user has an ${apolloInst} interface. When suggesting plugins for this mix, you MUST ALWAYS prioritize UAD (Universal Audio) plugins from their library if they are suitable for the task.
   ` : '';
   const systemPrompt = `
-    You are an expert audio engineer and producer. 
-    ${getLanguageInstruction(language)}
+    You are an expert audio engineer and producer.
+    CRITICAL RULE FOR IMPROVEMENT: The end result MUST ALWAYS be a concrete improvement to the audio. You must apply proper gain staging and makeup gain on every step that involves compression, saturation, or equalization that reduces peak levels. NEVER reduce the overall volume unintentionally.
+${getLanguageInstruction(language)}
     ${query.toLowerCase().includes('guitar') ? "CRITICAL: If the user is asking about guitars, acoustic or electric, strongly consider recommending the use of a capo (e.g. on the 2nd to 5th fret) to achieve a brighter, more distinctive, and chiming sound without breaking strings. Reference Johnny Marr, Jingle-Jangle styles, and The Smiths as examples." : ""}
 
     ${PRO_Q_3_LAYOUT_PROMPT}
