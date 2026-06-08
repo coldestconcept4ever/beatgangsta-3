@@ -951,7 +951,7 @@ export const getUnifiedRecipeSchema = () => {
                   purpose: { type: Type.STRING },
                   deepDive: {
                     type: Type.ARRAY,
-                    description: "Provide all parameters that exist on the actual plugin interface. Do not generate an artificial number of parameters, just use the real parameters the plugin has.",
+                    description: "List every parameter that exists on the actual plugin interface. Take your time to be complete and thorough. Only include the real parameters this plugin actually has.",
                     items: {
                       type: Type.OBJECT,
                       properties: {
@@ -1365,7 +1365,7 @@ export const verifyAndCorrectPlugin = async (
       "updatedPlugin": {
         "description": "Updated description for this specific version",
         "features": ["Updated features"],
-        "parameters": ["Exhaustive list of all actual technical parameters found on the real plugin (30-50+ for complex plugins)"],
+        "parameters": ["Exhaustive list of all actual technical parameters found on the real plugin "],
         "category": "Instruments|Dynamics|Equalizers|Reverb & Delay|Modulation|Distortion & Saturation|Utility & Metering|Creative FX",
         "version": "The verified version string",
         "tier": "The verified tier/edition string"
@@ -1428,7 +1428,7 @@ export const researchPluginParameters = async (plugin: VSTPlugin, language: stri
     1. A highly accurate, professional description of the plugin.
     2. A list of its key features.
     3. The most accurate category (Instruments, Dynamics, Equalizers, Reverb & Delay, Modulation, Distortion & Saturation, Utility & Metering, Creative FX).
-    4. An EXHAUSTIVE list of ALL actual technical parameter names found on the plugin's interface. Be precise and thorough. For complex plugins, provide all available parameters (30-50+). Do NOT be lazy.
+    4. An EXHAUSTIVE list of ALL actual technical parameter names found on the plugin's interface. Be precise and thorough. For complex plugins, provide all available parameters . Do NOT be lazy.
     ${getLanguageInstruction(language)}
   `;
   const response = await ai.models.generateContent({
@@ -1596,7 +1596,7 @@ export const getBeatRecommendations = async (plugins: VSTPlugin[], analogInstrum
       - duration: (e.g., '4', '8', '16')
       - wait: (e.g., '0', '4', '8')
       - velocity: (number between 0 and 127)
-    If vocals are used in the beat (e.g., vocal chops, atmospheric textures), you MUST provide the 'vocalElements' object (same structure as gangstaVox) to describe them. This is the ONLY place vocal elements should be described. Ensure every plugin in the vocalElements chain has an EXHAUSTIVE list of all parameters (typically 20-50 settings). Ensure every plugin in the vocalElements chain has AT LEAST 10 parameters in its deepDive (and up to 30 if it is a complex channel strip plugin).
+    If vocals are used in the beat (e.g., vocal chops, atmospheric textures), you MUST provide the 'vocalElements' object (same structure as gangstaVox) to describe them. This is the ONLY place vocal elements should be described.  Ensure every plugin in the vocalElements chain has .
     You MUST provide the 'busses' array. Create busses (e.g., "Drum Bus", "Melody Bus") and list which instrument tracks are using them, along with the fxPlugins on the bus and their deep dives  (EVERY available parameter per plugin, .
     You MUST provide the 'masterPlugins' array with deep dives for the master chain (EVERY available parameter per plugin, .
     You MUST provide 'drumPatterns' and 'arrangement'.
@@ -1803,11 +1803,11 @@ export const getSongBeatRecommendations = async (plugins: VSTPlugin[], songQuery
     Identify 2-3 mainstream or commonly known artists who would typically use this specific vocal chain.
     Include a recommended BPM, 'recommendedScale', and 'chordProgression' that fits the vibe.
     You MUST provide the 'gangstaVox' object in your response.
-    - trackingChain: Include the unisonPlugin (if applicable) and up to 4 inserts. Provide a deep dive for each (EXHAUSTIVE list of all parameters, typically 25-50 settings).
-    - vocalTracks: Provide multiple vocal layers (Lead, Adlibs, Doubles, etc.). For each, describe the sourceSoundGoal, which bus to send to (busSend), and the fxPlugins (with deep dives - EXHAUSTIVE list of all parameters, typically 25-50 settings).
+    - trackingChain: Include the unisonPlugin (if applicable) and up to 4 inserts. Provide a deep dive for each (typically 25-50 settings).
+    - vocalTracks: Provide multiple vocal layers (Lead, Adlibs, Doubles, etc.). For each, describe the sourceSoundGoal, which bus to send to (busSend), and the fxPlugins (with deep dives - typically 25-50 settings).
     - layeringStrategy: Explain how all these vocal layers should sit together in the mix.
-    You MUST also provide the 'busses' array. Create busses (e.g., "Vocal Reverb Bus", "Delay Bus") and list which vocal tracks are using them, along with the fxPlugins on the bus and their deep dives (EXHAUSTIVE list of all parameters, typically 25-50 settings).
-    You MUST provide the 'masterPlugins' array with deep dives for the master chain (EXHAUSTIVE list of all parameters, typically 25-50 settings).
+    You MUST also provide the 'busses' array. Create busses (e.g., "Vocal Reverb Bus", "Delay Bus") and list which vocal tracks are using them, along with the fxPlugins on the bus and their deep dives (typically 25-50 settings).
+    You MUST provide the 'masterPlugins' array with deep dives for the master chain (typically 25-50 settings).
     You MUST provide 'drumPatterns' and 'arrangement' as context for the beat.
     CRITICAL DRUM PATTERN RULES:
     - You MUST provide a FULL drum pattern for Kick, Snare, and Hi-Hat that is EXACTLY 4 or 8 bars long.
@@ -1858,7 +1858,7 @@ export const getSongBeatRecommendations = async (plugins: VSTPlugin[], songQuery
       - duration: (e.g., '4', '8', '16')
       - wait: (e.g., '0', '4', '8')
       - velocity: (number between 0 and 127)
-    If vocals are used in the beat (e.g., vocal chops, atmospheric textures), you MUST provide the 'vocalElements' object (same structure as gangstaVox) to describe them. This is the ONLY place vocal elements should be described. Ensure every plugin in the vocalElements chain has an EXHAUSTIVE list of all parameters (typically 25-50 settings). Ensure every plugin in the vocalElements chain has AT LEAST 10 parameters in its deepDive (and up to 30 if it is a complex channel strip plugin).
+    If vocals are used in the beat (e.g., vocal chops, atmospheric textures), you MUST provide the 'vocalElements' object (same structure as gangstaVox) to describe them. This is the ONLY place vocal elements should be described.  Ensure every plugin in the vocalElements chain has .
     You MUST provide the 'busses' array. Create busses (e.g., "Drum Bus", "Melody Bus") and list which instrument tracks are using them, along with the fxPlugins on the bus and their deep dives  (EVERY available parameter per plugin, .
     You MUST provide the 'masterPlugins' array with deep dives for the master chain (EVERY available parameter per plugin, .
     You MUST provide 'drumPatterns' and 'arrangement'.
@@ -1951,7 +1951,7 @@ export const getAudioBeatRecommendations = async (plugins: VSTPlugin[], audioBas
   const starredStr = starredPlugins.length > 0 ? `\nCRITICAL: The user has STARRED (favorited) the following plugins. You MUST prioritize using these plugins in your recipes whenever possible:\n${starredPlugins.join(', ')}` : '';
   const hasSphereMic = analogHardware.some(h => ['Sphere DLX', 'Sphere LX', 'L22'].includes(h.name) || h.name.toLowerCase() === 'l22' || h.name.toLowerCase().includes('townsend'));
   const sphereMicStr = hasSphereMic ? `\nCRITICAL: The user owns a Universal Audio Sphere (DLX/LX) or Townsend Labs L22 microphone. If the recipe involves a vocal tracking chain, you MUST assign the 'UAD Sphere Mic Collection', 'Ocean Way Mic Collection', or 'Bill Putnam Mic Collection' plugin as the VERY FIRST insert plugin on the vocal channel tracking chain. You MUST specifically select a mic model inside it based on the vibe searched. After the mic collection plugin, you can add up to 3 more plugins.` : '';
-  const contextStr = userContext ? `\nCRITICAL USER CONTEXT: The user has provided the following information about their track and goals. You MUST incorporate this into your analysis and advice:\n"${userContext}"\n` : "";
+  const contextStr = userContext ? `\nCRITICAL USER CONTEXT: The user has provided the following information about their track and goals. You MUST incorporate this into your analysis and advice ALWAYS, IT IS THE MOST IMPORTANT INSTRUCTION:\n"${userContext}"\n` : "";
   const uadPlugins = plugins.filter(p => 
     (p.vendor.toLowerCase().includes('universal audio') || p.name.toLowerCase().includes('uad')) && 
     !p.name.toLowerCase().includes('native') && 
@@ -2000,10 +2000,10 @@ export const getAudioBeatRecommendations = async (plugins: VSTPlugin[], audioBas
     - trackingChain: Include the unisonPlugin, EXACTLY 4 inserts, aux1, and aux2.
     - Provide a deep dive for each tracking plugin (EXHAUSTIVE list of EVERY parameter, typically 30-50+ settings. DO NOT BE LAZY).
     - Provide dawRoutingInstructions and dspUsageNote for the tracking chain.
-    - vocalTracks: Provide multiple vocal layers (Lead, Adlibs, Doubles, etc.). For each, describe the sourceSoundGoal, which bus to send to (busSend), and the fxPlugins (with deep dives - EXHAUSTIVE list of all parameters, typically 25-50 settings).
+    - vocalTracks: Provide multiple vocal layers (Lead, Adlibs, Doubles, etc.). For each, describe the sourceSoundGoal, which bus to send to (busSend), and the fxPlugins (with deep dives - typically 25-50 settings).
     - layeringStrategy: Explain how all these vocal layers should sit together in the mix.
-    You MUST also provide the 'busses' array. Create busses (e.g., "Vocal Reverb Bus", "Delay Bus") and list which vocal tracks are using them, along with the fxPlugins on the bus and their deep dives (EXHAUSTIVE list of all parameters, typically 25-50 settings).
-    You MUST provide the 'masterPlugins' array with deep dives for the master chain (EXHAUSTIVE list of all parameters, typically 25-50 settings).
+    You MUST also provide the 'busses' array. Create busses (e.g., "Vocal Reverb Bus", "Delay Bus") and list which vocal tracks are using them, along with the fxPlugins on the bus and their deep dives (typically 25-50 settings).
+    You MUST provide the 'masterPlugins' array with deep dives for the master chain (typically 25-50 settings).
     You MUST provide 'drumPatterns' and 'arrangement' as context for the beat.
     CRITICAL DRUM PATTERN RULES:
     - You MUST provide a FULL drum pattern for Kick, Snare, and Hi-Hat that is EXACTLY 4 or 8 bars long.
@@ -2051,7 +2051,7 @@ export const getAudioBeatRecommendations = async (plugins: VSTPlugin[], audioBas
       - duration: (e.g., '4', '8', '16')
       - wait: (e.g., '0', '4', '8')
       - velocity: (number between 0 and 127)
-    If vocals are used in the beat (e.g., vocal chops, atmospheric textures), you MUST provide the 'vocalElements' object (same structure as gangstaVox) to describe them. This is the ONLY place vocal elements should be described. Ensure every plugin in the vocalElements chain has an EXHAUSTIVE list of all parameters (typically 25-50 settings). Ensure every plugin in the vocalElements chain has AT LEAST 10 parameters in its deepDive (and up to 30 if it is a complex channel strip plugin).
+    If vocals are used in the beat (e.g., vocal chops, atmospheric textures), you MUST provide the 'vocalElements' object (same structure as gangstaVox) to describe them. This is the ONLY place vocal elements should be described.  Ensure every plugin in the vocalElements chain has .
     ${hasApollo ? `
     CRITICAL: For the vocalElements 'trackingChain', since the user owns a Universal Audio Apollo interface (${apolloModel}), you MUST include a 'trackingChain' specifically for this Apollo, mirroring the UAD Console workflow.
     FOR THE UAD CONSOLE TRACKING CHAIN in 'vocalElements', YOU MUST STRICTLY ONLY USE THESE UAD-2 DSP PLUGINS:
@@ -2060,7 +2060,7 @@ export const getAudioBeatRecommendations = async (plugins: VSTPlugin[], audioBas
     1. UNISON SLOT: A Unison plugin is MANDATORY.
     2. INSERTS: You MUST provide EXACTLY 4 plugins in the inserts array. The FIRST insert (Plugin 1 of 4) MUST ALWAYS be "Ocean Way Mic Collection" (or equivalent mic modeled plugin).
     3. AUX CHANNELS: Both 'aux1' and 'aux2' are MANDATORY.
-    4. ACCURACY: Provide EVERY available setting (30-50+ parameters per plugin). NO LAZY OUTPUTS. DO NOT SKIP KNOBS.
+    4. ACCURACY: Provide EVERY available setting . 
     ` : ''}
     You MUST provide the 'busses' array. Create busses (e.g., "Drum Bus", "Melody Bus") and list which instrument tracks are using them, along with the fxPlugins on the bus and their deep dives  (EVERY available parameter per plugin, .
     You MUST provide the 'masterPlugins' array with deep dives for the master chain (EVERY available parameter per plugin, .
@@ -2116,8 +2116,7 @@ export const getAudioBeatRecommendations = async (plugins: VSTPlugin[], audioBas
       },
       config: {
         customAction: 'audio_analysis_recipe',
-        responseMimeType: "application/json",
-        safetySettings: [
+        responseMimeType: "application/json", responseSchema: schemaObject, safetySettings: [
           { category: HarmCategory.HARM_CATEGORY_HARASSMENT, threshold: HarmBlockThreshold.OFF },
           { category: HarmCategory.HARM_CATEGORY_HATE_SPEECH, threshold: HarmBlockThreshold.OFF },
           { category: HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT, threshold: HarmBlockThreshold.OFF },
@@ -2202,7 +2201,7 @@ export const getMixCritique = async (
       focusInstruction = "Focus specifically on the BEAT/INSTRUMENTAL in this mix. DO NOT focus on the vocals. The user ONLY HAS THIS MP3 (a single stereo file). Make sure to listen to the ENTIRE length of the song, including any intros, bridges, and outros. Provide advice on mastering and stereo bus processing (e.g., dynamic EQ, mid-side processing, stem separation tools, overall EQ balance, limiting) to improve the sound without access to individual tracks.";
     }
   }
-  const contextStr = userContext ? `\nCRITICAL USER CONTEXT: The user has provided the following information about their track and goals. You MUST incorporate this into your analysis and advice:\n"${userContext}"\n` : "";
+  const contextStr = userContext ? `\nCRITICAL USER CONTEXT: The user has provided the following information about their track and goals. You MUST incorporate this into your analysis and advice ALWAYS, IT IS THE MOST IMPORTANT INSTRUCTION:\n"${userContext}"\n` : "";
   const previousCritiqueStr = previousCritique ? `\nPREVIOUS CRITIQUE CONTEXT: The user is uploading a new version of the track based on a previous critique. Here are the details of the previous critique:\nTitle: ${previousCritique.title}\nFeedback: ${previousCritique.overallFeedback}\nStrengths: ${JSON.stringify(previousCritique.strengths)}\nWeaknesses: ${JSON.stringify(previousCritique.weaknesses)}\nAction Plan: ${JSON.stringify(previousCritique.actionPlan)}\n\nPlease analyze the new audio, compare it with the previous critique, and provide further guidance to help the user achieve their desired sound. Focus on what has improved, what still needs work, and suggest further parameter adjustments or new plugins if necessary.\n` : "";
   const referenceTrackStr = referenceTrack ? `\nREFERENCE TRACK: The user wants their mix to sound like this reference track: "${referenceTrack}". Please provide a guide for the critiqued MP3 to sound as accurately as possible like this reference track. If the reference track is a known song, use your knowledge to compare the sonic characteristics. If it's a URL, try to understand the context.\n` : "";
   const languageInstruction = getLanguageInstruction(language);
@@ -2285,7 +2284,7 @@ export const getMixCritique = async (
                   purpose: { type: "STRING" },
                   deepDive: {
                     type: "ARRAY",
-                    description: "Provide all parameters that exist on the actual plugin interface. Do not generate an artificial number of parameters, just use the real parameters the plugin has.",
+                    description: "List every parameter that exists on the actual plugin interface. Take your time to be complete and thorough. Only include the real parameters this plugin actually has.",
                     minItems: 1,
                     items: {
                       type: "OBJECT",
@@ -2410,8 +2409,7 @@ export const getMixCritique = async (
              config: {
                customAction: 'stems_critique',
                tools: tools.length > 0 ? tools : undefined,
-               responseMimeType: "application/json",
-               safetySettings: [
+               responseMimeType: "application/json", responseSchema: chunkSchema, safetySettings: [
                  { category: "HARM_CATEGORY_HARASSMENT" as any, threshold: "BLOCK_NONE" as any },
                  { category: "HARM_CATEGORY_HATE_SPEECH" as any, threshold: "BLOCK_NONE" as any },
                  { category: "HARM_CATEGORY_SEXUALLY_EXPLICIT" as any, threshold: "BLOCK_NONE" as any },
@@ -2458,6 +2456,7 @@ export const getMixCritique = async (
           customAction: hasStems ? 'stems_critique' : 'critique',
           tools: tools.length > 0 ? tools : undefined,
           responseMimeType: "application/json",
+          responseSchema: schema,
           safetySettings: [
             { category: "HARM_CATEGORY_HARASSMENT" as any, threshold: "BLOCK_NONE" as any },
             { category: "HARM_CATEGORY_HATE_SPEECH" as any, threshold: "BLOCK_NONE" as any },
@@ -2553,8 +2552,7 @@ export const getSpecificMixHelp = async (plugins: VSTPlugin[], audioBase64: stri
       contents,
       config: {
         customAction: 'critique',
-        responseMimeType: "application/json",
-        safetySettings: [
+        responseMimeType: "application/json", responseSchema: undefined, safetySettings: [
           { category: HarmCategory.HARM_CATEGORY_HARASSMENT, threshold: HarmBlockThreshold.OFF },
           { category: HarmCategory.HARM_CATEGORY_HATE_SPEECH, threshold: HarmBlockThreshold.OFF },
           { category: HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT, threshold: HarmBlockThreshold.OFF },
@@ -2720,7 +2718,7 @@ export const regenerateTrackingChain = async (
       3. AUX 1: Array of UAD-2 plugins. This is MANDATORY.
       4. AUX 2: Array of UAD-2 plugins. This is MANDATORY.
       ACCURACY AND DEPTH:
-      - For EVERY plugin, provide exhaustive 'deepDive' parameters. DO NOT BE LAZY. Provide EVERY knob, slider, and switch ( exact parameter settings).
+      - For EVERY plugin, provide exhaustive 'deepDive' parameters. DO NOT BE LAZY. Provide EVERY knob, slider, and switch .
       - Provide 'dawRoutingInstructions' explaining Virtual I/O, physical outputs, UAD REC vs UAD MON switch, and printing choices vs monitoring choices.
       - Provide a 'dspUsageNote'.
     `;
