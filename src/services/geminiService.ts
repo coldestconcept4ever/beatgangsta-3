@@ -157,9 +157,8 @@ const RC20_SPEC_PROMPT = `
     - Wow/Flutter Parameter: This is a 0-100 slider controlling the balance between Wow and Flutter.
       - 0% (Slider to far Left): 100% Wow, 0% Flutter.
       - 100% (Slider to far Right): 0% Wow, 100% Flutter.
-    - Noise & Noise Tone:
-      - Noise: Value MUST be in dB (e.g., -12dB). DO NOT use percentages.
-      - Noise Tone: Value MUST be in dB (e.g., -2dB). DO NOT use percentages.
+    - Noise amounts:
+      - Noise: Value MUST be a percentage (0-100%). DO NOT use dB values for noise amounts.
     - Mandatory Parameters: You MUST ALWAYS include values for ALL of the following: Noise, Wobble, Distort, Digital Space, Magnetic, and Flux. 
       - Flux is often an additional parameter you should always check and define for RC-20.
 `;
@@ -167,6 +166,11 @@ const NI_RAUM_SPEC_PROMPT = `
     CRITICAL - NATIVE INSTRUMENTS RAUM SPECIFICATIONS:
     - Low Cut: MUST be displayed in dB (e.g., -6dB).
     - Hi Cut: MUST remain in Hz (e.g., 8000Hz).
+`;
+const ATR102_SPEC_PROMPT = `
+    CRITICAL - AMPEX ATR-102 (UNIVERSAL AUDIO / UAD) SPECIFICATIONS:
+    - Avoid Muting: Do NOT set "Reproduce" or "Record" (Repro / Record path settings) or any Power settings in a way that mutes the track/bypasses the audio.
+    - O'Clock Settings: There are many unlabeled knobs. For knobs that do not explicitly show numbers (e.g., Record, Reproduce, Input, Output), you MUST use "o'clock" values (e.g. "10 o'clock", "2 o'clock"). DO NOT use raw numbers.
 `;
 const GLOBAL_PARAMETER_STRICTNESS_PROMPT = `
     CRITICAL - STRICT PARAMETER REALISM, UNITS, & O'CLOCK POSITIONING:
@@ -178,6 +182,7 @@ const GLOBAL_PARAMETER_STRICTNESS_PROMPT = `
        - Percentage (%): Use ONLY when the plugin explicitly uses % (like Dry/Wet, Mix, or specific saturation amounts).
     3. 'O'CLOCK' POSITIONING FOR UNLABELED KNOBS: If a plugin features a vintage or analog-style interface with knobs that DO NOT provide numerical value readouts in its UI (e.g., analog compressor clones, guitar pedals, vintage saturators), you MUST use 'o'clock' values (e.g., "10 o'clock", "2 o'clock") instead of inventing exact numerical percentages. STRICTLY apply this ONLY to plugins without numerical readouts. For modern digital plugins with numerical displays, provide the exact numbers.
     4. EXHAUSTIVE COVERAGE: You MUST provide values for ALL parameters known to be in every plugin you recommend. Do not omit any known parameters from the 'deepDive' configuration, be entirely exhaustive and provide all settings available on the plugin.
+    5. BLOCKED PLUGINS: NEVER recommend basic VU Meters (like PreSonus VU Meter, BL VU Meter) as they cannot be adjusted and do not process audio.
 `;
 function postProcessResult(result: any) {
   const processRecipe = (recipe: any) => {
@@ -393,8 +398,8 @@ export const regeneratePlugin = async (
   analogHardware: Hardware[] = []
 ) => {
   const ai = getAI();
-  const pluginContext = `Plugin: ${pluginName}\nParameters: ${deepDive.map(d => `${d.parameter}: ${d.value}`).join(', ')}`;
-  const recipeContext = `Recipe Title: ${recipe.title}\nStyle: ${recipe.style}\nDescription: ${recipe.description}`;
+  const pluginContext = `Plugin: ${pluginName}\nParameters: ${(deepDive || []).map(d => `${d.parameter}: ${d.value}`).join(', ')}`;
+  const recipeContext = `Recipe Title: ${recipe.title || ''}\nStyle: ${recipe.style || 'N/A'}\nDescription: ${recipe.description || (recipe as any).overallFeedback || ''}`;
   const libraryContext = `Available Plugins: ${myPlugins.map(p => `${p.vendor} - ${p.name}`).join(', ')}`;
   const exclusionStr = excludedPlugins.length > 0 ? `\nCRITICAL: DO NOT suggest any of the following plugins (the user has already seen or rejected them): ${excludedPlugins.join(', ')}. You MUST choose a DIFFERENT plugin from the user's library.` : '';
   const hasApollo = analogHardware.some(h => h.name.toLowerCase().includes('apollo'));
@@ -410,6 +415,7 @@ export const regeneratePlugin = async (
     ${OZONE_SPEC_PROMPT}
     ${SONIBLE_SPEC_PROMPT}
     ${RC20_SPEC_PROMPT}
+    ${ATR102_SPEC_PROMPT}
     ${GLOBAL_PARAMETER_STRICTNESS_PROMPT}
     ${apolloConstraint}
     Original Plugin:
@@ -1529,6 +1535,7 @@ export const getBeatRecommendations = async (plugins: VSTPlugin[], analogInstrum
     ${OZONE_SPEC_PROMPT}
     ${SONIBLE_SPEC_PROMPT}
     ${RC20_SPEC_PROMPT}
+    ${ATR102_SPEC_PROMPT}
     ${NI_RAUM_SPEC_PROMPT}
     ${GLOBAL_PARAMETER_STRICTNESS_PROMPT}
     Focus on modern vocal sub-genres: Melodic Trap, Dark Drill, High-Energy Rage, Ethereal Cloud Rap.
@@ -1567,6 +1574,7 @@ export const getBeatRecommendations = async (plugins: VSTPlugin[], analogInstrum
     ${OZONE_SPEC_PROMPT}
     ${SONIBLE_SPEC_PROMPT}
     ${RC20_SPEC_PROMPT}
+    ${ATR102_SPEC_PROMPT}
     Focus on modern sub-genres: Melodic Trap, Dark Drill, High-Energy Rage.
     Identify 2-3 mainstream or commonly known artists who would typically use this specific beat type (e.g., "Lil Wayne type", "Travis Scott type").
     Include a recommended BPM, 'recommendedScale', and 'chordProgression'.
@@ -1667,6 +1675,7 @@ export const getCustomBeatRecommendations = async (plugins: VSTPlugin[], query: 
     ${OZONE_SPEC_PROMPT}
     ${SONIBLE_SPEC_PROMPT}
     ${RC20_SPEC_PROMPT}
+    ${ATR102_SPEC_PROMPT}
     ${GLOBAL_PARAMETER_STRICTNESS_PROMPT}
     Ensure the recipe captures the signature vocal sound, effects, and mixing techniques associated with ${query}.
     Identify 2-3 mainstream or commonly known artists who would typically use this specific vocal chain.
@@ -1787,6 +1796,7 @@ export const getSongBeatRecommendations = async (plugins: VSTPlugin[], songQuery
     ${OZONE_SPEC_PROMPT}
     ${SONIBLE_SPEC_PROMPT}
     ${RC20_SPEC_PROMPT}
+    ${ATR102_SPEC_PROMPT}
     ${GLOBAL_PARAMETER_STRICTNESS_PROMPT}
     Ensure the recipe captures the signature vocal sound of that specific song.
     Identify 2-3 mainstream or commonly known artists who would typically use this specific vocal chain.
@@ -1822,6 +1832,7 @@ export const getSongBeatRecommendations = async (plugins: VSTPlugin[], songQuery
     ${OZONE_SPEC_PROMPT}
     ${SONIBLE_SPEC_PROMPT}
     ${RC20_SPEC_PROMPT}
+    ${ATR102_SPEC_PROMPT}
     ${GLOBAL_PARAMETER_STRICTNESS_PROMPT}
     FOLLOW THIS STRUCTURAL BLUEPRINT:
     ${JSON.stringify(blueprint)}
@@ -1966,6 +1977,7 @@ export const getAudioBeatRecommendations = async (plugins: VSTPlugin[], audioBas
     ${OZONE_SPEC_PROMPT}
     ${SONIBLE_SPEC_PROMPT}
     ${RC20_SPEC_PROMPT}
+    ${ATR102_SPEC_PROMPT}
     ${GLOBAL_PARAMETER_STRICTNESS_PROMPT}
     ${audioUrl ? `The main audio file is available at this URL: ${audioUrl}. Please fetch and analyze it.` : "The main audio file is provided as inline data."}
     Ensure the recipe captures the signature vocal sound of the audio.
@@ -2016,6 +2028,7 @@ export const getAudioBeatRecommendations = async (plugins: VSTPlugin[], audioBas
     ${OZONE_SPEC_PROMPT}
     ${SONIBLE_SPEC_PROMPT}
     ${RC20_SPEC_PROMPT}
+    ${ATR102_SPEC_PROMPT}
     ${GLOBAL_PARAMETER_STRICTNESS_PROMPT}
     ${audioUrl ? `The main audio file is available at this URL: ${audioUrl}. Please fetch and analyze it.` : "The main audio file is provided as inline data."}
     Ensure the recipe captures the signature sound, instrumentation, and mixing techniques heard in the audio.
@@ -2203,6 +2216,7 @@ export const getMixCritique = async (
     ${OZONE_SPEC_PROMPT}
     ${SONIBLE_SPEC_PROMPT}
     ${RC20_SPEC_PROMPT}
+    ${ATR102_SPEC_PROMPT}
     ${GLOBAL_PARAMETER_STRICTNESS_PROMPT}
     CRITICAL: If the user is asking about guitars, acoustic or electric, or if a stem appears to be a guitar, strongly consider recommending the use of a capo (e.g. on the 2nd to 5th fret) to achieve a brighter, more distinctive playing texture without breaking strings. Reference Johnny Marr, Jingle-Jangle styles, and The Smiths if it fits the genre.
     Analyze the audio and provide a detailed mix critique. Since this is a full song, consider the dynamic changes, song structure (intro, verse, chorus, etc.), and how the mix evolves.
@@ -2302,7 +2316,7 @@ export const getMixCritique = async (
   const parts: any[] = [];
   if (uploadedStems && uploadedStems.length > 0) {
     for (const stem of uploadedStems) {
-      if (stem.uri) {
+      if (stem.uri && stem.uri.trim() !== '') {
         let uri = stem.uri;
         if (uri.includes('/files/')) {
            const uriParts = uri.split('/files/');
@@ -2310,15 +2324,15 @@ export const getMixCritique = async (
         } else if (!uri.startsWith('https://')) {
            uri = 'https://generativelanguage.googleapis.com/v1beta/' + (uri.startsWith('files/') ? uri : 'files/' + uri);
         }
-        let stemMimeType = stem.mimeType;
+        let stemMimeType = stem.mimeType || 'audio/mpeg';
         parts.push({ fileData: { fileUri: uri, mimeType: stemMimeType } });
-      } else if (stem.base64) {
-        let stemMimeType = stem.mimeType;
+      } else if (stem.base64 && stem.base64.trim() !== '') {
+        let stemMimeType = stem.mimeType || 'audio/mpeg';
         parts.push({ inlineData: { data: stem.base64, mimeType: stemMimeType } });
       }
     }
   } else {
-    if (geminiFileUri) {
+    if (geminiFileUri && geminiFileUri.trim() !== '') {
       let uri = geminiFileUri;
       if (uri.includes('/files/')) {
          const uriParts = uri.split('/files/');
@@ -2328,14 +2342,14 @@ export const getMixCritique = async (
       }
       let finalMimeType = mimeType;
       parts.push({ fileData: { fileUri: uri, mimeType: finalMimeType } });
-    } else if (audioBase64) {
+    } else if (audioBase64 && audioBase64.trim() !== '') {
       let finalMimeType = mimeType;
       parts.push({ inlineData: { data: audioBase64, mimeType: finalMimeType } });
     } else {
       throw new Error("No audio file provided for analysis (Critique).");
     }
   }
-  if (referenceGeminiFileUri) {
+  if (referenceGeminiFileUri && referenceGeminiFileUri.trim() !== '') {
     let uri = referenceGeminiFileUri;
     if (uri.includes('/files/')) {
        const uriParts = uri.split('/files/');
@@ -2344,7 +2358,7 @@ export const getMixCritique = async (
        uri = 'https://generativelanguage.googleapis.com/v1beta/' + (uri.startsWith('files/') ? uri : 'files/' + uri);
     }
     parts.push({ fileData: { fileUri: uri, mimeType: mimeType } });
-  } else if (referenceAudioBase64) {
+  } else if (referenceAudioBase64 && referenceAudioBase64.trim() !== '') {
     parts.push({ inlineData: { data: referenceAudioBase64, mimeType: mimeType } });
   }
   const multiBandInstruction = getMultiBandInstruction(isMultiBandMode);
@@ -2393,10 +2407,10 @@ export const getMixCritique = async (
                tools: tools.length > 0 ? tools : undefined,
                responseMimeType: "application/json",
                safetySettings: [
-                 { category: HarmCategory.HARM_CATEGORY_HARASSMENT, threshold: HarmBlockThreshold.OFF },
-                 { category: HarmCategory.HARM_CATEGORY_HATE_SPEECH, threshold: HarmBlockThreshold.OFF },
-                 { category: HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT, threshold: HarmBlockThreshold.OFF },
-                 { category: HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT, threshold: HarmBlockThreshold.OFF }
+                 { category: "HARM_CATEGORY_HARASSMENT" as any, threshold: "BLOCK_NONE" as any },
+                 { category: "HARM_CATEGORY_HATE_SPEECH" as any, threshold: "BLOCK_NONE" as any },
+                 { category: "HARM_CATEGORY_SEXUALLY_EXPLICIT" as any, threshold: "BLOCK_NONE" as any },
+                 { category: "HARM_CATEGORY_DANGEROUS_CONTENT" as any, threshold: "BLOCK_NONE" as any }
                ]
              }
           });
@@ -2436,10 +2450,10 @@ export const getMixCritique = async (
           tools: tools.length > 0 ? tools : undefined,
           responseMimeType: "application/json",
           safetySettings: [
-            { category: HarmCategory.HARM_CATEGORY_HARASSMENT, threshold: HarmBlockThreshold.OFF },
-            { category: HarmCategory.HARM_CATEGORY_HATE_SPEECH, threshold: HarmBlockThreshold.OFF },
-            { category: HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT, threshold: HarmBlockThreshold.OFF },
-            { category: HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT, threshold: HarmBlockThreshold.OFF }
+            { category: "HARM_CATEGORY_HARASSMENT" as any, threshold: "BLOCK_NONE" as any },
+            { category: "HARM_CATEGORY_HATE_SPEECH" as any, threshold: "BLOCK_NONE" as any },
+            { category: "HARM_CATEGORY_SEXUALLY_EXPLICIT" as any, threshold: "BLOCK_NONE" as any },
+            { category: "HARM_CATEGORY_DANGEROUS_CONTENT" as any, threshold: "BLOCK_NONE" as any }
           ]
         }
       });
@@ -2480,6 +2494,7 @@ export const getSpecificMixHelp = async (plugins: VSTPlugin[], audioBase64: stri
     ${OZONE_SPEC_PROMPT}
     ${SONIBLE_SPEC_PROMPT}
     ${RC20_SPEC_PROMPT}
+    ${ATR102_SPEC_PROMPT}
     ${GLOBAL_PARAMETER_STRICTNESS_PROMPT}
     ${apolloConstraint}
     ${audioBase64 || audioUrl ? "I am uploading an MP3 of a project that needs work." : "I am providing a recipe for a track."}

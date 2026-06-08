@@ -5051,6 +5051,7 @@ The AI was unable to verify these parameters. Please investigate.`;
                   setShowVault(false);
                 }}
                 onOpenCritique={(c) => {
+                  setShowVault(false);
                   try {
                     setError(null); // Clear any previous errors
                     if (!c) {
@@ -5070,7 +5071,6 @@ The AI was unable to verify these parameters. Please investigate.`;
                     setInputMode('upload');
                     setMainTab(c.isGangstaVox ? 'vox' : 'beat');
                     setIsGangstaVox(!!c.isGangstaVox);
-                    setShowVault(false);
                     setFriendMode(false);
                     setImportedSaveFile(null);
                     // Update currentAudioInfo if the opened critique has audio
