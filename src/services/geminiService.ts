@@ -168,13 +168,14 @@ const NI_RAUM_SPEC_PROMPT = `
     - Hi Cut: MUST remain in Hz (e.g., 8000Hz).
 `;
 const ATR102_SPEC_PROMPT = `
-    CRITICAL - AMPEX ATR-102 (UNIVERSAL AUDIO / UAD) SPECIFICATIONS:
+    CRITICAL - AMPEX ATR-102 & STUDER A800 (UNIVERSAL AUDIO / UAD) SPECIFICATIONS:
     - Avoid Muting: Do NOT set "Reproduce" or "Record" (Repro / Record path settings) or any Power settings in a way that mutes the track/bypasses the audio.
     - O'Clock Settings: There are many unlabeled knobs. For knobs that do not explicitly show numbers (e.g., Record, Reproduce, Input, Output), you MUST use "o'clock" values (e.g. "10 o'clock", "2 o'clock"). DO NOT use raw numbers.
+    - NO FAKE PARAMETERS: The parameters "LF Driver" or "HF Driver" or "Fatness" DO NOT EXIST on the UAD tapes. You MUST use real parameters like "Record Level", "Repro Level", "Tape Speed" (IPS), "Tape Formula", "Cal Level", "HF Record", "LF Record", "HF Repro", "LF Repro", "Bias", "Path" or "Sync". Never invent parameters.
 `;
 const GLOBAL_PARAMETER_STRICTNESS_PROMPT = `
     CRITICAL - STRICT PARAMETER REALISM, UNITS, & O'CLOCK POSITIONING:
-    1. ZERO HALLUCINATION: You MUST ONLY suggest parameters that actually exist on the real-world interface of the specified plugin as documented in its official manual. NEVER invent, guess, or inject parameters that do not exist on that plugin.
+    1. ZERO HALLUCINATION (FIREABLE OFFENSE): You MUST ONLY suggest parameters that actually exist on the real-world interface of the specified plugin as documented in its official manual. NEVER invent, guess, hallucinate, or inject parameters that do not exist on that plugin (e.g., do not invent "LF Driver" for a tape plugin, or "Warmth" for an EQ unless it specifically has it). If you do not know the exact name of a parameter on the UI, DO NOT list it at all. It is better to have fewer accurate parameters than fake ones.
     2. STRICT UNIT ACCURACY: You MUST use the exact, correct unit of measurement for every parameter:
        - Frequency: MUST be in Hz or kHz.
        - Gain/Threshold/Noise/Volume: MUST be in dB (e.g., -6dB, +2dB). DO NOT use percentages (%) for dB values!
@@ -2287,7 +2288,7 @@ ${previousCritiqueStr}
                   purpose: { type: "STRING" },
                   deepDive: {
                     type: "ARRAY",
-                    description: "List EVERY EXHAUSTIVE parameter that exists on the actual plugin interface. Take your time to be complete and thorough, EVEN IF IT TAKES LONGER. Only include the real parameters this plugin actually has. You MUST compensate for gain reduction and guarantee a concrete improvement.",
+                    description: "List EVERY EXHAUSTIVE parameter that exists on the actual plugin interface. Take your time to be complete and thorough. DO NOT HALLUCINATE PARAMETERS. Only include the real parameters this plugin actually has. You MUST compensate for gain reduction and guarantee a concrete improvement.",
                     minItems: 1,
                     items: {
                       type: "OBJECT",
