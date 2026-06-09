@@ -4156,16 +4156,17 @@ if (process.env.NODE_ENV !== 'production') {
         // Wait up to 3 minutes for each file.
         try {
           const filesToPoll: string[] = [];
+          const fileMimeTypes: Record<string, string> = {};
           
           let partsArr: any[] = [];
           if (Array.isArray(contents)) {
             for (const c of contents) {
                if (c.parts && Array.isArray(c.parts)) {
-                 partsArr.push(...c.parts);
+                  partsArr.push(...c.parts);
                }
             }
           } else if (contents && contents.parts && Array.isArray(contents.parts)) {
-            partsArr = contents.parts;
+             partsArr = contents.parts;
           }
 
           for (const part of partsArr) {
@@ -4189,6 +4190,9 @@ if (process.env.NODE_ENV !== 'production') {
                 try {
                   const metadata = await genAI.files.get({ name: fileName });
                   console.log(`File ${fileName} state is: ${metadata.state}`);
+                  if (metadata.mimeType) {
+                    fileMimeTypes[fileName] = metadata.mimeType;
+                  }
                   if (metadata.state === 'ACTIVE') {
                     isReady = true;
                     break;
@@ -4202,6 +4206,23 @@ if (process.env.NODE_ENV !== 'production') {
               }
               if (!isReady) {
                 console.warn(`File ${fileName} did not become ACTIVE in time.`);
+              }
+            }
+            
+            // Enforce correct registered mimeTypes for all parts to prevent any 400 "Request contains an invalid argument" errors
+            for (const part of partsArr) {
+              if (part && part.fileData && part.fileData.fileUri) {
+                const match = part.fileData.fileUri.match(/files\/[a-zA-Z0-9_-]+/);
+                if (match) {
+                  const fileName = match[0];
+                  const registeredMimeType = fileMimeTypes[fileName];
+                  if (registeredMimeType) {
+                    if (part.fileData.mimeType !== registeredMimeType) {
+                      console.log(`Matching mimeType mismatch for ${fileName}: corrected ${part.fileData.mimeType} to ${registeredMimeType}`);
+                      part.fileData.mimeType = registeredMimeType;
+                    }
+                  }
+                }
               }
             }
           }
