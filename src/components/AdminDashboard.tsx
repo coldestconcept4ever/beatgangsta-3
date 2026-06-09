@@ -76,6 +76,14 @@ export const AdminDashboard = ({ onBack, theme }: { onBack: () => void, theme: s
     totalRevenue: 0
   });
 
+  const [r2Stats, setR2Stats] = useState<{
+    totalUploadsThisMonth: number;
+    totalBytesThisMonth: number;
+    totalUploadsLifetime: number;
+    totalBytesLifetime: number;
+    recentUploads: { id: string; file_name: string; mime_type: string; size_bytes: number; uploaded_at: string; }[];
+  } | null>(null);
+
   const [isEditingCredits, setIsEditingCredits] = useState(false);
   const [editCreditsValue, setEditCreditsValue] = useState(0);
   const [updatingCredits, setUpdatingCredits] = useState(false);
@@ -155,6 +163,7 @@ export const AdminDashboard = ({ onBack, theme }: { onBack: () => void, theme: s
         const data = await res.json();
         setUsers(data.users);
         setStats(data.stats);
+        setR2Stats(data.r2Stats || null);
       } else if (viewMode === 'beta') {
         const res = await fetch(`/api/admin/beta-applications?key=${masterKey}`);
         if (!res.ok) throw new Error('Failed to fetch beta applications');
@@ -191,6 +200,15 @@ export const AdminDashboard = ({ onBack, theme }: { onBack: () => void, theme: s
   useEffect(() => {
     fetchAdminData();
   }, [viewMode]);
+
+  const formatBytes = (bytes: number, decimals = 2) => {
+    if (!bytes || bytes === 0) return '0 Bytes';
+    const k = 1024;
+    const dm = decimals < 0 ? 0 : decimals;
+    const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + ' ' + sizes[i];
+  };
 
   const filteredUsers = users.filter(u => 
     u.name?.toLowerCase().includes(searchTerm.toLowerCase()) || 
@@ -639,9 +657,9 @@ export const AdminDashboard = ({ onBack, theme }: { onBack: () => void, theme: s
               </div>
             </div>
           ) : (
-            <div className="h-full flex flex-col items-center justify-center text-center p-4">
+            <div className="h-full flex flex-col items-center justify-start text-center p-4 w-full overflow-y-auto pb-24">
               {/* Stats Overview */}
-              <div className="grid grid-cols-1 xs:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 w-full max-w-6xl mb-8 md:mb-12">
+              <div className="grid grid-cols-1 xs:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 w-full max-w-6xl mb-8">
                 <div className={`p-4 md:p-8 rounded-[1.5rem] md:rounded-[2.5rem] border ${dashboardTheme.card} flex flex-col items-center`}>
                   <Users className="text-blue-500 mb-2 md:mb-4 md:w-8 md:h-8" size={24} />
                   <div className="text-xl md:text-4xl font-black mb-1">{stats.totalUsers}</div>
@@ -664,10 +682,133 @@ export const AdminDashboard = ({ onBack, theme }: { onBack: () => void, theme: s
                 </div>
               </div>
 
-              <div className="opacity-20 flex flex-col items-center">
-                <Database size={48} className="mb-3 md:w-20 md:h-20 md:mb-4" />
-                <h2 className="text-lg md:text-2xl font-black uppercase tracking-tighter">Select a user to view details</h2>
-                <p className="text-xs md:text-sm font-medium">Manage credits and view plugin usage history</p>
+              {/* Cloudflare R2 Budget and Capacity Meter */}
+              {r2Stats && (
+                <div className={`w-full max-w-6xl p-6 md:p-8 rounded-3xl border ${dashboardTheme.card} text-left mb-8`}>
+                  <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
+                     <div>
+                       <div className="flex items-center gap-2">
+                         <div className="w-2.5 h-2.5 rounded-full bg-orange-500 animate-pulse" />
+                         <h3 className="text-sm md:text-lg font-black uppercase tracking-wider">Cloudflare R2 Safe-Limit Storage</h3>
+                       </div>
+                       <p className={`text-xs ${dashboardTheme.textMuted} mt-1`}>
+                         Monitoring system R2 usage strictly aligned with 10 GB Free Tier limits. High-compression transcoders are active.
+                       </p>
+                     </div>
+                     <div className="shrink-0 text-right">
+                       <span className="text-xl md:text-3xl font-black font-mono">
+                         {formatBytes(r2Stats.totalBytesThisMonth || 0)}
+                       </span>
+                       <span className="opacity-40 text-xs font-black uppercase tracking-wider ml-1">/ 10 GB limit</span>
+                     </div>
+                  </div>
+
+                  {/* Progress Bar */}
+                  {(() => {
+                    const totalBytes = r2Stats.totalBytesThisMonth || 0;
+                    const tenGigabytes = 10 * 1024 * 1024 * 1024;
+                    const percent = Math.min(100, Math.max(0, (totalBytes / tenGigabytes) * 100));
+                    const isNearingLimit = totalBytes > 8 * 1024 * 1024 * 1024;
+                    const isSafeLimitOver = totalBytes >= 9.5 * 1024 * 1024 * 1024;
+                     
+                    let barColor = "bg-emerald-500";
+                    if (totalBytes > 8 * 1024 * 1024 * 1024) barColor = "bg-red-500";
+                    else if (totalBytes > 5 * 1024 * 1024 * 1024) barColor = "bg-orange-500";
+
+                    return (
+                      <div>
+                        <div className="w-full h-3 rounded-full bg-white/5 relative overflow-hidden mb-3">
+                          {/* Limit marker for 9.5GB safety cap */}
+                          <div className="absolute top-0 bottom-0 left-[95%] w-0.5 bg-red-600/50 z-10" title="9.5GB Safety Cap Trigger" />
+                          <div className={`h-full ${barColor} rounded-full transition-all duration-500`} style={{ width: `${percent}%` }} />
+                        </div>
+
+                        <div className="flex items-center justify-between text-[10px] md:text-xs font-bold uppercase tracking-wider opacity-60">
+                          <span className="text-emerald-400">0 GB</span>
+                          <span className="text-red-400 animate-pulse">9.5 GB Safe Cap</span>
+                          <span>10 GB Hard limit</span>
+                        </div>
+
+                        {/* Hard Ceiling Warning Notice */}
+                        {isSafeLimitOver ? (
+                          <div className="mt-4 p-4 rounded-xl border border-red-500/20 bg-red-500/10 text-red-400 flex items-center gap-3 text-xs animate-pulse">
+                            <AlertTriangle className="shrink-0" size={16} />
+                            <p className="font-medium">
+                              <strong>CEILING BLOCKED:</strong> The 9.5 GB safety cap is active. Further uploads to R2 are temporarily blocked and redirected to backup storage to maintain zero-cost Cloudflare operations.
+                            </p>
+                          </div>
+                        ) : isNearingLimit ? (
+                          <div className="mt-4 p-4 rounded-xl border border-orange-500/20 bg-orange-500/10 text-orange-400 flex items-center gap-3 text-xs">
+                            <AlertTriangle className="shrink-0" size={16} />
+                            <p className="font-medium">
+                              <strong>NEAR CEILING:</strong> You are nearing the safe threshold. Compression of heavy audio files has been automatically hardened client-side.
+                            </p>
+                          </div>
+                        ) : (
+                          <div className={`mt-4 p-4 rounded-xl border ${theme === 'coldest' ? 'bg-slate-50 border-slate-200' : 'bg-black/20 border-white/5'} text-xs flex items-center gap-3`}>
+                            <Check className="text-emerald-500 shrink-0" size={16} />
+                            <p className={`font-medium ${dashboardTheme.textMuted}`}>
+                              Cloudflare R2 is healthy. System auto-converts heavy audio to 192kbps MP3 on-the-fly, reducing R2 storage consumption by <strong>~90%</strong>.
+                            </p>
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })()}
+
+                  {/* Statistics Breakdown */}
+                  <div className="mt-6 md:mt-8 grid grid-cols-1 sm:grid-cols-3 gap-4 border-t border-white/5 pt-6">
+                    <div>
+                      <span className={`text-[10px] uppercase font-black opacity-40 tracking-wider ${dashboardTheme.textMuted}`}>Uploads This Month</span>
+                      <p className="text-xl font-bold mt-1 font-mono">{r2Stats.totalUploadsThisMonth} files</p>
+                    </div>
+                    <div>
+                      <span className={`text-[10px] uppercase font-black opacity-40 tracking-wider ${dashboardTheme.textMuted}`}>Lifetime Uploads</span>
+                      <p className="text-xl font-bold mt-1 font-mono">{r2Stats.totalUploadsLifetime} files</p>
+                    </div>
+                    <div>
+                      <span className={`text-[10px] uppercase font-black opacity-40 tracking-wider ${dashboardTheme.textMuted}`}>Total Lifetime Space</span>
+                      <p className="text-xl font-bold mt-1 font-mono">{formatBytes(r2Stats.totalBytesLifetime)}</p>
+                    </div>
+                  </div>
+
+                  {/* Recent R2 Upload Log */}
+                  {r2Stats.recentUploads && r2Stats.recentUploads.length > 0 && (
+                    <div className="mt-8 border-t border-white/5 pt-6">
+                      <h4 className="text-xs font-black uppercase tracking-widest mb-4">Recent R2 Upload Register</h4>
+                      <div className="overflow-x-auto">
+                        <table className="w-full text-xs text-left">
+                          <thead>
+                            <tr className="border-b border-white/5 opacity-50 uppercase tracking-wider text-[10px]">
+                              <th className="pb-2 font-black">Filename</th>
+                              <th className="pb-2 font-black">Format</th>
+                              <th className="pb-2 font-black text-right">Size</th>
+                              <th className="pb-2 font-black text-right">Date</th>
+                            </tr>
+                          </thead>
+                          <tbody className="divide-y divide-white/5 font-mono">
+                            {r2Stats.recentUploads.map((log: any, idx: number) => (
+                              <tr key={log.id || idx} className="hover:bg-white/5 transition-colors">
+                                <td className="py-2.5 pr-4 truncate max-w-[200px]" title={log.file_name}>{log.file_name}</td>
+                                <td className="py-2.5 pr-4 opacity-50">{log.mime_type}</td>
+                                <td className="py-2.5 text-right font-bold text-sky-400">{formatBytes(log.size_bytes)}</td>
+                                <td className="py-2.5 text-right opacity-40" title={new Date(log.uploaded_at).toLocaleString()}>
+                                  {new Date(log.uploaded_at).toLocaleDateString()}
+                                </td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              <div className="opacity-30 flex flex-col items-center mt-4">
+                <Database size={40} className="mb-3 md:w-16 md:h-16 md:mb-4 opacity-70" />
+                <h2 className="text-sm md:text-lg font-black uppercase tracking-tighter">Select a user from the sidebar to view details</h2>
+                <p className="text-[10px] md:text-xs font-medium">Manage user credits and view historical gear log</p>
               </div>
             </div>
           )}

@@ -13,6 +13,8 @@ import helmet from "helmet";
 import { rateLimit } from "express-rate-limit";
 import cors from "cors";
 import { createClient } from "@libsql/client";
+import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
+import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { getGoogle } from "./src/lib/google.js";
 import axios from "axios";
 console.log("server.ts loading: imports finished.");
@@ -208,6 +210,16 @@ async function initDb() {
           contact_info TEXT NOT NULL,
           status TEXT DEFAULT 'pending',
           created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+        )
+      `);
+      
+      await client.execute(`
+        CREATE TABLE IF NOT EXISTS r2_uploads (
+          id TEXT PRIMARY KEY,
+          file_name TEXT,
+          mime_type TEXT,
+          size_bytes INTEGER NOT NULL,
+          uploaded_at DATETIME DEFAULT CURRENT_TIMESTAMP
         )
       `);
       
@@ -963,6 +975,181 @@ app.post("/api/upload/init-gemini", async (req, res) => {
   }
 });
 
+const getR2Client = () => {
+  const accessKeyId = process.env.R2_ACCESS_KEY_ID;
+  const secretAccessKey = process.env.R2_SECRET_ACCESS_KEY;
+  const endpoint = process.env.R2_ENDPOINT;
+  const bucketName = process.env.R2_BUCKET_NAME;
+
+  if (!accessKeyId || !secretAccessKey || !endpoint || !bucketName) {
+    return null;
+  }
+
+  return {
+    client: new S3Client({
+      region: "auto",
+      endpoint,
+      credentials: {
+        accessKeyId,
+        secretAccessKey,
+      },
+    }),
+    bucketName,
+    endpoint,
+  };
+};
+
+app.post("/api/upload/init-r2", express.json(), async (req, res) => {
+  try {
+    const r2Config = getR2Client();
+    if (!r2Config) {
+      console.log("[R2_UPLOAD] R2 environment variables are not fully configured. Falling back to local/Drive upload.");
+      return res.json({ r2Enabled: false });
+    }
+
+    const { fileName, mimeType, size } = req.body;
+    if (!fileName) {
+      return res.status(400).json({ error: "Missing fileName" });
+    }
+
+    // Safety Hard Limit Check: 9.5 GB to keep safely below 10GB free tier limit
+    const db = getDb();
+    let totalBytesThisMonth = 0;
+    try {
+      const monthlySumRes = await db.execute(`
+        SELECT SUM(size_bytes) as total_size 
+        FROM r2_uploads 
+        WHERE strftime('%Y-%m', uploaded_at) = strftime('%Y-%m', 'now')
+      `);
+      totalBytesThisMonth = Number(monthlySumRes.rows[0]?.total_size || 0);
+    } catch (e) {
+      console.warn("Failed to query monthly r2 usage, assuming 0:", e);
+    }
+
+    const LIMIT_BYTES = 9.5 * 1024 * 1024 * 1024; // 9.5 GB safety budget
+    if (totalBytesThisMonth + (size || 0) > LIMIT_BYTES) {
+      console.warn(`[R2_LIMIT] Blocked R2 upload of ${fileName} (${size || 0} bytes). Monthly usage is ${totalBytesThisMonth} bytes.`);
+      return res.json({ 
+        r2Enabled: false, 
+        limitReached: true, 
+        error: "R2 Monthly 10GB free tier limit is nearly exhausted. Safe budget limits are active to prevent cloud charges. Fallback system is initiated." 
+      });
+    }
+
+    // Generate a unique key
+    const fileId = crypto.randomUUID ? crypto.randomUUID() : Math.random().toString(36).substring(2, 15);
+    const cleanFileName = fileName.replace(/[^a-zA-Z0-9.-]/g, "_");
+    const key = `uploads/${fileId}-${cleanFileName}`;
+
+    const command = new PutObjectCommand({
+      Bucket: r2Config.bucketName,
+      Key: key,
+      ContentType: mimeType || "application/octet-stream",
+    });
+
+    // Generate Pre-signed PUT URL valid for 1 hour
+    const uploadUrl = await getSignedUrl(r2Config.client, command, { expiresIn: 3600 });
+
+    const publicUrlBase = (process.env.R2_PUBLIC_URL || "").trim().replace(/\/$/, "");
+    let fileUrl = "";
+    if (publicUrlBase) {
+      fileUrl = `${publicUrlBase}/${key}`;
+    } else {
+      // Form default URL
+      const cleanEndpoint = r2Config.endpoint.replace(/\/$/, "");
+      fileUrl = `${cleanEndpoint}/${r2Config.bucketName}/${key}`;
+    }
+
+    console.log(`[R2_UPLOAD] Successfully generated pre-signed URL for key: ${key}`);
+    res.json({
+      r2Enabled: true,
+      uploadUrl,
+      fileUrl,
+      fileId,
+      key
+    });
+  } catch (err: any) {
+    console.error("[R2_UPLOAD] Failed to initialize R2 upload:", err);
+    res.status(500).json({ error: "R2 Init failed", details: err.message });
+  }
+});
+
+app.post("/api/upload/register-r2-for-gemini", express.json(), async (req, res) => {
+  try {
+    const { url, fileId, fileName, mimeType, size } = req.body;
+    if (!url || !fileName) {
+      return res.status(400).json({ error: "Missing registration parameters" });
+    }
+
+    // Record successful R2 upload in the database
+    try {
+      const db = getDb();
+      await db.execute({
+        sql: `INSERT INTO r2_uploads (id, file_name, mime_type, size_bytes) VALUES (?, ?, ?, ?)`,
+        args: [fileId || crypto.randomUUID(), fileName, mimeType || "application/octet-stream", size || 0]
+      });
+      console.log(`[R2_UPLOAD_DB] Registered upload of ${fileName} (${size || 0} bytes)`);
+    } catch (dbErr) {
+      console.error("[R2_UPLOAD_DB] Failed to insert upload record to database:", dbErr);
+    }
+
+    let geminiFileUri = null;
+    let geminiError = null;
+    let tempFilePath = null;
+
+    try {
+      const userApiKey = req.headers['x-user-api-key'] as string;
+      const apiKey = userApiKey || process.env.GEMINI_API_KEY;
+
+      if (apiKey) {
+        tempFilePath = path.join(os.tmpdir(), `gemini-r2-${Date.now()}-${fileName.replace(/[^a-zA-Z0-9.-]/g, "_")}`);
+        
+        console.log(`[R2_GEMINI] Fetching ${fileName} from R2 for Gemini analysis...`);
+        const downloadRes = await axios({
+          method: 'get',
+          url,
+          responseType: 'stream'
+        });
+
+        const dest = fs.createWriteStream(tempFilePath);
+        await new Promise((resolve, reject) => {
+          downloadRes.data
+            .on('end', () => resolve(true))
+            .on('error', (err: any) => reject(err))
+            .pipe(dest);
+        });
+
+        console.log(`[R2_GEMINI] Registering ${fileName} to Gemini File API...`);
+        let finalMimeType = mimeType as string;
+        if (finalMimeType === 'audio/mp3') finalMimeType = 'audio/mpeg';
+
+        const { GoogleGenAI } = await import("@google/genai");
+        const ai = new GoogleGenAI({ apiKey });
+        const uploadResult = await ai.files.upload({
+          file: tempFilePath,
+          config: { mimeType: finalMimeType }
+        });
+        geminiFileUri = uploadResult.uri;
+        console.log(`[R2_GEMINI] Uploaded to Gemini successfully:`, geminiFileUri);
+      } else {
+        geminiError = "No API key available for Gemini upload";
+      }
+    } catch (geminiErr: any) {
+      console.error("[R2_GEMINI] Gemini File API upload failed:", geminiErr);
+      geminiError = geminiErr.message || String(geminiErr);
+    } finally {
+      if (tempFilePath) {
+        try { fs.unlinkSync(tempFilePath); } catch (e) {}
+      }
+    }
+
+    res.json({ success: true, geminiFileUri, geminiError });
+  } catch (err: any) {
+    console.error("Gemini registration failed:", err);
+    res.status(500).json({ error: "Registration failed", details: err.message });
+  }
+});
+
 // Original Chunked upload endpoint (kept for backwards compatibility if needed)
 app.post("/api/upload-chunk", express.raw({ type: 'application/octet-stream', limit: '100mb' }), async (req, res) => {
   const { fileName, mimeType, chunkIndex, totalChunks, sessionId, offset, geminiUploadUrl, totalSize } = req.query;
@@ -1429,8 +1616,44 @@ app.get("/api/admin/users-data", async (req, res) => {
       totalPluginsRecorded: gearResult.rows.length,
       totalRevenue: purchasesResult.rows.reduce((sum: number, p: any) => sum + (p.amount_fiat || 0), 0)
     };
+
+    // Query R2 upload tracking statistics
+    let r2Stats = {
+      totalUploadsThisMonth: 0,
+      totalBytesThisMonth: 0,
+      totalUploadsLifetime: 0,
+      totalBytesLifetime: 0,
+      recentUploads: [] as any[]
+    };
+
+    try {
+      const thisMonthRes = await db.execute(`
+        SELECT COUNT(*) as count, SUM(size_bytes) as total_size 
+        FROM r2_uploads 
+        WHERE strftime('%Y-%m', uploaded_at) = strftime('%Y-%m', 'now')
+      `);
+      const lifetimeRes = await db.execute(`
+        SELECT COUNT(*) as count, SUM(size_bytes) as total_size 
+        FROM r2_uploads
+      `);
+      const recentRes = await db.execute(`
+        SELECT * FROM r2_uploads 
+        ORDER BY uploaded_at DESC 
+        LIMIT 30
+      `);
+
+      r2Stats = {
+        totalUploadsThisMonth: Number(thisMonthRes.rows[0]?.count || 0),
+        totalBytesThisMonth: Number(thisMonthRes.rows[0]?.total_size || 0),
+        totalUploadsLifetime: Number(lifetimeRes.rows[0]?.count || 0),
+        totalBytesLifetime: Number(lifetimeRes.rows[0]?.total_size || 0),
+        recentUploads: (recentRes.rows || []) as any[]
+      };
+    } catch (e) {
+      console.error("[R2_STATS_DB] Failed to select r2_uploads stats:", e);
+    }
     
-    res.json({ users: usersWithData, stats });
+    res.json({ users: usersWithData, stats, r2Stats });
   } catch (err) {
     console.error("Failed to fetch admin users data:", err);
     res.status(500).json({ error: "Internal Server Error" });

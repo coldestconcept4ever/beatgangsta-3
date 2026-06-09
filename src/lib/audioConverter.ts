@@ -33,7 +33,7 @@ export async function convertWavToMp3(file: File, onProgress?: (progress: number
 
       const channels = audioBuffer.numberOfChannels;
       const sampleRate = audioBuffer.sampleRate;
-      const kbps = 256;
+      const kbps = 192;
 
       const mp3encoder = new lamejs.Mp3Encoder(channels, sampleRate, kbps);
       const mp3Data: Int8Array[] = [];
