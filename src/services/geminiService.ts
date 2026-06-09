@@ -2599,6 +2599,8 @@ export const getLyricAnalysis = async (
   vocalChain: any[];
   additionalAdvice: string;
   timeline?: any[];
+  formattedLyrics?: string;
+  syncedLyrics?: { time: string; lyric: string }[];
 }> => {
   const ai = getAI();
   const pluginListStr = plugins.map(p => `${p.vendor} - ${p.name} (${p.type})`).join('\n');
@@ -2626,9 +2628,13 @@ export const getLyricAnalysis = async (
     ${GLOBAL_PARAMETER_STRICTNESS_PROMPT}
     ${apolloConstraint}
 
-    Based on the provided full mix, stems (if available), current lyrics, and user context, you must output a valid JSON response containing advice on vocal dubbing, performance delivery, and processing.
+    Based on the provided full mix, stems (if available), current lyrics, and user context, you must output a valid JSON response containing advice on vocal dubbing, performance delivery, processing, formatted lyrics, and synchronization.
     
     The JSON structure MUST have these EXACT keys:
+    - 'formattedLyrics': A meticulously formatted string of the entered lyrics. You MUST fix any words that are misspelled or grammatically incorrect. Organize the lyrics into clear, logical sections separated by headers like [Verse 1], [Hook], [Verse 2], etc. (matching Genius website's structure). If the lyrics are continuous verses without a hook/chorus, you MUST label them all as sequential verses (e.g. [Verse 1], [Verse 2], [Verse 3]). Space blocks cleanly with blank lines.
+    - 'syncedLyrics': An array of objects matching the audio file's exact timing down to the millisecond. Synchronize each lyric line so it is perfectly aligned with the audio file. If no audio file is provided/accessible, estimate standard rhythmic timestamps (e.g., 2-3 seconds per line). Each item in the array MUST be an object with:
+        - 'time': The timestamp in LRC format, e.g. '[mm:ss.xx]' or '[mm:ss.xxx]' (e.g. '[00:14.25]' or '[01:03.045]'). Ensure this represents the exact millisecond-accurate start of the lyric line in the audio.
+        - 'lyric': The corrected, formatted text of that single line.
     - 'dubWords': A list of specific words from the lyrics that the user should record dubs/overdubs/ad-libs/reinforcements for. Explain why these words or phrases have significant structural, rhythmic, or emotional weight. Highlight which words to emphasize.
     - 'cadenceAndDelivery': A detailed description of the performance delivery. Explain what cadence should be used, when to match the rhythm, and specific vocal delivery styling: e.g. whether it should be a higher pitched dub, screaming dub, lower pitched, whisper dub, or double-tracked, and how it syncs with the backing instrumental or full mix.
     - 'vocalChain': A recommended chain of plugins (at least 3 and max 5) from the user's available plugin list to process these dubbed/vocal elements to give them premium polish, dimension, and fit in the mix. Each plugin MUST have:
@@ -2636,7 +2642,7 @@ export const getLyricAnalysis = async (
         - 'purpose': Brief description of its usage.
         - 'deepDive': An array of parameters with 'parameter', 'value', and 'explanation'.
     - 'additionalAdvice': Flexible section answering any other specific request or context the user typed in the custom context input box, mapping out performance strategy, lyrics modifications, or general vibes.
-    - 'timeline': An array of exactly 4 track objects representing a 16-bar multitrack timeline of the vocal/FX structure. The tracks MUST be named:
+    - 'timeline': An array of exactly 4 track objects representing a multitrack timeline of the entire vocal/FX structure matching the full length of the song (extend it up to 64 or 80+ bars to map the entire track layout in detail, instead of stopping at 16 bars). The tracks MUST be named:
         1. 'Lead Vocal'
         2. 'Overdubs/Dubs'
         3. 'Ad-libs/Accents'
@@ -2644,8 +2650,8 @@ export const getLyricAnalysis = async (
         Each track MUST contain a 'blocks' array of objects mapped sequentially across the timeline. Each block object has:
             - 'id': A unique string id (e.g., 'dub-sec-1')
             - 'text': Short text representing the lyric / vocal technique / delay throw / sweep effect (e.g. 'Yeah!', '[CHORUS]', 'Vocal Sweep', 'Delay Throw'). Max 15 chars.
-            - 'startBar': The starting bar of the segment (integer from 1 to 16)
-            - 'durationBars': Spanned length in bars (integer from 1 to 4)
+            - 'startBar': The starting bar of the segment (integer starting from 1 up to the total song length like 32, 64 or more)
+            - 'durationBars': Spanned length in bars (integer from 1 to 8)
             - 'color': Aesthetic visual theme color for this segment (one of: 'sky', 'indigo', 'rose', 'emerald', 'violet', 'amber')
             - 'intensity': Numeric visual amplitude level (integer from 15 to 100)
             - 'instructions': Precise, granular coaching and mixing directives for this physical segment, mapping details on automated effects, volume ducking, sidechains, polarity adjustments, or performance execution.
@@ -2738,7 +2744,9 @@ export const getLyricAnalysis = async (
       cadenceAndDelivery: parsed.cadenceAndDelivery || 'No delivery specifications generated',
       vocalChain: parsed.vocalChain || [],
       additionalAdvice: parsed.additionalAdvice || 'No additional advice.',
-      timeline: parsed.timeline || []
+      timeline: parsed.timeline || [],
+      formattedLyrics: parsed.formattedLyrics || '',
+      syncedLyrics: parsed.syncedLyrics || []
     };
   } catch (error) {
     console.error("Gemini API Error (Lyric Tool):", error);

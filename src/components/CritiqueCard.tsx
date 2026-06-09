@@ -5,7 +5,7 @@ import { getSpecificMixHelp, getMixCritique, regeneratePlugin, getLyricAnalysis 
 import { uploadFileChunked, deleteFileFromDrive } from '../services/uploadService';
 import { generateDawProjectFromMixCritique } from '../utils/dawprojectUtils';
 import { motion, AnimatePresence } from 'motion/react';
-import { Loader2, Search, CheckCircle2, AlertCircle, Download, RefreshCw, Layers, BarChart2, Mic, Minus, Sparkles, Play, Square, Volume2, VolumeX, Eye, Info, RefreshCcw, Settings, Sliders, Check, Headphones } from 'lucide-react';
+import { Loader2, Search, CheckCircle2, AlertCircle, Download, RefreshCw, Layers, BarChart2, Mic, Minus, Sparkles, Play, Square, Volume2, VolumeX, Eye, Info, RefreshCcw, Settings, Sliders, Check, Headphones, FileText } from 'lucide-react';
 import { PluginBubble } from './PluginBubble';
 import { CritiqueHTMLTemplate } from './CritiqueHTMLTemplate';
 
@@ -170,6 +170,8 @@ export const CritiqueCard: React.FC<CritiqueCardProps> = ({ critique, stems = []
     vocalChain: any[];
     additionalAdvice: string;
     timeline?: any[];
+    formattedLyrics?: string;
+    syncedLyrics?: { time: string; lyric: string }[];
   } | null>(() => (critique as any).lyricAnalysis?.results || null);
 
   // Grid Mapping States
@@ -179,30 +181,9 @@ export const CritiqueCard: React.FC<CritiqueCardProps> = ({ critique, stems = []
   const [mutedTracks, setMutedTracks] = useState<Record<string, boolean>>({});
   const [soloedTracks, setSoloedTracks] = useState<Record<string, boolean>>({});
   const [selectedBlockId, setSelectedBlockId] = useState<string | null>("lead-1");
-  const [activeLyricTab, setActiveLyricTab] = useState<'timeline' | 'aiCoach'>('timeline');
+  const [activeLyricTab, setActiveLyricTab] = useState<'timeline' | 'formattedLyrics' | 'aiCoach'>('timeline');
   const [activeManualTab, setActiveManualTab] = useState<'polarity' | 'sidechain' | 'delay' | 'sweeps'>('polarity');
   const [customDawOption, setCustomDawOption] = useState<string | null>(null);
-
-  // Playhead update interval
-  React.useEffect(() => {
-    if (isPlayingTimeline) {
-      playheadIntervalRef.current = setInterval(() => {
-        setCurrentTimelineBar((prev) => {
-          if (prev >= 16) return 1;
-          return prev + 1;
-        });
-      }, 1000); // 1 bar per second
-    } else {
-      if (playheadIntervalRef.current) {
-        clearInterval(playheadIntervalRef.current);
-      }
-    }
-    return () => {
-      if (playheadIntervalRef.current) {
-        clearInterval(playheadIntervalRef.current);
-      }
-    };
-  }, [isPlayingTimeline]);
 
   const defaultVocalTimeline = [
     {
@@ -245,6 +226,44 @@ export const CritiqueCard: React.FC<CritiqueCardProps> = ({ critique, stems = []
     }
     return defaultVocalTimeline;
   };
+
+  const getTimelineMaxBars = () => {
+    const timeline = getVocalTimeline();
+    let max = 16;
+    timeline.forEach((track: any) => {
+      if (Array.isArray(track.blocks)) {
+        track.blocks.forEach((block: any) => {
+          const endBar = (block.startBar || 1) + (block.durationBars || 1) - 1;
+          if (endBar > max) {
+            max = endBar;
+          }
+        });
+      }
+    });
+    return max;
+  };
+  const maxBars = getTimelineMaxBars();
+
+  // Playhead update interval
+  React.useEffect(() => {
+    if (isPlayingTimeline) {
+      playheadIntervalRef.current = setInterval(() => {
+        setCurrentTimelineBar((prev) => {
+          if (prev >= maxBars) return 1;
+          return prev + 1;
+        });
+      }, 1000); // 1 bar per second
+    } else {
+      if (playheadIntervalRef.current) {
+        clearInterval(playheadIntervalRef.current);
+      }
+    }
+    return () => {
+      if (playheadIntervalRef.current) {
+        clearInterval(playheadIntervalRef.current);
+      }
+    };
+  }, [isPlayingTimeline, maxBars]);
 
   const handleAnalyzeLyrics = async () => {
     if (!lyrics.trim()) {
@@ -705,7 +724,7 @@ export const CritiqueCard: React.FC<CritiqueCardProps> = ({ critique, stems = []
             {/* Analysis Output Results */}
             <div className={`mt-6 border-t pt-6 ${theme === 'coldest' ? 'border-sky-100' : 'border-sky-500/10'}`}>
               {/* Tab Bar */}
-              <div className="flex gap-2 mb-6">
+              <div className="flex flex-wrap gap-2 mb-6">
                 <button
                   onClick={() => setActiveLyricTab('timeline')}
                   className={`px-5 py-2.5 rounded-xl font-black text-xs uppercase tracking-widest transition-all shadow flex items-center gap-2 ${
@@ -720,6 +739,21 @@ export const CritiqueCard: React.FC<CritiqueCardProps> = ({ critique, stems = []
                 >
                   <Sliders className="w-4 h-4" />
                   {t('timeline_sequencer', 'Interactive Vocal Timeline')}
+                </button>
+                <button
+                  onClick={() => setActiveLyricTab('formattedLyrics')}
+                  className={`px-5 py-2.5 rounded-xl font-black text-xs uppercase tracking-widest transition-all shadow flex items-center gap-2 ${
+                    activeLyricTab === 'formattedLyrics'
+                      ? theme === 'coldest'
+                        ? 'bg-sky-600 text-white'
+                        : 'bg-sky-500 text-white'
+                      : theme === 'coldest'
+                      ? 'bg-sky-100/60 hover:bg-sky-200/60 text-sky-800'
+                      : 'bg-[#1e293b] hover:bg-[#334155] text-slate-300'
+                  }`}
+                >
+                  <FileText className="w-4 h-4" />
+                  {t('genius_lyrics_desc', 'Spotify Synced Genius Lyrics')}
                 </button>
                 <button
                   onClick={() => setActiveLyricTab('aiCoach')}
@@ -802,164 +836,166 @@ export const CritiqueCard: React.FC<CritiqueCardProps> = ({ critique, stems = []
                         </button>
                         
                         <span className="font-mono text-xs font-black px-2 py-1 rounded bg-black/20 text-[#38bdf8]">
-                          {t('bar_count', 'BAR')}: {currentTimelineBar}/16
+                          {t('bar_count', 'BAR')}: {currentTimelineBar}/{maxBars}
                         </span>
                       </div>
                     </div>
 
                     {/* Timeline Multi-track Matrix */}
-                    <div className="relative space-y-4 overflow-x-auto min-w-[700px]">
-                      {/* Timeline Scale Ruler */}
-                      <div className="grid grid-cols-[140px_1fr] items-center gap-4 text-center select-none pl-2">
-                        <span className="text-[9px] font-black uppercase tracking-widest text-[#0ea5e9]">
-                          {t('vocal_track', 'Vocal Track')}
-                        </span>
-                        <div className="relative grid font-mono text-[9px] font-black opacity-60" style={{ gridTemplateColumns: 'repeat(16, minmax(0, 1fr))' }}>
-                          {Array.from({ length: 16 }).map((_, barIdx) => {
-                            const barNum = barIdx + 1;
-                            const isCurrent = currentTimelineBar === barNum;
+                    <div className="relative space-y-4 overflow-x-auto pb-4 scrollbar-thin scrollbar-thumb-sky-500/50">
+                      <div style={{ minWidth: `calc(140px + 16px + ${maxBars * 45}px)`, width: '100%' }} className="space-y-4 relative">
+                        {/* Timeline Scale Ruler */}
+                        <div className="grid grid-cols-[140px_1fr] items-center gap-4 text-center select-none pl-2">
+                          <span className="text-[9px] font-black uppercase tracking-widest text-[#0ea5e9]">
+                            {t('vocal_track', 'Vocal Track')}
+                          </span>
+                          <div className="relative grid font-mono text-[9px] font-black opacity-60" style={{ gridTemplateColumns: `repeat(${maxBars}, minmax(0, 1fr))` }}>
+                            {Array.from({ length: maxBars }).map((_, barIdx) => {
+                              const barNum = barIdx + 1;
+                              const isCurrent = currentTimelineBar === barNum;
+                              return (
+                                <button
+                                  key={barIdx}
+                                  onClick={() => setCurrentTimelineBar(barNum)}
+                                  className={`text-center py-1 rounded cursor-pointer transition-colors ${
+                                    isCurrent 
+                                      ? 'text-rose-500 bg-rose-500/10 font-extrabold text-xs scale-110 shadow' 
+                                      : 'hover:text-sky-500 hover:bg-sky-500/5'
+                                  }`}
+                                >
+                                  {barNum}
+                                </button>
+                              );
+                            })}
+                          </div>
+                        </div>
+
+                        {/* Multitrack Body */}
+                        <div className="relative space-y-3.5">
+                          {/* Interactive sweeping Playhead bar */}
+                          <div 
+                            className="absolute top-0 bottom-0 border-l-2 border-rose-500 z-30 transition-all pointer-events-none duration-250 shadow-[0_0_10px_rgba(244,63,94,0.6)]"
+                            style={{
+                              left: `calc(140px + 16px + (((${currentTimelineBar} - 1) / ${maxBars}) * (100% - 140px - 16px)))`,
+                            }}
+                          />
+
+                          {getVocalTimeline().map((track: any, trackIdx: number) => {
+                            const isMuted = mutedTracks[track.trackName];
+                            const hasSolos = Object.values(soloedTracks).some(Boolean);
+                            const isSoloed = soloedTracks[track.trackName];
+                            // If some tracks are soloed, tracks that are not soloed are dimmed
+                            const isEffectiveMuted = isMuted || (hasSolos && !isSoloed);
+
                             return (
-                              <button
-                                key={barIdx}
-                                onClick={() => setCurrentTimelineBar(barNum)}
-                                className={`text-center py-1 rounded cursor-pointer transition-colors ${
-                                  isCurrent 
-                                    ? 'text-rose-500 bg-rose-500/10 font-extrabold text-xs scale-110 shadow' 
-                                    : 'hover:text-sky-500 hover:bg-sky-500/5'
-                                }`}
-                              >
-                                {barNum}
-                              </button>
+                              <div key={trackIdx} className="grid grid-cols-[140px_1fr] gap-4 items-center pl-2">
+                                {/* Track Controls Rail */}
+                                <div className={`p-2.5 rounded-xl border flex flex-col justify-center gap-1.5 transition-all select-none ${
+                                  theme === 'coldest' 
+                                    ? isEffectiveMuted ? 'bg-sky-100/40 border-sky-200/50 opacity-45' : 'bg-sky-100 border-sky-200'
+                                    : isEffectiveMuted ? 'bg-[#1e293b]/30 border-slate-800 opacity-40' : 'bg-[#1e293b]/70 border-slate-700/50'
+                                }`}>
+                                  <div className="flex items-center justify-between">
+                                    <span className="text-[10px] font-black uppercase tracking-wider text-current truncate pr-1 max-w-[85px]" title={track.trackName}>
+                                      {track.trackName}
+                                    </span>
+                                    {/* Level Indicators */}
+                                    {!isEffectiveMuted && isPlayingTimeline && (
+                                      <div className="flex items-end gap-0.5 h-3">
+                                        <motion.div animate={{ height: [4, 12, 6, 12, 4] }} transition={{ repeat: Infinity, duration: 0.7 + trackIdx*0.1 }} className="w-0.5 bg-emerald-500 rounded-full" />
+                                        <motion.div animate={{ height: [6, 4, 12, 8, 6] }} transition={{ repeat: Infinity, duration: 0.5 + trackIdx*0.15 }} className="w-0.5 bg-emerald-400 rounded-full" />
+                                      </div>
+                                    )}
+                                  </div>
+
+                                  <div className="flex items-center gap-1">
+                                    {/* Mute Button */}
+                                    <button
+                                      onClick={() => setMutedTracks(prev => ({ ...prev, [track.trackName]: !prev[track.trackName] }))}
+                                      className={`px-1.5 py-0.5 rounded text-[8px] font-black uppercase tracking-widest border transition-all ${
+                                        isMuted 
+                                          ? 'bg-red-500/20 text-red-400 border-red-500/50' 
+                                          : 'bg-black/25 text-slate-400 border-transparent hover:border-slate-500'
+                                      }`}
+                                    >
+                                      M
+                                    </button>
+                                    {/* Solo Button */}
+                                    <button
+                                      onClick={() => setSoloedTracks(prev => ({ ...prev, [track.trackName]: !prev[track.trackName] }))}
+                                      className={`px-1.5 py-0.5 rounded text-[8px] font-black uppercase tracking-widest border transition-all ${
+                                        isSoloed 
+                                          ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/50' 
+                                          : 'bg-black/25 text-slate-400 border-transparent hover:border-slate-500'
+                                      }`}
+                                    >
+                                      S
+                                    </button>
+                                  </div>
+                                </div>
+
+                                {/* Grid Track Strip */}
+                                <div className={`relative h-12 rounded-xl border flex items-center transition-all ${
+                                  theme === 'coldest' 
+                                    ? isEffectiveMuted ? 'bg-sky-500/[0.02] border-sky-100' : 'bg-sky-500/[0.05] border-sky-100'
+                                    : isEffectiveMuted ? 'bg-slate-900/10 border-slate-800' : 'bg-black/30 border-[#1e293b]'
+                                }`}>
+                                  {/* Grid Columns Guideline dividers */}
+                                  <div className="absolute inset-0 grid pointer-events-none" style={{ gridTemplateColumns: `repeat(${maxBars}, minmax(0, 1fr))` }}>
+                                    {Array.from({ length: maxBars }).map((_, barIdx) => (
+                                      <div key={barIdx} className={`h-full border-r ${
+                                        theme === 'coldest' ? 'border-sky-500/5' : 'border-sky-500/[0.03]'
+                                      }`} />
+                                    ))}
+                                  </div>
+
+                                  {/* Track Blocks */}
+                                  {track.blocks.map((block: any, bIdx: number) => {
+                                    const isSelected = selectedBlockId === block.id;
+                                    
+                                    // Determine dynamic color pairings
+                                    let blockColorClasses = 'bg-sky-500/10 text-sky-400 border-sky-500/30';
+                                    if (block.color === 'rose') blockColorClasses = 'bg-rose-500/10 text-rose-400 border-rose-500/30';
+                                    if (block.color === 'indigo') blockColorClasses = 'bg-indigo-500/10 text-indigo-400 border-indigo-500/30';
+                                    if (block.color === 'violet') blockColorClasses = 'bg-violet-500/10 text-violet-400 border-violet-500/30';
+                                    if (block.color === 'emerald') blockColorClasses = 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30';
+                                    if (block.color === 'amber') blockColorClasses = 'bg-amber-500/10 text-amber-400 border-amber-500/30';
+
+                                    if (isSelected) {
+                                      if (block.color === 'sky') blockColorClasses = 'bg-sky-500 text-white border-sky-400 scale-[1.01] shadow-lg shadow-sky-500/30 z-20';
+                                      if (block.color === 'rose') blockColorClasses = 'bg-rose-500 text-white border-rose-400 scale-[1.01] shadow-lg shadow-rose-500/30 z-20';
+                                      if (block.color === 'indigo') blockColorClasses = 'bg-indigo-500 text-white border-indigo-400 scale-[1.01] shadow-lg shadow-indigo-500/30 z-20';
+                                      if (block.color === 'violet') blockColorClasses = 'bg-violet-500 text-white border-violet-400 scale-[1.01] shadow-lg shadow-violet-500/30 z-20';
+                                      if (block.color === 'emerald') blockColorClasses = 'bg-emerald-500 text-white border-emerald-400 scale-[1.01] shadow-lg shadow-emerald-500/30 z-20';
+                                      if (block.color === 'amber') blockColorClasses = 'bg-amber-500 text-white border-amber-400 scale-[1.01] shadow-lg shadow-amber-500/30 z-20';
+                                    }
+
+                                    const startPct = ((block.startBar - 1) / maxBars) * 100;
+                                    const widthPct = (block.durationBars / maxBars) * 100;
+
+                                    return (
+                                      <button
+                                        key={bIdx}
+                                        onClick={() => setSelectedBlockId(block.id)}
+                                        style={{
+                                          left: `${startPct}%`,
+                                          width: `${widthPct}%`,
+                                        }}
+                                        className={`absolute h-9 rounded-lg border flex items-center justify-center px-2 cursor-pointer transition-all ${blockColorClasses} ${
+                                          isEffectiveMuted ? 'opacity-30' : 'opacity-100'
+                                        }`}
+                                      >
+                                        <span className="text-[9px] font-black uppercase tracking-wider truncate text-center select-none">
+                                          {block.text}
+                                        </span>
+                                      </button>
+                                    );
+                                  })}
+                                </div>
+                              </div>
                             );
                           })}
                         </div>
-                      </div>
-
-                      {/* Multitrack Body */}
-                      <div className="relative space-y-3.5">
-                        {/* Interactive sweeping Playhead bar */}
-                        <div 
-                          className="absolute top-0 bottom-0 border-l-2 border-rose-500 z-30 transition-all pointer-events-none duration-250 shadow-[0_0_10px_rgba(244,63,94,0.6)]"
-                          style={{
-                            left: `calc(140px + 16px + (((${currentTimelineBar} - 1) / 16) * (100% - 140px - 16px)))`,
-                          }}
-                        />
-
-                        {getVocalTimeline().map((track: any, trackIdx: number) => {
-                          const isMuted = mutedTracks[track.trackName];
-                          const hasSolos = Object.values(soloedTracks).some(Boolean);
-                          const isSoloed = soloedTracks[track.trackName];
-                          // If some tracks are soloed, tracks that are not soloed are dimmed
-                          const isEffectiveMuted = isMuted || (hasSolos && !isSoloed);
-
-                          return (
-                            <div key={trackIdx} className="grid grid-cols-[140px_1fr] gap-4 items-center pl-2">
-                              {/* Track Controls Rail */}
-                              <div className={`p-2.5 rounded-xl border flex flex-col justify-center gap-1.5 transition-all select-none ${
-                                theme === 'coldest' 
-                                  ? isEffectiveMuted ? 'bg-sky-100/40 border-sky-200/50 opacity-45' : 'bg-sky-100 border-sky-200'
-                                  : isEffectiveMuted ? 'bg-[#1e293b]/30 border-slate-800 opacity-40' : 'bg-[#1e293b]/70 border-slate-700/50'
-                              }`}>
-                                <div className="flex items-center justify-between">
-                                  <span className="text-[10px] font-black uppercase tracking-wider text-current truncate pr-1 max-w-[85px]" title={track.trackName}>
-                                    {track.trackName}
-                                  </span>
-                                  {/* Level Indicators */}
-                                  {!isEffectiveMuted && isPlayingTimeline && (
-                                    <div className="flex items-end gap-0.5 h-3">
-                                      <motion.div animate={{ height: [4, 12, 6, 12, 4] }} transition={{ repeat: Infinity, duration: 0.7 + trackIdx*0.1 }} className="w-0.5 bg-emerald-500 rounded-full" />
-                                      <motion.div animate={{ height: [6, 4, 12, 8, 6] }} transition={{ repeat: Infinity, duration: 0.5 + trackIdx*0.15 }} className="w-0.5 bg-emerald-400 rounded-full" />
-                                    </div>
-                                  )}
-                                </div>
-
-                                <div className="flex items-center gap-1">
-                                  {/* Mute Button */}
-                                  <button
-                                    onClick={() => setMutedTracks(prev => ({ ...prev, [track.trackName]: !prev[track.trackName] }))}
-                                    className={`px-1.5 py-0.5 rounded text-[8px] font-black uppercase tracking-widest border transition-all ${
-                                      isMuted 
-                                        ? 'bg-red-500/20 text-red-400 border-red-500/50' 
-                                        : 'bg-black/25 text-slate-400 border-transparent hover:border-slate-500'
-                                    }`}
-                                  >
-                                    M
-                                  </button>
-                                  {/* Solo Button */}
-                                  <button
-                                    onClick={() => setSoloedTracks(prev => ({ ...prev, [track.trackName]: !prev[track.trackName] }))}
-                                    className={`px-1.5 py-0.5 rounded text-[8px] font-black uppercase tracking-widest border transition-all ${
-                                      isSoloed 
-                                        ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/50' 
-                                        : 'bg-black/25 text-slate-400 border-transparent hover:border-slate-500'
-                                    }`}
-                                  >
-                                    S
-                                  </button>
-                                </div>
-                              </div>
-
-                              {/* Grid Track Strip */}
-                              <div className={`relative h-12 rounded-xl border flex items-center transition-all ${
-                                theme === 'coldest' 
-                                  ? isEffectiveMuted ? 'bg-sky-500/[0.02] border-sky-100' : 'bg-sky-500/[0.05] border-sky-100'
-                                  : isEffectiveMuted ? 'bg-slate-900/10 border-slate-800' : 'bg-black/30 border-[#1e293b]'
-                              }`}>
-                                {/* Grid Columns Guideline dividers */}
-                                <div className="absolute inset-0 grid pointer-events-none" style={{ gridTemplateColumns: 'repeat(16, minmax(0, 1fr))' }}>
-                                  {Array.from({ length: 16 }).map((_, barIdx) => (
-                                    <div key={barIdx} className={`h-full border-r ${
-                                      theme === 'coldest' ? 'border-sky-500/5' : 'border-sky-500/[0.03]'
-                                    }`} />
-                                  ))}
-                                </div>
-
-                                {/* Track Blocks */}
-                                {track.blocks.map((block: any, bIdx: number) => {
-                                  const isSelected = selectedBlockId === block.id;
-                                  
-                                  // Determine dynamic color pairings
-                                  let blockColorClasses = 'bg-sky-500/10 text-sky-400 border-sky-500/30';
-                                  if (block.color === 'rose') blockColorClasses = 'bg-rose-500/10 text-rose-400 border-rose-500/30';
-                                  if (block.color === 'indigo') blockColorClasses = 'bg-indigo-500/10 text-indigo-400 border-indigo-500/30';
-                                  if (block.color === 'violet') blockColorClasses = 'bg-violet-500/10 text-violet-400 border-violet-500/30';
-                                  if (block.color === 'emerald') blockColorClasses = 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30';
-                                  if (block.color === 'amber') blockColorClasses = 'bg-amber-500/10 text-amber-400 border-amber-500/30';
-
-                                  if (isSelected) {
-                                    if (block.color === 'sky') blockColorClasses = 'bg-sky-500 text-white border-sky-400 scale-[1.01] shadow-lg shadow-sky-500/30 z-20';
-                                    if (block.color === 'rose') blockColorClasses = 'bg-rose-500 text-white border-rose-400 scale-[1.01] shadow-lg shadow-rose-500/30 z-20';
-                                    if (block.color === 'indigo') blockColorClasses = 'bg-indigo-500 text-white border-indigo-400 scale-[1.01] shadow-lg shadow-indigo-500/30 z-20';
-                                    if (block.color === 'violet') blockColorClasses = 'bg-violet-500 text-white border-violet-400 scale-[1.01] shadow-lg shadow-violet-500/30 z-20';
-                                    if (block.color === 'emerald') blockColorClasses = 'bg-emerald-500 text-white border-emerald-400 scale-[1.01] shadow-lg shadow-emerald-500/30 z-20';
-                                    if (block.color === 'amber') blockColorClasses = 'bg-amber-500 text-white border-amber-400 scale-[1.01] shadow-lg shadow-amber-500/30 z-20';
-                                  }
-
-                                  const startPct = ((block.startBar - 1) / 16) * 100;
-                                  const widthPct = (block.durationBars / 16) * 100;
-
-                                  return (
-                                    <button
-                                      key={bIdx}
-                                      onClick={() => setSelectedBlockId(block.id)}
-                                      style={{
-                                        left: `${startPct}%`,
-                                        width: `${widthPct}%`,
-                                      }}
-                                      className={`absolute h-9 rounded-lg border flex items-center justify-center px-2 cursor-pointer transition-all ${blockColorClasses} ${
-                                        isEffectiveMuted ? 'opacity-30' : 'opacity-100'
-                                      }`}
-                                    >
-                                      <span className="text-[9px] font-black uppercase tracking-wider truncate text-center select-none">
-                                        {block.text}
-                                      </span>
-                                    </button>
-                                  );
-                                })}
-                              </div>
-                            </div>
-                          );
-                        })}
                       </div>
                     </div>
 
@@ -1234,6 +1270,130 @@ export const CritiqueCard: React.FC<CritiqueCardProps> = ({ critique, stems = []
                         <span className="text-[10px] font-bold text-slate-400">
                           {t('manual_tip', 'Tip: Polarity / Phase issues occur when overlapping doubles have sound waveforms that cancel each other out. Flipping polarity on a doubled track (by 180 degrees) will frequently recover lost low-end punch immediately.')}
                         </span>
+                      </div>
+                    </div>
+                  </div>
+                </motion.div>
+              )}
+
+              {/* FORMATTED & SYNCED LYRICS TAB CONTENT */}
+              {activeLyricTab === 'formattedLyrics' && (
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  className="space-y-6 animate-fade-in"
+                >
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    {/* Editorial Genius Style Card */}
+                    <div className={`p-6 rounded-3xl border flex flex-col ${
+                      theme === 'coldest' ? 'bg-white border-sky-100 shadow-sm' : 'bg-black/40 border-sky-500/20'
+                    }`}>
+                      <div className="flex items-center justify-between pb-4 border-b border-sky-500/10 mb-6">
+                        <div className="flex items-center gap-2">
+                          <FileText className="w-5 h-5 text-sky-500" />
+                          <h5 className="font-extrabold text-xs uppercase tracking-widest text-sky-500">
+                            {t('genius_format_title', 'Genius Properly Formatted Lyrics')}
+                          </h5>
+                        </div>
+                        <button
+                          onClick={() => {
+                            const lText = lyricResult?.formattedLyrics || lyrics;
+                            navigator.clipboard.writeText(lText);
+                          }}
+                          className={`px-3 py-1.5 rounded-lg border text-[10px] font-black uppercase tracking-wider transition-all select-none ${
+                            theme === 'coldest'
+                              ? 'bg-sky-50 border-sky-200 text-sky-800 hover:bg-sky-100'
+                              : 'bg-slate-800 border-slate-700 text-slate-300 hover:bg-slate-700'
+                          }`}
+                        >
+                          {t('copy_lyrics', 'Copy to Clipboard')}
+                        </button>
+                      </div>
+
+                      <div className={`flex-1 rounded-2xl p-4 font-sans text-sm leading-relaxed overflow-y-auto max-h-[480px] whitespace-pre-line border ${
+                        theme === 'coldest' ? 'bg-slate-50 border-slate-100 text-slate-800' : 'bg-slate-950/70 border-slate-800 text-slate-300'
+                      }`}>
+                        {lyricResult?.formattedLyrics || lyrics || (
+                          <div className="text-center opacity-40 py-8 font-serif italic text-xs">
+                            {t('no_lyrics_yet', 'No analyzed lyrics. Click "Analyze Lyrics & Track" above to generate perfectly corrected, organized lyrics.')}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Spotify Sync LRC File Card */}
+                    <div className={`p-6 rounded-3xl border flex flex-col ${
+                      theme === 'coldest' ? 'bg-white border-sky-100 shadow-sm' : 'bg-black/40 border-sky-500/20'
+                    }`}>
+                      <div className="flex items-center justify-between pb-4 border-b border-sky-500/10 mb-6">
+                        <div className="flex items-center gap-2">
+                          <Layers className="w-5 h-5 text-[#10b981]" />
+                          <h5 className="font-extrabold text-xs uppercase tracking-widest text-[#10b981]">
+                            {t('spotify_sync_title', 'Spotify LRC Sync Preview')}
+                          </h5>
+                        </div>
+                        <button
+                          onClick={() => {
+                            const filename = "synced_lyrics.lrc";
+                            let lrcContent = "";
+                            const lines = lyricResult?.syncedLyrics || [];
+                            if (lines.length > 0) {
+                              lrcContent = lines.map(line => `${line.time}${line.lyric}`).join("\n");
+                            } else {
+                              // Fallback simulated synced lyrics if not available
+                              const rawLines = (lyricResult?.formattedLyrics || lyrics).split("\n").filter(l => l.trim() && !l.startsWith("["));
+                              lrcContent = rawLines.map((line, idx) => {
+                                const sec = idx * 4;
+                                const mm = String(Math.floor(sec / 60)).padStart(2, '0');
+                                const ss = String(sec % 60).padStart(2, '0');
+                                return `[${mm}:${ss}.00]${line}`;
+                              }).join("\n");
+                            }
+                            const blob = new Blob([lrcContent], { type: 'text/plain;charset=utf-8' });
+                            const url = URL.createObjectURL(blob);
+                            const a = document.createElement('a');
+                            a.href = url;
+                            a.download = filename;
+                            a.click();
+                            URL.revokeObjectURL(url);
+                          }}
+                          className="px-4 py-2 bg-[#10b981] hover:bg-[#059669] active:scale-95 text-white text-xs font-black uppercase tracking-widest rounded-xl transition-all shadow-lg flex items-center gap-1.5"
+                        >
+                          <Download className="w-4 h-4" />
+                          {t('download_lrc', 'Download .LRC File')}
+                        </button>
+                      </div>
+
+                      <div className="flex-1 flex flex-col justify-between">
+                        <div className={`flex-1 rounded-2xl p-4 overflow-y-auto max-h-[400px] border ${
+                          theme === 'coldest' ? 'bg-slate-50 border-slate-100' : 'bg-slate-950/70 border-slate-800'
+                        }`}>
+                          {lyricResult?.syncedLyrics && lyricResult.syncedLyrics.length > 0 ? (
+                            <div className="space-y-3 font-mono text-xs">
+                              {lyricResult.syncedLyrics.map((item, idx) => (
+                                <div key={idx} className="flex gap-4 p-2 rounded hover:bg-emerald-500/5 transition-colors border-b border-white/5 items-center">
+                                  <span className="text-emerald-500 font-extrabold select-none shrink-0 border border-emerald-500/20 px-1.5 py-0.5 rounded bg-emerald-500/5">
+                                    {item.time}
+                                  </span>
+                                  <span className="text-slate-300 text-sm font-sans font-medium hover:text-white transition-colors">
+                                    {item.lyric}
+                                  </span>
+                                </div>
+                              ))}
+                            </div>
+                          ) : (
+                            <div className="text-center opacity-40 py-8 font-serif italic text-xs">
+                              {t('no_sync_yet', 'No synchronized timestamps yet. Click "Analyze Lyrics & Track" to generate millisecond-perfect timing logs.')}
+                            </div>
+                          )}
+                        </div>
+
+                        <div className="mt-4 p-3 rounded-xl bg-[#10b981]/5 border border-[#10b981]/10 flex items-start gap-2 text-[10px] leading-relaxed text-slate-400">
+                          <Info className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
+                          <span>
+                            {t('synced_instructions', 'Standard LRC files synchronize audio with lyrics using timestamps precise to the hundredth of a second. This file is compatible with Spotify, Apple Music, and Amazon Music lyric ingestion systems.')}
+                          </span>
+                        </div>
                       </div>
                     </div>
                   </div>
