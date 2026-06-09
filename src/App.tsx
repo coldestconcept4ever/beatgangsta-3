@@ -6724,6 +6724,7 @@ The AI was unable to verify these parameters. Please investigate.`;
                           onContactSupport={handleContactSupport}
                           onMinimize={() => handleMinimizeCritique(critique, idx)}
                           isMultiBandMode={isMultiBandMode}
+                           dawType={dawType}
                         />
                       </ErrorBoundary>
                     </motion.div>

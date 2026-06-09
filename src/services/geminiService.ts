@@ -2581,6 +2581,177 @@ ${getLanguageInstruction(language)}
     return { query, advice: `I'm sorry, I couldn't generate a response. Details: ${e.message || e}`, recommendedChain: [] };
   }
 };
+
+export const getLyricAnalysis = async (
+  plugins: VSTPlugin[],
+  audioBase64: string | undefined,
+  mimeType: string | undefined,
+  lyrics: string,
+  context: string,
+  audioUrl?: string,
+  geminiFileUri?: string,
+  language: string = 'en',
+  analogHardware: Hardware[] = [],
+  uploadedStems?: any[]
+): Promise<{
+  dubWords: string;
+  cadenceAndDelivery: string;
+  vocalChain: any[];
+  additionalAdvice: string;
+  timeline?: any[];
+}> => {
+  const ai = getAI();
+  const pluginListStr = plugins.map(p => `${p.vendor} - ${p.name} (${p.type})`).join('\n');
+  const hasApollo = analogHardware.some(h => h.name.toLowerCase().includes('apollo'));
+  const apolloInst = analogHardware.find(h => h.name.toLowerCase().includes('apollo'))?.name || 'Apollo';
+  const apolloConstraint = hasApollo ? `
+    CRITICAL: The user has an ${apolloInst} interface. When suggesting plugins for this mix, you MUST ALWAYS prioritize UAD (Universal Audio) plugins from their library if they are suitable for the task.
+  ` : '';
+
+  const systemInstructions = `
+    You are an expert audio engineer, vocal producer, and rap/melodic vocal coach.
+    You are analyzing lyrics and custom context/user guidance for an audio project.
+    
+    CRITICAL RULES:
+    1. ZERO HALLUCINATION (FIREABLE OFFENSE): You MUST ONLY suggest parameters that actually exist on the real-world interface of the specified plugin as documented in its official manual. NEVER invent, guess, hallucinate, or inject parameters that do not exist on that plugin. If you do not know the exact name of a parameter on the UI, DO NOT list it at all.
+    2. STRICT UNIT ACCURACY: You MUST use the exact, correct unit of measurement for every parameter (frequencies in Hz/kHz, gain/threshold in dB, time in ms/s).
+    3. Proper gain staging must be applied on compressing or EQ actions.
+    
+    ${PRO_Q_3_LAYOUT_PROMPT}
+    ${GULLFOSS_SPEC_PROMPT}
+    ${OZONE_SPEC_PROMPT}
+    ${SONIBLE_SPEC_PROMPT}
+    ${RC20_SPEC_PROMPT}
+    ${ATR102_SPEC_PROMPT}
+    ${GLOBAL_PARAMETER_STRICTNESS_PROMPT}
+    ${apolloConstraint}
+
+    Based on the provided full mix, stems (if available), current lyrics, and user context, you must output a valid JSON response containing advice on vocal dubbing, performance delivery, and processing.
+    
+    The JSON structure MUST have these EXACT keys:
+    - 'dubWords': A list of specific words from the lyrics that the user should record dubs/overdubs/ad-libs/reinforcements for. Explain why these words or phrases have significant structural, rhythmic, or emotional weight. Highlight which words to emphasize.
+    - 'cadenceAndDelivery': A detailed description of the performance delivery. Explain what cadence should be used, when to match the rhythm, and specific vocal delivery styling: e.g. whether it should be a higher pitched dub, screaming dub, lower pitched, whisper dub, or double-tracked, and how it syncs with the backing instrumental or full mix.
+    - 'vocalChain': A recommended chain of plugins (at least 3 and max 5) from the user's available plugin list to process these dubbed/vocal elements to give them premium polish, dimension, and fit in the mix. Each plugin MUST have:
+        - 'name': The exact name of the plugin from the list.
+        - 'purpose': Brief description of its usage.
+        - 'deepDive': An array of parameters with 'parameter', 'value', and 'explanation'.
+    - 'additionalAdvice': Flexible section answering any other specific request or context the user typed in the custom context input box, mapping out performance strategy, lyrics modifications, or general vibes.
+    - 'timeline': An array of exactly 4 track objects representing a 16-bar multitrack timeline of the vocal/FX structure. The tracks MUST be named:
+        1. 'Lead Vocal'
+        2. 'Overdubs/Dubs'
+        3. 'Ad-libs/Accents'
+        4. 'FX & Sweeps'
+        Each track MUST contain a 'blocks' array of objects mapped sequentially across the timeline. Each block object has:
+            - 'id': A unique string id (e.g., 'dub-sec-1')
+            - 'text': Short text representing the lyric / vocal technique / delay throw / sweep effect (e.g. 'Yeah!', '[CHORUS]', 'Vocal Sweep', 'Delay Throw'). Max 15 chars.
+            - 'startBar': The starting bar of the segment (integer from 1 to 16)
+            - 'durationBars': Spanned length in bars (integer from 1 to 4)
+            - 'color': Aesthetic visual theme color for this segment (one of: 'sky', 'indigo', 'rose', 'emerald', 'violet', 'amber')
+            - 'intensity': Numeric visual amplitude level (integer from 15 to 100)
+            - 'instructions': Precise, granular coaching and mixing directives for this physical segment, mapping details on automated effects, volume ducking, sidechains, polarity adjustments, or performance execution.
+    
+    Only recommend plugins from this list:
+    ${pluginListStr}
+  `;
+
+  const parts: any[] = [];
+  
+  // 1. Add main mix file metadata/content
+  if (geminiFileUri && geminiFileUri.trim() !== '') {
+    let uri = geminiFileUri;
+    if (uri.includes('/files/')) {
+       const uriParts = uri.split('/files/');
+       uri = 'https://generativelanguage.googleapis.com/v1beta/files/' + uriParts[1];
+    } else if (!uri.startsWith('https://')) {
+       uri = 'https://generativelanguage.googleapis.com/v1beta/' + (uri.startsWith('files/') ? uri : 'files/' + uri);
+    }
+    parts.push({ text: "This is the FULL MIX/MASTER stereo audio for global context:" });
+    parts.push({ fileData: { fileUri: uri, mimeType: mimeType || 'audio/mpeg' } });
+  } else if (audioBase64 && audioBase64.trim() !== '') {
+    parts.push({ text: "This is the FULL MIX/MASTER stereo audio for global context:" });
+    parts.push({ inlineData: { data: audioBase64, mimeType: mimeType || 'audio/mpeg' } });
+  }
+
+  // 2. Add individual stems if available
+  if (uploadedStems && uploadedStems.length > 0) {
+    parts.push({ text: "These are the INDIVIDUAL STEMS that make up the mix:" });
+    for (const stem of uploadedStems) {
+      if (stem.uri && stem.uri.trim() !== '') {
+        let uri = stem.uri;
+        if (uri.includes('/files/')) {
+           const uriParts = uri.split('/files/');
+           uri = 'https://generativelanguage.googleapis.com/v1beta/files/' + uriParts[1];
+        } else if (!uri.startsWith('https://')) {
+           uri = 'https://generativelanguage.googleapis.com/v1beta/' + (uri.startsWith('files/') ? uri : 'files/' + uri);
+        }
+        let stemMimeType = stem.mimeType || 'audio/mpeg';
+        parts.push({ text: `Stem Name: ${stem.name || stem.file?.name || 'Unknown Stem'}` });
+        parts.push({ fileData: { fileUri: uri, mimeType: stemMimeType } });
+      } else if (stem.base64 && stem.base64.trim() !== '') {
+        let stemMimeType = stem.mimeType || 'audio/mpeg';
+        parts.push({ text: `Stem Name: ${stem.name || stem.file?.name || 'Unknown Stem'}` });
+        parts.push({ inlineData: { data: stem.base64, mimeType: stemMimeType } });
+      }
+    }
+  }
+
+  // 3. User request
+  const userRequestPrompt = `
+    The user is asking for lyric analysis and dubbing advice.
+    SONG LYRICS:
+    """
+    ${lyrics}
+    """
+    
+    USER CUSTOM CONTEXT / REQUEST:
+    """
+    ${context || 'Analyze these lyrics and recommend dub and processing strategies.'}
+    """
+    
+    SYSTEM INSTRUCTIONS & EXPECTED JSON RESPONSE STRUCTURE:
+    ${systemInstructions}
+    
+    CRITICAL: Respond with a valid JSON object ONLY. DO NOT include extra markdown formatting other than enclosing the JSON block.
+  `;
+
+  parts.push({ text: userRequestPrompt });
+
+  try {
+    const response = await ai.models.generateContent({
+      model: "gemini-3.5-flash",
+      contents: [{ role: 'user', parts }],
+      config: {
+        customAction: 'critique',
+        responseMimeType: "application/json",
+        safetySettings: [
+          { category: HarmCategory.HARM_CATEGORY_HARASSMENT, threshold: HarmBlockThreshold.OFF },
+          { category: HarmCategory.HARM_CATEGORY_HATE_SPEECH, threshold: HarmBlockThreshold.OFF },
+          { category: HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT, threshold: HarmBlockThreshold.OFF },
+          { category: HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT, threshold: HarmBlockThreshold.OFF }
+        ]
+      }
+    });
+
+    const parsed = JSON.parse(sanitizeJSON(response.text || '{}'));
+    return {
+      dubWords: parsed.dubWords || 'None recommended',
+      cadenceAndDelivery: parsed.cadenceAndDelivery || 'No delivery specifications generated',
+      vocalChain: parsed.vocalChain || [],
+      additionalAdvice: parsed.additionalAdvice || 'No additional advice.',
+      timeline: parsed.timeline || []
+    };
+  } catch (error) {
+    console.error("Gemini API Error (Lyric Tool):", error);
+    return {
+      dubWords: "Could not perform automated lyric analysis due to a connection error.",
+      cadenceAndDelivery: "Unable to synthesize cadence & delivery advice. Please ensure your files are accessible.",
+      vocalChain: [],
+      additionalAdvice: `Error details: ${error instanceof Error ? error.message : String(error)}`,
+      timeline: []
+    };
+  }
+};
+
 export const getGangstaVoxRecipe = async (recipe: BeatRecipe | SavedRecipe, plugins: VSTPlugin[], analogHardware: Hardware[], language: string = 'en', vocalVibeGoal: string = '') => {
   const ai = getAI();
   const receiverStr = plugins.length > 0 
