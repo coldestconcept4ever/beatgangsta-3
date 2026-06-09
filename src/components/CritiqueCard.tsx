@@ -165,7 +165,7 @@ export const CritiqueCard: React.FC<CritiqueCardProps> = ({ critique, stems = []
   const [lyricContext, setLyricContext] = useState(() => (critique as any).lyricAnalysis?.context || "");
   const [isAnalyzingLyrics, setIsAnalyzingLyrics] = useState(false);
   const [lyricResult, setLyricResult] = useState<{
-    dubWords: string;
+    dubWords: any;
     cadenceAndDelivery: string;
     vocalChain: any[];
     additionalAdvice: string;
@@ -1420,9 +1420,57 @@ export const CritiqueCard: React.FC<CritiqueCardProps> = ({ critique, stems = []
                       <h6 className="text-[10px] font-black uppercase tracking-widest opacity-60 mb-2">
                         {t('suggested_dub_words', 'Suggested Dub Words / Performance Accents')}
                       </h6>
-                      <p className="text-sm font-bold leading-relaxed whitespace-pre-line bg-sky-500/5 p-4 rounded-xl border border-sky-500/10 text-current">
-                        {lyricResult.dubWords}
-                      </p>
+                      <div className="bg-sky-500/5 p-4 rounded-xl border border-sky-500/10 text-current">
+                        {typeof lyricResult.dubWords === 'string' ? (
+                          <p className="text-sm font-bold leading-relaxed whitespace-pre-line">
+                            {lyricResult.dubWords}
+                          </p>
+                        ) : Array.isArray(lyricResult.dubWords) ? (
+                          <div className="space-y-3">
+                            {lyricResult.dubWords.map((item: any, idx: number) => {
+                              if (typeof item === 'string') {
+                                return (
+                                  <p key={idx} className="text-sm font-bold leading-relaxed">
+                                    • {item}
+                                  </p>
+                                );
+                              } else if (typeof item === 'object' && item !== null) {
+                                const word = item.word || item.text || item.phrase || '';
+                                const emphasis = item.emphasis || item.accent || item.styling || '';
+                                const explanation = item.explanation || item.reason || item.why || item.comment || '';
+                                return (
+                                  <div key={idx} className={`p-3 rounded-lg border space-y-1 ${
+                                    theme === 'coldest' ? 'bg-white border-sky-200' : 'bg-black/10 border-sky-500/15'
+                                  }`}>
+                                    <div className="flex items-center gap-2 flex-wrap">
+                                      {word && (
+                                        <span className="text-xs font-black uppercase tracking-wider text-sky-500 bg-sky-500/10 px-2 py-0.5 rounded">
+                                          {word}
+                                        </span>
+                                      )}
+                                      {emphasis && (
+                                        <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-amber-500/10 text-amber-500 uppercase tracking-widest">
+                                          {emphasis}
+                                        </span>
+                                      )}
+                                    </div>
+                                    {explanation && (
+                                      <p className="text-xs text-current font-medium leading-relaxed p-0 m-0 border-0">
+                                        {explanation}
+                                      </p>
+                                    )}
+                                  </div>
+                                );
+                              }
+                              return null;
+                            })}
+                          </div>
+                        ) : (
+                          <p className="text-sm font-bold leading-relaxed">
+                            {JSON.stringify(lyricResult.dubWords)}
+                          </p>
+                        )}
+                      </div>
                     </div>
 
                     {/* Cadence & Delivery Details */}
