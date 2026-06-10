@@ -2969,11 +2969,11 @@ The AI was unable to verify these parameters. Please investigate.`;
     if (!input.trim()) return;
     const lines = input.trim().split('\n');
     const isReaperIni = lines.some(l => l.includes('=') && (l.includes('.dll') || l.includes('.vst3')));
-    const isMixcraftXml = input.includes('<VSTPlugins>') || input.includes('<Plugin ') || input.includes('<vst-inventory>');
+    const isMixcraftXml = input.includes('<VSTPlugins>') || input.includes('<Plugin ') || input.includes('<vst-inventory>') || input.includes('<PreSonus>') || input.includes('<Components>') || input.includes('<Component ') || input.includes('<?xml') || input.includes('<Settings>');
     let parsed: VSTPlugin[] = [];
 
     if (isReaperIni) {
-      parsed = lines.map(line => {
+      parsed = lines.map((line): VSTPlugin | null => {
         if (!line.includes('=')) return null;
         const [filename, rest] = line.split('=');
         if (!rest) return null;
@@ -2988,42 +2988,63 @@ The AI was unable to verify these parameters. Please investigate.`;
           type: filename.toLowerCase().includes('vst3') ? 'VST3' : 'VST2',
           version: 'N/A',
           lastModified: 'Found in INI',
+          id: parts[0]?.trim(),
         };
       }).filter((p): p is VSTPlugin => p !== null && p.name !== '');
     } else if (isMixcraftXml) {
-      // Basic Mixcraft VST inventory XML parsing using regex
-      const pluginMatches = input.matchAll(/<Plugin\s+([^>]+)>/gi);
+      // General XML inventory parsing (Mixcraft, Studio One Components lists, etc.)
+      const pluginMatches = input.matchAll(/<([a-zA-Z0-9_-]+)\s+([^>]+)>/gi);
       for (const match of pluginMatches) {
-        const attrText = match[1];
+        const attrText = match[2];
         const nameMatch = attrText.match(/name="([^"]+)"/i);
-        const vendorMatch = attrText.match(/vendor="([^"]+)"/i);
+        const vendorMatch = attrText.match(/(?:vendor|manufacturer|developer|publisher)="([^"]+)"/i);
+        const idMatch = attrText.match(/(?:classID|classId|id|uniqueID|uniqueId|uid|uuid)="([^"]+)"/i);
+        const typeMatch = attrText.match(/(?:type|category|pluginType)="([^"]+)"/i);
         const filenameMatch = attrText.match(/filename="([^"]+)"/i);
         
         if (nameMatch) {
           const filename = filenameMatch ? filenameMatch[1] : '';
+          const rawType = typeMatch ? typeMatch[1] : '';
+          const isVst3 = filename.toLowerCase().includes('vst3') || rawType.toLowerCase().includes('vst3') || attrText.toLowerCase().includes('vst3');
           parsed.push({
             name: nameMatch[1],
             vendor: vendorMatch ? vendorMatch[1] : 'Unknown',
-            type: filename.toLowerCase().includes('vst3') ? 'VST3' : 'VST2',
+            type: isVst3 ? 'VST3' : 'VST2',
             version: 'N/A',
-            lastModified: 'Found in Mixcraft XML',
+            lastModified: 'Found in XML',
+            id: idMatch ? idMatch[1].replace(/[{}]/g, '').trim() : undefined,
           });
         }
       }
     } else {
       const startIndex = lines[0] && lines[0].toLowerCase().includes('vendor') ? 1 : 0;
-      parsed = lines.slice(startIndex).map(line => {
+      parsed = lines.slice(startIndex).map((line): VSTPlugin | null => {
         // Try CSV parsing first
         const parts = line.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/);
         if (parts.length >= 2) {
           const rawName = parts[1]?.replace(/"/g, '').trim() || 'Unknown';
           const rawVendor = parts[0]?.replace(/"/g, '').trim() || 'Unknown';
+          const rawType = parts[2]?.replace(/"/g, '').trim() || 'Unknown';
+          const rawVersion = parts[3]?.replace(/"/g, '').trim() || 'Unknown';
+          const rawLastMod = parts[4]?.replace(/"/g, '').trim() || 'Unknown';
+          
+          let parsedId: string | undefined = undefined;
+          for (const part of parts) {
+            const cleanPart = part.replace(/[{}"]/g, '').trim();
+            // Match standard GUIDs or hex hashes of length 16, 32, or standard uuid pattern
+            if (/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(cleanPart) || /^[0-9a-f]{32}$/i.test(cleanPart) || /^[0-9a-f]{16}$/i.test(cleanPart)) {
+              parsedId = cleanPart;
+              break;
+            }
+          }
+
           return {
             vendor: rawVendor,
             name: rawName,
-            type: parts[2]?.replace(/"/g, '').trim() || 'Unknown',
-            version: parts[3]?.replace(/"/g, '').trim() || 'Unknown',
-            lastModified: parts[4]?.replace(/"/g, '').trim() || 'Unknown',
+            type: rawType,
+            version: rawVersion,
+            lastModified: rawLastMod,
+            id: parsedId
           };
         }
         

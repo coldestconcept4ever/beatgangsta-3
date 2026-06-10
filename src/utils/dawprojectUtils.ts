@@ -295,53 +295,56 @@ export const findBestUserPluginMatch = (suggestedName: string, userPlugins: VSTP
 const getPluginMetadata = (suggestedName: string, isInstrument: boolean, userPlugins: VSTPlugin[] = []): { deviceName: string, deviceVendor: string, deviceID: string, type: 'vst2' | 'vst3' } => {
   const userMatch = findBestUserPluginMatch(suggestedName, userPlugins);
   if (userMatch) {
-    const isVst3 = userMatch.type.toLowerCase().includes('vst3');
+    const isVst3 = !userMatch.type.toLowerCase().includes('vst2');
     const cleanUserMatchName = userMatch.name.toLowerCase();
-    let deviceID = "";
-    if (cleanUserMatchName.includes("pro-q 3") || cleanUserMatchName.includes("pro-q3") || cleanUserMatchName.includes("pro q 3")) {
-      deviceID = "5653545251336166616266696c746572";
-    } else if (cleanUserMatchName.includes("cla-76") || cleanUserMatchName.includes("cla76")) {
-      deviceID = "5653544337365377617665737368656c";
-    } else if (cleanUserMatchName.includes("cla-2a") || cleanUserMatchName.includes("cla2a")) {
-      deviceID = "5653544332415377617665737368656c";
-    } else if (cleanUserMatchName.includes("pro-c 2") || cleanUserMatchName.includes("pro-c2") || cleanUserMatchName.includes("pro c 2")) {
-      deviceID = "5653545250433266616266696c746572";
-    } else if (cleanUserMatchName.includes("pro-ds") || cleanUserMatchName.includes("pro ds")) {
-      deviceID = "56535452445366616266696c74657244";
-    } else if (cleanUserMatchName.includes("pro-l 2") || cleanUserMatchName.includes("pro-l2") || cleanUserMatchName.includes("pro l 2")) {
-      deviceID = "56535452504c3266616266696c746572";
-    } else if (cleanUserMatchName.includes("decapitator")) {
-      deviceID = "56535444637074736f756e64746f7973";
-    } else if (cleanUserMatchName.includes("saturn 2") || cleanUserMatchName.includes("saturn2")) {
-      deviceID = "5653545253326166616266696c746572";
-    } else if (cleanUserMatchName.includes("vintageverb") || cleanUserMatchName.includes("vintage verb")) {
-      deviceID = "5653545656524276616c68616c6c6176";
-    } else if (cleanUserMatchName.includes("pro-r 2") || cleanUserMatchName.includes("pro-r2") || cleanUserMatchName.includes("pro r 2")) {
-      deviceID = "5653545250523266616266696c746572";
-    } else if (cleanUserMatchName.includes("delay") && cleanUserMatchName.includes("valhalla")) {
-      deviceID = "56535456444c5976616c68616c6c6164";
-    } else if (cleanUserMatchName.includes("mixtool")) {
-      deviceID = "5653544d6978746f6f6c533130303030";
-    } else if (cleanUserMatchName.includes("microshift")) {
-      deviceID = "5653544d637368736f756e64746f7973";
-    } else if (cleanUserMatchName.includes("soothe2") || cleanUserMatchName.includes("soothe 2")) {
-      deviceID = "565354536f6f74326f616b736f756e64";
-    } else if (cleanUserMatchName.includes("auto-tune pro") || cleanUserMatchName.includes("autotune pro")) {
-      deviceID = "56535441545039616e74617265736174";
-    } else if (cleanUserMatchName.includes("serum")) {
-      deviceID = "565354586d4e79736572756d78363400";
-    } else if (cleanUserMatchName.includes("nexus")) {
-      deviceID = "5653544e5853336e6578757373706163";
-    } else if (cleanUserMatchName.includes("omnisphere")) {
-      deviceID = "5653544f5048526f6d6e697370686572";
-    } else if (cleanUserMatchName.includes("kontakt") || cleanUserMatchName.includes("contact")) {
-      deviceID = "5653544e694f386b6f6e74616b743800";
-    } else if (cleanUserMatchName.includes("sublab")) {
-      deviceID = "565354534c41427375626c6162767374";
-    } else if (cleanUserMatchName.includes("keyszone")) {
-      deviceID = "5653544b5a434c6b6579737a6f6e6563";
-    } else {
-      deviceID = generateDeterministicDeviceID(userMatch.name, userMatch.vendor, isVst3);
+    let deviceID = userMatch.id || "";
+    
+    if (!deviceID) {
+      if (cleanUserMatchName.includes("pro-q 3") || cleanUserMatchName.includes("pro-q3") || cleanUserMatchName.includes("pro q 3")) {
+        deviceID = "5653545251336166616266696c746572";
+      } else if (cleanUserMatchName.includes("cla-76") || cleanUserMatchName.includes("cla76")) {
+        deviceID = "5653544337365377617665737368656c";
+      } else if (cleanUserMatchName.includes("cla-2a") || cleanUserMatchName.includes("cla2a")) {
+        deviceID = "5653544332415377617665737368656c";
+      } else if (cleanUserMatchName.includes("pro-c 2") || cleanUserMatchName.includes("pro-c2") || cleanUserMatchName.includes("pro c 2")) {
+        deviceID = "5653545250433266616266696c746572";
+      } else if (cleanUserMatchName.includes("pro-ds") || cleanUserMatchName.includes("pro ds")) {
+        deviceID = "56535452445366616266696c74657244";
+      } else if (cleanUserMatchName.includes("pro-l 2") || cleanUserMatchName.includes("pro-l2") || cleanUserMatchName.includes("pro l 2")) {
+        deviceID = "56535452504c3266616266696c746572";
+      } else if (cleanUserMatchName.includes("decapitator")) {
+        deviceID = "56535444637074736f756e64746f7973";
+      } else if (cleanUserMatchName.includes("saturn 2") || cleanUserMatchName.includes("saturn2")) {
+        deviceID = "5653545253326166616266696c746572";
+      } else if (cleanUserMatchName.includes("vintageverb") || cleanUserMatchName.includes("vintage verb")) {
+        deviceID = "5653545656524276616c68616c6c6176";
+      } else if (cleanUserMatchName.includes("pro-r 2") || cleanUserMatchName.includes("pro-r2") || cleanUserMatchName.includes("pro r 2")) {
+        deviceID = "5653545250523266616266696c746572";
+      } else if (cleanUserMatchName.includes("delay") && cleanUserMatchName.includes("valhalla")) {
+        deviceID = "56535456444c5976616c68616c6c6164";
+      } else if (cleanUserMatchName.includes("mixtool")) {
+        deviceID = "5653544d6978746f6f6c533130303030";
+      } else if (cleanUserMatchName.includes("microshift")) {
+        deviceID = "5653544d637368736f756e64746f7973";
+      } else if (cleanUserMatchName.includes("soothe2") || cleanUserMatchName.includes("soothe 2")) {
+        deviceID = "565354536f6f74326f616b736f756e64";
+      } else if (cleanUserMatchName.includes("auto-tune pro") || cleanUserMatchName.includes("autotune pro")) {
+        deviceID = "56535441545039616e74617265736174";
+      } else if (cleanUserMatchName.includes("serum")) {
+        deviceID = "565354586d4e79736572756d78363400";
+      } else if (cleanUserMatchName.includes("nexus")) {
+        deviceID = "5653544e5853336e6578757373706163";
+      } else if (cleanUserMatchName.includes("omnisphere")) {
+        deviceID = "5653544f5048526f6d6e697370686572";
+      } else if (cleanUserMatchName.includes("kontakt") || cleanUserMatchName.includes("contact")) {
+        deviceID = "5653544e694f386b6f6e74616b743800";
+      } else if (cleanUserMatchName.includes("sublab")) {
+        deviceID = "565354534c41427375626c6162767374";
+      } else if (cleanUserMatchName.includes("keyszone")) {
+        deviceID = "5653544b5a434c6b6579737a6f6e6563";
+      } else {
+        deviceID = generateDeterministicDeviceID(userMatch.name, userMatch.vendor, isVst3);
+      }
     }
 
     return {
