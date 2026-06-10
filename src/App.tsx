@@ -3016,10 +3016,10 @@ The AI was unable to verify these parameters. Please investigate.`;
     } else if (isMixcraftXml) {
       // General XML / Studio One settings parsing
       const xmlPluginInfos: XMLPluginInfo[] = [];
-      const tagMatches = input.matchAll(/<PlugInInfo\s+([^>]+)>/gi);
+      const tagMatches = input.matchAll(/<([a-zA-Z0-9_-]+)\s+([^>]+)>/gi);
       
       for (const match of tagMatches) {
-        const attrText = match[1];
+        const attrText = match[2];
         const classIDMatch = attrText.match(/classID="([^"]+)"/i);
         const sortPathMatch = attrText.match(/sortPath="([^"]+)"/i);
         
@@ -3057,7 +3057,14 @@ The AI was unable to verify these parameters. Please investigate.`;
       // Separate lines that look like CSV entries
       const csvLines = lines.filter(line => {
         const trimmed = line.trim();
-        return trimmed && !trimmed.startsWith('<') && !trimmed.startsWith('?') && !trimmed.startsWith('</') && !trimmed.startsWith(']>') && !trimmed.startsWith('<!');
+        if (!trimmed) return false;
+        // Skip obvious XML structure rows
+        if (trimmed.startsWith('<') || trimmed.startsWith('?') || trimmed.startsWith('/') || trimmed.startsWith(']') || trimmed.startsWith('!')) {
+          return false;
+        }
+        // Must have at least a few commas to be a valid CSV line, and not be XML attributes
+        const parts = trimmed.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/);
+        return parts.length >= 2 && !trimmed.toLowerCase().includes('<?xml') && !trimmed.toLowerCase().includes('xmlns=');
       });
 
       const csvParsed: VSTPlugin[] = [];
@@ -3083,13 +3090,26 @@ The AI was unable to verify these parameters. Please investigate.`;
             const cleanCsvName = cleanStringForMatching(plugin.name);
             
             // Heuristic 1: VST2 decoded name exact or substring match
-            const matchedXml = xmlPluginInfos.find(info => {
+            let matchedXml = xmlPluginInfos.find(info => {
               if (!info.decodedName) return false;
               const cleanDecoded = cleanStringForMatching(info.decodedName);
               return cleanCsvName === cleanDecoded || 
                      (cleanDecoded.length >= 4 && cleanCsvName.includes(cleanDecoded)) ||
                      (cleanCsvName.length >= 4 && cleanDecoded.includes(cleanCsvName));
             });
+
+            // Heuristic 1.5: Match via sortPath (highly accurate for VST3 plug-ins!)
+            if (!matchedXml && xmlPluginInfos.length > 0) {
+              matchedXml = xmlPluginInfos.find(info => {
+                if (!info.sortPath) return false;
+                const pathParts = info.sortPath.split('/');
+                const lastPart = pathParts[pathParts.length - 1]; // e.g. "Pro-Q 3" from "FabFilter/Pro-Q 3"
+                const cleanSortName = cleanStringForMatching(lastPart);
+                return cleanCsvName === cleanSortName || 
+                       (cleanSortName.length >= 4 && cleanCsvName.includes(cleanSortName)) ||
+                       (cleanCsvName.length >= 4 && cleanSortName.includes(cleanSortName));
+              });
+            }
 
             if (matchedXml) {
               plugin.id = matchedXml.cleanID;
@@ -3320,40 +3340,74 @@ The AI was unable to verify these parameters. Please investigate.`;
     }
   };
 
-  const processFile = async (file: File) => {
+  const processFiles = async (files: File[]) => {
     if (!requireAuth()) return;
+    if (files.length === 0) return;
     
-    const fileName = file.name.toLowerCase();
-    if (fileName.includes('reaper')) {
-      setDawType('Reaper');
-    } else if (fileName.includes('studio one') || fileName.includes('studioone')) {
-      setDawType('Studio One');
-    } else if (fileName.includes('fl studio') || fileName.includes('flstudio')) {
-      setDawType('FL Studio');
-    } else if (fileName.includes('mixcraft') || fileName.includes('vst-inventory')) {
-      setDawType('Mixcraft');
+    // Check files to determine DAW type
+    for (const file of files) {
+      const fileName = file.name.toLowerCase();
+      if (fileName.includes('reaper')) {
+        setDawType('Reaper');
+      } else if (fileName.includes('studio one') || fileName.includes('studioone')) {
+        setDawType('Studio One');
+      } else if (fileName.includes('fl studio') || fileName.includes('flstudio')) {
+        setDawType('FL Studio');
+      } else if (fileName.includes('mixcraft') || fileName.includes('vst-inventory')) {
+        setDawType('Mixcraft');
+      }
     }
 
-    return new Promise<void>((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onload = async (event) => {
-        try {
-          const content = event.target?.result as string;
-          if (content) {
-            setCsvInput(content);
-            await parsePlugins(content);
+    const readPromises = files.map(file => {
+      return new Promise<string>((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = (event) => {
+          resolve((event.target?.result as string) || '');
+        };
+        reader.onerror = () => {
+          reject(new Error(`Failed to read file ${file.name}`));
+        };
+
+        // Read the first 4 bytes to check for encoding BOM or null distribution (UTF-16 vs UTF-8)
+        const headerReader = new FileReader();
+        headerReader.onload = () => {
+          const arr = new Uint8Array(headerReader.result as ArrayBuffer);
+          let encoding = 'utf-8';
+          if (arr.length >= 2) {
+            if (arr[0] === 0xFF && arr[1] === 0xFE) {
+              encoding = 'utf-16le';
+            } else if (arr[0] === 0xFE && arr[1] === 0xFF) {
+              encoding = 'utf-16be';
+            } else if (arr[0] === 0x00 && arr[1] !== 0x00) {
+              // No BOM but looks like UTF-16BE (even bytes are 0)
+              encoding = 'utf-16be';
+            } else if (arr[0] !== 0x00 && arr[1] === 0x00) {
+              // No BOM but looks like UTF-16LE (odd bytes are 0)
+              encoding = 'utf-16le';
+            }
           }
-          resolve();
-        } catch (err) {
-          reject(err);
-        }
-      };
-      reader.onerror = () => {
-        setError("Failed to read the file. Please try again.");
-        reject(new Error("Failed to read file"));
-      };
-      reader.readAsText(file);
+          reader.readAsText(file, encoding);
+        };
+        headerReader.onerror = () => {
+          reader.readAsText(file, 'utf-8');
+        };
+        headerReader.readAsArrayBuffer(file.slice(0, 4));
+      });
     });
+
+    try {
+      const fileContents = await Promise.all(readPromises);
+      // Join contents of files. This allows drop zone to accept multiple files simultaneously
+      // (like both PluginManagement.csv and PluginPresentation.settings files)
+      const combinedContent = fileContents.join('\n\n');
+      if (combinedContent) {
+        setCsvInput(combinedContent);
+        await parsePlugins(combinedContent);
+      }
+    } catch (err: any) {
+      setError(err?.message || "An error occurred while reading your files.");
+      throw err;
+    }
   };
 
   const handleAnalogSave = async (instruments: Hardware[], hardware: Hardware[]): Promise<boolean> => {
@@ -3538,9 +3592,9 @@ The AI was unable to verify these parameters. Please investigate.`;
   };
 
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    processFile(file).catch(err => {
+    const files = e.target.files ? Array.from(e.target.files) : [];
+    if (files.length === 0) return;
+    processFiles(files).catch(err => {
       console.error("Error processing file:", err);
       if (err?.message?.includes("INSUFFICIENT_CREDITS") || err?.message?.includes("402")) {
         setCreditError(err.message);
@@ -3567,9 +3621,9 @@ The AI was unable to verify these parameters. Please investigate.`;
   const handleDrop = (e: React.DragEvent) => {
     e.preventDefault();
     setIsDragging(false);
-    const file = e.dataTransfer.files?.[0];
-    if (!file) return;
-    processFile(file).catch(err => {
+    const files = e.dataTransfer.files ? Array.from(e.dataTransfer.files) : [];
+    if (files.length === 0) return;
+    processFiles(files).catch(err => {
       console.error("Error processing file in drop:", err);
       if (err?.message?.includes("INSUFFICIENT_CREDITS") || err?.message?.includes("402")) {
         setCreditError(err.message);
@@ -6097,7 +6151,7 @@ The AI was unable to verify these parameters. Please investigate.`;
                   </div>
                 </div>
               )}
-              <input type="file" ref={fileInputRef} className="hidden" accept=".csv,.txt,.ini,.xml" onChange={(e) => {
+              <input type="file" ref={fileInputRef} className="hidden" accept=".csv,.txt,.ini,.xml" multiple onChange={(e) => {
                 handleFileUpload(e);
               }} />
             </div>

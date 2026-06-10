@@ -306,12 +306,12 @@ export const DAWGuide: React.FC<DAWGuideProps> = ({ theme, onClose }) => {
                   <span className="text-[10px] uppercase bg-emerald-500/20 text-emerald-400 px-2 py-0.5 rounded font-black ml-auto">Recommended</span>
                 </h4>
                 <p className="text-xs leading-relaxed mb-3 opacity-90">
-                  Because <strong className="font-bold">PluginPresentation.settings</strong> only contains internal technical IDs (GUIDs) and <strong className="font-bold">PluginManagement.csv</strong> has human-readable names but lacks GUID mapping, you can now upload/paste <strong className="font-black text-emerald-400">BOTH</strong>!
+                  Because <strong className="font-bold">PluginPresentation.settings</strong> only contains internal technical IDs (GUIDs) and <strong className="font-bold">PluginManagement.csv</strong> has human-readable names but lacks GUID mapping, you can now upload or drop <strong className="font-black text-emerald-400">BOTH files simultaneously</strong>!
                 </p>
                 <div className="space-y-2 text-xs leading-relaxed opacity-85">
-                  <p>1. Upload or paste your <strong className="font-bold">PluginManagement.csv</strong> list first to load your named plugins.</p>
-                  <p>2. Next, upload or paste your <strong className="font-bold">PluginPresentation.settings</strong> XML file.</p>
-                  <p>3. Our smart library parser will instantly merge them, matching named plugins with their official Studio One ClassIDs for perfect dawproject exporting!</p>
+                  <p>1. Simply **drag and drop both files together** into the upload area (or select both using the file chooser).</p>
+                  <p>2. Our smart library parser will instantly combine their contents, automatically merging named plugins with their official Studio One ClassIDs for perfect dawproject exporting!</p>
+                  <p className="text-[10px] opacity-75 italic">* Note: You can still paste or import them one-by-one if you prefer, as they will merge into your active session library either way!</p>
                 </div>
               </div>
             </div>
