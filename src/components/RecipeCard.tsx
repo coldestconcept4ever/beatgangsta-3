@@ -332,7 +332,7 @@ export const RecipeCard: React.FC<RecipeCardProps> = ({ recipe: initialRecipe, i
   const handleExportDawProject = async () => {
     setIsExportingDawProject(true);
     try {
-      const blob = await generateDawProjectFromBeatRecipe(recipe);
+      const blob = await generateDawProjectFromBeatRecipe(recipe, plugins);
       const url = URL.createObjectURL(blob);
       const link = document.createElement('a');
       link.href = url;

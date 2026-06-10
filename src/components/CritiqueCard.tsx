@@ -395,7 +395,7 @@ export const CritiqueCard: React.FC<CritiqueCardProps> = ({ critique, stems = []
   const handleExportDawProject = async () => {
     setIsExportingDawProject(true);
     try {
-      const blob = await generateDawProjectFromMixCritique(critique, stems, getVocalTimeline());
+      const blob = await generateDawProjectFromMixCritique(critique, stems, getVocalTimeline(), plugins);
       const url = URL.createObjectURL(blob);
       const link = document.createElement('a');
       link.href = url;

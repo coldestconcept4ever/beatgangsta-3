@@ -46,7 +46,7 @@ import { AdminDashboard } from './components/AdminDashboard';
 import { BetaApplicationModal } from './components/BetaApplicationModal';
 import { AnimatePresence, motion } from 'motion/react';
 import { useTranslation } from 'react-i18next';
-import { Globe, Languages, Star, X, Cpu, Folder as FolderIcon, ShieldCheck, Check, Zap, Rocket, Eye, EyeOff, AlertTriangle, Lock, Shield, Loader2, Gem, Sword, User as UserIcon, Link, Link2, Palette, Sparkles, Drum, Image as ImageIcon, Crown, CheckCircle2, ExternalLink, Facebook, Instagram, Linkedin, Twitter, Activity, Database, Trash2, Music, Video } from 'lucide-react';
+import { Globe, Languages, Star, X, Upload, Cpu, Folder as FolderIcon, ShieldCheck, Check, Zap, Rocket, Eye, EyeOff, AlertTriangle, Lock, Shield, Loader2, Gem, Sword, User as UserIcon, Link, Link2, Palette, Sparkles, Drum, Image as ImageIcon, Crown, CheckCircle2, ExternalLink, Facebook, Instagram, Linkedin, Twitter, Activity, Database, Trash2, Music, Video } from 'lucide-react';
 import tinycolor from 'tinycolor2';
 import Turnstile from 'react-turnstile';
 import { useScreenRecorder } from './hooks/useScreenRecorder';
@@ -6374,8 +6374,77 @@ The AI was unable to verify these parameters. Please investigate.`;
                           >
                            <X className="w-5 h-5 mx-auto" />
                            <span className="text-[10px] uppercase">Clear Stems</span>
-                          </button>
+                           </button>
                         )}
+                      </div>
+
+                      {/* Premium Drag & Drop Area for Multiple Stems */}
+                      <div
+                        onDragOver={(e) => { e.preventDefault(); e.stopPropagation(); setDragOverStemId('multi'); }}
+                        onDragLeave={(e) => { e.preventDefault(); e.stopPropagation(); setDragOverStemId(null); }}
+                        onDrop={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          setDragOverStemId(null);
+                          const files = Array.from(e.dataTransfer.files || []);
+                          if (files.length > 0) {
+                            const newStems = [...stems];
+                            let startIdx = 0;
+                            const firstEmpty = newStems.findIndex(s => !s.file);
+                            if (firstEmpty !== -1) {
+                              startIdx = firstEmpty;
+                            }
+                            let fileIdx = 0;
+                            for (let i = startIdx; i < newStems.length && fileIdx < files.length; i++) {
+                              newStems[i] = { ...newStems[i], file: files[fileIdx], mimeType: files[fileIdx].type, status: 'pending' };
+                              fileIdx++;
+                            }
+                            setStems(newStems);
+                          }
+                        }}
+                        onClick={() => document.getElementById('multi-stem-upload-input')?.click()}
+                        className={`p-6 rounded-2xl border-2 border-dashed transition-all cursor-pointer text-center flex flex-col items-center justify-center gap-2 hover:scale-[1.01] active:scale-[0.99] group ${
+                          dragOverStemId === 'multi'
+                            ? 'border-sky-500 bg-sky-500/15 scale-[1.02]'
+                            : theme === 'coldest'
+                              ? 'border-purple-200 bg-purple-100/20 hover:bg-purple-100/40 hover:border-purple-400'
+                              : 'border-purple-500/20 bg-purple-500/5 hover:bg-purple-500/10 hover:border-purple-500/50'
+                        }`}
+                      >
+                        <div className="p-3 rounded-full bg-purple-500/10 group-hover:bg-purple-500/20 transition-colors">
+                          <Upload className="w-6 h-6 text-purple-500 animate-pulse" />
+                        </div>
+                        <div className={`text-xs font-black uppercase tracking-widest ${theme === 'coldest' ? 'text-slate-800' : 'text-white'}`}>
+                          Drag & Drop All Your Stems Here
+                        </div>
+                        <div className={`text-[10px] font-bold opacity-60 max-w-sm ${theme === 'coldest' ? 'text-slate-500' : 'text-white/70'}`}>
+                          Drop multiple files to populate slots at once, or <span className="text-purple-500 underline">click to browse</span>. Max {stemsLimit} slots.
+                        </div>
+                        <input
+                          id="multi-stem-upload-input"
+                          type="file"
+                          multiple
+                          accept="audio/mpeg,audio/mp3,audio/wav,audio/x-wav"
+                          className="hidden"
+                          onChange={(e) => {
+                            const files = Array.from(e.target.files || []);
+                            if (files.length > 0) {
+                              const newStems = [...stems];
+                              let startIdx = 0;
+                              const firstEmpty = newStems.findIndex(s => !s.file);
+                              if (firstEmpty !== -1) {
+                                startIdx = firstEmpty;
+                              }
+                              let fileIdx = 0;
+                              for (let i = startIdx; i < newStems.length && fileIdx < files.length; i++) {
+                                newStems[i] = { ...newStems[i], file: files[fileIdx], mimeType: files[fileIdx].type, status: 'pending' };
+                                fileIdx++;
+                              }
+                              setStems(newStems);
+                            }
+                            if (e.target) e.target.value = '';
+                          }}
+                        />
                       </div>
 
                       {stems.map((stem, index) => (
@@ -6387,10 +6456,14 @@ The AI was unable to verify these parameters. Please investigate.`;
                             e.preventDefault();
                             e.stopPropagation();
                             setDragOverStemId(null);
-                            const file = e.dataTransfer.files?.[0];
-                            if (file) {
+                            const files = Array.from(e.dataTransfer.files || []);
+                            if (files.length > 0) {
                               const newStems = [...stems];
-                              newStems[index] = { ...newStems[index], file, mimeType: file.type, status: 'pending' };
+                              let fileIdx = 0;
+                              for (let i = index; i < newStems.length && fileIdx < files.length; i++) {
+                                newStems[i] = { ...newStems[i], file: files[fileIdx], mimeType: files[fileIdx].type, status: 'pending' };
+                                fileIdx++;
+                              }
                               setStems(newStems);
                             }
                           }}
@@ -6411,13 +6484,18 @@ The AI was unable to verify these parameters. Please investigate.`;
                             <input 
                               id={`stem-upload-${index}`}
                               type="file" 
+                              multiple
                               accept="audio/mpeg,audio/mp3,audio/wav,audio/x-wav"
                               className="hidden"
                               onChange={(e) => {
-                                const file = e.target.files?.[0];
-                                if (file) {
+                                const files = Array.from(e.target.files || []);
+                                if (files.length > 0) {
                                   const newStems = [...stems];
-                                  newStems[index] = { ...newStems[index], file, mimeType: file.type, status: 'pending' };
+                                  let fileIdx = 0;
+                                  for (let i = index; i < newStems.length && fileIdx < files.length; i++) {
+                                    newStems[i] = { ...newStems[i], file: files[fileIdx], mimeType: files[fileIdx].type, status: 'pending' };
+                                    fileIdx++;
+                                  }
                                   setStems(newStems);
                                 }
                                 if (e.target) e.target.value = '';
