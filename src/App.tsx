@@ -2972,6 +2972,28 @@ The AI was unable to verify these parameters. Please investigate.`;
     const isMixcraftXml = input.includes('<VSTPlugins>') || input.includes('<Plugin ') || input.includes('<vst-inventory>') || input.includes('<PreSonus>') || input.includes('<Components>') || input.includes('<Component ') || input.includes('<?xml') || input.includes('<Settings>');
     let parsed: VSTPlugin[] = [];
 
+    // Helper functions for matching
+    const cleanStringForMatching = (s: string): string => {
+      return s.toLowerCase().replace(/[^a-z0-9]/g, '');
+    };
+
+    const KNOWN_VST3_IDS: Record<string, string> = {
+      "pro-q 3": "72C4DB71-7A4D-459A-B97E-51745D84B39D",
+      "pro-q3": "72C4DB71-7A4D-459A-B97E-51745D84B39D",
+      "pro q 3": "72C4DB71-7A4D-459A-B97E-51745D84B39D",
+      "gullfoss": "F2AEE70D-00DE-4F4E-536E-6454474C4653",
+      "gullfoss live": "F2AEE70D-00DE-4F4E-536E-6454474C466D",
+      "gullfoss master": "F2AEE70D-00DE-4F4E-536E-6454474C466C",
+    };
+
+    interface XMLPluginInfo {
+      classID: string;
+      cleanID: string;
+      sortPath?: string;
+      decodedName: string | null;
+      _matched?: boolean;
+    }
+
     if (isReaperIni) {
       parsed = lines.map((line): VSTPlugin | null => {
         if (!line.includes('=')) return null;
@@ -2992,34 +3014,193 @@ The AI was unable to verify these parameters. Please investigate.`;
         };
       }).filter((p): p is VSTPlugin => p !== null && p.name !== '');
     } else if (isMixcraftXml) {
-      // General XML inventory parsing (Mixcraft, Studio One Components lists, etc.)
-      const pluginMatches = input.matchAll(/<([a-zA-Z0-9_-]+)\s+([^>]+)>/gi);
-      for (const match of pluginMatches) {
-        const attrText = match[2];
-        const nameMatch = attrText.match(/name="([^"]+)"/i);
-        const vendorMatch = attrText.match(/(?:vendor|manufacturer|developer|publisher)="([^"]+)"/i);
-        const idMatch = attrText.match(/(?:classID|classId|id|uniqueID|uniqueId|uid|uuid)="([^"]+)"/i);
-        const typeMatch = attrText.match(/(?:type|category|pluginType)="([^"]+)"/i);
-        const filenameMatch = attrText.match(/filename="([^"]+)"/i);
+      // General XML / Studio One settings parsing
+      const xmlPluginInfos: XMLPluginInfo[] = [];
+      const tagMatches = input.matchAll(/<PlugInInfo\s+([^>]+)>/gi);
+      
+      for (const match of tagMatches) {
+        const attrText = match[1];
+        const classIDMatch = attrText.match(/classID="([^"]+)"/i);
+        const sortPathMatch = attrText.match(/sortPath="([^"]+)"/i);
         
-        if (nameMatch) {
-          const filename = filenameMatch ? filenameMatch[1] : '';
-          const rawType = typeMatch ? typeMatch[1] : '';
-          const isVst3 = filename.toLowerCase().includes('vst3') || rawType.toLowerCase().includes('vst3') || attrText.toLowerCase().includes('vst3');
-          parsed.push({
-            name: nameMatch[1],
-            vendor: vendorMatch ? vendorMatch[1] : 'Unknown',
-            type: isVst3 ? 'VST3' : 'VST2',
-            version: 'N/A',
-            lastModified: 'Found in XML',
-            id: idMatch ? idMatch[1].replace(/[{}]/g, '').trim() : undefined,
+        if (classIDMatch) {
+          const classID = classIDMatch[1];
+          const cleanID = classID.replace(/[{}]/g, '').trim();
+          let decodedName: string | null = null;
+          const cleanHex = cleanID.replace(/-/g, '').toLowerCase();
+          
+          if (cleanHex.startsWith('565354')) {
+            let name = '';
+            for (let i = 8; i < cleanHex.length; i += 2) {
+              const byteStr = cleanHex.substring(i, i + 2);
+              const code = parseInt(byteStr, 16);
+              if (code === 0) continue;
+              if (code >= 32 && code <= 126) {
+                name += String.fromCharCode(code);
+              }
+            }
+            name = name.trim();
+            if (name) {
+              decodedName = name;
+            }
+          }
+          
+          xmlPluginInfos.push({
+            classID,
+            cleanID,
+            sortPath: sortPathMatch ? sortPathMatch[1] : undefined,
+            decodedName,
           });
+        }
+      }
+
+      // Separate lines that look like CSV entries
+      const csvLines = lines.filter(line => {
+        const trimmed = line.trim();
+        return trimmed && !trimmed.startsWith('<') && !trimmed.startsWith('?') && !trimmed.startsWith('</') && !trimmed.startsWith(']>') && !trimmed.startsWith('<!');
+      });
+
+      const csvParsed: VSTPlugin[] = [];
+      const startIndex = csvLines[0] && csvLines[0].toLowerCase().includes('vendor') ? 1 : 0;
+      
+      csvLines.slice(startIndex).forEach(line => {
+        const parts = line.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/);
+        if (parts.length >= 2) {
+          csvParsed.push({
+            vendor: parts[0]?.replace(/"/g, '').trim() || 'Unknown',
+            name: parts[1]?.replace(/"/g, '').trim() || 'Unknown',
+            type: parts[2]?.replace(/"/g, '').trim() || 'Unknown',
+            version: parts[3]?.replace(/"/g, '').trim() || 'Unknown',
+            lastModified: parts[4]?.replace(/"/g, '').trim() || 'Unknown',
+          });
+        }
+      });
+
+      // Try matching the parsed CSV lines with the XML classIDs
+      if (xmlPluginInfos.length > 0) {
+        if (csvParsed.length > 0) {
+          csvParsed.forEach(plugin => {
+            const cleanCsvName = cleanStringForMatching(plugin.name);
+            
+            // Heuristic 1: VST2 decoded name exact or substring match
+            const matchedXml = xmlPluginInfos.find(info => {
+              if (!info.decodedName) return false;
+              const cleanDecoded = cleanStringForMatching(info.decodedName);
+              return cleanCsvName === cleanDecoded || 
+                     (cleanDecoded.length >= 4 && cleanCsvName.includes(cleanDecoded)) ||
+                     (cleanCsvName.length >= 4 && cleanDecoded.includes(cleanCsvName));
+            });
+
+            if (matchedXml) {
+              plugin.id = matchedXml.cleanID;
+              matchedXml._matched = true;
+            } else {
+              // Heuristic 2: Known heavy VST3 IDs dictionary
+              const knownId = KNOWN_VST3_IDS[plugin.name.toLowerCase()];
+              if (knownId) {
+                const xmlWithId = xmlPluginInfos.find(info => info.cleanID.toLowerCase() === knownId.toLowerCase().replace(/[{}]/g, ''));
+                if (xmlWithId) {
+                  plugin.id = xmlWithId.cleanID;
+                  xmlWithId._matched = true;
+                }
+              }
+            }
+          });
+
+          // Any unassigned XML items that decoded to actual names can be added as standalone
+          const unassignedXmlProducts: VSTPlugin[] = [];
+          xmlPluginInfos.forEach(info => {
+            if (!info._matched && info.decodedName && info.decodedName.length >= 3) {
+              unassignedXmlProducts.push({
+                vendor: info.sortPath || 'Unknown',
+                name: info.decodedName,
+                type: (info.sortPath?.toLowerCase().includes('synth') || info.sortPath?.toLowerCase().includes('instrument')) ? 'Instruments' : 'Unknown',
+                version: 'N/A',
+                lastModified: 'Found in settings XML',
+                id: info.cleanID,
+              });
+            }
+          });
+
+          parsed = [...csvParsed, ...unassignedXmlProducts];
+        } else {
+          // No CSV lines found, only parsed XML. Let's try merging into existing library plugins first!
+          if (plugins.length > 0) {
+            let mergedCount = 0;
+            const updatedPlugins = plugins.map(p => {
+              if (p.id) return p;
+              const cleanName = cleanStringForMatching(p.name);
+              
+              const matchedXml = xmlPluginInfos.find(info => {
+                if (!info.decodedName) return false;
+                const cleanDecoded = cleanStringForMatching(info.decodedName);
+                return cleanName === cleanDecoded || 
+                       (cleanDecoded.length >= 4 && cleanName.includes(cleanDecoded)) ||
+                       (cleanName.length >= 4 && cleanDecoded.includes(cleanName));
+              });
+
+              if (matchedXml) {
+                mergedCount++;
+                return { ...p, id: matchedXml.cleanID };
+              } else {
+                const knownId = KNOWN_VST3_IDS[p.name.toLowerCase()];
+                if (knownId) {
+                  const xmlWithId = xmlPluginInfos.find(info => info.cleanID.toLowerCase() === knownId.toLowerCase().replace(/[{}]/g, ''));
+                  if (xmlWithId) {
+                    mergedCount++;
+                    return { ...p, id: xmlWithId.cleanID };
+                  }
+                }
+              }
+              return p;
+            });
+
+            if (mergedCount > 0) {
+              setPlugins(updatedPlugins);
+              setError(null);
+              return;
+            }
+          }
+
+          // Directly list decoded XML plug-ins
+          parsed = xmlPluginInfos.filter(info => info.decodedName && info.decodedName.length >= 3).map(info => ({
+            vendor: info.sortPath || 'Unknown',
+            name: info.decodedName || 'Unknown',
+            type: (info.sortPath?.toLowerCase().includes('synth') || info.sortPath?.toLowerCase().includes('instrument')) ? 'Instruments' : 'Unknown',
+            version: 'N/A',
+            lastModified: 'Settings XML',
+            id: info.cleanID,
+          }));
+        }
+      } else {
+        // Fallback XML attribute parser
+        const pluginMatches = input.matchAll(/<([a-zA-Z0-9_-]+)\s+([^>]+)>/gi);
+        for (const match of pluginMatches) {
+          const attrText = match[2];
+          const nameMatch = attrText.match(/name="([^"]+)"/i);
+          const vendorMatch = attrText.match(/(?:vendor|manufacturer|developer|publisher)="([^"]+)"/i);
+          const idMatch = attrText.match(/(?:classID|classId|id|uniqueID|uniqueId|uid|uuid)="([^"]+)"/i);
+          const typeMatch = attrText.match(/(?:type|category|pluginType)="([^"]+)"/i);
+          const filenameMatch = attrText.match(/filename="([^"]+)"/i);
+          
+          if (nameMatch) {
+            const filename = filenameMatch ? filenameMatch[1] : '';
+            const rawType = typeMatch ? typeMatch[1] : '';
+            const isVst3 = filename.toLowerCase().includes('vst3') || rawType.toLowerCase().includes('vst3') || attrText.toLowerCase().includes('vst3');
+            parsed.push({
+              name: nameMatch[1],
+              vendor: vendorMatch ? vendorMatch[1] : 'Unknown',
+              type: isVst3 ? 'VST3' : 'VST2',
+              version: 'N/A',
+              lastModified: 'Found in XML',
+              id: idMatch ? idMatch[1].replace(/[{}]/g, '').trim() : undefined,
+            });
+          }
         }
       }
     } else {
       const startIndex = lines[0] && lines[0].toLowerCase().includes('vendor') ? 1 : 0;
       parsed = lines.slice(startIndex).map((line): VSTPlugin | null => {
-        // Try CSV parsing first
         const parts = line.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/);
         if (parts.length >= 2) {
           const rawName = parts[1]?.replace(/"/g, '').trim() || 'Unknown';
@@ -3031,7 +3212,6 @@ The AI was unable to verify these parameters. Please investigate.`;
           let parsedId: string | undefined = undefined;
           for (const part of parts) {
             const cleanPart = part.replace(/[{}"]/g, '').trim();
-            // Match standard GUIDs or hex hashes of length 16, 32, or standard uuid pattern
             if (/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(cleanPart) || /^[0-9a-f]{32}$/i.test(cleanPart) || /^[0-9a-f]{16}$/i.test(cleanPart)) {
               parsedId = cleanPart;
               break;
@@ -3048,11 +3228,9 @@ The AI was unable to verify these parameters. Please investigate.`;
           };
         }
         
-        // Fallback: treat whole line as plugin name if it's not empty
         const name = line.trim();
         if (!name) return null;
         
-        // Try to guess vendor if it's in format "Vendor - Name" or "Vendor: Name"
         let vendor = 'Unknown';
         let cleanName = name;
         if (name.includes(' - ')) {

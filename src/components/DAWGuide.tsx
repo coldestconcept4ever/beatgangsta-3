@@ -195,22 +195,124 @@ export const DAWGuide: React.FC<DAWGuideProps> = ({ theme, onClose }) => {
             </div>
           )}
           {activeTab === 'studio-one' && (
-            <div className="space-y-4">
-              <div className="flex gap-4">
-                <div className="w-8 h-8 rounded-full bg-red-500/20 flex items-center justify-center font-black flex-shrink-0">1</div>
-                <p className="text-sm leading-relaxed"><Trans i18nKey="daw_studio_one_step1">Open Studio One and select <strong className="font-black">Help</strong> from the top menu.</Trans></p>
+            <div className="space-y-6 overflow-y-auto max-h-[350px] pr-2">
+              {/* Method A: XML / Settings */}
+              <div className={`p-5 rounded-2xl border ${
+                theme === 'coldest' 
+                  ? 'border-sky-500/20 bg-sky-500/5 text-sky-900' 
+                  : theme === 'hustle-time' 
+                  ? 'border-yellow-500/20 bg-yellow-500/5 text-yellow-50' 
+                  : 'border-red-500/20 bg-red-500/5 text-red-50'
+              }`}>
+                <h4 className={`text-xs font-black uppercase tracking-widest mb-3 flex items-center gap-1 ${
+                  theme === 'coldest' ? 'text-sky-600' : theme === 'hustle-time' ? 'text-yellow-400' : 'text-red-500'
+                }`}>
+                  <span>Method A: Upload Plugins Settings (XML)</span>
+                  <span className={`text-[10px] uppercase px-2 py-0.5 rounded font-black ml-auto ${
+                    theme === 'coldest' 
+                      ? 'bg-sky-500/20 text-sky-700' 
+                      : theme === 'hustle-time' 
+                      ? 'bg-yellow-500/20 text-yellow-300' 
+                      : 'bg-red-500/20 text-red-400'
+                  }`}>Fastest</span>
+                </h4>
+                
+                <div className="space-y-4">
+                  <div className="flex gap-3">
+                    <div className={`w-6 h-6 rounded-full flex items-center justify-center font-black text-xs flex-shrink-0 ${
+                      theme === 'coldest' ? 'bg-sky-500/20 text-sky-700' : theme === 'hustle-time' ? 'bg-yellow-500/20 text-yellow-300' : 'bg-red-500/20 text-red-400'
+                    }`}>1</div>
+                    <div className="text-sm leading-relaxed w-full">
+                      <p className="font-bold mb-1.5">Locate your settings folder based on your Operating System:</p>
+                      
+                      <div className={`p-3 rounded-xl text-xs font-mono space-y-2 border ${
+                        theme === 'coldest' 
+                          ? 'bg-sky-50/50 text-sky-950 border-sky-100' 
+                          : 'bg-black/40 text-yellow-101 border-white/5'
+                      }`}>
+                        <div>
+                          <p className={`font-black uppercase text-[10px] tracking-wider mb-1 ${theme === 'coldest' ? 'text-sky-700' : 'text-red-400'}`}>Windows Path:</p>
+                          <code className="select-all block p-1.5 rounded bg-black/20 text-white font-bold select-all break-all">%AppData%\PreSonus\Studio One 6\User\</code>
+                        </div>
+                        <div>
+                          <p className={`font-black uppercase text-[10px] tracking-wider mb-1 ${theme === 'coldest' ? 'text-sky-700' : 'text-red-400'}`}>macOS (Mac) Path:</p>
+                          <code className="select-all block p-1.5 rounded bg-black/20 text-white font-bold select-all break-all">~/Library/Application Support/PreSonus/Studio One 6/User/</code>
+                        </div>
+                      </div>
+                      <p className="text-[11px] opacity-75 mt-1.5 italic">Note: Replace "Studio One 6" if you are using Studio One 5 or 4.</p>
+                    </div>
+                  </div>
+
+                  <div className="flex gap-3">
+                    <div className={`w-6 h-6 rounded-full flex items-center justify-center font-black text-xs flex-shrink-0 ${
+                      theme === 'coldest' ? 'bg-sky-500/20 text-sky-700' : theme === 'hustle-time' ? 'bg-yellow-500/20 text-yellow-300' : 'bg-red-500/20 text-red-400'
+                    }`}>2</div>
+                    <p className="text-sm leading-relaxed">
+                      Find <strong className="font-extrabold">Plugins-en.xml</strong>, <strong className="font-extrabold">PluginComponents.settings</strong>, or <strong className="font-extrabold">PluginPresentation.settings</strong>.
+                    </p>
+                  </div>
+
+                  <div className="flex gap-3">
+                    <div className={`w-6 h-6 rounded-full flex items-center justify-center font-black text-xs flex-shrink-0 ${
+                      theme === 'coldest' ? 'bg-sky-500/20 text-sky-700' : theme === 'hustle-time' ? 'bg-yellow-500/20 text-yellow-300' : 'bg-red-500/20 text-red-400'
+                    }`}>3</div>
+                    <p className="text-sm leading-relaxed">
+                      <strong className="font-extrabold">Upload that settings xml/file</strong> directly or <strong className="font-extrabold">copy-paste its text data</strong> inside the input box to configure your plugins.
+                    </p>
+                  </div>
+                </div>
               </div>
-              <div className="flex gap-4">
-                <div className="w-8 h-8 rounded-full bg-red-500/20 flex items-center justify-center font-black flex-shrink-0">2</div>
-                <p className="text-sm leading-relaxed"><Trans i18nKey="daw_studio_one_step2">Click <strong className="font-black">Create Diagnostic Report</strong>.</Trans></p>
+
+              {/* Method B: Diagnostic Report / CSV */}
+              <div className={`p-5 rounded-2xl border ${
+                theme === 'coldest' 
+                  ? 'border-[#0c4a6e]/10 bg-black/5 text-sky-900' 
+                  : 'border-white/10 bg-white/5 text-white/90'
+              }`}>
+                <h4 className="text-xs font-black uppercase tracking-widest mb-3 opacity-80">
+                  Method B: Create Diagnostic Report (CSV Export)
+                </h4>
+                
+                <div className="space-y-4">
+                  <div className="flex gap-3">
+                    <div className="w-6 h-6 rounded-full bg-white/10 flex items-center justify-center font-black text-xs flex-shrink-0">1</div>
+                    <p className="text-sm leading-relaxed">Open Studio One and select <strong className="font-black">Help</strong> from the top menu.</p>
+                  </div>
+                  <div className="flex gap-3">
+                    <div className="w-6 h-6 rounded-full bg-white/10 flex items-center justify-center font-black text-xs flex-shrink-0">2</div>
+                    <p className="text-sm leading-relaxed">Click <strong className="font-black">Create Diagnostic Report</strong>.</p>
+                  </div>
+                  <div className="flex gap-3">
+                    <div className="w-6 h-6 rounded-full bg-white/10 flex items-center justify-center font-black text-xs flex-shrink-0">3</div>
+                    <p className="text-sm leading-relaxed">Locate <strong className="font-black">PluginManagement.csv</strong> inside the generated ZIP file.</p>
+                  </div>
+                  <div className="flex gap-3">
+                    <div className="w-6 h-6 rounded-full bg-white/10 flex items-center justify-center font-black text-xs flex-shrink-0">4</div>
+                    <p className="text-sm leading-relaxed">Upload that CSV / list file directly details here, or copy and paste the CSV text.</p>
+                  </div>
+                </div>
               </div>
-              <div className="flex gap-4">
-                <div className="w-8 h-8 rounded-full bg-red-500/20 flex items-center justify-center font-black flex-shrink-0">3</div>
-                <p className="text-sm leading-relaxed"><Trans i18nKey="daw_studio_one_step3">Locate <strong className="font-black">PluginManagement.csv</strong> inside the generated ZIP file.</Trans></p>
-              </div>
-              <div className="flex gap-4">
-                <div className="w-8 h-8 rounded-full bg-red-500/20 flex items-center justify-center font-black flex-shrink-0">4</div>
-                <p className="text-sm leading-relaxed">{t('daw_studio_one_step4')}</p>
+
+              {/* Method C: Smart Combined Mode */}
+              <div className={`p-5 rounded-2xl border ${
+                theme === 'coldest' 
+                  ? 'border-emerald-500/20 bg-emerald-500/5 text-emerald-900' 
+                  : 'border-emerald-500/20 bg-emerald-500/5 text-emerald-100'
+              }`}>
+                <h4 className={`text-xs font-black uppercase tracking-widest mb-3 flex items-center gap-1 ${
+                  theme === 'coldest' ? 'text-emerald-600' : 'text-emerald-400'
+                }`}>
+                  <span>🌟 Method C: Combined Ultimate Accuracy</span>
+                  <span className="text-[10px] uppercase bg-emerald-500/20 text-emerald-400 px-2 py-0.5 rounded font-black ml-auto">Recommended</span>
+                </h4>
+                <p className="text-xs leading-relaxed mb-3 opacity-90">
+                  Because <strong className="font-bold">PluginPresentation.settings</strong> only contains internal technical IDs (GUIDs) and <strong className="font-bold">PluginManagement.csv</strong> has human-readable names but lacks GUID mapping, you can now upload/paste <strong className="font-black text-emerald-400">BOTH</strong>!
+                </p>
+                <div className="space-y-2 text-xs leading-relaxed opacity-85">
+                  <p>1. Upload or paste your <strong className="font-bold">PluginManagement.csv</strong> list first to load your named plugins.</p>
+                  <p>2. Next, upload or paste your <strong className="font-bold">PluginPresentation.settings</strong> XML file.</p>
+                  <p>3. Our smart library parser will instantly merge them, matching named plugins with their official Studio One ClassIDs for perfect dawproject exporting!</p>
+                </div>
               </div>
             </div>
           )}
