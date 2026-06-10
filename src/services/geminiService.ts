@@ -1204,7 +1204,44 @@ export const enrichPluginLibrary = async (
         config: {
           customAction: 'enrich_library',
           temperature: 0.1,
-          responseMimeType: "application/json"
+          responseMimeType: "application/json",
+          responseSchema: {
+            type: Type.OBJECT,
+            properties: {
+              plugins: {
+                type: Type.ARRAY,
+                items: {
+                  type: Type.OBJECT,
+                  properties: {
+                    name: {
+                      type: Type.STRING,
+                      description: "The name of the plugin being analyzed."
+                    },
+                    description: {
+                      type: Type.STRING,
+                      description: "A professional, helpful description of the plugin in the requested language."
+                    },
+                    features: {
+                      type: Type.ARRAY,
+                      items: { type: Type.STRING },
+                      description: "List of key features or characteristics of the plugin in the requested language."
+                    },
+                    parameters: {
+                      type: Type.ARRAY,
+                      items: { type: Type.STRING },
+                      description: "An exhaustive list of technical parameter names found on the plugin's interface (must be in English)."
+                    },
+                    category: {
+                      type: Type.STRING,
+                      description: "The category choice. MUST be one of: 'Instruments', 'Dynamics', 'Equalizers', 'Reverb & Delay', 'Modulation', 'Distortion & Saturation', 'Utility & Metering', 'Creative FX'."
+                    }
+                  },
+                  required: ["name", "description", "features", "parameters", "category"]
+                }
+              }
+            },
+            required: ["plugins"]
+          }
         }
       });
       const text = response.text?.trim() || '{"plugins": []}';
@@ -1215,7 +1252,7 @@ export const enrichPluginLibrary = async (
         console.error("Failed to parse AI response as JSON in processBatch", e);
         result = { plugins: [] };
       }
-      const researchResults: VSTPlugin[] = [];
+      researchResults = [];
       if (result.plugins && Array.isArray(result.plugins)) {
         pluginsToResearch.forEach((plugin, index) => {
           const details = result.plugins[index];

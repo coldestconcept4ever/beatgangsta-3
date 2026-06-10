@@ -3349,7 +3349,7 @@ The AI was unable to verify these parameters. Please investigate.`;
       const fileName = file.name.toLowerCase();
       if (fileName.includes('reaper')) {
         setDawType('Reaper');
-      } else if (fileName.includes('studio one') || fileName.includes('studioone')) {
+      } else if (fileName.includes('studio one') || fileName.includes('studioone') || fileName.includes('pluginmanagement') || fileName.includes('pluginpresentation')) {
         setDawType('Studio One');
       } else if (fileName.includes('fl studio') || fileName.includes('flstudio')) {
         setDawType('FL Studio');
