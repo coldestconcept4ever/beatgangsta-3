@@ -413,6 +413,7 @@ export interface MixCritique {
   mimeType?: string;
   previousCritiqueId?: string;
   reCritiqueContext?: string;
+  isMasterMode?: boolean;
 }
 
 export interface RecommendationResponse {

@@ -692,6 +692,7 @@ const App: React.FC = () => {
   const [hasStems, setHasStems] = useState<boolean>(false);
   const [isBusMode, setIsBusMode] = useState<boolean>(false);
   const [isMultiBandMode, setIsMultiBandMode] = useState<boolean>(false);
+  const [isMasterMode, setIsMasterMode] = useState<boolean>(false);
   const [stems, setStems] = useState<{ id: string; file: File | null; type: string; customType?: string; base64?: string; url?: string; mimeType: string; fileId?: string; uri?: string; status: 'empty' | 'pending' | 'uploading' | 'ready' | 'error' }[]>(() => {
     const preset = activeUI?.stemTypesPreset || Array(10).fill('Other');
     const customPreset = activeUI?.stemCustomTypesPreset || Array(10).fill('');
@@ -3719,8 +3720,9 @@ The AI was unable to verify these parameters. Please investigate.`;
       const stemsContext = uploadedStems.map(s => `Stem: ${s.file!.name} (Type: ${s.type === 'Other' && s.customType ? s.customType : s.type}) - URI: ${s.uri}`).join('\n');
       const fullContext = `The user has uploaded ${activeStems.length} stems for analysis.\n\n${stemsContext}\n\nUser Context: ${critiqueContext}`;
 
-      const critique = await getMixCritique(plugins, null, null, 'audio/mpeg', isGangstaVox, true, fullContext, null, finalReferenceTrack, referenceAudioBase64, null, referenceGeminiFileUri, i18n.language, uploadedStems, analogInstruments, analogHardware, isBusMode, isMultiBandMode);
+      const critique = await getMixCritique(plugins, null, null, 'audio/mpeg', isGangstaVox, true, fullContext, null, finalReferenceTrack, referenceAudioBase64, null, referenceGeminiFileUri, i18n.language, uploadedStems, analogInstruments, analogHardware, isBusMode, isMultiBandMode, isMasterMode);
       critique.id = Math.random().toString(36).substr(2, 9);
+      critique.isMasterMode = isMasterMode;
       critique.audioBase64 = null;
       critique.mimeType = 'audio/mpeg';
 
@@ -3992,8 +3994,9 @@ The AI was unable to verify these parameters. Please investigate.`;
           }
         }
 
-        const critique = await getMixCritique(plugins, audioBase64, audioUrl, mimeType, isGangstaVox, hasStems, critiqueContext, null, finalReferenceTrack, referenceAudioBase64, geminiFileUri, referenceGeminiFileUri, i18n.language, undefined, analogInstruments, analogHardware, isBusMode, isMultiBandMode);
+        const critique = await getMixCritique(plugins, audioBase64, audioUrl, mimeType, isGangstaVox, hasStems, critiqueContext, null, finalReferenceTrack, referenceAudioBase64, geminiFileUri, referenceGeminiFileUri, i18n.language, undefined, analogInstruments, analogHardware, isBusMode, isMultiBandMode, isMasterMode);
         critique.id = Math.random().toString(36).substr(2, 9);
+        critique.isMasterMode = isMasterMode;
         critique.audioBase64 = audioBase64;
         critique.geminiFileUri = geminiFileUri;
         critique.mimeType = mimeType;
@@ -6208,6 +6211,17 @@ The AI was unable to verify these parameters. Please investigate.`;
                         </button>
                         
                         <span className={`text-[10px] font-black uppercase tracking-widest transition-colors ${hasStems ? (theme === 'coldest' ? 'text-slate-900' : 'text-white') : (theme === 'coldest' ? 'text-slate-500' : 'text-white/50')}`}>{t('i_have_stems')}</span>
+                      </div>
+
+                      <div className={`inline-flex items-center gap-3 rounded-full px-4 py-2 ${theme === 'coldest' ? 'bg-white/40' : 'bg-black/40'}`}>
+                        <span className={`text-[10px] font-black uppercase tracking-widest transition-colors ${!isMasterMode ? (theme === 'coldest' ? 'text-slate-900' : 'text-white') : (theme === 'coldest' ? 'text-slate-500' : 'text-white/50')}`}>Mix Mode</span>
+                        <button 
+                          onClick={() => setIsMasterMode(!isMasterMode)}
+                          className={`relative w-10 h-5 rounded-full transition-colors ${isMasterMode ? 'bg-[#10b981]' : 'bg-slate-400/50'}`}
+                        >
+                          <div className={`absolute top-0.5 left-0.5 w-4 h-4 rounded-full bg-white transition-transform ${isMasterMode ? 'translate-x-5' : 'translate-x-0'}`} />
+                        </button>
+                        <span className={`text-[10px] font-black uppercase tracking-widest transition-colors ${isMasterMode ? (theme === 'coldest' ? 'text-slate-900' : 'text-white') : (theme === 'coldest' ? 'text-slate-500' : 'text-white/50')}`}>Master Mode</span>
                       </div>
 
                       <div className={`inline-flex items-center gap-3 rounded-full px-4 py-2 ${theme === 'coldest' ? 'bg-white/40' : 'bg-black/40'}`}>

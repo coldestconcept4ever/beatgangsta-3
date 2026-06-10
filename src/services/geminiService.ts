@@ -2166,7 +2166,8 @@ export const getMixCritique = async (
   analogInstruments: Hardware[] = [], 
   analogHardware: Hardware[] = [],
   isBusMode: boolean = false,
-  isMultiBandMode: boolean = false
+  isMultiBandMode: boolean = false,
+  isMasterMode: boolean = false
 ): Promise<any> => {
   const ai = getAI();
   const pluginListStr = plugins.map(p => {
@@ -2188,7 +2189,13 @@ export const getMixCritique = async (
     return `${h.vendor} - ${h.name}${pedalsStr}${ampsStr}`;
   }).join('\n');
   let focusInstruction = "";
-  if (isGangstaVox) {
+  if (isMasterMode) {
+    if (hasStems && uploadedStems && uploadedStems.length > 0) {
+      focusInstruction = `Focus specifically on STEM MASTERING / MASTER BUS options to achieve a highly polished, cohesive final master. The user HAS UPLOADED STEMS. Provide suggestions on how to pre-process these stems (such as EQ carving, group compression, and gentle transient balancing) AND how to configure the final central MASTER BUS chain (Master EQ, glue compression, tape saturation, limiting, and stereo width) to achieve a supreme master with maximum weight, punch, and clarity, while avoiding muddy overlaps. Listen to the ENTIRE duration of the files to understand the dynamic peaks and make the overall mix cohesive.`;
+    } else {
+      focusInstruction = `Focus specifically on MASTERING the single stereo mixdown on the MASTER BUS. Provide advice and explicit technical setups for the final MASTER BUS chain (including linear phase EQ, master bus compression, tape saturation, dynamic EQ, stereo imaging, and final limiting) to achieve maximum punch, loudness, warmth, and depth, while preserving transient response. Listen to the ENTIRE duration of the track.`;
+    }
+  } else if (isGangstaVox) {
     if (hasStems && uploadedStems && uploadedStems.length > 0) {
       focusInstruction = `Focus specifically on the VOCALS in this mix. DO NOT focus on the beat or instruments. The user HAS UPLOADED STEMS. You MUST analyze how these stems sound mixed together, rather than just in isolation. Your primary goal is to ensure all the vocals sound completely cohesive together. Suggest plugins that not only improve tone, but strictly level the vocals correctly so the end result has every vocal track (verses, hooks, dubs, etc.) at the perfect consistent volume. ${isBusMode ? "BUS MODE IS ON: Provide advice on how to group these stems into logical busses (e.g., Lead Bus, Backing Bus, Ad-lib Bus) and how to process those busses collectively, in addition to individual track processing." : "Make sure to listen to the ENTIRE length of the audio files, including any intros, bridges, and outros. Provide advice on how to process each individual stem and how they fit together to improve the overall vocal mix."}`;
     } else {
@@ -2241,7 +2248,7 @@ ${previousCritiqueStr}
     - 'strengths': An array of 4-6 specific things that sound good (e.g., specific frequency ranges, dynamic control, spatial imaging).
     - 'weaknesses': An array of 4-6 specific issues that need fixing, categorized by their impact on the mix.
     - 'deviationMetrics': (ONLY IF A REFERENCE TRACK IS PROVIDED): Generate 2-4 analytical deviation metrics comparing the mix analytically to the reference (e.g. Dynamic Range: 2dB narrower than reference, High-end Air: 15% darker).
-    - 'actionPlan': A comprehensive array of actionable steps to fix the issues. ${hasStems && uploadedStems && uploadedStems.length > 0 ? (isMultiBandMode ? `CRITICAL: Because the user uploaded ${uploadedStems.length} stems, you MUST provide EXACTLY one step per stem. For EACH stem's step, provide the multiBandDetails, then provide an adequate number of plugins to handle all the bands.` : `CRITICAL: Because the user uploaded ${uploadedStems.length} stems, you MUST provide EXACTLY one step per stem. For EACH stem's step, you MUST provide EXACTLY 4 plugins in the 'recommendedChain'. ALWAYS add an extra plugin (the 4th plugin) dedicated specifically to volume leveling/gain structuring so that the resulting stem sounds completely unified strictly in volume with the rest of the stems.`) : "For each step, provide a robust chain of plugins."} For each step, provide:
+    - 'actionPlan': A comprehensive array of actionable steps to fix the issues. ${isMasterMode ? `CRITICAL: Since you are in MASTER mode, the action plan MUST focus exclusively on master bus fader / master fader processing elements. Provide 4 sequential mastering-chain steps to apply (e.g., Linear Phase EQ, Master Bus Saturation/Exciter, Vintage or Glue Compressor, Stereo Width/Imaging, and Final Brickwall Limiting/Maximizer). If stems are uploaded, explain stem leveling and routing in these steps, but target them for the collective mix ending on the Master Bus.` : (hasStems && uploadedStems && uploadedStems.length > 0 ? (isMultiBandMode ? `CRITICAL: Because the user uploaded ${uploadedStems.length} stems, you MUST provide EXACTLY one step per stem. For EACH stem's step, provide the multiBandDetails, then provide an adequate number of plugins to handle all the bands.` : `CRITICAL: Because the user uploaded ${uploadedStems.length} stems, you MUST provide EXACTLY one step per stem. For EACH stem's step, you MUST provide EXACTLY 4 plugins in the 'recommendedChain'. ALWAYS add an extra plugin (the 4th plugin) dedicated specifically to volume leveling/gain structuring so that the resulting stem sounds completely unified strictly in volume with the rest of the stems.`) : "For each step, provide a robust chain of plugins.")} For each step, provide:
       - 'targetStem': The exact name of the stem this step applies to (if stems were uploaded).
       - 'issue': The specific problem.
       - 'solution': A detailed technical explanation of how to fix it.
@@ -2748,7 +2755,74 @@ export const getLyricAnalysis = async (
       formattedLyrics: parsed.formattedLyrics || '',
       syncedLyrics: parsed.syncedLyrics || []
     };
-  } catch (error) {
+  } catch (error: any) {
+    if (error?.status === 503 || error?.message?.includes('high demand') || error?.status === 'INVALID_ARGUMENT' || error?.status === 400 || String(error).includes('503')) {
+      console.warn("gemini-3.5-flash high demand or error, falling back to gemini-3.5-pro...");
+      try {
+        const responseListFallback = await ai.models.generateContent({
+          model: "gemini-3.5-pro",
+          contents: [{ role: 'user', parts }],
+          config: {
+            customAction: 'critique',
+            responseMimeType: "application/json",
+            safetySettings: [
+              { category: HarmCategory.HARM_CATEGORY_HARASSMENT, threshold: HarmBlockThreshold.OFF },
+              { category: HarmCategory.HARM_CATEGORY_HATE_SPEECH, threshold: HarmBlockThreshold.OFF },
+              { category: HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT, threshold: HarmBlockThreshold.OFF },
+              { category: HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT, threshold: HarmBlockThreshold.OFF }
+            ]
+          }
+        });
+        const parsed = JSON.parse(sanitizeJSON(responseListFallback.text || '{}'));
+        return {
+          dubWords: parsed.dubWords || 'None recommended',
+          cadenceAndDelivery: parsed.cadenceAndDelivery || 'No delivery specifications generated',
+          vocalChain: parsed.vocalChain || [],
+          additionalAdvice: parsed.additionalAdvice || 'No additional advice.',
+          timeline: parsed.timeline || [],
+          formattedLyrics: parsed.formattedLyrics || '',
+          syncedLyrics: parsed.syncedLyrics || []
+        };
+      } catch (fallbackError: any) {
+        console.warn("Fallback gemini-3.5-pro also failed, trying gemini-3.1-pro-preview...");
+        try {
+          const responseListFallback2 = await ai.models.generateContent({
+            model: "gemini-3.1-pro-preview",
+            contents: [{ role: 'user', parts }],
+            config: {
+              customAction: 'critique',
+              responseMimeType: "application/json",
+              safetySettings: [
+                { category: HarmCategory.HARM_CATEGORY_HARASSMENT, threshold: HarmBlockThreshold.OFF },
+                { category: HarmCategory.HARM_CATEGORY_HATE_SPEECH, threshold: HarmBlockThreshold.OFF },
+                { category: HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT, threshold: HarmBlockThreshold.OFF },
+                { category: HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT, threshold: HarmBlockThreshold.OFF }
+              ]
+            }
+          });
+          const parsed2 = JSON.parse(sanitizeJSON(responseListFallback2.text || '{}'));
+          return {
+            dubWords: parsed2.dubWords || 'None recommended',
+            cadenceAndDelivery: parsed2.cadenceAndDelivery || 'No delivery specifications generated',
+            vocalChain: parsed2.vocalChain || [],
+            additionalAdvice: parsed2.additionalAdvice || 'No additional advice.',
+            timeline: parsed2.timeline || [],
+            formattedLyrics: parsed2.formattedLyrics || '',
+            syncedLyrics: parsed2.syncedLyrics || []
+          };
+        } catch (fbError2: any) {
+          console.error("Gemini API Fallback Error (Lyric Tool):", fbError2);
+          return {
+            dubWords: "Could not perform automated lyric analysis due to a connection error.",
+            cadenceAndDelivery: "Unable to synthesize cadence & delivery advice. Please ensure your files are accessible.",
+            vocalChain: [],
+            additionalAdvice: `Error details: ${fbError2 instanceof Error ? fbError2.message : String(fbError2)}`,
+            timeline: []
+          };
+        }
+      }
+    }
+    
     console.error("Gemini API Error (Lyric Tool):", error);
     return {
       dubWords: "Could not perform automated lyric analysis due to a connection error.",

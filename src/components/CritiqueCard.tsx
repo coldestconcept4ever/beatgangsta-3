@@ -539,6 +539,13 @@ export const CritiqueCard: React.FC<CritiqueCardProps> = ({ critique, stems = []
             }`}>
               {critique.isGangstaVox ? t('vocal_critique') : t('beat_critique')}
             </span>
+            <span className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest ${
+              critique.isMasterMode
+                ? (theme === 'coldest' ? 'bg-emerald-100 text-emerald-800' : 'bg-emerald-500/20 text-emerald-300')
+                : (theme === 'coldest' ? 'bg-indigo-100 text-indigo-800' : 'bg-indigo-500/20 text-indigo-300')
+            }`}>
+              {critique.isMasterMode ? 'Master Mode' : 'Mix Mode'}
+            </span>
           </div>
           <p className="text-sm font-bold opacity-80 max-w-2xl leading-relaxed">
             {critique.overallFeedback}
