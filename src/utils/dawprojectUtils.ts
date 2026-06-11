@@ -2,18 +2,27 @@ import { DawProject, Project, Application, MetaData, Utility, ContentType, Mixer
 import JSZip from 'jszip';
 import { MixCritique, SavedRecipe, InstrumentTrack, DeepDivePlugin, VSTPlugin } from '../types';
 
-// Monkey patch Vst3Plugin and Vst2Plugin to output standard lowercase XML tag names
+// Monkey patch Vst3Plugin and Vst2Plugin to output standard lowercase XML tag names and include required attributes
 Vst3Plugin.prototype.toXmlObject = function() {
-  const pluginContent = Object.getPrototypeOf(Vst3Plugin.prototype).toXmlObject.call(this);
+  const base = Object.getPrototypeOf(Vst3Plugin.prototype).toXmlObject.call(this);
   return {
-    vst3Plugin: pluginContent
+    vst3Plugin: {
+      ...base,
+      pluginId: (this as any).pluginId || (this as any).vst3Id || (this as any).deviceID,
+      loaded: this.loaded ? "true" : "false"
+    }
   };
 };
 
 Vst2Plugin.prototype.toXmlObject = function() {
-  const pluginContent = Object.getPrototypeOf(Vst2Plugin.prototype).toXmlObject.call(this);
+  const base = Object.getPrototypeOf(Vst2Plugin.prototype).toXmlObject.call(this);
   return {
-    vst2Plugin: pluginContent
+    vst2Plugin: {
+      ...base,
+      pluginId: (this as any).pluginId || (this as any).vst2Id || (this as any).deviceID,
+      uniqueId: (this as any).uniqueId,
+      loaded: this.loaded ? "true" : "false"
+    }
   };
 };
 
@@ -430,10 +439,11 @@ export const findBestUserPluginMatch = (suggestedName: string, userPlugins: VSTP
   return null;
 };
 
-const getPluginMetadata = (suggestedName: string, isInstrument: boolean, userPlugins: VSTPlugin[] = []): { deviceName: string, deviceVendor: string, deviceID: string, type: 'vst2' | 'vst3' } => {
+const getPluginMetadata = (suggestedName: string, isInstrument: boolean, userPlugins: VSTPlugin[] = []): { deviceName: string, deviceVendor: string, deviceID: string, type: 'vst2' | 'vst3', version: string } => {
   const userMatch = findBestUserPluginMatch(suggestedName, userPlugins);
   if (userMatch) {
-    const isVst3 = !userMatch.type.toLowerCase().includes('vst2');
+    const typeLower = userMatch.type.toLowerCase();
+    const isVst3 = typeLower.includes('vst3') || (!typeLower.includes('vst2') && !userMatch.name.toLowerCase().endsWith('.dll'));
     const cleanUserMatchName = userMatch.name.toLowerCase();
     let deviceID = userMatch.id || "";
     
@@ -445,6 +455,7 @@ const getPluginMetadata = (suggestedName: string, isInstrument: boolean, userPlu
     }
     
     if (!deviceID) {
+      // Hardware-coded fallbacks for very common plugins if user library extraction failed
       if (cleanUserMatchName.includes("pro-q 3") || cleanUserMatchName.includes("pro-q3") || cleanUserMatchName.includes("pro q 3")) {
         deviceID = "72C4DB71-7A4D-459A-B97E-51745D84B39D";
       } else if (cleanUserMatchName.includes("cla-76") || cleanUserMatchName.includes("cla76")) {
@@ -496,7 +507,8 @@ const getPluginMetadata = (suggestedName: string, isInstrument: boolean, userPlu
       deviceName: userMatch.name,
       deviceVendor: userMatch.vendor,
       deviceID: formatAsVst3GuidIfNeeded(deviceID, isVst3),
-      type: isVst3 ? 'vst3' : 'vst2'
+      type: isVst3 ? 'vst3' : 'vst2',
+      version: userMatch.version || '1.0'
     };
   }
 
@@ -507,7 +519,8 @@ const getPluginMetadata = (suggestedName: string, isInstrument: boolean, userPlu
     deviceName: meta.deviceName,
     deviceVendor: meta.deviceVendor,
     deviceID: formatAsVst3GuidIfNeeded(finalID, true),
-    type: 'vst3'
+    type: 'vst3',
+    version: '1.0'
   };
 };
 
@@ -545,10 +558,16 @@ const applyDefaultVocalPlugins = (track: Track, trackName: string, userPlugins: 
   for (const pName of pluginsToLoad) {
     const meta = getPluginMetadata(pName, false, userPlugins);
     const fxDevice = meta.type === 'vst2' ? new Vst2Plugin() : new Vst3Plugin();
-    fxDevice.deviceName = meta.deviceName;
+    fxDevice.name = meta.deviceName;
+    (fxDevice as any).vendor = meta.deviceVendor;
+    (fxDevice as any).version = meta.version;
     fxDevice.deviceRole = DeviceRole.AUDIO_FX;
-    fxDevice.deviceID = meta.deviceID;
-    fxDevice.deviceVendor = meta.deviceVendor;
+    fxDevice.loaded = true;
+    (fxDevice as any).pluginId = meta.deviceID;
+    (fxDevice as any).vst3Id = meta.deviceID;
+    (fxDevice as any).vst2Id = meta.deviceID;
+    (fxDevice as any).deviceID = meta.deviceID;
+    fxDevice.id = `p-${Math.random().toString(36).substring(2, 9)}`;
     track.channel.devices.push(fxDevice);
   }
 };
@@ -566,6 +585,7 @@ const generateTrackChannels = (parentName: string, multiBandDetails?: { isEnable
       0.8,
       0.5
     );
+    track.loaded = true;
     if (track.channel) {
       if (!track.channel.devices) track.channel.devices = [];
     }
@@ -578,26 +598,37 @@ const applyPluginsToTrack = (track: Track, fxList: DeepDivePlugin[], instrumentN
   if (!track.channel) return;
   if (!track.channel.devices) track.channel.devices = [];
   
+  const addDevice = (meta: any, role: DeviceRole) => {
+    const fxDevice = meta.type === 'vst2' ? new Vst2Plugin() : new Vst3Plugin();
+    // Use standard Property names for the library
+    fxDevice.name = meta.deviceName;
+    (fxDevice as any).vendor = meta.deviceVendor;
+    (fxDevice as any).version = meta.version;
+    fxDevice.deviceRole = role;
+    fxDevice.loaded = true;
+    
+    // Store IDs in multiple possible fields to ensure monkey-patch or library picks them up
+    (fxDevice as any).pluginId = meta.deviceID;
+    (fxDevice as any).vst3Id = meta.deviceID;
+    (fxDevice as any).vst2Id = meta.deviceID;
+    (fxDevice as any).deviceID = meta.deviceID;
+    
+    // Assign a project-wide unique ID for the device
+    fxDevice.id = `p-${Math.random().toString(36).substring(2, 9)}`;
+    
+    track.channel!.devices.push(fxDevice);
+  };
+
   if (instrumentName) {
     const meta = getPluginMetadata(instrumentName, true, userPlugins);
-    const instrDevice = meta.type === 'vst2' ? new Vst2Plugin() : new Vst3Plugin();
-    instrDevice.deviceName = meta.deviceName;
-    instrDevice.deviceRole = DeviceRole.INSTRUMENT;
-    instrDevice.deviceID = meta.deviceID;
-    instrDevice.deviceVendor = meta.deviceVendor;
-    track.channel.devices.push(instrDevice);
+    addDevice(meta, DeviceRole.INSTRUMENT);
   }
 
   for (const fx of fxList || []) {
     const fxName = typeof fx === 'string' ? fx : (fx && (fx as any).name) || '';
     if (!fxName) continue;
     const meta = getPluginMetadata(fxName, false, userPlugins);
-    const fxDevice = meta.type === 'vst2' ? new Vst2Plugin() : new Vst3Plugin();
-    fxDevice.deviceName = meta.deviceName;
-    fxDevice.deviceRole = DeviceRole.AUDIO_FX;
-    fxDevice.deviceID = meta.deviceID;
-    fxDevice.deviceVendor = meta.deviceVendor;
-    track.channel.devices.push(fxDevice);
+    addDevice(meta, DeviceRole.AUDIO_FX);
   }
 };
 
