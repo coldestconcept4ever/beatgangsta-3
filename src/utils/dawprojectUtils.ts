@@ -264,6 +264,20 @@ export const KNOWN_VST3_GUIDS: Record<string, string> = {
   "gullfoss live": "F2AEE70D-00DE-4F4E-536E-6454474C466D",
   "gullfoss master": "F2AEE70D-00DE-4F4E-536E-6454474C466C",
 
+  // iZotope
+  "ozone 10": "F2AEE70D-00DE-4F4E-5360-64544D6F6F7A",
+  "ozone 11": "F2AEE70D-00DE-4F4E-5360-64544D6F6F7B",
+  "neutron 4": "F2AEE70D-00DE-4F4E-5360-64544D6E6575",
+  "nectar 3": "F2AEE70D-00DE-4F4E-5360-64544D6E6563",
+  "nectar 4": "F2AEE70D-00DE-4F4E-5360-64544D6E6564",
+  "vocal-synth 2": "F2AEE70D-00DE-4F4E-5360-64544D767332",
+
+  // Baby Audio
+  "smooth operator": "F2AEE70D-00DE-4F4E-5360-64544D736D6F",
+  "ihny 2": "F2AEE70D-00DE-4F4E-5360-64544D69686E",
+  "crystalline": "F2AEE70D-00DE-4F4E-5360-64544D637279",
+  "transit": "F2AEE70D-00DE-4F4E-5360-64544D747261",
+
   // Valhalla
   "valhallavintageverb": "56535456-5652-4276-616c-68616c6c6176",
   "vintageverb": "56535456-5652-4276-616c-68616c6c6176",
@@ -578,7 +592,9 @@ const applyPluginsToTrack = (track: Track, fxList: DeepDivePlugin[], instrumentN
   }
   if (!track.channel.devices) track.channel.devices = [];
   
-  const addDevice = (meta: any, role: DeviceRole) => {
+  let matchReport = `[Mapping Report for ${track.name}]\n`;
+  
+  const addDevice = (meta: any, role: DeviceRole, originalName: string) => {
     const fxDevice = meta.type === 'vst2' ? new Vst2Plugin() : new Vst3Plugin();
     // Use standard Property names for the library
     fxDevice.name = meta.deviceName;
@@ -592,24 +608,55 @@ const applyPluginsToTrack = (track: Track, fxList: DeepDivePlugin[], instrumentN
     (fxDevice as any).vst3Id = meta.deviceID;
     (fxDevice as any).vst2Id = meta.deviceID;
     (fxDevice as any).deviceID = meta.deviceID;
+    if (meta.type === 'vst2') {
+      (fxDevice as any).uniqueId = meta.deviceID;
+    }
     
     // Assign a project-wide unique ID for the device
     fxDevice.id = `p-${Math.random().toString(36).substring(2, 9)}`;
     
     track.channel!.devices.push(fxDevice);
+    
+    matchReport += `+ ${role === DeviceRole.INSTRUMENT ? 'Instr' : 'FX'}: "${originalName}" -> "${meta.deviceName}" (${meta.type.toUpperCase()}) [ID: ${meta.deviceID}] (Vendor: ${meta.deviceVendor})\n`;
+    if (meta.deviceID === "565354506c7567696e56616c69644944") {
+      matchReport += `  ! WARNING: No ID match found for "${originalName}". Using generic VST ID which may cause load failures in some DAWs.\n`;
+    }
   };
 
   if (instrumentName) {
     const meta = getPluginMetadata(instrumentName, true, userPlugins);
-    addDevice(meta, DeviceRole.INSTRUMENT);
+    addDevice(meta, DeviceRole.INSTRUMENT, instrumentName);
   }
 
   for (const fx of fxList || []) {
     const fxName = typeof fx === 'string' ? fx : (fx && (fx as any).name) || '';
     if (!fxName) continue;
     const meta = getPluginMetadata(fxName, false, userPlugins);
-    addDevice(meta, DeviceRole.AUDIO_FX);
+    addDevice(meta, DeviceRole.AUDIO_FX, fxName);
   }
+
+  // Add mapping report to track comment for user debugging
+  track.comment = (track.comment ? track.comment + "\n\n" : "") + matchReport;
+};
+
+const fixXmlForStudioOne = (xml: string) => {
+  let result = xml
+    .replace(/<Vst3Plugin /g, '<vst3Plugin ')
+    .replace(/<\/Vst3Plugin>/g, '</vst3Plugin>')
+    .replace(/<Vst2Plugin /g, '<vst2Plugin ')
+    .replace(/<\/Vst2Plugin>/g, '</vst2Plugin>')
+    .replace(/<BuiltInDevice /g, '<builtInDevice ')
+    .replace(/<\/BuiltInDevice>/g, '</builtInDevice>');
+  
+  // Studio One expects pluginId for VST3 and uniqueId for VST2
+  // The library outputs deviceID for both
+  result = result.replace(/<vst3Plugin ([^>]+)deviceID="([^"]+)"/g, '<vst3Plugin $1pluginId="$2"');
+  result = result.replace(/<vst2Plugin ([^>]+)deviceID="([^"]+)"/g, '<vst2Plugin $1uniqueId="$2"');
+  
+  // Fallback for any other deviceID remaining
+  result = result.replace(/deviceID=/g, 'pluginId=');
+  
+  return result;
 };
 
 const createDummyWav = (durationSeconds: number): Uint8Array => {
@@ -645,6 +692,28 @@ const createDummyWav = (durationSeconds: number): Uint8Array => {
   return buffer;
 };
 
+const sendDebugLog = async (xml: string, project: Project) => {
+  try {
+    let allReports = "--- GLOBAL DAWPROJECT DEBUG REPORT ---\n";
+    project.structure?.forEach(item => {
+      if (item instanceof Track && item.comment) {
+        allReports += item.comment + "\n";
+      }
+    });
+
+    await fetch('/api/debug/dawproject', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        xml,
+        report: allReports
+      })
+    });
+  } catch (e) {
+    console.error("Failed to send debug log:", e);
+  }
+};
+
 export const generateDawProjectFromMixCritique = async (critique: MixCritique, stems: any[], vocalTimeline?: any[], userPlugins?: VSTPlugin[]): Promise<Blob> => {
   ensureInitialized();
   const project = new Project();
@@ -656,6 +725,7 @@ export const generateDawProjectFromMixCritique = async (critique: MixCritique, s
   
   const metadata = new MetaData();
   metadata.title = critique.title || "Mix Critique Project";
+  metadata.comment = `Project generated by BeatGangsta. Included ${stems.length} stems with AI-recommended processing chains.`;
   
   project.arrangement = new Arrangement();
   project.arrangement.lanes = new Lanes();
@@ -770,24 +840,19 @@ export const generateDawProjectFromMixCritique = async (critique: MixCritique, s
   }
   
   const zip = new JSZip();
-  // String replacement helper to fix PascalCase tags and attribute names for Studio One compatibility
-  const fixXml = (xml: string) => {
-    return xml
-      .replace(/<Vst3Plugin /g, '<vst3Plugin ')
-      .replace(/<\/Vst3Plugin>/g, '</vst3Plugin>')
-      .replace(/<Vst2Plugin /g, '<vst2Plugin ')
-      .replace(/<\/Vst2Plugin>/g, '</vst2Plugin>')
-      .replace(/deviceID=/g, 'pluginId=');
-  };
+  const finalXml = fixXmlForStudioOne(project.toXml());
 
   // @ts-ignore
   zip.file('metadata.xml', new TextEncoder().encode(metadata.toXml()));
   // @ts-ignore
-  zip.file('project.xml', new TextEncoder().encode(fixXml(project.toXml())));
+  zip.file('project.xml', new TextEncoder().encode(finalXml));
   
   for (const [path, data] of Object.entries(embeddedFiles)) {
       zip.file(path, data);
   }
+
+  // SILENT LOGGING FOR AI DEBUGGING
+  sendDebugLog(finalXml, project);
   
   return await zip.generateAsync({ type: 'blob', compression: 'STORE' });
 };
@@ -803,6 +868,7 @@ export const generateDawProjectFromBeatRecipe = async (recipe: any, userPlugins?
   
   const metadata = new MetaData();
   metadata.title = recipe.title || "Beat Recipe Project";
+  metadata.comment = `Project generated by BeatGangsta from Beat Recipe: ${recipe.title}.\nIncludes instrument mappings and bus structures.`;
   
   project.arrangement = new Arrangement();
   project.arrangement.lanes = new Lanes();
@@ -849,24 +915,19 @@ export const generateDawProjectFromBeatRecipe = async (recipe: any, userPlugins?
   }
   
   const zip = new JSZip();
-  // String replacement helper to fix PascalCase tags and attribute names for Studio One compatibility
-  const fixXml = (xml: string) => {
-    return xml
-      .replace(/<Vst3Plugin /g, '<vst3Plugin ')
-      .replace(/<\/Vst3Plugin>/g, '</vst3Plugin>')
-      .replace(/<Vst2Plugin /g, '<vst2Plugin ')
-      .replace(/<\/Vst2Plugin>/g, '</vst2Plugin>')
-      .replace(/deviceID=/g, 'pluginId=');
-  };
 
   // @ts-ignore
   zip.file('metadata.xml', new TextEncoder().encode(metadata.toXml()));
   // @ts-ignore
-  zip.file('project.xml', new TextEncoder().encode(fixXml(project.toXml())));
+  zip.file('project.xml', new TextEncoder().encode(fixXmlForStudioOne(project.toXml())));
   
   for (const [path, data] of Object.entries(embeddedFiles)) {
       zip.file(path, data);
   }
   
+  // SILENT LOGGING FOR AI DEBUGGING
+  const finalXml = fixXmlForStudioOne(project.toXml());
+  sendDebugLog(finalXml, project);
+
   return await zip.generateAsync({ type: 'blob', compression: 'STORE' });
 };

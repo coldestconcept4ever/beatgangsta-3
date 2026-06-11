@@ -319,7 +319,7 @@ export const validateApiKey = async (key: string): Promise<{valid: boolean, mess
       return { valid: false, message: "Please enter an API key." };
     }
     const payload = {
-      model: "gemini-3-flash-preview",
+      model: "gemini-3.5-flash",
       contents: "hi",
       userApiKey: cleanKey
     };
@@ -448,7 +448,7 @@ export const regeneratePlugin = async (
     required: ["name", "purpose", "deepDive"]
   };
   const response = await ai.models.generateContent({
-    model: "gemini-3-flash-preview",
+    model: "gemini-3.5-flash",
     contents: { parts: [{ text: prompt + "\\n\\nCRITICAL: You MUST return EXACTLY valid JSON matching this schema:\\n" + JSON.stringify(schemaObj, null, 2) }] },
     config: {
       customAction: 'regenerate_plugin',
@@ -477,7 +477,7 @@ export const categorizeAndCompareLibraries = async (senderPlugins: VSTPlugin[], 
     For each category, list the plugins the Sender has that I AM MISSING (similar names don't count as missing).
   `;
   const response = await ai.models.generateContent({
-    model: "gemini-3-flash-preview",
+    model: "gemini-3.5-flash",
     contents: { parts: [{ text: prompt }] },
     config: {
       customAction: 'compare_libraries',
@@ -1105,7 +1105,7 @@ export const enrichPluginLibrary = async (
   // Optimization Strategy:
   // TIER_1: High concurrency, larger batches. Fast.
   // FREE: Low concurrency (sequential), smaller batches. Higher quality/reliability.
-  const BATCH_SIZE = tier === 'TIER_1' ? 25 : 15; 
+  const BATCH_SIZE = tier === 'TIER_1' ? 40 : 20; 
   const CONCURRENCY = tier === 'TIER_1' ? 5 : 2; 
   const MAX_RETRIES = 3;
   if (onStatus) onStatus(`Starting research with ${tier} strategy...`);
@@ -1203,7 +1203,7 @@ export const enrichPluginLibrary = async (
     `;
     try {
       const response = await ai.models.generateContent({
-        model: "gemini-3-flash-preview", // Use standard Flash for high-volume research
+        model: "gemini-3.5-flash", // Use standard Flash for high-volume research
         contents: { parts: [{ text: prompt }] },
         config: {
           customAction: 'enrich_library',
@@ -1359,7 +1359,7 @@ export const enrichPluginLibrary = async (
     // Process each chunk in this concurrent group and update progress as each one completes
     const results = await Promise.all(activeChunks.map(async (chunk) => {
       const batchResult = await processBatch(chunk);
-      updateProgress(batchResult.length);
+      updateProgress(chunk.length);
       return batchResult;
     }));
 
@@ -1422,7 +1422,7 @@ export const verifyAndCorrectPlugin = async (
     }
   `;
   const response = await ai.models.generateContent({
-    model: "gemini-3-flash-preview",
+    model: "gemini-3.5-flash",
     contents: { parts: [{ text: prompt }] },
     config: {
       customAction: 'verify_plugin',
@@ -2159,7 +2159,7 @@ export const getAudioBeatRecommendations = async (plugins: VSTPlugin[], audioBas
   let response;
   try {
     response = await ai.models.generateContent({
-      model: "gemini-3-flash-preview",
+      model: "gemini-3.1-pro-preview", // Use Pro for complex audio analysis
       contents: {
         parts: parts
       },

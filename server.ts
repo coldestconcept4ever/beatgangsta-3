@@ -441,8 +441,11 @@ app.use(cookieSession({
   httpOnly: true,
 }));
 
+app.use(express.json({ limit: '200mb' }));
+app.use(express.urlencoded({ limit: '200mb', extended: true }));
+
 // NowPayments Payment Creation for Stem Slots
-app.post("/api/payments/nowpayments/create-stems", express.json(), async (req, res) => {
+app.post("/api/payments/nowpayments/create-stems", async (req, res) => {
   try {
     const { slots, userId } = req.body;
     if (!slots || !userId) {
@@ -495,7 +498,7 @@ app.post("/api/payments/nowpayments/create-stems", express.json(), async (req, r
   }
 });
 
-app.post("/api/test-schema", express.json(), async (req, res) => {
+app.post("/api/test-schema", async (req, res) => {
   try {
     const { GoogleGenAI } = await import("@google/genai");
     const genAI = new GoogleGenAI({ 
@@ -522,7 +525,7 @@ app.post("/api/test-schema", express.json(), async (req, res) => {
 });
 
 // NowPayments Payment Creation
-app.post("/api/payments/nowpayments/create", express.json(), async (req, res) => {
+app.post("/api/payments/nowpayments/create", async (req, res) => {
   try {
     const { amount, credits, userId } = req.body;
     if (!amount || !credits || !userId) {
@@ -735,12 +738,6 @@ app.post("/api/webhooks/lemonsqueezy", express.raw({ type: 'application/json' })
   }
 });
 
-// NOTE: Vercel has a 4.5MB request body limit for Serverless Functions.
-// The 200MB limits below only apply if running on a stateful server (like Cloud Run or VPS).
-// On Vercel, large files MUST be uploaded via chunked upload or external storage.
-app.use(express.json({ limit: '200mb' }));
-app.use(express.urlencoded({ limit: '200mb', extended: true }));
-
 // --- Honey Pot Trap for Bots ---
 app.get("/api/trap", (req, res) => {
   const userAgent = req.headers["user-agent"] || "unknown";
@@ -767,7 +764,7 @@ app.get("/api/health", (req, res) => {
   res.json({ status: "ok", appUrl: APP_URL });
 });
 
-app.post("/api/proxy-audio", express.json(), async (req, res) => {
+app.post("/api/proxy-audio", async (req, res) => {
   try {
     const { url } = req.body;
     if (!url) return res.status(400).json({ error: "Missing url parameter" });
@@ -999,7 +996,7 @@ const getR2Client = () => {
   };
 };
 
-app.post("/api/upload/init-r2", express.json(), async (req, res) => {
+app.post("/api/upload/init-r2", async (req, res) => {
   try {
     const r2Config = getR2Client();
     if (!r2Config) {
@@ -1074,7 +1071,7 @@ app.post("/api/upload/init-r2", express.json(), async (req, res) => {
   }
 });
 
-app.post("/api/upload/register-r2-for-gemini", express.json(), async (req, res) => {
+app.post("/api/upload/register-r2-for-gemini", async (req, res) => {
   try {
     const { url, fileId, fileName, mimeType, size } = req.body;
     if (!url || !fileName) {
@@ -1351,7 +1348,7 @@ app.post("/api/upload-chunk", express.raw({ type: 'application/octet-stream', li
   }
 });
 
-app.post("/api/delete-file", express.json(), async (req, res) => {
+app.post("/api/delete-file", async (req, res) => {
   const { fileId } = req.body;
   if (!fileId) {
     return res.status(400).json({ error: "Missing fileId" });
@@ -1454,7 +1451,7 @@ app.post("/api/verify-master", (req, res) => {
   }
 });
 
-app.post("/api/beta/apply", express.json(), async (req, res) => {
+app.post("/api/beta/apply", async (req, res) => {
   const { daw, experience, gmail, contactMethod, contactInfo } = req.body;
   if (!daw || !experience || !gmail || !contactMethod || !contactInfo) {
     return res.status(400).json({ error: "All fields are required" });
@@ -1495,7 +1492,7 @@ app.get("/api/admin/beta-applications", async (req, res) => {
   }
 });
 
-app.post("/api/admin/delete-beta-application", express.json(), async (req, res) => {
+app.post("/api/admin/delete-beta-application", async (req, res) => {
   const authorizedEmails = ['coldestconcept@gmail.com', 'recognizemiracles@gmail.com'];
   const userEmail = (req as any).session?.user?.email;
   const key = req.query.key;
@@ -1660,7 +1657,7 @@ app.get("/api/admin/users-data", async (req, res) => {
   }
 });
 
-app.post("/api/admin/clear-user-receipts", express.json(), async (req, res) => {
+app.post("/api/admin/clear-user-receipts", async (req, res) => {
   const authorizedEmails = ['coldestconcept@gmail.com', 'recognizemiracles@gmail.com'];
   const userEmail = req.session?.user?.email;
   const key = req.query.key;
@@ -1688,7 +1685,7 @@ app.post("/api/admin/clear-user-receipts", express.json(), async (req, res) => {
   }
 });
 
-app.post("/api/admin/update-credits", express.json(), async (req, res) => {
+app.post("/api/admin/update-credits", async (req, res) => {
   const authorizedEmails = ['coldestconcept@gmail.com', 'recognizemiracles@gmail.com'];
   const userEmail = req.session?.user?.email;
   const key = req.query.key;
@@ -1719,7 +1716,7 @@ app.post("/api/admin/update-credits", express.json(), async (req, res) => {
   }
 });
 
-app.post("/api/admin/create-placeholder-user", express.json(), async (req, res) => {
+app.post("/api/admin/create-placeholder-user", async (req, res) => {
   const authorizedEmails = ['coldestconcept@gmail.com', 'recognizemiracles@gmail.com'];
   const userEmail = req.session?.user?.email;
   const key = req.query.key;
@@ -4475,6 +4472,37 @@ if (process.env.NODE_ENV !== 'production') {
 
 
 
+
+app.get("/api/admin/diagnostics", (req, res) => {
+  try {
+    const logPath = path.join(process.cwd(), "dawproject_debug.log");
+    if (!fs.existsSync(logPath)) {
+      return res.send("<html><body><h1>No diagnostics found yet.</h1><p>Generate a DAWProject to see logs here.</p></body></html>");
+    }
+    const content = fs.readFileSync(logPath, 'utf8');
+    res.setHeader('Content-Type', 'text/html; charset=utf-8');
+    res.send(`<html><body><h1>DAWProject Diagnostics</h1><pre style="white-space: pre-wrap; font-family: monospace;">${content}</pre></body></html>`);
+  } catch (e: any) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+app.post("/api/debug/dawproject", (req, res) => {
+  try {
+    const { report, xml } = req.body;
+    const logEntry = {
+      timestamp: new Date().toISOString(),
+      report,
+      xml
+    };
+    // Append to dawproject_debug.log in current directory
+    fs.appendFileSync(path.join(process.cwd(), "dawproject_debug.log"), JSON.stringify(logEntry) + "\n---\n");
+    res.json({ success: true });
+  } catch (e: any) {
+    console.error("Debug log failed:", e);
+    res.status(500).json({ error: e.message });
+  }
+});
 
 // Catch-all for undefined API routes
 app.all(/\/api\/.*/, (req, res) => {
