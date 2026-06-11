@@ -5202,7 +5202,7 @@ The AI was unable to verify these parameters. Please investigate.`;
               <FoodField />
             </motion.div>
           )}
-          {showGuide && <DAWGuide theme={theme} onClose={() => setShowGuide(false)} />}
+          {showGuide && <DAWGuide theme={theme} onClose={() => setShowGuide(false)} userPlugins={plugins} />}
         </React.Suspense>
       </AnimatePresence>
       
