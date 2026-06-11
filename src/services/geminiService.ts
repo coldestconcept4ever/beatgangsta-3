@@ -1088,7 +1088,8 @@ export const enrichPluginLibrary = async (
   plugins: VSTPlugin[],
   onProgress: (progress: number, estimatedTimeLeft: number) => void,
   onStatus?: (status: string) => void,
-  language: string = 'en'
+  language: string = 'en',
+  forceRefresh: boolean = false
 ): Promise<VSTPlugin[]> => {
   // Dynamic import for the large mapping
   const { COMMON_PLUGIN_MAPPING } = await import('../constants/pluginMapping');
@@ -1127,20 +1128,22 @@ export const enrichPluginLibrary = async (
     }
     // 1. Check Server Cache
     let serverCached: Record<string, any> = {};
-    try {
-      const cacheRes = await fetch('/api/vst-cache/check', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ plugins: batch.map(p => ({ vendor: p.vendor, name: p.name })) })
-      });
-      if (cacheRes.ok) {
-        const data = await cacheRes.json();
-        data.cached.forEach((c: any) => {
-          serverCached[`${c.vendor}-${c.name}`.toLowerCase()] = c;
+    if (!forceRefresh) {
+      try {
+        const cacheRes = await fetch('/api/vst-cache/check', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ plugins: batch.map(p => ({ vendor: p.vendor, name: p.name })) })
         });
+        if (cacheRes.ok) {
+          const data = await cacheRes.json();
+          data.cached.forEach((c: any) => {
+            serverCached[`${c.vendor}-${c.name}`.toLowerCase()] = c;
+          });
+        }
+      } catch (e) {
+        console.error("Failed to check server cache", e);
       }
-    } catch (e) {
-      console.error("Failed to check server cache", e);
     }
     // Pre-check for common plugins and server cache to save API calls
     const preMappedBatch = batch.map(p => {

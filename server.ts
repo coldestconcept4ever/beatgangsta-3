@@ -2496,7 +2496,17 @@ if (process.env.NODE_ENV !== 'production') {
           }
         }
       }
-      res.json({ success: true, message: "Cloud data deleted successfully" });
+
+      // Also clear user plugins from database if they want to wipe cloud data
+      const db = getDb();
+      if (db && req.session.user && req.session.user.uid) {
+        await db.execute({
+          sql: `DELETE FROM user_plugins WHERE uid = ?`,
+          args: [req.session.user.uid]
+        });
+      }
+
+      res.json({ success: true, message: "Cloud data and gear rack removed successfully" });
     } catch (error) {
       console.error("Failed to delete cloud data", error);
       res.status(500).json({ error: "Failed to delete cloud data" });
@@ -2535,7 +2545,20 @@ if (process.env.NODE_ENV !== 'production') {
         }
       }
 
-      // 2. Revoke token
+      // 2. Clear database records
+      const db = getDb();
+      if (db) {
+        const uid = req.session.user.uid;
+        await db.batch([
+          { sql: `DELETE FROM user_plugins WHERE uid = ?`, args: [uid] },
+          { sql: `DELETE FROM purchases WHERE uid = ?`, args: [uid] },
+          { sql: `DELETE FROM receipts WHERE uid = ?`, args: [uid] },
+          { sql: `DELETE FROM plugin_usage WHERE uid = ?`, args: [uid] },
+          { sql: `DELETE FROM users WHERE uid = ?`, args: [uid] }
+        ]);
+      }
+
+      // 3. Revoke token
       try {
         await auth.revokeCredentials();
       } catch (e) {
@@ -4004,6 +4027,26 @@ if (process.env.NODE_ENV !== 'production') {
     } catch (error) {
       console.error("Error saving user plugins:", error);
       res.status(500).json({ error: "Failed to save user plugins" });
+    }
+  });
+
+  app.post("/api/user-plugins/reset", async (req, res) => {
+    try {
+      const { uid } = req.body;
+      if (!uid) return res.status(400).json({ error: "UID is required" });
+
+      const client = await getDb();
+      if (!client) return res.status(500).json({ error: "Database not available" });
+
+      await client.execute({
+        sql: `DELETE FROM user_plugins WHERE uid = ?`,
+        args: [uid]
+      });
+
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Error resetting user plugins:", error);
+      res.status(500).json({ error: "Failed to reset user plugins" });
     }
   });
 

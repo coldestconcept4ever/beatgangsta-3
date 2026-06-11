@@ -693,6 +693,7 @@ const App: React.FC = () => {
   const [isBusMode, setIsBusMode] = useState<boolean>(false);
   const [isMultiBandMode, setIsMultiBandMode] = useState<boolean>(false);
   const [isMasterMode, setIsMasterMode] = useState<boolean>(false);
+  const [forceResearch, setForceResearch] = useState<boolean>(false);
   const [stems, setStems] = useState<{ id: string; file: File | null; type: string; customType?: string; base64?: string; url?: string; mimeType: string; fileId?: string; uri?: string; status: 'empty' | 'pending' | 'uploading' | 'ready' | 'error' }[]>(() => {
     const preset = activeUI?.stemTypesPreset || Array(10).fill('Other');
     const customPreset = activeUI?.stemCustomTypesPreset || Array(10).fill('');
@@ -1298,7 +1299,18 @@ The AI was unable to verify these parameters. Please investigate.`;
     localStorage.setItem('bg_tutorial_completed', 'true');
   };
 
-  const handleResetLibrary = () => {
+  const handleResetLibrary = async () => {
+    if (user) {
+      try {
+        await fetchWithDetailedError('/api/user-plugins/reset', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ uid: user.uid })
+        });
+      } catch (err) {
+        console.error("Failed to reset library on server", err);
+      }
+    }
     setPlugins([]);
     localStorage.removeItem('bg_library'); // Use correct key for plugins
     localStorage.removeItem('bg_plugins');
@@ -3420,7 +3432,7 @@ The AI was unable to verify these parameters. Please investigate.`;
         setEnrichEta(eta);
       }, (status) => {
         setEnrichStatus(status);
-      }, i18n.language);
+      }, i18n.language, forceResearch);
       
       logReceipt('Enrich Plugin Library', 5); // Base cost
       
@@ -4936,7 +4948,7 @@ The AI was unable to verify these parameters. Please investigate.`;
                   onClick={(e) => {
                     e.stopPropagation();
                     if (window.confirm("Are you sure you want to clear your entire gear rack? This cannot be undone.")) {
-                      setPlugins([]);
+                      handleResetLibrary();
                       setAnalogInstruments([]);
                       setAnalogHardware([]);
                       setCsvInput('');
@@ -6278,6 +6290,20 @@ The AI was unable to verify these parameters. Please investigate.`;
                     <div className="w-11 h-6 bg-white/10 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-amber-500"></div>
                     <span className={`ml-3 text-[10px] font-bold uppercase tracking-widest ${theme === 'coldest' || theme === 'chef-mode' ? 'text-slate-600' : 'text-white/70'}`}>
                       BandLab Premium
+                    </span>
+                  </label>
+                </div>
+                <div className="flex items-center gap-2 ml-2">
+                  <label className="relative inline-flex items-center cursor-pointer">
+                    <input 
+                      type="checkbox" 
+                      className="sr-only peer" 
+                      checked={forceResearch}
+                      onChange={(e) => setForceResearch(e.target.checked)}
+                    />
+                    <div className="w-11 h-6 bg-white/10 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-purple-500"></div>
+                    <span className={`ml-3 text-[10px] font-bold uppercase tracking-widest ${theme === 'coldest' || theme === 'chef-mode' ? 'text-slate-600' : 'text-white/70'}`}>
+                      Deep AI Research
                     </span>
                   </label>
                 </div>
