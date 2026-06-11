@@ -9,36 +9,46 @@ function ensureInitialized() {
   if (isInitialized) return;
   
   // Monkey patch Vst3Plugin and Vst2Plugin to output standard lowercase XML tag names and include required attributes
-  if (Vst3Plugin?.prototype) {
-    Vst3Plugin.prototype.toXmlObject = function() {
-      const base = Object.getPrototypeOf(Vst3Plugin.prototype).toXmlObject.call(this);
-      return {
-        vst3Plugin: {
-          ...base,
-          pluginId: (this as any).pluginId || (this as any).vst3Id || (this as any).deviceID,
-          loaded: this.loaded ? "true" : "false"
-        }
-      };
-    };
-  }
-
-  if (Vst2Plugin?.prototype) {
-    Vst2Plugin.prototype.toXmlObject = function() {
-      const base = Object.getPrototypeOf(Vst2Plugin.prototype).toXmlObject.call(this);
-      return {
-        vst2Plugin: {
-          ...base,
-          pluginId: (this as any).pluginId || (this as any).vst2Id || (this as any).deviceID,
-          uniqueId: (this as any).uniqueId,
-          loaded: this.loaded ? "true" : "false"
-        }
-      };
-    };
-  }
-
-  // Register lowercase tag names in DeviceRegistry for proper bidirectional parsing mapping
   try {
-    const registry = (DeviceRegistry.getInstance() as any).getRegistry();
+    const v3 = (Vst3Plugin as any);
+    if (v3 && v3.prototype && !v3.prototype._bgPatched) {
+      const original = v3.prototype.toXmlObject;
+      v3.prototype.toXmlObject = function() {
+        const base = original.call(this);
+        // Extract inner content if library already wrapped it
+        const inner = base.vst3Plugin || base.Vst3Plugin || base;
+        return {
+          vst3Plugin: {
+            ...inner,
+            pluginId: (this as any).pluginId || (this as any).vst3Id || (this as any).deviceID,
+            loaded: (this as any).loaded ? "true" : "false"
+          }
+        };
+      };
+      v3.prototype._bgPatched = true;
+    }
+
+    const v2 = (Vst2Plugin as any);
+    if (v2 && v2.prototype && !v2.prototype._bgPatched) {
+      const original = v2.prototype.toXmlObject;
+      v2.prototype.toXmlObject = function() {
+        const base = original.call(this);
+        const inner = base.vst2Plugin || base.Vst2Plugin || base;
+        return {
+          vst2Plugin: {
+            ...inner,
+            pluginId: (this as any).pluginId || (this as any).vst2Id || (this as any).deviceID,
+            uniqueId: (this as any).uniqueId,
+            loaded: (this as any).loaded ? "true" : "false"
+          }
+        };
+      };
+      v2.prototype._bgPatched = true;
+    }
+
+    // Register lowercase tag names in DeviceRegistry for proper bidirectional parsing mapping
+    const registryInstance = (DeviceRegistry as any)?.getInstance?.();
+    const registry = (registryInstance as any)?.getRegistry?.();
     if (registry) {
       if (registry["Vst3Plugin"] && !registry["vst3Plugin"]) {
         registry["vst3Plugin"] = registry["Vst3Plugin"];
@@ -48,7 +58,7 @@ function ensureInitialized() {
       }
     }
   } catch (e) {
-    console.warn("Could not register lowercase tags in DeviceRegistry:", e);
+    console.warn("Could not apply dawproject patches:", e);
   }
   
   isInitialized = true;
@@ -539,7 +549,10 @@ const getPluginMetadata = (suggestedName: string, isInstrument: boolean, userPlu
 };
 
 const applyDefaultVocalPlugins = (track: Track, trackName: string, userPlugins: VSTPlugin[] = []) => {
-  if (!track.channel) return;
+  if (!track.channel) {
+    track.channel = new Channel();
+    (track.channel as any).role = MixerRole.REGULAR;
+  }
   if (!track.channel.devices) track.channel.devices = [];
 
   const nameLower = trackName.toLowerCase();
@@ -609,7 +622,11 @@ const generateTrackChannels = (parentName: string, multiBandDetails?: { isEnable
 };
 
 const applyPluginsToTrack = (track: Track, fxList: DeepDivePlugin[], instrumentName?: string, userPlugins: VSTPlugin[] = []) => {
-  if (!track.channel) return;
+  // Ensure we have a channel to attach devices to
+  if (!track.channel) {
+    track.channel = new Channel();
+    (track.channel as any).role = MixerRole.REGULAR;
+  }
   if (!track.channel.devices) track.channel.devices = [];
   
   const addDevice = (meta: any, role: DeviceRole) => {
