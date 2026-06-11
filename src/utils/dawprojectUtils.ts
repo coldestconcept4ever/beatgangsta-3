@@ -2,43 +2,56 @@ import { DawProject, Project, Application, MetaData, Utility, ContentType, Mixer
 import JSZip from 'jszip';
 import { MixCritique, SavedRecipe, InstrumentTrack, DeepDivePlugin, VSTPlugin } from '../types';
 
-// Monkey patch Vst3Plugin and Vst2Plugin to output standard lowercase XML tag names and include required attributes
-Vst3Plugin.prototype.toXmlObject = function() {
-  const base = Object.getPrototypeOf(Vst3Plugin.prototype).toXmlObject.call(this);
-  return {
-    vst3Plugin: {
-      ...base,
-      pluginId: (this as any).pluginId || (this as any).vst3Id || (this as any).deviceID,
-      loaded: this.loaded ? "true" : "false"
-    }
-  };
-};
+// Internal flag to track initialization
+let isInitialized = false;
 
-Vst2Plugin.prototype.toXmlObject = function() {
-  const base = Object.getPrototypeOf(Vst2Plugin.prototype).toXmlObject.call(this);
-  return {
-    vst2Plugin: {
-      ...base,
-      pluginId: (this as any).pluginId || (this as any).vst2Id || (this as any).deviceID,
-      uniqueId: (this as any).uniqueId,
-      loaded: this.loaded ? "true" : "false"
-    }
-  };
-};
-
-// Register lowercase tag names in DeviceRegistry for proper bidirectional parsing mapping
-try {
-  const registry = (DeviceRegistry.getInstance() as any).getRegistry();
-  if (registry) {
-    if (registry["Vst3Plugin"] && !registry["vst3Plugin"]) {
-      registry["vst3Plugin"] = registry["Vst3Plugin"];
-    }
-    if (registry["Vst2Plugin"] && !registry["vst2Plugin"]) {
-      registry["vst2Plugin"] = registry["Vst2Plugin"];
-    }
+function ensureInitialized() {
+  if (isInitialized) return;
+  
+  // Monkey patch Vst3Plugin and Vst2Plugin to output standard lowercase XML tag names and include required attributes
+  if (Vst3Plugin?.prototype) {
+    Vst3Plugin.prototype.toXmlObject = function() {
+      const base = Object.getPrototypeOf(Vst3Plugin.prototype).toXmlObject.call(this);
+      return {
+        vst3Plugin: {
+          ...base,
+          pluginId: (this as any).pluginId || (this as any).vst3Id || (this as any).deviceID,
+          loaded: this.loaded ? "true" : "false"
+        }
+      };
+    };
   }
-} catch (e) {
-  console.warn("Could not register lowercase tags in DeviceRegistry:", e);
+
+  if (Vst2Plugin?.prototype) {
+    Vst2Plugin.prototype.toXmlObject = function() {
+      const base = Object.getPrototypeOf(Vst2Plugin.prototype).toXmlObject.call(this);
+      return {
+        vst2Plugin: {
+          ...base,
+          pluginId: (this as any).pluginId || (this as any).vst2Id || (this as any).deviceID,
+          uniqueId: (this as any).uniqueId,
+          loaded: this.loaded ? "true" : "false"
+        }
+      };
+    };
+  }
+
+  // Register lowercase tag names in DeviceRegistry for proper bidirectional parsing mapping
+  try {
+    const registry = (DeviceRegistry.getInstance() as any).getRegistry();
+    if (registry) {
+      if (registry["Vst3Plugin"] && !registry["vst3Plugin"]) {
+        registry["vst3Plugin"] = registry["Vst3Plugin"];
+      }
+      if (registry["Vst2Plugin"] && !registry["vst2Plugin"]) {
+        registry["vst2Plugin"] = registry["Vst2Plugin"];
+      }
+    }
+  } catch (e) {
+    console.warn("Could not register lowercase tags in DeviceRegistry:", e);
+  }
+  
+  isInitialized = true;
 }
 
 interface PluginMeta {
@@ -369,6 +382,7 @@ const formatAsVst3GuidIfNeeded = (id: string, isVst3: boolean): string => {
 };
 
 export const findBestUserPluginMatch = (suggestedName: string, userPlugins: VSTPlugin[] = []): VSTPlugin | null => {
+  ensureInitialized();
   if (!suggestedName || userPlugins.length === 0) return null;
 
   const cleanSuggested = suggestedName.toLowerCase().replace(/[^a-z0-9]/g, '');
@@ -666,6 +680,7 @@ const createDummyWav = (durationSeconds: number): Uint8Array => {
 };
 
 export const generateDawProjectFromMixCritique = async (critique: MixCritique, stems: any[], vocalTimeline?: any[], userPlugins?: VSTPlugin[]): Promise<Blob> => {
+  ensureInitialized();
   const project = new Project();
   project.application = new Application("BeatGangsta", "1.0.0");
   
@@ -802,6 +817,7 @@ export const generateDawProjectFromMixCritique = async (critique: MixCritique, s
 };
 
 export const generateDawProjectFromBeatRecipe = async (recipe: any, userPlugins?: VSTPlugin[]): Promise<Blob> => {
+  ensureInitialized();
   const project = new Project();
   project.application = new Application("BeatGangsta", "1.0.0");
   
