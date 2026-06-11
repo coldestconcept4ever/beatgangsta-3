@@ -1206,7 +1206,7 @@ export const enrichPluginLibrary = async (
     `;
     try {
       const response = await ai.models.generateContent({
-        model: "gemini-1.5-flash", // Reverting to stable Flash for reliability
+        model: "gemini-3.5-flash", // Use stable Flash for reliable enrichment
         contents: { parts: [{ text: prompt }] },
         config: {
           customAction: 'enrich_library',

@@ -3180,14 +3180,21 @@ The AI was unable to verify these parameters. Please investigate.`;
         }
         // Must have at least a few commas to be a valid CSV line, and not be XML attributes
         const parts = trimmed.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/);
-        return parts.length >= 2 && !trimmed.toLowerCase().includes('xmlns=') && (trimmed.includes(',') || trimmed.includes('\t'));
+        // Be more lenient for CSV entries that might have been detected as XML if they contain commas
+        // but ensure we don't pick up single XML tags that aren't plugin entries.
+        return parts.length >= 2 && !trimmed.toLowerCase().includes('xmlns=') && (trimmed.includes(',') || trimmed.includes('\t')) && !trimmed.includes('<?xml');
       });
 
       const csvParsed: VSTPlugin[] = [];
-      const startIndex = csvLines[0] && csvLines[0].toLowerCase().includes('vendor') ? 1 : 0;
       
-      csvLines.slice(startIndex).forEach(line => {
+      csvLines.forEach(line => {
         const trimmedLine = line.trim().replace(/^\uFEFF/, '');
+        // Skip header lines that might appear multiple times if files were concatenated
+        const lower = trimmedLine.toLowerCase();
+        if (lower.startsWith('vendor,name') || lower.startsWith('"vendor","name"')) {
+          return;
+        }
+
         const parts = trimmedLine.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/);
         if (parts.length >= 2) {
           csvParsed.push({
