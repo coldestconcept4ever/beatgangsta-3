@@ -251,6 +251,95 @@ const generateDeterministicDeviceID = (name: string, vendor: string, isVst3: boo
   return (prefix + suffix + hexBody).padEnd(32, '0').slice(0, 32);
 };
 
+export const KNOWN_VST3_GUIDS: Record<string, string> = {
+  // FabFilter
+  "pro-q 3": "72C4DB71-7A4D-459A-B97E-51745D84B39D",
+  "pro-q3": "72C4DB71-7A4D-459A-B97E-51745D84B39D",
+  "pro q 3": "72C4DB71-7A4D-459A-B97E-51745D84B39D",
+  "pro-c 2": "72C4DB71-7A4D-459A-B97E-51744D666332",
+  "pro-c2": "72C4DB71-7A4D-459A-B97E-51744D666332",
+  "pro c 2": "72C4DB71-7A4D-459A-B97E-51744D666332",
+  "pro-ds": "72C4DB71-7A4D-459A-B97E-51744D666473",
+  "pro ds": "72C4DB71-7A4D-459A-B97E-51744D666473",
+  "pro-l 2": "72C4DB71-7A4D-459A-B97E-51744D666c32",
+  "pro-l2": "72C4DB71-7A4D-459A-B97E-51744D666c32",
+  "pro l 2": "72C4DB71-7A4D-459A-B97E-51744D666c32",
+  "pro-r 2": "72C4DB71-7A4D-459A-B97E-51744D667232",
+  "pro-r2": "72C4DB71-7A4D-459A-B97E-51744D667232",
+  "pro r 2": "72C4DB71-7A4D-459A-B97E-51744D667232",
+  "saturn 2": "72C4DB71-7A4D-459A-B97E-51744D736132",
+  "saturn2": "72C4DB71-7A4D-459A-B97E-51744D736132",
+  
+  // Soundtoys
+  "decapitator": "F2AEE70D-00DE-4F4E-536E-645447446370",
+  "microshift": "F2AEE70D-00DE-4F4E-536E-6454474d6373",
+  
+  // oeksound
+  "soothe2": "F2AEE70D-00DE-4F4E-536E-645447537468",
+  "soothe 2": "F2AEE70D-00DE-4F4E-536E-645447537468",
+  
+  // Soundtheory
+  "gullfoss": "F2AEE70D-00DE-4F4E-536E-6454474C4653",
+  "gullfoss live": "F2AEE70D-00DE-4F4E-536E-6454474C466D",
+  "gullfoss master": "F2AEE70D-00DE-4F4E-536E-6454474C466C",
+
+  // Valhalla
+  "valhallavintageverb": "56535456-5652-4276-616c-68616c6c6176",
+  "vintageverb": "56535456-5652-4276-616c-68616c6c6176",
+  "vintage verb": "56535456-5652-4276-616c-68616c6c6176",
+  "valhalladelay": "56535456-444c-5976-616c-68616c6c6164",
+  "valhalla delay": "56535456-444c-5976-616c-68616c6c6164",
+
+  // Waves
+  "cla-76": "56535443-3736-5377-6176-65737368656c",
+  "cla76": "56535443-3736-5377-6176-65737368656c",
+  "cla-2a": "56535443-3241-5377-6176-65737368656c",
+  "cla2a": "56535443-3241-5377-6176-65737368656c",
+  
+  // Instruments
+  "serum": "56535458-6d4e-7973-6572-756d78363400",
+  "nexus": "5653544e-5853-336e-6578-757373706163",
+  "omnisphere": "5653544f-5048-526f-6d65-6e6973706865",
+  "kontakt": "5653544e-694f-386b-6f6e-74616b743800",
+  "kontakt 8": "5653544e-694f-386b-6f6e-74616b743800",
+  "sublab": "56535453-4c41-4273-7562-6c6162767374",
+  "keyszone classic": "5653544b-5a43-4c6b-6579-737a6f6e6563"
+};
+
+const getKnownVst3Guid = (name: string): string | null => {
+  const cleanName = name.toLowerCase().trim();
+  if (KNOWN_VST3_GUIDS[cleanName]) {
+    return KNOWN_VST3_GUIDS[cleanName];
+  }
+  const superClean = cleanName.replace(/[^a-z0-9]/g, '');
+  for (const [key, val] of Object.entries(KNOWN_VST3_GUIDS)) {
+    if (key.replace(/[^a-z0-9]/g, '') === superClean) {
+      return val;
+    }
+  }
+  return null;
+};
+
+const formatAsVst3GuidIfNeeded = (id: string, isVst3: boolean): string => {
+  if (!id) return "";
+  if (!isVst3) return id; // VST2 keeps its standard format
+  
+  const clean = id.replace(/[{}]/g, '').trim();
+  
+  // If it's a 32-character hex string, format as a standard hyphenated GUID (8-4-4-4-12)
+  if (clean.length === 32 && !clean.includes("-")) {
+    return [
+      clean.slice(0, 8),
+      clean.slice(8, 12),
+      clean.slice(12, 16),
+      clean.slice(16, 20),
+      clean.slice(20)
+    ].join('-').toUpperCase();
+  }
+  
+  return clean.toUpperCase();
+};
+
 export const findBestUserPluginMatch = (suggestedName: string, userPlugins: VSTPlugin[] = []): VSTPlugin | null => {
   if (!suggestedName || userPlugins.length === 0) return null;
 
@@ -329,49 +418,56 @@ const getPluginMetadata = (suggestedName: string, isInstrument: boolean, userPlu
     const cleanUserMatchName = userMatch.name.toLowerCase();
     let deviceID = userMatch.id || "";
     
+    if (isVst3) {
+      const knownGuid = getKnownVst3Guid(userMatch.name);
+      if (knownGuid) {
+        deviceID = knownGuid;
+      }
+    }
+    
     if (!deviceID) {
       if (cleanUserMatchName.includes("pro-q 3") || cleanUserMatchName.includes("pro-q3") || cleanUserMatchName.includes("pro q 3")) {
-        deviceID = "5653545251336166616266696c746572";
+        deviceID = "72C4DB71-7A4D-459A-B97E-51745D84B39D";
       } else if (cleanUserMatchName.includes("cla-76") || cleanUserMatchName.includes("cla76")) {
-        deviceID = "5653544337365377617665737368656c";
+        deviceID = "56535443-3736-5377-6176-65737368656c";
       } else if (cleanUserMatchName.includes("cla-2a") || cleanUserMatchName.includes("cla2a")) {
-        deviceID = "5653544332415377617665737368656c";
+        deviceID = "56535443-3241-5377-6176-65737368656c";
       } else if (cleanUserMatchName.includes("pro-c 2") || cleanUserMatchName.includes("pro-c2") || cleanUserMatchName.includes("pro c 2")) {
-        deviceID = "5653545250433266616266696c746572";
+        deviceID = "72C4DB71-7A4D-459A-B97E-51744D666332";
       } else if (cleanUserMatchName.includes("pro-ds") || cleanUserMatchName.includes("pro ds")) {
-        deviceID = "56535452445366616266696c74657244";
+        deviceID = "72C4DB71-7A4D-459A-B97E-51744D666473";
       } else if (cleanUserMatchName.includes("pro-l 2") || cleanUserMatchName.includes("pro-l2") || cleanUserMatchName.includes("pro l 2")) {
-        deviceID = "56535452504c3266616266696c746572";
+        deviceID = "72C4DB71-7A4D-459A-B97E-51744D666c32";
       } else if (cleanUserMatchName.includes("decapitator")) {
-        deviceID = "56535444637074736f756e64746f7973";
+        deviceID = "F2AEE70D-00DE-4F4E-536E-645447446370";
       } else if (cleanUserMatchName.includes("saturn 2") || cleanUserMatchName.includes("saturn2")) {
-        deviceID = "5653545253326166616266696c746572";
+        deviceID = "72C4DB71-7A4D-459A-B97E-51744D736132";
       } else if (cleanUserMatchName.includes("vintageverb") || cleanUserMatchName.includes("vintage verb")) {
-        deviceID = "5653545656524276616c68616c6c6176";
+        deviceID = "56535456-5652-4276-616c-68616c6c6176";
       } else if (cleanUserMatchName.includes("pro-r 2") || cleanUserMatchName.includes("pro-r2") || cleanUserMatchName.includes("pro r 2")) {
-        deviceID = "5653545250523266616266696c746572";
+        deviceID = "72C4DB71-7A4D-459A-B97E-51744D667232";
       } else if (cleanUserMatchName.includes("delay") && cleanUserMatchName.includes("valhalla")) {
-        deviceID = "56535456444c5976616c68616c6c6164";
+        deviceID = "56535456-444c-5976-616c-68616c6c6164";
       } else if (cleanUserMatchName.includes("mixtool")) {
-        deviceID = "5653544d6978746f6f6c533130303030";
+        deviceID = "5653544d-6978-746f-6f6c-533130303030";
       } else if (cleanUserMatchName.includes("microshift")) {
-        deviceID = "5653544d637368736f756e64746f7973";
+        deviceID = "F2AEE70D-00DE-4F4E-536E-6454474d6373";
       } else if (cleanUserMatchName.includes("soothe2") || cleanUserMatchName.includes("soothe 2")) {
-        deviceID = "565354536f6f74326f616b736f756e64";
+        deviceID = "F2AEE70D-00DE-4F4E-536E-645447537468";
       } else if (cleanUserMatchName.includes("auto-tune pro") || cleanUserMatchName.includes("autotune pro")) {
-        deviceID = "56535441545039616e74617265736174";
+        deviceID = "56535441-5450-3961-6e74-617265736174";
       } else if (cleanUserMatchName.includes("serum")) {
-        deviceID = "565354586d4e79736572756d78363400";
+        deviceID = "56535458-6d4e-7973-6572-756d78363400";
       } else if (cleanUserMatchName.includes("nexus")) {
-        deviceID = "5653544e5853336e6578757373706163";
+        deviceID = "5653544e-5853-336e-6578-757373706163";
       } else if (cleanUserMatchName.includes("omnisphere")) {
-        deviceID = "5653544f5048526f6d6e697370686572";
+        deviceID = "5653544f-5048-526f-6d65-6e6973706865";
       } else if (cleanUserMatchName.includes("kontakt") || cleanUserMatchName.includes("contact")) {
-        deviceID = "5653544e694f386b6f6e74616b743800";
+        deviceID = "5653544e-694f-386b-6f6e-74616b743800";
       } else if (cleanUserMatchName.includes("sublab")) {
-        deviceID = "565354534c41427375626c6162767374";
+        deviceID = "56535453-4c41-4273-7562-6c6162767374";
       } else if (cleanUserMatchName.includes("keyszone")) {
-        deviceID = "5653544b5a434c6b6579737a6f6e6563";
+        deviceID = "5653544b-5a43-4c6b-6579-737a6f6e6563";
       } else {
         deviceID = generateDeterministicDeviceID(userMatch.name, userMatch.vendor, isVst3);
       }
@@ -380,16 +476,18 @@ const getPluginMetadata = (suggestedName: string, isInstrument: boolean, userPlu
     return {
       deviceName: userMatch.name,
       deviceVendor: userMatch.vendor,
-      deviceID: deviceID,
+      deviceID: formatAsVst3GuidIfNeeded(deviceID, isVst3),
       type: isVst3 ? 'vst3' : 'vst2'
     };
   }
 
   const meta = mapPluginMetadata(suggestedName, isInstrument);
+  const knownGuid = getKnownVst3Guid(meta.deviceName);
+  const finalID = knownGuid || meta.deviceID;
   return {
     deviceName: meta.deviceName,
     deviceVendor: meta.deviceVendor,
-    deviceID: meta.deviceID,
+    deviceID: formatAsVst3GuidIfNeeded(finalID, true),
     type: 'vst3'
   };
 };

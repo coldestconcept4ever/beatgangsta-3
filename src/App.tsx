@@ -2978,12 +2978,58 @@ The AI was unable to verify these parameters. Please investigate.`;
     };
 
     const KNOWN_VST3_IDS: Record<string, string> = {
+      // FabFilter
       "pro-q 3": "72C4DB71-7A4D-459A-B97E-51745D84B39D",
       "pro-q3": "72C4DB71-7A4D-459A-B97E-51745D84B39D",
       "pro q 3": "72C4DB71-7A4D-459A-B97E-51745D84B39D",
+      "pro-c 2": "72C4DB71-7A4D-459A-B97E-51744D666332",
+      "pro-c2": "72C4DB71-7A4D-459A-B97E-51744D666332",
+      "pro c 2": "72C4DB71-7A4D-459A-B97E-51744D666332",
+      "pro-ds": "72C4DB71-7A4D-459A-B97E-51744D666473",
+      "pro ds": "72C4DB71-7A4D-459A-B97E-51744D666473",
+      "pro-l 2": "72C4DB71-7A4D-459A-B97E-51744D666c32",
+      "pro-l2": "72C4DB71-7A4D-459A-B97E-51744D666c32",
+      "pro l 2": "72C4DB71-7A4D-459A-B97E-51744D666c32",
+      "pro-r 2": "72C4DB71-7A4D-459A-B97E-51744D667232",
+      "pro-r2": "72C4DB71-7A4D-459A-B97E-51744D667232",
+      "pro r 2": "72C4DB71-7A4D-459A-B97E-51744D667232",
+      "saturn 2": "72C4DB71-7A4D-459A-B97E-51744D736132",
+      "saturn2": "72C4DB71-7A4D-459A-B97E-51744D736132",
+      
+      // Soundtoys
+      "decapitator": "F2AEE70D-00DE-4F4E-536E-645447446370",
+      "microshift": "F2AEE70D-00DE-4F4E-536E-6454474d6373",
+      
+      // oeksound
+      "soothe2": "F2AEE70D-00DE-4F4E-536E-645447537468",
+      "soothe 2": "F2AEE70D-00DE-4F4E-536E-645447537468",
+      
+      // Soundtheory
       "gullfoss": "F2AEE70D-00DE-4F4E-536E-6454474C4653",
       "gullfoss live": "F2AEE70D-00DE-4F4E-536E-6454474C466D",
       "gullfoss master": "F2AEE70D-00DE-4F4E-536E-6454474C466C",
+
+      // Valhalla
+      "valhallavintageverb": "56535456-5652-4276-616c-68616c6c6176",
+      "vintageverb": "56535456-5652-4276-616c-68616c6c6176",
+      "vintage verb": "56535456-5652-4276-616c-68616c6c6176",
+      "valhalladelay": "56535456-444c-5976-616c-68616c6c6164",
+      "valhalla delay": "56535456-444c-5976-616c-68616c6c6164",
+
+      // Waves
+      "cla-76": "56535443-3736-5377-6176-65737368656c",
+      "cla76": "56535443-3736-5377-6176-65737368656c",
+      "cla-2a": "56535443-3241-5377-6176-65737368656c",
+      "cla2a": "56535443-3241-5377-6176-65737368656c",
+      
+      // Instruments
+      "serum": "56535458-6d4e-7973-6572-756d78363400",
+      "nexus": "5653544e-5853-336e-6578-757373706163",
+      "omnisphere": "5653544f-5048-526f-6d65-6e6973706865",
+      "kontakt": "5653544e-694f-386b-6f6e-74616b743800",
+      "kontakt 8": "5653544e-694f-386b-6f6e-74616b743800",
+      "sublab": "56535453-4c41-4273-7562-6c6162767374",
+      "keyszone classic": "5653544b-5a43-4c6b-6579-737a6f6e6563"
     };
 
     interface XMLPluginInfo {
@@ -3152,11 +3198,25 @@ The AI was unable to verify these parameters. Please investigate.`;
               const cleanName = cleanStringForMatching(p.name);
               
               const matchedXml = xmlPluginInfos.find(info => {
-                if (!info.decodedName) return false;
-                const cleanDecoded = cleanStringForMatching(info.decodedName);
-                return cleanName === cleanDecoded || 
-                       (cleanDecoded.length >= 4 && cleanName.includes(cleanDecoded)) ||
-                       (cleanName.length >= 4 && cleanDecoded.includes(cleanName));
+                if (info.decodedName) {
+                  const cleanDecoded = cleanStringForMatching(info.decodedName);
+                  if (cleanName === cleanDecoded || 
+                         (cleanDecoded.length >= 4 && cleanName.includes(cleanDecoded)) ||
+                         (cleanName.length >= 4 && cleanDecoded.includes(cleanName))) {
+                    return true;
+                  }
+                }
+                if (info.sortPath) {
+                  const parts = info.sortPath.split('/');
+                  const lastPart = parts[parts.length - 1]; // e.g. "Pro-Q 3" from "FabFilter/Pro-Q 3"
+                  const cleanSortName = cleanStringForMatching(lastPart);
+                  if (cleanName === cleanSortName || 
+                         (cleanSortName.length >= 4 && cleanName.includes(cleanSortName)) ||
+                         (cleanName.length >= 4 && cleanSortName.includes(cleanName))) {
+                    return true;
+                  }
+                }
+                return false;
               });
 
               if (matchedXml) {
@@ -3182,15 +3242,35 @@ The AI was unable to verify these parameters. Please investigate.`;
             }
           }
 
-          // Directly list decoded XML plug-ins
-          parsed = xmlPluginInfos.filter(info => info.decodedName && info.decodedName.length >= 3).map(info => ({
-            vendor: info.sortPath || 'Unknown',
-            name: info.decodedName || 'Unknown',
-            type: (info.sortPath?.toLowerCase().includes('synth') || info.sortPath?.toLowerCase().includes('instrument')) ? 'Instruments' : 'Unknown',
-            version: 'N/A',
-            lastModified: 'Settings XML',
-            id: info.cleanID,
-          }));
+          // Directly list decoded XML plug-ins or those with a structural sortPath (supports VST3!)
+          parsed = xmlPluginInfos.filter(info => {
+            const hasDecoded = info.decodedName && info.decodedName.length >= 3;
+            const hasSortPath = info.sortPath && info.sortPath.includes('/') && info.sortPath.split('/').pop()!.length >= 3;
+            return hasDecoded || hasSortPath;
+          }).map(info => {
+            let name = info.decodedName || "";
+            let vendor = 'Unknown';
+            if (!name && info.sortPath) {
+              const parts = info.sortPath.split('/');
+              name = parts.pop() || "";
+              vendor = parts.join('/') || 'Unknown';
+            } else if (info.sortPath) {
+              const parts = info.sortPath.split('/');
+              if (parts.length > 1) {
+                vendor = parts.slice(0, -1).join('/') || 'Unknown';
+              } else {
+                vendor = info.sortPath;
+              }
+            }
+            return {
+              vendor,
+              name,
+              type: (info.sortPath?.toLowerCase().includes('synth') || info.sortPath?.toLowerCase().includes('instrument')) ? 'Instruments' : 'Unknown',
+              version: 'N/A',
+              lastModified: 'Settings XML',
+              id: info.cleanID,
+            };
+          });
         }
       } else {
         // Fallback XML attribute parser

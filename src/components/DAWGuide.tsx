@@ -435,8 +435,12 @@ export const DAWGuide: React.FC<DAWGuideProps> = ({ theme, onClose, userPlugins 
                               : 'bg-black/40 text-[#fef08a] border-white/5'
                           }`}>
                             <div>
-                              <p className={`font-black uppercase text-[10px] tracking-wider mb-1 ${theme === 'coldest' ? 'text-sky-700' : 'text-red-400'}`}>Windows Path:</p>
+                              <p className={`font-black uppercase text-[10px] tracking-wider mb-1 ${theme === 'coldest' ? 'text-sky-700' : 'text-red-400'}`}>Windows Path (User-defined / Custom folders):</p>
                               <code className="select-all block p-1.5 rounded bg-black/20 text-white font-bold select-all break-all">%AppData%\PreSonus\Studio One 6\User\</code>
+                            </div>
+                            <div>
+                              <p className={`font-black uppercase text-[10px] tracking-wider mb-1 ${theme === 'coldest' ? 'text-sky-700' : 'text-red-400'}`}>Windows Path (Global x64 Plugin List / Translation):</p>
+                              <code className="select-all block p-1.5 rounded bg-black/20 text-white font-bold select-all break-all">%AppData%\PreSonus\Studio One 6\x64\Plugins-en.settings</code>
                             </div>
                             <div>
                               <p className={`font-black uppercase text-[10px] tracking-wider mb-1 ${theme === 'coldest' ? 'text-sky-700' : 'text-red-400'}`}>macOS (Mac) Path:</p>
@@ -452,7 +456,7 @@ export const DAWGuide: React.FC<DAWGuideProps> = ({ theme, onClose, userPlugins 
                           theme === 'coldest' ? 'bg-sky-500/20 text-sky-700' : theme === 'hustle-time' ? 'bg-yellow-500/20 text-yellow-300' : 'bg-red-500/20 text-red-400'
                         }`}>2</div>
                         <p className="text-sm leading-relaxed">
-                          Find <strong className="font-extrabold">Plugins-en.xml</strong>, <strong className="font-extrabold">PluginComponents.settings</strong>, or <strong className="font-extrabold">PluginPresentation.settings</strong>.
+                          Find <strong className="font-extrabold">Plugins-en.settings</strong>, <strong className="font-extrabold">Plugins-en.xml</strong>, <strong className="font-extrabold">PluginComponents.settings</strong>, or <strong className="font-extrabold">PluginPresentation.settings</strong>.
                         </p>
                       </div>
 
