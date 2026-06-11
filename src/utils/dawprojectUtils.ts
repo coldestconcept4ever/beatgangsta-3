@@ -360,19 +360,38 @@ export const findBestUserPluginMatch = (suggestedName: string, userPlugins: VSTP
 
   const cleanSuggested = suggestedName.toLowerCase().replace(/[^a-z0-9]/g, '');
 
+  let potentialMatches: VSTPlugin[] = [];
+
   // 1. Try exact match after cleaning non-alphanumeric chars
   for (const p of userPlugins) {
     if (p.name.toLowerCase().replace(/[^a-z0-9]/g, '') === cleanSuggested) {
-      return p;
+      potentialMatches.push(p);
     }
+  }
+
+  // 1.5. If exact matches found, return the best one
+  if (potentialMatches.length > 0) {
+     return potentialMatches.sort((a, b) => {
+         const aIsVst2 = a.type.toLowerCase() === 'vst2' || a.name.toLowerCase().endsWith('.dll') ? -1 : 1;
+         const bIsVst2 = b.type.toLowerCase() === 'vst2' || b.name.toLowerCase().endsWith('.dll') ? -1 : 1;
+         return aIsVst2 - bIsVst2;
+     })[0];
   }
 
   // 2. Try substring match (e.g. if cleanSuggested contains p.name or vice-versa)
   for (const p of userPlugins) {
     const cleanUser = p.name.toLowerCase().replace(/[^a-z0-9]/g, '');
     if (cleanUser.length > 2 && (cleanSuggested.includes(cleanUser) || cleanUser.includes(cleanSuggested))) {
-      return p;
+      potentialMatches.push(p);
     }
+  }
+
+  if (potentialMatches.length > 0) {
+     return potentialMatches.sort((a, b) => {
+         const aIsVst2 = a.type.toLowerCase() === 'vst2' || a.name.toLowerCase().endsWith('.dll') ? -1 : 1;
+         const bIsVst2 = b.type.toLowerCase() === 'vst2' || b.name.toLowerCase().endsWith('.dll') ? -1 : 1;
+         return aIsVst2 - bIsVst2;
+     })[0];
   }
 
   // 3. Match by common aliases/keywords
@@ -382,45 +401,53 @@ export const findBestUserPluginMatch = (suggestedName: string, userPlugins: VSTP
     // EQs
     if (lowerS.includes('eq') || lowerS.includes('equalizer') || lowerS.includes('pro-q') || lowerS.includes('pro q')) {
       if (lowerP.includes('pro-q') || lowerP.includes('pro q') || lowerP.includes('equalizer') || lowerP.includes('pro eq') || lowerP.includes('proeq') || (lowerP.includes('eq') && p.vendor.toLowerCase().includes('fabfilter'))) {
-        return p;
+        potentialMatches.push(p);
       }
     }
     // Compressors
     if (lowerS.includes('compressor') || lowerS.includes('compress') || lowerS.includes('comp') || lowerS.includes('cla-76') || lowerS.includes('1176') || lowerS.includes('la-2a') || lowerS.includes('la2a')) {
       if (lowerP.includes('comp') || lowerP.includes('cla-76') || lowerP.includes('1176') || lowerP.includes('la-2a') || lowerP.includes('la2a') || lowerP.includes('pro-c') || lowerP.includes('pro c')) {
-        return p;
+        potentialMatches.push(p);
       }
     }
     // Saturation/Distortion
     if (lowerS.includes('decapitator') || lowerS.includes('saturation') || lowerS.includes('saturator') || lowerS.includes('saturn') || lowerS.includes('distortion') || lowerS.includes('drive')) {
       if (lowerP.includes('decapitator') || lowerP.includes('saturation') || lowerP.includes('saturator') || lowerP.includes('saturn') || lowerP.includes('dist') || lowerP.includes('knob')) {
-        return p;
+        potentialMatches.push(p);
       }
     }
     // Reverbs
     if (lowerS.includes('reverb') || lowerS.includes('verb') || lowerS.includes('vintageverb') || lowerS.includes('valhalla') || lowerS.includes('space') || lowerS.includes('hall')) {
       if (lowerP.includes('reverb') || lowerP.includes('verb') || lowerP.includes('vintageverb') || lowerP.includes('valhalla') || lowerP.includes('raum') || lowerP.includes('space')) {
-        return p;
+        potentialMatches.push(p);
       }
     }
     // Delays
     if (lowerS.includes('delay') || lowerS.includes('echo') || lowerS.includes('timeless')) {
       if (lowerP.includes('delay') || lowerP.includes('echo') || lowerP.includes('timeless') || lowerP.includes('replika')) {
-        return p;
+        potentialMatches.push(p);
       }
     }
     // Deessers
     if (lowerS.includes('deesser') || lowerS.includes('de-esser') || lowerS.includes('pro-ds') || lowerS.includes('pro ds')) {
       if (lowerP.includes('deesser') || lowerP.includes('de-esser') || lowerP.includes('pro-ds') || lowerP.includes('pro ds')) {
-        return p;
+        potentialMatches.push(p);
       }
     }
     // Limiters
     if (lowerS.includes('limiter') || lowerS.includes('pro-l') || lowerS.includes('pro l')) {
       if (lowerP.includes('limiter') || lowerP.includes('pro-l') || lowerP.includes('pro l') || lowerP.includes('l1') || lowerP.includes('l2') || lowerP.includes('maximizer')) {
-        return p;
+        potentialMatches.push(p);
       }
     }
+  }
+
+  if (potentialMatches.length > 0) {
+     return potentialMatches.sort((a, b) => {
+         const aIsVst2 = a.type.toLowerCase() === 'vst2' || a.name.toLowerCase().endsWith('.dll') ? -1 : 1;
+         const bIsVst2 = b.type.toLowerCase() === 'vst2' || b.name.toLowerCase().endsWith('.dll') ? -1 : 1;
+         return aIsVst2 - bIsVst2;
+     })[0];
   }
 
   return null;
@@ -640,20 +667,14 @@ const applyPluginsToTrack = (track: Track, fxList: DeepDivePlugin[], instrumentN
 };
 
 const fixXmlForStudioOne = (xml: string) => {
-  let result = xml
-    .replace(/<Vst3Plugin /g, '<vst3Plugin ')
-    .replace(/<\/Vst3Plugin>/g, '</vst3Plugin>')
-    .replace(/<Vst2Plugin /g, '<vst2Plugin ')
-    .replace(/<\/Vst2Plugin>/g, '</vst2Plugin>')
-    .replace(/<BuiltInDevice /g, '<builtInDevice ')
-    .replace(/<\/BuiltInDevice>/g, '</builtInDevice>');
+  let result = xml;
   
   // Studio One expects pluginId for VST3 and uniqueId for VST2
   // The library outputs deviceID for both
-  result = result.replace(/<vst3Plugin ([^>]+)deviceID="([^"]+)"/g, '<vst3Plugin $1pluginId="$2"');
-  result = result.replace(/<vst2Plugin ([^>]+)deviceID="([^"]+)"/g, '<vst2Plugin $1uniqueId="$2"');
+  result = result.replace(/<Vst3Plugin ([^>]+)deviceID="([^"]+)"/g, '<Vst3Plugin $1pluginId="$2"');
+  result = result.replace(/<Vst2Plugin ([^>]+)deviceID="([^"]+)"/g, '<Vst2Plugin $1uniqueId="$2"');
   
-  // Fallback for any other deviceID remaining
+  // Also perform general fallback for any missed deviceID to pluginId
   result = result.replace(/deviceID=/g, 'pluginId=');
   
   return result;

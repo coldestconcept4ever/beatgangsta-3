@@ -319,7 +319,7 @@ export const validateApiKey = async (key: string): Promise<{valid: boolean, mess
       return { valid: false, message: "Please enter an API key." };
     }
     const payload = {
-      model: "gemini-3.5-flash",
+      model: "gemini-3-flash-preview",
       contents: "hi",
       userApiKey: cleanKey
     };
@@ -448,7 +448,7 @@ export const regeneratePlugin = async (
     required: ["name", "purpose", "deepDive"]
   };
   const response = await ai.models.generateContent({
-    model: "gemini-3.5-flash",
+    model: "gemini-3-flash-preview",
     contents: { parts: [{ text: prompt + "\\n\\nCRITICAL: You MUST return EXACTLY valid JSON matching this schema:\\n" + JSON.stringify(schemaObj, null, 2) }] },
     config: {
       customAction: 'regenerate_plugin',
@@ -477,7 +477,7 @@ export const categorizeAndCompareLibraries = async (senderPlugins: VSTPlugin[], 
     For each category, list the plugins the Sender has that I AM MISSING (similar names don't count as missing).
   `;
   const response = await ai.models.generateContent({
-    model: "gemini-3.5-flash",
+    model: "gemini-3-flash-preview",
     contents: { parts: [{ text: prompt }] },
     config: {
       customAction: 'compare_libraries',
@@ -1179,7 +1179,15 @@ export const enrichPluginLibrary = async (
     let researchResults: VSTPlugin[] = [];
     if (pluginsToResearch.length > 0) {
       const ai = getAI();
-      const pluginList = pluginsToResearch.map((p, i) => `${i + 1}. ${p.vendor} - ${p.name} ${p.version !== 'N/A' ? `(v${p.version})` : ''}`).join('\n');
+      const pluginList = pluginsToResearch.map((p, i) => {
+        let text = `${i + 1}. ${p.vendor} - ${p.name}`;
+        if (p.version && p.version !== 'N/A') text += ` (v${p.version})`;
+        const hints = [];
+        if (p.category) hints.push(`Category Hint: ${p.category}`);
+        if ((p as any).sortPath) hints.push(`Path: ${(p as any).sortPath}`);
+        if (hints.length > 0) text += ` [${hints.join(', ')}]`;
+        return text;
+      }).join('\n');
     const prompt = `
       You are a world-class VST plugin expert and audio engineer. 
       I have a list of ${batch.length} audio plugins (VST/AU/AAX).
@@ -1206,7 +1214,7 @@ export const enrichPluginLibrary = async (
     `;
     try {
       const response = await ai.models.generateContent({
-        model: "gemini-3.5-flash", // Use stable Flash for reliable enrichment
+        model: "gemini-3-flash-preview", // Use older flash preview for reliable enrichment as requested to save costs
         contents: { parts: [{ text: prompt }] },
         config: {
           customAction: 'enrich_library',
@@ -1371,7 +1379,9 @@ export const enrichPluginLibrary = async (
     });
     // Safety delay to respect rate limits (especially for Free Tier)
     if (tier === 'FREE') {
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      await new Promise(resolve => setTimeout(resolve, 5000));
+    } else {
+      await new Promise(resolve => setTimeout(resolve, 1000));
     }
   }
   // Final check: if more than 80% of plugins failed to analyze, throw an error
@@ -1425,7 +1435,7 @@ export const verifyAndCorrectPlugin = async (
     }
   `;
   const response = await ai.models.generateContent({
-    model: "gemini-3.5-flash",
+    model: "gemini-3-flash-preview",
     contents: { parts: [{ text: prompt }] },
     config: {
       customAction: 'verify_plugin',
@@ -1973,7 +1983,7 @@ export const analyzeInstrumental = async (audioBase64: string, mimeType: string)
   const ai = getAI();
   const prompt = "Analyze this instrumental track. Identify its exact BPM (Tempo) and the exact start time (in seconds) of the clearest, most loopable 4-bar or 8-bar section. Output a JSON object with two fields: 'bpm' (a number, the tempo) and 'loopStart' (a number, the start time in seconds). Do not include any other text.";
   const data = await ai.models.generateContent({
-    model: "gemini-3.1-pro-preview",
+    model: "gemini-3-flash-preview",
     contents: [{ parts: [{ text: prompt }, { inlineData: { data: audioBase64, mimeType } }] }],
     config: {
       customAction: 'analyze_instrumental' }
@@ -2162,7 +2172,7 @@ export const getAudioBeatRecommendations = async (plugins: VSTPlugin[], audioBas
   let response;
   try {
     response = await ai.models.generateContent({
-      model: "gemini-3.1-pro-preview", // Use Pro for complex audio analysis
+      model: "gemini-3-flash-preview", // Use Pro for complex audio analysis
       contents: {
         parts: parts
       },
@@ -2781,7 +2791,7 @@ export const getLyricAnalysis = async (
 
   try {
     const response = await ai.models.generateContent({
-      model: "gemini-3.5-flash",
+      model: "gemini-3-flash-preview",
       contents: [{ role: 'user', parts }],
       config: {
         customAction: 'critique',
@@ -2810,7 +2820,7 @@ export const getLyricAnalysis = async (
       console.warn("gemini-3.5-flash high demand or error, falling back to gemini-3.5-pro...");
       try {
         const responseListFallback = await ai.models.generateContent({
-          model: "gemini-3.5-pro",
+          model: "gemini-3-flash-preview",
           contents: [{ role: 'user', parts }],
           config: {
             customAction: 'critique',
@@ -2837,7 +2847,7 @@ export const getLyricAnalysis = async (
         console.warn("Fallback gemini-3.5-pro also failed, trying gemini-3.1-pro-preview...");
         try {
           const responseListFallback2 = await ai.models.generateContent({
-            model: "gemini-3.1-pro-preview",
+            model: "gemini-3-flash-preview",
             contents: [{ role: 'user', parts }],
             config: {
               customAction: 'critique',

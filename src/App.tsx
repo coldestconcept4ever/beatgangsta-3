@@ -3000,8 +3000,8 @@ The AI was unable to verify these parameters. Please investigate.`;
   const parsePlugins = async (input: string) => {
     if (!requireAuth()) return;
     if (!input.trim()) return;
-    const lines = input.trim().split('\n');
-    const isReaperIni = lines.some(l => l.includes('=') && (l.includes('.dll') || l.includes('.vst3')));
+    const lines = input.trim().split(/\r?\n|\r/);
+    const isReaperIni = lines.some(l => !l.trim().startsWith('<') && /^[^=]+\.(dll|vst3)=/i.test(l.trim()));
     const isMixcraftXml = input.includes('<VSTPlugins>') || input.includes('<Plugin ') || input.includes('<vst-inventory>') || input.includes('<PreSonus>') || input.includes('<Components>') || input.includes('<Component ') || input.includes('<?xml') || input.includes('<Settings>') || input.includes('<ClassDescription') || input.includes('<Attributes');
     let parsed: VSTPlugin[] = [];
 
@@ -3238,6 +3238,8 @@ The AI was unable to verify these parameters. Please investigate.`;
 
             if (matchedXml) {
               plugin.id = matchedXml.cleanID;
+              if (matchedXml.category) plugin.category = matchedXml.category;
+              if (matchedXml.sortPath) (plugin as any).sortPath = matchedXml.sortPath;
               matchedXml._matched = true;
             } else {
               // Heuristic 2: Known heavy VST3 IDs dictionary
@@ -3257,14 +3259,17 @@ The AI was unable to verify these parameters. Please investigate.`;
           xmlPluginInfos.forEach(info => {
             const displayName = info.decodedName || info.name;
             if (!info._matched && displayName && displayName.length >= 3 && !displayName.includes('.') && info.cleanID.length > 10) {
-              unassignedXmlProducts.push({
+              const newPlugin: VSTPlugin = {
                 vendor: info.vendor || info.sortPath?.split('/')[0] || 'Unknown',
                 name: displayName,
                 type: (info.sortPath?.toLowerCase().includes('synth') || info.sortPath?.toLowerCase().includes('instrument') || info.category?.toLowerCase().includes('synth')) ? 'Instruments' : 'AudioEffect',
                 version: 'N/A',
                 lastModified: 'Found in settings XML',
                 id: info.cleanID,
-              });
+                category: info.category
+              };
+              if (info.sortPath) (newPlugin as any).sortPath = info.sortPath;
+              unassignedXmlProducts.push(newPlugin);
             }
           });
 
@@ -3347,14 +3352,17 @@ The AI was unable to verify these parameters. Please investigate.`;
                 vendor = parts.slice(0, -1).join('/') || vendor;
               }
             }
-            return {
+            const newObj: VSTPlugin = {
               vendor,
               name,
               type: (info.category?.toLowerCase() === 'audiosynth' || info.sortPath?.toLowerCase().includes('synth') || info.sortPath?.toLowerCase().includes('instrument')) ? 'Instruments' : 'Unknown',
               version: 'N/A',
               lastModified: 'Settings XML',
               id: info.cleanID,
+              category: info.category
             };
+            if (info.sortPath) (newObj as any).sortPath = info.sortPath;
+            return newObj;
           });
         }
       } else {
@@ -3379,6 +3387,7 @@ The AI was unable to verify these parameters. Please investigate.`;
               version: 'N/A',
               lastModified: 'Found in XML',
               id: idMatch ? idMatch[1].replace(/[{}]/g, '').trim() : undefined,
+              category: typeMatch ? typeMatch[1] : undefined
             });
           }
         }

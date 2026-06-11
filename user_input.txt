@@ -1,0 +1,49 @@
+Vendor,Name,Type,Version,Last Modified
+Acqua,GREY,VST3,3.0.0,2 years ago
+Acqua,GREYULTRA,VST3,3.0.0,2 years ago
+Acqua,GREYULTRAZL,VST3,3.0.0,2 years ago
+Acqua,GREYZL,VST3,3.0.0,2 years ago
+Acqua,PUMPKIN,VST3,3.0.0,2 years ago
+Acqua,PUMPKINZL,VST3,3.0.0,2 years ago
+AIR Music Technology,Xpand!2,VST3,2.3.1.471de85,Last year
+Ample Sound,APC,VST2,1.0.1.0,8 years ago
+Antares,Auto-Key 2,VST3,2.0.0,3 years ago
+Antares,AVOX CHOIR,VST3,4.3.0,4 years ago
+Audio Damage. Inc.,Basic x64,VST2,1.0.0.0,Last year
+Boz Digital Labs,Bark of Dog 3,VST2,3.0.2.0,2 months ago
+Boz Digital Labs,Master Keys,VST2,1.1.5.0,9 months ago
+Boz Digital Labs,Panipulator 3,VST2,3.0.11.0,3 years ago
+<?xml version="1.0" encoding="UTF-8"?>
+<Settings xmlns:x="https://ccl.dev/xml" name="Plugins-en" version="1">
+	<Section path="00000000/ampire.dspdef">
+		<Attributes numClasses="1">
+			<DateTime x:id="modifiedTime" time="1900/01/01 00:00:00.000"/>
+			<Version x:id="version" vendor="PreSonus" url="http://www.presonussoftware.com"/>
+			<List x:id="Classes">
+				<ClassDescription classID="{B6407C28-0F92-4538-9E7F-9B867B3FEA74}" category="AudioEffect" name="Ampire"
+				                  subCategory="(Native)/Distortion">
+					<PersistentAttributes x:id="attributes">
+						<Attribute id="Class:Folder" value="(Native)/Distortion"/>
+					</PersistentAttributes>
+				</ClassDescription>
+			</List>
+		</Attributes>
+	</Section>
+	<Section path="021A09FB/FIN-MICRO.dll">
+		<Attributes numClasses="1">
+			<DateTime x:id="modifiedTime" time="2024/08/02 18:13:26.000"/>
+			<Version x:id="version" version="1.3.0.0" vendor="UJAM"/>
+			<List x:id="Classes">
+				<ClassDescription classID="{56535446-494D-4966-696E-2D6D6963726F}" category="AudioEffect" name="FIN-MICRO"
+				                  subCategory="VST2">
+					<PersistentAttributes x:id="attributes">
+						<Attribute id="VST2:UniqueID" value="1179209033"/>
+						<Attribute id="Class:Vendor" value="UJAM"/>
+						<Attribute id="Class:Version" value="1.3.0.0"/>
+						<Attribute id="Class:Folder" value="UJAM"/>
+					</PersistentAttributes>
+				</ClassDescription>
+			</List>
+		</Attributes>
+	</Section>
+</Settings>
