@@ -1310,6 +1310,21 @@ The AI was unable to verify these parameters. Please investigate.`;
       } catch (err) {
         console.error("Failed to reset library on server", err);
       }
+
+      // Admin direct database purge of analyzed plug-in results
+      const authorizedEmails = ['coldestconcept@gmail.com', 'recogniizemiracles@gmail.com', 'recognizemiracles@gmail.com'];
+      if (user.email && authorizedEmails.includes(user.email.toLowerCase().trim())) {
+        try {
+          await fetchWithDetailedError('/api/vst-cache/clear', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email: user.email })
+          });
+          console.log("Admin triggered direct database purge of VST cache successfully.");
+        } catch (err) {
+          console.error("Failed to purge VST cache on server", err);
+        }
+      }
     }
     setPlugins([]);
     localStorage.removeItem('bg_library'); // Use correct key for plugins
@@ -3005,6 +3020,50 @@ The AI was unable to verify these parameters. Please investigate.`;
     const isMixcraftXml = input.includes('<VSTPlugins>') || input.includes('<Plugin ') || input.includes('<vst-inventory>') || input.includes('<PreSonus>') || input.includes('<Components>') || input.includes('<Component ') || input.includes('<?xml') || input.includes('<Settings>') || input.includes('<ClassDescription') || input.includes('<Attributes');
     let parsed: VSTPlugin[] = [];
 
+    const isJunkName = (n: string | undefined | null, cleanID?: string): boolean => {
+      if (!n) return true;
+      const trimmed = n.trim();
+      if (trimmed.startsWith('{') || trimmed.endsWith('}')) return true;
+      if (trimmed.startsWith('$')) return true;
+      // GUID / Unique ID hex strings checks
+      if (/^[a-fA-F0-9-]{12,}$/.test(trimmed)) return true;
+      if (/^[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}$/i.test(trimmed)) return true;
+      if (/^[0-9]+[A-Za-z]*uad/i.test(trimmed)) return true;
+      if (/^[0-9]+[A-Za-z]+ /i.test(trimmed)) return true; // e.g. "355sine play"
+      if (/^[0-9]{1,3}AU/i.test(trimmed)) return true; // e.g. "2AU..."
+      if (trimmed.toLowerCase().includes('metaclass')) return true;
+      if (trimmed.toLowerCase().includes('classdescription')) return true;
+      if (cleanID && trimmed.toLowerCase() === cleanID.toLowerCase().replace(/[{}-]/g, '').trim()) return true;
+      return false;
+    };
+
+    const isJunkCategory = (c: string | undefined | null): boolean => {
+      if (!c) return false;
+      const cl = c.toLowerCase().trim();
+      return cl === 'metaclass' || 
+             cl === 'gadget' || 
+             cl === 'editaddin' || 
+             cl === 'documentfilter' || 
+             cl === 'extensionhandler' || 
+             cl === 'scriptengine' || 
+             cl === 'programservice' || 
+             cl === 'frameworkservice' || 
+             cl === 'deviceenumerator' || 
+             cl === 'browserextension' || 
+             cl === 'databaseengine' || 
+             cl === 'coderesourceloader' || 
+             cl === 'useroption' || 
+             cl === 'helptutorialhandler' || 
+             cl === 'documenteventhandler' || 
+             cl === 'userservice' || 
+             cl.includes('handler') || 
+             cl.includes('service') || 
+             cl.includes('importer') || 
+             cl.includes('converter') || 
+             cl.includes('enumerator') || 
+             cl.includes('utility');
+    };
+
     // Helper functions for matching
     const cleanStringForMatching = (s: string): string => {
       return s.toLowerCase().replace(/[^a-z0-9]/g, '');
@@ -3254,31 +3313,22 @@ The AI was unable to verify these parameters. Please investigate.`;
             }
           });
 
-          const isJunkName = (n: string | undefined | null) => {
-            if (!n) return true;
-            if (n.startsWith('{') && n.endsWith('}')) return true;
-            if (/^[a-fA-F0-9]{32}$/.test(n)) return true;
-            if (/^[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}/.test(n)) return true;
-            if (n.startsWith('0AU') || n.startsWith('1AU') || n.startsWith('2AU') || n.startsWith('3AU')) return true;
-            if (/^[0-9]{1,3}[A-Za-z]+ /.test(n)) return true;
-            if (n.startsWith('$')) return true;
-            return false;
-          };
-
           // Any unassigned XML items that look like products can be added as standalone
           const unassignedXmlProducts: VSTPlugin[] = [];
           xmlPluginInfos.forEach(info => {
+            if (info.category && isJunkCategory(info.category)) return;
+
             let displayName = info.decodedName || "";
-            if (!displayName || isJunkName(displayName)) {
+            if (!displayName || isJunkName(displayName, info.cleanID)) {
                if (info.sortPath && info.sortPath.includes('/')) {
                  displayName = info.sortPath.split('/').pop() || "";
                }
             }
-            if (!displayName || isJunkName(displayName)) {
+            if (!displayName || isJunkName(displayName, info.cleanID)) {
                displayName = info.name || "";
             }
 
-            if (!info._matched && displayName && !isJunkName(displayName) && displayName.length >= 3 && !displayName.includes('.') && info.cleanID.length > 10) {
+            if (!info._matched && displayName && !isJunkName(displayName, info.cleanID) && displayName.length >= 3 && !displayName.includes('.') && info.cleanID.length > 10) {
               const newPlugin: VSTPlugin = {
                 vendor: info.vendor || info.sortPath?.split('/')[0] || 'Unknown',
                 name: displayName,
@@ -3349,34 +3399,20 @@ The AI was unable to verify these parameters. Please investigate.`;
 
           // Directly list decoded XML plug-ins or those with a structural sortPath (supports VST3!)
           parsed = xmlPluginInfos.reduce((acc, info) => {
-            const cat = info.category?.toLowerCase() || '';
-            // Exclude common Studio One internal/technical categories that aren't VSTs
-            if (cat && (cat.includes('service') || cat.includes('handler') || cat.includes('importer') || cat.includes('converter') || cat.includes('enumerator') || cat.includes('utility'))) {
+            if (info.category && isJunkCategory(info.category)) {
               return acc;
             }
-            
-            const isJunkName = (n: string | undefined | null) => {
-              if (!n) return true;
-              if (n.startsWith('{') && n.endsWith('}')) return true;
-              if (/^[a-fA-F0-9]{32}$/.test(n)) return true;
-              if (/^[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}/.test(n)) return true;
-              if (n.startsWith('0AU') || n.startsWith('1AU') || n.startsWith('2AU') || n.startsWith('3AU')) return true;
-              if (/^[0-9]{1,3}[A-Za-z]+ /.test(n)) return true;
-              if (n.startsWith('$')) return true;
-              if (info.cleanID && n.toLowerCase() === info.cleanID.toLowerCase()) return true;
-              return false;
-            };
 
             let name = info.decodedName || "";
-            if (!name || isJunkName(name)) {
+            if (!name || isJunkName(name, info.cleanID)) {
               if (info.sortPath && info.sortPath.includes('/')) {
                 name = info.sortPath.split('/').pop() || "";
               }
             }
-            if (!name || isJunkName(name)) {
+            if (!name || isJunkName(name, info.cleanID)) {
               name = info.name || "";
             }
-            if (!name || isJunkName(name)) {
+            if (!name || isJunkName(name, info.cleanID)) {
               return acc;
             }
 
@@ -3403,17 +3439,6 @@ The AI was unable to verify these parameters. Please investigate.`;
         }
       } else {
         // Fallback XML attribute parser
-        const isJunkName = (n: string | undefined | null) => {
-          if (!n) return true;
-          if (n.startsWith('{') && n.endsWith('}')) return true;
-          if (/^[a-fA-F0-9]{32}$/.test(n)) return true;
-          if (/^[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}/.test(n)) return true;
-          if (n.startsWith('0AU') || n.startsWith('1AU') || n.startsWith('2AU') || n.startsWith('3AU')) return true;
-          if (/^[0-9]{1,3}[A-Za-z]+ /.test(n)) return true;
-          if (n.startsWith('$')) return true;
-          return false;
-        };
-
         const pluginMatches = input.matchAll(/<([a-zA-Z0-9_-]+)\s+([^>]+)>/gi);
         for (const match of pluginMatches) {
           const attrText = match[2];
@@ -3423,6 +3448,10 @@ The AI was unable to verify these parameters. Please investigate.`;
           const typeMatch = attrText.match(/(?:type|category|pluginType)="([^"]+)"/i);
           const filenameMatch = attrText.match(/filename="([^"]+)"/i);
           
+          if (typeMatch && isJunkCategory(typeMatch[1])) {
+            continue;
+          }
+
           if (nameMatch && !isJunkName(nameMatch[1])) {
             const filename = filenameMatch ? filenameMatch[1] : '';
             const rawType = typeMatch ? typeMatch[1] : '';
@@ -3490,15 +3519,59 @@ The AI was unable to verify these parameters. Please investigate.`;
       }).filter((p): p is VSTPlugin => p !== null && p.name !== 'Unknown');
     }
 
-    // Deduplicate by Name + Vendor to avoid technical variants (Mono/Stereo/VST2/VST3 duplicates)
-    const uniqueMap = new Map<string, VSTPlugin>();
+    // Robust deduplication that prioritizes VST3 over VST2, and removes trailing "(m)" or "(Native)" duplicates
+    const normalizeVendor = (v: string): string => {
+      return (v || '').toLowerCase()
+        .replace(/[^a-z0-9]/g, '')
+        .replace('inc', '')
+        .replace('limited', '')
+        .replace('ltd', '')
+        .replace('software', '')
+        .trim();
+    };
+
+    const normalizeName = (n: string): string => {
+      return (n || '').toLowerCase()
+        .replace(/\(m\)$/i, '')
+        .replace(/\(vst3\)$/i, '')
+        .replace(/\(vst2\)$/i, '')
+        .replace(/\(mono\)$/i, '')
+        .replace(/\(stereo\)$/i, '')
+        .replace(/\(native\)$/i, '')
+        .replace(/[^a-z0-9]/g, '')
+        .trim();
+    };
+
+    const getFormatScore = (p: VSTPlugin): number => {
+      const t = (p.type || '').toLowerCase();
+      const n = (p.name || '').toLowerCase();
+      if (t.includes('vst3')) return 4;
+      if (n.includes('vst3')) return 4;
+      if (t.includes('au') || t.includes('audiounit')) return 3;
+      if (t.includes('vst2') || t.includes('vst')) return 2;
+      if (t.includes('native')) return 1.5;
+      return 1;
+    };
+
+    const grouped = new Map<string, VSTPlugin[]>();
     parsed.forEach(p => {
-      const key = `${p.vendor.toLowerCase()}|${p.name.toLowerCase()}`;
-      if (!uniqueMap.has(key) || (p.id && !uniqueMap.get(key)?.id)) {
-        uniqueMap.set(key, p);
-      }
+      const vNormalized = normalizeVendor(p.vendor);
+      const nNormalized = normalizeName(p.name);
+      const key = `${vNormalized}|${nNormalized}`;
+      const list = grouped.get(key) || [];
+      list.push(p);
+      grouped.set(key, list);
     });
-    parsed = Array.from(uniqueMap.values());
+
+    parsed = Array.from(grouped.values()).map(group => {
+      // Sort group descending by score
+      group.sort((a, b) => {
+        const scoreA = getFormatScore(a) + (a.id ? 0.1 : 0);
+        const scoreB = getFormatScore(b) + (b.id ? 0.1 : 0);
+        return scoreB - scoreA;
+      });
+      return group[0];
+    });
 
     if (parsed.length > 5000) {
       setError(`Your list has ${parsed.length} items. Please limit it to 5000 plugins at a time so the AI doesn't get overwhelmed.`);

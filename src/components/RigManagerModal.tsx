@@ -217,7 +217,6 @@ export const RigManagerModal: React.FC<RigManagerModalProps> = ({
   const { t } = useTranslation();
   const [activeTab, setActiveTab] = useState<Tab>('options');
   const [copied, setCopied] = useState(false);
-  const [showResetConfirm, setShowResetConfirm] = useState(false);
   const [friendRigLink, setFriendRigLink] = useState('');
   const [friendPlugins, setFriendPlugins] = useState<VSTPlugin[]>([]);
   const [friendGear, setFriendGear] = useState<Hardware[]>([]);

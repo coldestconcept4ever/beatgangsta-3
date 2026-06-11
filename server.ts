@@ -3986,6 +3986,26 @@ if (process.env.NODE_ENV !== 'production') {
     }
   });
 
+  app.post("/api/vst-cache/clear", async (req, res) => {
+    try {
+      const authorizedEmails = ['coldestconcept@gmail.com', 'recogniizemiracles@gmail.com', 'recognizemiracles@gmail.com'];
+      const userEmail = req.session?.user?.email || req.body.email;
+
+      if (!userEmail || !authorizedEmails.includes(userEmail.toLowerCase().trim())) {
+        return res.status(403).json({ error: "Unauthorized access: admin privileges required to wipe AI VST Cache" });
+      }
+
+      const client = await getDb();
+      if (!client) return res.status(500).json({ error: "Database not available" });
+
+      await client.execute("DELETE FROM vst_cache");
+      res.json({ success: true, message: "VST cache cleared successfully" });
+    } catch (error) {
+      console.error("Error clearing VST cache:", error);
+      res.status(500).json({ error: "Failed to clear cache" });
+    }
+  });
+
   app.post("/api/user-plugins/save", async (req, res) => {
     try {
       const { uid, plugins } = req.body;
