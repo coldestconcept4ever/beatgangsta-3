@@ -1112,7 +1112,7 @@ export const enrichPluginLibrary = async (
   console.log(`Enriching library with ${tier} strategy. Batch Size: ${BATCH_SIZE}, Concurrency: ${CONCURRENCY}`);
   const updateProgress = (count: number) => {
     processedCount += count;
-    const progress = Math.round((processedCount / plugins.length) * 100);
+    const progress = Math.min(Math.round((processedCount / plugins.length) * 100), 99); // Cap at 99 until truly finished
     const elapsedTime = Date.now() - startTime;
     const rate = processedCount > 0 ? elapsedTime / processedCount : 0;
     const remainingPlugins = plugins.length - processedCount;
@@ -1121,6 +1121,10 @@ export const enrichPluginLibrary = async (
     if (onStatus) onStatus(`Analyzed ${processedCount} of ${plugins.length} plugins...`);
   };
   const processBatch = async (batch: VSTPlugin[], retryCount = 0): Promise<VSTPlugin[]> => {
+    if (onStatus && batch.length > 0) {
+      const names = batch.slice(0, 2).map(p => p.name).join(', ') + (batch.length > 2 ? '...' : '');
+      onStatus(`Researching ${batch.length} plugins: ${names}`);
+    }
     // 1. Check Server Cache
     let serverCached: Record<string, any> = {};
     try {
@@ -1351,10 +1355,16 @@ export const enrichPluginLibrary = async (
   // Process chunks with concurrency
   for (let i = 0; i < chunks.length; i += CONCURRENCY) {
     const activeChunks = chunks.slice(i, i + CONCURRENCY);
-    const results = await Promise.all(activeChunks.map(chunk => processBatch(chunk)));
+    
+    // Process each chunk in this concurrent group and update progress as each one completes
+    const results = await Promise.all(activeChunks.map(async (chunk) => {
+      const batchResult = await processBatch(chunk);
+      updateProgress(batchResult.length);
+      return batchResult;
+    }));
+
     results.forEach(batchResult => {
       enrichedPlugins.push(...batchResult);
-      updateProgress(batchResult.length);
     });
     // Safety delay to respect rate limits (especially for Free Tier)
     if (tier === 'FREE') {

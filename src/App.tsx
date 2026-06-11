@@ -6150,31 +6150,50 @@ The AI was unable to verify these parameters. Please investigate.`;
         {isEnrichingLibrary ? (
           <div className="max-w-3xl mx-auto mt-16 sm:mt-12 animate-in fade-in zoom-in duration-1000">
             <div className={`p-8 sm:p-16 transition-all ${mainBlurClass} border rounded-[3rem] sm:rounded-[4rem] shadow-2xl flex flex-col items-center text-center ${theme === 'coldest' ? 'bg-white/30 border-white/40' : theme === 'chef-mode' ? 'bg-white/40 border-white/40' : 'bg-black/40 border-white/10'}`}>
-              <Logo size={160} grillStyle={grillStyle} knifeStyle={knifeStyle} duragStyle={duragStyle} pendantStyle={pendantStyle} chainStyle={chainStyle} theme={theme} saberColor={saberColor} mascotColor={mascotColor} showChain={showChain} highEyes={highEyes} isCigarEquipped={isCigarEquipped} isTossingCigar={isTossingCigar} showSparkles={showSparkles} onClick={cycleGrill} />
+              <div className="relative">
+                <Logo size={160} grillStyle={grillStyle} knifeStyle={knifeStyle} duragStyle={duragStyle} pendantStyle={pendantStyle} chainStyle={chainStyle} theme={theme} saberColor={saberColor} mascotColor={mascotColor} showChain={showChain} highEyes={highEyes} isCigarEquipped={isCigarEquipped} isTossingCigar={isTossingCigar} showSparkles={showSparkles} onClick={cycleGrill} />
+                <div className="absolute -bottom-2 -right-2 bg-sky-500 text-white text-[10px] font-black px-2 py-1 rounded-full animate-pulse uppercase tracking-widest">
+                  Researching
+                </div>
+              </div>
               
               <h2 className={`text-3xl sm:text-4xl font-black tracking-tighter mt-8 mb-4 ${theme === 'coldest' || theme === 'chef-mode' ? 'text-slate-800' : 'text-white'}`}>
-                Building Your Library...
+                {enrichProgress < 10 ? "Scanning Your Gear..." : enrichProgress < 90 ? "AI Deep Research..." : "Finalizing Profile..."}
               </h2>
               
               <p className={`text-sm font-bold mb-8 max-w-md ${theme === 'coldest' || theme === 'chef-mode' ? 'text-slate-600' : 'text-slate-400'}`}>
-                We're researching your unique plugins to find out what makes them special. This is a lot of work, but we'll automatically save your library so you won't have to do this again until you get new plugins!
+                {enrichProgress < 30 
+                  ? "We're identifying your plugins and checking our secure global cache to speed things up." 
+                  : "The AI is currently researching technical parameters and sonic characteristics for your unique gear."}
               </p>
 
-              <div className="w-full max-w-md bg-black/10 rounded-full h-4 mb-4 overflow-hidden relative">
+              <div className="w-full max-w-md bg-black/10 rounded-full h-4 mb-4 overflow-hidden relative group">
                 <div 
-                  className={`h-full rounded-full transition-all duration-500 ease-out ${theme === 'coldest' ? 'bg-sky-500' : theme === 'chef-mode' ? 'bg-orange-500' : 'bg-white'}`}
+                  className={`h-full rounded-full transition-all duration-1000 ease-out relative ${theme === 'coldest' ? 'bg-sky-500 shadow-[0_0_20px_rgba(14,165,233,0.5)]' : theme === 'chef-mode' ? 'bg-orange-500 shadow-[0_0_20px_rgba(249,115,22,0.5)]' : 'bg-white shadow-[0_0_20px_rgba(255,255,255,0.5)]'}`}
                   style={{ width: `${enrichProgress}%` }}
-                />
+                >
+                  <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent animate-shimmer" />
+                </div>
               </div>
               
               <div className="flex justify-between w-full max-w-md text-xs font-black uppercase tracking-widest opacity-60">
                 <span>{enrichProgress}% Complete</span>
-                <span>~{enrichEta}s remaining</span>
+                <span>
+                  {enrichEta > 0 ? (
+                    enrichEta > 60 
+                      ? `~${Math.floor(enrichEta / 60)}m ${enrichEta % 60}s remaining` 
+                      : `~${enrichEta}s remaining`
+                  ) : "Calculating..."}
+                </span>
               </div>
 
               {enrichStatus && (
-                <div className={`mt-6 text-[10px] font-black uppercase tracking-[0.2em] px-4 py-2 rounded-full border ${theme === 'coldest' ? 'bg-slate-100 border-slate-200 text-slate-500' : 'bg-white/5 border-white/10 text-white/40'}`}>
-                  {enrichStatus}
+                <div className={`mt-8 w-full max-w-md`}>
+                  <div className={`text-[10px] font-black uppercase tracking-[0.2em] mb-2 text-left opacity-40 px-2`}>Current Activity</div>
+                  <div className={`text-[11px] font-bold text-left px-4 py-3 rounded-2xl border flex items-center gap-3 ${theme === 'coldest' ? 'bg-slate-100/50 border-slate-200 text-slate-600' : 'bg-white/5 border-white/10 text-white/70'}`}>
+                    <div className="w-2 h-2 rounded-full bg-sky-500 animate-ping" />
+                    <span className="truncate">{enrichStatus}</span>
+                  </div>
                 </div>
               )}
             </div>
