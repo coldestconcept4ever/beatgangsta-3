@@ -3021,12 +3021,31 @@ The AI was unable to verify these parameters. Please investigate.`;
       "cla76": "56535443-3736-5377-6176-65737368656c",
       "cla-2a": "56535443-3241-5377-6176-65737368656c",
       "cla2a": "56535443-3241-5377-6176-65737368656c",
+
+      // PreSonus Native
+      "ampire": "B6407C28-0F92-4538-9E7F-9B867B3FEA74",
+      "fat channel": "5E91DC8A-E560-4115-98FA-59FB3F215BA1",
+      "pedalboard": "BC9129B4-EC67-41B8-96DE-EC128D5FE54D",
+      "tuner": "4F748A80-0D49-4E8A-A558-B120D824512B",
+      "pro eq": "073C4094-E062-4FB5-8328-74608DD1A3A4",
+      "compressor": "54F19B72-352C-4AA5-A2AF-67F86F30D6BE",
+      "limiter": "61B18D53-26FA-4220-8614-89944A1990EC",
+
+      // Universal Audio (UADx / Spark VST3s)
+      "uaudio_manley_massive_passive": "ABCDEF01-9182-FAEB-5541-447855333931",
+      "uaudio_teletronix_la-2": "ABCDEF01-9182-FAEB-5541-447855334135",
+      "uaudio_ua_1176ln_rev_e": "ABCDEF01-9182-FAEB-5541-447855333958",
+      "uaudio_manley_voxbox": "ABCDEF01-9182-FAEB-5541-447855334250",
+      "uaudio_api_2500": "ABCDEF01-9182-FAEB-5541-447855334255",
+      "uaudio_neve_1073": "ABCDEF01-9182-FAEB-5541-44785533415A",
+      "uaudio_pultec_eqp-1a": "ABCDEF01-9182-FAEB-5541-44785533414E",
       
       // Instruments
       "serum": "56535458-6d4e-7973-6572-756d78363400",
       "nexus": "5653544e-5853-336e-6578-757373706163",
       "omnisphere": "5653544f-5048-526f-6d65-6e6973706865",
       "kontakt": "5653544e-694f-386b-6f6e-74616b743800",
+      "kontakt 7": "5653544E-694B-376B-6F6E-74616B742037",
       "kontakt 8": "5653544e-694f-386b-6f6e-74616b743800",
       "sublab": "56535453-4c41-4273-7562-6c6162767374",
       "keyszone classic": "5653544b-5a43-4c6b-6579-737a6f6e6563"
@@ -3036,6 +3055,9 @@ The AI was unable to verify these parameters. Please investigate.`;
       classID: string;
       cleanID: string;
       sortPath?: string;
+      name?: string;
+      vendor?: string;
+      category?: string;
       decodedName: string | null;
       _matched?: boolean;
     }
@@ -3063,11 +3085,20 @@ The AI was unable to verify these parameters. Please investigate.`;
       // General XML / Studio One settings parsing
       const xmlPluginInfos: XMLPluginInfo[] = [];
       const tagMatches = input.matchAll(/<([a-zA-Z0-9_-]+)\s+([^>]+)>/gi);
+      let currentVendor: string | undefined;
       
       for (const match of tagMatches) {
+        const tagName = match[1].toLowerCase();
         const attrText = match[2];
         const classIDMatch = attrText.match(/classID="([^"]+)"/i);
+        const nameMatch = attrText.match(/\s+name="([^"]+)"/i);
+        const vendorMatch = attrText.match(/vendor="([^"]+)"/i);
+        const categoryMatch = attrText.match(/category="([^"]+)"/i);
         const sortPathMatch = attrText.match(/sortPath="([^"]+)"/i);
+
+        if (vendorMatch) {
+          currentVendor = vendorMatch[1];
+        }
         
         if (classIDMatch) {
           const classID = classIDMatch[1];
@@ -3095,6 +3126,9 @@ The AI was unable to verify these parameters. Please investigate.`;
             classID,
             cleanID,
             sortPath: sortPathMatch ? sortPathMatch[1] : undefined,
+            name: nameMatch ? nameMatch[1] : undefined,
+            vendor: currentVendor,
+            category: categoryMatch ? categoryMatch[1] : undefined,
             decodedName,
           });
         }
@@ -3245,27 +3279,26 @@ The AI was unable to verify these parameters. Please investigate.`;
           // Directly list decoded XML plug-ins or those with a structural sortPath (supports VST3!)
           parsed = xmlPluginInfos.filter(info => {
             const hasDecoded = info.decodedName && info.decodedName.length >= 3;
+            const hasName = info.name && info.name.length >= 2;
             const hasSortPath = info.sortPath && info.sortPath.includes('/') && info.sortPath.split('/').pop()!.length >= 3;
-            return hasDecoded || hasSortPath;
+            return hasDecoded || hasName || hasSortPath;
           }).map(info => {
-            let name = info.decodedName || "";
-            let vendor = 'Unknown';
+            let name = info.name || info.decodedName || "";
+            let vendor = info.vendor || 'Unknown';
             if (!name && info.sortPath) {
               const parts = info.sortPath.split('/');
               name = parts.pop() || "";
-              vendor = parts.join('/') || 'Unknown';
+              vendor = parts.join('/') || vendor;
             } else if (info.sortPath) {
               const parts = info.sortPath.split('/');
-              if (parts.length > 1) {
-                vendor = parts.slice(0, -1).join('/') || 'Unknown';
-              } else {
-                vendor = info.sortPath;
+              if (parts.length > 1 && vendor === 'Unknown') {
+                vendor = parts.slice(0, -1).join('/') || vendor;
               }
             }
             return {
               vendor,
               name,
-              type: (info.sortPath?.toLowerCase().includes('synth') || info.sortPath?.toLowerCase().includes('instrument')) ? 'Instruments' : 'Unknown',
+              type: (info.category?.toLowerCase() === 'audiosynth' || info.sortPath?.toLowerCase().includes('synth') || info.sortPath?.toLowerCase().includes('instrument')) ? 'Instruments' : 'Unknown',
               version: 'N/A',
               lastModified: 'Settings XML',
               id: info.cleanID,
