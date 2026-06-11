@@ -2137,8 +2137,21 @@ The AI was unable to verify these parameters. Please investigate.`;
   const handleDeleteCloudData = async () => {
     try {
       setIsDeletingAccount(true);
-      const res = await fetchWithDetailedError('/api/cloud/data', { method: 'DELETE' });
+      await fetchWithDetailedError('/api/cloud/data', { method: 'DELETE' });
+      
+      // Clear local states if user successfully cleared cloud data
+      setPlugins([]);
+      setAnalogInstruments([]);
+      setAnalogHardware([]);
+      setStarredPlugins([]);
+      
+      localStorage.removeItem('bg_library');
+      localStorage.removeItem('bg_plugins');
+      localStorage.removeItem('bg_analog_instruments_v2');
+      localStorage.removeItem('bg_analog_hardware_v2');
+
       alert(t('cloud_data_removed'));
+      window.location.reload(); // Force full reload to be sure
     } catch (err: any) {
       console.error("Failed to delete cloud data", err);
       alert(t('cloud_data_delete_error', { error: err.message }));
@@ -2151,9 +2164,17 @@ The AI was unable to verify these parameters. Please investigate.`;
   const handleDeleteAccount = async () => {
     try {
       setIsDeletingAccount(true);
-      const res = await fetchWithDetailedError('/api/auth/account', { method: 'DELETE' });
+      await fetchWithDetailedError('/api/auth/account', { method: 'DELETE' });
+      
+      // Comprehensive state wipe
+      setPlugins([]);
+      setAnalogInstruments([]);
+      setAnalogHardware([]);
+      setVault([]);
+      setSavedCritiques([]);
+      setFolders([]);
+      
       localStorage.clear();
-      setUser(null);
       setShowDeleteConfirm(false);
       alert(t('account_deleted'));
       window.location.reload();
@@ -3096,6 +3117,7 @@ The AI was unable to verify these parameters. Please investigate.`;
     } else if (isMixcraftXml) {
       // General XML / Studio One settings parsing
       const xmlPluginInfos: XMLPluginInfo[] = [];
+      // Use a more robust regex for tags that might span multiple lines
       const tagMatches = input.matchAll(/<([a-zA-Z0-9_-]+)\s+([^>]+)>/gi);
       let currentVendor: string | undefined;
       
@@ -3110,6 +3132,8 @@ The AI was unable to verify these parameters. Please investigate.`;
 
         if (vendorMatch) {
           currentVendor = vendorMatch[1];
+        } else if (sortPathMatch && sortPathMatch[1].includes('/')) {
+          currentVendor = sortPathMatch[1].split('/')[0];
         }
         
         if (classIDMatch) {
@@ -3119,18 +3143,18 @@ The AI was unable to verify these parameters. Please investigate.`;
           const cleanHex = cleanID.replace(/-/g, '').toLowerCase();
           
           if (cleanHex.startsWith('565354')) {
-            let name = '';
+            let decoded = '';
             for (let i = 8; i < cleanHex.length; i += 2) {
               const byteStr = cleanHex.substring(i, i + 2);
               const code = parseInt(byteStr, 16);
               if (code === 0) continue;
               if (code >= 32 && code <= 126) {
-                name += String.fromCharCode(code);
+                decoded += String.fromCharCode(code);
               }
             }
-            name = name.trim();
-            if (name) {
-              decodedName = name;
+            decoded = decoded.trim();
+            if (decoded) {
+              decodedName = decoded;
             }
           }
           
@@ -3148,22 +3172,23 @@ The AI was unable to verify these parameters. Please investigate.`;
 
       // Separate lines that look like CSV entries
       const csvLines = lines.filter(line => {
-        const trimmed = line.trim();
+        const trimmed = line.trim().replace(/^\uFEFF/, ''); // Remove BOM if present
         if (!trimmed) return false;
-        // Skip obvious XML structure rows
-        if (trimmed.startsWith('<') || trimmed.startsWith('?') || trimmed.startsWith('/') || trimmed.startsWith(']') || trimmed.startsWith('!')) {
+        // Skip obvious XML structure rows - be very strict here
+        if (trimmed.startsWith('<') || trimmed.startsWith('?') || trimmed.startsWith('/') || trimmed.startsWith(']') || trimmed.startsWith('!') || trimmed.startsWith('<?')) {
           return false;
         }
         // Must have at least a few commas to be a valid CSV line, and not be XML attributes
         const parts = trimmed.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/);
-        return parts.length >= 2 && !trimmed.toLowerCase().includes('<?xml') && !trimmed.toLowerCase().includes('xmlns=');
+        return parts.length >= 2 && !trimmed.toLowerCase().includes('xmlns=') && (trimmed.includes(',') || trimmed.includes('\t'));
       });
 
       const csvParsed: VSTPlugin[] = [];
       const startIndex = csvLines[0] && csvLines[0].toLowerCase().includes('vendor') ? 1 : 0;
       
       csvLines.slice(startIndex).forEach(line => {
-        const parts = line.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/);
+        const trimmedLine = line.trim().replace(/^\uFEFF/, '');
+        const parts = trimmedLine.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/);
         if (parts.length >= 2) {
           csvParsed.push({
             vendor: parts[0]?.replace(/"/g, '').trim() || 'Unknown',
@@ -3183,11 +3208,12 @@ The AI was unable to verify these parameters. Please investigate.`;
             
             // Heuristic 1: VST2 decoded name exact or substring match
             let matchedXml = xmlPluginInfos.find(info => {
-              if (!info.decodedName) return false;
-              const cleanDecoded = cleanStringForMatching(info.decodedName);
-              return cleanCsvName === cleanDecoded || 
-                     (cleanDecoded.length >= 4 && cleanCsvName.includes(cleanDecoded)) ||
-                     (cleanCsvName.length >= 4 && cleanDecoded.includes(cleanCsvName));
+              const infoName = info.decodedName || info.name;
+              if (!infoName) return false;
+              const cleanInfoName = cleanStringForMatching(infoName);
+              return cleanCsvName === cleanInfoName || 
+                     (cleanInfoName.length >= 4 && cleanCsvName.includes(cleanInfoName)) ||
+                     (cleanCsvName.length >= 4 && cleanInfoName.includes(cleanCsvName));
             });
 
             // Heuristic 1.5: Match via sortPath (highly accurate for VST3 plug-ins!)
@@ -3199,7 +3225,7 @@ The AI was unable to verify these parameters. Please investigate.`;
                 const cleanSortName = cleanStringForMatching(lastPart);
                 return cleanCsvName === cleanSortName || 
                        (cleanSortName.length >= 4 && cleanCsvName.includes(cleanSortName)) ||
-                       (cleanCsvName.length >= 4 && cleanSortName.includes(cleanSortName));
+                       (cleanCsvName.length >= 4 && cleanSortName.includes(cleanCsvName));
               });
             }
 
@@ -3219,14 +3245,15 @@ The AI was unable to verify these parameters. Please investigate.`;
             }
           });
 
-          // Any unassigned XML items that decoded to actual names can be added as standalone
+          // Any unassigned XML items that look like products can be added as standalone
           const unassignedXmlProducts: VSTPlugin[] = [];
           xmlPluginInfos.forEach(info => {
-            if (!info._matched && info.decodedName && info.decodedName.length >= 3) {
+            const displayName = info.decodedName || info.name;
+            if (!info._matched && displayName && displayName.length >= 3 && !displayName.includes('.') && info.cleanID.length > 10) {
               unassignedXmlProducts.push({
-                vendor: info.sortPath || 'Unknown',
-                name: info.decodedName,
-                type: (info.sortPath?.toLowerCase().includes('synth') || info.sortPath?.toLowerCase().includes('instrument')) ? 'Instruments' : 'Unknown',
+                vendor: info.vendor || info.sortPath?.split('/')[0] || 'Unknown',
+                name: displayName,
+                type: (info.sortPath?.toLowerCase().includes('synth') || info.sortPath?.toLowerCase().includes('instrument') || info.category?.toLowerCase().includes('synth')) ? 'Instruments' : 'AudioEffect',
                 version: 'N/A',
                 lastModified: 'Found in settings XML',
                 id: info.cleanID,
