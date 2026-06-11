@@ -8,58 +8,7 @@ let isInitialized = false;
 function ensureInitialized() {
   if (isInitialized) return;
   
-  // Monkey patch Vst3Plugin and Vst2Plugin to output standard lowercase XML tag names and include required attributes
-  try {
-    const v3 = (Vst3Plugin as any);
-    if (v3 && v3.prototype && !v3.prototype._bgPatched) {
-      const original = v3.prototype.toXmlObject;
-      v3.prototype.toXmlObject = function() {
-        const base = original.call(this);
-        // Extract inner content if library already wrapped it
-        const inner = base.vst3Plugin || base.Vst3Plugin || base;
-        return {
-          vst3Plugin: {
-            ...inner,
-            pluginId: (this as any).pluginId || (this as any).vst3Id || (this as any).deviceID,
-            loaded: (this as any).loaded ? "true" : "false"
-          }
-        };
-      };
-      v3.prototype._bgPatched = true;
-    }
-
-    const v2 = (Vst2Plugin as any);
-    if (v2 && v2.prototype && !v2.prototype._bgPatched) {
-      const original = v2.prototype.toXmlObject;
-      v2.prototype.toXmlObject = function() {
-        const base = original.call(this);
-        const inner = base.vst2Plugin || base.Vst2Plugin || base;
-        return {
-          vst2Plugin: {
-            ...inner,
-            pluginId: (this as any).pluginId || (this as any).vst2Id || (this as any).deviceID,
-            uniqueId: (this as any).uniqueId,
-            loaded: (this as any).loaded ? "true" : "false"
-          }
-        };
-      };
-      v2.prototype._bgPatched = true;
-    }
-
-    // Register lowercase tag names in DeviceRegistry for proper bidirectional parsing mapping
-    const registryInstance = (DeviceRegistry as any)?.getInstance?.();
-    const registry = (registryInstance as any)?.getRegistry?.();
-    if (registry) {
-      if (registry["Vst3Plugin"] && !registry["vst3Plugin"]) {
-        registry["vst3Plugin"] = registry["Vst3Plugin"];
-      }
-      if (registry["Vst2Plugin"] && !registry["vst2Plugin"]) {
-        registry["vst2Plugin"] = registry["Vst2Plugin"];
-      }
-    }
-  } catch (e) {
-    console.warn("Could not apply dawproject patches:", e);
-  }
+  // Removed monkey-patching logic as it may cause ReferenceErrors during module initialization in bundled builds
   
   isInitialized = true;
 }
@@ -821,10 +770,20 @@ export const generateDawProjectFromMixCritique = async (critique: MixCritique, s
   }
   
   const zip = new JSZip();
+  // String replacement helper to fix PascalCase tags and attribute names for Studio One compatibility
+  const fixXml = (xml: string) => {
+    return xml
+      .replace(/<Vst3Plugin /g, '<vst3Plugin ')
+      .replace(/<\/Vst3Plugin>/g, '</vst3Plugin>')
+      .replace(/<Vst2Plugin /g, '<vst2Plugin ')
+      .replace(/<\/Vst2Plugin>/g, '</vst2Plugin>')
+      .replace(/deviceID=/g, 'pluginId=');
+  };
+
   // @ts-ignore
   zip.file('metadata.xml', new TextEncoder().encode(metadata.toXml()));
   // @ts-ignore
-  zip.file('project.xml', new TextEncoder().encode(project.toXml()));
+  zip.file('project.xml', new TextEncoder().encode(fixXml(project.toXml())));
   
   for (const [path, data] of Object.entries(embeddedFiles)) {
       zip.file(path, data);
@@ -890,10 +849,20 @@ export const generateDawProjectFromBeatRecipe = async (recipe: any, userPlugins?
   }
   
   const zip = new JSZip();
+  // String replacement helper to fix PascalCase tags and attribute names for Studio One compatibility
+  const fixXml = (xml: string) => {
+    return xml
+      .replace(/<Vst3Plugin /g, '<vst3Plugin ')
+      .replace(/<\/Vst3Plugin>/g, '</vst3Plugin>')
+      .replace(/<Vst2Plugin /g, '<vst2Plugin ')
+      .replace(/<\/Vst2Plugin>/g, '</vst2Plugin>')
+      .replace(/deviceID=/g, 'pluginId=');
+  };
+
   // @ts-ignore
   zip.file('metadata.xml', new TextEncoder().encode(metadata.toXml()));
   // @ts-ignore
-  zip.file('project.xml', new TextEncoder().encode(project.toXml()));
+  zip.file('project.xml', new TextEncoder().encode(fixXml(project.toXml())));
   
   for (const [path, data] of Object.entries(embeddedFiles)) {
       zip.file(path, data);
