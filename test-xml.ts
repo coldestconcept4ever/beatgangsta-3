@@ -1,5 +1,13 @@
 import { Project, Utility, ContentType, MixerRole, Vst3Plugin, DeviceRole } from 'dawproject-typescript';
 
+// Monkey patch Vst3Plugin to output lowercase xml tag name
+Vst3Plugin.prototype.toXmlObject = function() {
+  const pluginContent = Object.getPrototypeOf(Vst3Plugin.prototype).toXmlObject.call(this);
+  return {
+    vst3Plugin: pluginContent
+  };
+};
+
 const project = new Project();
 const track = Utility.createTrack("Lead Vocal", new Set([ContentType.AUDIO]), MixerRole.REGULAR, 0.8, 0.5);
 

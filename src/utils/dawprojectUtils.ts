@@ -1,6 +1,36 @@
-import { DawProject, Project, Application, MetaData, Utility, ContentType, MixerRole, Track, Channel, Plugin, Arrangement, Lanes, Vst3Plugin, Vst2Plugin, DeviceRole, Clip, Clips, Transport, RealParameter, Unit } from 'dawproject-typescript';
+import { DawProject, Project, Application, MetaData, Utility, ContentType, MixerRole, Track, Channel, Plugin, Arrangement, Lanes, Vst3Plugin, Vst2Plugin, DeviceRole, Clip, Clips, Transport, RealParameter, Unit, DeviceRegistry } from 'dawproject-typescript';
 import JSZip from 'jszip';
 import { MixCritique, SavedRecipe, InstrumentTrack, DeepDivePlugin, VSTPlugin } from '../types';
+
+// Monkey patch Vst3Plugin and Vst2Plugin to output standard lowercase XML tag names
+Vst3Plugin.prototype.toXmlObject = function() {
+  const pluginContent = Object.getPrototypeOf(Vst3Plugin.prototype).toXmlObject.call(this);
+  return {
+    vst3Plugin: pluginContent
+  };
+};
+
+Vst2Plugin.prototype.toXmlObject = function() {
+  const pluginContent = Object.getPrototypeOf(Vst2Plugin.prototype).toXmlObject.call(this);
+  return {
+    vst2Plugin: pluginContent
+  };
+};
+
+// Register lowercase tag names in DeviceRegistry for proper bidirectional parsing mapping
+try {
+  const registry = (DeviceRegistry.getInstance() as any).getRegistry();
+  if (registry) {
+    if (registry["Vst3Plugin"] && !registry["vst3Plugin"]) {
+      registry["vst3Plugin"] = registry["Vst3Plugin"];
+    }
+    if (registry["Vst2Plugin"] && !registry["vst2Plugin"]) {
+      registry["vst2Plugin"] = registry["Vst2Plugin"];
+    }
+  }
+} catch (e) {
+  console.warn("Could not register lowercase tags in DeviceRegistry:", e);
+}
 
 interface PluginMeta {
   deviceName: string;
