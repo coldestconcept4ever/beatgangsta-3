@@ -2969,7 +2969,7 @@ The AI was unable to verify these parameters. Please investigate.`;
     if (!input.trim()) return;
     const lines = input.trim().split('\n');
     const isReaperIni = lines.some(l => l.includes('=') && (l.includes('.dll') || l.includes('.vst3')));
-    const isMixcraftXml = input.includes('<VSTPlugins>') || input.includes('<Plugin ') || input.includes('<vst-inventory>') || input.includes('<PreSonus>') || input.includes('<Components>') || input.includes('<Component ') || input.includes('<?xml') || input.includes('<Settings>');
+    const isMixcraftXml = input.includes('<VSTPlugins>') || input.includes('<Plugin ') || input.includes('<vst-inventory>') || input.includes('<PreSonus>') || input.includes('<Components>') || input.includes('<Component ') || input.includes('<?xml') || input.includes('<Settings>') || input.includes('<ClassDescription') || input.includes('<Attributes');
     let parsed: VSTPlugin[] = [];
 
     // Helper functions for matching
@@ -3278,6 +3278,12 @@ The AI was unable to verify these parameters. Please investigate.`;
 
           // Directly list decoded XML plug-ins or those with a structural sortPath (supports VST3!)
           parsed = xmlPluginInfos.filter(info => {
+            const cat = info.category?.toLowerCase() || '';
+            // Exclude common Studio One internal/technical categories that aren't VSTs
+            if (cat && (cat.includes('service') || cat.includes('handler') || cat.includes('importer') || cat.includes('converter') || cat.includes('enumerator'))) {
+              return false;
+            }
+            
             const hasDecoded = info.decodedName && info.decodedName.length >= 3;
             const hasName = info.name && info.name.length >= 2;
             const hasSortPath = info.sortPath && info.sortPath.includes('/') && info.sortPath.split('/').pop()!.length >= 3;
@@ -3382,8 +3388,18 @@ The AI was unable to verify these parameters. Please investigate.`;
       }).filter((p): p is VSTPlugin => p !== null && p.name !== 'Unknown');
     }
 
-    if (parsed.length > 2000) {
-      setError("Please limit your list to 2000 plugins at a time so the AI doesn't get overwhelmed.");
+    // Deduplicate by Name + Vendor to avoid technical variants (Mono/Stereo/VST2/VST3 duplicates)
+    const uniqueMap = new Map<string, VSTPlugin>();
+    parsed.forEach(p => {
+      const key = `${p.vendor.toLowerCase()}|${p.name.toLowerCase()}`;
+      if (!uniqueMap.has(key) || (p.id && !uniqueMap.get(key)?.id)) {
+        uniqueMap.set(key, p);
+      }
+    });
+    parsed = Array.from(uniqueMap.values());
+
+    if (parsed.length > 5000) {
+      setError(`Your list has ${parsed.length} items. Please limit it to 5000 plugins at a time so the AI doesn't get overwhelmed.`);
       return;
     }
 
