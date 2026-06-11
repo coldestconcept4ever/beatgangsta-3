@@ -3254,11 +3254,31 @@ The AI was unable to verify these parameters. Please investigate.`;
             }
           });
 
+          const isJunkName = (n: string | undefined | null) => {
+            if (!n) return true;
+            if (n.startsWith('{') && n.endsWith('}')) return true;
+            if (/^[a-fA-F0-9]{32}$/.test(n)) return true;
+            if (/^[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}/.test(n)) return true;
+            if (n.startsWith('0AU') || n.startsWith('1AU') || n.startsWith('2AU') || n.startsWith('3AU')) return true;
+            if (/^[0-9]{1,3}[A-Za-z]+ /.test(n)) return true;
+            if (n.startsWith('$')) return true;
+            return false;
+          };
+
           // Any unassigned XML items that look like products can be added as standalone
           const unassignedXmlProducts: VSTPlugin[] = [];
           xmlPluginInfos.forEach(info => {
-            const displayName = info.decodedName || info.name;
-            if (!info._matched && displayName && displayName.length >= 3 && !displayName.includes('.') && info.cleanID.length > 10) {
+            let displayName = info.decodedName || "";
+            if (!displayName || isJunkName(displayName)) {
+               if (info.sortPath && info.sortPath.includes('/')) {
+                 displayName = info.sortPath.split('/').pop() || "";
+               }
+            }
+            if (!displayName || isJunkName(displayName)) {
+               displayName = info.name || "";
+            }
+
+            if (!info._matched && displayName && !isJunkName(displayName) && displayName.length >= 3 && !displayName.includes('.') && info.cleanID.length > 10) {
               const newPlugin: VSTPlugin = {
                 vendor: info.vendor || info.sortPath?.split('/')[0] || 'Unknown',
                 name: displayName,
@@ -3328,25 +3348,40 @@ The AI was unable to verify these parameters. Please investigate.`;
           }
 
           // Directly list decoded XML plug-ins or those with a structural sortPath (supports VST3!)
-          parsed = xmlPluginInfos.filter(info => {
+          parsed = xmlPluginInfos.reduce((acc, info) => {
             const cat = info.category?.toLowerCase() || '';
             // Exclude common Studio One internal/technical categories that aren't VSTs
-            if (cat && (cat.includes('service') || cat.includes('handler') || cat.includes('importer') || cat.includes('converter') || cat.includes('enumerator'))) {
-              return false;
+            if (cat && (cat.includes('service') || cat.includes('handler') || cat.includes('importer') || cat.includes('converter') || cat.includes('enumerator') || cat.includes('utility'))) {
+              return acc;
             }
             
-            const hasDecoded = info.decodedName && info.decodedName.length >= 3;
-            const hasName = info.name && info.name.length >= 2;
-            const hasSortPath = info.sortPath && info.sortPath.includes('/') && info.sortPath.split('/').pop()!.length >= 3;
-            return hasDecoded || hasName || hasSortPath;
-          }).map(info => {
-            let name = info.name || info.decodedName || "";
+            const isJunkName = (n: string | undefined | null) => {
+              if (!n) return true;
+              if (n.startsWith('{') && n.endsWith('}')) return true;
+              if (/^[a-fA-F0-9]{32}$/.test(n)) return true;
+              if (/^[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}/.test(n)) return true;
+              if (n.startsWith('0AU') || n.startsWith('1AU') || n.startsWith('2AU') || n.startsWith('3AU')) return true;
+              if (/^[0-9]{1,3}[A-Za-z]+ /.test(n)) return true;
+              if (n.startsWith('$')) return true;
+              if (info.cleanID && n.toLowerCase() === info.cleanID.toLowerCase()) return true;
+              return false;
+            };
+
+            let name = info.decodedName || "";
+            if (!name || isJunkName(name)) {
+              if (info.sortPath && info.sortPath.includes('/')) {
+                name = info.sortPath.split('/').pop() || "";
+              }
+            }
+            if (!name || isJunkName(name)) {
+              name = info.name || "";
+            }
+            if (!name || isJunkName(name)) {
+              return acc;
+            }
+
             let vendor = info.vendor || 'Unknown';
-            if (!name && info.sortPath) {
-              const parts = info.sortPath.split('/');
-              name = parts.pop() || "";
-              vendor = parts.join('/') || vendor;
-            } else if (info.sortPath) {
+            if (info.sortPath) {
               const parts = info.sortPath.split('/');
               if (parts.length > 1 && vendor === 'Unknown') {
                 vendor = parts.slice(0, -1).join('/') || vendor;
@@ -3362,11 +3397,23 @@ The AI was unable to verify these parameters. Please investigate.`;
               category: info.category
             };
             if (info.sortPath) (newObj as any).sortPath = info.sortPath;
-            return newObj;
-          });
+            acc.push(newObj);
+            return acc;
+          }, [] as VSTPlugin[]);
         }
       } else {
         // Fallback XML attribute parser
+        const isJunkName = (n: string | undefined | null) => {
+          if (!n) return true;
+          if (n.startsWith('{') && n.endsWith('}')) return true;
+          if (/^[a-fA-F0-9]{32}$/.test(n)) return true;
+          if (/^[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}/.test(n)) return true;
+          if (n.startsWith('0AU') || n.startsWith('1AU') || n.startsWith('2AU') || n.startsWith('3AU')) return true;
+          if (/^[0-9]{1,3}[A-Za-z]+ /.test(n)) return true;
+          if (n.startsWith('$')) return true;
+          return false;
+        };
+
         const pluginMatches = input.matchAll(/<([a-zA-Z0-9_-]+)\s+([^>]+)>/gi);
         for (const match of pluginMatches) {
           const attrText = match[2];
@@ -3376,7 +3423,7 @@ The AI was unable to verify these parameters. Please investigate.`;
           const typeMatch = attrText.match(/(?:type|category|pluginType)="([^"]+)"/i);
           const filenameMatch = attrText.match(/filename="([^"]+)"/i);
           
-          if (nameMatch) {
+          if (nameMatch && !isJunkName(nameMatch[1])) {
             const filename = filenameMatch ? filenameMatch[1] : '';
             const rawType = typeMatch ? typeMatch[1] : '';
             const isVst3 = filename.toLowerCase().includes('vst3') || rawType.toLowerCase().includes('vst3') || attrText.toLowerCase().includes('vst3');

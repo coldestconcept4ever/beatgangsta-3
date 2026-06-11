@@ -75,6 +75,7 @@ export interface VSTPlugin {
   parameters?: string[];
   tier?: string;
   id?: string;
+  category?: string;
 }
 
 export interface FullSaveFile {
