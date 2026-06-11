@@ -957,6 +957,8 @@ The AI was unable to verify these parameters. Please investigate.`;
   const [cloudSyncMode, setCloudSyncMode] = useState<'setup' | 'backup' | 'restore'>('setup');
   const [wasCloudSyncModalShown, setWasCloudSyncModalShown] = useState(false);
   const [isEnrichingLibrary, setIsEnrichingLibrary] = useState(false);
+  const [hasRestoredBackup, setHasRestoredBackup] = useState(false);
+  const [showBackupRestored, setShowBackupRestored] = useState(false);
   const [tutorialPlugin, setTutorialPlugin] = useState<VSTPlugin | null>(null);
   const [tutorialFolder, setTutorialFolder] = useState<string | null>(null);
   const [pendingFile, setPendingFile] = useState<File | null>(null);
@@ -1419,9 +1421,7 @@ The AI was unable to verify these parameters. Please investigate.`;
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [isDraggingAudio, setIsDraggingAudio] = useState(false);
   const audioInputRef = useRef<HTMLInputElement>(null);
-  const [showBackupRestored, setShowBackupRestored] = useState(false);
-  const [hasRestoredBackup, setHasRestoredBackup] = useState(false);
-
+  
   useEffect(() => {
     if ((!isEnrichingLibrary && plugins.length > 0) || hasRestoredBackup) {
       const vibeExamples = t('vibe_examples', { returnObjects: true }) as string[];
