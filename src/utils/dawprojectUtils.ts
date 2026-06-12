@@ -629,6 +629,15 @@ const generateTrackChannels = (parentName: string, multiBandDetails?: { isEnable
   return tracks;
 };
 
+const applyStudioOneTrackFixes = (track: Track) => {
+  if (track.channel) {
+    (track.channel as any).enabled = true;
+    if (track.name) {
+       (track.channel as any).name = track.name;
+    }
+  }
+};
+
 const applyPluginsToTrack = (track: Track, fxList: DeepDivePlugin[], instrumentName?: string, userPlugins: VSTPlugin[] = []) => {
   // Ensure we have a channel to attach devices to
   if (!track.channel) {
@@ -647,6 +656,7 @@ const applyPluginsToTrack = (track: Track, fxList: DeepDivePlugin[], instrumentN
     (fxDevice as any).version = meta.version;
     fxDevice.deviceRole = role;
     fxDevice.loaded = true;
+    (fxDevice as any).enabled = true;
     
     // Store IDs in multiple possible fields to ensure monkey-patch or library picks them up
     (fxDevice as any).pluginId = meta.deviceID;
@@ -687,14 +697,25 @@ const applyPluginsToTrack = (track: Track, fxList: DeepDivePlugin[], instrumentN
 const fixXmlForStudioOne = (xml: string) => {
   let result = xml;
   
-  // Studio One expects pluginId for VST3 and uniqueId for VST2
-  // The library outputs deviceID for both
-  result = result.replace(/<Vst3Plugin ([^>]+)deviceID="([^"]+)"/g, '<Vst3Plugin $1pluginId="$2"');
+  // VST3: deviceID="GUID" -> pluginId="{GUID}" uid="{GUID}"
+  result = result.replace(/<Vst3Plugin ([^>]+)deviceID="([A-Fa-f0-9-]+)"/g, (match, p1, id) => {
+    const cleanId = id.replace(/[{}]/g, '').toUpperCase();
+    return `<Vst3Plugin ${p1}pluginId="{${cleanId}}" uid="{${cleanId}}"`;
+  });
+  
+  // For VST2: deviceID="ID" -> uniqueId="ID"
   result = result.replace(/<Vst2Plugin ([^>]+)deviceID="([^"]+)"/g, '<Vst2Plugin $1uniqueId="$2"');
   
-  // Also perform general fallback for any missed deviceID to pluginId
+  // 2. Fix generic deviceID to pluginId as fallback
   result = result.replace(/deviceID=/g, 'pluginId=');
   
+  // 3. Ensure role="regular" is lowercase if library made it uppercase
+  result = result.replace(/role="REGULAR"/g, 'role="regular"');
+  
+  // 4. Ensure enabled="true" is present (Studio One needs this for visibility in inserts)
+  result = result.replace(/<Vst3Plugin ([^>]+)(?!\benabled=)/g, '<Vst3Plugin $1enabled="true" ');
+  result = result.replace(/<Vst2Plugin ([^>]+)(?!\benabled=)/g, '<Vst2Plugin $1enabled="true" ');
+
   return result;
 };
 
@@ -782,6 +803,7 @@ export const generateDawProjectFromMixCritique = async (critique: MixCritique, s
         project.structure.push(track);
         
         applyPluginsToTrack(track, step.recommendedChain, undefined, userPlugins);
+        applyStudioOneTrackFixes(track);
         
         let fileBuffer: Uint8Array | Blob | null = null;
         let relativePath = `audio/${step.targetStem}`;
@@ -839,6 +861,7 @@ export const generateDawProjectFromMixCritique = async (critique: MixCritique, s
       project.structure.push(vTrack);
  
       applyDefaultVocalPlugins(vTrack, trackName, userPlugins);
+      applyStudioOneTrackFixes(vTrack);
 
       // Map block clips onto track timeline
       const clipsList: Clip[] = [];
@@ -932,6 +955,7 @@ export const generateDawProjectFromBeatRecipe = async (recipe: any, userPlugins?
       project.structure.push(track);
 
       applyPluginsToTrack(track, instr.fxPlugins, instr.plugin, userPlugins);
+      applyStudioOneTrackFixes(track);
       
       const audio = Utility.createAudio(relativePath, 44100, 2, 8.0); // 8 beats long approx
       const clip = Utility.createClip(audio, 0, 8.0);

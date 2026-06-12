@@ -3041,7 +3041,6 @@ The AI was unable to verify these parameters. Please investigate.`;
       // GUID / Unique ID hex strings checks
       if (/^[a-fA-F0-9-]{12,}$/.test(trimmed)) return true;
       if (/^[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}$/i.test(trimmed)) return true;
-      if (/^[0-9]+[A-Za-z]*uad/i.test(trimmed)) return true;
       if (/^[0-9]+[A-Za-z]+ /i.test(trimmed)) return true; // e.g. "355sine play"
       if (/^[0-9]{1,3}AU/i.test(trimmed)) return true; // e.g. "2AU..."
       if (lower.includes('metaclass')) return true;
@@ -3122,17 +3121,19 @@ The AI was unable to verify these parameters. Please investigate.`;
 
     const getPluginType = (category: string | undefined | null, sortPath: string | undefined | null, isVst3: boolean = false): string => {
       if (isStudioOneFunction(category)) return 'Studio One Function';
-      if (category?.toLowerCase() === 'audiosynth' || sortPath?.toLowerCase().includes('synth') || sortPath?.toLowerCase().includes('instrument') || category?.toLowerCase().includes('synth')) return 'Instruments';
       
+      const isMidi = category?.toLowerCase().includes('midi') || sortPath?.toLowerCase().includes('midi');
+      const isInstrument = category?.toLowerCase() === 'audiosynth' || sortPath?.toLowerCase().includes('synth') || sortPath?.toLowerCase().includes('instrument') || category?.toLowerCase().includes('synth');
       const isEffect = category?.toLowerCase().includes('effect') || sortPath?.toLowerCase().includes('effect');
-      if (isEffect) return 'AudioEffect';
       
-      if (isVst3) return 'VST3';
+      let baseType = 'AudioEffect';
+      if (isInstrument) baseType = 'Instruments';
+      else if (isMidi) baseType = 'MIDI';
       
-      // Check if it's explicitly VST2
-      if (category?.toLowerCase().includes('vst2') || sortPath?.toLowerCase().includes('vst2')) return 'VST2';
+      const format = isVst3 ? ' (VST3)' : 
+                     (category?.toLowerCase().includes('vst2') || sortPath?.toLowerCase().includes('vst2')) ? ' (VST2)' : '';
       
-      return 'AudioEffect'; // Default
+      return baseType + format;
     };
 
     // Helper functions for matching
