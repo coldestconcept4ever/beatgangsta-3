@@ -3056,6 +3056,22 @@ The AI was unable to verify these parameters. Please investigate.`;
              cl === 'helptutorialhandler' || 
              cl === 'documenteventhandler' || 
              cl === 'userservice' || 
+             cl === 'edittask' ||
+             cl === 'trackedit' ||
+             cl === 'audioedit' ||
+             cl === 'musicedit' ||
+             cl === 'eventedit' ||
+             cl === 'projectedit' ||
+             cl === 'showedit' ||
+             cl === 'musicpartedit' ||
+             cl === 'toolset' ||
+             cl === 'audiostretch' ||
+             cl === 'audioresampler' ||
+             cl === 'audiorateconverter' ||
+             cl === 'audiopanner' ||
+             cl === 'audiocodec' ||
+             cl === 'audioretune' ||
+             cl.includes('analysis') ||
              cl.includes('handler') || 
              cl.includes('service') || 
              cl.includes('importer') || 
