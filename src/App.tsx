@@ -3203,7 +3203,8 @@ The AI was unable to verify these parameters. Please investigate.`;
           
           if (cleanHex.startsWith('565354')) {
             let decoded = '';
-            for (let i = 8; i < cleanHex.length; i += 2) {
+            // Skip "VST" prefix (6 hex chars) and VST2 Unique ID (8 hex chars), starting name decode at index 14
+            for (let i = 14; i < cleanHex.length; i += 2) {
               const byteStr = cleanHex.substring(i, i + 2);
               const code = parseInt(byteStr, 16);
               if (code === 0) continue;
@@ -3272,9 +3273,21 @@ The AI was unable to verify these parameters. Please investigate.`;
           csvParsed.forEach(plugin => {
             const cleanCsvName = cleanStringForMatching(plugin.name);
             
-            // Heuristic 1: VST2 decoded name exact or substring match
+            // Heuristic 1: Priority matching of human-readable name or sortPath before fallback decoded hex value
             let matchedXml = xmlPluginInfos.find(info => {
-              const infoName = info.decodedName || info.name;
+              let infoName = "";
+              if (info.name && !isJunkName(info.name, info.cleanID)) {
+                infoName = info.name;
+              } else if (info.sortPath && info.sortPath.includes('/')) {
+                const lastPart = info.sortPath.split('/').pop() || "";
+                if (!isJunkName(lastPart, info.cleanID)) {
+                  infoName = lastPart;
+                }
+              }
+              if (!infoName && info.decodedName && !isJunkName(info.decodedName, info.cleanID)) {
+                infoName = info.decodedName;
+              }
+
               if (!infoName) return false;
               const cleanInfoName = cleanStringForMatching(infoName);
               return cleanCsvName === cleanInfoName || 
@@ -3315,20 +3328,36 @@ The AI was unable to verify these parameters. Please investigate.`;
 
           // Any unassigned XML items that look like products can be added as standalone
           const unassignedXmlProducts: VSTPlugin[] = [];
+          const seenCleanIDs = new Set<string>();
+          csvParsed.forEach(p => {
+            if (p.id) {
+              seenCleanIDs.add(p.id.toLowerCase().replace(/[{}-]/g, '').trim());
+            }
+          });
+
           xmlPluginInfos.forEach(info => {
             if (info.category && isJunkCategory(info.category)) return;
 
-            let displayName = info.decodedName || "";
-            if (!displayName || isJunkName(displayName, info.cleanID)) {
-               if (info.sortPath && info.sortPath.includes('/')) {
-                 displayName = info.sortPath.split('/').pop() || "";
-               }
+            const normID = info.cleanID.toLowerCase().replace(/[{}-]/g, '').trim();
+            if (seenCleanIDs.has(normID)) {
+              return; // Already matched, skip duplicate!
             }
-            if (!displayName || isJunkName(displayName, info.cleanID)) {
-               displayName = info.name || "";
+
+            let displayName = "";
+            if (info.name && !isJunkName(info.name, info.cleanID)) {
+              displayName = info.name;
+            } else if (info.sortPath && info.sortPath.includes('/')) {
+              const lastPart = info.sortPath.split('/').pop() || "";
+              if (!isJunkName(lastPart, info.cleanID)) {
+                displayName = lastPart;
+              }
+            }
+            if (!displayName && info.decodedName && !isJunkName(info.decodedName, info.cleanID)) {
+              displayName = info.decodedName;
             }
 
             if (!info._matched && displayName && !isJunkName(displayName, info.cleanID) && displayName.length >= 3 && !displayName.includes('.') && info.cleanID.length > 10) {
+              seenCleanIDs.add(normID);
               const newPlugin: VSTPlugin = {
                 vendor: info.vendor || info.sortPath?.split('/')[0] || 'Unknown',
                 name: displayName,
@@ -3353,11 +3382,11 @@ The AI was unable to verify these parameters. Please investigate.`;
               const cleanName = cleanStringForMatching(p.name);
               
               const matchedXml = xmlPluginInfos.find(info => {
-                if (info.decodedName) {
-                  const cleanDecoded = cleanStringForMatching(info.decodedName);
-                  if (cleanName === cleanDecoded || 
-                         (cleanDecoded.length >= 4 && cleanName.includes(cleanDecoded)) ||
-                         (cleanName.length >= 4 && cleanDecoded.includes(cleanName))) {
+                if (info.name && !isJunkName(info.name, info.cleanID)) {
+                  const cleanInfoName = cleanStringForMatching(info.name);
+                  if (cleanName === cleanInfoName || 
+                         (cleanInfoName.length >= 4 && cleanName.includes(cleanInfoName)) ||
+                         (cleanName.length >= 4 && cleanInfoName.includes(cleanName))) {
                     return true;
                   }
                 }
@@ -3368,6 +3397,14 @@ The AI was unable to verify these parameters. Please investigate.`;
                   if (cleanName === cleanSortName || 
                          (cleanSortName.length >= 4 && cleanName.includes(cleanSortName)) ||
                          (cleanName.length >= 4 && cleanSortName.includes(cleanName))) {
+                    return true;
+                  }
+                }
+                if (info.decodedName) {
+                  const cleanDecoded = cleanStringForMatching(info.decodedName);
+                  if (cleanName === cleanDecoded || 
+                         (cleanDecoded.length >= 4 && cleanName.includes(cleanDecoded)) ||
+                         (cleanName.length >= 4 && cleanDecoded.includes(cleanName))) {
                     return true;
                   }
                 }
@@ -3398,23 +3435,34 @@ The AI was unable to verify these parameters. Please investigate.`;
           }
 
           // Directly list decoded XML plug-ins or those with a structural sortPath (supports VST3!)
+          const seenCleanIDsOnly = new Set<string>();
           parsed = xmlPluginInfos.reduce((acc, info) => {
             if (info.category && isJunkCategory(info.category)) {
               return acc;
             }
 
-            let name = info.decodedName || "";
-            if (!name || isJunkName(name, info.cleanID)) {
-              if (info.sortPath && info.sortPath.includes('/')) {
-                name = info.sortPath.split('/').pop() || "";
+            const normID = info.cleanID.toLowerCase().replace(/[{}-]/g, '').trim();
+            if (seenCleanIDsOnly.has(normID)) {
+              return acc;
+            }
+
+            let name = "";
+            if (info.name && !isJunkName(info.name, info.cleanID)) {
+              name = info.name;
+            } else if (info.sortPath && info.sortPath.includes('/')) {
+              const lastPart = info.sortPath.split('/').pop() || "";
+              if (!isJunkName(lastPart, info.cleanID)) {
+                name = lastPart;
               }
             }
-            if (!name || isJunkName(name, info.cleanID)) {
-              name = info.name || "";
+            if (!name && info.decodedName && !isJunkName(info.decodedName, info.cleanID)) {
+              name = info.decodedName;
             }
             if (!name || isJunkName(name, info.cleanID)) {
               return acc;
             }
+
+            seenCleanIDsOnly.add(normID);
 
             let vendor = info.vendor || 'Unknown';
             if (info.sortPath) {
