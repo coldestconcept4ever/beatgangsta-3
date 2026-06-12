@@ -710,28 +710,73 @@ const applyPluginsToTrack = (track: Track, fxList: DeepDivePlugin[], instrumentN
 const fixXmlForStudioOne = (xml: string) => {
   let result = xml;
   
-  // 1. Studio One VST3 identifiers - use a more robust tag-aware regex
-  result = result.replace(/<Vst3Plugin\b([^>]*?)deviceID="([^"]+)"([^>]*)>/g, (match, before, id, after) => {
-    const cleanId = id.replace(/[{}]/g, '').toUpperCase();
-    // Studio One versions vary: some want uid, some pluginId, some with/without braces.
-    // Providing multiple common variants ensures higher compatibility.
-    return `<Vst3Plugin ${before} pluginId="{${cleanId}}" uid="${cleanId}" vst3Id="${cleanId}" vst3uid="{${cleanId}}" deviceID="${id}" ${after}>`;
-  });
+  // 0. Add mandatory DAWproject namespace and update version
+  if (!result.includes('xmlns=')) {
+    result = result.replace('<Project version="1.0">', '<Project version="1.1" xmlns="http://www.bitwig.com/dawproject">');
+  }
   
-  // 2. VST2 identifiers
-  result = result.replace(/<Vst2Plugin\b([^>]*?)deviceID="([^"]+)"([^>]*)>/g, (match, before, id, after) => {
-    return `<Vst2Plugin ${before} uniqueId="${id}" pluginId="${id}" deviceID="${id}" ${after}>`;
-  });
-  
-  // 3. Ensure mandatory enabled="true" for Studio One insert visibility
-  result = result.replace(/<(Vst3Plugin|Vst2Plugin)\b([^>]*?)>/g, (match, tag, attrs) => {
-    if (!attrs.includes('enabled="')) {
-      return `<${tag}${attrs} enabled="true">`;
+  // 1. Process Plugin Tags robustly to ensure no duplicate attributes and proper ID formatting
+  result = result.replace(/<(Vst3Plugin|Vst2Plugin)\b([^>]*?)>/g, (fullMatch, tag, attributes) => {
+    // Parse attributes into a map
+    const attrMap: Record<string, string> = {};
+    const attrRegex = /([a-zA-Z0-9]+)="([^"]*)"/g;
+    let match;
+    while ((match = attrRegex.exec(attributes)) !== null) {
+      attrMap[match[1]] = match[2];
     }
-    return match;
+
+    // Determine the ID from any candidate attribute
+    const rawId = attrMap['deviceID'] || attrMap['pluginId'] || attrMap['pluginID'] || attrMap['uniqueId'] || attrMap['vst3id'] || attrMap['uid'] || "";
+    if (!rawId) return fullMatch;
+
+    const cleanHex = rawId.replace(/[-{}]/g, '').toUpperCase();
+    const guidWithBraces = `{${cleanHex.slice(0, 8)}-${cleanHex.slice(8, 12)}-${cleanHex.slice(12, 16)}-${cleanHex.slice(16, 20)}-${cleanHex.slice(20)}}`;
+    
+    // Determine role
+    const deviceRole = attrMap['deviceRole'] || attrMap['role'] || 'audioFX';
+
+    // Build unique set of Studio One / Spec compatible attributes
+    // We remove all ID-related variants first to avoid duplicates
+    const idKeys = ['deviceID', 'pluginId', 'pluginID', 'vst3Id', 'vst3ID', 'vst3uid', 'cid', 'classID', 'uid', 'vst3id', 'uniqueId'];
+    idKeys.forEach(k => delete attrMap[k]);
+    
+    // Remove state flags to re-add them consistently
+    ['enabled', 'active', 'loaded', 'deviceRole', 'role'].forEach(k => delete attrMap[k]);
+
+    const newAttrs: string[] = [];
+    // Keep existing metadata like name, color, version, etc.
+    for (const [k, v] of Object.entries(attrMap)) {
+      newAttrs.push(`${k}="${v}"`);
+    }
+
+    if (tag === 'Vst3Plugin') {
+      newAttrs.push(`deviceID="${guidWithBraces}"`);
+      newAttrs.push(`pluginId="${guidWithBraces}"`);
+      newAttrs.push(`pluginID="${guidWithBraces}"`);
+      newAttrs.push(`vst3id="${cleanHex}"`);
+      newAttrs.push(`vst3Id="${guidWithBraces}"`);
+      newAttrs.push(`vst3ID="${guidWithBraces}"`);
+      newAttrs.push(`vst3uid="${guidWithBraces}"`);
+      newAttrs.push(`uid="${cleanHex}"`);
+      newAttrs.push(`classID="${guidWithBraces}"`);
+      newAttrs.push(`cid="${cleanHex}"`);
+    } else {
+      newAttrs.push(`deviceID="${cleanHex}"`);
+      newAttrs.push(`pluginId="${cleanHex}"`);
+      newAttrs.push(`uniqueId="${cleanHex}"`);
+      newAttrs.push(`uid="${cleanHex}"`);
+    }
+
+    newAttrs.push(`deviceRole="${deviceRole}"`);
+    newAttrs.push(`role="${deviceRole}"`);
+    newAttrs.push(`enabled="true"`);
+    newAttrs.push(`active="true"`);
+    newAttrs.push(`loaded="true"`);
+
+    return `<${tag} ${newAttrs.join(' ')}>`;
   });
   
-  // 4. Ensure lowercase role="regular"
+  // 3. Metadata & Structure Case fixes
   result = result.replace(/role="REGULAR"/g, 'role="regular"');
   
   return result;
