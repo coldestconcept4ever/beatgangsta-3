@@ -560,6 +560,42 @@ const getPluginMetadata = (suggestedName: string, isInstrument: boolean, userPlu
   };
 };
 
+const createAndConfigureDevice = (meta: any, role: DeviceRole): (Vst3Plugin | Vst2Plugin) => {
+  const fxDevice = meta.type === 'vst2' ? new Vst2Plugin() : new Vst3Plugin();
+  
+  // Basic properties
+  fxDevice.name = meta.deviceName;
+  (fxDevice as any).deviceName = meta.deviceName;
+  fxDevice.deviceRole = role;
+  fxDevice.loaded = true;
+
+  // BoolParameter is required by the library's toXmlObject() - passing raw boolean causes crashes
+  const enabled = new BoolParameter();
+  enabled.value = true;
+  fxDevice.enabled = enabled;
+
+  // Vendor/Version metadata
+  (fxDevice as any).deviceVendor = meta.deviceVendor;
+  (fxDevice as any).vendor = meta.deviceVendor;
+  (fxDevice as any).pluginVersion = meta.version;
+  (fxDevice as any).version = meta.version;
+
+  // Identifier redundancy for DAW compatibility (mapped to XML attributes via post-process)
+  (fxDevice as any).pluginId = meta.deviceID;
+  (fxDevice as any).vst3Id = meta.deviceID;
+  (fxDevice as any).vst2Id = meta.deviceID;
+  (fxDevice as any).deviceID = meta.deviceID;
+  
+  if (meta.type === 'vst2') {
+    (fxDevice as any).uniqueId = meta.deviceID;
+  }
+
+  // Project-unique identifier
+  fxDevice.id = `p-${Math.random().toString(36).substring(2, 9)}`;
+  
+  return fxDevice;
+};
+
 const applyDefaultVocalPlugins = (track: Track, trackName: string, userPlugins: VSTPlugin[] = []) => {
   if (!track.channel) {
     track.channel = new Channel();
@@ -596,17 +632,7 @@ const applyDefaultVocalPlugins = (track: Track, trackName: string, userPlugins: 
 
   for (const pName of pluginsToLoad) {
     const meta = getPluginMetadata(pName, false, userPlugins);
-    const fxDevice = meta.type === 'vst2' ? new Vst2Plugin() : new Vst3Plugin();
-    fxDevice.name = meta.deviceName;
-    (fxDevice as any).vendor = meta.deviceVendor;
-    (fxDevice as any).version = meta.version;
-    fxDevice.deviceRole = DeviceRole.AUDIO_FX;
-    fxDevice.loaded = true;
-    (fxDevice as any).pluginId = meta.deviceID;
-    (fxDevice as any).vst3Id = meta.deviceID;
-    (fxDevice as any).vst2Id = meta.deviceID;
-    (fxDevice as any).deviceID = meta.deviceID;
-    fxDevice.id = `p-${Math.random().toString(36).substring(2, 9)}`;
+    const fxDevice = createAndConfigureDevice(meta, DeviceRole.AUDIO_FX);
     track.channel.devices.push(fxDevice);
   }
 };
@@ -656,34 +682,7 @@ const applyPluginsToTrack = (track: Track, fxList: DeepDivePlugin[], instrumentN
   let matchReport = `[Mapping Report for ${track.name}]\n`;
   
   const addDevice = (meta: any, role: DeviceRole, originalName: string) => {
-    const fxDevice = meta.type === 'vst2' ? new Vst2Plugin() : new Vst3Plugin();
-    // Use standard Property names for the library
-    fxDevice.name = meta.deviceName;
-    (fxDevice as any).deviceName = meta.deviceName;
-    fxDevice.deviceRole = role;
-    fxDevice.loaded = true;
-    
-    const enabled = new BoolParameter();
-    enabled.value = true;
-    fxDevice.enabled = enabled;
-    
-    (fxDevice as any).deviceVendor = meta.deviceVendor;
-    (fxDevice as any).pluginVersion = meta.version;
-    (fxDevice as any).vendor = meta.deviceVendor;
-    (fxDevice as any).version = meta.version;
-    
-    // Store IDs in multiple possible fields to ensure monkey-patch or library picks them up
-    (fxDevice as any).pluginId = meta.deviceID;
-    (fxDevice as any).vst3Id = meta.deviceID;
-    (fxDevice as any).vst2Id = meta.deviceID;
-    (fxDevice as any).deviceID = meta.deviceID;
-    if (meta.type === 'vst2') {
-      (fxDevice as any).uniqueId = meta.deviceID;
-    }
-    
-    // Assign a project-wide unique ID for the device
-    fxDevice.id = `p-${Math.random().toString(36).substring(2, 9)}`;
-    
+    const fxDevice = createAndConfigureDevice(meta, role);
     track.channel!.devices.push(fxDevice);
     
     matchReport += `+ ${role === DeviceRole.INSTRUMENT ? 'Instr' : 'FX'}: "${originalName}" -> "${meta.deviceName}" (${meta.type.toUpperCase()}) [ID: ${meta.deviceID}] (Vendor: ${meta.deviceVendor})\n`;
@@ -711,29 +710,30 @@ const applyPluginsToTrack = (track: Track, fxList: DeepDivePlugin[], instrumentN
 const fixXmlForStudioOne = (xml: string) => {
   let result = xml;
   
-  // 1. Studio One VST3 identifiers
-  // VST3: deviceID="GUID" -> pluginId="{GUID}" uid="{GUID}"
-  result = result.replace(/<Vst3Plugin ([^>]+)deviceID="([A-Fa-f0-9-]+)"/g, (match, p1, id) => {
+  // 1. Studio One VST3 identifiers - use a more robust tag-aware regex
+  result = result.replace(/<Vst3Plugin\b([^>]*?)deviceID="([^"]+)"([^>]*)>/g, (match, before, id, after) => {
     const cleanId = id.replace(/[{}]/g, '').toUpperCase();
-    // Some Studio One versions prefer braces, some don't. We provide both under different names to be safe.
-    return `<Vst3Plugin ${p1}pluginId="{${cleanId}}" uid="${cleanId}" vst3Id="${cleanId}" vst3uid="{${cleanId}}" `;
+    // Studio One versions vary: some want uid, some pluginId, some with/without braces.
+    // Providing multiple common variants ensures higher compatibility.
+    return `<Vst3Plugin ${before} pluginId="{${cleanId}}" uid="${cleanId}" vst3Id="${cleanId}" vst3uid="{${cleanId}}" deviceID="${id}" ${after}>`;
   });
   
   // 2. VST2 identifiers
-  // For VST2: deviceID="ID" -> uniqueId="ID"
-  result = result.replace(/<Vst2Plugin ([^>]+)deviceID="([^"]+)"/g, '<Vst2Plugin $1uniqueId="$2" pluginId="$2" ');
+  result = result.replace(/<Vst2Plugin\b([^>]*?)deviceID="([^"]+)"([^>]*)>/g, (match, before, id, after) => {
+    return `<Vst2Plugin ${before} uniqueId="${id}" pluginId="${id}" deviceID="${id}" ${after}>`;
+  });
   
-  // 3. Cleanup & Casing
-  result = result.replace(/deviceID=/g, 'pluginId=');
+  // 3. Ensure mandatory enabled="true" for Studio One insert visibility
+  result = result.replace(/<(Vst3Plugin|Vst2Plugin)\b([^>]*?)>/g, (match, tag, attrs) => {
+    if (!attrs.includes('enabled="')) {
+      return `<${tag}${attrs} enabled="true">`;
+    }
+    return match;
+  });
+  
+  // 4. Ensure lowercase role="regular"
   result = result.replace(/role="REGULAR"/g, 'role="regular"');
   
-  // 4. Ensure mandatory flags for Studio One visibility
-  result = result.replace(/<Vst3Plugin ([^>]+)(?!\benabled=)/g, '<Vst3Plugin $1enabled="true" ');
-  result = result.replace(/<Vst2Plugin ([^>]+)(?!\benabled=)/g, '<Vst2Plugin $1enabled="true" ');
-  
-  // 5. Some versions of DAWproject import in S1 expect track color in a different format or missing
-  // But usually it's fine.
-
   return result;
 };
 
