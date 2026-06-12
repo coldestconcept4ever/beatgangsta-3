@@ -1,4 +1,4 @@
-import { DawProject, Project, Application, MetaData, Utility, ContentType, MixerRole, Track, Channel, Plugin, Arrangement, Lanes, Vst3Plugin, Vst2Plugin, DeviceRole, Clip, Clips, Transport, RealParameter, Unit, DeviceRegistry } from 'dawproject-typescript';
+import { DawProject, Project, Application, MetaData, Utility, ContentType, MixerRole, Track, Channel, Plugin, Arrangement, Lanes, Vst3Plugin, Vst2Plugin, DeviceRole, Clip, Clips, Transport, RealParameter, Unit, DeviceRegistry, BoolParameter } from 'dawproject-typescript';
 import JSZip from 'jszip';
 import { MixCritique, SavedRecipe, InstrumentTrack, DeepDivePlugin, VSTPlugin } from '../types';
 
@@ -300,10 +300,14 @@ export const KNOWN_VST3_GUIDS: Record<string, string> = {
   "compressor": "54F19B72-352C-4AA5-A2AF-67F86F30D6BE",
   "limiter": "61B18D53-26FA-4220-8614-89944A1990EC",
 
-  // Universal Audio (UADx / Spark VST3s)
+  // Universal Audio (UADx / Spark VST3s & Apollo VST3s)
   "uaudio_manley_massive_passive": "ABCDEF01-9182-FAEB-5541-447855333931",
-  "uaudio_teletronix_la-2": "ABCDEF01-9182-FAEB-5541-447855334135",
-  "uaudio_ua_1176ln_rev_e": "ABCDEF01-9182-FAEB-5541-447855333958",
+  "uaudio_teletronix_la-2": "5541444C-4132-4153-0000-000000000000",
+  "uaudio_ua_1176ln_rev_e": "5541444C-3131-3736-0000-000000000000",
+  "teletronix la-2a silver": "5541444C-4132-4153-0000-000000000000",
+  "teletronix la-2a gray": "5541444C-4132-4147-0000-000000000000",
+  "1176ln rev e": "5541444C-3131-3736-0000-000000000000",
+  "1176se rev e": "5541444C-3131-3753-0000-000000000000",
   "uaudio_manley_voxbox": "ABCDEF01-9182-FAEB-5541-447855334250",
   "uaudio_api_2500": "ABCDEF01-9182-FAEB-5541-447855334255",
   "uaudio_neve_1073": "ABCDEF01-9182-FAEB-5541-44785533415A",
@@ -631,9 +635,12 @@ const generateTrackChannels = (parentName: string, multiBandDetails?: { isEnable
 
 const applyStudioOneTrackFixes = (track: Track) => {
   if (track.channel) {
-    (track.channel as any).enabled = true;
+    const mute = new BoolParameter();
+    mute.value = false;
+    track.channel.mute = mute;
+    
     if (track.name) {
-       (track.channel as any).name = track.name;
+       track.channel.name = track.name;
     }
   }
 };
@@ -652,11 +659,18 @@ const applyPluginsToTrack = (track: Track, fxList: DeepDivePlugin[], instrumentN
     const fxDevice = meta.type === 'vst2' ? new Vst2Plugin() : new Vst3Plugin();
     // Use standard Property names for the library
     fxDevice.name = meta.deviceName;
-    (fxDevice as any).vendor = meta.deviceVendor;
-    (fxDevice as any).version = meta.version;
+    (fxDevice as any).deviceName = meta.deviceName;
     fxDevice.deviceRole = role;
     fxDevice.loaded = true;
-    (fxDevice as any).enabled = true;
+    
+    const enabled = new BoolParameter();
+    enabled.value = true;
+    fxDevice.enabled = enabled;
+    
+    (fxDevice as any).deviceVendor = meta.deviceVendor;
+    (fxDevice as any).pluginVersion = meta.version;
+    (fxDevice as any).vendor = meta.deviceVendor;
+    (fxDevice as any).version = meta.version;
     
     // Store IDs in multiple possible fields to ensure monkey-patch or library picks them up
     (fxDevice as any).pluginId = meta.deviceID;
@@ -697,24 +711,28 @@ const applyPluginsToTrack = (track: Track, fxList: DeepDivePlugin[], instrumentN
 const fixXmlForStudioOne = (xml: string) => {
   let result = xml;
   
+  // 1. Studio One VST3 identifiers
   // VST3: deviceID="GUID" -> pluginId="{GUID}" uid="{GUID}"
   result = result.replace(/<Vst3Plugin ([^>]+)deviceID="([A-Fa-f0-9-]+)"/g, (match, p1, id) => {
     const cleanId = id.replace(/[{}]/g, '').toUpperCase();
-    return `<Vst3Plugin ${p1}pluginId="{${cleanId}}" uid="{${cleanId}}"`;
+    // Some Studio One versions prefer braces, some don't. We provide both under different names to be safe.
+    return `<Vst3Plugin ${p1}pluginId="{${cleanId}}" uid="${cleanId}" vst3Id="${cleanId}" vst3uid="{${cleanId}}" `;
   });
   
+  // 2. VST2 identifiers
   // For VST2: deviceID="ID" -> uniqueId="ID"
-  result = result.replace(/<Vst2Plugin ([^>]+)deviceID="([^"]+)"/g, '<Vst2Plugin $1uniqueId="$2"');
+  result = result.replace(/<Vst2Plugin ([^>]+)deviceID="([^"]+)"/g, '<Vst2Plugin $1uniqueId="$2" pluginId="$2" ');
   
-  // 2. Fix generic deviceID to pluginId as fallback
+  // 3. Cleanup & Casing
   result = result.replace(/deviceID=/g, 'pluginId=');
-  
-  // 3. Ensure role="regular" is lowercase if library made it uppercase
   result = result.replace(/role="REGULAR"/g, 'role="regular"');
   
-  // 4. Ensure enabled="true" is present (Studio One needs this for visibility in inserts)
+  // 4. Ensure mandatory flags for Studio One visibility
   result = result.replace(/<Vst3Plugin ([^>]+)(?!\benabled=)/g, '<Vst3Plugin $1enabled="true" ');
   result = result.replace(/<Vst2Plugin ([^>]+)(?!\benabled=)/g, '<Vst2Plugin $1enabled="true" ');
+  
+  // 5. Some versions of DAWproject import in S1 expect track color in a different format or missing
+  // But usually it's fine.
 
   return result;
 };

@@ -96,7 +96,13 @@ export const uploadFileChunked = async (
       }
     }
   } catch (r2Error: any) {
-    console.warn("[R2_UPLOAD] Cloudflare R2 upload failed or is unconfigured. Falling back to chunked Google Drive upload flow.", r2Error);
+    // If it's a "Failed to fetch" on a pre-signed URL, it's likely CORS or missing R2 config
+    if (r2Error instanceof TypeError && r2Error.message === "Failed to fetch") {
+        console.log("[R2_UPLOAD] Cloudflare R2 endpoint unreachable or CORS blocked. This usually means R2 is unconfigured. Falling back to Drive.");
+    } else {
+        console.warn("[R2_UPLOAD] Cloudflare R2 upload failed or is unconfigured. Falling back to chunked Google Drive upload flow.", r2Error);
+    }
+    
     if (r2Error?.message?.includes("budget") || r2Error?.message?.includes("exhausted") || r2Error?.message?.includes("limit") || r2Error?.message?.includes("Limit")) {
       // If it was rejected because of the safety limit, pass that error upward!
       throw r2Error;
