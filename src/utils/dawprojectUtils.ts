@@ -265,12 +265,27 @@ export const KNOWN_VST3_GUIDS: Record<string, string> = {
   "gullfoss master": "F2AEE70D-00DE-4F4E-536E-6454474C466C",
 
   // iZotope
+  "ozone 9": "5653545A-6E4F-396F-7A6F-6E6520390000",
   "ozone 10": "F2AEE70D-00DE-4F4E-5360-64544D6F6F7A",
-  "ozone 11": "F2AEE70D-00DE-4F4E-5360-64544D6F6F7B",
-  "neutron 4": "F2AEE70D-00DE-4F4E-5360-64544D6E6575",
-  "nectar 3": "F2AEE70D-00DE-4F4E-5360-64544D6E6563",
-  "nectar 4": "F2AEE70D-00DE-4F4E-5360-64544D6E6564",
-  "vocal-synth 2": "F2AEE70D-00DE-4F4E-5360-64544D767332",
+  "ozone 11": "5653545A-414F-5A4F-7A6F-6E6500000000",
+  "neutron 4": "5653545A-4E4E-5A4E-6575-74726F6E2050",
+  "neutron 4 unmask": "5653545A-4E55-5A4E-6575-74726F6E2050",
+  "neutron unmask": "5653545A-4E55-5A4E-6575-74726F6E2050",
+  "nectar 3": "5653544E-6374-5A4E-6563-746172203300",
+  "nectar 4": "5653544E-6374-5A4E-6563-746172205072",
+  "nectar 4 auto-level": "5653544E-4354-414E-6563-746172203420",
+  "nectar auto-level": "5653544E-4354-414E-6563-746172203420",
+  "nectar 4 saturation": "5653544E-4354-534E-6563-746172203420",
+  "vocal-synth 2": "56535441-6E74-4346-3253-565332000000",
+  "relay": "5653545A-524C-3152-656C-617900000000",
+  "izotope relay": "5653545A-524C-3152-656C-617900000000",
+  "izotope nectar 4": "5653544E-6374-5A4E-6563-746172205072",
+
+  // XLN Audio
+  "rc-20 retro color": "ABCDEF01-9182-FAEB-786C-6E4178615243",
+  "rc20": "ABCDEF01-9182-FAEB-786C-6E4178615243",
+  "retro color": "ABCDEF01-9182-FAEB-786C-6E4178615243",
+  "addictive keys": "ABCDEF01-9182-FAEB-786C-6E417861414B",
 
   // Baby Audio
   "smooth operator": "F2AEE70D-00DE-4F4E-5360-64544D736D6F",
@@ -299,15 +314,31 @@ export const KNOWN_VST3_GUIDS: Record<string, string> = {
   "pro eq": "073C4094-E062-4FB5-8328-74608DD1A3A4",
   "compressor": "54F19B72-352C-4AA5-A2AF-67F86F30D6BE",
   "limiter": "61B18D53-26FA-4220-8614-89944A1990EC",
+  "mixtool": "5653544D-6978-746F-6F6C-533130303030",
 
   // Universal Audio (UADx / Spark VST3s & Apollo VST3s)
+  "1176ln rev e": "56535458-3941-5575-6164-207561203131",
+  "uad ua 1176ln rev e": "56535458-3941-5575-6164-207561203131",
+  "uad 1176ln rev e": "56535458-3941-5575-6164-207561203131",
+  "la-2a silver compressor": "ABCDEF01-9182-FAEB-5541-447855334139",
+  "uadx la-2a silver compressor": "ABCDEF01-9182-FAEB-5541-447855334139",
+  "fairchild 670 compressor": "ABCDEF01-9182-FAEB-5541-447855334156",
+  "uadx fairchild 670 compressor": "ABCDEF01-9182-FAEB-5541-447855334156",
+  "fairchild 670": "ABCDEF01-9182-FAEB-5541-447855334156",
+  "la-2a silver": "ABCDEF01-9182-FAEB-5541-447855334139",
+  "la-2a gray": "ABCDEF01-9182-FAEB-5541-447855334137",
+  "la-2": "ABCDEF01-9182-FAEB-5541-447855334135",
   "uaudio_manley_massive_passive": "ABCDEF01-9182-FAEB-5541-447855333931",
-  "uaudio_teletronix_la-2": "5541444C-4132-4153-0000-000000000000",
-  "uaudio_ua_1176ln_rev_e": "5541444C-3131-3736-0000-000000000000",
-  "teletronix la-2a silver": "5541444C-4132-4153-0000-000000000000",
-  "teletronix la-2a gray": "5541444C-4132-4147-0000-000000000000",
+  "uaudio_teletronix_la-2": "ABCDEF01-9182-FAEB-5541-447855334135",
+  "uaudio_ua_1176ln_rev_e": "ABCDEF01-9182-FAEB-5541-447855333958",
+  "uaudio_ua_1176se_rev_e": "5541444C-3131-3753-0000-000000000000",
+  "teletronix la-2a silver": "ABCDEF01-9182-FAEB-5541-447855334139",
+  "teletronix la-2a gray": "ABCDEF01-9182-FAEB-5541-447855334137",
   "1176ln rev e": "5541444C-3131-3736-0000-000000000000",
   "1176se rev e": "5541444C-3131-3753-0000-000000000000",
+  "fairchild 670": "ABCDEF01-9182-FAEB-5541-447855333835",
+  "fairchild 660": "ABCDEF01-9182-FAEB-5541-447855333834",
+  "uaudio_fairchild_670": "ABCDEF01-9182-FAEB-5541-447855333835",
   "uaudio_manley_voxbox": "ABCDEF01-9182-FAEB-5541-447855334250",
   "uaudio_api_2500": "ABCDEF01-9182-FAEB-5541-447855334255",
   "uaudio_neve_1073": "ABCDEF01-9182-FAEB-5541-44785533415A",
@@ -512,14 +543,36 @@ const getPluginMetadata = (suggestedName: string, isInstrument: boolean, userPlu
         deviceID = "5653544d-6978-746f-6f6c-533130303030";
       } else if (cleanUserMatchName.includes("microshift")) {
         deviceID = "F2AEE70D-00DE-4F4E-536E-6454474d6373";
-      } else if (cleanUserMatchName.includes("compressor")) {
-        deviceID = "54F19B72-352C-4AA5-A2AF-67F86F30D6BE";
-      } else if (cleanUserMatchName.includes("limiter")) {
-        deviceID = "61B18D53-26FA-4220-8614-89944A1990EC";
-      } else if (cleanUserMatchName.includes("la-2") || cleanUserMatchName.includes("la2")) {
-        deviceID = "ABCDEF01-9182-FAEB-5541-447855334135"; // UADx ID
+      } else if (cleanUserMatchName.includes("rc-20") || cleanUserMatchName.includes("retro color")) {
+        deviceID = "ABCDEF01-9182-FAEB-786C-6E4178615243";
+      } else if (cleanUserMatchName.includes("relay")) {
+        deviceID = "5653545A-524C-3152-656C-617900000000";
+      } else if (cleanUserMatchName.includes("nectar 4 auto-level") || cleanUserMatchName.includes("nectar 4 auto level")) {
+        deviceID = "5653544E-4354-414E-6563-746172203420";
+      } else if (cleanUserMatchName.includes("neutron 4 unmask") || cleanUserMatchName.includes("neutron unmask")) {
+        deviceID = "5653545A-4E55-5A4E-6575-74726F6E2050";
+      } else if (cleanUserMatchName.includes("1176") && (cleanUserMatchName.includes("rev e") || cleanUserMatchName.includes("rev. e"))) {
+        deviceID = "56535458-3941-5575-6164-207561203131";
+      } else if (cleanUserMatchName.includes("1176") && (cleanUserMatchName.includes("uadx") || cleanUserMatchName.includes("spark"))) {
+        deviceID = "ABCDEF01-9182-FAEB-5541-447855333958";
       } else if (cleanUserMatchName.includes("1176")) {
-        deviceID = "ABCDEF01-9182-FAEB-5541-447855333958"; // UADx ID
+        deviceID = "5541444C-3131-3736-0000-000000000000";
+      } else if ((cleanUserMatchName.includes("la-2a silver") || cleanUserMatchName.includes("la2a silver"))) {
+        deviceID = "ABCDEF01-9182-FAEB-5541-447855333553"; 
+      } else if ((cleanUserMatchName.includes("la-2") || cleanUserMatchName.includes("la2")) && (cleanUserMatchName.includes("uadx") || cleanUserMatchName.includes("spark"))) {
+        deviceID = "ABCDEF01-9182-FAEB-5541-447855334135"; 
+      } else if (cleanUserMatchName.includes("la-2") || cleanUserMatchName.includes("la2")) {
+        deviceID = "5541444C-4132-4153-0000-000000000000";
+      } else if (cleanUserMatchName.includes("fairchild 670")) {
+        deviceID = "ABCDEF01-9182-FAEB-5541-447855334156";
+      } else if (cleanUserMatchName.includes("fairchild 660")) {
+        deviceID = "ABCDEF01-9182-FAEB-5541-447855334158";
+      } else if (cleanUserMatchName.includes("fairchild") && (cleanUserMatchName.includes("uadx") || cleanUserMatchName.includes("spark"))) {
+        deviceID = "ABCDEF01-9182-FAEB-5541-447855333835";
+      } else if (cleanUserMatchName.includes("compressor") && !cleanUserMatchName.includes("uad") && !cleanUserMatchName.includes("waves") && !cleanUserMatchName.includes("fabfilter") && !cleanUserMatchName.includes("la-2") && !cleanUserMatchName.includes("1176")) {
+        deviceID = "54F19B72-352C-4AA5-A2AF-67F86F30D6BE";
+      } else if (cleanUserMatchName.includes("limiter") && !cleanUserMatchName.includes("fabfilter") && !cleanUserMatchName.includes("waves")) {
+        deviceID = "61B18D53-26FA-4220-8614-89944A1990EC";
       } else if (cleanUserMatchName.includes("auto-tune pro") || cleanUserMatchName.includes("autotune pro")) {
         deviceID = "56535441-5450-3961-6e74-617265736174";
       } else if (cleanUserMatchName.includes("serum")) {
@@ -750,21 +803,36 @@ const fixXmlForStudioOne = (xml: string) => {
     }
 
     if (tag === 'Vst3Plugin') {
+      const vendorLower = (attrMap['deviceVendor'] || attrMap['vendor'] || '').toLowerCase();
+      let finalVendor = attrMap['deviceVendor'] || attrMap['vendor'] || 'Unknown';
+      if (vendorLower.includes('izotope')) finalVendor = 'iZotope, Inc.';
+      else if (vendorLower.includes('xln')) finalVendor = 'XLN Audio';
+      else if (vendorLower.includes('fabfilter')) finalVendor = 'FabFilter';
+      else if (vendorLower.includes('universal audio') || vendorLower.includes('uaudio')) finalVendor = 'Universal Audio';
+      
+      const cleanName = (attrMap['name'] || attrMap['deviceName'] || '').replace(/"/g, '&quot;');
+      newAttrs.push(`name="${cleanName}"`); 
+      newAttrs.push(`deviceName="${cleanName}"`);
+      newAttrs.push(`deviceVendor="${finalVendor}"`);
+      newAttrs.push(`vendor="${finalVendor}"`);
       newAttrs.push(`deviceID="${guidWithBraces}"`);
       newAttrs.push(`pluginId="${guidWithBraces}"`);
       newAttrs.push(`pluginID="${guidWithBraces}"`);
-      newAttrs.push(`vst3id="${cleanHex}"`);
+      newAttrs.push(`vst3id="${guidWithBraces}"`);
       newAttrs.push(`vst3Id="${guidWithBraces}"`);
       newAttrs.push(`vst3ID="${guidWithBraces}"`);
       newAttrs.push(`vst3uid="${guidWithBraces}"`);
       newAttrs.push(`uid="${cleanHex}"`);
       newAttrs.push(`classID="${guidWithBraces}"`);
       newAttrs.push(`cid="${cleanHex}"`);
+      newAttrs.push(`identifier="${guidWithBraces}"`);
     } else {
+      newAttrs.push(`name="${attrMap['name'] || ''}"`);
       newAttrs.push(`deviceID="${cleanHex}"`);
       newAttrs.push(`pluginId="${cleanHex}"`);
       newAttrs.push(`uniqueId="${cleanHex}"`);
       newAttrs.push(`uid="${cleanHex}"`);
+      newAttrs.push(`vst2id="${cleanHex}"`);
     }
 
     newAttrs.push(`deviceRole="${deviceRole}"`);
