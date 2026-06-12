@@ -308,6 +308,19 @@ export const KNOWN_VST3_GUIDS: Record<string, string> = {
   "uaudio_api_2500": "ABCDEF01-9182-FAEB-5541-447855334255",
   "uaudio_neve_1073": "ABCDEF01-9182-FAEB-5541-44785533415A",
   "uaudio_pultec_eqp-1a": "ABCDEF01-9182-FAEB-5541-44785533414E",
+  "uaudio_hitsville_eq": "ABCDEF01-9182-FAEB-5541-447855334241",
+  "uaudio_capitol_chambers": "ABCDEF01-9182-FAEB-5541-447855334137",
+  "uaudio_pure_plate": "ABCDEF01-9182-FAEB-5541-447855334131",
+  "uaudio_studer_a800": "ABCDEF01-9182-FAEB-5541-447855334136",
+  "la-2a": "ABCDEF01-9182-FAEB-5541-447855334135",
+  "1176ln": "ABCDEF01-9182-FAEB-5541-447855333958",
+  "pultec eqp-1a": "ABCDEF01-9182-FAEB-5541-44785533414E",
+  "massive passive": "ABCDEF01-9182-FAEB-5541-447855333931",
+  "la-2": "ABCDEF01-9182-FAEB-5541-447855334135",
+  "teletronix la-2": "ABCDEF01-9182-FAEB-5541-447855334135",
+  "teletronix la-2a": "ABCDEF01-9182-FAEB-5541-447855334135",
+  "uad teletronix la-2a": "ABCDEF01-9182-FAEB-5541-447855334135",
+  "uadx la-2 compressor": "ABCDEF01-9182-FAEB-5541-447855334135",
   
   // Instruments
   "serum": "56535458-6d4e-7973-6572-756d78363400",
@@ -321,13 +334,14 @@ export const KNOWN_VST3_GUIDS: Record<string, string> = {
 };
 
 const getKnownVst3Guid = (name: string): string | null => {
-  const cleanName = name.toLowerCase().trim();
+  const cleanName = name.toLowerCase().replace(/uaudio_/, '').replace(/uadx /, '').replace(/uad /, '').trim();
   if (KNOWN_VST3_GUIDS[cleanName]) {
     return KNOWN_VST3_GUIDS[cleanName];
   }
   const superClean = cleanName.replace(/[^a-z0-9]/g, '');
   for (const [key, val] of Object.entries(KNOWN_VST3_GUIDS)) {
-    if (key.replace(/[^a-z0-9]/g, '') === superClean) {
+    const cleanKey = key.toLowerCase().replace(/uaudio_/, '').replace(/uadx /, '').replace(/uad /, '').replace(/[^a-z0-9]/g, '');
+    if (cleanKey === superClean) {
       return val;
     }
   }
@@ -457,7 +471,7 @@ const getPluginMetadata = (suggestedName: string, isInstrument: boolean, userPlu
   const userMatch = findBestUserPluginMatch(suggestedName, userPlugins);
   if (userMatch) {
     const typeLower = userMatch.type.toLowerCase();
-    const isVst3 = typeLower.includes('vst3') || (!typeLower.includes('vst2') && !userMatch.name.toLowerCase().endsWith('.dll'));
+    const isVst3 = typeLower.includes('vst3') || (!typeLower.includes('vst2') && !userMatch.name.toLowerCase().endsWith('.dll') && !typeLower.includes('vst2'));
     const cleanUserMatchName = userMatch.name.toLowerCase();
     let deviceID = userMatch.id || "";
     
@@ -486,18 +500,22 @@ const getPluginMetadata = (suggestedName: string, isInstrument: boolean, userPlu
         deviceID = "F2AEE70D-00DE-4F4E-536E-645447446370";
       } else if (cleanUserMatchName.includes("saturn 2") || cleanUserMatchName.includes("saturn2")) {
         deviceID = "72C4DB71-7A4D-459A-B97E-51744D736132";
-      } else if (cleanUserMatchName.includes("vintageverb") || cleanUserMatchName.includes("vintage verb")) {
-        deviceID = "56535456-5652-4276-616c-68616c6c6176";
-      } else if (cleanUserMatchName.includes("pro-r 2") || cleanUserMatchName.includes("pro-r2") || cleanUserMatchName.includes("pro r 2")) {
-        deviceID = "72C4DB71-7A4D-459A-B97E-51744D667232";
+      } else if (cleanUserMatchName === "chorus" || cleanUserMatchName.includes("chorus")) {
+        deviceID = "5D330224-87A5-4DA5-AF6C-9A87EE21C55C"; // Standard PreSonus Chorus
       } else if (cleanUserMatchName.includes("delay") && cleanUserMatchName.includes("valhalla")) {
         deviceID = "56535456-444c-5976-616c-68616c6c6164";
       } else if (cleanUserMatchName.includes("mixtool")) {
         deviceID = "5653544d-6978-746f-6f6c-533130303030";
       } else if (cleanUserMatchName.includes("microshift")) {
         deviceID = "F2AEE70D-00DE-4F4E-536E-6454474d6373";
-      } else if (cleanUserMatchName.includes("soothe2") || cleanUserMatchName.includes("soothe 2")) {
-        deviceID = "F2AEE70D-00DE-4F4E-536E-645447537468";
+      } else if (cleanUserMatchName.includes("compressor")) {
+        deviceID = "54F19B72-352C-4AA5-A2AF-67F86F30D6BE";
+      } else if (cleanUserMatchName.includes("limiter")) {
+        deviceID = "61B18D53-26FA-4220-8614-89944A1990EC";
+      } else if (cleanUserMatchName.includes("la-2") || cleanUserMatchName.includes("la2")) {
+        deviceID = "ABCDEF01-9182-FAEB-5541-447855334135"; // UADx ID
+      } else if (cleanUserMatchName.includes("1176")) {
+        deviceID = "ABCDEF01-9182-FAEB-5541-447855333958"; // UADx ID
       } else if (cleanUserMatchName.includes("auto-tune pro") || cleanUserMatchName.includes("autotune pro")) {
         deviceID = "56535441-5450-3961-6e74-617265736174";
       } else if (cleanUserMatchName.includes("serum")) {

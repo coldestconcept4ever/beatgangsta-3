@@ -2962,12 +2962,20 @@ The AI was unable to verify these parameters. Please investigate.`;
   };
 
 
+  const allActivePlugins = useMemo(() => {
+    return plugins.filter(p => p.type !== 'Studio One Function');
+  }, [plugins]);
+
   const filteredPlugins = useMemo(() => {
-    let filtered = plugins.filter(p => 
-      p.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      p.vendor.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      p.type.toLowerCase().includes(searchTerm.toLowerCase())
-    );
+    let filtered = allActivePlugins;
+    
+    if (searchTerm) {
+      filtered = filtered.filter(p => 
+        p.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        p.vendor.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        p.type.toLowerCase().includes(searchTerm.toLowerCase())
+      );
+    }
 
     if (selectedFolder) {
       filtered = filtered.filter(p => 
@@ -2995,11 +3003,15 @@ The AI was unable to verify these parameters. Please investigate.`;
   const groupedPlugins = useMemo(() => {
     if (sortBy === 'name') return null;
     
-    let filtered = plugins.filter(p => 
-      p.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      p.vendor.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      p.type.toLowerCase().includes(searchTerm.toLowerCase())
-    );
+    let filtered = allActivePlugins;
+    
+    if (searchTerm) {
+      filtered = filtered.filter(p => 
+        p.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        p.vendor.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        p.type.toLowerCase().includes(searchTerm.toLowerCase())
+      );
+    }
 
     const groups: Record<string, VSTPlugin[]> = {};
     filtered.forEach(p => {
@@ -3023,6 +3035,7 @@ The AI was unable to verify these parameters. Please investigate.`;
     const isJunkName = (n: string | undefined | null, cleanID?: string): boolean => {
       if (!n) return true;
       const trimmed = n.trim();
+      const lower = trimmed.toLowerCase();
       if (trimmed.startsWith('{') || trimmed.endsWith('}')) return true;
       if (trimmed.startsWith('$')) return true;
       // GUID / Unique ID hex strings checks
@@ -3031,8 +3044,15 @@ The AI was unable to verify these parameters. Please investigate.`;
       if (/^[0-9]+[A-Za-z]*uad/i.test(trimmed)) return true;
       if (/^[0-9]+[A-Za-z]+ /i.test(trimmed)) return true; // e.g. "355sine play"
       if (/^[0-9]{1,3}AU/i.test(trimmed)) return true; // e.g. "2AU..."
-      if (trimmed.toLowerCase().includes('metaclass')) return true;
-      if (trimmed.toLowerCase().includes('classdescription')) return true;
+      if (lower.includes('metaclass')) return true;
+      if (lower.includes('classdescription')) return true;
+      if (lower.includes('component')) return true;
+      if (lower.includes('template')) return true;
+      if (lower.includes('handler')) return true;
+      if (lower.includes('importer')) return true;
+      if (lower.includes('service')) return true;
+      if (lower.includes('statics')) return true;
+      if (lower === 'vst' || lower === 'vst3' || lower === 'au' || lower === 'vst' || lower === 'vst2' || lower === 'vst2.4') return true;
       if (cleanID && trimmed.toLowerCase() === cleanID.toLowerCase().replace(/[{}-]/g, '').trim()) return true;
       return false;
     };
@@ -3040,14 +3060,11 @@ The AI was unable to verify these parameters. Please investigate.`;
     const isJunkCategory = (c: string | undefined | null): boolean => {
       if (!c) return false;
       const cl = c.toLowerCase().trim();
+      // Only truly useless or internal engine noise that shouldn't even be automation targets
       return cl === 'metaclass' || 
              cl === 'gadget' || 
-             cl === 'editaddin' || 
              cl === 'documentfilter' || 
-             cl === 'extensionhandler' || 
              cl === 'scriptengine' || 
-             cl === 'programservice' || 
-             cl === 'frameworkservice' || 
              cl === 'deviceenumerator' || 
              cl === 'browserextension' || 
              cl === 'databaseengine' || 
@@ -3055,29 +3072,67 @@ The AI was unable to verify these parameters. Please investigate.`;
              cl === 'useroption' || 
              cl === 'helptutorialhandler' || 
              cl === 'documenteventhandler' || 
+             cl === 'application' ||
+             cl.includes('importer') || 
+             cl.includes('enumerator');
+    };
+
+    const isStudioOneFunction = (c: string | undefined | null): boolean => {
+      if (!c) return false;
+      const cl = c.toLowerCase().trim();
+      return cl === 'edittask' || 
+             cl === 'trackedit' || 
+             cl === 'audioedit' || 
+             cl === 'musicedit' || 
+             cl === 'eventedit' || 
+             cl === 'projectedit' || 
+             cl === 'showedit' || 
+             cl === 'musicpartedit' || 
+             cl === 'toolset' || 
+             cl === 'audiostretch' || 
+             cl === 'audioresampler' || 
+             cl === 'audiorateconverter' || 
+             cl === 'audiopanner' || 
+             cl === 'audiocodec' || 
+             cl === 'audioretune' || 
+             cl === 'programservice' || 
+             cl === 'frameworkservice' || 
              cl === 'userservice' || 
-             cl === 'edittask' ||
-             cl === 'trackedit' ||
-             cl === 'audioedit' ||
-             cl === 'musicedit' ||
-             cl === 'eventedit' ||
-             cl === 'projectedit' ||
-             cl === 'showedit' ||
-             cl === 'musicpartedit' ||
-             cl === 'toolset' ||
-             cl === 'audiostretch' ||
-             cl === 'audioresampler' ||
-             cl === 'audiorateconverter' ||
-             cl === 'audiopanner' ||
-             cl === 'audiocodec' ||
-             cl === 'audioretune' ||
-             cl.includes('analysis') ||
+             cl === 'editaddin' || 
+             cl === 'extensionhandler' ||
+             cl === 'statics' ||
+             cl === 'enumerator' ||
+             cl === 'provider' ||
+             cl === 'model' ||
+             cl === 'template' ||
+             cl === 'worker' ||
+             cl === 'bridge' ||
+             cl === 'helper' ||
+             cl === 'executor' ||
+             cl === 'manager' ||
+             cl.includes('analysis process') || 
              cl.includes('handler') || 
              cl.includes('service') || 
-             cl.includes('importer') || 
+             cl.includes('component') ||
              cl.includes('converter') || 
-             cl.includes('enumerator') || 
-             cl.includes('utility');
+             cl.includes('utility') ||
+             cl.includes('statics') ||
+             cl.includes('factory');
+    };
+
+    const getPluginType = (category: string | undefined | null, sortPath: string | undefined | null, isVst3: boolean = false): string => {
+      if (isStudioOneFunction(category)) return 'Studio One Function';
+      if (category?.toLowerCase() === 'audiosynth' || sortPath?.toLowerCase().includes('synth') || sortPath?.toLowerCase().includes('instrument') || category?.toLowerCase().includes('synth')) return 'Instruments';
+      
+      const isEffect = category?.toLowerCase().includes('effect') || sortPath?.toLowerCase().includes('effect');
+      if (isEffect) return 'AudioEffect';
+      
+      if (isVst3) return 'VST3';
+      
+      // Check if it's explicitly VST2
+      if (category?.toLowerCase().includes('vst2') || sortPath?.toLowerCase().includes('vst2')) return 'VST2';
+      
+      return 'AudioEffect'; // Default
     };
 
     // Helper functions for matching
@@ -3191,7 +3246,17 @@ The AI was unable to verify these parameters. Please investigate.`;
       }).filter((p): p is VSTPlugin => p !== null && p.name !== '');
     } else if (isMixcraftXml) {
       // General XML / Studio One settings parsing
-      const xmlPluginInfos: XMLPluginInfo[] = [];
+      const xmlPluginInfos: {
+        classID: string;
+        cleanID: string;
+        sortPath?: string;
+        name?: string;
+        vendor?: string;
+        category?: string;
+        subCategory?: string;
+        decodedName?: string | null;
+        _matched?: boolean;
+      }[] = [];
       // Use a more robust regex for tags that might span multiple lines
       const tagMatches = input.matchAll(/<([a-zA-Z0-9_-]+)\s+([^>]+)>/gi);
       let currentVendor: string | undefined;
@@ -3203,6 +3268,7 @@ The AI was unable to verify these parameters. Please investigate.`;
         const nameMatch = attrText.match(/\s+name="([^"]+)"/i);
         const vendorMatch = attrText.match(/vendor="([^"]+)"/i);
         const categoryMatch = attrText.match(/category="([^"]+)"/i);
+        const subCategoryMatch = attrText.match(/subCategory="([^"]+)"/i);
         const sortPathMatch = attrText.match(/sortPath="([^"]+)"/i);
 
         if (vendorMatch) {
@@ -3241,6 +3307,7 @@ The AI was unable to verify these parameters. Please investigate.`;
             name: nameMatch ? nameMatch[1] : undefined,
             vendor: currentVendor,
             category: categoryMatch ? categoryMatch[1] : undefined,
+            subCategory: subCategoryMatch ? subCategoryMatch[1] : undefined,
             decodedName,
           });
         }
@@ -3373,15 +3440,19 @@ The AI was unable to verify these parameters. Please investigate.`;
             }
 
             if (!info._matched && displayName && !isJunkName(displayName, info.cleanID) && displayName.length >= 3 && !displayName.includes('.') && info.cleanID.length > 10) {
+              const infoCategory = info.category || info.subCategory;
+              if (isStudioOneFunction(infoCategory)) return;
+
               seenCleanIDs.add(normID);
+              const isVst3Val = info.subCategory?.toUpperCase().includes('VST3') || info.sortPath?.toLowerCase().includes('.vst3') || false;
               const newPlugin: VSTPlugin = {
                 vendor: info.vendor || info.sortPath?.split('/')[0] || 'Unknown',
                 name: displayName,
-                type: (info.sortPath?.toLowerCase().includes('synth') || info.sortPath?.toLowerCase().includes('instrument') || info.category?.toLowerCase().includes('synth')) ? 'Instruments' : 'AudioEffect',
+                type: getPluginType(infoCategory, info.sortPath, isVst3Val),
                 version: 'N/A',
                 lastModified: 'Found in settings XML',
                 id: info.cleanID,
-                category: info.category
+                category: infoCategory
               };
               if (info.sortPath) (newPlugin as any).sortPath = info.sortPath;
               unassignedXmlProducts.push(newPlugin);
@@ -3453,7 +3524,8 @@ The AI was unable to verify these parameters. Please investigate.`;
           // Directly list decoded XML plug-ins or those with a structural sortPath (supports VST3!)
           const seenCleanIDsOnly = new Set<string>();
           parsed = xmlPluginInfos.reduce((acc, info) => {
-            if (info.category && isJunkCategory(info.category)) {
+            const infoCategory = info.category || info.subCategory;
+            if (isJunkCategory(infoCategory) || isStudioOneFunction(infoCategory)) {
               return acc;
             }
 
@@ -3487,14 +3559,15 @@ The AI was unable to verify these parameters. Please investigate.`;
                 vendor = parts.slice(0, -1).join('/') || vendor;
               }
             }
+            const isVst3Val = info.subCategory?.toUpperCase().includes('VST3') || info.sortPath?.toLowerCase().includes('.vst3') || false;
             const newObj: VSTPlugin = {
               vendor,
               name,
-              type: (info.category?.toLowerCase() === 'audiosynth' || info.sortPath?.toLowerCase().includes('synth') || info.sortPath?.toLowerCase().includes('instrument')) ? 'Instruments' : 'Unknown',
+              type: getPluginType(infoCategory, info.sortPath, isVst3Val),
               version: 'N/A',
               lastModified: 'Settings XML',
               id: info.cleanID,
-              category: info.category
+              category: infoCategory
             };
             if (info.sortPath) (newObj as any).sortPath = info.sortPath;
             acc.push(newObj);
@@ -3523,7 +3596,7 @@ The AI was unable to verify these parameters. Please investigate.`;
             parsed.push({
               name: nameMatch[1],
               vendor: vendorMatch ? vendorMatch[1] : 'Unknown',
-              type: isVst3 ? 'VST3' : 'VST2',
+              type: getPluginType(typeMatch ? typeMatch[1] : undefined, undefined, isVst3),
               version: 'N/A',
               lastModified: 'Found in XML',
               id: idMatch ? idMatch[1].replace(/[{}]/g, '').trim() : undefined,
@@ -4340,8 +4413,10 @@ The AI was unable to verify these parameters. Please investigate.`;
       // Format stems context for Gemini
       const stemsContext = uploadedStems.map(s => `Stem: ${s.file!.name} (Type: ${s.type === 'Other' && s.customType ? s.customType : s.type}) - URI: ${s.uri}`).join('\n');
       const fullContext = `The user has uploaded ${activeStems.length} stems for analysis.\n\n${stemsContext}\n\nUser Context: ${critiqueContext}`;
+      
+      const activePlugins = plugins.filter(p => p.type !== 'Studio One Function');
 
-      const critique = await getMixCritique(plugins, null, null, 'audio/mpeg', isGangstaVox, true, fullContext, null, finalReferenceTrack, referenceAudioBase64, null, referenceGeminiFileUri, i18n.language, uploadedStems, analogInstruments, analogHardware, isBusMode, isMultiBandMode, isMasterMode);
+      const critique = await getMixCritique(activePlugins, null, null, 'audio/mpeg', isGangstaVox, true, fullContext, null, finalReferenceTrack, referenceAudioBase64, null, referenceGeminiFileUri, i18n.language, uploadedStems, analogInstruments, analogHardware, isBusMode, isMultiBandMode, isMasterMode);
       critique.id = Math.random().toString(36).substr(2, 9);
       critique.isMasterMode = isMasterMode;
       critique.audioBase64 = null;
@@ -4614,8 +4689,10 @@ The AI was unable to verify these parameters. Please investigate.`;
             referenceAudioBase64 = await fileToBase64(refFileToUpload);
           }
         }
+        
+        const activePlugins = plugins.filter(p => p.type !== 'Studio One Function');
 
-        const critique = await getMixCritique(plugins, audioBase64, audioUrl, mimeType, isGangstaVox, hasStems, critiqueContext, null, finalReferenceTrack, referenceAudioBase64, geminiFileUri, referenceGeminiFileUri, i18n.language, undefined, analogInstruments, analogHardware, isBusMode, isMultiBandMode, isMasterMode);
+        const critique = await getMixCritique(activePlugins, audioBase64, audioUrl, mimeType, isGangstaVox, hasStems, critiqueContext, null, finalReferenceTrack, referenceAudioBase64, geminiFileUri, referenceGeminiFileUri, i18n.language, undefined, analogInstruments, analogHardware, isBusMode, isMultiBandMode, isMasterMode);
         critique.id = Math.random().toString(36).substr(2, 9);
         critique.isMasterMode = isMasterMode;
         critique.audioBase64 = audioBase64;
@@ -6627,7 +6704,7 @@ The AI was unable to verify these parameters. Please investigate.`;
                   </div>
                   <div className="flex flex-col justify-center -mt-4 sm:mt-0">
                     <h2 className={`text-4xl sm:text-6xl font-black tracking-tighter select-none ${theme === 'coldest' || theme === 'chef-mode' ? 'text-slate-800' : 'text-white'}`}>{t('studio_info')}</h2>
-                    <p className="text-sm sm:text-lg font-bold opacity-70 select-none mt-2">{t('loaded_plugins_count', { count: plugins.length })}</p>
+                    <p className="text-sm sm:text-lg font-bold opacity-70 select-none mt-2">{t('loaded_plugins_count', { count: allActivePlugins.length })}</p>
                   </div>
                 </div>
                 <div className="flex flex-col sm:flex-row items-center gap-4 relative z-30">

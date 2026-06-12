@@ -173,6 +173,18 @@ const ATR102_SPEC_PROMPT = `
     - O'Clock Settings: There are many unlabeled knobs. For knobs that do not explicitly show numbers (e.g., Record, Reproduce, Input, Output), you MUST use "o'clock" values (e.g. "10 o'clock", "2 o'clock"). DO NOT use raw numbers.
     - NO FAKE PARAMETERS: The parameters "LF Driver" or "HF Driver" or "Fatness" DO NOT EXIST on the UAD tapes. You MUST use real parameters like "Record Level", "Repro Level", "Tape Speed" (IPS), "Tape Formula", "Cal Level", "HF Record", "LF Record", "HF Repro", "LF Repro", "Bias", "Path" or "Sync". Never invent parameters.
 `;
+const FUNCTION_AUTOMATION_PROMPT = `
+    CRITICAL - STUDIO ONE PROFESSIONAL FUNCTIONS & AUTOMATION:
+    The user can perform several "Silent Functions" via automation commands in their DAW. You MUST recommend using these in the 'actionPlan' when applicable:
+    1. "Quantize": Use this for fixing timing issues on MIDI or Audio events (e.g., "Automation Command: Quantize").
+    2. "Transpose": Use for pitching tracks up/down (e.g., "Automation Command: Transpose [-12 semitones]").
+    3. "Silence Detection / Strip Silence": Use for cleaning up noise floor on recordings (e.g., "Automation Command: Detect Silence").
+    4. "Audio Bend / transient Detection": Use for surgical rhythmic correction on audio stems.
+    5. "Chord Detection": Use for harmonic analysis to extract chords to the global Chord Track.
+    6. "Bounce Selection": Use for printing heavy processing chains into new audio files to save CPU.
+    7. "Merge Events": Use for combining track segments for cleaner project organization.
+    8. "Mixtool": A native PreSonus utility. Recommend it for phase inversion or gain staging without using a dedicated saturation/compression plugin.
+`;
 const GLOBAL_PARAMETER_STRICTNESS_PROMPT = `
     CRITICAL - STRICT PARAMETER REALISM, UNITS, & O'CLOCK POSITIONING:
     1. ZERO HALLUCINATION (FIREABLE OFFENSE): You MUST ONLY suggest parameters that actually exist on the real-world interface of the specified plugin as documented in its official manual. NEVER invent, guess, hallucinate, or inject parameters that do not exist on that plugin (e.g., do not invent "LF Driver" for a tape plugin, or "Warmth" for an EQ unless it specifically has it). If you do not know the exact name of a parameter on the UI, DO NOT list it at all. It is better to have fewer accurate parameters than fake ones.
@@ -2441,7 +2453,7 @@ ${previousCritiqueStr}
     parts.push({ inlineData: { data: referenceAudioBase64, mimeType: mimeType } });
   }
   const multiBandInstruction = getMultiBandInstruction(isMultiBandMode);
-  parts.push({ text: prompt + multiBandInstruction });
+  parts.push({ text: prompt + multiBandInstruction + FUNCTION_AUTOMATION_PROMPT });
   const tools: any[] = [];
   if (referenceTrack && !referenceAudioBase64) {
     tools.push({ googleSearch: {} });
@@ -2464,7 +2476,7 @@ ${previousCritiqueStr}
         let chunkSchema = JSON.parse(JSON.stringify(schemaObject));
         chunkSchema.properties.actionPlan.description = `CRITICAL: You MUST generate EXACTLY ${currentStems.length} items in this array, one for each specific stem assigned to this phase.`;
         
-        let chunkPrompt = prompt + multiBandInstruction;
+        let chunkPrompt = prompt + multiBandInstruction + FUNCTION_AUTOMATION_PROMPT;
         
         if (i > 0) {
            chunkPrompt += `\n\nCRITICAL MULTI-PART REQUEST: You are analyzing part ${i+1} out of ${chunks.length}. For this phase, ONLY provide action plan steps for the following stems: ${stemNames}. Do NOT provide overall feedback or strengths/weaknesses again (just return simple dummy strings for those fields), but you MUST provide the exhaustive actionPlan array for these specific stems.`;
