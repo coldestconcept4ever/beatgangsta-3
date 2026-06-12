@@ -280,6 +280,9 @@ export const KNOWN_VST3_GUIDS: Record<string, string> = {
   "relay": "5653545A-524C-3152-656C-617900000000",
   "izotope relay": "5653545A-524C-3152-656C-617900000000",
   "izotope nectar 4": "5653544E-6374-5A4E-6563-746172205072",
+  "tonal balance control 2": "5653545A-424D-3254-6F6E-616C2042616C",
+  "izotope tonal balance control 2": "5653545A-424D-3254-6F6E-616C2042616C",
+  "stutter edit 2": "ABCDEF01-9182-FAEB-695A-747053744532",
 
   // XLN Audio
   "rc-20 retro color": "ABCDEF01-9182-FAEB-786C-6E4178615243",
@@ -788,13 +791,18 @@ const fixXmlForStudioOne = (xml: string) => {
     // Determine role
     const deviceRole = attrMap['deviceRole'] || attrMap['role'] || 'audioFX';
 
+    const paramName = attrMap['name'];
+    const paramDeviceName = attrMap['deviceName'];
+    const paramVendor = attrMap['vendor'];
+    const paramDeviceVendor = attrMap['deviceVendor'];
+
     // Build unique set of Studio One / Spec compatible attributes
     // We remove all ID-related variants first to avoid duplicates
     const idKeys = ['deviceID', 'pluginId', 'pluginID', 'vst3Id', 'vst3ID', 'vst3uid', 'cid', 'classID', 'uid', 'vst3id', 'uniqueId'];
     idKeys.forEach(k => delete attrMap[k]);
     
     // Remove state flags to re-add them consistently
-    ['enabled', 'active', 'loaded', 'deviceRole', 'role'].forEach(k => delete attrMap[k]);
+    ['enabled', 'active', 'loaded', 'deviceRole', 'role', 'name', 'deviceName', 'deviceVendor', 'vendor'].forEach(k => delete attrMap[k]);
 
     const newAttrs: string[] = [];
     // Keep existing metadata like name, color, version, etc.
@@ -803,36 +811,24 @@ const fixXmlForStudioOne = (xml: string) => {
     }
 
     if (tag === 'Vst3Plugin') {
-      const vendorLower = (attrMap['deviceVendor'] || attrMap['vendor'] || '').toLowerCase();
-      let finalVendor = attrMap['deviceVendor'] || attrMap['vendor'] || 'Unknown';
+      const vendorLower = (paramDeviceVendor || paramVendor || '').toLowerCase();
+      let finalVendor = paramDeviceVendor || paramVendor || 'Unknown';
       if (vendorLower.includes('izotope')) finalVendor = 'iZotope, Inc.';
       else if (vendorLower.includes('xln')) finalVendor = 'XLN Audio';
       else if (vendorLower.includes('fabfilter')) finalVendor = 'FabFilter';
       else if (vendorLower.includes('universal audio') || vendorLower.includes('uaudio')) finalVendor = 'Universal Audio';
       
-      const cleanName = (attrMap['name'] || attrMap['deviceName'] || '').replace(/"/g, '&quot;');
+      const cleanName = (paramName || paramDeviceName || '').replace(/"/g, '&quot;');
       newAttrs.push(`name="${cleanName}"`); 
       newAttrs.push(`deviceName="${cleanName}"`);
       newAttrs.push(`deviceVendor="${finalVendor}"`);
       newAttrs.push(`vendor="${finalVendor}"`);
-      newAttrs.push(`deviceID="${guidWithBraces}"`);
-      newAttrs.push(`pluginId="${guidWithBraces}"`);
       newAttrs.push(`pluginID="${guidWithBraces}"`);
-      newAttrs.push(`vst3id="${guidWithBraces}"`);
-      newAttrs.push(`vst3Id="${guidWithBraces}"`);
-      newAttrs.push(`vst3ID="${guidWithBraces}"`);
-      newAttrs.push(`vst3uid="${guidWithBraces}"`);
-      newAttrs.push(`uid="${cleanHex}"`);
-      newAttrs.push(`classID="${guidWithBraces}"`);
-      newAttrs.push(`cid="${cleanHex}"`);
-      newAttrs.push(`identifier="${guidWithBraces}"`);
-    } else {
-      newAttrs.push(`name="${attrMap['name'] || ''}"`);
-      newAttrs.push(`deviceID="${cleanHex}"`);
-      newAttrs.push(`pluginId="${cleanHex}"`);
       newAttrs.push(`uniqueId="${cleanHex}"`);
-      newAttrs.push(`uid="${cleanHex}"`);
-      newAttrs.push(`vst2id="${cleanHex}"`);
+    } else {
+      newAttrs.push(`name="${paramName || paramDeviceName || ''}"`);
+      newAttrs.push(`pluginID="${cleanHex}"`);
+      newAttrs.push(`uniqueId="${cleanHex}"`);
     }
 
     newAttrs.push(`deviceRole="${deviceRole}"`);
