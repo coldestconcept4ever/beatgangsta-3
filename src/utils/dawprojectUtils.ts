@@ -73,6 +73,66 @@ const mapPluginMetadata = (suggestedName: string, isInstrument: boolean = false)
   }
 
   // Audio Effects
+  const cleanName = name.toLowerCase();
+
+  // Precise User/Mix-Critique requested plugins mapping
+  if (cleanName.includes("unmask") || (cleanName.includes("neutron") && cleanName.includes("unmask"))) {
+    return {
+      deviceName: "Neutron 4 Unmask",
+      deviceID: "5653545ZA4E555A4E657574726F6E2050".replace('ZA', 'A'),
+      deviceVendor: "iZotope"
+    };
+  }
+  if (cleanName.includes("relay") || cleanName.includes("izotope relay")) {
+    return {
+      deviceName: "Relay",
+      deviceID: "5653545Z524C3152656C617900000000".replace('Z', 'A'),
+      deviceVendor: "iZotope"
+    };
+  }
+  if (cleanName.includes("nectar 4 auto-level") || cleanName.includes("nectar 4 auto level") || (cleanName.includes("nectar") && cleanName.includes("level"))) {
+    return {
+      deviceName: "Nectar 4 Auto-Level",
+      deviceID: "F2AEE70D00DE4F4E536064544D6E6564",
+      deviceVendor: "iZotope"
+    };
+  }
+  if (cleanName.includes("rc-20") || cleanName.includes("rc20") || cleanName.includes("retro color")) {
+    return {
+      deviceName: "RC-20 Retro Color",
+      deviceID: "ABCDEF019182FAEB786C6E4178615243",
+      deviceVendor: "XLN Audio"
+    };
+  }
+  if (cleanName.includes("gullfoss")) {
+    return {
+      deviceName: "Gullfoss",
+      deviceID: "F2AEE70D00DE4F4E536E6454474C4653",
+      deviceVendor: "Soundtheory"
+    };
+  }
+  if (cleanName.includes("fairchild")) {
+    return {
+      deviceName: "UADx Fairchild 670",
+      deviceID: "ABCDEF019182FAEB5541447855333939",
+      deviceVendor: "Universal Audio"
+    };
+  }
+  if (cleanName.includes("la-2a silver") || cleanName.includes("la-2a silver compressor") || (cleanName.includes("la-2a") && (cleanName.includes("universal") || cleanName.includes("uad") || cleanName.includes("uadx")))) {
+    return {
+      deviceName: "UADx LA-2A Silver Compressor",
+      deviceID: "ABCDEF019182FAEB5541447855334139",
+      deviceVendor: "Universal Audio"
+    };
+  }
+  if (cleanName.includes("1176ln rev e") || cleanName.includes("uad ua 1176ln rev e") || (cleanName.includes("1176") && (cleanName.includes("universal") || cleanName.includes("uad") || cleanName.includes("uadx")))) {
+    return {
+      deviceName: "UAD UA 1176LN Rev E",
+      deviceID: "56535458394155756164207561203131",
+      deviceVendor: "Universal Audio"
+    };
+  }
+
   if (name.includes("pro-q") || name.includes("pro q") || (name.includes("eq") && name.includes("surgical")) || name.includes("equalizer")) {
     return {
       deviceName: "Pro-Q 3",
@@ -265,30 +325,24 @@ export const KNOWN_VST3_GUIDS: Record<string, string> = {
   "gullfoss master": "F2AEE70D-00DE-4F4E-536E-6454474C466C",
 
   // iZotope
-  "ozone 9": "5653545A-6E4F-396F-7A6F-6E6520390000",
   "ozone 10": "F2AEE70D-00DE-4F4E-5360-64544D6F6F7A",
-  "ozone 11": "5653545A-414F-5A4F-7A6F-6E6500000000",
-  "neutron 4": "5653545A-4E4E-5A4E-6575-74726F6E2050",
+  "ozone 11": "F2AEE70D-00DE-4F4E-5360-64544D6F6F7B",
+  "neutron 4": "F2AEE70D-00DE-4F4E-5360-64544D6E6575",
   "neutron 4 unmask": "5653545A-4E55-5A4E-6575-74726F6E2050",
-  "neutron unmask": "5653545A-4E55-5A4E-6575-74726F6E2050",
-  "nectar 3": "5653544E-6374-5A4E-6563-746172203300",
-  "nectar 4": "5653544E-6374-5A4E-6563-746172205072",
-  "nectar 4 auto-level": "5653544E-4354-414E-6563-746172203420",
-  "nectar auto-level": "5653544E-4354-414E-6563-746172203420",
-  "nectar 4 saturation": "5653544E-4354-534E-6563-746172203420",
-  "vocal-synth 2": "56535441-6E74-4346-3253-565332000000",
+  "izotope neutron 4 unmask": "5653545A-4E55-5A4E-6575-74726F6E2050",
+  "nectar 3": "F2AEE70D-00DE-4F4E-5360-64544D6E6563",
+  "nectar 4": "F2AEE70D-00DE-4F4E-5360-64544D6E6564",
+  "nectar 4 auto-level": "F2AEE70D-00DE-4F4E-5360-64544D6E6564",
+  "vocal-synth 2": "F2AEE70D-00DE-4F4E-5360-64544D767332",
   "relay": "5653545A-524C-3152-656C-617900000000",
   "izotope relay": "5653545A-524C-3152-656C-617900000000",
-  "izotope nectar 4": "5653544E-6374-5A4E-6563-746172205072",
-  "tonal balance control 2": "5653545A-424D-3254-6F6E-616C2042616C",
-  "izotope tonal balance control 2": "5653545A-424D-3254-6F6E-616C2042616C",
-  "stutter edit 2": "ABCDEF01-9182-FAEB-695A-747053744532",
 
   // XLN Audio
   "rc-20 retro color": "ABCDEF01-9182-FAEB-786C-6E4178615243",
+  "rc-20": "ABCDEF01-9182-FAEB-786C-6E4178615243",
   "rc20": "ABCDEF01-9182-FAEB-786C-6E4178615243",
   "retro color": "ABCDEF01-9182-FAEB-786C-6E4178615243",
-  "addictive keys": "ABCDEF01-9182-FAEB-786C-6E417861414B",
+  "xln audio rc-20 retro color": "ABCDEF01-9182-FAEB-786C-6E4178615243",
 
   // Baby Audio
   "smooth operator": "F2AEE70D-00DE-4F4E-5360-64544D736D6F",
@@ -317,31 +371,18 @@ export const KNOWN_VST3_GUIDS: Record<string, string> = {
   "pro eq": "073C4094-E062-4FB5-8328-74608DD1A3A4",
   "compressor": "54F19B72-352C-4AA5-A2AF-67F86F30D6BE",
   "limiter": "61B18D53-26FA-4220-8614-89944A1990EC",
-  "mixtool": "5653544D-6978-746F-6F6C-533130303030",
 
   // Universal Audio (UADx / Spark VST3s & Apollo VST3s)
-  "1176ln rev e": "56535458-3941-5575-6164-207561203131",
-  "uad ua 1176ln rev e": "56535458-3941-5575-6164-207561203131",
-  "uad 1176ln rev e": "56535458-3941-5575-6164-207561203131",
-  "la-2a silver compressor": "ABCDEF01-9182-FAEB-5541-447855334139",
-  "uadx la-2a silver compressor": "ABCDEF01-9182-FAEB-5541-447855334139",
-  "fairchild 670 compressor": "ABCDEF01-9182-FAEB-5541-447855334156",
-  "uadx fairchild 670 compressor": "ABCDEF01-9182-FAEB-5541-447855334156",
-  "fairchild 670": "ABCDEF01-9182-FAEB-5541-447855334156",
-  "la-2a silver": "ABCDEF01-9182-FAEB-5541-447855334139",
-  "la-2a gray": "ABCDEF01-9182-FAEB-5541-447855334137",
-  "la-2": "ABCDEF01-9182-FAEB-5541-447855334135",
   "uaudio_manley_massive_passive": "ABCDEF01-9182-FAEB-5541-447855333931",
-  "uaudio_teletronix_la-2": "ABCDEF01-9182-FAEB-5541-447855334135",
-  "uaudio_ua_1176ln_rev_e": "ABCDEF01-9182-FAEB-5541-447855333958",
-  "uaudio_ua_1176se_rev_e": "5541444C-3131-3753-0000-000000000000",
+  "uaudio_teletronix_la-2": "5541444C-4132-4153-0000-000000000000",
+  "uaudio_ua_1176ln_rev_e": "56535458-3941-5575-6164-207561203131",
+  "ua 1176ln rev e": "56535458-3941-5575-6164-207561203131",
+  "uad ua 1176ln rev e": "56535458-3941-5575-6164-207561203131",
+  "1176ln rev e": "56535458-3941-5575-6164-207561203131",
+  "uad 1176ln rev e": "56535458-3941-5575-6164-207561203131",
   "teletronix la-2a silver": "ABCDEF01-9182-FAEB-5541-447855334139",
-  "teletronix la-2a gray": "ABCDEF01-9182-FAEB-5541-447855334137",
-  "1176ln rev e": "5541444C-3131-3736-0000-000000000000",
+  "teletronix la-2a gray": "5541444C-4132-4147-0000-000000000000",
   "1176se rev e": "5541444C-3131-3753-0000-000000000000",
-  "fairchild 670": "ABCDEF01-9182-FAEB-5541-447855333835",
-  "fairchild 660": "ABCDEF01-9182-FAEB-5541-447855333834",
-  "uaudio_fairchild_670": "ABCDEF01-9182-FAEB-5541-447855333835",
   "uaudio_manley_voxbox": "ABCDEF01-9182-FAEB-5541-447855334250",
   "uaudio_api_2500": "ABCDEF01-9182-FAEB-5541-447855334255",
   "uaudio_neve_1073": "ABCDEF01-9182-FAEB-5541-44785533415A",
@@ -359,6 +400,10 @@ export const KNOWN_VST3_GUIDS: Record<string, string> = {
   "teletronix la-2a": "ABCDEF01-9182-FAEB-5541-447855334135",
   "uad teletronix la-2a": "ABCDEF01-9182-FAEB-5541-447855334135",
   "uadx la-2 compressor": "ABCDEF01-9182-FAEB-5541-447855334135",
+  "uadx la-2a silver compressor": "ABCDEF01-9182-FAEB-5541-447855334139",
+  "uadx fairchild 670 compressor": "ABCDEF01-9182-FAEB-5541-447855333939",
+  "fairchild 670": "ABCDEF01-9182-FAEB-5541-447855333939",
+  "quad fairchild 670": "ABCDEF01-9182-FAEB-5541-447855333939",
   
   // Instruments
   "serum": "56535458-6d4e-7973-6572-756d78363400",
@@ -406,18 +451,69 @@ const formatAsVst3GuidIfNeeded = (id: string, isVst3: boolean): string => {
   return clean.toUpperCase();
 };
 
+const checkBrandCompatibility = (suggestedLower: string, userPlugin: VSTPlugin): boolean => {
+  const vendorLower = (userPlugin.vendor || "").toLowerCase();
+  const nameLower = (userPlugin.name || "").toLowerCase();
+
+  const brands = [
+    { keys: ["fabfilter", "fab-filter"], matches: ["fabfilter", "fab-filter"] },
+    { keys: ["izotope"], matches: ["izotope", "ozone", "neutron", "nectar", "relay"] },
+    { keys: ["soundtheory"], matches: ["soundtheory", "gullfoss"] },
+    { keys: ["universal audio", "uad", "uadx"], matches: ["universal audio", "uaudio", "uad", "uadx", "teletronix", "lexicon", "neve", "studer", "manley", "fairchild", "pultec", "api vision", "api"] },
+    { keys: ["xln audio", "xln"], matches: ["xln audio", "xln", "rc-20", "rc20", "addictive"] },
+    { keys: ["waves"], matches: ["waves", "cla-", "abbey road", "ssl"] },
+    { keys: ["softube"], matches: ["softube"] },
+    { keys: ["soundtoys"], matches: ["soundtoys", "decapitator", "microshift", "crystallizer", "echoboy", "devil-loc", "filterfreak", "panman", "phase mistress", "radiator", "sie-q", "tremolator"] },
+    { keys: ["valhalla"], matches: ["valhalla", "vintageverb", "shimmer", "delay", "room", "plate"] },
+    { keys: ["sonible"], matches: ["sonible", "smart:"] },
+    { keys: ["oeksound"], matches: ["oeksound", "soothe", "spiff"] },
+    { keys: ["baby audio"], matches: ["baby audio", "smooth operator", "crystalline", "transit"] },
+    { keys: ["pulsar"], matches: ["pulsar"] },
+    { keys: ["tokyo dawn"], matches: ["tokyo dawn", "tdr"] },
+    { keys: ["antares"], matches: ["antares", "auto-tune", "autotune"] },
+    { keys: ["acqua"], matches: ["acqua", "acustica"] }
+  ];
+
+  let brandInSuggested = false;
+  for (const b of brands) {
+    if (b.keys.some(k => suggestedLower.includes(k))) {
+      brandInSuggested = true;
+      if (b.matches.some(m => vendorLower.includes(m) || nameLower.includes(m))) {
+        return true;
+      }
+    }
+  }
+
+  if (brandInSuggested) {
+    return false;
+  }
+
+  // If a plugin is general/stock PreSonus, let's only match it if suggested name doesn't imply any specified brand
+  if (vendorLower.includes("presonus") || vendorLower.includes("steinberg") || vendorLower.includes("cockos")) {
+    const hasAnyBrand = brands.some(b => b.keys.some(k => suggestedLower.includes(k)));
+    if (hasAnyBrand) {
+      return false;
+    }
+  }
+
+  return true;
+};
+
 export const findBestUserPluginMatch = (suggestedName: string, userPlugins: VSTPlugin[] = []): VSTPlugin | null => {
   ensureInitialized();
   if (!suggestedName || userPlugins.length === 0) return null;
 
   const cleanSuggested = suggestedName.toLowerCase().replace(/[^a-z0-9]/g, '');
+  const lowerS = suggestedName.toLowerCase();
 
   let potentialMatches: VSTPlugin[] = [];
 
   // 1. Try exact match after cleaning non-alphanumeric chars
   for (const p of userPlugins) {
-    if (p.name.toLowerCase().replace(/[^a-z0-9]/g, '') === cleanSuggested) {
-      potentialMatches.push(p);
+    if (checkBrandCompatibility(lowerS, p)) {
+      if (p.name.toLowerCase().replace(/[^a-z0-9]/g, '') === cleanSuggested) {
+        potentialMatches.push(p);
+      }
     }
   }
 
@@ -432,9 +528,11 @@ export const findBestUserPluginMatch = (suggestedName: string, userPlugins: VSTP
 
   // 2. Try substring match (e.g. if cleanSuggested contains p.name or vice-versa)
   for (const p of userPlugins) {
-    const cleanUser = p.name.toLowerCase().replace(/[^a-z0-9]/g, '');
-    if (cleanUser.length > 2 && (cleanSuggested.includes(cleanUser) || cleanUser.includes(cleanSuggested))) {
-      potentialMatches.push(p);
+    if (checkBrandCompatibility(lowerS, p)) {
+      const cleanUser = p.name.toLowerCase().replace(/[^a-z0-9]/g, '');
+      if (cleanUser.length > 2 && (cleanSuggested.includes(cleanUser) || cleanUser.includes(cleanSuggested))) {
+        potentialMatches.push(p);
+      }
     }
   }
 
@@ -447,49 +545,50 @@ export const findBestUserPluginMatch = (suggestedName: string, userPlugins: VSTP
   }
 
   // 3. Match by common aliases/keywords
-  const lowerS = suggestedName.toLowerCase();
   for (const p of userPlugins) {
-    const lowerP = p.name.toLowerCase();
-    // EQs
-    if (lowerS.includes('eq') || lowerS.includes('equalizer') || lowerS.includes('pro-q') || lowerS.includes('pro q')) {
-      if (lowerP.includes('pro-q') || lowerP.includes('pro q') || lowerP.includes('equalizer') || lowerP.includes('pro eq') || lowerP.includes('proeq') || (lowerP.includes('eq') && p.vendor.toLowerCase().includes('fabfilter'))) {
-        potentialMatches.push(p);
+    if (checkBrandCompatibility(lowerS, p)) {
+      const lowerP = p.name.toLowerCase();
+      // EQs
+      if (lowerS.includes('eq') || lowerS.includes('equalizer') || lowerS.includes('pro-q') || lowerS.includes('pro q')) {
+        if (lowerP.includes('pro-q') || lowerP.includes('pro q') || lowerP.includes('equalizer') || lowerP.includes('pro eq') || lowerP.includes('proeq') || (lowerP.includes('eq') && p.vendor.toLowerCase().includes('fabfilter'))) {
+          potentialMatches.push(p);
+        }
       }
-    }
-    // Compressors
-    if (lowerS.includes('compressor') || lowerS.includes('compress') || lowerS.includes('comp') || lowerS.includes('cla-76') || lowerS.includes('1176') || lowerS.includes('la-2a') || lowerS.includes('la2a')) {
-      if (lowerP.includes('comp') || lowerP.includes('cla-76') || lowerP.includes('1176') || lowerP.includes('la-2a') || lowerP.includes('la2a') || lowerP.includes('pro-c') || lowerP.includes('pro c')) {
-        potentialMatches.push(p);
+      // Compressors
+      if (lowerS.includes('compressor') || lowerS.includes('compress') || lowerS.includes('comp') || lowerS.includes('cla-76') || lowerS.includes('1176') || lowerS.includes('la-2a') || lowerS.includes('la2a')) {
+        if (lowerP.includes('comp') || lowerP.includes('cla-76') || lowerP.includes('1176') || lowerP.includes('la-2a') || lowerP.includes('la2a') || lowerP.includes('pro-c') || lowerP.includes('pro c')) {
+          potentialMatches.push(p);
+        }
       }
-    }
-    // Saturation/Distortion
-    if (lowerS.includes('decapitator') || lowerS.includes('saturation') || lowerS.includes('saturator') || lowerS.includes('saturn') || lowerS.includes('distortion') || lowerS.includes('drive')) {
-      if (lowerP.includes('decapitator') || lowerP.includes('saturation') || lowerP.includes('saturator') || lowerP.includes('saturn') || lowerP.includes('dist') || lowerP.includes('knob')) {
-        potentialMatches.push(p);
+      // Saturation/Distortion
+      if (lowerS.includes('decapitator') || lowerS.includes('saturation') || lowerS.includes('saturator') || lowerS.includes('saturn') || lowerS.includes('distortion') || lowerS.includes('drive')) {
+        if (lowerP.includes('decapitator') || lowerP.includes('saturation') || lowerP.includes('saturator') || lowerP.includes('saturn') || lowerP.includes('dist') || lowerP.includes('knob')) {
+          potentialMatches.push(p);
+        }
       }
-    }
-    // Reverbs
-    if (lowerS.includes('reverb') || lowerS.includes('verb') || lowerS.includes('vintageverb') || lowerS.includes('valhalla') || lowerS.includes('space') || lowerS.includes('hall')) {
-      if (lowerP.includes('reverb') || lowerP.includes('verb') || lowerP.includes('vintageverb') || lowerP.includes('valhalla') || lowerP.includes('raum') || lowerP.includes('space')) {
-        potentialMatches.push(p);
+      // Reverbs
+      if (lowerS.includes('reverb') || lowerS.includes('verb') || lowerS.includes('vintageverb') || lowerS.includes('valhalla') || lowerS.includes('space') || lowerS.includes('hall')) {
+        if (lowerP.includes('reverb') || lowerP.includes('verb') || lowerP.includes('vintageverb') || lowerP.includes('valhalla') || lowerP.includes('raum') || lowerP.includes('space')) {
+          potentialMatches.push(p);
+        }
       }
-    }
-    // Delays
-    if (lowerS.includes('delay') || lowerS.includes('echo') || lowerS.includes('timeless')) {
-      if (lowerP.includes('delay') || lowerP.includes('echo') || lowerP.includes('timeless') || lowerP.includes('replika')) {
-        potentialMatches.push(p);
+      // Delays
+      if (lowerS.includes('delay') || lowerS.includes('echo') || lowerS.includes('timeless')) {
+        if (lowerP.includes('delay') || lowerP.includes('echo') || lowerP.includes('timeless') || lowerP.includes('replika')) {
+          potentialMatches.push(p);
+        }
       }
-    }
-    // Deessers
-    if (lowerS.includes('deesser') || lowerS.includes('de-esser') || lowerS.includes('pro-ds') || lowerS.includes('pro ds')) {
-      if (lowerP.includes('deesser') || lowerP.includes('de-esser') || lowerP.includes('pro-ds') || lowerP.includes('pro ds')) {
-        potentialMatches.push(p);
+      // Deessers
+      if (lowerS.includes('deesser') || lowerS.includes('de-esser') || lowerS.includes('pro-ds') || lowerS.includes('pro ds')) {
+        if (lowerP.includes('deesser') || lowerP.includes('de-esser') || lowerP.includes('pro-ds') || lowerP.includes('pro ds')) {
+          potentialMatches.push(p);
+        }
       }
-    }
-    // Limiters
-    if (lowerS.includes('limiter') || lowerS.includes('pro-l') || lowerS.includes('pro l')) {
-      if (lowerP.includes('limiter') || lowerP.includes('pro-l') || lowerP.includes('pro l') || lowerP.includes('l1') || lowerP.includes('l2') || lowerP.includes('maximizer')) {
-        potentialMatches.push(p);
+      // Limiters
+      if (lowerS.includes('limiter') || lowerS.includes('pro-l') || lowerS.includes('pro l')) {
+        if (lowerP.includes('limiter') || lowerP.includes('pro-l') || lowerP.includes('pro l') || lowerP.includes('l1') || lowerP.includes('l2') || lowerP.includes('maximizer')) {
+          potentialMatches.push(p);
+        }
       }
     }
   }
@@ -505,9 +604,42 @@ export const findBestUserPluginMatch = (suggestedName: string, userPlugins: VSTP
   return null;
 };
 
+const isHighConfidenceMatch = (suggestedName: string, userPlugin: VSTPlugin): boolean => {
+  const sName = suggestedName.toLowerCase();
+  const pName = userPlugin.name.toLowerCase();
+  const pVendor = (userPlugin.vendor || "").toLowerCase();
+
+  if (sName.includes("unmask")) {
+    return pName.includes("unmask") && (pVendor.includes("izotope") || pName.includes("izotope") || pName.includes("neutron"));
+  }
+  if (sName.includes("relay")) {
+    return pName.includes("relay") && (pVendor.includes("izotope") || pName.includes("izotope"));
+  }
+  if (sName.includes("nectar 4 auto-level") || sName.includes("nectar 4 auto level") || (sName.includes("nectar") && sName.includes("level"))) {
+    return (pName.includes("nectar") && (pName.includes("level") || pName.includes("auto-level") || pName.includes("auto_level"))) && (pVendor.includes("izotope") || pName.includes("izotope"));
+  }
+  if (sName.includes("rc-20") || sName.includes("rc20") || sName.includes("retro color")) {
+    return (pName.includes("rc-20") || pName.includes("rc20") || pName.includes("retro color")) && (pVendor.includes("xln") || pName.includes("xln") || pName.includes("xln audio"));
+  }
+  if (sName.includes("gullfoss")) {
+    return pName.includes("gullfoss") && (pVendor.includes("soundtheory") || pName.includes("soundtheory"));
+  }
+  if (sName.includes("fairchild")) {
+    return pName.includes("fairchild") && (pVendor.includes("universal") || pVendor.includes("uad") || pVendor.includes("uaudio") || pName.includes("universal") || pName.includes("uad") || pName.includes("uaudio"));
+  }
+  if (sName.includes("la-2a silver") || sName.includes("la-2a silver compressor") || sName.includes("la2a silver") || (sName.includes("la-2a") && sName.includes("silver"))) {
+    return (pName.includes("la-2a") || pName.includes("la2a")) && (pName.includes("silver") || pName.includes("compressor")) && (pVendor.includes("universal") || pVendor.includes("uad") || pVendor.includes("uaudio") || pName.includes("universal") || pName.includes("uad") || pName.includes("uaudio"));
+  }
+  if (sName.includes("1176ln") || sName.includes("1176 ln")) {
+    return (pName.includes("1176ln") || pName.includes("1176 ln") || pName.includes("1176")) && (pVendor.includes("universal") || pVendor.includes("uad") || pVendor.includes("uaudio") || pName.includes("universal") || pName.includes("uad") || pName.includes("uaudio"));
+  }
+
+  return true;
+};
+
 const getPluginMetadata = (suggestedName: string, isInstrument: boolean, userPlugins: VSTPlugin[] = []): { deviceName: string, deviceVendor: string, deviceID: string, type: 'vst2' | 'vst3', version: string } => {
   const userMatch = findBestUserPluginMatch(suggestedName, userPlugins);
-  if (userMatch) {
+  if (userMatch && isHighConfidenceMatch(suggestedName, userMatch)) {
     const typeLower = userMatch.type.toLowerCase();
     const isVst3 = typeLower.includes('vst3') || (!typeLower.includes('vst2') && !userMatch.name.toLowerCase().endsWith('.dll') && !typeLower.includes('vst2'));
     const cleanUserMatchName = userMatch.name.toLowerCase();
@@ -546,36 +678,14 @@ const getPluginMetadata = (suggestedName: string, isInstrument: boolean, userPlu
         deviceID = "5653544d-6978-746f-6f6c-533130303030";
       } else if (cleanUserMatchName.includes("microshift")) {
         deviceID = "F2AEE70D-00DE-4F4E-536E-6454474d6373";
-      } else if (cleanUserMatchName.includes("rc-20") || cleanUserMatchName.includes("retro color")) {
-        deviceID = "ABCDEF01-9182-FAEB-786C-6E4178615243";
-      } else if (cleanUserMatchName.includes("relay")) {
-        deviceID = "5653545A-524C-3152-656C-617900000000";
-      } else if (cleanUserMatchName.includes("nectar 4 auto-level") || cleanUserMatchName.includes("nectar 4 auto level")) {
-        deviceID = "5653544E-4354-414E-6563-746172203420";
-      } else if (cleanUserMatchName.includes("neutron 4 unmask") || cleanUserMatchName.includes("neutron unmask")) {
-        deviceID = "5653545A-4E55-5A4E-6575-74726F6E2050";
-      } else if (cleanUserMatchName.includes("1176") && (cleanUserMatchName.includes("rev e") || cleanUserMatchName.includes("rev. e"))) {
-        deviceID = "56535458-3941-5575-6164-207561203131";
-      } else if (cleanUserMatchName.includes("1176") && (cleanUserMatchName.includes("uadx") || cleanUserMatchName.includes("spark"))) {
-        deviceID = "ABCDEF01-9182-FAEB-5541-447855333958";
-      } else if (cleanUserMatchName.includes("1176")) {
-        deviceID = "5541444C-3131-3736-0000-000000000000";
-      } else if ((cleanUserMatchName.includes("la-2a silver") || cleanUserMatchName.includes("la2a silver"))) {
-        deviceID = "ABCDEF01-9182-FAEB-5541-447855333553"; 
-      } else if ((cleanUserMatchName.includes("la-2") || cleanUserMatchName.includes("la2")) && (cleanUserMatchName.includes("uadx") || cleanUserMatchName.includes("spark"))) {
-        deviceID = "ABCDEF01-9182-FAEB-5541-447855334135"; 
-      } else if (cleanUserMatchName.includes("la-2") || cleanUserMatchName.includes("la2")) {
-        deviceID = "5541444C-4132-4153-0000-000000000000";
-      } else if (cleanUserMatchName.includes("fairchild 670")) {
-        deviceID = "ABCDEF01-9182-FAEB-5541-447855334156";
-      } else if (cleanUserMatchName.includes("fairchild 660")) {
-        deviceID = "ABCDEF01-9182-FAEB-5541-447855334158";
-      } else if (cleanUserMatchName.includes("fairchild") && (cleanUserMatchName.includes("uadx") || cleanUserMatchName.includes("spark"))) {
-        deviceID = "ABCDEF01-9182-FAEB-5541-447855333835";
-      } else if (cleanUserMatchName.includes("compressor") && !cleanUserMatchName.includes("uad") && !cleanUserMatchName.includes("waves") && !cleanUserMatchName.includes("fabfilter") && !cleanUserMatchName.includes("la-2") && !cleanUserMatchName.includes("1176")) {
+      } else if (cleanUserMatchName.includes("compressor")) {
         deviceID = "54F19B72-352C-4AA5-A2AF-67F86F30D6BE";
-      } else if (cleanUserMatchName.includes("limiter") && !cleanUserMatchName.includes("fabfilter") && !cleanUserMatchName.includes("waves")) {
+      } else if (cleanUserMatchName.includes("limiter")) {
         deviceID = "61B18D53-26FA-4220-8614-89944A1990EC";
+      } else if (cleanUserMatchName.includes("la-2") || cleanUserMatchName.includes("la2")) {
+        deviceID = "ABCDEF01-9182-FAEB-5541-447855334135"; // UADx ID
+      } else if (cleanUserMatchName.includes("1176")) {
+        deviceID = "ABCDEF01-9182-FAEB-5541-447855333958"; // UADx ID
       } else if (cleanUserMatchName.includes("auto-tune pro") || cleanUserMatchName.includes("autotune pro")) {
         deviceID = "56535441-5450-3961-6e74-617265736174";
       } else if (cleanUserMatchName.includes("serum")) {
@@ -791,18 +901,13 @@ const fixXmlForStudioOne = (xml: string) => {
     // Determine role
     const deviceRole = attrMap['deviceRole'] || attrMap['role'] || 'audioFX';
 
-    const paramName = attrMap['name'];
-    const paramDeviceName = attrMap['deviceName'];
-    const paramVendor = attrMap['vendor'];
-    const paramDeviceVendor = attrMap['deviceVendor'];
-
     // Build unique set of Studio One / Spec compatible attributes
     // We remove all ID-related variants first to avoid duplicates
     const idKeys = ['deviceID', 'pluginId', 'pluginID', 'vst3Id', 'vst3ID', 'vst3uid', 'cid', 'classID', 'uid', 'vst3id', 'uniqueId'];
     idKeys.forEach(k => delete attrMap[k]);
     
     // Remove state flags to re-add them consistently
-    ['enabled', 'active', 'loaded', 'deviceRole', 'role', 'name', 'deviceName', 'deviceVendor', 'vendor'].forEach(k => delete attrMap[k]);
+    ['enabled', 'active', 'loaded', 'deviceRole', 'role'].forEach(k => delete attrMap[k]);
 
     const newAttrs: string[] = [];
     // Keep existing metadata like name, color, version, etc.
@@ -811,24 +916,21 @@ const fixXmlForStudioOne = (xml: string) => {
     }
 
     if (tag === 'Vst3Plugin') {
-      const vendorLower = (paramDeviceVendor || paramVendor || '').toLowerCase();
-      let finalVendor = paramDeviceVendor || paramVendor || 'Unknown';
-      if (vendorLower.includes('izotope')) finalVendor = 'iZotope, Inc.';
-      else if (vendorLower.includes('xln')) finalVendor = 'XLN Audio';
-      else if (vendorLower.includes('fabfilter')) finalVendor = 'FabFilter';
-      else if (vendorLower.includes('universal audio') || vendorLower.includes('uaudio')) finalVendor = 'Universal Audio';
-      
-      const cleanName = (paramName || paramDeviceName || '').replace(/"/g, '&quot;');
-      newAttrs.push(`name="${cleanName}"`); 
-      newAttrs.push(`deviceName="${cleanName}"`);
-      newAttrs.push(`deviceVendor="${finalVendor}"`);
-      newAttrs.push(`vendor="${finalVendor}"`);
+      newAttrs.push(`deviceID="${guidWithBraces}"`);
+      newAttrs.push(`pluginId="${guidWithBraces}"`);
       newAttrs.push(`pluginID="${guidWithBraces}"`);
-      newAttrs.push(`uniqueId="${cleanHex}"`);
+      newAttrs.push(`vst3id="${cleanHex}"`);
+      newAttrs.push(`vst3Id="${guidWithBraces}"`);
+      newAttrs.push(`vst3ID="${guidWithBraces}"`);
+      newAttrs.push(`vst3uid="${guidWithBraces}"`);
+      newAttrs.push(`uid="${cleanHex}"`);
+      newAttrs.push(`classID="${guidWithBraces}"`);
+      newAttrs.push(`cid="${cleanHex}"`);
     } else {
-      newAttrs.push(`name="${paramName || paramDeviceName || ''}"`);
-      newAttrs.push(`pluginID="${cleanHex}"`);
+      newAttrs.push(`deviceID="${cleanHex}"`);
+      newAttrs.push(`pluginId="${cleanHex}"`);
       newAttrs.push(`uniqueId="${cleanHex}"`);
+      newAttrs.push(`uid="${cleanHex}"`);
     }
 
     newAttrs.push(`deviceRole="${deviceRole}"`);
