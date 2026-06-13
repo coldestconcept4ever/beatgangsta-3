@@ -2304,7 +2304,7 @@ ${previousCritiqueStr}
     ${GLOBAL_PARAMETER_STRICTNESS_PROMPT}
     CRITICAL: If the user is asking about guitars, acoustic or electric, or if a stem appears to be a guitar, strongly consider recommending the use of a capo (e.g. on the 2nd to 5th fret) to achieve a brighter, more distinctive playing texture without breaking strings. Reference Johnny Marr, Jingle-Jangle styles, and The Smiths if it fits the genre.
     Analyze the audio and provide a detailed mix critique. Since this is a full song, consider the dynamic changes, song structure (intro, verse, chorus, etc.), and how the mix evolves.
-    Only recommend plugins from this list:
+    CRITICAL: You MUST ONLY recommend plugins that are present in this user-owned plugin list. You are STRICTLY FORBIDDEN from suggesting any plugin brand or model that the user does not own. If the list below is non-empty, use only EXACT names or clean substring matches found in the list. Do not recommend generic compressors or EQs (e.g. do not use "CLA-76", "1176", or "Pro-C 2" unless they appear below; instead, look through the list and recommend an actual compressor or EQ the user owns):
     ${pluginListStr}
     The user also has the following hardware and instruments:
     ${hardwareListStr}
@@ -2601,7 +2601,7 @@ ${getLanguageInstruction(language)}
     ${isGangstaVox ? "Focus specifically on the VOCALS." : "Focus specifically on the BEAT/INSTRUMENTAL."}
     ${recipeContext ? `Here is the recipe context:\n${recipeContext}\n` : ""}
     ${audioBase64 || audioUrl ? "Analyze the audio focusing ONLY on the user's requests, and provide targeted advice." : "Analyze the recipe details focusing ONLY on the user's requests, and provide targeted advice."}
-    Only recommend plugins from this list:
+    CRITICAL: You MUST ONLY recommend plugins that are present in this user-owned plugin list. You are STRICTLY FORBIDDEN from suggesting any plugin brand or model that the user does not own. If the list below is non-empty, use only EXACT names or clean substring matches found in the list. Do not recommend generic compressors or EQs (e.g. do not use "CLA-76", "1176", or "Pro-C 2" unless they appear below; instead, look through the list and recommend an actual compressor or EQ the user owns):
     ${pluginListStr}
     ${audioUrl ? `The audio file is available at this URL: ${audioUrl}. Please fetch and analyze it.` : ""}
     Respond to the user's latest message. Return the result as a JSON object with 'query', 'advice', 'multiBandDetails' (optional object with 'isEnabled', 'bandCount', 'splitFrequencies', 'reasoning' if Gaffel/Multi-band mode is on), and 'recommendedChain' (an array of plugin objects with 'name', 'purpose', 'band', 'routing', and 'deepDive' parameters).
@@ -2735,7 +2735,7 @@ export const getLyricAnalysis = async (
             - 'intensity': Numeric visual amplitude level (integer from 15 to 100)
             - 'instructions': Precise, granular coaching and mixing directives for this physical segment, mapping details on automated effects, volume ducking, sidechains, polarity adjustments, or performance execution.
     
-    Only recommend plugins from this list:
+    CRITICAL: You MUST ONLY recommend plugins that are present in this user-owned plugin list. You are STRICTLY FORBIDDEN from suggesting any plugin brand or model that the user does not own. If the list below is non-empty, use only EXACT names or clean substring matches found in the list. Do not recommend generic compressors or EQs (e.g. do not use "CLA-76", "1176", or "Pro-C 2" unless they appear below; instead, look through the list and recommend an actual compressor or EQ the user owns):
     ${pluginListStr}
   `;
 

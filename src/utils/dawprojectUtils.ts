@@ -79,14 +79,14 @@ const mapPluginMetadata = (suggestedName: string, isInstrument: boolean = false)
   if (cleanName.includes("unmask") || (cleanName.includes("neutron") && cleanName.includes("unmask"))) {
     return {
       deviceName: "Neutron 4 Unmask",
-      deviceID: "5653545ZA4E555A4E657574726F6E2050".replace('ZA', 'A'),
+      deviceID: "5653545A4E555A4E657574726F6E2050",
       deviceVendor: "iZotope"
     };
   }
   if (cleanName.includes("relay") || cleanName.includes("izotope relay")) {
     return {
       deviceName: "Relay",
-      deviceID: "5653545Z524C3152656C617900000000".replace('Z', 'A'),
+      deviceID: "5653545A524C3152656C617900000000",
       deviceVendor: "iZotope"
     };
   }
@@ -133,7 +133,15 @@ const mapPluginMetadata = (suggestedName: string, isInstrument: boolean = false)
     };
   }
 
-  if (name.includes("pro-q") || name.includes("pro q") || (name.includes("eq") && name.includes("surgical")) || name.includes("equalizer")) {
+  // EQs (Specific models first, general EQ last)
+  if (name.includes("pro-q 3") || name.includes("pro-q3") || name.includes("pro q 3")) {
+    return {
+      deviceName: "Pro-Q 3",
+      deviceID: "5653545251336166616266696c746572",
+      deviceVendor: "FabFilter"
+    };
+  }
+  if (name.includes("pro-q") || name.includes("pro q")) {
     return {
       deviceName: "Pro-Q 3",
       deviceID: "5653545251336166616266696c746572",
@@ -154,8 +162,22 @@ const mapPluginMetadata = (suggestedName: string, isInstrument: boolean = false)
       deviceVendor: "Waves"
     };
   }
+  if (name.includes("equalizer") || name.includes("eq")) {
+    return {
+      deviceName: "Pro-Q 3",
+      deviceID: "5653545251336166616266696c746572",
+      deviceVendor: "FabFilter"
+    };
+  }
 
-  // Compressors
+  // Compressors (Specific models first, general/generic compressor last)
+  if (name.includes("la-2a") || name.includes("la2a") || name.includes("cla-2a") || name.includes("cla2a") || name.includes("opto") || name.includes("la-2") || name.includes("la2")) {
+    return {
+      deviceName: "CLA-2A",
+      deviceID: "5653544332415377617665737368656c",
+      deviceVendor: "Waves"
+    };
+  }
   if (name.includes("1176") || name.includes("fet compressor") || name.includes("cla-76") || name.includes("cla76")) {
     return {
       deviceName: "CLA-76",
@@ -163,18 +185,25 @@ const mapPluginMetadata = (suggestedName: string, isInstrument: boolean = false)
       deviceVendor: "Waves"
     };
   }
-  if (name.includes("pro-c") || name.includes("pro c") || name.includes("compressor") || name.includes("glue")) {
+  if (name.includes("g-bus") || name.includes("gbus") || name.includes("ssl g")) {
+    return {
+      deviceName: "UAD SSL G Bus Compressor",
+      deviceID: "565354594241557561642073736c2067",
+      deviceVendor: "Universal Audio"
+    };
+  }
+  if (name.includes("pro-c") || name.includes("pro c") || name.includes("pro-c 2") || name.includes("pro-c2") || name.includes("pro c 2")) {
     return {
       deviceName: "Pro-C 2",
       deviceID: "5653545250433266616266696c746572",
       deviceVendor: "FabFilter"
     };
   }
-  if (name.includes("la-2a") || name.includes("la2a") || name.includes("cla-2a") || name.includes("cla2a") || name.includes("opto")) {
+  if (name.includes("compressor") || name.includes("glue") || name.includes("comp")) {
     return {
-      deviceName: "CLA-2A",
-      deviceID: "5653544332415377617665737368656c",
-      deviceVendor: "Waves"
+      deviceName: "Pro-C 2",
+      deviceID: "5653545250433266616266696c746572",
+      deviceVendor: "FabFilter"
     };
   }
 
@@ -506,9 +535,10 @@ export const findBestUserPluginMatch = (suggestedName: string, userPlugins: VSTP
   const cleanSuggested = suggestedName.toLowerCase().replace(/[^a-z0-9]/g, '');
   const lowerS = suggestedName.toLowerCase();
 
+  // PASS 1: Brand Enforced
   let potentialMatches: VSTPlugin[] = [];
 
-  // 1. Try exact match after cleaning non-alphanumeric chars
+  // 1.1 Exact cleaned match
   for (const p of userPlugins) {
     if (checkBrandCompatibility(lowerS, p)) {
       if (p.name.toLowerCase().replace(/[^a-z0-9]/g, '') === cleanSuggested) {
@@ -516,17 +546,11 @@ export const findBestUserPluginMatch = (suggestedName: string, userPlugins: VSTP
       }
     }
   }
-
-  // 1.5. If exact matches found, return the best one
   if (potentialMatches.length > 0) {
-     return potentialMatches.sort((a, b) => {
-         const aIsVst2 = a.type.toLowerCase() === 'vst2' || a.name.toLowerCase().endsWith('.dll') ? -1 : 1;
-         const bIsVst2 = b.type.toLowerCase() === 'vst2' || b.name.toLowerCase().endsWith('.dll') ? -1 : 1;
-         return aIsVst2 - bIsVst2;
-     })[0];
+    return selectBestVstMatch(potentialMatches);
   }
 
-  // 2. Try substring match (e.g. if cleanSuggested contains p.name or vice-versa)
+  // 1.2 Substring match
   for (const p of userPlugins) {
     if (checkBrandCompatibility(lowerS, p)) {
       const cleanUser = p.name.toLowerCase().replace(/[^a-z0-9]/g, '');
@@ -535,73 +559,166 @@ export const findBestUserPluginMatch = (suggestedName: string, userPlugins: VSTP
       }
     }
   }
-
   if (potentialMatches.length > 0) {
-     return potentialMatches.sort((a, b) => {
-         const aIsVst2 = a.type.toLowerCase() === 'vst2' || a.name.toLowerCase().endsWith('.dll') ? -1 : 1;
-         const bIsVst2 = b.type.toLowerCase() === 'vst2' || b.name.toLowerCase().endsWith('.dll') ? -1 : 1;
-         return aIsVst2 - bIsVst2;
-     })[0];
+    return selectBestVstMatch(potentialMatches);
   }
 
-  // 3. Match by common aliases/keywords
+  // 1.3 Alias/keywords match
   for (const p of userPlugins) {
     if (checkBrandCompatibility(lowerS, p)) {
-      const lowerP = p.name.toLowerCase();
-      // EQs
-      if (lowerS.includes('eq') || lowerS.includes('equalizer') || lowerS.includes('pro-q') || lowerS.includes('pro q')) {
-        if (lowerP.includes('pro-q') || lowerP.includes('pro q') || lowerP.includes('equalizer') || lowerP.includes('pro eq') || lowerP.includes('proeq') || (lowerP.includes('eq') && p.vendor.toLowerCase().includes('fabfilter'))) {
-          potentialMatches.push(p);
-        }
-      }
-      // Compressors
-      if (lowerS.includes('compressor') || lowerS.includes('compress') || lowerS.includes('comp') || lowerS.includes('cla-76') || lowerS.includes('1176') || lowerS.includes('la-2a') || lowerS.includes('la2a')) {
-        if (lowerP.includes('comp') || lowerP.includes('cla-76') || lowerP.includes('1176') || lowerP.includes('la-2a') || lowerP.includes('la2a') || lowerP.includes('pro-c') || lowerP.includes('pro c')) {
-          potentialMatches.push(p);
-        }
-      }
-      // Saturation/Distortion
-      if (lowerS.includes('decapitator') || lowerS.includes('saturation') || lowerS.includes('saturator') || lowerS.includes('saturn') || lowerS.includes('distortion') || lowerS.includes('drive')) {
-        if (lowerP.includes('decapitator') || lowerP.includes('saturation') || lowerP.includes('saturator') || lowerP.includes('saturn') || lowerP.includes('dist') || lowerP.includes('knob')) {
-          potentialMatches.push(p);
-        }
-      }
-      // Reverbs
-      if (lowerS.includes('reverb') || lowerS.includes('verb') || lowerS.includes('vintageverb') || lowerS.includes('valhalla') || lowerS.includes('space') || lowerS.includes('hall')) {
-        if (lowerP.includes('reverb') || lowerP.includes('verb') || lowerP.includes('vintageverb') || lowerP.includes('valhalla') || lowerP.includes('raum') || lowerP.includes('space')) {
-          potentialMatches.push(p);
-        }
-      }
-      // Delays
-      if (lowerS.includes('delay') || lowerS.includes('echo') || lowerS.includes('timeless')) {
-        if (lowerP.includes('delay') || lowerP.includes('echo') || lowerP.includes('timeless') || lowerP.includes('replika')) {
-          potentialMatches.push(p);
-        }
-      }
-      // Deessers
-      if (lowerS.includes('deesser') || lowerS.includes('de-esser') || lowerS.includes('pro-ds') || lowerS.includes('pro ds')) {
-        if (lowerP.includes('deesser') || lowerP.includes('de-esser') || lowerP.includes('pro-ds') || lowerP.includes('pro ds')) {
-          potentialMatches.push(p);
-        }
-      }
-      // Limiters
-      if (lowerS.includes('limiter') || lowerS.includes('pro-l') || lowerS.includes('pro l')) {
-        if (lowerP.includes('limiter') || lowerP.includes('pro-l') || lowerP.includes('pro l') || lowerP.includes('l1') || lowerP.includes('l2') || lowerP.includes('maximizer')) {
-          potentialMatches.push(p);
-        }
+      if (matchPluginByKeywords(lowerS, p.name.toLowerCase(), (p.vendor || "").toLowerCase())) {
+        potentialMatches.push(p);
       }
     }
   }
-
   if (potentialMatches.length > 0) {
-     return potentialMatches.sort((a, b) => {
-         const aIsVst2 = a.type.toLowerCase() === 'vst2' || a.name.toLowerCase().endsWith('.dll') ? -1 : 1;
-         const bIsVst2 = b.type.toLowerCase() === 'vst2' || b.name.toLowerCase().endsWith('.dll') ? -1 : 1;
-         return aIsVst2 - bIsVst2;
-     })[0];
+    return selectBestVstMatch(potentialMatches);
+  }
+
+  // PASS 2: Fallback (Brand Relaxation)
+  // If no match is found, try exact/substring/alias matches without brand restrictions!
+  // This allows mapping of e.g. Waves CLA-76 suggestions to whichever compressor the user actually has (like UADx, FabFilter, or Stock).
+  
+  // 2.1 Exact cleaned match (no brand constraint)
+  for (const p of userPlugins) {
+    if (p.name.toLowerCase().replace(/[^a-z0-9]/g, '') === cleanSuggested) {
+      potentialMatches.push(p);
+    }
+  }
+  if (potentialMatches.length > 0) {
+    return selectBestVstMatch(potentialMatches);
+  }
+
+  // 2.2 Substring match (no brand constraint)
+  for (const p of userPlugins) {
+    const cleanUser = p.name.toLowerCase().replace(/[^a-z0-9]/g, '');
+    if (cleanUser.length > 2 && (cleanSuggested.includes(cleanUser) || cleanUser.includes(cleanSuggested))) {
+      potentialMatches.push(p);
+    }
+  }
+  if (potentialMatches.length > 0) {
+    return selectBestVstMatch(potentialMatches);
+  }
+
+  // 2.3 Keyword match (no brand constraint)
+  for (const p of userPlugins) {
+    if (matchPluginByKeywords(lowerS, p.name.toLowerCase(), (p.vendor || "").toLowerCase())) {
+      potentialMatches.push(p);
+    }
+  }
+  if (potentialMatches.length > 0) {
+    return selectBestVstMatch(potentialMatches);
+  }
+
+  // PASS 3: Category Fallback (Dynamic substitution with user-owned plugins of the same category)
+  // If we still found no match, find any plugin from the user's library of the same category
+  // (e.g., Compressor, EQ, Reverb, Delay, Saturation, Deesser, Limiter) as the suggested plugin name.
+  // This ensures that the user's compiled DAWproject is populated with plugins they ACTUALLY own!
+  let category: string | null = null;
+  if (lowerS.includes('eq') || lowerS.includes('equalizer') || lowerS.includes('pro-q') || lowerS.includes('pro q') || lowerS.includes('pultec') || lowerS.includes('neve') || lowerS.includes('tone') || lowerS.includes('filter') || lowerS.includes('gullfoss') || lowerS.includes('unmask')) {
+    category = 'eq';
+  } else if (lowerS.includes('compressor') || lowerS.includes('compress') || lowerS.includes('comp') || lowerS.includes('cla-76') || lowerS.includes('1176') || lowerS.includes('la-2a') || lowerS.includes('la2a') || lowerS.includes('distressor') || lowerS.includes('ssl g') || lowerS.includes('glue') || lowerS.includes('dynamic') || lowerS.includes('gate') || lowerS.includes('transient')) {
+    category = 'compressor';
+  } else if (lowerS.includes('reverb') || lowerS.includes('verb') || lowerS.includes('space') || lowerS.includes('hall') || lowerS.includes('room') || lowerS.includes('plate') || lowerS.includes('raum') || lowerS.includes('chamber')) {
+    category = 'reverb';
+  } else if (lowerS.includes('delay') || lowerS.includes('echo') || lowerS.includes('timeless') || lowerS.includes('replika')) {
+    category = 'delay';
+  } else if (lowerS.includes('saturation') || lowerS.includes('saturator') || lowerS.includes('saturn') || lowerS.includes('distortion') || lowerS.includes('drive') || lowerS.includes('decapitator') || lowerS.includes('tape') || lowerS.includes('tube') || lowerS.includes('preamp') || lowerS.includes('exciter')) {
+    category = 'saturation';
+  } else if (lowerS.includes('deesser') || lowerS.includes('de-esser') || lowerS.includes('ds')) {
+    category = 'deesser';
+  } else if (lowerS.includes('limiter') || lowerS.includes('pro-l') || lowerS.includes('pro l') || lowerS.includes('maximizer') || lowerS.includes('limiting') || lowerS.includes('limit')) {
+    category = 'limiter';
+  }
+
+  if (category) {
+    for (const p of userPlugins) {
+      const lowerP = p.name.toLowerCase();
+      const lowerPType = (p.type || "").toLowerCase();
+      
+      let isMatch = false;
+      if (category === 'eq') {
+        isMatch = lowerP.includes('eq') || lowerP.includes('equalizer') || lowerP.includes('pro-q') || lowerP.includes('pro q') || lowerP.includes('pultec') || lowerP.includes('neve') || lowerPType.includes('eq') || lowerPType.includes('filter');
+      } else if (category === 'compressor') {
+        isMatch = lowerP.includes('compressor') || lowerP.includes('compress') || lowerP.includes('comp') || lowerP.includes('limit') || lowerP.includes('cla-76') || lowerP.includes('1176') || lowerP.includes('la-2a') || lowerP.includes('la2a') || lowerP.includes('distressor') || lowerP.includes('ssl g') || lowerP.includes('glue') || lowerP.includes('dynamic') || lowerPType.includes('comp') || lowerPType.includes('dynamic');
+      } else if (category === 'reverb') {
+        isMatch = lowerP.includes('reverb') || lowerP.includes('verb') || lowerP.includes('space') || lowerP.includes('hall') || lowerP.includes('room') || lowerP.includes('plate') || lowerP.includes('raum') || lowerP.includes('chamber') || lowerPType.includes('reverb');
+      } else if (category === 'delay') {
+        isMatch = lowerP.includes('delay') || lowerP.includes('echo') || lowerP.includes('timeless') || lowerP.includes('replika') || lowerPType.includes('delay');
+      } else if (category === 'saturation') {
+        isMatch = lowerP.includes('saturation') || lowerP.includes('saturator') || lowerP.includes('saturn') || lowerP.includes('distortion') || lowerP.includes('drive') || lowerP.includes('decapitator') || lowerP.includes('tape') || lowerP.includes('tube') || lowerP.includes('preamp') || lowerP.includes('exciter') || lowerPType.includes('distortion');
+      } else if (category === 'deesser') {
+        isMatch = lowerP.includes('deesser') || lowerP.includes('de-esser') || lowerP.includes('ds') || lowerPType.includes('deesser') || lowerPType.includes('de-esser');
+      } else if (category === 'limiter') {
+        isMatch = lowerP.includes('limiter') || lowerP.includes('limit') || lowerP.includes('pro-l') || lowerP.includes('pro l') || lowerP.includes('maximizer') || lowerPType.includes('limiter');
+      }
+
+      if (isMatch) {
+        potentialMatches.push(p);
+      }
+    }
+    if (potentialMatches.length > 0) {
+      return selectBestVstMatch(potentialMatches);
+    }
   }
 
   return null;
+};
+
+// Helper for selecting VST3 over VST2 when returning a list of viable matches
+const selectBestVstMatch = (potentialMatches: VSTPlugin[]): VSTPlugin => {
+  return potentialMatches.sort((a, b) => {
+    const aIsVst2 = a.type.toLowerCase() === 'vst2' || a.name.toLowerCase().endsWith('.dll') ? -1 : 1;
+    const bIsVst2 = b.type.toLowerCase() === 'vst2' || b.name.toLowerCase().endsWith('.dll') ? -1 : 1;
+    return aIsVst2 - bIsVst2; // If one is VST3, it sorts later (returning VST3 first)
+  })[0];
+};
+
+// Extracted keyword compatibility check
+const matchPluginByKeywords = (lowerS: string, lowerP: string, vendorLower: string): boolean => {
+  // EQs
+  if (lowerS.includes('eq') || lowerS.includes('equalizer') || lowerS.includes('pro-q') || lowerS.includes('pro q')) {
+    if (lowerP.includes('pro-q') || lowerP.includes('pro q') || lowerP.includes('equalizer') || lowerP.includes('pro eq') || lowerP.includes('proeq') || (lowerP.includes('eq') && vendorLower.includes('fabfilter'))) {
+      return true;
+    }
+  }
+  // Compressors
+  if (lowerS.includes('compressor') || lowerS.includes('compress') || lowerS.includes('comp') || lowerS.includes('cla-76') || lowerS.includes('1176') || lowerS.includes('la-2a') || lowerS.includes('la2a') || lowerS.includes('fairchild') || lowerS.includes('g-bus') || lowerS.includes('gbus') || lowerS.includes('ssl g') || lowerS.includes('glue')) {
+    if (lowerP.includes('comp') || lowerP.includes('cla-76') || lowerP.includes('1176') || lowerP.includes('la-2a') || lowerP.includes('la2a') || lowerP.includes('pro-c') || lowerP.includes('pro c') || lowerP.includes('fairchild') || lowerP.includes('g-bus') || lowerP.includes('gbus') || lowerP.includes('ssl g') || lowerP.includes('glue')) {
+      return true;
+    }
+  }
+  // Saturation/Distortion
+  if (lowerS.includes('decapitator') || lowerS.includes('saturation') || lowerS.includes('saturator') || lowerS.includes('saturn') || lowerS.includes('distortion') || lowerS.includes('drive')) {
+    if (lowerP.includes('decapitator') || lowerP.includes('saturation') || lowerP.includes('saturator') || lowerP.includes('saturn') || lowerP.includes('dist') || lowerP.includes('knob')) {
+      return true;
+    }
+  }
+  // Reverbs
+  if (lowerS.includes('reverb') || lowerS.includes('verb') || lowerS.includes('vintageverb') || lowerS.includes('valhalla') || lowerS.includes('space') || lowerS.includes('hall')) {
+    if (lowerP.includes('reverb') || lowerP.includes('verb') || lowerP.includes('vintageverb') || lowerP.includes('valhalla') || lowerP.includes('raum') || lowerP.includes('space')) {
+      return true;
+    }
+  }
+  // Delays
+  if (lowerS.includes('delay') || lowerS.includes('echo') || lowerS.includes('timeless')) {
+    if (lowerP.includes('delay') || lowerP.includes('echo') || lowerP.includes('timeless') || lowerP.includes('replika')) {
+      return true;
+    }
+  }
+  // Deessers
+  if (lowerS.includes('deesser') || lowerS.includes('de-esser') || lowerS.includes('pro-ds') || lowerS.includes('pro ds')) {
+    if (lowerP.includes('deesser') || lowerP.includes('de-esser') || lowerP.includes('pro-ds') || lowerP.includes('pro ds')) {
+      return true;
+    }
+  }
+  // Limiters
+  if (lowerS.includes('limiter') || lowerS.includes('pro-l') || lowerS.includes('pro l')) {
+    if (lowerP.includes('limiter') || lowerP.includes('pro-l') || lowerP.includes('pro l') || lowerP.includes('l1') || lowerP.includes('l2') || lowerP.includes('maximizer')) {
+      return true;
+    }
+  }
+  return false;
 };
 
 const isHighConfidenceMatch = (suggestedName: string, userPlugin: VSTPlugin): boolean => {
@@ -639,13 +756,14 @@ const isHighConfidenceMatch = (suggestedName: string, userPlugin: VSTPlugin): bo
 
 const getPluginMetadata = (suggestedName: string, isInstrument: boolean, userPlugins: VSTPlugin[] = []): { deviceName: string, deviceVendor: string, deviceID: string, type: 'vst2' | 'vst3', version: string } => {
   const userMatch = findBestUserPluginMatch(suggestedName, userPlugins);
-  if (userMatch && isHighConfidenceMatch(suggestedName, userMatch)) {
+  if (userMatch) {
     const typeLower = userMatch.type.toLowerCase();
     const isVst3 = typeLower.includes('vst3') || (!typeLower.includes('vst2') && !userMatch.name.toLowerCase().endsWith('.dll') && !typeLower.includes('vst2'));
     const cleanUserMatchName = userMatch.name.toLowerCase();
     let deviceID = userMatch.id || "";
     
-    if (isVst3) {
+    // Only query known guideline GUIDs if we didn't extract an ID from the user's settings file
+    if (!deviceID && isVst3) {
       const knownGuid = getKnownVst3Guid(userMatch.name);
       if (knownGuid) {
         deviceID = knownGuid;
@@ -660,6 +778,14 @@ const getPluginMetadata = (suggestedName: string, isInstrument: boolean, userPlu
         deviceID = "56535443-3736-5377-6176-65737368656c";
       } else if (cleanUserMatchName.includes("cla-2a") || cleanUserMatchName.includes("cla2a")) {
         deviceID = "56535443-3241-5377-6176-65737368656c";
+      } else if (cleanUserMatchName.includes("la-2") || cleanUserMatchName.includes("la2")) {
+        deviceID = "ABCDEF01-9182-FAEB-5541-447855334135"; // UADx ID
+      } else if (cleanUserMatchName.includes("1176")) {
+        deviceID = "ABCDEF01-9182-FAEB-5541-447855333958"; // UADx ID
+      } else if (cleanUserMatchName.includes("fairchild")) {
+        deviceID = "ABCDEF01-9182-FAEB-5541-447855333939"; // UADx ID
+      } else if (cleanUserMatchName.includes("g-bus") || cleanUserMatchName.includes("gbus") || cleanUserMatchName.includes("ssl g")) {
+        deviceID = "56535459-4241-5575-6164-2073736C2067"; // UAD SSL G Bus Compressor
       } else if (cleanUserMatchName.includes("pro-c 2") || cleanUserMatchName.includes("pro-c2") || cleanUserMatchName.includes("pro c 2")) {
         deviceID = "72C4DB71-7A4D-459A-B97E-51744D666332";
       } else if (cleanUserMatchName.includes("pro-ds") || cleanUserMatchName.includes("pro ds")) {
@@ -682,10 +808,6 @@ const getPluginMetadata = (suggestedName: string, isInstrument: boolean, userPlu
         deviceID = "54F19B72-352C-4AA5-A2AF-67F86F30D6BE";
       } else if (cleanUserMatchName.includes("limiter")) {
         deviceID = "61B18D53-26FA-4220-8614-89944A1990EC";
-      } else if (cleanUserMatchName.includes("la-2") || cleanUserMatchName.includes("la2")) {
-        deviceID = "ABCDEF01-9182-FAEB-5541-447855334135"; // UADx ID
-      } else if (cleanUserMatchName.includes("1176")) {
-        deviceID = "ABCDEF01-9182-FAEB-5541-447855333958"; // UADx ID
       } else if (cleanUserMatchName.includes("auto-tune pro") || cleanUserMatchName.includes("autotune pro")) {
         deviceID = "56535441-5450-3961-6e74-617265736174";
       } else if (cleanUserMatchName.includes("serum")) {
