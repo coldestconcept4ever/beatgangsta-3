@@ -532,8 +532,14 @@ export const findBestUserPluginMatch = (suggestedName: string, userPlugins: VSTP
   ensureInitialized();
   if (!suggestedName || userPlugins.length === 0) return null;
 
-  const cleanSuggested = suggestedName.toLowerCase().replace(/[^a-z0-9]/g, '');
-  const lowerS = suggestedName.toLowerCase();
+  const lowerS = suggestedName.toLowerCase().trim();
+  
+  // PASS 0: Exact case-insensitive match (The most accurate)
+  const exactMatch = userPlugins.find(p => p.name.toLowerCase().trim() === lowerS);
+  if (exactMatch) return exactMatch;
+
+  // Clean suggested name, stripping (n) suffixes if they exist
+  const cleanSuggested = suggestedName.replace(/\s\(\d+\)$/, '').toLowerCase().replace(/[^a-z0-9]/g, '');
 
   // PASS 1: Brand Enforced
   let potentialMatches: VSTPlugin[] = [];
@@ -541,7 +547,8 @@ export const findBestUserPluginMatch = (suggestedName: string, userPlugins: VSTP
   // 1.1 Exact cleaned match
   for (const p of userPlugins) {
     if (checkBrandCompatibility(lowerS, p)) {
-      if (p.name.toLowerCase().replace(/[^a-z0-9]/g, '') === cleanSuggested) {
+      const cleanUser = p.name.replace(/\s\(\d+\)$/, '').toLowerCase().replace(/[^a-z0-9]/g, '');
+      if (cleanUser === cleanSuggested) {
         potentialMatches.push(p);
       }
     }
@@ -553,7 +560,7 @@ export const findBestUserPluginMatch = (suggestedName: string, userPlugins: VSTP
   // 1.2 Substring match
   for (const p of userPlugins) {
     if (checkBrandCompatibility(lowerS, p)) {
-      const cleanUser = p.name.toLowerCase().replace(/[^a-z0-9]/g, '');
+      const cleanUser = p.name.replace(/\s\(\d+\)$/, '').toLowerCase().replace(/[^a-z0-9]/g, '');
       if (cleanUser.length > 2 && (cleanSuggested.includes(cleanUser) || cleanUser.includes(cleanSuggested))) {
         potentialMatches.push(p);
       }
@@ -577,11 +584,11 @@ export const findBestUserPluginMatch = (suggestedName: string, userPlugins: VSTP
 
   // PASS 2: Fallback (Brand Relaxation)
   // If no match is found, try exact/substring/alias matches without brand restrictions!
-  // This allows mapping of e.g. Waves CLA-76 suggestions to whichever compressor the user actually has (like UADx, FabFilter, or Stock).
   
   // 2.1 Exact cleaned match (no brand constraint)
   for (const p of userPlugins) {
-    if (p.name.toLowerCase().replace(/[^a-z0-9]/g, '') === cleanSuggested) {
+    const cleanUser = p.name.replace(/\s\(\d+\)$/, '').toLowerCase().replace(/[^a-z0-9]/g, '');
+    if (cleanUser === cleanSuggested) {
       potentialMatches.push(p);
     }
   }
@@ -591,7 +598,7 @@ export const findBestUserPluginMatch = (suggestedName: string, userPlugins: VSTP
 
   // 2.2 Substring match (no brand constraint)
   for (const p of userPlugins) {
-    const cleanUser = p.name.toLowerCase().replace(/[^a-z0-9]/g, '');
+    const cleanUser = p.name.replace(/\s\(\d+\)$/, '').toLowerCase().replace(/[^a-z0-9]/g, '');
     if (cleanUser.length > 2 && (cleanSuggested.includes(cleanUser) || cleanUser.includes(cleanSuggested))) {
       potentialMatches.push(p);
     }
@@ -754,13 +761,22 @@ const isHighConfidenceMatch = (suggestedName: string, userPlugin: VSTPlugin): bo
   return true;
 };
 
-const getPluginMetadata = (suggestedName: string, isInstrument: boolean, userPlugins: VSTPlugin[] = []): { deviceName: string, deviceVendor: string, deviceID: string, type: 'vst2' | 'vst3', version: string } => {
+const getPluginMetadata = (suggestedName: string, isInstrument: boolean, userPlugins: VSTPlugin[] = []): { deviceName: string, deviceVendor: string, deviceID: string, type: 'vst2' | 'vst3', version: string, matchType: 'EXACT' | 'FUZZY' | 'FALLBACK' } => {
   const userMatch = findBestUserPluginMatch(suggestedName, userPlugins);
   if (userMatch) {
-    const typeLower = userMatch.type.toLowerCase();
-    const isVst3 = typeLower.includes('vst3') || (!typeLower.includes('vst2') && !userMatch.name.toLowerCase().endsWith('.dll') && !typeLower.includes('vst2'));
+    const typeLower = (userMatch.type || "").toLowerCase();
+    const isVst3 = typeLower.includes('vst3') || (!typeLower.includes('vst2') && !userMatch.name.toLowerCase().endsWith('.dll'));
     const cleanUserMatchName = userMatch.name.toLowerCase();
+    const lowerS = suggestedName.toLowerCase().trim();
+    
+    // Determine match confidence
+    let matchType: 'EXACT' | 'FUZZY' | 'FALLBACK' = 'FUZZY';
+    if (userMatch.name.toLowerCase().trim() === lowerS) {
+      matchType = 'EXACT';
+    }
+
     let deviceID = userMatch.id || "";
+    const originalIdFound = !!deviceID;
     
     // Only query known guideline GUIDs if we didn't extract an ID from the user's settings file
     if (!deviceID && isVst3) {
@@ -832,19 +848,22 @@ const getPluginMetadata = (suggestedName: string, isInstrument: boolean, userPlu
       deviceVendor: userMatch.vendor,
       deviceID: formatAsVst3GuidIfNeeded(deviceID, isVst3),
       type: isVst3 ? 'vst3' : 'vst2',
-      version: userMatch.version || '1.0'
+      version: userMatch.version || '1.0',
+      matchType: (matchType === 'EXACT' && originalIdFound) ? 'EXACT' : 'FUZZY'
     };
   }
 
   const meta = mapPluginMetadata(suggestedName, isInstrument);
   const knownGuid = getKnownVst3Guid(meta.deviceName);
   const finalID = knownGuid || meta.deviceID;
+  
   return {
     deviceName: meta.deviceName,
     deviceVendor: meta.deviceVendor,
     deviceID: formatAsVst3GuidIfNeeded(finalID, true),
     type: 'vst3',
-    version: '1.0'
+    version: '1.0',
+    matchType: 'FALLBACK'
   };
 };
 
@@ -973,9 +992,9 @@ const applyPluginsToTrack = (track: Track, fxList: DeepDivePlugin[], instrumentN
     const fxDevice = createAndConfigureDevice(meta, role);
     track.channel!.devices.push(fxDevice);
     
-    matchReport += `+ ${role === DeviceRole.INSTRUMENT ? 'Instr' : 'FX'}: "${originalName}" -> "${meta.deviceName}" (${meta.type.toUpperCase()}) [ID: ${meta.deviceID}] (Vendor: ${meta.deviceVendor})\n`;
-    if (meta.deviceID === "565354506c7567696e56616c69644944") {
-      matchReport += `  ! WARNING: No ID match found for "${originalName}". Using generic VST ID which may cause load failures in some DAWs.\n`;
+    matchReport += `+ ${role === DeviceRole.INSTRUMENT ? 'Instr' : 'FX'}: "${originalName}" -> "${meta.deviceName}" (${meta.type.toUpperCase()}) [ID: ${meta.deviceID}] (Vendor: ${meta.deviceVendor}) (Match: ${meta.matchType})\n`;
+    if (meta.matchType === 'FALLBACK' || (meta.matchType === 'FUZZY' && meta.deviceID.startsWith("F2AEE70D"))) {
+      matchReport += `  ! WARNING: No exact ID found in your library for "${originalName}". Using a fallback which may fail to load in Studio One if the plugin GUID differs on your machine.\n`;
     }
   };
 

@@ -2577,7 +2577,7 @@ ${previousCritiqueStr}
 };
 export const getSpecificMixHelp = async (plugins: VSTPlugin[], audioBase64: string | undefined, mimeType: string | undefined, query: string, isGangstaVox: boolean = false, recipeContext?: string, chatHistory: {role: 'user' | 'model', content: string}[] = [], audioUrl?: string, geminiFileUri?: string, language: string = 'en', analogHardware: Hardware[] = [], isMultiBandMode: boolean = false): Promise<{query: string, advice: string, recommendedChain: any[]}> => {
   const ai = getAI();
-  const pluginListStr = plugins.map(p => `${p.vendor} - ${p.name} (${p.type})`).join('\n');
+  const pluginListStr = plugins.map(p => `- ${p.name} (by ${p.vendor || 'Unknown'}, type ${p.type || 'VST'})`).join('\n');
   const hasApollo = analogHardware.some(h => h.name.toLowerCase().includes('apollo'));
   const apolloInst = analogHardware.find(h => h.name.toLowerCase().includes('apollo'))?.name || 'Apollo';
   const apolloConstraint = hasApollo ? `
@@ -2601,8 +2601,16 @@ ${getLanguageInstruction(language)}
     ${isGangstaVox ? "Focus specifically on the VOCALS." : "Focus specifically on the BEAT/INSTRUMENTAL."}
     ${recipeContext ? `Here is the recipe context:\n${recipeContext}\n` : ""}
     ${audioBase64 || audioUrl ? "Analyze the audio focusing ONLY on the user's requests, and provide targeted advice." : "Analyze the recipe details focusing ONLY on the user's requests, and provide targeted advice."}
-    CRITICAL: You MUST ONLY recommend plugins that are present in this user-owned plugin list. You are STRICTLY FORBIDDEN from suggesting any plugin brand or model that the user does not own. If the list below is non-empty, use only EXACT names or clean substring matches found in the list. Do not recommend generic compressors or EQs (e.g. do not use "CLA-76", "1176", or "Pro-C 2" unless they appear below; instead, look through the list and recommend an actual compressor or EQ the user owns):
+
+    CRITICAL PLUGIN SELECTION RULE:
+    1. You MUST ONLY recommend plugins present in the list below.
+    2. When selecting a plugin, you MUST use the EXACT name string as it appears in the list (e.g. if the list says "Pro-Q 3", do NOT write "FabFilter - Pro-Q 3").
+    3. Do not invent plugin names or assume the user owns other models from the same brand.
+    4. You are STRICTLY FORBIDDEN from recommending generic placeholders (e.g. do not write "Compressor" if there is an actual compressor in the list).
+    
+    USER OWNED PLUGIN LIST:
     ${pluginListStr}
+    
     ${audioUrl ? `The audio file is available at this URL: ${audioUrl}. Please fetch and analyze it.` : ""}
     Respond to the user's latest message. Return the result as a JSON object with 'query', 'advice', 'multiBandDetails' (optional object with 'isEnabled', 'bandCount', 'splitFrequencies', 'reasoning' if Gaffel/Multi-band mode is on), and 'recommendedChain' (an array of plugin objects with 'name', 'purpose', 'band', 'routing', and 'deepDive' parameters).
   `;
@@ -2682,7 +2690,7 @@ export const getLyricAnalysis = async (
   syncedLyrics?: { time: string; lyric: string }[];
 }> => {
   const ai = getAI();
-  const pluginListStr = plugins.map(p => `${p.vendor} - ${p.name} (${p.type})`).join('\n');
+  const pluginListStr = plugins.map(p => `- ${p.name} (by ${p.vendor || 'Unknown'}, type ${p.type || 'VST'})`).join('\n');
   const hasApollo = analogHardware.some(h => h.name.toLowerCase().includes('apollo'));
   const apolloInst = analogHardware.find(h => h.name.toLowerCase().includes('apollo'))?.name || 'Apollo';
   const apolloConstraint = hasApollo ? `
@@ -2735,7 +2743,13 @@ export const getLyricAnalysis = async (
             - 'intensity': Numeric visual amplitude level (integer from 15 to 100)
             - 'instructions': Precise, granular coaching and mixing directives for this physical segment, mapping details on automated effects, volume ducking, sidechains, polarity adjustments, or performance execution.
     
-    CRITICAL: You MUST ONLY recommend plugins that are present in this user-owned plugin list. You are STRICTLY FORBIDDEN from suggesting any plugin brand or model that the user does not own. If the list below is non-empty, use only EXACT names or clean substring matches found in the list. Do not recommend generic compressors or EQs (e.g. do not use "CLA-76", "1176", or "Pro-C 2" unless they appear below; instead, look through the list and recommend an actual compressor or EQ the user owns):
+    CRITICAL PLUGIN SELECTION RULE:
+    1. You MUST ONLY recommend plugins present in the list below.
+    2. When selecting a plugin, you MUST use the EXACT name string as it appears in the list (e.g. if the list says "Pro-Q 3", do NOT write "FabFilter - Pro-Q 3").
+    3. Do not invent plugin names or assume the user owns other models from the same brand.
+    4. You are STRICTLY FORBIDDEN from recommending generic placeholders (e.g. do not write "Compressor" if there is an actual compressor in the list).
+    
+    USER OWNED PLUGIN LIST:
     ${pluginListStr}
   `;
 

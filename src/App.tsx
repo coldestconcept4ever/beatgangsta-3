@@ -3030,6 +3030,7 @@ The AI was unable to verify these parameters. Please investigate.`;
     const lines = input.trim().split(/\r?\n|\r/);
     const isReaperIni = lines.some(l => !l.trim().startsWith('<') && /^[^=]+\.(dll|vst3)=/i.test(l.trim()));
     const isMixcraftXml = input.includes('<VSTPlugins>') || input.includes('<Plugin ') || input.includes('<vst-inventory>') || input.includes('<PreSonus>') || input.includes('<Components>') || input.includes('<Component ') || input.includes('<?xml') || input.includes('<Settings>') || input.includes('<ClassDescription') || input.includes('<Attributes');
+    const isReasonLog = input.includes('Reason Log') || lines.some(l => l.includes('Discovering VST') || l.includes('Created VST3 plugin') || l.includes('Loading VST3 plugin') || l.includes('Created VST plugin'));
     let parsed: VSTPlugin[] = [];
 
     const isJunkName = (n: string | undefined | null, cleanID?: string): boolean => {
@@ -3138,7 +3139,9 @@ The AI was unable to verify these parameters. Please investigate.`;
 
     // Helper functions for matching
     const cleanStringForMatching = (s: string): string => {
-      return s.toLowerCase().replace(/[^a-z0-9]/g, '');
+      // Remove trailing (n) suffix often added by hosts for duplicates or VST3 vs VST2
+      const stripped = s.replace(/\s\(\d+\)$/, '').trim();
+      return stripped.toLowerCase().replace(/[^a-z0-9]/g, '');
     };
 
     const KNOWN_VST3_IDS: Record<string, string> = {
@@ -3270,7 +3273,54 @@ The AI was unable to verify these parameters. Please investigate.`;
       _matched?: boolean;
     }
 
-    if (isReaperIni) {
+    if (isReasonLog) {
+      const detected: VSTPlugin[] = [];
+      for (const line of lines) {
+        const trimmed = line.trim();
+        if (!trimmed) continue;
+        
+        let name: string | null = null;
+        let isVst3 = false;
+        
+        const createdMatch = trimmed.match(/(?:Created VST3 plugin|Created VST plugin|Discovering VST|Discovering VST3|Loading VST3 plugin):\s*([^\r\n]+)/i);
+        if (createdMatch) {
+          const matchedText = createdMatch[1].trim();
+          isVst3 = trimmed.toLowerCase().includes('vst3');
+          
+          if (matchedText.includes('\\') || matchedText.includes('/')) {
+            const parts = matchedText.split(/[\\/]/);
+            const filename = parts[parts.length - 1];
+            name = filename.replace(/\.(dll|vst3|component)$/i, '').trim();
+          } else {
+            name = matchedText;
+          }
+        } else if (trimmed.includes('Loading plugin')) {
+          const match = trimmed.match(/Loading plugin\s+([^\r\n]+)/i);
+          if (match) {
+            name = match[1].trim();
+          }
+        }
+        
+        if (name && !isJunkName(name)) {
+          name = name.replace(/\(vst3\)$/i, '').replace(/\(vst2\)$/i, '').trim();
+          detected.push({
+            vendor: 'Unknown',
+            name: name,
+            type: isVst3 ? 'VST3' : 'VST',
+            version: 'N/A',
+            lastModified: 'Reason Log',
+          });
+        }
+      }
+      
+      const seen = new Set<string>();
+      parsed = detected.filter(p => {
+        const key = p.name.toLowerCase();
+        if (seen.has(key)) return false;
+        seen.add(key);
+        return true;
+      });
+    } else if (isReaperIni) {
       parsed = lines.map((line): VSTPlugin | null => {
         if (!line.includes('=')) return null;
         const [filename, rest] = line.split('=');
@@ -3309,12 +3359,15 @@ The AI was unable to verify these parameters. Please investigate.`;
       for (const match of tagMatches) {
         const tagName = match[1].toLowerCase();
         const attrText = match[2];
-        const classIDMatch = attrText.match(/classID="([^"]+)"/i);
+        const classIDMatch = attrText.match(/(?:classID|classId|cid|uid|id|uuid|uniqueID)="([^"]+)"/i);
         const nameMatch = attrText.match(/\s+name="([^"]+)"/i);
-        const vendorMatch = attrText.match(/vendor="([^"]+)"/i);
-        const categoryMatch = attrText.match(/category="([^"]+)"/i);
+        const vendorMatch = attrText.match(/(?:vendor|manufacturer|developer|publisher)="([^"]+)"/i);
+        const categoryMatch = attrText.match(/(?:category|type|subCategory|categoryName)="([^"]+)"/i);
         const subCategoryMatch = attrText.match(/subCategory="([^"]+)"/i);
         const sortPathMatch = attrText.match(/sortPath="([^"]+)"/i);
+        const pluginNameMatch = attrText.match(/pluginName="([^"]+)"/i);
+        const publicNameMatch = attrText.match(/publicName="([^"]+)"/i);
+        const hostNameMatch = attrText.match(/hostName="([^"]+)"/i);
 
         if (vendorMatch) {
           currentVendor = vendorMatch[1];
@@ -3349,7 +3402,7 @@ The AI was unable to verify these parameters. Please investigate.`;
             classID,
             cleanID,
             sortPath: sortPathMatch ? sortPathMatch[1] : undefined,
-            name: nameMatch ? nameMatch[1] : undefined,
+            name: nameMatch ? nameMatch[1] : (publicNameMatch ? publicNameMatch[1] : (hostNameMatch ? hostNameMatch[1] : (pluginNameMatch ? pluginNameMatch[1] : undefined))),
             vendor: currentVendor,
             category: categoryMatch ? categoryMatch[1] : undefined,
             subCategory: subCategoryMatch ? subCategoryMatch[1] : undefined,
@@ -3562,12 +3615,18 @@ The AI was unable to verify these parameters. Please investigate.`;
             if (mergedCount > 0) {
               setPlugins(updatedPlugins);
               setError(null);
-              return;
             }
           }
 
           // Directly list decoded XML plug-ins or those with a structural sortPath (supports VST3!)
           const seenCleanIDsOnly = new Set<string>();
+          const currentPluginsPool = (plugins.length > 0) ? plugins : [];
+          currentPluginsPool.forEach(p => {
+            if (p.id) {
+              seenCleanIDsOnly.add(p.id.toLowerCase().replace(/[{}-]/g, '').trim());
+            }
+          });
+          
           parsed = xmlPluginInfos.reduce((acc, info) => {
             const infoCategory = info.category || info.subCategory;
             if (isJunkCategory(infoCategory) || isStudioOneFunction(infoCategory)) {

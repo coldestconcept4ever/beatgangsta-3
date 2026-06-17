@@ -12,7 +12,7 @@ interface DAWGuideProps {
 
 export const DAWGuide: React.FC<DAWGuideProps> = ({ theme, onClose, userPlugins = [] }) => {
   const { t } = useTranslation();
-  const [activeTab, setActiveTab] = useState<'reaper' | 'studio-one' | 'pro-tools' | 'cubase' | 'fl-studio' | 'ableton' | 'logic' | 'bitwig' | 'mixcraft' | 'garage-band'>('ableton');
+  const [activeTab, setActiveTab] = useState<'reaper' | 'studio-one' | 'pro-tools' | 'cubase' | 'fl-studio' | 'ableton' | 'logic' | 'bitwig' | 'mixcraft' | 'garage-band' | 'reason'>('ableton');
   const [mode, setMode] = useState<'guides' | 'diagnostics'>('guides');
 
   // Diagnostics states
@@ -314,6 +314,12 @@ export const DAWGuide: React.FC<DAWGuideProps> = ({ theme, onClose, userPlugins 
                 className={`py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${tabClasses('garage-band')}`}
               >
                 Garage Band
+              </button>
+              <button 
+                onClick={() => setActiveTab('reason')}
+                className={`py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${tabClasses('reason')}`}
+              >
+                Reason
               </button>
             </div>
 
@@ -617,6 +623,42 @@ export const DAWGuide: React.FC<DAWGuideProps> = ({ theme, onClose, userPlugins 
                   <div className="flex gap-4">
                     <div className="w-8 h-8 rounded-full bg-orange-500/20 flex items-center justify-center font-black flex-shrink-0">4</div>
                     <p className="text-sm leading-relaxed">{t('daw_garage_band_step4')}</p>
+                  </div>
+                </div>
+              )}
+              {activeTab === 'reason' && (
+                <div className="space-y-4">
+                  <div className="p-4 rounded-2xl border border-sky-500/20 bg-sky-500/5 text-sm mb-2">
+                    <p className="font-black mb-1">Reason Log.txt Support</p>
+                    <p className="opacity-80 text-xs">Reason automatically logs all successfully scanned and created custom VST/VST3 and Rack Extension plugins inside its application log on startup. You can drag and drop or select your log file directly!</p>
+                  </div>
+                  <div className="flex gap-4">
+                    <div className="w-8 h-8 rounded-full bg-sky-500/20 flex items-center justify-center font-black flex-shrink-0 font-bold">1</div>
+                    <p className="text-sm leading-relaxed">
+                      Locate your <strong className="font-black">Reason Log.txt</strong> file based on your OS:
+                    </p>
+                  </div>
+                  <div className="pl-12 space-y-2">
+                    <div>
+                      <p className="text-[10px] font-black uppercase tracking-wider text-sky-600 mb-1">Windows Path (Paste in File Explorer / Run):</p>
+                      <code className="select-all block p-2 rounded bg-black/10 font-mono text-xs font-bold leading-normal break-all">%LocalAppData%\Reason Studios\Reason\Logs\Reason Log.txt</code>
+                    </div>
+                    <div>
+                      <p className="text-[10px] font-black uppercase tracking-wider text-sky-600 mb-1">macOS (Finder - Cmd+Shift+G):</p>
+                      <code className="select-all block p-2 rounded bg-black/10 font-mono text-xs font-bold leading-normal break-all">~/Library/Application Support/Reason Studios/Reason/Logs/Reason Log.txt</code>
+                    </div>
+                  </div>
+                  <div className="flex gap-4">
+                    <div className="w-8 h-8 rounded-full bg-sky-500/20 flex items-center justify-center font-black flex-shrink-0 font-bold">2</div>
+                    <p className="text-sm leading-relaxed">
+                      <strong className="font-black">Drag & drop</strong> the file or click the upload zone on BeatGangsta to select it.
+                    </p>
+                  </div>
+                  <div className="flex gap-4">
+                    <div className="w-8 h-8 rounded-full bg-sky-500/20 flex items-center justify-center font-black flex-shrink-0 font-bold">3</div>
+                    <p className="text-sm leading-relaxed">
+                      Alternatively, copy and paste its text contents directly, or upload a manual list of your plugins formatted as <code className="bg-black/5 px-1 rounded font-mono">My Plugin</code> or <code className="bg-black/5 px-1 rounded font-mono">Vendor - My Plugin</code> on separate lines.
+                    </p>
                   </div>
                 </div>
               )}

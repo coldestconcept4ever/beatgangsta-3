@@ -205,6 +205,8 @@ const resources = {
       "daw_mixcraft_desc": "Supports .xml VST inventory list",
       "daw_garage_band": "Garage Band",
       "daw_garage_band_desc": "Supports AU plugins on macOS",
+      "daw_reason": "Reason",
+      "daw_reason_desc": "Supports Reason Log.txt plugin list",
       "daw_other": "Other / Skip",
       "daw_other_desc": "Standard MIDI support",
       "sync_session": "Sync Session: {{title}}",
