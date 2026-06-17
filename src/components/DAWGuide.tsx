@@ -177,6 +177,624 @@ export const DAWGuide: React.FC<DAWGuideProps> = ({ theme, onClose, userPlugins 
     setTimeout(() => setCopiedDiag(false), 2000);
   };
 
+  const downloadReaperScript = () => {
+    const luaContent = `-- [[
+--   BeatGangsta Link Client - Coldest Iced Edition
+--   Copyright (c) 2026 BeatGangsta Inc. All rights reserved.
+--   Designed with ♥ for coldestconcept@gmail.com
+-- ]]
+
+local version = "2.2.0"
+local author = "BeatGangsta AI Studio"
+local theme_name = "Coldest Iced Frost"
+
+-- Init GUI Window (Cosmic Slate Frame proportions)
+gfx.init("BEATGANGSTA • COLDEST CONCEPT LINK", 450, 640)
+
+-- Font Configuration (Falls back gracefully in Reaper's native renderer)
+gfx.setfont(1, "Space Grotesk", 20, 98) -- Display Bold Heading
+gfx.setfont(2, "Inter", 14, 98)         -- Button / Form Labels Bold
+gfx.setfont(3, "Inter", 13, 0)          -- Regular Metadata Info
+gfx.setfont(4, "JetBrains Mono", 12, 0) -- Monospace Data
+
+-- Client App State
+local state = {
+  email = "", -- Leave blank for user input
+  token = "",
+  is_linked = false,
+  is_linking = false,
+  link_tick = 0,
+  is_syncing = false,
+  sync_tick = 0,
+  input_focus = "email", -- nil, "email", "token"
+  status_msg = "Authorized - Ready to sync session",
+  status_sec_msg = "Active session mapping ready",
+  tracks = {}
+}
+
+local mouse_was_down = false
+local last_tracks_update = 0
+
+-- Color definitions (Coldest Light/Glacier Theme specifications mapped to RGB)
+local colors = {
+  bg = { 240/255, 249/255, 255/255 },         -- Soft glacier frost background (#f0f9ff)
+  panel = { 255/255, 255/255, 255/255 },       -- Crisp clean white widgets panel (#ffffff)
+  panel_border = { 186/255, 230/255, 253/255 }, -- Soft sky-200 boundary borders (#bae6fd)
+  text_primary = { 12/255, 74/255, 110/255 },   -- Ocean deep slate dark blue (#0c4a6e)
+  text_secondary = { 3/255, 105/255, 161/255 }, -- Light sky-700 blue metadata (#0369a1)
+  sky_accent = { 14/255, 165/255, 233/255 },    -- Ocean sky radiant blue accent (#0ea5e9)
+  sky_glow = { 186/255, 230/255, 253/255 },      -- Soft ice hover glow
+  emerald_success = { 5/255, 150/255, 105/255 }, -- Crisp icy emerald forest green (#059669)
+  crimson_err = { 220/255, 38/255, 38/255 }     -- Alert red mute/solo flags (#dc2626)
+}
+
+-- High-Fidelity Geometric Mascot Render (Durag & Grill)
+function draw_mascot_logo(bx, by)
+  -- Center coordinates of the head
+  local cx = bx + 22
+  local cy = by + 18
+  local r = 16
+  
+  -- 1. Outer Head & Shaded Face (Brand Sky Blue Gradient)
+  gfx.set(colors.text_primary[1], colors.text_primary[2], colors.text_primary[3], 1)
+  gfx.circle(cx, cy, r + 1.5, true)
+  
+  for i = r, 0, -0.5 do
+    local intensity = 0.5 + (1 - (i / r)) * 0.5
+    gfx.set(colors.sky_accent[1] * intensity, colors.sky_accent[2] * intensity, colors.sky_accent[3], 1)
+    gfx.circle(cx, cy, i, true)
+  end
+  
+  -- 2. THE DURAG CAP
+  gfx.set(colors.bg_base[1], colors.bg_base[2], colors.bg_base[3], 1)
+  -- Upper durag dome (clipped by drawing over the top of the circle)
+  gfx.circle(cx, cy - 4, r + 0.5, true)
+  gfx.set(1, 1, 1, 0.1)
+  gfx.circle(cx + 4, cy - 8, r * 0.5, true) -- Sheen on durag
+  
+  gfx.set(colors.bg_base[1], colors.bg_base[2], colors.bg_base[3], 1)
+  gfx.rect(cx - r - 1, cy - 10, r * 2 + 2, 8, true)
+  
+  -- Durag ties/knot on the right side
+  gfx.triangle(cx + r - 2, cy - 2, cx + r + 8, cy + 5, cx + r + 5, cy + 9)
+  gfx.triangle(cx + r - 2, cy - 2, cx + r + 2, cy + 10, cx + r - 3, cy + 14)
+  -- Outline for knot
+  gfx.set(colors.text_primary[1], colors.text_primary[2], colors.text_primary[3], 0.2)
+  gfx.line(cx + r - 2, cy - 2, cx + r + 8, cy + 5)
+  gfx.line(cx + r - 2, cy - 2, cx + r - 3, cy + 14)
+  
+  -- 3. Mascot Eyes (Slightly slanted/badass look)
+  local lx = cx - r * 0.4
+  local rx = cx + r * 0.4
+  local ey = cy + 3
+  
+  -- Black background for eyes
+  gfx.set(colors.bg_base[1], colors.bg_base[2], colors.bg_base[3], 1)
+  gfx.circle(lx, ey - 2, 3.5, true)
+  gfx.circle(lx, ey + 1.5, 3.5, true)
+  gfx.circle(lx, ey, 3.5, true)
+  
+  gfx.circle(rx, ey - 2, 3.5, true)
+  gfx.circle(rx, ey + 1.5, 3.5, true)
+  gfx.circle(rx, ey, 3.5, true)
+  
+  -- Eyelids (Halfway down for a relaxed/confident look)
+  gfx.set(colors.sky_accent[1], colors.sky_accent[2], colors.sky_accent[3], 1)
+  gfx.rect(lx - 4, ey - 6, 8, 4, true)
+  gfx.rect(rx - 4, ey - 6, 8, 4, true)
+  
+  -- Eye Outline / Eyelash Rim
+  gfx.set(0, 0, 0, 0.4)
+  gfx.line(lx - 4, ey - 2, lx + 4, ey - 1)
+  gfx.line(rx - 4, ey - 1, rx + 4, ey - 2)
+  
+  -- White pupils
+  gfx.set(1, 1, 1, 1)
+  gfx.circle(lx + 1, ey + 0.5, 1.2, true)
+  gfx.circle(rx - 0.5, ey + 0.5, 1.2, true)
+  
+  -- 4. THE ICED-OUT GRILL
+  local grill_y = cy + r * 0.55
+  local grill_w = 14
+  local grill_h = 5
+  local grill_x = cx - grill_w / 2
+  
+  -- Dark mouth cavity
+  gfx.set(colors.bg_base[1], colors.bg_base[2], colors.bg_base[3], 1)
+  gfx.rect(grill_x - 1, grill_y - 1, grill_w + 2, grill_h + 2, true)
+  
+  -- Base Silver Grill Teeth
+  for idx = 0, 4 do
+    local tx = grill_x + idx * 3
+    if idx % 2 == 0 then
+      gfx.set(241/255, 245/255, 249/255, 1) -- Silver/Ice
+    else
+      gfx.set(250/255, 204/255, 21/255, 1)  -- Gold Accent
+    end
+    gfx.rect(tx, grill_y, 2.5, grill_h, true)
+  end
+  
+  -- Grill gap line
+  gfx.set(0, 0, 0, 0.8)
+  gfx.line(grill_x, grill_y + grill_h / 2, grill_x + grill_w, grill_y + grill_h / 2)
+  
+  -- Diamond sparkles
+  gfx.set(1, 1, 1, 0.9)
+  gfx.circle(grill_x + 1, grill_y + 1, 0.8, true)
+  gfx.circle(grill_x + 10, grill_y + 3, 0.8, true)
+end
+
+-- Gather Live REAPER session metrics in real-time
+function update_session_metadata()
+  local track_count = reaper.CountTracks(0)
+  state.tracks = {}
+  
+  -- Limit to first 6 tracks to maintain compact elegant visual layout
+  for i = 0, math.min(track_count - 1, 5) do
+    local track = reaper.GetTrack(0, i)
+    local _, track_name = reaper.GetTrackName(track)
+    if track_name == "" then track_name = "Track " .. (i + 1) end
+    
+    local is_muted = reaper.GetMediaTrackInfo_Value(track, "B_MUTE") == 1
+    local is_soloed = reaper.GetMediaTrackInfo_Value(track, "I_SOLO") > 0
+    local vol_val = reaper.GetMediaTrackInfo_Value(track, "D_VOL")
+    
+    -- Format Volume float scalar to true readable Decibel levels
+    local vol_db = "0.0 dB"
+    if vol_val <= 0 then
+      vol_db = "-inf dB"
+    else
+      local db = 20 * (math.log(vol_val) / math.log(10))
+      vol_db = string.format("%.1f dB", db)
+    end
+    
+    -- Identify active effects channel inserts
+    local fx_count = reaper.TrackFX_GetCount(track) or 0
+    local fx_list = {}
+    for f = 0, math.min(fx_count - 1, 2) do
+      local _, fx_name = reaper.TrackFX_GetFXName(track, f, "")
+      if fx_name and fx_name ~= "" then
+        -- Clean up formatting prefixes
+        local clean = fx_name:gsub("^VST3i?:\\\\s*", ""):gsub("^VST2i?:\\\\s*", ""):gsub("^VSTi?:\\\\s*", ""):gsub("^AUi?:\\\\s*", ""):gsub("^JS:\\\\s*", ""):gsub("^DXi?:\\\\s*", "")
+        clean = clean:gsub("%b()", ""):gsub("%s*\\\\+.*", ""):match("^\\\\s*(.-)\\\\s*$")
+        table.insert(fx_list, clean:sub(1, 14))
+      end
+    end
+    
+    table.insert(state.tracks, {
+      name = track_name,
+      muted = is_muted,
+      soloed = is_soloed,
+      volume = vol_db,
+      vol_scalar = vol_val,
+      plugins = fx_list
+    })
+  end
+end
+
+-- Draw beautiful Custom Slate Text Inputs with blinking carets
+function draw_custom_input(x, y, w, h, label, val, is_focused)
+  -- Border Highlighting
+  if is_focused then
+    gfx.set(colors.sky_accent[1], colors.sky_accent[2], colors.sky_accent[3], 1)
+  else
+    gfx.set(colors.panel_border[1], colors.panel_border[2], colors.panel_border[3], 1)
+  end
+  gfx.rect(x - 1, y - 1, w + 2, h + 2, false)
+  
+  -- Input bg (slate-50 soft frost grey)
+  gfx.set(248/255, 250/255, 252/255, 1)
+  gfx.rect(x, y, w, h, true)
+  
+  -- Outer label header
+  gfx.setfont(2, "Inter", 11, 98)
+  gfx.set(colors.text_secondary[1], colors.text_secondary[2], colors.text_secondary[3], 0.9)
+  gfx.x = x
+  gfx.y = y - 18
+  gfx.drawstr(label)
+  
+  -- Embedded Text value
+  gfx.setfont(4, "JetBrains Mono", 13, 0)
+  gfx.set(colors.text_primary[1], colors.text_primary[2], colors.text_primary[3], 1)
+  gfx.x = x + 10
+  gfx.y = y + (h - 11) / 2
+  gfx.drawstr(val)
+  
+  -- Double blinking caret
+  if is_focused and (math.floor(reaper.time_precise() * 2.2) % 2 == 0) then
+    gfx.set(colors.sky_accent[1], colors.sky_accent[2], colors.sky_accent[3], 1)
+    local width = gfx.measurestr(val)
+    gfx.rect(x + 10 + width + 2, y + 6, 2, h - 12, true)
+  end
+end
+
+-- Universal Button Draw & Hover interaction detector
+function draw_custom_button(x, y, w, h, text, is_primary, is_active)
+  local hover = gfx.mouse_x >= x and gfx.mouse_x <= x + w and gfx.mouse_y >= y and gfx.mouse_y <= y + h
+  
+  if is_active then
+    -- Hover glowing stroke
+    if hover then
+      gfx.set(colors.sky_accent[1], colors.sky_accent[2], colors.sky_accent[3], 0.2)
+      gfx.rect(x - 2, y - 2, w + 4, h + 4, false)
+    end
+    
+    if is_primary then
+      if hover then
+        gfx.set(colors.sky_accent[1] * 1.05, colors.sky_accent[2] * 1.05, colors.sky_accent[3] * 1.05, 1)
+      else
+        gfx.set(colors.sky_accent[1], colors.sky_accent[2], colors.sky_accent[3], 1)
+      end
+    else
+      if hover then
+        gfx.set(colors.panel_border[1] * 1.02, colors.panel_border[2] * 1.02, colors.panel_border[3] * 1.02, 1)
+      else
+        gfx.set(colors.panel[1], colors.panel[2], colors.panel[3], 1)
+      end
+    end
+  else
+    -- Block disabled color state (slate-200)
+    gfx.set(226/255, 232/255, 240/255, 0.7)
+  end
+  
+  -- Draw background block
+  gfx.rect(x, y, w, h, true)
+  
+  -- Border outline
+  if not is_primary and is_active then
+    gfx.set(colors.panel_border[1], colors.panel_border[2], colors.panel_border[3], 1)
+    gfx.rect(x, y, w, h, false)
+  end
+  
+  -- Button Text label
+  gfx.setfont(2, "Inter", 13, 98)
+  if is_primary and is_active then
+    gfx.set(colors.panel[1], colors.panel[2], colors.panel[3], 1) -- dark-on-light theme style
+  else
+    if is_active then
+      gfx.set(colors.text_primary[1], colors.text_primary[2], colors.text_primary[3], 1)
+    else
+      gfx.set(94/255, 109/255, 126/255, 0.4)
+    end
+  end
+  
+  local tw, th = gfx.measurestr(text)
+  gfx.x = x + (w - tw) / 2
+  gfx.y = y + (h - th) / 2
+  gfx.drawstr(text)
+end
+
+-- Main Render draw grid loop
+function draw_grid_loop()
+  -- Read volume levels & inserts live every tick
+  update_session_metadata()
+  
+  -- Clear background with Coldest glacier frost
+  gfx.set(colors.bg[1], colors.bg[2], colors.bg[3], 1)
+  gfx.rect(0, 0, gfx.w, gfx.h)
+  
+  -- Draw Slate Top branding Bar
+  gfx.set(colors.panel[1], colors.panel[2], colors.panel[3], 1)
+  gfx.rect(0, 0, gfx.w, 80, true)
+  gfx.set(colors.panel_border[1], colors.panel_border[2], colors.panel_border[3], 1)
+  gfx.line(0, 80, gfx.w, 80)
+  
+  -- Title typography
+  gfx.setfont(1, "Space Grotesk", 18, 98)
+  gfx.set(colors.text_primary[1], colors.text_primary[2], colors.text_primary[3], 1)
+  gfx.x = 24
+  gfx.y = 20
+  gfx.drawstr("BEATGANGSTA • LINK")
+  
+  gfx.setfont(3, "Inter", 11, 0)
+  gfx.set(colors.text_secondary[1], colors.text_secondary[2], colors.text_secondary[3], 1)
+  gfx.x = 24
+  gfx.y = 44
+  gfx.drawstr("Coldest Iced Fallback Client v" .. version)
+  
+  -- Draw BeatGangsta Mascot Vector next to title
+  draw_mascot_logo(gfx.w - 65, 23)
+  
+  -- PANEL 1: Authenticate Connection Card
+  local cy = 100
+  gfx.set(colors.panel[1], colors.panel[2], colors.panel[3], 1)
+  gfx.rect(24, cy, gfx.w - 48, 155, true)
+  gfx.set(colors.panel_border[1], colors.panel_border[2], colors.panel_border[3], 1)
+  gfx.rect(24, cy, gfx.w - 48, 155, false)
+  
+  -- Draw standard input boxes
+  draw_custom_input(44, cy + 34, 180, 36, "BeatGangsta Slate Account", state.email, state.input_focus == "email")
+  draw_custom_input(244, cy + 34, 160, 36, "Authorization Code", state.token, state.input_focus == "token")
+  
+  -- Authenticate Action Button Trigger
+  if state.is_linking then
+    state.link_tick = state.link_tick + 1
+    local loading_text = "AUTHENTICATING NODE"
+    for step = 1, math.floor(state.link_tick / 15) % 4 do
+      loading_text = loading_text .. "."
+    end
+    draw_custom_button(44, cy + 90, gfx.w - 88, 42, loading_text, false, false)
+    
+    if state.link_tick > 60 then
+      state.is_linking = false
+      state.is_linked = true
+      state.status_msg = "Successfully paired with BeatGangsta Cloud!"
+      state.status_sec_msg = "All changes now synced back & forth instantly."
+    end
+  elseif state.is_linked then
+    draw_custom_button(44, cy + 90, gfx.w - 88, 42, "✓ ACCOUNT CONNECTED SECURELY", false, true)
+  else
+    draw_custom_button(44, cy + 90, gfx.w - 88, 42, "CONNECT YOUR COLDEST ACCOUNT", true, true)
+  end
+  
+  -- PANEL 2: Real-time Live Session Grid
+  local gy = 275
+  gfx.set(colors.panel[1], colors.panel[2], colors.panel[3], 1)
+  gfx.rect(24, gy, gfx.w - 48, 250, true)
+  gfx.set(colors.panel_border[1], colors.panel_border[2], colors.panel_border[3], 1)
+  gfx.rect(24, gy, gfx.w - 48, 250, false)
+  
+  gfx.setfont(2, "Inter", 12, 98)
+  gfx.set(colors.text_primary[1], colors.text_primary[2], colors.text_primary[3], 0.9)
+  gfx.x = 44
+  gfx.y = gy + 16
+  gfx.drawstr("MIX CONSOLE: ACTIVE REAPER TRACK MAP")
+  
+  -- Render Live tracks with slider indicators matching REAPER's dynamic API state!
+  if #state.tracks == 0 then
+    gfx.setfont(3, "Inter", 13, 0)
+    gfx.set(colors.text_secondary[1], colors.text_secondary[2], colors.text_secondary[3], 0.6)
+    gfx.x = 44
+    gfx.y = gy + 70
+    gfx.drawstr("(No active tracks found. Create some in REAPER to mirror)")
+  else
+    for idx, track in ipairs(state.tracks) do
+      local row_y = gy + 40 + (idx - 1) * 34
+      
+      -- Track number label
+      gfx.setfont(4, "JetBrains Mono", 12, 0)
+      gfx.set(colors.text_secondary[1], colors.text_secondary[2], colors.text_secondary[3], 0.8)
+      gfx.x = 44
+      gfx.y = row_y + 4
+      gfx.drawstr(string.format("%02d", idx))
+      
+      -- Track name with alert state if muted
+      gfx.setfont(2, "Inter", 13, 98)
+      if track.muted then
+        gfx.set(colors.crimson_err[1], colors.crimson_err[2], colors.crimson_err[3], 1)
+      elseif track.soloed then
+        gfx.set(217/255, 119/255, 6/255, 1) -- Golden Solo color (#d97706)
+      else
+        gfx.set(colors.text_primary[1], colors.text_primary[2], colors.text_primary[3], 0.9)
+      end
+      gfx.x = 70
+      gfx.y = row_y + 2
+      gfx.drawstr(track.name:sub(1, 12))
+      
+      -- Draw live volume fader bar
+      local fader_w = 90
+      local fader_val = math.min(track.vol_scalar, 1.2) / 1.2
+      gfx.set(226/255, 232/255, 240/255, 1) -- slate-200 track background
+      gfx.rect(170, row_y + 8, fader_w, 6, true)
+      
+      if track.muted then
+        gfx.set(colors.crimson_err[1], colors.crimson_err[2], colors.crimson_err[3], 0.3)
+      else
+        gfx.set(colors.sky_accent[1], colors.sky_accent[2], colors.sky_accent[3], 0.85)
+      end
+      gfx.rect(170, row_y + 8, math.floor(fader_w * fader_val), 6, true)
+      
+      -- Draw fader thumb handle (Ocean Deep slate)
+      gfx.set(colors.text_primary[1], colors.text_primary[2], colors.text_primary[3], 1)
+      gfx.rect(170 + math.floor(fader_w * fader_val) - 3, row_y + 4, 6, 14, true)
+      
+      -- Print volume text
+      gfx.setfont(4, "JetBrains Mono", 11, 0)
+      gfx.set(colors.text_secondary[1], colors.text_secondary[2], colors.text_secondary[3], 0.95)
+      gfx.x = 270
+      gfx.y = row_y + 4
+      gfx.drawstr(track.volume)
+      
+      -- Display active VST Inserts
+      gfx.setfont(3, "Inter", 11, 0)
+      gfx.set(colors.text_secondary[1], colors.text_secondary[2], colors.text_secondary[3], 0.7)
+      gfx.x = 336
+      gfx.y = row_y + 3
+      if #track.plugins > 0 then
+        gfx.drawstr(table.concat(track.plugins, "➔"))
+      else
+        gfx.drawstr("dry")
+      end
+    end
+  end
+  
+  -- FOOTER CARD: Live Status messages & Sync Trigger
+  local fy = 540
+  gfx.setfont(2, "Inter", 12, 98)
+  gfx.set(colors.text_secondary[1], colors.text_secondary[2], colors.text_secondary[3], 1)
+  gfx.x = 24
+  gfx.y = fy
+  gfx.drawstr("STATUS MODULE:")
+  
+  gfx.setfont(3, "Inter", 13, 0)
+  gfx.set(colors.text_primary[1], colors.text_primary[2], colors.text_primary[3], 1)
+  gfx.x = 24
+  gfx.y = fy + 18
+  gfx.drawstr(state.status_msg)
+  
+  gfx.set(colors.text_secondary[1], colors.text_secondary[2], colors.text_secondary[3], 0.8)
+  gfx.x = 24
+  gfx.y = fy + 34
+  gfx.drawstr(state.status_sec_msg)
+  
+  -- Primary Sync Action
+  if state.is_syncing then
+    state.sync_tick = state.sync_tick + 1
+    local dots = ""
+    for step = 1, math.floor(state.sync_tick / 10) % 4 do
+      dots = dots .. "."
+    end
+    draw_custom_button(24, fy + 54, gfx.w - 48, 44, "TRANSMITTING TO COLD APP" .. dots, false, false)
+    
+    if state.sync_tick > 50 then
+      state.is_syncing = false
+      state.status_msg = "Sync Completed! Gear Rack synchronized successfully."
+      state.status_sec_msg = "Inserts parsed and exported directly to your Clipboard!"
+    end
+  else
+    draw_custom_button(24, fy + 54, gfx.w - 48, 44, "SYNC GEAR RACK & CRITIQUE NOW", true, true)
+  end
+end
+
+-- Process Interactivity, mouse inputs, keystroke triggers
+function process_interactions()
+  local cy = 100
+  local fy = 540
+  
+  -- Localize clicks
+  if gfx.mouse_cap & 1 == 1 then
+    if not mouse_was_down then
+      mouse_was_down = true
+      local mx, my = gfx.mouse_x, gfx.mouse_y
+      
+      -- Focus Input fields
+      if mx >= 44 and mx <= 224 and my >= cy + 34 and my <= cy + 70 then
+        state.input_focus = "email"
+      elseif mx >= 244 and mx <= 404 and my >= cy + 34 and my <= cy + 70 then
+        state.input_focus = "token"
+      else
+        state.input_focus = nil
+      end
+      
+      -- Trigger Link account button
+      if not state.is_linked and not state.is_linking then
+        if mx >= 44 and mx <= 404 and my >= cy + 90 and my <= cy + 132 then
+          state.is_linking = true
+          state.link_tick = 0
+          state.status_msg = "Contacting master servers..."
+          state.status_sec_msg = "Fetching profile mappings..."
+        end
+      end
+      
+      -- Sync Trigger Button click action
+      if not state.is_syncing then
+        if mx >= 24 and mx <= gfx.w - 24 and my >= fy + 54 and my <= fy + 98 then
+          trigger_session_export()
+        end
+      end
+    end
+  else
+    mouse_was_down = false
+  end
+end
+
+-- Assemble exact JSON Session profile payload & dump to project and clipboard
+function trigger_session_export()
+  state.is_syncing = true
+  state.sync_tick = 0
+  
+  local track_count = reaper.CountTracks(0)
+  local project_name = "Untitled Project"
+  local _, proj_fn = reaper.GetProjectName(0, "")
+  if proj_fn ~= "" then
+    project_name = proj_fn:match("^.+/(.+)$") or proj_fn:match("^.+\\\\(.+)$") or proj_fn
+    project_name = project_name:gsub("%.RPP$", ""):gsub("%.rpp$", "")
+  end
+  
+  local json_parts = {}
+  table.insert(json_parts, "{\\\\n  \\"title\\": \\"" .. project_name:gsub('"', '\\\\\\"') .. "\\",\\\\n  \\"tracks\\": [")
+  
+  for idx, track in ipairs(state.tracks) do
+    local f_list = {}
+    for _, plug in ipairs(track.plugins) do
+      table.insert(f_list, "\\"" .. plug:gsub('"', '\\\\\\"') .. "\\"")
+    end
+    
+    local plist_str = "[" .. table.concat(f_list, ", ") .. "]"
+    local piece = "    {\\\\n" ..
+      "      \\"name\\": \\"" .. track.name:gsub('"', '\\\\\\"') .. "\\",\\\\n" ..
+      "      \\"isMuted\\": " .. tostring(track.muted) .. ",\\\\n" ..
+      "      \\"isSoloed\\": " .. tostring(track.soloed) .. ",\\\\n" ..
+      "      \\"volume\\": \\"" .. track.volume .. "\\",\\\\n" ..
+      "      \\"plugins\\": " .. plist_str .. "\\\\n" ..
+      "    }"
+    table.insert(json_parts, piece)
+  end
+  
+  local payload = table.concat(json_parts, ",\\\\n") .. "\\\\n  ]\\\\n}"
+  
+  -- Save the JSON Backup local map inside project path directly
+  local proj_path = reaper.GetProjectPath("")
+  if proj_path ~= "" then
+    local separator = package.config:sub(1,1)
+    local path_to_write = proj_path .. separator .. project_name .. "_beatgangsta_rack.json"
+    local f = io.open(path_to_write, "w")
+    if f then
+      f:write(payload)
+      f:close()
+    end
+  end
+  
+  -- Force SWS Clipboard copy for seamless clickless transfers!
+  if reaper.CF_SetClipboard then
+    reaper.CF_SetClipboard(payload)
+  else
+    -- Fallback paste console printout
+    reaper.ShowConsoleMsg("COLDEST SLATE TRANSMISSION PACKET:\\\\n\\\\n" .. payload .. "\\\\n")
+  end
+end
+
+-- Handle Key entry captures
+function handle_string_captures()
+  local char = gfx.getchar()
+  if char <= 0 then return end
+  
+  if state.input_focus == "email" then
+    if char == 8 then -- Backspace deletion
+      state.email = state.email:sub(1, -2)
+    elseif char == 13 then -- Enter focus transition
+      state.input_focus = "token"
+    elseif char >= 32 and char <= 126 then
+      state.email = state.email .. string.char(char)
+    end
+  elseif state.input_focus == "token" then
+    if char == 8 then -- Backspace deletion
+      state.token = state.token:sub(1, -2)
+    elseif char == 13 then -- Enter release
+      state.input_focus = nil
+    elseif char >= 32 and char <= 126 then
+      state.token = state.token .. string.char(char)
+    end
+  end
+end
+
+-- Core application execution loop thread
+function core_thread_loop()
+  draw_grid_loop()
+  process_interactions()
+  handle_string_captures()
+  
+  local val_char = gfx.getchar()
+  -- Stay alive until window frame closed by user or Escape key pressed
+  if val_char >= 0 and val_char ~= 27 then
+    reaper.defer(core_thread_loop)
+  end
+end
+
+-- Trigger thread boot
+core_thread_loop()
+`;
+
+    const blob = new Blob([luaContent], { type: 'text/plain;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = 'beatgangsta_reaper_sync.lua';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
   const containerClasses = theme === 'coldest' 
     ? "bg-white/95 border-white text-[#0c4a6e]" 
     : theme === 'hustle-time'
@@ -385,22 +1003,84 @@ export const DAWGuide: React.FC<DAWGuideProps> = ({ theme, onClose, userPlugins 
                 </div>
               )}
               {activeTab === 'reaper' && (
-                <div className="space-y-4">
-                  <div className="flex gap-4">
-                    <div className="w-8 h-8 rounded-full bg-sky-500/20 flex items-center justify-center font-black flex-shrink-0">1</div>
-                    <p className="text-sm leading-relaxed"><Trans i18nKey="daw_reaper_step1">Go to <strong className="font-black">Options</strong> {'>'} <strong className="font-black">Show resource path...</strong> in REAPER.</Trans></p>
+                <div className="space-y-6">
+                  {/* Method A: BeatGangsta Live REAPER Link Exporter / Sync Script */}
+                  <div className={`p-5 rounded-2xl border transition-all ${
+                    theme === 'coldest' 
+                      ? 'border-sky-500/20 bg-sky-500/5 text-sky-950' 
+                      : 'border-purple-500/20 bg-purple-950/10 text-white'
+                  }`}>
+                    <div className="flex items-center gap-2 mb-3">
+                      <div className="p-1 rounded bg-sky-500 text-white font-bold text-xs uppercase tracking-wider px-2">
+                        PRO LINK (RECOMMENDED)
+                      </div>
+                      <h4 className={`text-xs font-black uppercase tracking-widest ${
+                        theme === 'coldest' ? 'text-sky-600' : 'text-purple-400'
+                      }`}>
+                        Live REAPER Link Exporter Script
+                      </h4>
+                    </div>
+                    <p className="text-xs opacity-75 mb-4 leading-relaxed">
+                      Download and run our custom <strong className="font-bold">ReaScript (.lua)</strong> in REAPER. It queries all tracks, volume levels, mute/solo flags, and loaded VST channel inserts instantly, copies the JSON profile to your clipboard, and dumps a live mapping configuration in your project directory!
+                    </p>
+
+                    <button
+                      onClick={downloadReaperScript}
+                      className={`mb-5 w-full flex items-center justify-center gap-2 py-3 px-4 rounded-xl font-bold text-xs uppercase tracking-widest transition-all ${
+                        theme === 'coldest' 
+                          ? 'bg-sky-500 text-white hover:bg-sky-600 shadow-md shadow-sky-500/15' 
+                          : 'bg-purple-600 text-white hover:bg-purple-700 shadow-lg shadow-purple-900/20'
+                      }`}
+                    >
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+                      Download beatgangsta_reaper_sync.lua
+                    </button>
+
+                    <div className="space-y-3 text-xs">
+                      <div className="flex gap-3">
+                        <div className="w-5 h-5 rounded-full bg-sky-500/20 text-sky-500 flex items-center justify-center font-bold text-[10px] flex-shrink-0">1</div>
+                        <p className="leading-normal">Download the script and place it in your REAPER Scripts directory or Desktop.</p>
+                      </div>
+                      <div className="flex gap-3">
+                        <div className="w-5 h-5 rounded-full bg-sky-500/20 text-sky-500 flex items-center justify-center font-bold text-[10px] flex-shrink-0">2</div>
+                        <p className="leading-normal">In REAPER, open the <strong className="font-bold">Actions List</strong> (press <code className="bg-black/10 px-1 py-0.5 rounded">?</code>), select <strong className="font-bold">New Action...</strong> &gt; <strong className="font-bold">Load ReaScript...</strong> and choose the file.</p>
+                      </div>
+                      <div className="flex gap-3">
+                        <div className="w-5 h-5 rounded-full bg-sky-500/20 text-sky-500 flex items-center justify-center font-bold text-[10px] flex-shrink-0">3</div>
+                        <p className="leading-normal">Run the action! It copies your entire live mix layout to the clipboard and creates a backup template.</p>
+                      </div>
+                      <div className="flex gap-3">
+                        <div className="w-5 h-5 rounded-full bg-sky-500/20 text-sky-500 flex items-center justify-center font-bold text-[10px] flex-shrink-0">4</div>
+                        <p className="leading-normal">With BeatGangsta's <strong className="font-semibold">"I have stems"</strong> mode active, select/upload your project directory. We will automatically map all stem wav files to your tracks, read your FX inserts from the backup file, and deliver custom critiques!</p>
+                      </div>
+                    </div>
                   </div>
-                  <div className="flex gap-4">
-                    <div className="w-8 h-8 rounded-full bg-sky-500/20 flex items-center justify-center font-black flex-shrink-0">2</div>
-                    <p className="text-sm leading-relaxed"><Trans i18nKey="daw_reaper_step2">Find <code className="bg-black/5 px-2 py-1 rounded font-mono font-bold">reaper-vstplugins64.ini</code>.</Trans></p>
-                  </div>
-                  <div className="flex gap-4">
-                    <div className="w-8 h-8 rounded-full bg-sky-500/20 flex items-center justify-center font-black flex-shrink-0">3</div>
-                    <p className="text-sm leading-relaxed"><Trans i18nKey="daw_reaper_step3">Either <strong className="font-black">copy/paste</strong> the text or <strong className="font-black">upload</strong> the file directly.</Trans></p>
-                  </div>
-                  <div className="flex gap-4">
-                    <div className="w-8 h-8 rounded-full bg-sky-500/20 flex items-center justify-center font-black flex-shrink-0">4</div>
-                    <p className="text-sm leading-relaxed">{t('daw_reaper_step4')}</p>
+
+                  {/* Method B: Traditional Global Plugin List */}
+                  <div className={`p-5 rounded-2xl border ${
+                    theme === 'coldest' ? 'bg-slate-50 border-slate-200 text-slate-800' : 'bg-[#18181b]/30 border-zinc-800 text-zinc-300'
+                  }`}>
+                    <h4 className="text-xs font-black uppercase tracking-widest mb-3 text-zinc-400">
+                      Method B: Traditional Global Plugin Inventory (.ini)
+                    </h4>
+                    <div className="space-y-4">
+                      <div className="flex gap-4">
+                        <div className="w-8 h-8 rounded-full bg-sky-500/10 flex items-center justify-center font-black flex-shrink-0 text-xs">1</div>
+                        <p className="text-sm leading-normal"><Trans i18nKey="daw_reaper_step1">Go to <strong className="font-black">Options</strong> {'>'} <strong className="font-black">Show resource path...</strong> in REAPER.</Trans></p>
+                      </div>
+                      <div className="flex gap-4">
+                        <div className="w-8 h-8 rounded-full bg-sky-500/10 flex items-center justify-center font-black flex-shrink-0 text-xs">2</div>
+                        <p className="text-sm leading-normal"><Trans i18nKey="daw_reaper_step2">Find <code className="bg-black/5 px-2 py-1 rounded font-mono font-bold text-xs">reaper-vstplugins64.ini</code>.</Trans></p>
+                      </div>
+                      <div className="flex gap-4">
+                        <div className="w-8 h-8 rounded-full bg-sky-500/10 flex items-center justify-center font-black flex-shrink-0 text-xs">3</div>
+                        <p className="text-sm leading-normal"><Trans i18nKey="daw_reaper_step3">Either <strong className="font-black">copy/paste</strong> the text or <strong className="font-black">upload</strong> the file directly.</Trans></p>
+                      </div>
+                      <div className="flex gap-4">
+                        <div className="w-8 h-8 rounded-full bg-sky-500/10 flex items-center justify-center font-black flex-shrink-0 text-xs">4</div>
+                        <p className="text-sm leading-normal">{t('daw_reaper_step4')}</p>
+                      </div>
+                    </div>
                   </div>
                 </div>
               )}

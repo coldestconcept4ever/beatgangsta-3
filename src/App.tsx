@@ -1,5 +1,6 @@
 
 import React, { useState, useMemo, useEffect, useRef, useCallback, useTransition } from 'react';
+import JSZip from 'jszip';
 import { VSTPlugin, BeatRecipe, AppTheme, User, SavedRecipe, HistoryItem, Folder, KnifeStyle, PendantStyle, ChainStyle, SharedSession, DuragStyle, Hardware, FullSaveFile, GrillStyle, MixCritique, SavedCritique, TutorialProgress, ReceiptItem } from './types';
 import { VIBE_EXAMPLES, SONG_EXAMPLES, BANDLAB_PLUGINS_LATEST, BANDLAB_FREE_PLUGINS_LATEST } from './constants';
 import { ARTIST_EXAMPLES } from './constants/artists';
@@ -10,6 +11,7 @@ import { convertWavToMp3 } from './lib/audioConverter';
 import { enrichHardware } from './services/enrichmentService';
 import { initAudio } from './utils/midiPlayer';
 import { fetchWithDetailedError } from './lib/api';
+import { parseRpp } from './utils/reaperUtils';
 
 import { AvianField } from './components/RavenField';
 import { PluginCard } from './components/PluginCard';
@@ -46,7 +48,7 @@ import { AdminDashboard } from './components/AdminDashboard';
 import { BetaApplicationModal } from './components/BetaApplicationModal';
 import { AnimatePresence, motion } from 'motion/react';
 import { useTranslation } from 'react-i18next';
-import { Globe, Languages, Star, X, Upload, Cpu, Folder as FolderIcon, ShieldCheck, Check, Zap, Rocket, Eye, EyeOff, AlertTriangle, Lock, Shield, Loader2, Gem, Sword, User as UserIcon, Link, Link2, Palette, Sparkles, Drum, Image as ImageIcon, Crown, CheckCircle2, ExternalLink, Facebook, Instagram, Linkedin, Twitter, Activity, Database, Trash2, Music, Video } from 'lucide-react';
+import { Globe, Languages, Star, X, Upload, Cpu, Folder as FolderIcon, ShieldCheck, Check, Zap, Rocket, Eye, EyeOff, AlertTriangle, Lock, Shield, Loader2, Gem, Sword, User as UserIcon, Link, Link2, Palette, Sparkles, Drum, Image as ImageIcon, Crown, CheckCircle2, ExternalLink, Facebook, Instagram, Linkedin, Twitter, Activity, Database, Trash2, Music, Video, Cloud } from 'lucide-react';
 import tinycolor from 'tinycolor2';
 import Turnstile from 'react-turnstile';
 import { useScreenRecorder } from './hooks/useScreenRecorder';
@@ -897,6 +899,288 @@ const App: React.FC = () => {
     return user && authorizedEmails.includes(user.email) && isEnglish;
   }, [user, i18n.language, authorizedEmails]);
 
+  const handleDawProjectImport = async (file: File) => {
+    if (!file) return;
+    setIsDawProjectPulling(true);
+    setDawProjectPullError(null);
+    setDawProjectPullSuccess(null);
+    setDawProjectParsedInfo(null);
+
+    try {
+      const zip = await JSZip.loadAsync(file);
+      
+      // 1. Try to read project.xml to list tracks/devices
+      const projectXmlFile = zip.file('project.xml');
+      let title = file.name.replace(/\.dawproject$/i, '');
+      const parsedTracks: { name: string; type: string; plugins: string[] }[] = [];
+      
+      if (projectXmlFile) {
+        try {
+          const xmlString = await projectXmlFile.async('text');
+          const parser = new DOMParser();
+          const xmlDoc = parser.parseFromString(xmlString, "text/xml");
+          
+          // Try to read metadata/title from project or metadata.xml
+          const metadataXmlFile = zip.file('metadata.xml');
+          if (metadataXmlFile) {
+            const metaStr = await metadataXmlFile.async('text');
+            const metaDoc = parser.parseFromString(metaStr, "text/xml");
+            const titleNode = metaDoc.getElementsByTagName("Title")[0] || metaDoc.getElementsByTagName("title")[0];
+            if (titleNode && titleNode.textContent) {
+              title = titleNode.textContent.trim();
+            }
+          }
+          
+          const trackNodes = xmlDoc.getElementsByTagName("Track");
+          for (let i = 0; i < trackNodes.length; i++) {
+            const track = trackNodes[i];
+            const trackName = track.getAttribute("name") || `Track ${i + 1}`;
+            const contentType = track.getAttribute("contentType") || "audio";
+            
+            const pluginsList: string[] = [];
+            const deviceNodes = track.getElementsByTagName("Plugin");
+            for (let j = 0; j < deviceNodes.length; j++) {
+              const devName = deviceNodes[j].getAttribute("deviceName") || deviceNodes[j].getAttribute("name");
+              if (devName) pluginsList.push(devName);
+            }
+            
+            parsedTracks.push({
+              name: trackName,
+              type: contentType,
+              plugins: pluginsList
+            });
+          }
+        } catch (e: any) {
+          console.warn("[DAWProject Import] XML parse warning:", e.message);
+        }
+      }
+
+      // 2. Discover and extract all audio files inside the Zip container
+      const audioFiles: { path: string; entry: JSZip.JSZipObject }[] = [];
+      zip.forEach((relativePath, entry) => {
+        if (!entry.dir && /\.(wav|mp3|m4a|ogg|flac|aif|aiff)$/i.test(relativePath)) {
+          audioFiles.push({ path: relativePath, entry });
+        }
+      });
+
+      if (audioFiles.length === 0) {
+        throw new Error("No audio stem files found inside the uploaded .dawproject ZIP file. Make sure the project has embedded audio files (usually in the media/ or audio/ folder).");
+      }
+
+      const importedStemsCount = audioFiles.length;
+      const finalStems: any[] = [];
+
+      for (let i = 0; i < audioFiles.length; i++) {
+        const item = audioFiles[i];
+        const rawBlob = await item.entry.async('blob');
+        const originalFileName = item.path.split('/').pop() || `stem_${i+1}.wav`;
+        const stemName = originalFileName.replace(/\.(wav|mp3|m4a|ogg|flac|aif|aiff)$/i, '').trim();
+        
+        let mime = 'audio/wav';
+        if (originalFileName.toLowerCase().endsWith('.mp3')) mime = 'audio/mp3';
+        else if (originalFileName.toLowerCase().endsWith('.m4a')) mime = 'audio/m4a';
+        else if (originalFileName.toLowerCase().endsWith('.ogg')) mime = 'audio/ogg';
+        else if (originalFileName.toLowerCase().endsWith('.flac')) mime = 'audio/flac';
+
+        const stemFile = new File([rawBlob], originalFileName, { type: mime });
+        
+        let stemType = 'Other';
+        let customType = stemName;
+        const lowerName = stemName.toLowerCase();
+        
+        if (lowerName.includes('drum') || lowerName.includes('kick') || lowerName.includes('percs') || lowerName.includes('beat') || lowerName.includes('loop') || lowerName.includes('snare') || lowerName.includes('clap') || lowerName.includes('hat')) {
+          stemType = 'Beats';
+        } else if (lowerName.includes('vocal') || lowerName.includes('vox') || lowerName.includes('lead') || lowerName.includes('back') || lowerName.includes('harmony') || lowerName.includes('sing') || lowerName.includes('rap') || lowerName.includes('dub')) {
+          stemType = 'Vocals';
+        } else if (lowerName.includes('synth') || lowerName.includes('melody') || lowerName.includes('keys') || lowerName.includes('guitar') || lowerName.includes('piano') || lowerName.includes('organ') || lowerName.includes('brass') || lowerName.includes('string')) {
+          stemType = 'Instrumental';
+        } else if (lowerName.includes('bass') || lowerName.includes('808') || lowerName.includes('sub')) {
+          stemType = 'Bass';
+        }
+
+        finalStems.push({
+          id: crypto.randomUUID ? crypto.randomUUID() : Math.random().toString(36).substring(7),
+          file: stemFile,
+          type: stemType,
+          customType: stemType === 'Other' ? customType : '',
+          mimeType: mime,
+          status: 'ready' as const
+        });
+      }
+
+      setStems(finalStems);
+      setHasStems(true);
+      setDawProjectPullSuccess(`Successfully loaded DAWProject "${title}"! Found and imported ${importedStemsCount} track stem(s) directly into your workspace.`);
+      setDawProjectParsedInfo({
+        title,
+        tracksCount: parsedTracks.length,
+        stemsCount: importedStemsCount,
+        tracks: parsedTracks
+      });
+    } catch (err: any) {
+      console.error(err);
+      setDawProjectPullError(err.message || "Failed to process .dawproject file. Ensure it is a valid, uncorrupted zip package.");
+    } finally {
+      setIsDawProjectPulling(false);
+    }
+  };
+
+  const handleReaperDirectoryImport = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
+
+    setIsReaperPulling(true);
+    setReaperPullError(null);
+    setReaperPullSuccess(null);
+    setReaperParsedInfo(null);
+
+    try {
+      const filesArray = Array.from(files);
+      
+      // 1. Locate REAPER Project File (.rpp)
+      const rppFile = filesArray.find(f => f.name.toLowerCase().endsWith('.rpp'));
+      if (!rppFile) {
+        throw new Error("No REAPER project (.RPP) file found in the selected folder. Please make sure to import a folder containing your active .rpp file!");
+      }
+
+      // Read .rpp content
+      const rppContent = await rppFile.text();
+      const parsedTracks = parseRpp(rppContent);
+      const title = rppFile.name.replace(/\.rpp$/i, '');
+
+      // 2. Locate all audio files in the folder structure
+      const audioFiles = filesArray.filter(f => 
+        /\.(wav|mp3|m4a|ogg|flac|aif|aiff)$/i.test(f.name)
+      );
+
+      if (audioFiles.length === 0) {
+        throw new Error("No audio files (wav, mp3, m4a, etc.) found in the selected folder. Please make sure your project stems or media are in this folder so we can load them!");
+      }
+
+      // 3. Match physical media files to parsed tracks
+      const finalStems: any[] = [];
+      const matchedFilesSet = new Set<string>();
+
+      for (const track of parsedTracks) {
+        let matchedFile: File | undefined = undefined;
+
+        // Try direct referenced files inside the RPP structure
+        for (const refName of track.referencedFiles) {
+          matchedFile = audioFiles.find(af => af.name.toLowerCase() === refName.toLowerCase());
+          if (matchedFile) break;
+        }
+
+        // Match by similar track and file names as fallback
+        if (!matchedFile) {
+          const trackLower = track.name.toLowerCase().trim();
+          matchedFile = audioFiles.find(af => {
+            const fileLower = af.name.toLowerCase();
+            const cleanFile = fileLower.replace(/\.(wav|mp3|m4a|ogg|flac|aif|aiff)$/i, '').trim();
+            return trackLower && cleanFile && (trackLower.includes(cleanFile) || cleanFile.includes(trackLower));
+          });
+        }
+
+        if (matchedFile) {
+          matchedFilesSet.add(matchedFile.name);
+          const originalFileName = matchedFile.name;
+          const stemName = track.name || originalFileName.replace(/\.(wav|mp3|m4a|ogg|flac|aif|aiff)$/i, '').trim();
+          
+          let mime = 'audio/wav';
+          if (originalFileName.toLowerCase().endsWith('.mp3')) mime = 'audio/mp3';
+          else if (originalFileName.toLowerCase().endsWith('.m4a')) mime = 'audio/m4a';
+          else if (originalFileName.toLowerCase().endsWith('.ogg')) mime = 'audio/ogg';
+          else if (originalFileName.toLowerCase().endsWith('.flac')) mime = 'audio/flac';
+
+          let stemType = 'Other';
+          let customType = stemName;
+          const lowerName = stemName.toLowerCase();
+          
+          if (lowerName.includes('drum') || lowerName.includes('kick') || lowerName.includes('percs') || lowerName.includes('beat') || lowerName.includes('loop') || lowerName.includes('snare') || lowerName.includes('clap') || lowerName.includes('hat')) {
+            stemType = 'Beats';
+          } else if (lowerName.includes('vocal') || lowerName.includes('vox') || lowerName.includes('lead') || lowerName.includes('back') || lowerName.includes('harmony') || lowerName.includes('sing') || lowerName.includes('rap') || lowerName.includes('dub')) {
+            stemType = 'Vocals';
+          } else if (lowerName.includes('synth') || lowerName.includes('melody') || lowerName.includes('keys') || lowerName.includes('guitar') || lowerName.includes('piano') || lowerName.includes('organ') || lowerName.includes('brass') || lowerName.includes('string')) {
+            stemType = 'Instrumental';
+          } else if (lowerName.includes('bass') || lowerName.includes('808') || lowerName.includes('sub')) {
+            stemType = 'Bass';
+          }
+
+          finalStems.push({
+            id: crypto.randomUUID ? crypto.randomUUID() : Math.random().toString(36).substring(7),
+            file: matchedFile,
+            type: stemType,
+            customType: stemType === 'Other' ? customType : '',
+            mimeType: mime,
+            status: 'ready' as const
+          });
+        }
+      }
+
+      // Capture unmatched audio stems
+      for (const af of audioFiles) {
+        if (!matchedFilesSet.has(af.name) && finalStems.length < stemsLimit) {
+          const originalFileName = af.name;
+          const stemName = originalFileName.replace(/\.(wav|mp3|m4a|ogg|flac|aif|aiff)$/i, '').trim();
+          
+          let mime = 'audio/wav';
+          if (originalFileName.toLowerCase().endsWith('.mp3')) mime = 'audio/mp3';
+          else if (originalFileName.toLowerCase().endsWith('.m4a')) mime = 'audio/m4a';
+          else if (originalFileName.toLowerCase().endsWith('.ogg')) mime = 'audio/ogg';
+          else if (originalFileName.toLowerCase().endsWith('.flac')) mime = 'audio/flac';
+
+          let stemType = 'Other';
+          let customType = stemName;
+          const lowerName = stemName.toLowerCase();
+          
+          if (lowerName.includes('drum') || lowerName.includes('kick') || lowerName.includes('percs') || lowerName.includes('beat') || lowerName.includes('loop') || lowerName.includes('snare') || lowerName.includes('clap') || lowerName.includes('hat')) {
+            stemType = 'Beats';
+          } else if (lowerName.includes('vocal') || lowerName.includes('vox') || lowerName.includes('lead') || lowerName.includes('back') || lowerName.includes('harmony') || lowerName.includes('sing') || lowerName.includes('rap') || lowerName.includes('dub')) {
+            stemType = 'Vocals';
+          } else if (lowerName.includes('synth') || lowerName.includes('melody') || lowerName.includes('keys') || lowerName.includes('guitar') || lowerName.includes('piano') || lowerName.includes('organ') || lowerName.includes('brass') || lowerName.includes('string')) {
+            stemType = 'Instrumental';
+          } else if (lowerName.includes('bass') || lowerName.includes('808') || lowerName.includes('sub')) {
+            stemType = 'Bass';
+          }
+
+          finalStems.push({
+            id: crypto.randomUUID ? crypto.randomUUID() : Math.random().toString(36).substring(7),
+            file: af,
+            type: stemType,
+            customType: stemType === 'Other' ? customType : '',
+            mimeType: mime,
+            status: 'ready' as const
+          });
+        }
+      }
+
+      if (finalStems.length === 0) {
+        throw new Error("Could not map any audio files automatically. Please ensure audio filenames or folder structures align with track names!");
+      }
+
+      setStems(finalStems.slice(0, stemsLimit));
+      setHasStems(true);
+      setReaperPullSuccess(`Successfully parsed REAPER Project File "${title}.RPP"! Extracted all track layout metadata and matched ${finalStems.length} audio file stem(s) automatically with zero file size overhead.`);
+      setReaperParsedInfo({
+        title,
+        tracksCount: parsedTracks.length,
+        stemsCount: finalStems.length,
+        tracks: parsedTracks.map(t => ({
+          name: t.name,
+          type: t.type,
+          plugins: t.plugins,
+          isMuted: t.isMuted,
+          isSoloed: t.isSoloed,
+          volume: t.volume
+        }))
+      });
+    } catch (err: any) {
+      console.error(err);
+      setReaperPullError(err.message || "Failed to parse REAPER project directory.");
+    } finally {
+      setIsReaperPulling(false);
+    }
+  };
+
   const handleContactSupport = useCallback((pluginInfo: any) => {
     const message = `Developer Investigation Request:
 Plugin: ${pluginInfo.name}
@@ -1312,7 +1596,7 @@ The AI was unable to verify these parameters. Please investigate.`;
       }
 
       // Admin direct database purge of analyzed plug-in results
-      const authorizedEmails = ['coldestconcept@gmail.com', 'recogniizemiracles@gmail.com', 'recognizemiracles@gmail.com'];
+      const authorizedEmails = ['coldestconcept@gmail.com', 'recogniizemiracles@gmail.com', 'recognizemiracles@gmail.com', 'ruhedramarkprod@gmail.com'];
       if (user.email && authorizedEmails.includes(user.email.toLowerCase().trim())) {
         try {
           await fetchWithDetailedError('/api/vst-cache/clear', {
@@ -1379,6 +1663,24 @@ The AI was unable to verify these parameters. Please investigate.`;
   const [c_act, setC_act] = useState(() => localStorage.getItem('_cv') === 'true');
   const [hasUnlockedBluntToggle, setHasUnlockedBluntToggle] = useState(false);
   const [showDawModal, setShowDawModal] = useState(false);
+  const [isDawProjectPulling, setIsDawProjectPulling] = useState(false);
+  const [dawProjectPullError, setDawProjectPullError] = useState<string | null>(null);
+  const [dawProjectPullSuccess, setDawProjectPullSuccess] = useState<string | null>(null);
+  const [dawProjectParsedInfo, setDawProjectParsedInfo] = useState<{
+    title: string;
+    tracksCount: number;
+    stemsCount: number;
+    tracks: { name: string; type: string; plugins: string[] }[];
+  } | null>(null);
+  const [isReaperPulling, setIsReaperPulling] = useState(false);
+  const [reaperPullError, setReaperPullError] = useState<string | null>(null);
+  const [reaperPullSuccess, setReaperPullSuccess] = useState<string | null>(null);
+  const [reaperParsedInfo, setReaperParsedInfo] = useState<{
+    title: string;
+    tracksCount: number;
+    stemsCount: number;
+    tracks: { name: string; type: string; plugins: string[]; isMuted?: boolean; isSoloed?: boolean; volume?: string }[];
+  } | null>(null);
   const [dawModalSource, setDawModalSource] = useState<'initial' | 'menu'>('initial');
   const [showAnalogModal, setShowAnalogModal] = useState(false);
   const [analogInstruments, setAnalogInstruments] = useState<Hardware[]>(() => {
@@ -7171,6 +7473,216 @@ The AI was unable to verify these parameters. Please investigate.`;
                     <div className="flex justify-between items-center">
                       <h3 className={`text-sm font-black uppercase tracking-widest ${theme === 'coldest' ? 'text-slate-900' : 'text-white'}`}>Stems ({stems.filter(s => s.file).length}/{stemsLimit})</h3>
                     </div>
+
+                    {isAdminDashboardAuthorized && (
+                      dawType === 'Reaper' ? (
+                        <div className={`p-5 rounded-2xl border transition-all ${
+                          theme === 'coldest' 
+                            ? 'bg-purple-100/30 border-purple-200 text-slate-850' 
+                            : 'bg-purple-950/10 border-purple-500/20 text-white'
+                        }`}>
+                          <div className="flex items-center gap-2 mb-3">
+                            <div className="p-1 rounded bg-purple-500 text-white">
+                              <Cloud className="w-4 h-4 text-white" />
+                            </div>
+                            <h4 className="text-xs font-black uppercase tracking-widest text-purple-500">
+                              REAPER Project Folder Importer (Admin Active)
+                            </h4>
+                          </div>
+                          <p className="text-xs opacity-75 mb-4 leading-relaxed">
+                            Upload your active <span className="font-bold">REAPER Project Folder</span>. We'll instantly parse the <span className="font-bold">.RPP</span> file, extract all tracks, active VST/AU inserts, mute/solo flags, volume levels, and map your audio files directly to stems slots!
+                          </p>
+                          
+                          <div className="flex flex-col gap-3">
+                            <label className={`flex flex-col items-center justify-center p-6 border-2 border-dashed rounded-xl cursor-pointer transition-all ${
+                              theme === 'coldest'
+                                ? 'border-purple-200 hover:border-purple-400 bg-white/50 hover:bg-white'
+                                : 'border-purple-500/20 hover:border-purple-500 bg-black/20 hover:bg-black/40'
+                            }`}>
+                              <div className="flex flex-col items-center justify-center text-center">
+                                {isReaperPulling ? (
+                                  <Loader2 className="w-8 h-8 text-purple-500 animate-spin mb-2" />
+                                ) : (
+                                  <FolderIcon className="w-8 h-8 text-purple-500 mb-2" />
+                                )}
+                                <p className="text-xs font-bold leading-normal">
+                                  {isReaperPulling ? 'Parsing RPP S-expressions & matching audio wavs...' : 'Click to select your REAPER Project Directory'}
+                                </p>
+                                <p className="text-[10px] opacity-60 mt-1">Select the directory containing your project .rpp and exported stems</p>
+                              </div>
+                              <input 
+                                type="file" 
+                                {...({
+                                  webkitdirectory: "",
+                                  directory: "",
+                                  multiple: true
+                                } as any)}
+                                onChange={handleReaperDirectoryImport}
+                                disabled={isReaperPulling}
+                                className="hidden"
+                              />
+                            </label>
+                          </div>
+                          
+                          {reaperPullError && (
+                            <div className="mt-3 p-3 rounded-lg bg-red-500/10 border border-red-500/20 text-xs text-red-500 font-bold">
+                              ⚠️ {reaperPullError}
+                            </div>
+                          )}
+                          
+                          {reaperPullSuccess && (
+                            <div className="mt-3 p-3 rounded-lg bg-green-500/10 border border-green-500/20 text-xs text-green-500 font-bold">
+                              ✅ {reaperPullSuccess}
+                            </div>
+                          )}
+
+                          {reaperParsedInfo && (
+                            <div className={`mt-3 p-4 rounded-xl text-xs space-y-2 border ${
+                              theme === 'coldest' ? 'bg-white/80 border-slate-200' : 'bg-black/40 border-zinc-800'
+                            }`}>
+                              <p className="font-bold text-xs uppercase tracking-wider text-purple-500">📊 Parsed REAPER Session details:</p>
+                              <div className="divide-y divide-zinc-700/20">
+                                <div className="py-1 flex justify-between text-[11px]">
+                                  <span className="opacity-70">Project Name:</span>
+                                  <span className="font-semibold">{reaperParsedInfo.title}</span>
+                                </div>
+                                <div className="py-1 flex justify-between text-[11px]">
+                                  <span className="opacity-70">Tracks Discovered:</span>
+                                  <span className="font-semibold">{reaperParsedInfo.tracksCount}</span>
+                                </div>
+                                <div className="py-1 flex justify-between text-[11px]">
+                                  <span className="opacity-70">Matched Audio Stems:</span>
+                                  <span className="font-semibold text-purple-400">{reaperParsedInfo.stemsCount}</span>
+                                </div>
+                              </div>
+                              
+                              {reaperParsedInfo.tracks.length > 0 && (
+                                <div className="pt-2">
+                                  <p className="font-bold text-[10px] uppercase opacity-75 mb-1 text-zinc-400">Track List & Loaded Effects:</p>
+                                  <div className="max-h-36 overflow-y-auto space-y-1 pr-1 custom-scrollbar text-[11px]">
+                                    {reaperParsedInfo.tracks.map((t, idx) => (
+                                      <div key={idx} className="flex justify-between items-center text-[10px] py-1 border-b border-zinc-500/10 last:border-0 opacity-90">
+                                        <div className="flex flex-col">
+                                          <span className="truncate max-w-[150px] font-bold">
+                                            ↳ {t.name}
+                                          </span>
+                                          <div className="flex gap-2 text-[8px] opacity-65">
+                                            <span>Volume: {t.volume || '0dB'}</span>
+                                            {t.isMuted && <span className="text-red-500">Muted</span>}
+                                            {t.isSoloed && <span className="text-yellow-500">Soloed</span>}
+                                          </div>
+                                        </div>
+                                        <span className="text-[10px] opacity-75 text-purple-400 truncate max-w-[180px] text-right">
+                                          {t.plugins.length > 0 ? t.plugins.join(' ➔ ') : 'dry'}
+                                        </span>
+                                      </div>
+                                    ))}
+                                  </div>
+                                </div>
+                              )}
+                            </div>
+                          )}
+                        </div>
+                      ) : (
+                        <div className={`p-5 rounded-2xl border transition-all ${
+                          theme === 'coldest' 
+                            ? 'bg-purple-100/30 border-purple-200 text-slate-850' 
+                            : 'bg-purple-950/10 border-purple-500/20 text-white'
+                        }`}>
+                          <div className="flex items-center gap-2 mb-3">
+                            <div className="p-1 rounded bg-purple-500 text-white">
+                              <Cloud className="w-4 h-4 text-white" />
+                            </div>
+                            <h4 className="text-xs font-black uppercase tracking-widest text-purple-500">
+                              DAWProject Direct Stem Importer (Admin Active)
+                            </h4>
+                          </div>
+                          <p className="text-xs opacity-75 mb-4 leading-relaxed">
+                            Upload any <span className="font-bold">.dawproject</span> file exported from Studio One or Bitwig. We'll automatically unpack all active track stems, map them to your slots, and read the plugin channel inserts to craft perfect mix critique guides!
+                          </p>
+                          
+                          <div className="flex flex-col gap-3">
+                            <label className={`flex flex-col items-center justify-center p-6 border-2 border-dashed rounded-xl cursor-pointer transition-all ${
+                              theme === 'coldest'
+                                ? 'border-purple-200 hover:border-purple-400 bg-white/50 hover:bg-white'
+                                : 'border-purple-500/20 hover:border-purple-500 bg-black/20 hover:bg-black/40'
+                            }`}>
+                              <div className="flex flex-col items-center justify-center text-center">
+                                {isDawProjectPulling ? (
+                                  <Loader2 className="w-8 h-8 text-purple-500 animate-spin mb-2" />
+                                ) : (
+                                  <Upload className="w-8 h-8 text-purple-500 mb-2" />
+                                )}
+                                <p className="text-xs font-bold leading-normal">
+                                  {isDawProjectPulling ? 'Reading archives & matching waveforms...' : 'Click to upload or drag .dawproject package'}
+                                </p>
+                                <p className="text-[10px] opacity-60 mt-1">Bitwig / Studio One .dawproject format including embedded tracks</p>
+                              </div>
+                              <input 
+                                type="file" 
+                                accept=".dawproject"
+                                onChange={(e) => {
+                                  const file = e.target.files?.[0];
+                                  if (file) handleDawProjectImport(file);
+                                }}
+                                disabled={isDawProjectPulling}
+                                className="hidden"
+                              />
+                            </label>
+                          </div>
+                          
+                          {dawProjectPullError && (
+                            <div className="mt-3 p-3 rounded-lg bg-red-500/10 border border-red-500/20 text-xs text-red-500 font-bold">
+                              ⚠️ {dawProjectPullError}
+                            </div>
+                          )}
+                          
+                          {dawProjectPullSuccess && (
+                            <div className="mt-3 p-3 rounded-lg bg-green-500/10 border border-green-500/20 text-xs text-green-500 font-bold">
+                              ✅ {dawProjectPullSuccess}
+                            </div>
+                          )}
+
+                          {dawProjectParsedInfo && (
+                            <div className={`mt-3 p-4 rounded-xl text-xs space-y-2 border ${
+                              theme === 'coldest' ? 'bg-white/80 border-slate-200' : 'bg-black/40 border-zinc-800'
+                            }`}>
+                              <p className="font-bold text-xs uppercase tracking-wider text-purple-500">ℹ️ Extracted Session Layout:</p>
+                              <div className="divide-y divide-zinc-700/20">
+                                <div className="py-1 flex justify-between text-[11px]">
+                                  <span className="opacity-70">Project Name:</span>
+                                  <span className="font-semibold">{dawProjectParsedInfo.title}</span>
+                                </div>
+                                <div className="py-1 flex justify-between text-[11px]">
+                                  <span className="opacity-70">Tracks Count:</span>
+                                  <span className="font-semibold">{dawProjectParsedInfo.tracksCount}</span>
+                                </div>
+                                <div className="py-1 flex justify-between text-[11px]">
+                                  <span className="opacity-70">Extracted Audio Stems:</span>
+                                  <span className="font-semibold text-purple-400">{dawProjectParsedInfo.stemsCount}</span>
+                                </div>
+                              </div>
+                              
+                              {dawProjectParsedInfo.tracks.length > 0 && (
+                                <div className="pt-2">
+                                  <p className="font-bold text-[10px] uppercase opacity-75 mb-1 text-zinc-400">Discovered Channels & Inserts:</p>
+                                  <div className="max-h-32 overflow-y-auto space-y-1 pr-1 custom-scrollbar text-[11px]">
+                                    {dawProjectParsedInfo.tracks.map((t, idx) => (
+                                      <div key={idx} className="flex justify-between items-center text-[10px] py-1 border-b border-zinc-500/10 last:border-0 opacity-90">
+                                        <span className="truncate max-w-[150px] font-medium">↳ {t.name}</span>
+                                        <span className="text-[10px] opacity-75 text-purple-400 truncate max-w-[180px]">
+                                          {t.plugins.length > 0 ? t.plugins.join(' ➔ ') : 'dry'}
+                                        </span>
+                                      </div>
+                                    ))}
+                                  </div>
+                                </div>
+                              )}
+                            </div>
+                          )}
+                        </div>
+                      )
+                    )}
 
                     <div className="flex flex-col gap-2">
                       <div className="flex justify-between gap-2">
