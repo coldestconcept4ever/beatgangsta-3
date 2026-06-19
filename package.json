@@ -15,6 +15,7 @@
     "@aws-sdk/s3-request-presigner": "^3.1064.0",
     "@google/genai": "^1.41.0",
     "@libsql/client": "^0.17.0",
+    "@types/uuid": "^10.0.0",
     "axios": "^1.13.6",
     "cookie-session": "^2.1.1",
     "cors": "^2.8.6",
@@ -43,7 +44,8 @@
     "react-turnstile": "^1.1.5",
     "recharts": "^3.8.1",
     "soundfont-player": "^0.12.0",
-    "tinycolor2": "^1.6.0"
+    "tinycolor2": "^1.6.0",
+    "uuid": "^14.0.0"
   },
   "devDependencies": {
     "@tailwindcss/vite": "^4.2.0",

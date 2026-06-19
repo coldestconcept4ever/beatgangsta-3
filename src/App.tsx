@@ -48,7 +48,7 @@ import { AdminDashboard } from './components/AdminDashboard';
 import { BetaApplicationModal } from './components/BetaApplicationModal';
 import { AnimatePresence, motion } from 'motion/react';
 import { useTranslation } from 'react-i18next';
-import { Globe, Languages, Star, X, Upload, Cpu, Folder as FolderIcon, ShieldCheck, Check, Zap, Rocket, Eye, EyeOff, AlertTriangle, Lock, Shield, Loader2, Gem, Sword, User as UserIcon, Link, Link2, Palette, Sparkles, Drum, Image as ImageIcon, Crown, CheckCircle2, ExternalLink, Facebook, Instagram, Linkedin, Twitter, Activity, Database, Trash2, Music, Video, Cloud } from 'lucide-react';
+import { Download, Globe, Languages, Star, X, Upload, Cpu, Folder as FolderIcon, ShieldCheck, Check, Zap, Rocket, Eye, EyeOff, AlertTriangle, Lock, Shield, Loader2, Gem, Sword, User as UserIcon, Link, Link2, Palette, Sparkles, Drum, Image as ImageIcon, Crown, CheckCircle2, ExternalLink, Facebook, Instagram, Linkedin, Twitter, Activity, Database, Trash2, Music, Video, Cloud, Settings2, HelpCircle } from 'lucide-react';
 import tinycolor from 'tinycolor2';
 import Turnstile from 'react-turnstile';
 import { useScreenRecorder } from './hooks/useScreenRecorder';
@@ -693,6 +693,7 @@ const App: React.FC = () => {
   const referenceTrackInputRef = useRef<HTMLInputElement>(null);
   const [hasStems, setHasStems] = useState<boolean>(false);
   const [isBusMode, setIsBusMode] = useState<boolean>(false);
+  const [isJsfxMode, setIsJsfxMode] = useState<boolean>(false);
   const [isMultiBandMode, setIsMultiBandMode] = useState<boolean>(false);
   const [isMasterMode, setIsMasterMode] = useState<boolean>(false);
   const [forceResearch, setForceResearch] = useState<boolean>(false);
@@ -1037,8 +1038,14 @@ const App: React.FC = () => {
     try {
       const filesArray = Array.from(files);
       
+      // Filter out files that are within any folder named "backup" or "backups" or have a ".rpp-bak" extension
+      const validFilesArray = filesArray.filter(f => {
+        const path = (f.webkitRelativePath || f.name).toLowerCase();
+        return !path.includes('/backup/') && !path.includes('/backups/') && !path.endsWith('.rpp-bak') && !path.endsWith('.rpp-bak-undo');
+      });
+      
       // 1. Locate REAPER Project File (.rpp)
-      const rppFile = filesArray.find(f => f.name.toLowerCase().endsWith('.rpp'));
+      const rppFile = validFilesArray.find(f => f.name.toLowerCase().endsWith('.rpp'));
       if (!rppFile) {
         throw new Error("No REAPER project (.RPP) file found in the selected folder. Please make sure to import a folder containing your active .rpp file!");
       }
@@ -1049,7 +1056,7 @@ const App: React.FC = () => {
       const title = rppFile.name.replace(/\.rpp$/i, '');
 
       // 2. Locate all audio files in the folder structure
-      const audioFiles = filesArray.filter(f => 
+      const audioFiles = validFilesArray.filter(f => 
         /\.(wav|mp3|m4a|ogg|flac|aif|aiff)$/i.test(f.name)
       );
 
@@ -1171,7 +1178,8 @@ const App: React.FC = () => {
           isMuted: t.isMuted,
           isSoloed: t.isSoloed,
           volume: t.volume
-        }))
+        })),
+        rawRpp: rppContent
       });
     } catch (err: any) {
       console.error(err);
@@ -1679,8 +1687,10 @@ The AI was unable to verify these parameters. Please investigate.`;
     title: string;
     tracksCount: number;
     stemsCount: number;
-    tracks: { name: string; type: string; plugins: string[]; isMuted?: boolean; isSoloed?: boolean; volume?: string }[];
+    tracks: { name: string; type: string; plugins: { name: string; readableParams?: string }[]; isMuted?: boolean; isSoloed?: boolean; volume?: string }[];
+    rawRpp?: string;
   } | null>(null);
+  const [reaperSelectedPluginParams, setReaperSelectedPluginParams] = useState<{name: string, params: string} | null>(null);
   const [dawModalSource, setDawModalSource] = useState<'initial' | 'menu'>('initial');
   const [showAnalogModal, setShowAnalogModal] = useState(false);
   const [analogInstruments, setAnalogInstruments] = useState<Hardware[]>(() => {
@@ -1941,6 +1951,7 @@ The AI was unable to verify these parameters. Please investigate.`;
   const [dragOverStemId, setDragOverStemId] = useState<string | null>(null);
   const [showBuyCreditsModal, setShowBuyCreditsModal] = useState(false);
   const [showPromoPopup, setShowPromoPopup] = useState(false);
+  const [showJsfxHelpModal, setShowJsfxHelpModal] = useState(false);
 
   useEffect(() => {
     if (user && user.justReceivedPromo) {
@@ -4818,7 +4829,18 @@ The AI was unable to verify these parameters. Please investigate.`;
 
       // Format stems context for Gemini
       const stemsContext = uploadedStems.map(s => `Stem: ${s.file!.name} (Type: ${s.type === 'Other' && s.customType ? s.customType : s.type}) - URI: ${s.uri}`).join('\n');
-      const fullContext = `The user has uploaded ${activeStems.length} stems for analysis.\n\n${stemsContext}\n\nUser Context: ${critiqueContext}`;
+      let fullContext = `The user has uploaded ${activeStems.length} stems for analysis.\n\n${stemsContext}\n\nUser Context: ${critiqueContext}`;
+      if (dawType === 'REAPER' && isJsfxMode) {
+        fullContext += `\n\nCRITICAL DIRECTIVE: YOU MUST ONLY RECOMMEND JSFX PLUGINS FOR THIS MIX CRITIQUE. DO NOT RECOMMEND ANY VST/AU PLUGINS. 
+Only use valid, default REAPER JSFX (JS:). Here is a comprehensive list of actual standard JSFX categories and plugins to use as a reference:
+- Compressors/Dynamics/Limiters: JS: 1175 Compressor, JS: Auto Expander, JS: Event Horizon Clipper/Limiter, JS: Fairly Childish Compressor/Limiter, JS: General Dynamics, JS: LOSER/1175, JS: LOSER/MGA_JSLimiter, JS: LOSER/MasterLimiter, JS: LOSER/MasterTom, JS: LOSER/compciter, JS: LOSER/gate, JS: LOSER/DDC, JS: Liteon/np1136peaklimiter, JS: Multi-Band Compressor, JS: SStillwell/1175, JS: SStillwell/bombastic, JS: SStillwell/dyno, JS: SStillwell/eventhorizon, JS: SStillwell/eventhorizon2, JS: SStillwell/expander, JS: SStillwell/fairlychildish, JS: SStillwell/hugebooty, JS: SStillwell/majorTom, JS: 5-Band Compressor, JS: 3-Band Compressor, JS: Expander / Gate.
+- EQ/Enhancers/Filters: JS: 3-Band EQ, JS: 4-Band EQ, JS: 5-Band Stereo EQ, JS: Auto-peaker, JS: Bandpass Filter, JS: DC Filter, JS: Exciter, JS: Huge Booty Bass Enhancer, JS: LOSER/3BandEQ, JS: LOSER/4BandEQ, JS: LOSER/5BandEQ, JS: LOSER/BasiQ, JS: LOSER/Filter, JS: LOSER/Filter_RC, JS: LOSER/MIDI_EQ, JS: LOSER/VCF, JS: LOSER/saturation, JS: LOSER/stereo_enhancer, JS: Liteon/3bandpeakfilter, JS: Liteon/applefilter12db, JS: Liteon/applefilter24db, JS: Liteon/butterworth24db, JS: Liteon/cheb24db, JS: Liteon/moog24db, JS: Liteon/presenceeq, JS: Liteon/rbj1073, JS: Liteon/rbjeq, JS: Liteon/saturator, JS: Liteon/shelveq, JS: Liteon/statevariable, JS: Liteon/statevariable2, JS: RBJ 1073 EQ, JS: RBJ 4-Band Semi-Parametric EQ, JS: RBJ 7-Band Graphic EQ, JS: RBJ Highpass/Lowpass Filters, JS: SStillwell/1973, JS: SStillwell/badbussmojo, JS: SStillwell/equo, JS: SStillwell/rbj1073, JS: SStillwell/realoud, JS: SStillwell/thunderkick, JS: SStillwell/tilt, JS: Saturation/Soft Clipper, JS: Teej/rbj12eq-teej, JS: 12-Band EQ, JS: Graphic EQ.
+- Modulation/Time: JS: Chorus, JS: Chorus (Stereo), JS: Delay, JS: Delay w/ Chorus, JS: Delay w/ Tempo Ping-Pong, JS: Flanger, JS: Flanger (Stereo), JS: LOSER/FBDelay, JS: LOSER/FBFlanger, JS: LOSER/Flanger, JS: LOSER/Phaser, JS: LOSER/Tremolo, JS: Phaser, JS: Reverb, JS: SStillwell/chorus, JS: SStillwell/chorus_stereo, JS: SStillwell/delay, JS: SStillwell/delay_pong, JS: SStillwell/delay_tempo, JS: SStillwell/flanger, JS: SStillwell/flanger_ext, JS: SStillwell/ozzifier, JS: SStillwell/width, JS: Tremolo, JS: Delay (L/R).
+- Guitar/Amp/Distortion: JS: Distortion, JS: SStillwell/dirtymouth, JS: SStillwell/guitar/AmpModel, JS: SStillwell/guitar/chorus, JS: SStillwell/guitar/distortion, JS: SStillwell/guitar/flanger, JS: SStillwell/guitar/phaser, JS: SStillwell/guitar/tremolo, JS: Tube Harmonics, JS: Wah-Wah, JS: Wig-Wah.
+- Utility/Routing/Imaging/Pitch: JS: 8-Channel Mixer, JS: Audio To MIDI Drum Trigger, JS: Band Splitter, JS: Band Joiner, JS: Dual Pan, JS: FFT Splitter, JS: FFT Splitter (3-band), JS: LOSER/CenterCanceler, JS: LOSER/Dither, JS: LOSER/Downjumper, JS: LOSER/TransientController, JS: LOSER/Upjumper, JS: LOSER/WaveShaper, JS: LOSER/WhiteNoise, JS: LOSER/goniometer, JS: LOSER/phase_rotator, JS: LOSER/pitch_shifter_2, JS: LOSER/stereofield, JS: Liteon/deesser, JS: Liteon/pinknoisegen, JS: Liteon/pseudostereo, JS: Multichannel Routing/Channel Mapper, JS: Phase Rotator, JS: Pitch Down-Shifter, JS: Pitch Octave Up, JS: Pitch Shifter, JS: Pitch/Detune, JS: SMPTE LTC Generator, JS: SMPTE LTC Reader/Meter, JS: Stereo Field, JS: Time Adjustment, JS: Volume/Pan Smoother v5, JS: 3-Band Splitter, JS: 4-Band Splitter, JS: 5-Band Splitter, JS: 8x8 Matrix Mixer, JS: 8-Way Panner, JS: Channel Mixer, JS: Super Pitch, JS: Transient Enhancer, JS: Tonifier, JS: Vocoder, JS: MS Decoder, JS: MS Encoder, JS: Stereo Upmix, JS: IX/Mixer_8xM-1xS, JS: IX/StereoPhaseInverter, JS: IX/PhaseAdjust, JS: IX/SwixMitz.
+(Note: You may also recommend other standard Cockos JSFX modules such as those under the SStillwell, LOSER, Liteon, IX, and Utility directories).
+Provide the exact JSFX plugin name and required sliders/parameters.`;
+      }
       
       const activePlugins = plugins.filter(p => p.type !== 'Studio One Function');
 
@@ -5098,7 +5120,20 @@ The AI was unable to verify these parameters. Please investigate.`;
         
         const activePlugins = plugins.filter(p => p.type !== 'Studio One Function');
 
-        const critique = await getMixCritique(activePlugins, audioBase64, audioUrl, mimeType, isGangstaVox, hasStems, critiqueContext, null, finalReferenceTrack, referenceAudioBase64, geminiFileUri, referenceGeminiFileUri, i18n.language, undefined, analogInstruments, analogHardware, isBusMode, isMultiBandMode, isMasterMode);
+        let fullContext = critiqueContext;
+        if (dawType === 'REAPER' && isJsfxMode) {
+          fullContext += `\n\nCRITICAL DIRECTIVE: YOU MUST ONLY RECOMMEND JSFX PLUGINS FOR THIS MIX CRITIQUE. DO NOT RECOMMEND ANY VST/AU PLUGINS. 
+Only use valid, default REAPER JSFX (JS:). Here is a comprehensive list of actual standard JSFX categories and plugins to use as a reference:
+- Compressors/Dynamics/Limiters: JS: 1175 Compressor, JS: Auto Expander, JS: Event Horizon Clipper/Limiter, JS: Fairly Childish Compressor/Limiter, JS: General Dynamics, JS: LOSER/1175, JS: LOSER/MGA_JSLimiter, JS: LOSER/MasterLimiter, JS: LOSER/MasterTom, JS: LOSER/compciter, JS: LOSER/gate, JS: LOSER/DDC, JS: Liteon/np1136peaklimiter, JS: Multi-Band Compressor, JS: SStillwell/1175, JS: SStillwell/bombastic, JS: SStillwell/dyno, JS: SStillwell/eventhorizon, JS: SStillwell/eventhorizon2, JS: SStillwell/expander, JS: SStillwell/fairlychildish, JS: SStillwell/hugebooty, JS: SStillwell/majorTom, JS: 5-Band Compressor, JS: 3-Band Compressor, JS: Expander / Gate.
+- EQ/Enhancers/Filters: JS: 3-Band EQ, JS: 4-Band EQ, JS: 5-Band Stereo EQ, JS: Auto-peaker, JS: Bandpass Filter, JS: DC Filter, JS: Exciter, JS: Huge Booty Bass Enhancer, JS: LOSER/3BandEQ, JS: LOSER/4BandEQ, JS: LOSER/5BandEQ, JS: LOSER/BasiQ, JS: LOSER/Filter, JS: LOSER/Filter_RC, JS: LOSER/MIDI_EQ, JS: LOSER/VCF, JS: LOSER/saturation, JS: LOSER/stereo_enhancer, JS: Liteon/3bandpeakfilter, JS: Liteon/applefilter12db, JS: Liteon/applefilter24db, JS: Liteon/butterworth24db, JS: Liteon/cheb24db, JS: Liteon/moog24db, JS: Liteon/presenceeq, JS: Liteon/rbj1073, JS: Liteon/rbjeq, JS: Liteon/saturator, JS: Liteon/shelveq, JS: Liteon/statevariable, JS: Liteon/statevariable2, JS: RBJ 1073 EQ, JS: RBJ 4-Band Semi-Parametric EQ, JS: RBJ 7-Band Graphic EQ, JS: RBJ Highpass/Lowpass Filters, JS: SStillwell/1973, JS: SStillwell/badbussmojo, JS: SStillwell/equo, JS: SStillwell/rbj1073, JS: SStillwell/realoud, JS: SStillwell/thunderkick, JS: SStillwell/tilt, JS: Saturation/Soft Clipper, JS: Teej/rbj12eq-teej, JS: 12-Band EQ, JS: Graphic EQ.
+- Modulation/Time: JS: Chorus, JS: Chorus (Stereo), JS: Delay, JS: Delay w/ Chorus, JS: Delay w/ Tempo Ping-Pong, JS: Flanger, JS: Flanger (Stereo), JS: LOSER/FBDelay, JS: LOSER/FBFlanger, JS: LOSER/Flanger, JS: LOSER/Phaser, JS: LOSER/Tremolo, JS: Phaser, JS: Reverb, JS: SStillwell/chorus, JS: SStillwell/chorus_stereo, JS: SStillwell/delay, JS: SStillwell/delay_pong, JS: SStillwell/delay_tempo, JS: SStillwell/flanger, JS: SStillwell/flanger_ext, JS: SStillwell/ozzifier, JS: SStillwell/width, JS: Tremolo, JS: Delay (L/R).
+- Guitar/Amp/Distortion: JS: Distortion, JS: SStillwell/dirtmouth, JS: SStillwell/guitar/AmpModel, JS: SStillwell/guitar/chorus, JS: SStillwell/guitar/distortion, JS: SStillwell/guitar/flanger, JS: SStillwell/guitar/phaser, JS: SStillwell/guitar/tremolo, JS: Tube Harmonics, JS: Wah-Wah, JS: Wig-Wah.
+- Utility/Routing/Imaging/Pitch: JS: 8-Channel Mixer, JS: Audio To MIDI Drum Trigger, JS: Band Splitter, JS: Band Joiner, JS: Dual Pan, JS: FFT Splitter, JS: FFT Splitter (3-band), JS: LOSER/CenterCanceler, JS: LOSER/Dither, JS: LOSER/Downjumper, JS: LOSER/TransientController, JS: LOSER/Upjumper, JS: LOSER/WaveShaper, JS: LOSER/WhiteNoise, JS: LOSER/goniometer, JS: LOSER/phase_rotator, JS: LOSER/pitch_shifter_2, JS: LOSER/stereofield, JS: Liteon/deesser, JS: Liteon/pinknoisegen, JS: Liteon/pseudostereo, JS: Multichannel Routing/Channel Mapper, JS: Phase Rotator, JS: Pitch Down-Shifter, JS: Pitch Octave Up, JS: Pitch Shifter, JS: Pitch/Detune, JS: SMPTE LTC Generator, JS: SMPTE LTC Reader/Meter, JS: Stereo Field, JS: Time Adjustment, JS: Volume/Pan Smoother v5, JS: 3-Band Splitter, JS: 4-Band Splitter, JS: 5-Band Splitter, JS: 8x8 Matrix Mixer, JS: 8-Way Panner, JS: Channel Mixer, JS: Super Pitch, JS: Transient Enhancer, JS: Tonifier, JS: Vocoder, JS: MS Decoder, JS: MS Encoder, JS: Stereo Upmix, JS: IX/Mixer_8xM-1xS, JS: IX/StereoPhaseInverter, JS: IX/PhaseAdjust, JS: IX/SwixMitz.
+(Note: You may also recommend other standard Cockos JSFX modules such as those under the SStillwell, LOSER, Liteon, IX, and Utility directories).
+Provide the exact JSFX plugin name and required sliders/parameters.`;
+        }
+
+        const critique = await getMixCritique(activePlugins, audioBase64, audioUrl, mimeType, isGangstaVox, hasStems, fullContext, null, finalReferenceTrack, referenceAudioBase64, geminiFileUri, referenceGeminiFileUri, i18n.language, undefined, analogInstruments, analogHardware, isBusMode, isMultiBandMode, isMasterMode);
         critique.id = Math.random().toString(36).substr(2, 9);
         critique.isMasterMode = isMasterMode;
         critique.audioBase64 = audioBase64;
@@ -7380,6 +7415,73 @@ The AI was unable to verify these parameters. Please investigate.`;
                           <div className={`absolute top-0.5 left-0.5 w-4 h-4 rounded-full bg-white transition-transform ${isMultiBandMode ? 'translate-x-5' : 'translate-x-0'}`} />
                         </button>
                       </div>
+
+                      {dawType === 'REAPER' && (
+                        <div className="flex items-center gap-2">
+                          <div className="flex items-center gap-1 bg-[#10b981] rounded-full text-white">
+                            <button
+                              onClick={() => {
+                                const jsfxContent = `desc:BeatGangsta Connect
+author:BeatGangsta AI
+version:1.0
+
+slider1:0<0,9999,1>PIN Code
+slider2:0<0,9999,1>User ID (Email Hash)
+
+in_pin:left input
+in_pin:right input
+out_pin:left output
+out_pin:right output
+
+@init
+ext_noinit = 1;
+
+@slider
+
+@block
+
+@sample
+spl0 = spl0;
+spl1 = spl1;
+`;
+                                const blob = new Blob([jsfxContent], { type: 'text/plain;charset=utf-8' });
+                                const url = URL.createObjectURL(blob);
+                                const link = document.createElement('a');
+                                link.href = url;
+                                link.download = 'BeatGangsta_Connect.jsfx';
+                                document.body.appendChild(link);
+                                link.click();
+                                document.body.removeChild(link);
+                                URL.revokeObjectURL(url);
+                              }}
+                              className={`inline-flex items-center gap-2 rounded-l-full px-4 py-2 font-black text-[10px] uppercase tracking-widest transition-colors ${
+                                theme === 'coldest' ? 'bg-[#10b981] text-white hover:bg-[#059669]' : 'bg-[#10b981]/20 text-[#10b981] hover:bg-[#10b981]/30'
+                              }`}
+                            >
+                              <Download className="w-3 h-3" />
+                              BeatGangsta Connect (.jsfx)
+                            </button>
+                            <button 
+                              onClick={() => setShowJsfxHelpModal(true)}
+                              className={`rounded-r-full pr-3 pl-1 py-2 transition-colors flex items-center justify-center ${
+                                theme === 'coldest' ? 'bg-[#10b981] text-white hover:bg-[#059669]' : 'bg-[#10b981]/20 text-[#10b981] hover:bg-[#10b981]/30'
+                              }`}
+                              title="How to use BeatGangsta Connect"
+                            >
+                              <HelpCircle className="w-3.5 h-3.5" />
+                            </button>
+                          </div>
+                          <div className={`inline-flex items-center gap-3 rounded-full px-4 py-2 ${theme === 'coldest' ? 'bg-white/40' : 'bg-black/40'}`}>
+                            <span className={`text-[10px] font-black uppercase tracking-widest transition-colors ${!isJsfxMode ? (theme === 'coldest' ? 'text-slate-900' : 'text-white') : (theme === 'coldest' ? 'text-slate-500' : 'text-white/50')}`}>JSFX Mode</span>
+                            <button 
+                              onClick={() => setIsJsfxMode(!isJsfxMode)}
+                              className={`relative w-10 h-5 rounded-full transition-colors ${isJsfxMode ? 'bg-[#10b981]' : 'bg-slate-400/50'}`}
+                            >
+                              <div className={`absolute top-0.5 left-0.5 w-4 h-4 rounded-full bg-white transition-transform ${isJsfxMode ? 'translate-x-5' : 'translate-x-0'}`} />
+                            </button>
+                          </div>
+                        </div>
+                      )}
                     </div>
                   </div>
                 )}
@@ -7475,7 +7577,7 @@ The AI was unable to verify these parameters. Please investigate.`;
                     </div>
 
                     {isAdminDashboardAuthorized && (
-                      dawType === 'Reaper' ? (
+                      (dawType === 'REAPER' || dawType === 'Reaper') ? (
                         <div className={`p-5 rounded-2xl border transition-all ${
                           theme === 'coldest' 
                             ? 'bg-purple-100/30 border-purple-200 text-slate-850' 
@@ -7572,9 +7674,23 @@ The AI was unable to verify these parameters. Please investigate.`;
                                             {t.isSoloed && <span className="text-yellow-500">Soloed</span>}
                                           </div>
                                         </div>
-                                        <span className="text-[10px] opacity-75 text-purple-400 truncate max-w-[180px] text-right">
-                                          {t.plugins.length > 0 ? t.plugins.join(' ➔ ') : 'dry'}
-                                        </span>
+                                        <div className="text-[10px] opacity-75 text-purple-400 truncate max-w-[200px] text-right flex gap-1 justify-end flex-wrap">
+                                          {t.plugins.length > 0 ? t.plugins.map((p, pIdx) => (
+                                            <span key={pIdx}>
+                                              {p.readableParams ? (
+                                                <button 
+                                                  onClick={() => setReaperSelectedPluginParams({ name: p.name, params: p.readableParams! })}
+                                                  className="hover:text-purple-300 hover:underline transition-colors"
+                                                >
+                                                  {p.name}
+                                                </button>
+                                              ) : (
+                                                <span className="opacity-80">{p.name}</span>
+                                              )}
+                                              {pIdx < t.plugins.length - 1 && <span className="opacity-50 ml-1">➔</span>}
+                                            </span>
+                                          )) : 'dry'}
+                                        </div>
                                       </div>
                                     ))}
                                   </div>
@@ -7583,7 +7699,7 @@ The AI was unable to verify these parameters. Please investigate.`;
                             </div>
                           )}
                         </div>
-                      ) : (
+                      ) : (dawType === 'Studio One' || dawType === 'Bitwig') ? (
                         <div className={`p-5 rounded-2xl border transition-all ${
                           theme === 'coldest' 
                             ? 'bg-purple-100/30 border-purple-200 text-slate-850' 
@@ -7681,7 +7797,7 @@ The AI was unable to verify these parameters. Please investigate.`;
                             </div>
                           )}
                         </div>
-                      )
+                      ) : null
                     )}
 
                     <div className="flex flex-col gap-2">
@@ -9010,6 +9126,107 @@ The AI was unable to verify these parameters. Please investigate.`;
         )}
       </AnimatePresence>
 
+      {/* JSFX Help Modal */}
+      <AnimatePresence>
+        {showJsfxHelpModal && (
+          <div className="fixed inset-0 z-[150] overflow-y-auto bg-black/80 backdrop-blur-sm">
+            <div className="min-h-[100dvh] flex items-center justify-center p-4">
+              <motion.div 
+                initial={{ opacity: 0, scale: 0.9, y: 20 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.9, y: -20 }}
+                className={`max-w-2xl w-full rounded-3xl p-8 border ${
+                  theme === 'coldest'
+                    ? 'bg-white border-slate-200'
+                    : 'bg-zinc-950 border-zinc-800'
+                }`}
+              >
+                <div className="flex justify-between items-start mb-6">
+                  <div>
+                    <h2 className={`text-2xl font-black uppercase tracking-tighter ${
+                      theme === 'coldest' ? 'text-slate-900' : 'text-white'
+                    }`}>
+                      How to use BeatGangsta Connect
+                    </h2>
+                    <p className={`text-sm mt-1 uppercase tracking-widest font-bold ${
+                      theme === 'coldest' ? 'text-[#10b981]' : 'text-[#10b981]'
+                    }`}>
+                      Direct REAPER JSFX Integration
+                    </p>
+                  </div>
+                  <button 
+                    onClick={() => setShowJsfxHelpModal(false)}
+                    className={`p-2 rounded-full transition-colors ${
+                      theme === 'coldest' ? 'hover:bg-slate-100 text-slate-400' : 'hover:bg-zinc-800 text-zinc-500'
+                    }`}
+                  >
+                    <X className="w-5 h-5" />
+                  </button>
+                </div>
+
+                <div className={`space-y-6 ${theme === 'coldest' ? 'text-slate-700' : 'text-zinc-300'}`}>
+                  {/* Step 1 */}
+                  <div className={`p-4 rounded-xl border ${theme === 'coldest' ? 'bg-slate-50 border-slate-100' : 'bg-black/40 border-zinc-800'}`}>
+                    <div className="flex items-center gap-3 mb-2">
+                      <div className="w-6 h-6 rounded-full bg-[#10b981] flex items-center justify-center text-white font-black text-xs">1</div>
+                      <h3 className="font-bold">Download the .jsfx file</h3>
+                    </div>
+                    <p className="text-sm pl-9 opacity-80">Click the "BeatGangsta Connect (.jsfx)" button to download the plugin. This is a lightweight script that runs directly inside REAPER.</p>
+                  </div>
+
+                  {/* Step 2 */}
+                  <div className={`p-4 rounded-xl border ${theme === 'coldest' ? 'bg-slate-50 border-slate-100' : 'bg-black/40 border-zinc-800'}`}>
+                    <div className="flex items-center gap-3 mb-2">
+                      <div className="w-6 h-6 rounded-full bg-[#10b981] flex items-center justify-center text-white font-black text-xs">2</div>
+                      <h3 className="font-bold">Install in REAPER</h3>
+                    </div>
+                    <ul className="text-sm pl-9 opacity-80 list-disc ml-4 space-y-1">
+                      <li>Open REAPER and go to <strong>Options</strong> &gt; <strong>Show REAPER resource path in explorer/finder...</strong></li>
+                      <li>Open the <strong>Effects</strong> folder</li>
+                      <li>Move the downloaded <code>BeatGangsta_Connect.jsfx</code> file into this folder</li>
+                      <li>In REAPER's FX Browser, press <strong>F5</strong> to refresh the list</li>
+                    </ul>
+                  </div>
+
+                  {/* Step 3 */}
+                  <div className={`p-4 rounded-xl border ${theme === 'coldest' ? 'bg-slate-50 border-slate-100' : 'bg-black/40 border-zinc-800'}`}>
+                    <div className="flex items-center gap-3 mb-2">
+                      <div className="w-6 h-6 rounded-full bg-[#10b981] flex items-center justify-center text-white font-black text-xs">3</div>
+                      <h3 className="font-bold">Enable JSFX Mode</h3>
+                    </div>
+                    <p className="text-sm pl-9 opacity-80 mb-2">Toggle the <strong>JSFX Mode</strong> switch next to the download button before running a mix critique.</p>
+                    <p className="text-sm pl-9 opacity-80">When enabled, the AI will <strong>exclusively</strong> recommend standard JSFX plugins included with REAPER (like 1175, RCComp, GAFFEL) and provide their exact slider parameters to match your typed context (e.g., Don Toliver mix traits).</p>
+                  </div>
+
+                  {/* Step 4 */}
+                  <div className={`p-4 rounded-xl border ${theme === 'coldest' ? 'bg-slate-50 border-slate-100' : 'bg-black/40 border-zinc-800'}`}>
+                    <div className="flex items-center gap-3 mb-2">
+                      <div className="w-6 h-6 rounded-full bg-[#10b981] flex items-center justify-center text-white font-black text-xs">4</div>
+                      <h3 className="font-bold">Sync Your Mix</h3>
+                    </div>
+                    <ul className="text-sm pl-9 opacity-80 list-disc ml-4 space-y-1">
+                      <li>Load <strong>BeatGangsta Connect</strong> on any track in REAPER</li>
+                      <li>Enter your <strong>Push REAPER Sync</strong> authorization PIN into the plugin sliders</li>
+                      <li>Click the <strong>Push REAPER Sync</strong> button in the web app</li>
+                      <li>The requested standard JSFX plugins with precisely configured parameters will automatically instantiate onto your channels!</li>
+                    </ul>
+                  </div>
+                </div>
+
+                <button
+                  onClick={() => setShowJsfxHelpModal(false)}
+                  className={`w-full mt-8 py-4 rounded-xl font-black uppercase tracking-widest transition-all ${
+                    theme === 'coldest' ? 'bg-slate-900 text-white hover:bg-slate-800' : 'bg-white text-black hover:bg-zinc-200'
+                  }`}
+                >
+                  Got It
+                </button>
+              </motion.div>
+            </div>
+          </div>
+        )}
+      </AnimatePresence>
+
       <React.Suspense fallback={null}>
         <PaymentMethodModal
           isOpen={showPaymentMethodModal}
@@ -9098,6 +9315,46 @@ The AI was unable to verify these parameters. Please investigate.`;
           initialHardware={analogHardware}
         />
       </React.Suspense>
+
+      {reaperSelectedPluginParams && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className={`relative w-full max-w-lg rounded-2xl shadow-2xl overflow-hidden ${
+            theme === 'coldest' 
+              ? 'bg-white border text-slate-800' 
+              : 'bg-zinc-900 border-zinc-800 text-white'
+          } border`}>
+            {/* Header */}
+            <div className={`px-6 py-4 border-b flex justify-between items-center ${
+              theme === 'coldest' ? 'bg-sky-50 border-slate-200' : 'bg-black/40 border-zinc-800'
+            }`}>
+              <h3 className="font-black text-sm uppercase tracking-widest flex items-center gap-2 text-purple-500">
+                <Settings2 className="w-4 h-4" />
+                {reaperSelectedPluginParams.name} Parameters
+              </h3>
+              <button 
+                onClick={() => setReaperSelectedPluginParams(null)}
+                className={`p-1.5 rounded-full transition-colors ${
+                  theme === 'coldest' ? 'hover:bg-slate-200 text-slate-500' : 'hover:bg-zinc-800 text-zinc-400'
+                }`}
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+            
+            {/* Body */}
+            <div className="p-6 max-h-[60vh] overflow-y-auto custom-scrollbar">
+              <p className={`text-xs mb-3 italic ${theme === 'coldest' ? 'text-slate-500' : 'text-zinc-500'}`}>
+                Extracted readable state parameters from REAPER VST chunk:
+              </p>
+              <pre className={`text-[10px] p-4 rounded-xl overflow-x-auto ${
+                theme === 'coldest' ? 'bg-slate-50 text-slate-800 border border-slate-200' : 'bg-black text-zinc-300 border border-zinc-800'
+              }`}>
+                {reaperSelectedPluginParams.params || 'No parameters readable.'}
+              </pre>
+            </div>
+          </div>
+        </div>
+      )}
 
       <React.Suspense fallback={null}>
         <DrumKitModal

@@ -9,5 +9,14 @@ export async function initDb() {
       accepted_at DATETIME DEFAULT CURRENT_TIMESTAMP
     )
   `);
+  await turso.execute(`
+    CREATE TABLE IF NOT EXISTS reaper_syncs (
+      id TEXT PRIMARY KEY,
+      email TEXT NOT NULL,
+      pin TEXT NOT NULL,
+      payload TEXT NOT NULL,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    )
+  `);
   console.log('Database initialized');
 }

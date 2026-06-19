@@ -1,6 +1,12 @@
+export interface ReaperPlugin {
+  name: string;
+  rawState?: string;
+  readableParams?: string;
+}
+
 export interface ReaperTrack {
   name: string;
-  plugins: string[];
+  plugins: ReaperPlugin[];
   type: 'audio' | 'midi' | 'folder' | 'bus';
   isMuted: boolean;
   isSoloed: boolean;
@@ -28,6 +34,9 @@ export function parseRpp(content: string): ReaperTrack[] {
   let trackBraceLevel = 0;
   let insideTrack = false;
 
+  let currentPlugin: { name: string; stateLines: string[] } | null = null;
+  let pluginBraceLevel = 0;
+
   for (let i = 0; i < lines.length; i++) {
     const trimmed = lines[i].trim();
     if (!trimmed) continue;
@@ -54,7 +63,8 @@ export function parseRpp(content: string): ReaperTrack[] {
           let plugName = match[2].trim();
           // Stripping down system prefixes for human-readable critiquing
           plugName = plugName.replace(/^(VST3|VST2|VST|AU|JS|DX|VST3i|VSTi):\s*/i, '');
-          currentTrack.plugins.push(plugName);
+          currentPlugin = { name: plugName, stateLines: [] };
+          pluginBraceLevel = braceLevel;
         }
       } else if (insideTrack && trimmed.startsWith('<SOURCE')) {
         // Search inside source block for embedded stem names
@@ -81,7 +91,7 @@ export function parseRpp(content: string): ReaperTrack[] {
     }
 
     // Capture parent track state parameters
-    if (insideTrack && currentTrack) {
+    if (insideTrack && currentTrack && !currentPlugin) {
       if (trimmed.startsWith('NAME ')) {
         const match = trimmed.match(/NAME\s+"([^"]+)"/i) || trimmed.match(/NAME\s+(.+)$/i);
         if (match) {
@@ -112,11 +122,43 @@ export function parseRpp(content: string): ReaperTrack[] {
           }
         }
       }
+    } else if (insideTrack && currentTrack && currentPlugin) {
+      // Capture base64 state data (or any other readable properties)
+      if (!trimmed.startsWith('<') && !trimmed.startsWith('>')) {
+        currentPlugin.stateLines.push(trimmed);
+      }
     }
 
     // Track block termination check
     if (trimmed === '>') {
-      if (insideTrack && braceLevel === trackBraceLevel) {
+      if (currentPlugin && braceLevel === pluginBraceLevel) {
+        // We finished the plugin block
+        // Decode base64 to extract legible strings
+        let b64 = currentPlugin.stateLines.map(l => l.replace(/[^A-Za-z0-9+/=]/g, '')).join('');
+        let legibleText = '';
+        if (b64.length > 0) {
+          try {
+            // Note: browser atob might fail if padding is wrong
+            while (b64.length % 4 !== 0) b64 += '=';
+            const bin = atob(b64);
+            // Naive string extraction: looking for sequences of printable chars
+            // FabFilter and others often leave XML or param names in plain text inside chunk
+            const strings = bin.match(/[\x20-\x7E]{4,}/g);
+            if (strings) {
+              legibleText = strings.join('\n');
+            }
+          } catch (e) {
+            // ignore base64 errors
+          }
+        }
+        
+        currentTrack?.plugins.push({
+          name: currentPlugin.name,
+          rawState: b64,
+          readableParams: legibleText
+        });
+        currentPlugin = null;
+      } else if (insideTrack && braceLevel === trackBraceLevel) {
         if (currentTrack) {
           tracks.push(currentTrack);
           currentTrack = null;

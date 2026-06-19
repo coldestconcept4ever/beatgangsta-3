@@ -4565,6 +4565,59 @@ app.post("/api/debug/dawproject", (req, res) => {
   }
 });
 
+import { turso } from "./src/db/turso.js";
+import { v4 as uuidv4 } from "uuid";
+
+app.post("/api/reaper-sync/push", express.json({limit: '5mb'}), async (req, res) => {
+  try {
+    const { email, pin, payload } = req.body;
+    if (!email || !pin || !payload) {
+      return res.status(400).json({ error: "Missing email, pin or payload" });
+    }
+
+    // Delete existing sync for this email/pin if any, to keep it clean (or just keep one per email)
+    await turso.execute({
+      sql: 'DELETE FROM reaper_syncs WHERE email = ?',
+      args: [email.toLowerCase().trim()]
+    });
+
+    const id = uuidv4();
+    await turso.execute({
+      sql: 'INSERT INTO reaper_syncs (id, email, pin, payload) VALUES (?, ?, ?, ?)',
+      args: [id, email.toLowerCase().trim(), String(pin).trim(), payload]
+    });
+
+    res.json({ success: true });
+  } catch (e: any) {
+    console.error("Failed to push reaper sync:", e);
+    res.status(500).json({ error: "Failed to push sync to cloud" });
+  }
+});
+
+app.get("/api/reaper-sync/pull", async (req, res) => {
+  try {
+    const { email, pin } = req.query;
+    if (!email || !pin) {
+      return res.status(400).json({ error: "Missing email or pin" });
+    }
+
+    const result = await turso.execute({
+      sql: 'SELECT payload FROM reaper_syncs WHERE email = ? AND pin = ? ORDER BY created_at DESC LIMIT 1',
+      args: [String(email).toLowerCase().trim(), String(pin).trim()]
+    });
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: "No sync found for this email and PIN" });
+    }
+
+    const payload = result.rows[0].payload;
+    res.send(payload); // Send as text
+  } catch (e: any) {
+    console.error("Failed to pull reaper sync:", e);
+    res.status(500).json({ error: "Failed to pull sync from cloud" });
+  }
+});
+
 // Catch-all for undefined API routes
 app.all(/\/api\/.*/, (req, res) => {
   res.status(404).json({ error: `API route not found: ${req.method} ${req.url}` });

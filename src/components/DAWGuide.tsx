@@ -177,11 +177,66 @@ export const DAWGuide: React.FC<DAWGuideProps> = ({ theme, onClose, userPlugins 
     setTimeout(() => setCopiedDiag(false), 2000);
   };
 
-  const downloadReaperScript = () => {
+  const downloadReaperScript = async () => {
+    // 1. Generate mascot PNG via offscreen canvas
+    const canvas = document.createElement('canvas');
+    canvas.width = 120;
+    canvas.height = 120;
+    const ctx = canvas.getContext('2d');
+    if (ctx) {
+      // Background / Face
+      const cx = 60, cy = 60, r = 45;
+      
+      // Face circle
+      ctx.fillStyle = '#0f172a'; // dark outline/shadow
+      ctx.beginPath(); ctx.arc(cx, cy, r + 4, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = '#0ea5e9'; // sky blue
+      ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI * 2); ctx.fill();
+
+      // Durag cap
+      ctx.fillStyle = '#f8fafc'; // light theme base or dark
+      ctx.beginPath(); ctx.arc(cx, cy - 10, r + 1, Math.PI, 0); ctx.fill();
+      ctx.fillRect(cx - r - 2, cy - 15, r * 2 + 4, 15); // brim
+      
+      // Durag knot
+      ctx.beginPath(); ctx.moveTo(cx + r, cy - 5); ctx.lineTo(cx + r + 25, cy + 15); ctx.lineTo(cx + r + 8, cy + 25); ctx.fill();
+      ctx.beginPath(); ctx.moveTo(cx + r, cy - 5); ctx.lineTo(cx + r + 15, cy + 28); ctx.lineTo(cx - 5 + r, cy + 35); ctx.fill();
+
+      // Eyes
+      ctx.fillStyle = '#f8fafc'; // bg_base for eyes
+      const lx = cx - 18, rx = cx + 18, ey = cy + 5;
+      ctx.beginPath(); ctx.arc(lx, ey, 10, 0, Math.PI*2); ctx.fill();
+      ctx.beginPath(); ctx.arc(rx, ey, 10, 0, Math.PI*2); ctx.fill();
+
+      // Eyelids
+      ctx.fillStyle = '#0ea5e9';
+      ctx.fillRect(lx - 12, ey - 15, 24, 12);
+      ctx.fillRect(rx - 12, ey - 15, 24, 12);
+
+      // Pupils
+      ctx.fillStyle = '#ffffff';
+      ctx.beginPath(); ctx.arc(lx + 3, ey + 2, 4, 0, Math.PI*2); ctx.fill();
+      ctx.beginPath(); ctx.arc(rx - 2, ey + 2, 4, 0, Math.PI*2); ctx.fill();
+
+      // Grill
+      const gx = cx - 20, gy = cy + 20;
+      ctx.fillStyle = '#f8fafc'; // mouth background
+      ctx.fillRect(gx - 3, gy - 3, 46, 16);
+      
+      for (let i = 0; i < 5; i++) {
+        ctx.fillStyle = i % 2 === 0 ? '#f1f5f9' : '#facc15';
+        ctx.fillRect(gx + i * 8, gy, 7, 10);
+      }
+      
+      // Grill gap
+      ctx.strokeStyle = '#000000'; ctx.lineWidth = 2;
+      ctx.beginPath(); ctx.moveTo(gx - 3, gy + 5); ctx.lineTo(gx + 43, gy + 5); ctx.stroke();
+    }
+    const pngBase64 = canvas.toDataURL('image/png').split(',')[1];
+
     const luaContent = `-- [[
 --   BeatGangsta Link Client - Coldest Iced Edition
 --   Copyright (c) 2026 BeatGangsta Inc. All rights reserved.
---   Designed with ♥ for coldestconcept@gmail.com
 -- ]]
 
 local version = "2.2.0"
@@ -189,7 +244,7 @@ local author = "BeatGangsta AI Studio"
 local theme_name = "Coldest Iced Frost"
 
 -- Init GUI Window (Cosmic Slate Frame proportions)
-gfx.init("BEATGANGSTA • COLDEST CONCEPT LINK", 450, 640)
+gfx.init("BEATGANGSTA • COLDEST CONCEPT LINK", 450, 710)
 
 -- Font Configuration (Falls back gracefully in Reaper's native renderer)
 gfx.setfont(1, "Space Grotesk", 20, 98) -- Display Bold Heading
@@ -228,100 +283,11 @@ local colors = {
   crimson_err = { 220/255, 38/255, 38/255 }     -- Alert red mute/solo flags (#dc2626)
 }
 
--- High-Fidelity Geometric Mascot Render (Durag & Grill)
-function draw_mascot_logo(bx, by)
-  -- Center coordinates of the head
-  local cx = bx + 22
-  local cy = by + 18
-  local r = 16
-  
-  -- 1. Outer Head & Shaded Face (Brand Sky Blue Gradient)
-  gfx.set(colors.text_primary[1], colors.text_primary[2], colors.text_primary[3], 1)
-  gfx.circle(cx, cy, r + 1.5, true)
-  
-  for i = r, 0, -0.5 do
-    local intensity = 0.5 + (1 - (i / r)) * 0.5
-    gfx.set(colors.sky_accent[1] * intensity, colors.sky_accent[2] * intensity, colors.sky_accent[3], 1)
-    gfx.circle(cx, cy, i, true)
-  end
-  
-  -- 2. THE DURAG CAP
-  gfx.set(colors.bg_base[1], colors.bg_base[2], colors.bg_base[3], 1)
-  -- Upper durag dome (clipped by drawing over the top of the circle)
-  gfx.circle(cx, cy - 4, r + 0.5, true)
-  gfx.set(1, 1, 1, 0.1)
-  gfx.circle(cx + 4, cy - 8, r * 0.5, true) -- Sheen on durag
-  
-  gfx.set(colors.bg_base[1], colors.bg_base[2], colors.bg_base[3], 1)
-  gfx.rect(cx - r - 1, cy - 10, r * 2 + 2, 8, true)
-  
-  -- Durag ties/knot on the right side
-  gfx.triangle(cx + r - 2, cy - 2, cx + r + 8, cy + 5, cx + r + 5, cy + 9)
-  gfx.triangle(cx + r - 2, cy - 2, cx + r + 2, cy + 10, cx + r - 3, cy + 14)
-  -- Outline for knot
-  gfx.set(colors.text_primary[1], colors.text_primary[2], colors.text_primary[3], 0.2)
-  gfx.line(cx + r - 2, cy - 2, cx + r + 8, cy + 5)
-  gfx.line(cx + r - 2, cy - 2, cx + r - 3, cy + 14)
-  
-  -- 3. Mascot Eyes (Slightly slanted/badass look)
-  local lx = cx - r * 0.4
-  local rx = cx + r * 0.4
-  local ey = cy + 3
-  
-  -- Black background for eyes
-  gfx.set(colors.bg_base[1], colors.bg_base[2], colors.bg_base[3], 1)
-  gfx.circle(lx, ey - 2, 3.5, true)
-  gfx.circle(lx, ey + 1.5, 3.5, true)
-  gfx.circle(lx, ey, 3.5, true)
-  
-  gfx.circle(rx, ey - 2, 3.5, true)
-  gfx.circle(rx, ey + 1.5, 3.5, true)
-  gfx.circle(rx, ey, 3.5, true)
-  
-  -- Eyelids (Halfway down for a relaxed/confident look)
-  gfx.set(colors.sky_accent[1], colors.sky_accent[2], colors.sky_accent[3], 1)
-  gfx.rect(lx - 4, ey - 6, 8, 4, true)
-  gfx.rect(rx - 4, ey - 6, 8, 4, true)
-  
-  -- Eye Outline / Eyelash Rim
-  gfx.set(0, 0, 0, 0.4)
-  gfx.line(lx - 4, ey - 2, lx + 4, ey - 1)
-  gfx.line(rx - 4, ey - 1, rx + 4, ey - 2)
-  
-  -- White pupils
-  gfx.set(1, 1, 1, 1)
-  gfx.circle(lx + 1, ey + 0.5, 1.2, true)
-  gfx.circle(rx - 0.5, ey + 0.5, 1.2, true)
-  
-  -- 4. THE ICED-OUT GRILL
-  local grill_y = cy + r * 0.55
-  local grill_w = 14
-  local grill_h = 5
-  local grill_x = cx - grill_w / 2
-  
-  -- Dark mouth cavity
-  gfx.set(colors.bg_base[1], colors.bg_base[2], colors.bg_base[3], 1)
-  gfx.rect(grill_x - 1, grill_y - 1, grill_w + 2, grill_h + 2, true)
-  
-  -- Base Silver Grill Teeth
-  for idx = 0, 4 do
-    local tx = grill_x + idx * 3
-    if idx % 2 == 0 then
-      gfx.set(241/255, 245/255, 249/255, 1) -- Silver/Ice
-    else
-      gfx.set(250/255, 204/255, 21/255, 1)  -- Gold Accent
-    end
-    gfx.rect(tx, grill_y, 2.5, grill_h, true)
-  end
-  
-  -- Grill gap line
-  gfx.set(0, 0, 0, 0.8)
-  gfx.line(grill_x, grill_y + grill_h / 2, grill_x + grill_w, grill_y + grill_h / 2)
-  
-  -- Diamond sparkles
-  gfx.set(1, 1, 1, 0.9)
-  gfx.circle(grill_x + 1, grill_y + 1, 0.8, true)
-  gfx.circle(grill_x + 10, grill_y + 3, 0.8, true)
+-- Load the mascot image from the script's directory
+local script_path = debug.getinfo(1, "S").source:match([=[^@?(.*[\\/])]=])
+local logo_img = -1
+if script_path then
+  logo_img = gfx.loadimg(1, script_path .. "beatgangsta_logo.png")
 end
 
 -- Gather Live REAPER session metrics in real-time
@@ -492,8 +458,16 @@ function draw_grid_loop()
   gfx.y = 44
   gfx.drawstr("Coldest Iced Fallback Client v" .. version)
   
-  -- Draw BeatGangsta Mascot Vector next to title
-  draw_mascot_logo(gfx.w - 65, 23)
+  -- Draw BeatGangsta Mascot Image next to title
+  if logo_img ~= -1 then
+    local w, h = gfx.getimgdim(logo_img)
+    if w > 0 and h > 0 then
+      local scale = 40 / h
+      gfx.x = gfx.w - 70
+      gfx.y = 15
+      gfx.blit(logo_img, scale, 0)
+    end
+  end
   
   -- PANEL 1: Authenticate Connection Card
   local cy = 100
@@ -642,8 +616,10 @@ function draw_grid_loop()
       state.status_sec_msg = "Inserts parsed and exported directly to your Clipboard!"
     end
   else
-    draw_custom_button(24, fy + 54, gfx.w - 48, 44, "SYNC GEAR RACK & CRITIQUE NOW", true, true)
+    draw_custom_button(24, fy + 54, gfx.w - 48, 44, "^ EXPORT GEAR RACK TO BEATGANGSTA ^", true, true)
   end
+  
+  draw_custom_button(24, fy + 106, gfx.w - 48, 44, "v IMPORT RECIPE PLUGINS TO TRACKS v", true, true)
 end
 
 -- Process Interactivity, mouse inputs, keystroke triggers
@@ -680,12 +656,100 @@ function process_interactions()
       if not state.is_syncing then
         if mx >= 24 and mx <= gfx.w - 24 and my >= fy + 54 and my <= fy + 98 then
           trigger_session_export()
+        elseif mx >= 24 and mx <= gfx.w - 24 and my >= fy + 106 and my <= fy + 150 then
+          import_beatgangsta_sync()
         end
       end
     end
   else
     mouse_was_down = false
   end
+end
+
+-- Import Mix Recipe Pulls over HTTP
+function import_beatgangsta_sync()
+  if state.email == "" or state.token == "" then
+    state.status_msg = "Error: Authentication Required"
+    state.status_sec_msg = "Please enter Email and Authorization Code."
+    return
+  end
+
+  state.status_msg = "Contacting BeatGangsta Cloud..."
+  state.status_sec_msg = "Pulling Sync Payload..."
+  
+  local origin = "${window.location.origin}"
+  local url = origin .. "/api/reaper-sync/pull?email=" .. state.email .. "&pin=" .. state.token
+  
+  local tmp_file = os.tmpname()
+  if tmp_file:sub(1,1) == "\\" then tmp_file = os.getenv("TMP") .. tmp_file end
+
+  local is_win = string.find(reaper.GetOS(), "Win") ~= nil
+  if is_win then
+    os.execute('curl.exe -sL "' .. url .. '" -o "' .. tmp_file .. '"')
+  else
+    os.execute('curl -sL "' .. url .. '" -o "' .. tmp_file .. '"')
+  end
+  
+  local f = io.open(tmp_file, "r")
+  if not f then 
+    state.status_msg = "Error connecting to server."
+    state.status_sec_msg = "Check your internet connection."
+    return 
+  end
+  
+  local content = f:read("*all")
+  f:close()
+  os.remove(tmp_file)
+  
+  if content == "" or string.match(content, "^{%s*\"error\"") then
+    state.status_msg = "Sync Payload not found!"
+    state.status_sec_msg = "Ensure you clicked Push Sync in the Web App."
+    return
+  end
+  
+  reaper.Undo_BeginBlock()
+  
+  local current_track = nil
+  local current_fx_idx = -1
+  for line in content:gmatch("([^\\n]+)") do
+    if line:sub(1, 6) == "TRACK|" then
+      local track_name = line:sub(7)
+      -- Trim CR Windows line endings if any
+      track_name = track_name:gsub("\\r", "")
+      current_track = nil
+      current_fx_idx = -1
+      for i=0, reaper.CountTracks(0)-1 do
+        local tr = reaper.GetTrack(0, i)
+        local _, name = reaper.GetSetMediaTrackInfo_String(tr, "P_NAME", "", false)
+        if name == track_name then
+          current_track = tr
+          break
+        end
+      end
+    elseif line:sub(1, 3) == "FX|" and current_track then
+      local fx_name = line:sub(4)
+      fx_name = fx_name:gsub("\\r", "")
+      current_fx_idx = reaper.TrackFX_AddByName(current_track, fx_name, false, -1)
+      if current_fx_idx >= 0 then
+        reaper.TrackFX_SetOpen(current_track, current_fx_idx, true)
+      end
+    elseif line:sub(1, 6) == "PARAM|" and current_track and current_fx_idx >= 0 then
+      local p_data = line:sub(7)
+      local split_pos = p_data:find("|")
+      if split_pos then
+        local p_idx = tonumber(p_data:sub(1, split_pos - 1))
+        local p_val = tonumber(p_data:sub(split_pos + 1))
+        if p_idx and p_val then
+          reaper.TrackFX_SetParam(current_track, current_fx_idx, p_idx, p_val)
+        end
+      end
+    end
+  end
+  
+  reaper.Undo_EndBlock("BeatGangsta Recipe Sync", -1)
+  
+  state.status_msg = "Recipe Synced Successfully!"
+  state.status_sec_msg = "Suggested JSFX & VSTs applied to tracks."
 end
 
 -- Assemble exact JSON Session profile payload & dump to project and clipboard
@@ -785,14 +849,19 @@ end
 core_thread_loop()
 `;
 
-    const blob = new Blob([luaContent], { type: 'text/plain;charset=utf-8' });
+    const zip = new JSZip();
+    zip.file("beatgangsta_reaper_sync.lua", luaContent);
+    zip.file("beatgangsta_logo.png", pngBase64, { base64: true });
+
+    const blob = await zip.generateAsync({ type: "blob" });
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.href = url;
-    link.download = 'beatgangsta_reaper_sync.lua';
+    link.download = 'BeatGangsta_ReaperLink.zip';
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
+    URL.revokeObjectURL(url);
   };
 
   const containerClasses = theme === 'coldest' 
@@ -1033,17 +1102,17 @@ core_thread_loop()
                       }`}
                     >
                       <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
-                      Download beatgangsta_reaper_sync.lua
+                      Download BeatGangsta Link Bundle (.zip)
                     </button>
 
                     <div className="space-y-3 text-xs">
                       <div className="flex gap-3">
                         <div className="w-5 h-5 rounded-full bg-sky-500/20 text-sky-500 flex items-center justify-center font-bold text-[10px] flex-shrink-0">1</div>
-                        <p className="leading-normal">Download the script and place it in your REAPER Scripts directory or Desktop.</p>
+                        <p className="leading-normal">Download and <strong>extract</strong> the ZIP bundle into your REAPER Scripts directory or Desktop.</p>
                       </div>
                       <div className="flex gap-3">
                         <div className="w-5 h-5 rounded-full bg-sky-500/20 text-sky-500 flex items-center justify-center font-bold text-[10px] flex-shrink-0">2</div>
-                        <p className="leading-normal">In REAPER, open the <strong className="font-bold">Actions List</strong> (press <code className="bg-black/10 px-1 py-0.5 rounded">?</code>), select <strong className="font-bold">New Action...</strong> &gt; <strong className="font-bold">Load ReaScript...</strong> and choose the file.</p>
+                        <p className="leading-normal">In REAPER, open the <strong className="font-bold">Actions List</strong> (press <code className="bg-black/10 px-1 py-0.5 rounded">?</code>), select <strong className="font-bold">New Action...</strong> &gt; <strong className="font-bold">Load ReaScript...</strong> and choose the extracted <strong>beatgangsta_reaper_sync.lua</strong> file.</p>
                       </div>
                       <div className="flex gap-3">
                         <div className="w-5 h-5 rounded-full bg-sky-500/20 text-sky-500 flex items-center justify-center font-bold text-[10px] flex-shrink-0">3</div>

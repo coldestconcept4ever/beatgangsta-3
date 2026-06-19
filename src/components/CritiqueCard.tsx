@@ -412,6 +412,109 @@ export const CritiqueCard: React.FC<CritiqueCardProps> = ({ critique, stems = []
     }
   };
 
+  const handleExportReaperMarkers = () => {
+    try {
+      // REAPER Region/Marker Manager CSV format
+      // #,Name,Start,End,Length,Color
+      let csvContent = "#,Name,Start,End,Length,Color\n";
+      let markerIndex = 1;
+      
+      // We will place all track feedback sequentially as markers roughly starting at 0:01
+      // with a few seconds spacing so they form a timeline of notes
+      critique.actionPlan.forEach((plan, idx) => {
+        const timeSec = idx * 2.0; // Place each note 2 seconds apart for easy reading
+        const mins = Math.floor(timeSec / 60);
+        const secs = (timeSec % 60).toFixed(3);
+        const timestamp = `0:${secs.padStart(6, '0')}`;
+        
+        let feedbackLines = `${plan.issue} -> ${plan.solution}`.trim();
+        // Strip quotes and newlines to keep CSV clean
+        feedbackLines = feedbackLines.replace(/"/g, '""').replace(/\n/g, ' ');
+        
+        const trackNameContext = plan.targetStem ? `[${plan.targetStem}] ` : '';
+        csvContent += `M${markerIndex},"[BG AI] ${trackNameContext}${feedbackLines}",${timestamp},,,\n`;
+        markerIndex++;
+      });
+      
+      // And overall feedback
+      const overallStr = critique.overallFeedback.replace(/"/g, '""').replace(/\n/g, ' ');
+      csvContent += `M${markerIndex},"[BG AI] OVERALL: ${overallStr}",0:00.000,,,\n`;
+
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `${critique.title.replace(/\s+/g, '_')}_REAPER_Markers.csv`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error("REAPER Marker Export failed:", error);
+      alert("Failed to export REAPER mapping.");
+    }
+  };
+
+  const [isPushingSync, setIsPushingSync] = useState(false);
+  const [syncPin, setSyncPin] = useState<string | null>(null);
+
+  const handlePushReaperSync = async () => {
+    try {
+      let txtContent = "";
+      
+      critique.actionPlan.forEach(plan => {
+        if (!plan.targetStem) return;
+        txtContent += `TRACK|${plan.targetStem}\n`;
+        plan.recommendedChain.forEach(req => {
+          txtContent += `FX|${req.name}\n`;
+          let paramIdx = 0;
+          if (req.deepDive) {
+            req.deepDive.forEach(dive => {
+              const numVal = parseFloat(String(dive.value).replace(/[^0-9.-]/g, ''));
+              if (!isNaN(numVal)) {
+                txtContent += `PARAM|${paramIdx}|${numVal}\n`;
+              }
+              paramIdx++;
+            });
+          }
+        });
+      });
+      
+      // We need an email. Ask the user.
+      const savedEmail = localStorage.getItem('beatgangsta_sync_email') || '';
+      const email = prompt("Enter your email to sync to REAPER:", savedEmail);
+      if (!email) return;
+      localStorage.setItem('beatgangsta_sync_email', email.trim());
+
+      setIsPushingSync(true);
+      const generatedPin = Math.floor(1000 + Math.random() * 9000).toString(); // 4 digit pin
+      
+      const res = await fetch('/api/reaper-sync/push', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          email: email.trim(),
+          pin: generatedPin,
+          payload: txtContent
+        })
+      });
+
+      if (!res.ok) {
+        throw new Error("Failed to push sync");
+      }
+
+      setSyncPin(generatedPin);
+      alert(`Sync pushed successfully! Open REAPER and run BeatGangsta Connect.\n\nYour Email: ${email.trim()}\nYour PIN: ${generatedPin}`);
+    } catch (error) {
+      console.error("REAPER Sync Push failed:", error);
+      alert("Failed to push REAPER Sync to cloud.");
+    } finally {
+      setIsPushingSync(false);
+    }
+  };
+
   const handleSpecificHelpSearch = async () => {
     if (!specificHelpQuery.trim()) return;
     
@@ -586,6 +689,31 @@ export const CritiqueCard: React.FC<CritiqueCardProps> = ({ critique, stems = []
           >
             {isExportingDawProject ? <Loader2 className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />}
             {isExportingDawProject ? t('exporting', { progress: 100 }) : 'DAWProject'}
+          </button>
+          
+          <button 
+            onClick={handleExportReaperMarkers}
+            className={`shrink-0 px-8 py-4 rounded-full font-black text-xs uppercase tracking-widest transition-all shadow-xl hover:scale-105 active:scale-95 flex items-center gap-2 min-w-[160px] justify-center ${
+              theme === 'coldest'
+                ? 'bg-emerald-600 text-white hover:bg-emerald-700'
+                : 'bg-emerald-500/20 text-emerald-300 hover:bg-emerald-500/30'
+            }`}
+          >
+            <Download className="w-4 h-4" />
+            REAPER Markers (.csv)
+          </button>
+
+          <button 
+            onClick={handlePushReaperSync}
+            disabled={isPushingSync}
+            className={`shrink-0 px-8 py-4 rounded-full font-black text-xs uppercase tracking-widest transition-all shadow-xl hover:scale-105 active:scale-95 flex items-center gap-2 min-w-[160px] justify-center ${
+              theme === 'coldest'
+                ? 'bg-blue-600 text-white hover:bg-blue-700'
+                : 'bg-blue-500/20 text-blue-300 hover:bg-blue-500/30'
+            }`}
+          >
+            {isPushingSync ? <Loader2 className="w-4 h-4 animate-spin" /> : <RefreshCw className="w-4 h-4" />}
+            Push REAPER Sync
           </button>
           {isExporting && (
             <div className="absolute -bottom-2 left-0 right-0 h-1 bg-black/10 rounded-full overflow-hidden">
