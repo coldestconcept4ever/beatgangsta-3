@@ -222,6 +222,16 @@ async function initDb() {
           uploaded_at DATETIME DEFAULT CURRENT_TIMESTAMP
         )
       `);
+
+      await client.execute(`
+        CREATE TABLE IF NOT EXISTS reaper_syncs (
+          id TEXT PRIMARY KEY,
+          email TEXT NOT NULL,
+          pin TEXT NOT NULL,
+          payload TEXT NOT NULL,
+          created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+        )
+      `);
       
       // Migration: Add gmail column if it doesn't exist
       try {
@@ -4575,14 +4585,16 @@ app.post("/api/reaper-sync/push", express.json({limit: '5mb'}), async (req, res)
       return res.status(400).json({ error: "Missing email, pin or payload" });
     }
 
+    const client = getDb();
+
     // Delete existing sync for this email/pin if any, to keep it clean (or just keep one per email)
-    await turso.execute({
+    await client.execute({
       sql: 'DELETE FROM reaper_syncs WHERE email = ?',
       args: [email.toLowerCase().trim()]
     });
 
-    const id = uuidv4();
-    await turso.execute({
+    const id = crypto.randomUUID();
+    await client.execute({
       sql: 'INSERT INTO reaper_syncs (id, email, pin, payload) VALUES (?, ?, ?, ?)',
       args: [id, email.toLowerCase().trim(), String(pin).trim(), payload]
     });
@@ -4601,7 +4613,8 @@ app.get("/api/reaper-sync/pull", async (req, res) => {
       return res.status(400).json({ error: "Missing email or pin" });
     }
 
-    const result = await turso.execute({
+    const client = getDb();
+    const result = await client.execute({
       sql: 'SELECT payload FROM reaper_syncs WHERE email = ? AND pin = ? ORDER BY created_at DESC LIMIT 1',
       args: [String(email).toLowerCase().trim(), String(pin).trim()]
     });

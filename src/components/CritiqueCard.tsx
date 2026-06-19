@@ -457,8 +457,15 @@ export const CritiqueCard: React.FC<CritiqueCardProps> = ({ critique, stems = []
 
   const [isPushingSync, setIsPushingSync] = useState(false);
   const [syncPin, setSyncPin] = useState<string | null>(null);
+  const [syncEmail, setSyncEmail] = useState<string>(() => localStorage.getItem('beatgangsta_sync_email') || '');
+  const [showEmailInput, setShowEmailInput] = useState(false);
 
   const handlePushReaperSync = async () => {
+    if (!syncEmail) {
+      setShowEmailInput(true);
+      return;
+    }
+
     try {
       let txtContent = "";
       
@@ -480,11 +487,7 @@ export const CritiqueCard: React.FC<CritiqueCardProps> = ({ critique, stems = []
         });
       });
       
-      // We need an email. Ask the user.
-      const savedEmail = localStorage.getItem('beatgangsta_sync_email') || '';
-      const email = prompt("Enter your email to sync to REAPER:", savedEmail);
-      if (!email) return;
-      localStorage.setItem('beatgangsta_sync_email', email.trim());
+      localStorage.setItem('beatgangsta_sync_email', syncEmail.trim());
 
       setIsPushingSync(true);
       const generatedPin = Math.floor(1000 + Math.random() * 9000).toString(); // 4 digit pin
@@ -495,7 +498,7 @@ export const CritiqueCard: React.FC<CritiqueCardProps> = ({ critique, stems = []
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({
-          email: email.trim(),
+          email: syncEmail.trim(),
           pin: generatedPin,
           payload: txtContent
         })
@@ -506,7 +509,6 @@ export const CritiqueCard: React.FC<CritiqueCardProps> = ({ critique, stems = []
       }
 
       setSyncPin(generatedPin);
-      alert(`Sync pushed successfully! Open REAPER and run BeatGangsta Connect.\n\nYour Email: ${email.trim()}\nYour PIN: ${generatedPin}`);
     } catch (error) {
       console.error("REAPER Sync Push failed:", error);
       alert("Failed to push REAPER Sync to cloud.");
@@ -703,18 +705,78 @@ export const CritiqueCard: React.FC<CritiqueCardProps> = ({ critique, stems = []
             REAPER Markers (.csv)
           </button>
 
-          <button 
-            onClick={handlePushReaperSync}
-            disabled={isPushingSync}
-            className={`shrink-0 px-8 py-4 rounded-full font-black text-xs uppercase tracking-widest transition-all shadow-xl hover:scale-105 active:scale-95 flex items-center gap-2 min-w-[160px] justify-center ${
-              theme === 'coldest'
-                ? 'bg-blue-600 text-white hover:bg-blue-700'
-                : 'bg-blue-500/20 text-blue-300 hover:bg-blue-500/30'
-            }`}
-          >
-            {isPushingSync ? <Loader2 className="w-4 h-4 animate-spin" /> : <RefreshCw className="w-4 h-4" />}
-            Push REAPER Sync
-          </button>
+          <div className="flex flex-col gap-2">
+            <button 
+              onClick={handlePushReaperSync}
+              disabled={isPushingSync}
+              className={`shrink-0 px-8 py-4 rounded-full font-black text-xs uppercase tracking-widest transition-all shadow-xl hover:scale-105 active:scale-95 flex items-center gap-2 min-w-[160px] justify-center ${
+                theme === 'coldest'
+                  ? 'bg-blue-600 text-white hover:bg-blue-700'
+                  : 'bg-blue-500/20 text-blue-300 hover:bg-blue-500/30'
+              } ${syncPin ? 'border-2 border-emerald-400' : ''}`}
+            >
+              {isPushingSync ? <Loader2 className="w-4 h-4 animate-spin" /> : (syncPin ? <Check className="w-4 h-4" /> : <RefreshCw className="w-4 h-4" />)}
+              {syncPin ? 'Sync Pushed' : 'Push REAPER Sync'}
+            </button>
+            
+            <AnimatePresence>
+              {showEmailInput && !syncPin && (
+                <motion.div 
+                  initial={{ opacity: 0, y: -10 }} 
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -10 }}
+                  className="flex flex-col gap-2 p-3 rounded-xl bg-blue-500/10 border border-blue-500/20"
+                >
+                  <label className="text-[10px] font-black uppercase tracking-widest opacity-60">Enter Email to Sync:</label>
+                  <div className="flex gap-2">
+                    <input 
+                      type="email" 
+                      value={syncEmail}
+                      onChange={(e) => setSyncEmail(e.target.value)}
+                      placeholder="mixer@gmail.com"
+                      className={`flex-1 px-3 py-2 rounded-lg text-xs bg-black/20 border border-white/10 focus:outline-none focus:border-blue-500`}
+                    />
+                    <button 
+                      onClick={handlePushReaperSync}
+                      className="px-4 py-2 bg-blue-600 text-white text-[10px] font-black uppercase rounded-lg"
+                    >
+                      OK
+                    </button>
+                  </div>
+                </motion.div>
+              )}
+              
+              {syncPin && (
+                <motion.div 
+                  initial={{ opacity: 0, scale: 0.9 }} 
+                  animate={{ opacity: 1, scale: 1 }}
+                  className={`p-4 rounded-xl border-2 border-emerald-400/50 bg-emerald-400/10 flex flex-col items-center text-center`}
+                >
+                  <div className="flex items-center gap-2 mb-2 text-emerald-500">
+                    <CheckCircle2 className="w-4 h-4" />
+                    <span className="text-xs font-black uppercase tracking-widest">Cloud Sync Active</span>
+                  </div>
+                  <div className="text-[10px] opacity-60 uppercase mb-1">Enter in BeatGangsta Connect:</div>
+                  <div className="flex gap-4">
+                    <div className="flex flex-col">
+                      <span className="text-[8px] opacity-50 uppercase leading-none">Email</span>
+                      <span className="text-xs font-bold">{syncEmail}</span>
+                    </div>
+                    <div className="flex flex-col">
+                      <span className="text-[8px] opacity-50 uppercase leading-none">PIN</span>
+                      <span className="text-xl font-black text-emerald-500 tracking-[0.2em]">{syncPin}</span>
+                    </div>
+                  </div>
+                  <button 
+                    onClick={() => { setSyncPin(null); setShowEmailInput(true); }}
+                    className="mt-3 text-[10px] opacity-40 hover:opacity-100 underline"
+                  >
+                    Resync / Change Email
+                  </button>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
           {isExporting && (
             <div className="absolute -bottom-2 left-0 right-0 h-1 bg-black/10 rounded-full overflow-hidden">
               <motion.div 
