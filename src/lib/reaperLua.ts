@@ -44,7 +44,6 @@ local state = {
   theme = "coldest",     -- "coldest" or "crazy-bird"
   snowflakes = {},       -- falling snowflake particles
   birds = {},            -- active flying ravens
-  wind_lines = {},       -- active horizontal wind tunnels
   clicks = {},           -- click coordinate tracking for animation
   last_mouse_cap = 0,    -- detects single click transitions
   sync_errors = {}       -- sync diagnostic logs
@@ -416,10 +415,10 @@ function draw_flying_bird(x, y, s_size, flap_phase, flap_speed)
   -- 4. GLOWING SCARLET EYE (exactly as from website drop shadow)
   local eye_x = x + (16 - 60) * sc
   local eye_y = y + (41 - 50) * sc
-  local eye_r = math.max(1.5, 1.2 * sc * (state.scale or 1.0))
+  local eye_r = math.max(0.75, 0.4 * sc)
   
   gfx.set(1.0, 0.12, 0.34, 0.35) -- eye soft red outer glow
-  gfx.circle(eye_x, eye_y, eye_r * 2.5, 1)
+  gfx.circle(eye_x, eye_y, eye_r * 2.2, 1)
   
   gfx.set(1.0, 0.12, 0.34, 1.0) -- bright red core
   gfx.circle(eye_x, eye_y, eye_r, 1)
@@ -434,37 +433,6 @@ function draw_flying_bird(x, y, s_size, flap_phase, flap_speed)
   
   gfx.set(0.80, 0.12, 0.25, 0.9) -- highly brilliant scarlet wing strokes
   draw_poly_outline(w1)
-end
-
-function draw_wind()
-  if #state.wind_lines == 0 then
-    for i = 1, 50 do
-      table.insert(state.wind_lines, {
-        x = math.random(-200, gfx.w + 400),
-        y = math.random(40, gfx.h - 100),
-        width = math.random(150, 450),
-        height = math.random(1, 3),
-        speed = math.random(35, 80) / 10,
-        alpha = math.random(6, 22) / 100
-      })
-    end
-  end
-  
-  for _, line in ipairs(state.wind_lines) do
-    line.x = line.x - line.speed -- move fast leftwards
-    if line.x + line.width < -100 then
-      line.x = gfx.w + math.random(50, 250)
-      line.y = math.random(40, gfx.h - 100)
-    end
-    
-    -- Draw horizontal wind sweep gradient representation
-    -- fading from back to front
-    gfx.set(1.0, 0.3, 0.4, line.alpha * 0.15)
-    gfx.rect(line.x, line.y - 1, line.width, line.height + 2, 1)
-    
-    gfx.set(1.0, 1.0, 1.0, line.alpha)
-    gfx.rect(line.x, line.y, line.width, line.height, 1)
-  end
 end
 
 function draw_birds()
@@ -599,18 +567,15 @@ function draw_top_controls(click_pressed)
       end
       state.snowflakes = {}
       state.birds = {}
-      state.wind_lines = {}
     elseif in_rect(gfx.mouse_x, gfx.mouse_y, mx1, my, mw, mw) then
       state.scale = math.max(0.7, state.scale - 0.1)
       state.snowflakes = {}
       state.birds = {}
-      state.wind_lines = {}
       update_fonts()
     elseif in_rect(gfx.mouse_x, gfx.mouse_y, mx2, my, mw, mw) then
       state.scale = math.min(1.8, state.scale + 0.1)
       state.snowflakes = {}
       state.birds = {}
-      state.wind_lines = {}
       update_fonts()
     end
   end
@@ -659,7 +624,6 @@ function draw_ui()
 
   -- Falling snowflakes or feathers in background (or crazy birds!)
   if state.theme == "crazy-bird" then
-    draw_wind()
     draw_birds()
   else
     draw_snow()
@@ -798,6 +762,11 @@ end
 function draw_input(x, y, w, h, label, val, focused)
   local s = state.scale or 1.0
   local thm = themes[state.theme] or themes["coldest"]
+  
+  -- Draw a solid filled background with the current theme bg color to cover any passing birds
+  gfx.set(thm.bg_r, thm.bg_g, thm.bg_b, 1.0)
+  gfx.rect(x, y, w, h, 1)
+  
   if focused then 
     gfx.set(thm.acc_r, thm.acc_g, thm.acc_b, 1) 
   else 
