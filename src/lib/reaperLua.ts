@@ -43,6 +43,7 @@ local state = {
   scale = 1.3,           -- adjustable size modifier
   theme = "coldest",     -- "coldest" or "crazy-bird"
   snowflakes = {},       -- falling snowflake particles
+  birds = {},            -- active flying ravens
   clicks = {},           -- click coordinate tracking for animation
   last_mouse_cap = 0,    -- detects single click transitions
   sync_errors = {}       -- sync diagnostic logs
@@ -154,6 +155,103 @@ function draw_snow()
   end
 end
 
+function draw_flying_bird(x, y, s_size, flap_phase, flap_speed)
+  local t = os.clock()
+  local flap = math.sin(t * flap_speed + flap_phase) -- oscillates between -1 and 1
+  
+  -- Draw back wing (behind body)
+  gfx.set(0.04, 0.0, 0.01, 0.7) -- dimmer dark maroon
+  local wing2_tip_x = x + s_size * 0.1
+  local wing2_tip_y = y - flap * s_size * 0.85 - s_size * 0.15
+  gfx.triangle(x, y, x + s_size * 0.3, y, wing2_tip_x, wing2_tip_y)
+  
+  -- Back wing feather highlight
+  gfx.set(0.25, 0.04, 0.06, 0.6)
+  gfx.line(x, y, wing2_tip_x, wing2_tip_y)
+  
+  -- Draw tail
+  gfx.set(0.03, 0.0, 0.0, 0.9)
+  local tail_tip_x = x + s_size * 1.0
+  local tail_tip_y = y + s_size * 0.15
+  gfx.triangle(x, y, x + s_size * 0.25, y + s_size * 0.08, tail_tip_x, tail_tip_y)
+  
+  -- Draw main body
+  gfx.set(0.08, 0.01, 0.02, 1.0) -- Body fill (dark rich maroon)
+  local body_front_x = x - s_size * 0.65
+  local body_front_y = y - s_size * 0.08
+  local body_back_x = x + s_size * 0.55
+  local body_back_y = y + s_size * 0.08
+  
+  -- Body thickness triangles
+  gfx.triangle(body_front_x, body_front_y, body_back_x, body_back_y, x, y + s_size * 0.18)
+  gfx.triangle(body_front_x, body_front_y, body_back_x, body_back_y, x, y - s_size * 0.08)
+  
+  -- Draw beak (bold bright red / scarlet edge)
+  gfx.set(0.9, 0.15, 0.15, 1.0)
+  local beak_tip_x = x - s_size * 1.0
+  local beak_tip_y = y
+  gfx.triangle(body_front_x, body_front_y, x - s_size * 0.65, y + s_size * 0.04, beak_tip_x, beak_tip_y)
+  
+  -- Draw front wing
+  gfx.set(0.12, 0.01, 0.03, 1.0) -- lighter maroon for front wing
+  local wing1_tip_x = x - s_size * 0.15
+  local wing1_tip_y = y - flap * s_size * 1.05
+  local wing1_mid_x = x + s_size * 0.25
+  local wing1_mid_y = y + s_size * 0.08
+  gfx.triangle(x - s_size * 0.18, y - s_size * 0.08, wing1_mid_x, wing1_mid_y, wing1_tip_x, wing1_tip_y)
+  
+  -- Front wing wing-tip highlights
+  gfx.set(0.48, 0.08, 0.17, 0.8) -- red feather highlights
+  gfx.line(x - s_size * 0.18, y - s_size * 0.08, wing1_tip_x, wing1_tip_y)
+  gfx.line(wing1_mid_x, wing1_mid_y, wing1_tip_x, wing1_tip_y)
+  
+  -- Draw glowing scarlet eyes
+  gfx.set(1.0, 0.12, 0.34, 1.0) -- bright eye
+  local eye_x = x - s_size * 0.6
+  local eye_y = y - s_size * 0.12
+  local eye_r = math.max(1, math.floor(s_size * 0.08))
+  gfx.circle(eye_x, eye_y, eye_r, 1)
+end
+
+function draw_birds()
+  if #state.birds == 0 then
+    local s = state.scale or 1.0
+    for i = 1, 12 do
+      table.insert(state.birds, {
+        x = math.random(0, gfx.w + 200),
+        y = math.random(80, gfx.h - 120),
+        size = math.random(15, 28) * s,
+        speed_x = -math.random(15, 38) / 10 * s,
+        speed_y = math.random(-4, 4) / 10 * s,
+        flap_speed = math.random(10, 18),
+        flap_phase = math.random(0, 314) / 100,
+        bob_amp = math.random(2, 6) * s
+      })
+    end
+  end
+
+  local t = os.clock()
+  for _, b in ipairs(state.birds) do
+    b.x = b.x + b.speed_x
+    b.y = b.y + b.speed_y + math.sin(t * b.flap_speed * 0.4) * (b.bob_amp * 0.05)
+    
+    -- Wrap around
+    local pad = b.size * 2
+    if b.x < -pad then
+      b.x = gfx.w + pad
+      b.y = math.random(80, gfx.h - 120)
+    elseif b.x > gfx.w + pad then
+      b.x = -pad
+      b.y = math.random(80, gfx.h - 120)
+    end
+    
+    if b.y < 50 then b.y = 50 b.speed_y = -b.speed_y end
+    if b.y > gfx.h - 100 then b.y = gfx.h - 100 b.speed_y = -b.speed_y end
+    
+    draw_flying_bird(b.x, b.y, b.size, b.flap_phase, b.flap_speed)
+  end
+end
+
 function draw_top_controls(click_pressed)
   local s = state.scale or 1.0
   local thm = themes[state.theme] or themes["coldest"]
@@ -242,11 +340,17 @@ function draw_top_controls(click_pressed)
       else
         state.theme = "coldest"
       end
+      state.snowflakes = {}
+      state.birds = {}
     elseif in_rect(gfx.mouse_x, gfx.mouse_y, mx1, my, mw, mw) then
       state.scale = math.max(0.7, state.scale - 0.1)
+      state.snowflakes = {}
+      state.birds = {}
       update_fonts()
     elseif in_rect(gfx.mouse_x, gfx.mouse_y, mx2, my, mw, mw) then
       state.scale = math.min(1.8, state.scale + 0.1)
+      state.snowflakes = {}
+      state.birds = {}
       update_fonts()
     end
   end
@@ -293,8 +397,12 @@ function draw_ui()
   gfx.set(thm.bg_r, thm.bg_g, thm.bg_b, 1)
   gfx.rect(0, 0, gfx.w, gfx.h, 1)
 
-  -- Falling snowflakes or feathers in background
-  draw_snow()
+  -- Falling snowflakes or feathers in background (or crazy birds!)
+  if state.theme == "crazy-bird" then
+    draw_birds()
+  else
+    draw_snow()
+  end
 
   -- Size adjustment buttons (+ and -) and Theme switch
   draw_top_controls(click_pressed)
