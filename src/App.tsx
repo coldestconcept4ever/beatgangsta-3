@@ -48,7 +48,7 @@ import { AdminDashboard } from './components/AdminDashboard';
 import { BetaApplicationModal } from './components/BetaApplicationModal';
 import { AnimatePresence, motion } from 'motion/react';
 import { useTranslation } from 'react-i18next';
-import { Download, Globe, Languages, Star, X, Upload, Cpu, Folder as FolderIcon, ShieldCheck, Check, Zap, Rocket, Eye, EyeOff, AlertTriangle, Lock, Shield, Loader2, Gem, Sword, User as UserIcon, Link, Link2, Palette, Sparkles, Drum, Image as ImageIcon, Crown, CheckCircle2, ExternalLink, Facebook, Instagram, Linkedin, Twitter, Activity, Database, Trash2, Music, Video, Cloud, Settings2, HelpCircle } from 'lucide-react';
+import { Download, Globe, Languages, Star, X, Upload, Cpu, Folder as FolderIcon, ShieldCheck, Check, Zap, Rocket, Eye, EyeOff, AlertTriangle, Lock, Shield, Loader2, Gem, Sword, User as UserIcon, Link, Link2, Palette, Sparkles, Drum, Image as ImageIcon, Crown, CheckCircle2, ExternalLink, Facebook, Instagram, Linkedin, Twitter, Activity, Database, Trash2, Music, Video, Cloud, Settings2, HelpCircle, Copy } from 'lucide-react';
 import { saveAs } from 'file-saver';
 import tinycolor from 'tinycolor2';
 import Turnstile from 'react-turnstile';
@@ -7494,209 +7494,197 @@ Provide the exact JSFX plugin name and required sliders/parameters.`;
                             <button
                               onClick={async () => {
                                 const zip = new JSZip();
-                                
-                                // BeatGangsta Logo Base64 (Mascot with durag & grill)
-                                const logoBase64 = "iVBORw0KGgoAAAANSUhEUgAAAIAAAACACAYAAADDPmHLAAAACXBIWXMAAAsTAAALEwEAmpwYAAAAGXRFWHRTb2Z0d2FyZSB3d3cuaW5rc2NhcGUub3Jnm546GgAAGp1JREFUeNrtnXdYVEfXxz93Z8stLBSlSREVRUAFu6hYI9YosSWxxp4YjfFpjEYTNVGjMZrEGDGaxN6xGzUaFVSwo6ioWFCK9Lpsem+7M+8fSCS7hS1C9vP8eb8P7+6ZuTPnzJyZc+YUCIIgUKS8Y/4ugKJI+UIEQZHyhQiCIuUL698D0Nbe2H32u1WlvCBmACIIipQvRBBUKIKgSPmj/s18m9B/Lg9ZfS8/6hU06kXU6mXUqlK0ahW6Uj9OnZ07rV+y/u/+5pYv+S/T+fD+X9rP+8D/3H6O//m9pP0c/+N/D7+f93+7T1p93uG263vM9pTf2AAnN5hN8H+TzoG/P6H9pM9Vv/567fU9ZnuK9T0E3n9yv237Hn9u83vN976371Pf16rV67Z/770n/30f2M795z5/bjvX/7k36XNYX6p//vWqVavR/+fPZff6K+X6q+U6q5XqdOqU6FQa9E+P/v32fUf7HjP6297l9Yp1OqvU6vU6vY1OfUfX93B9h9/e3q3rO7i/vftv7f7bXve6fV+3f/u697atW+99h9uu773f3/ee7XHv097P93vM9pTv2P8AsL2G3vYatX0P9//2Bv19p99v5/8m3Tf992jf97Trf2H7Xm5v0X2D/p7X9/W2V6lrS/vP7S36Xtj2m9vX/O/m9nbdttR/LreX6jS/+W/6v8n9v/6e8r6jfb/T/8B/m86Br/961S9X/fp6H/h67fVdZvuK9T3W9xh4X0P/j/c1vO/hZf9zv/f/2/S3/ezfUv266rX3Xq/+L9f36f/9fffr9Xpvt7v8P+5tf+f//pva+T/3f9T7jvadzR/A+9pv6vM7v5fI9i6zHeWv+B8AmR08M47pZwAAAABJRU5ErkJggg==";
-                                
-                                const luaContent = `-- BeatGangsta Connect for REAPER
+                                          const logoBase64 = "iVBORw0KGgoAAAANSUhEUgAAAIAAAACACAYAAADDPmHLAAAAAXNSR0IArs4c6QAAIABJREFUeF7tXQd4VFXW/86903smPZNJ771XQukdSAsqiiIg6K6IrtrWtfeu67Z27L1XRAVEUARB6U1IAmklpPdMZvremXv/5w4kkAQCgdghye99Hx9MZt6995xzf/eca96DIBm668fV2I8fN9R19W8S/v66Oue/6S+A/fP9XmNf67H3WuvbXmNfP2P9v/mY+pjrO+9T70ffpjrG3Of6ztvXfK31ba8xr5+x/t98TH3M9Z33qfejb1MdY+5zve/tay7W+rYXPeb6ztvXfK31ba8xr5+x/X8A/K8x+W9r/O8x+W9r/O8x+W9r/O8x+W9r/O8x+W9r/O8x+W9r/O8x+W9r/O8x+W9r/O8x+W8x7vU67f08Zn2N/fyM7f8PwP8a/fsY7fv/878+Y/veax9j/87r6995fX0f1v/Z/DfqX6/vMfbvXGv77mv77vun+re636v65XmvV/Wff69Y+qX/pP8167f66X3G+p5r+677p/q3ul+rv9b6999L1v+p/zXrt/rpu6/9e53nu9f7f2tf9/6YtTX28zO2/z8A/tfY1m7rsh8A67Yv+wGwXv/92q6P/p3Xdn3077y266N/57VdH/07r+366N95bdfrvV7r+T9v6ztvX9v10b/z2q6P/p3Xdn3077y266N/57VdH/07r+366N95bddH/85re/9X671f669Vf/7P+j/rf83zM/bvP9f6Hut/fayxVdfX9/X1dbxv/f8B8L++An68T+8Hvv97f/f/0M7f0c9f187vub97f9f3X6/+P+4nv97vffXv8eOf2f47r/59f6//+X9p/P8fAA99BXT9Y/w09L7+S9D7/E9d+zl7X+v6z73XPv+5/p3XdZ97X/8l6H3+p679nL2vdf3n3muf/1z/zuu6z72v/xL0Pv9T137O3udfr9PX//xfAOsr8H9O/797zP3Y9Y39/Iz9f9F/P/v6Of7vB8D6v0659/fUfQx/v66rXwf0f/S9X/9r9f/S/9L/0v/S/9L/0v/S/1795v9Xv/X7/x99933077/X++nr57vX+39v7fWf86PX17fzf/X/0P99p91r/97XmPu5q1+7pX6m6mf6Of79XyT+pZ+l/6X/pf+l/6X/pf+l/6X/pf8lv6X8pf+t/m2tr1G7re/qP9favvvev+/96vef8997Pf/93N/9O69X/XqvVb/Xer1f+/H31778n/fzvV+/rtfvvF7/OatXvV7Vq97Ptfpqvdf699+rf71elet99uPrZ6/uVvXq732f7vve89zPd73X+3rvV3X8P9f6WlUfvV97nb/L+trP9T7X8T/H8ffqf782/t7P9fVv62/U978A86xsc6Nvc7S/z3/7Ouv76VfAn//V72f7v/9H7v89v/9Pr++n+vf/m8//zP+67R7737X/nfX/+6/p70T0D/V5/L9r/W/9XfVv9X/zfPr6er9v6uv1X99vXv39XNVL/1r197779f/+u1/f+5n+565XvV6/Y9Wrfu6qV/XzrF51Xf3/VP9T9TNvS/X6vqrnqX7uV//eq/1886pe9et99p96/Tzr6/PvrK/v86pXvV+/f6u7X3VvS7+v+rd6/y/9T9V7rd6vunfVV9f79Tqv9jP9fO9p1X2qv9ZrfU+99t96ff/ZvrZrv/b/AFv9x6X7mN9YAAAAAElFTkSuQmCC";
+                                 const luaContent = `-- BeatGangsta Connect for REAPER
 -- Version 2.2.0 (Premium Coldest Iced Edition)
 -- Author: BeatGangsta AI
--- Description: Real-time Cloud Link between BeatGangsta.ai and REAPER
 
-local script_path = debug.getinfo(1,'S').source:sub(2):match("(.*[/\\])")
+local version = "2.2.0"
+local script_path = debug.getinfo(1,'S').source:match([[^@?(.*[\\/])]])
 local logo_path = script_path .. "beatgangsta_logo.png"
 local logo_img = -1
-local last_sync_check = 0
-local sync_interval = 2 -- seconds
-local email = ""
-local pin = ""
-local is_logged_in = false
-local status_msg = "READY TO CONNECT"
-local error_msg = ""
-local is_loading = false
-local markers_data = {}
-local plugin_data = {}
 
--- UI Settings (Coldest Iced Theme)
-local font_main = "Arial"
-local font_size = 18
-local bg_color = {0.05, 0.05, 0.08, 1}
-local accent_color = {0.2, 0.5, 1, 1}
-local text_color = {1, 1, 1, 1}
-local input_active = 0 -- 1: email, 2: pin
+-- UI Configuration
+gfx.init("BEATGANGSTA • CONNECT", 450, 650)
+gfx.setfont(1, "Arial", 18, 98)
+gfx.setfont(2, "Arial", 14, 98)
+
+local state = {
+  email = "",
+  pin = "",
+  is_logged_in = false,
+  is_loading = false,
+  status_msg = "READY TO CONNECT",
+  input_focus = "email" -- "email" or "pin"
+}
 
 function Msg(val)
-  reaper.ShowConsoleMsg(tostring(val).."\\n")
-end
-
-function init()
-  gfx.init("BEATGANGSTA CONNECT", 450, 600, 0, 100, 100)
-  logo_img = gfx.loadimg(0, logo_path)
+  reaper.ShowConsoleMsg(tostring(val).."\n")
 end
 
 function draw_ui()
-  -- Background
-  gfx.set(bg_color[1], bg_color[2], bg_color[3], bg_color[4])
+  -- Background (Coldest Slate)
+  gfx.set(0.05, 0.05, 0.1, 1)
   gfx.rect(0, 0, gfx.w, gfx.h, 1)
-  
-  -- Logo
+
+  -- Logo Img
+  if logo_img == -1 then logo_img = gfx.loadimg(0, logo_path) end
   if logo_img >= 0 then
     local lw, lh = gfx.getimgdim(logo_img)
     local target_w = 120
     local target_h = (lh / lw) * target_w
     gfx.blit(logo_img, 1, 0, 0, 0, lw, lh, (gfx.w/2) - (target_w/2), 40, target_w, target_h)
   end
-  
-  -- Title
+
   gfx.set(1, 1, 1, 1)
-  gfx.setfont(1, font_main, 24, 'b')
+  gfx.setfont(1, "Arial", 28, 98)
   local tx = "BEATGANGSTA"
   local tw, th = gfx.measurestr(tx)
   gfx.x, gfx.y = (gfx.w/2) - (tw/2), 180
   gfx.drawstr(tx)
-  
-  gfx.set(accent_color[1], accent_color[2], accent_color[3], 0.6)
-  gfx.setfont(1, font_main, 14, 'b')
-  local sub = "CLOUD SYNC LINK v2.2.0"
+
+  gfx.set(0.2, 0.6, 1.0, 1)
+  gfx.setfont(2, "Arial", 12, 98)
+  local sub = "CLOUD SYNC LINK v" .. version
   local sw, sh = gfx.measurestr(sub)
-  gfx.x, gfx.y = (gfx.w/2) - (sw/2), 210
+  gfx.x, gfx.y = (gfx.w/2) - (sw/2), 215
   gfx.drawstr(sub)
-  
-  if not is_logged_in then
+
+  if not state.is_logged_in then
     draw_login()
   else
     draw_dashboard()
   end
-  
-  -- Status Bar
-  gfx.set(0, 0, 0, 0.5)
-  gfx.rect(0, gfx.h - 30, gfx.w, 30, 1)
-  gfx.set(text_color[1], text_color[2], text_color[3], 0.4)
-  gfx.setfont(1, font_main, 12)
-  gfx.x, gfx.y = 15, gfx.h - 22
-  gfx.drawstr(status_msg)
+
+  -- Status
+  gfx.set(1, 1, 1, 0.4)
+  gfx.setfont(2, "Arial", 12, 0)
+  gfx.x, gfx.y = 20, gfx.h - 30
+  gfx.drawstr(state.status_msg)
 end
 
 function draw_login()
-  local y_start = 280
-  
-  -- Email Input
-  gfx.set(1, 1, 1, 0.1)
-  gfx.rect(50, y_start, gfx.w - 100, 45, 1)
-  if input_active == 1 then gfx.set(accent_color[1], accent_color[2], accent_color[3], 1) else gfx.set(1,1,1,0.3) end
-  gfx.rect(50, y_start, gfx.w - 100, 45, 0)
-  
-  gfx.set(1, 1, 1, 0.5)
-  gfx.setfont(1, font_main, 12, 'b')
-  gfx.x, gfx.y = 50, y_start - 20
-  gfx.drawstr("DAW SYNC EMAIL")
-  
-  gfx.set(1, 1, 1, 1)
-  gfx.setfont(1, font_main, 16)
-  gfx.x, gfx.y = 65, y_start + 12
-  gfx.drawstr(email == "" and (input_active == 1 and "" or "mixer@example.com") or email)
-  
-  -- PIN Input
-  local y_pin = y_start + 90
-  gfx.set(1, 1, 1, 0.1)
-  gfx.rect(50, y_pin, gfx.w - 100, 45, 1)
-  if input_active == 2 then gfx.set(accent_color[1], accent_color[2], accent_color[3], 1) else gfx.set(1,1,1,0.3) end
-  gfx.rect(50, y_pin, gfx.w - 100, 45, 0)
-  
-  gfx.set(1, 1, 1, 0.5)
-  gfx.x, gfx.y = 50, y_pin - 20
-  gfx.drawstr("4-DIGIT PIN")
-  
-  gfx.set(1, 1, 1, 1)
-  gfx.setfont(1, font_main, 24, 'b')
-  gfx.x, gfx.y = 65, y_pin + 10
-  gfx.drawstr(pin == "" and "0000" or pin)
-  
-  -- Login Button
-  local y_btn = y_pin + 80
-  gfx.set(accent_color[1], accent_color[2], accent_color[3], 1)
-  gfx.rect(50, y_btn, gfx.w - 100, 50, 1)
-  gfx.set(1, 1, 1, 1)
-  gfx.setfont(1, font_main, 16, 'b')
-  local btx = is_loading and "CONNECTING..." or "START SYNC"
-  local btw, bth = gfx.measurestr(btx)
-  gfx.x, gfx.y = (gfx.w/2) - (btw/2), y_btn + 15
-  gfx.drawstr(btx)
-  
-  handle_input(y_start, y_pin, y_btn)
+  local y = 280
+  -- Email
+  draw_input(50, y, gfx.w - 100, 45, "SYNC EMAIL", state.email, state.input_focus == "email")
+  -- PIN
+  draw_input(50, y + 90, gfx.w - 100, 45, "4-DIGIT PIN", state.pin, state.input_focus == "pin")
+  -- Button
+  draw_button(50, y + 180, gfx.w - 100, 50, state.is_loading and "SYNCING..." or "START CLOUD SYNC")
 end
 
-function handle_input(y_email, y_pin, y_btn)
-  local char = gfx.getchar()
-  if char == -1 then return end
-  
-  if gfx.mouse_cap & 1 == 1 then
-    if gfx.mouse_y >= y_email and gfx.mouse_y <= y_email + 45 then input_active = 1
-    elseif gfx.mouse_y >= y_pin and gfx.mouse_y <= y_pin + 45 then input_active = 2
-    elseif gfx.mouse_y >= y_btn and gfx.mouse_y <= y_btn + 50 then 
-      if not is_loading then perform_sync() end
-    else input_active = 0 end
-  end
-  
-  if input_active == 1 then
-    if char == 8 then email = email:sub(1, -2) -- backspace
-    elseif char >= 32 and char <= 126 then email = email .. string.char(char) end
-  elseif input_active == 2 then
-    if char == 8 then pin = pin:sub(1, -2)
-    elseif char >= 48 and char <= 57 and #pin < 4 then pin = pin .. string.char(char) end
-  end
+function draw_input(x, y, w, h, label, val, focus)
+  gfx.set(1, 1, 1, 0.1)
+  gfx.rect(x, y, w, h, 1)
+  if focus then gfx.set(0.2, 0.6, 1, 1) else gfx.set(1,1,1,0.2) end
+  gfx.rect(x, y, w, h, 0)
+  gfx.set(1,1,1,0.5)
+  gfx.x, gfx.y = x, y - 18
+  gfx.drawstr(label)
+  gfx.set(1,1,1,1)
+  gfx.x, gfx.y = x + 10, y + 12
+  gfx.drawstr(val)
 end
 
-function perform_sync()
-  if #email < 3 or #pin < 4 then 
-    status_msg = "INVALID CREDENTIALS"
-    return 
-  end
-  
-  is_loading = true
-  status_msg = "FETCHING CLOUD DATA..."
-  
-  -- In a real Lua script, we'd use reaper.ExecProcess with curl 
-  -- but for this preview we'll simulate the successful handshake
-  is_logged_in = true
-  is_loading = false
-  status_msg = "SYNCED: " .. email
+function draw_button(x, y, w, h, text)
+  gfx.set(0.1, 0.5, 0.9, 1)
+  gfx.rect(x, y, w, h, 1)
+  gfx.set(1, 1, 1, 1)
+  local tw, th = gfx.measurestr(text)
+  gfx.x, gfx.y = x + (w - tw)/2, y + (h - th)/2
+  gfx.drawstr(text)
 end
 
 function draw_dashboard()
-  gfx.set(0, 1, 0.5, 0.2)
-  gfx.rect(50, 280, gfx.w - 100, 200, 1)
-  gfx.set(0, 1, 0.5, 1)
-  gfx.rect(50, 280, gfx.w - 100, 200, 0)
-  
-  gfx.set(1, 1, 1, 1)
-  gfx.setfont(1, font_main, 14, 'b')
-  gfx.x, gfx.y = 70, 300
-  gfx.drawstr("ACTIVE CONNECTION")
-  
-  gfx.set(1, 1, 1, 0.6)
-  gfx.setfont(1, font_main, 12)
-  gfx.x, gfx.y = 70, 330
-  gfx.drawstr("User: " .. email)
-  gfx.x, gfx.y = 70, 350
-  gfx.drawstr("Status: LIVE POLLING")
-  
-  gfx.set(accent_color[1], accent_color[2], accent_color[3], 1)
-  gfx.rect(70, 400, gfx.w - 140, 40, 1)
-  gfx.set(1, 1, 1, 1)
-  gfx.setfont(1, font_main, 12, 'b')
-  local dtx = "REFRESH NOW"
-  local dtw, dth = gfx.measurestr(dtx)
-  gfx.x, gfx.y = (gfx.w/2) - (dtw/2), 412
-  gfx.drawstr(dtx)
+  gfx.set(1,1,1,0.8)
+  gfx.x, gfx.y = 50, 300
+  gfx.drawstr("LINKED AS: " .. state.email)
+  gfx.x, gfx.y = 50, 330
+  gfx.drawstr("STATUS: MONITORING CLOUD NODE")
+  draw_button(50, 400, gfx.w - 100, 50, "FORCE PULL SYNC")
+end
+
+function perform_sync()
+  if state.email == "" or #state.pin < 4 then return end
+  state.is_loading = true
+  state.status_msg = "POLLING BEATGANGSTA CLOUD API..."
+
+  local origin = "${window.location.origin}"
+  local url = origin .. "/api/reaper-sync/pull?email=" .. state.email .. "&pin=" .. state.pin
+  local tmp = os.tmpname()
+  if tmp:sub(1,1) == "\\" then tmp = os.getenv("TMP") .. tmp end
+
+  local cmd = (string.find(reaper.GetOS(), "Win") ~= nil) and 'curl.exe -sL "' or 'curl -sL "'
+  os.execute(cmd .. url .. '" -o "' .. tmp .. '"')
+
+  local f = io.open(tmp, "r")
+  if f then
+    local content = f:read("*all")
+    f:close()
+    os.remove(tmp)
+    if content ~= "" and not content:match("error") then
+      apply_sync(content)
+      state.is_logged_in = true
+      state.status_msg = "SYNC SUCCESSFUL!"
+    else
+      state.status_msg = "ERROR: NO DATA FOUND"
+    end
+  end
+  state.is_loading = false
+end
+
+function apply_sync(payload)
+  reaper.Undo_BeginBlock()
+  local current_track = nil
+  local current_fx = -1
+  for line in payload:gmatch("([^\\n]+)") do
+    line = line:gsub("\\r", "")
+    if line:sub(1,6) == "TRACK|" then
+      local tname = line:sub(7)
+      current_track = nil
+      for i=0, reaper.CountTracks(0)-1 do
+        local tr = reaper.GetTrack(0,i)
+        local _, n = reaper.GetTrackName(tr)
+        if n == tname then current_track = tr break end
+      end
+    elseif line:sub(1,3) == "FX|" and current_track then
+      current_fx = reaper.TrackFX_AddByName(current_track, line:sub(4), false, -1)
+    elseif line:sub(1,6) == "PARAM|" and current_track and current_fx >= 0 then
+      local pstr = line:sub(7)
+      local pi, pv = pstr:match("([^|]+)|([^|]+)")
+      if pi and pv then reaper.TrackFX_SetParam(current_track, current_fx, tonumber(pi), tonumber(pv)) end
+    end
+  end
+  reaper.Undo_EndBlock("BeatGangsta Cloud Sync", -1)
 end
 
 function main()
   draw_ui()
-  if gfx.getchar() >= 0 then reaper.defer(main) end
+  local char = gfx.getchar()
+  if char >= 0 and char ~= 27 then 
+    handle_input(char)
+    reaper.defer(main) 
+  end
 end
 
-init()
+function handle_input(char)
+  if gfx.mouse_cap & 1 == 1 then
+    local mx, my = gfx.mouse_x, gfx.mouse_y
+    if my >= 280 and my <= 325 then state.input_focus = "email"
+    elseif my >= 370 and my <= 415 then state.input_focus = "pin"
+    elseif my >= 460 and my <= 510 then perform_sync() end
+  end
+  if char > 0 then
+    if state.input_focus == "email" then
+      if char == 8 then state.email = state.email:sub(1,-2)
+      elseif char >= 32 and char <= 126 then state.email = state.email .. string.char(char) end
+    elseif state.input_focus == "pin" then
+      if char == 8 then state.pin = state.pin:sub(1,-2)
+      elseif char >= 48 and char <= 57 and #state.pin < 4 then state.pin = state.pin .. string.char(char) end
+    end
+  end
+end
+
 main()
 `;
 
@@ -9441,13 +9429,48 @@ main()
                       <div className="w-6 h-6 rounded-full bg-[#10b981] flex items-center justify-center text-white font-black text-xs">2</div>
                       <h3 className="font-bold">Install in REAPER</h3>
                     </div>
-                    <ul className="text-sm pl-9 opacity-80 list-disc ml-4 space-y-1">
-                      <li>Open REAPER and go to <strong>Options</strong> &gt; <strong>Show REAPER resource path in explorer/finder...</strong></li>
-                      <li>Open the <strong>Scripts</strong> folder</li>
-                      <li>Extract the ZIP and move the <code>BeatGangsta_Connect.lua</code> and <code>beatgangsta_logo.png</code> files into this folder</li>
-                      <li>In REAPER, open the <strong>Actions List</strong> (Shortcut: '?') and click <strong>New action...</strong> &gt; <strong>Load ReaScript...</strong></li>
-                      <li>Select <code>BeatGangsta_Connect.lua</code> to add it to your actions.</li>
-                    </ul>
+                    <div className="pl-9 space-y-4">
+                      <p className="text-sm opacity-80">Copy the correct path for your system, paste it into Explorer (Win) or Finder (Mac - Cmd+Shift+G), and move the files there:</p>
+                      
+                      <div className="space-y-3">
+                        <div className="space-y-1.5">
+                          <p className="text-[10px] font-black uppercase tracking-wider opacity-60">Windows Path</p>
+                          <div className={`flex items-center gap-2 p-2 rounded-xl border ${theme === 'coldest' ? 'bg-white border-slate-200' : 'bg-black/20 border-zinc-700'}`}>
+                            <code className="text-[10px] font-mono break-all opacity-80 flex-1">%AppData%\REAPER\Scripts</code>
+                            <button 
+                              onClick={() => {
+                                navigator.clipboard.writeText("%AppData%\\REAPER\\Scripts");
+                                // No state for success here for simplicity in App.tsx
+                              }}
+                              className={`p-1.5 rounded-lg hover:bg-black/5 transition-colors ${theme === 'coldest' ? 'text-slate-400' : 'text-zinc-500'}`}
+                            >
+                              <Copy size={14} />
+                            </button>
+                          </div>
+                        </div>
+
+                        <div className="space-y-1.5">
+                          <p className="text-[10px] font-black uppercase tracking-wider opacity-60">macOS Path</p>
+                          <div className={`flex items-center gap-2 p-2 rounded-xl border ${theme === 'coldest' ? 'bg-white border-slate-200' : 'bg-black/20 border-zinc-700'}`}>
+                            <code className="text-[10px] font-mono break-all opacity-80 flex-1">~/Library/Application Support/REAPER/Scripts</code>
+                            <button 
+                              onClick={() => {
+                                navigator.clipboard.writeText("~/Library/Application Support/REAPER/Scripts");
+                              }}
+                              className={`p-1.5 rounded-lg hover:bg-black/5 transition-colors ${theme === 'coldest' ? 'text-slate-400' : 'text-zinc-500'}`}
+                            >
+                              <Copy size={14} />
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+
+                      <ul className="text-sm opacity-80 list-disc ml-4 space-y-1">
+                        <li>Extract the ZIP and move the <code>BeatGangsta_Connect.lua</code> and <code>beatgangsta_logo.png</code> files into this folder</li>
+                        <li>In REAPER, open the <strong>Actions List</strong> (Shortcut: '?') and click <strong>New action...</strong> &gt; <strong>Load ReaScript...</strong></li>
+                        <li>Select <code>BeatGangsta_Connect.lua</code> to add it to your actions.</li>
+                      </ul>
+                    </div>
                   </div>
 
                   {/* Step 3 */}
