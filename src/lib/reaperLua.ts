@@ -519,8 +519,8 @@ function draw_top_controls(click_pressed)
   if mw < 25 then mw = 25 end
   
   -- Label for theme
-  local labelTheme = "THEME: COLD"
-  if state.theme == "crazy-bird" then labelTheme = "THEME: BIRD" end
+  local labelTheme = "THEME: COLDEST"
+  if state.theme == "crazy-bird" then labelTheme = "THEME: CRAZY BIRD" end
   
   -- Measure theme label under Font 2 (Button Font)
   gfx.setfont(2)
