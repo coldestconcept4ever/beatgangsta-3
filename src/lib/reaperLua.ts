@@ -25,7 +25,7 @@ local state = {
 }
 
 function Msg(val)
-  reaper.ShowConsoleMsg(tostring(val).."\n")
+  reaper.ShowConsoleMsg(tostring(val)..string.char(10))
 end
 
 function draw_ui()
@@ -152,7 +152,7 @@ function perform_sync()
 
   local url = "${origin}/api/reaper-sync/pull?email=" .. state.email .. "&pin=" .. state.pin
   local tmp = os.tmpname()
-  if tmp:sub(1,1) == "\\" then tmp = os.getenv("TMP") .. tmp end
+  if tmp:byte(1) == 92 then tmp = os.getenv("TMP") .. tmp end
 
   local cmd = (string.find(reaper.GetOS(), "Win") ~= nil) and 'curl.exe -sL "' or 'curl -sL "'
   os.execute(cmd .. url .. '" -o "' .. tmp .. '"')
@@ -179,8 +179,8 @@ function apply_sync(payload)
   reaper.Undo_BeginBlock()
   local current_track = nil
   local current_fx = -1
-  for line in payload:gmatch("([^\n]+)") do
-    line = line:gsub("\r", "")
+  for line in payload:gmatch("([^" .. string.char(10) .. "]+)") do
+    line = line:gsub(string.char(13), "")
     if line:sub(1,6) == "TRACK|" then
       local tname = line:sub(7)
       current_track = nil
