@@ -88,6 +88,7 @@ export const Mascot: React.FC<MascotProps> = React.memo(({
   return (
     <div className={`relative ${className}`} style={{ width: size, height: displayHeight }}>
       <svg 
+        id="mascot-svg"
         ref={svgRef}
         width={size} 
         height={displayHeight} 

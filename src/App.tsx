@@ -7495,7 +7495,149 @@ Provide the exact JSFX plugin name and required sliders/parameters.`;
                             <button
                               onClick={async () => {
                                 const zip = new JSZip();
-                                const logoBase64 = "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8/5+hHgAHggJ/PchI7wAAAABJRU5ErkJggg==";
+                                let logoBase64 = "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8/5+hHgAHggJ/PchI7wAAAABJRU5ErkJggg==";
+                                const svgEl = document.getElementById("mascot-svg") as any;
+                                
+                                if (svgEl) {
+                                  try {
+                                    const serializedSvg = new XMLSerializer().serializeToString(svgEl);
+                                    const blob = new Blob([serializedSvg], { type: "image/svg+xml;charset=utf-8" });
+                                    const url = URL.createObjectURL(blob);
+                                    
+                                    const img = new Image();
+                                    const loadedPromise = new Promise<string>((resolveImg, rejectImg) => {
+                                      img.onload = () => {
+                                        const canvas = document.createElement("canvas");
+                                        canvas.width = 400;
+                                        canvas.height = 400;
+                                        const ctx = canvas.getContext("2d");
+                                        if (ctx) {
+                                          ctx.clearRect(0, 0, canvas.width, canvas.height);
+                                          ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+                                          resolveImg(canvas.toDataURL("image/png").split(",")[1]);
+                                        } else {
+                                          rejectImg(new Error("No canvas context"));
+                                        }
+                                      };
+                                      img.onerror = () => rejectImg(new Error("Image load failed"));
+                                    });
+                                    img.src = url;
+                                    logoBase64 = await loadedPromise;
+                                    URL.revokeObjectURL(url);
+                                  } catch (err) {
+                                    console.error("Failed to dynamically convert Mascot SVG to PNG", err);
+                                    
+                                    // Fallback offscreen drawing from DAWGuide
+                                    try {
+                                      const canvas = document.createElement('canvas');
+                                      canvas.width = 400;
+                                      canvas.height = 400;
+                                      const ctx = canvas.getContext('2d');
+                                      if (ctx) {
+                                        const cx = 200, cy = 200, r = 150;
+                                        ctx.fillStyle = '#0f172a';
+                                        ctx.beginPath(); ctx.arc(cx, cy, r + 10, 0, Math.PI * 2); ctx.fill();
+                                        ctx.fillStyle = '#3b82f6'; // User's mascot color
+                                        ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI * 2); ctx.fill();
+                                        
+                                        // Durag cap
+                                        ctx.fillStyle = '#000000';
+                                        ctx.beginPath(); ctx.arc(cx, cy - 30, r + 3, Math.PI, 0); ctx.fill();
+                                        ctx.fillRect(cx - r - 5, cy - 45, r * 2 + 10, 45);
+                                        
+                                        // Knot
+                                        ctx.beginPath(); ctx.moveTo(cx + r, cy - 15); ctx.lineTo(cx + r + 80, cy + 50); ctx.lineTo(cx + r + 25, cy + 80); ctx.fill();
+                                        ctx.beginPath(); ctx.moveTo(cx + r, cy - 15); ctx.lineTo(cx + r + 50, cy + 90); ctx.lineTo(cx - 15 + r, cy + 115); ctx.fill();
+                                        
+                                        // Eyes
+                                        ctx.fillStyle = '#000000';
+                                        const lx = cx - 60, rx = cx + 60, ey = cy + 15;
+                                        ctx.beginPath(); ctx.arc(lx, ey, 32, 0, Math.PI*2); ctx.fill();
+                                        ctx.beginPath(); ctx.arc(rx, ey, 32, 0, Math.PI*2); ctx.fill();
+                                        
+                                        // Pupils
+                                        ctx.fillStyle = '#ffffff';
+                                        ctx.beginPath(); ctx.arc(lx + 10, ey + 6, 12, 0, Math.PI*2); ctx.fill();
+                                        ctx.beginPath(); ctx.arc(rx - 6, ey + 6, 12, 0, Math.PI*2); ctx.fill();
+                                        
+                                        // Grill
+                                        const gx = cx - 65, gy = cy + 70;
+                                        ctx.fillStyle = '#000000';
+                                        ctx.fillRect(gx - 10, gy - 10, 150, 50);
+                                        for (let i = 0; i < 6; i++) {
+                                          ctx.fillStyle = '#ffffff';
+                                          ctx.fillRect(gx + i * 22, gy, 18, 28);
+                                        }
+                                        
+                                        // Sword/Dagger
+                                        ctx.lineWidth = 12;
+                                        ctx.strokeStyle = '#94a3b8';
+                                        ctx.beginPath(); ctx.moveTo(cx - 130, cy + 130); ctx.lineTo(cx - 210, cy + 210); ctx.stroke();
+                                        ctx.strokeStyle = '#1e293b';
+                                        ctx.beginPath(); ctx.moveTo(cx - 210, cy + 210); ctx.lineTo(cx - 240, cy + 240); ctx.stroke();
+                                        
+                                        logoBase64 = canvas.toDataURL('image/png').split(',')[1];
+                                      }
+                                    } catch (fallbackErr) {
+                                      console.error("Canvas draw fallback failed", fallbackErr);
+                                    }
+                                  }
+                                } else {
+                                  // Direct Canvas drawing as accurate fallback if SVG element not found in DOM
+                                  try {
+                                    const canvas = document.createElement('canvas');
+                                    canvas.width = 400;
+                                    canvas.height = 400;
+                                    const ctx = canvas.getContext('2d');
+                                    if (ctx) {
+                                      const cx = 200, cy = 200, r = 150;
+                                      ctx.fillStyle = '#0f172a';
+                                      ctx.beginPath(); ctx.arc(cx, cy, r + 10, 0, Math.PI * 2); ctx.fill();
+                                      ctx.fillStyle = '#3b82f6';
+                                      ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI * 2); ctx.fill();
+                                      
+                                      // Durag cap
+                                      ctx.fillStyle = '#000000';
+                                      ctx.beginPath(); ctx.arc(cx, cy - 30, r + 3, Math.PI, 0); ctx.fill();
+                                      ctx.fillRect(cx - r - 5, cy - 45, r * 2 + 10, 45);
+                                      
+                                      // Knot
+                                      ctx.beginPath(); ctx.moveTo(cx + r, cy - 15); ctx.lineTo(cx + r + 80, cy + 50); ctx.lineTo(cx + r + 25, cy + 80); ctx.fill();
+                                      ctx.beginPath(); ctx.moveTo(cx + r, cy - 15); ctx.lineTo(cx + r + 50, cy + 90); ctx.lineTo(cx - 15 + r, cy + 115); ctx.fill();
+                                      
+                                      // Eyes
+                                      ctx.fillStyle = '#000000';
+                                      const lx = cx - 60, rx = cx + 60, ey = cy + 15;
+                                      ctx.beginPath(); ctx.arc(lx, ey, 32, 0, Math.PI*2); ctx.fill();
+                                      ctx.beginPath(); ctx.arc(rx, ey, 32, 0, Math.PI*2); ctx.fill();
+                                      
+                                      // Pupils
+                                      ctx.fillStyle = '#ffffff';
+                                      ctx.beginPath(); ctx.arc(lx + 10, ey + 6, 12, 0, Math.PI*2); ctx.fill();
+                                      ctx.beginPath(); ctx.arc(rx - 6, ey + 6, 12, 0, Math.PI*2); ctx.fill();
+                                      
+                                      // Grill
+                                      const gx = cx - 65, gy = cy + 70;
+                                      ctx.fillStyle = '#000000';
+                                      ctx.fillRect(gx - 10, gy - 10, 150, 50);
+                                      for (let i = 0; i < 6; i++) {
+                                        ctx.fillStyle = '#ffffff';
+                                        ctx.fillRect(gx + i * 22, gy, 18, 28);
+                                      }
+                                      
+                                      // Sword/Dagger
+                                      ctx.lineWidth = 12;
+                                      ctx.strokeStyle = '#94a3b8';
+                                      ctx.beginPath(); ctx.moveTo(cx - 130, cy + 130); ctx.lineTo(cx - 210, cy + 210); ctx.stroke();
+                                      ctx.strokeStyle = '#1e293b';
+                                      ctx.beginPath(); ctx.moveTo(cx - 210, cy + 210); ctx.lineTo(cx - 240, cy + 240); ctx.stroke();
+                                      
+                                      logoBase64 = canvas.toDataURL('image/png').split(',')[1];
+                                    }
+                                  } catch (fallbackErr) {
+                                    console.error("Direct canvas draw failed", fallbackErr);
+                                  }
+                                }
 
                                 const finalLua = getReaperLua(window.location.origin);
                                 zip.file("BeatGangsta_Connect.lua", finalLua);
