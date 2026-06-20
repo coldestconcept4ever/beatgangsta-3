@@ -48,6 +48,8 @@ local state = {
   sync_errors = {}       -- sync diagnostic logs
 }
 
+gfx.init("BEATGANGSTA • CONNECT", 420, 620)
+
 local function update_fonts()
   local s = state.scale or 1.0
   gfx.setfont(1, "Arial", math.floor(28 * s), 98) -- Title Font
@@ -197,9 +199,10 @@ end
 
 function draw_custom_cursor(mx, my)
   if mx < 0 or my < 0 or mx > gfx.w or my > gfx.h then return end
-  if gfx.setcursor then
-    gfx.setcursor(0) -- Safe REAPER native function to set/reset standard mouse cursor
-  end
+  -- Attempt to hide native cursor safely (different REAPER/OS configurations might have different support)
+  pcall(function()
+    gfx.cursor = -1
+  end)
   
   local s = state.scale or 1.0
   if s < 0.8 then s = 0.8 end
