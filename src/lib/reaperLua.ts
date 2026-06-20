@@ -115,6 +115,7 @@ function draw_top_controls(click_pressed)
   local tw_th = 95
   
   if in_rect(gfx.mouse_x, gfx.mouse_y, tx_th, my, tw_th, mw) then
+    state.hovering_interactive = true
     gfx.set(thm.acc_r, thm.acc_g, thm.acc_b, 0.3)
   else
     gfx.set(thm.bg_r, thm.bg_g, thm.bg_b, 1)
@@ -133,6 +134,7 @@ function draw_top_controls(click_pressed)
   -- Button '-'
   local mx1 = gfx.w - 75
   if in_rect(gfx.mouse_x, gfx.mouse_y, mx1, my, mw, mw) then
+    state.hovering_interactive = true
     gfx.set(thm.acc_r, thm.acc_g, thm.acc_b, 0.3)
   else
     gfx.set(thm.bg_r, thm.bg_g, thm.bg_b, 1)
@@ -147,6 +149,7 @@ function draw_top_controls(click_pressed)
   -- Button '+'
   local mx2 = gfx.w - 40
   if in_rect(gfx.mouse_x, gfx.mouse_y, mx2, my, mw, mw) then
+    state.hovering_interactive = true
     gfx.set(thm.acc_r, thm.acc_g, thm.acc_b, 0.3)
   else
     gfx.set(thm.bg_r, thm.bg_g, thm.bg_b, 1)
@@ -197,56 +200,8 @@ function draw_click_animations()
   end
 end
 
-function draw_custom_cursor(mx, my)
-  if mx < 0 or my < 0 or mx > gfx.w or my > gfx.h then return end
-  -- Attempt to hide native cursor safely (different REAPER/OS configurations might have different support)
-  pcall(function()
-    gfx.cursor = -1
-  end)
-  
-  local s = state.scale or 1.0
-  if s < 0.8 then s = 0.8 end
-  local thm = themes[state.theme] or themes["coldest"]
-
-  -- Gunmetal/Silver Walther PPK/s
-  gfx.set(0.02, 0.02, 0.05, 0.6)
-  gfx.rect(mx + 1, my + 1, 22*s, 7*s, 1)
-  gfx.rect(mx + 13*s, my + 7*s, 8*s, 15*s, 1)
-  
-  -- Slide/barrel body
-  gfx.set(0.24, 0.26, 0.30, 1.0)
-  gfx.rect(mx, my, 21*s, 6*s, 1)
-  
-  -- Silver muzzle extension
-  gfx.set(0.60, 0.65, 0.70, 1.0)
-  gfx.rect(mx - 2*s, my + 1.5*s, 3*s, 3*s, 1)
-  
-  -- Rear slide detail and hammer
-  gfx.set(0.15, 0.16, 0.18, 1.0)
-  gfx.rect(mx + 18*s, my, 3*s, 6*s, 1)
-  gfx.set(0.5, 0.45, 0.4, 1.0)
-  gfx.rect(mx + 21*s, my + 1*s, 2*s, 2*s, 1)
-  
-  -- Grip frame
-  gfx.set(0.20, 0.22, 0.25, 1.0)
-  gfx.rect(mx + 12*s, my + 6*s, 8*s, 14*s, 1)
-  
-  -- Grip plate
-  gfx.set(0.12, 0.12, 0.14, 1.0)
-  gfx.rect(mx + 13*s, my + 8*s, 6*s, 11*s, 1)
-  
-  -- Walther theme-colored logo dot
-  gfx.set(thm.acc_r, thm.acc_g, thm.acc_b, 1.0)
-  gfx.rect(mx + 15*s, my + 12*s, 2*s, 2*s, 1)
-  
-  -- Trigger guard
-  gfx.set(0.15, 0.16, 0.18, 1.0)
-  gfx.rect(mx + 6*s, my + 6*s, 6*s, 5*s, 0)
-  gfx.set(0.55, 0.58, 0.62, 1.0)
-  gfx.line(mx + 8*s, my + 6*s, mx + 7*s, my + 9*s)
-end
-
 function draw_ui()
+  state.hovering_interactive = false
   local mx, my = gfx.mouse_x, gfx.mouse_y
   local click_pressed = (gfx.mouse_cap == 1 and state.last_mouse_cap == 0)
   local thm = themes[state.theme] or themes["coldest"]
@@ -309,8 +264,14 @@ function draw_ui()
   -- Click ring animations
   draw_click_animations()
 
-  -- Walther PPK Custom Cursor
-  draw_custom_cursor(mx, my)
+  -- Safe Native Mouse Cursor (replaces custom drawing)
+  if gfx.setcursor then
+    if state.hovering_interactive then
+      gfx.setcursor(32649) -- Native Hand cursor
+    else
+      gfx.setcursor(32512) -- Native Arrow cursor
+    end
+  end
 
   state.last_mouse_cap = gfx.mouse_cap
 
@@ -352,6 +313,17 @@ function draw_login(start_y, click_pressed)
   local sw = gfx.measurestr(state.status_msg)
   gfx.x, gfx.y = center_x - (sw/2), status_y
   gfx.drawstr(state.status_msg)
+
+  -- Hover tracking for inputs and button
+  if gfx.mouse_x > 50 and gfx.mouse_x < gfx.w - 50 then
+    if gfx.mouse_y > email_y and gfx.mouse_y < email_y + input_h then
+      state.hovering_interactive = true
+    elseif gfx.mouse_y > pin_y and gfx.mouse_y < pin_y + input_h then
+      state.hovering_interactive = true
+    elseif gfx.mouse_y > btn_y and gfx.mouse_y < btn_y + math.floor(50 * s) and not state.is_loading then
+      state.hovering_interactive = true
+    end
+  end
 
   -- Interaction
   if click_pressed then
@@ -429,6 +401,13 @@ function draw_dashboard(start_y, click_pressed)
   gfx.drawstr("STATUS: MONITORING CLOUD NODE")
   
   draw_button(50, btn_y, gfx.w - 100, btn_h, state.is_loading and "PULLING..." or "FORCE PULL SYNC")
+
+  -- Hover tracking for force pull button
+  if gfx.mouse_x > 50 and gfx.mouse_x < gfx.w - 50 then
+    if gfx.mouse_y > btn_y and gfx.mouse_y < btn_y + btn_h and not state.is_loading then
+      state.hovering_interactive = true
+    end
+  end
 
   if click_pressed then
     if gfx.mouse_y > btn_y and gfx.mouse_y < btn_y + btn_h and not state.is_loading then
