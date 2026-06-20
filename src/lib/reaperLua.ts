@@ -44,6 +44,7 @@ local state = {
   theme = "coldest",     -- "coldest" or "crazy-bird"
   snowflakes = {},       -- falling snowflake particles
   birds = {},            -- active flying ravens
+  wind_lines = {},       -- active horizontal wind tunnels
   clicks = {},           -- click coordinate tracking for animation
   last_mouse_cap = 0,    -- detects single click transitions
   sync_errors = {}       -- sync diagnostic logs
@@ -155,108 +156,332 @@ function draw_snow()
   end
 end
 
+local function cubic_bezier(t, p0x, p0y, p1x, p1y, p2x, p2y, p3x, p3y)
+  local mt = 1.0 - t
+  local mt2 = mt * mt
+  local mt3 = mt2 * mt
+  local t2 = t * t
+  local t3 = t2 * t
+  
+  local rx = mt3 * p0x + 3 * mt2 * t * p1x + 3 * mt * t2 * p2x + t3 * p3x
+  local ry = mt3 * p0y + 3 * mt2 * t * p1y + 3 * mt * t2 * p2y + t3 * p3y
+  return rx, ry
+end
+
+local function add_bezier(vertices, p0x, p0y, p1x, p1y, p2x, p2y, p3x, p3y)
+  local steps = 6
+  for i = 1, steps do
+    local t = i / steps
+    local rx, ry = cubic_bezier(t, p0x, p0y, p1x, p1y, p2x, p2y, p3x, p3y)
+    table.insert(vertices, {x = rx, y = ry})
+  end
+end
+
+local function lerp(a, b, f)
+  return a + (b - a) * f
+end
+
+local function draw_filled_poly(vertices, rx, ry)
+  if #vertices < 3 then return end
+  local root_x = rx or vertices[1].x
+  local root_y = ry or vertices[1].y
+  for i = 2, #vertices - 1 do
+    gfx.triangle(root_x, root_y, vertices[i].x, vertices[i].y, vertices[i + 1].x, vertices[i + 1].y)
+  end
+end
+
+local function draw_poly_outline(vertices)
+  if #vertices < 2 then return end
+  for i = 1, #vertices - 1 do
+    gfx.line(vertices[i].x, vertices[i].y, vertices[i + 1].x, vertices[i + 1].y)
+  end
+  gfx.line(vertices[#vertices].x, vertices[#vertices].y, vertices[1].x, vertices[1].y)
+end
+
+local function get_back_wing_vertices(phase)
+  local kA, kB, f
+  if phase < 0.20 then
+    kA, kB, f = 1, 2, phase / 0.20
+  elseif phase < 0.45 then
+    kA, kB, f = 2, 3, (phase - 0.20) / 0.25
+  elseif phase < 0.75 then
+    kA, kB, f = 3, 2, (phase - 0.45) / 0.30
+  else
+    kA, kB, f = 2, 1, (phase - 0.75) / 0.25
+  end
+  
+  local keys = {
+    [1] = {
+      c1x=55, c1y=10, c2x=75, c2y=-5, e1x=95, e1y=-10,
+      p2x=90, p2y=-2, p3x=100, p3y=0, p4x=92, p4y=8, p5x=100, p5y=15,
+      c3x=80, c3y=25, c4x=65, c4y=35
+    },
+    [2] = {
+      c1x=46, c1y=55, c2x=56, c2y=70, e1x=71, e1y=80,
+      p2x=66, p2y=75, p3x=74, p3y=73, p4x=68, p4y=67, p5x=74, p5y=55,
+      c3x=61, c3y=50, c4x=51, c4y=45
+    },
+    [3] = {
+      c1x=51, c1y=60, c2x=71, c2y=70, e1x=91, e1y=70,
+      p2x=86, p2y=65, p3x=94, p3y=60, p4x=84, p4y=55, p5x=88, p5y=47,
+      c3x=71, c3y=45, c4x=56, c4y=43
+    }
+  }
+  
+  local a = keys[kA]
+  local b = keys[kB]
+  
+  local c1x = lerp(a.c1x, b.c1x, f)
+  local c1y = lerp(a.c1y, b.c1y, f)
+  local c2x = lerp(a.c2x, b.c2x, f)
+  local c2y = lerp(a.c2y, b.c2y, f)
+  local e1x = lerp(a.e1x, b.e1x, f)
+  local e1y = lerp(a.e1y, b.e1y, f)
+  
+  local p2x = lerp(a.p2x, b.p2x, f)
+  local p2y = lerp(a.p2y, b.p2y, f)
+  local p3x = lerp(a.p3x, b.p3x, f)
+  local p3y = lerp(a.p3y, b.p3y, f)
+  local p4x = lerp(a.p4x, b.p4x, f)
+  local p4y = lerp(a.p4y, b.p4y, f)
+  local p5x = lerp(a.p5x, b.p5x, f)
+  local p5y = lerp(a.p5y, b.p5y, f)
+  
+  local c3x = lerp(a.c3x, b.c3x, f)
+  local c3y = lerp(a.c3y, b.c3y, f)
+  local c4x = lerp(a.c4x, b.c4x, f)
+  local c4y = lerp(a.c4y, b.c4y, f)
+  
+  local v = {}
+  table.insert(v, {x=44, y=42})
+  add_bezier(v, 44, 42, c1x, c1y, c2x, c2y, e1x, e1y)
+  table.insert(v, {x=p2x, y=p2y})
+  table.insert(v, {x=p3x, y=p3y})
+  table.insert(v, {x=p4x, y=p4y})
+  table.insert(v, {x=p5x, y=p5y})
+  add_bezier(v, p5x, p5y, c3x, c3y, c4x, c4y, 44, 42)
+  return v
+end
+
+local function get_front_wing_vertices(phase)
+  local kA, kB, f
+  if phase < 0.20 then
+    kA, kB, f = 1, 2, phase / 0.20
+  elseif phase < 0.45 then
+    kA, kB, f = 2, 3, (phase - 0.20) / 0.25
+  elseif phase < 0.75 then
+    kA, kB, f = 3, 2, (phase - 0.45) / 0.30
+  else
+    kA, kB, f = 2, 1, (phase - 0.75) / 0.25
+  end
+  
+  local keys = {
+    [1] = {
+      c1x=40, c1y=25, c2x=55, c2y=10, e1x=75, e1y=5,
+      p2x=72, p2y=12, p3x=80, p3y=15, p4x=75, p4y=22, p5x=82, p5y=28,
+      c3x=70, c3y=38, c4x=55, c4y=44
+    },
+    [2] = {
+      c1x=40, c1y=65, c2x=50, c2y=80, e1x=65, e1y=90,
+      p2x=60, p2y=85, p3x=68, p3y=83, p4x=62, p4y=77, p5x=68, p5y=60,
+      c3x=55, c3y=55, c4x=45, c4y=50
+    },
+    [3] = {
+      c1x=45, c1y=70, c2x=65, c2y=80, e1x=85, e1y=80,
+      p2x=80, p2y=75, p3x=88, p3y=70, p4x=78, p4y=65, p5x=82, p5y=52,
+      c3x=65, c3y=50, c4x=50, c4y=48
+    }
+  }
+  
+  local a = keys[kA]
+  local b = keys[kB]
+  
+  local c1x = lerp(a.c1x, b.c1x, f)
+  local c1y = lerp(a.c1y, b.c1y, f)
+  local c2x = lerp(a.c2x, b.c2x, f)
+  local c2y = lerp(a.c2y, b.c2y, f)
+  local e1x = lerp(a.e1x, b.e1x, f)
+  local e1y = lerp(a.e1y, b.e1y, f)
+  
+  local p2x = lerp(a.p2x, b.p2x, f)
+  local p2y = lerp(a.p2y, b.p2y, f)
+  local p3x = lerp(a.p3x, b.p3x, f)
+  local p3y = lerp(a.p3y, b.p3y, f)
+  local p4x = lerp(a.p4x, b.p4x, f)
+  local p4y = lerp(a.p4y, b.p4y, f)
+  local p5x = lerp(a.p5x, b.p5x, f)
+  local p5y = lerp(a.p5y, b.p5y, f)
+  
+  local c3x = lerp(a.c3x, b.c3x, f)
+  local c3y = lerp(a.c3y, b.c3y, f)
+  local c4x = lerp(a.c4x, b.c4x, f)
+  local c4y = lerp(a.c4y, b.c4y, f)
+  
+  local v = {}
+  table.insert(v, {x=38, y=48})
+  add_bezier(v, 38, 48, c1x, c1y, c2x, c2y, e1x, e1y)
+  table.insert(v, {x=p2x, y=p2y})
+  table.insert(v, {x=p3x, y=p3y})
+  table.insert(v, {x=p4x, y=p4y})
+  table.insert(v, {x=p5x, y=p5y})
+  add_bezier(v, p5x, p5y, c3x, c3y, c4x, c4y, 38, 48)
+  return v
+end
+
+local function translate_vertices(v_in, x, y, sc_factor)
+  local out = {}
+  for i, pt in ipairs(v_in) do
+    table.insert(out, {
+      x = x + (pt.x - 60) * sc_factor,
+      y = y + (pt.y - 50) * sc_factor
+    })
+  end
+  return out
+end
+
 function draw_flying_bird(x, y, s_size, flap_phase, flap_speed)
   local t = os.clock()
-  local flap = math.sin(t * flap_speed + flap_phase) -- oscillates between -1 and 1
+  local phase = ((t * flap_speed * 0.1) + flap_phase) % 1.0
+  local sc = s_size / 140
   
-  -- 1. Draw wind sweep speed streaks trailing behind the bird (flowing to the right)
-  for i = 1, 3 do
-    local offset_y = (i - 2) * s_size * 0.18
-    local wave = math.sin(t * flap_speed * 0.4 + i) * (s_size * 0.12)
-    local start_x = x + s_size * 0.25
-    local end_x = x + s_size * (2.8 + i * 1.0)
-    
-    local steps = 6
-    local prev_x = start_x
-    local prev_y = y + offset_y
-    for step = 1, steps do
-      local f = step / steps
-      local curr_x = start_x + (end_x - start_x) * f
-      local curr_y = y + offset_y + wave * math.sin(f * math.pi + t * 3.5)
-      
-      -- Smooth fading alpha
-      local alpha = (1.0 - f) * 0.26
-      
-      -- Main scarlet wind streak
-      gfx.set(0.9, 0.12, 0.2, alpha)
-      gfx.line(prev_x, prev_y, curr_x, curr_y)
-      
-      -- Subtle dark smoke parallel highlight
-      gfx.set(0.12, 0.01, 0.03, alpha * 0.4)
-      gfx.line(prev_x, prev_y + 1, curr_x, curr_y + 1)
-      
-      prev_x = curr_x
-      prev_y = curr_y
+  -- 1. BACK WING (Dimmer burgundy/maroon)
+  local raw_w2 = get_back_wing_vertices(phase)
+  local w2 = translate_vertices(raw_w2, x, y, sc)
+  w2[1].x, w2[1].y = x + (44 - 60) * sc, y + (42 - 50) * sc  -- exact lock joint
+  
+  gfx.set(0.16, 0.03, 0.06, 0.85) -- dark maroon fill
+  draw_filled_poly(w2, w2[1].x, w2[1].y)
+  
+  gfx.set(0.48, 0.08, 0.17, 0.5) -- specular edge outline
+  draw_poly_outline(w2)
+  
+  -- 2. BODY & TAIL FEATHERS
+  local body_raw = {}
+  table.insert(body_raw, {x = 0, y = 46})
+  add_bezier(body_raw, 0, 46, 4, 44.5, 8, 43, 12, 42)
+  add_bezier(body_raw, 12, 42, 16, 37, 22, 36, 28, 37)
+  add_bezier(body_raw, 28, 37, 40, 39, 50, 39, 60, 40)
+  add_bezier(body_raw, 60, 40, 75, 42, 85, 44, 95, 46)
+  table.insert(body_raw, {x = 115, y = 50})
+  table.insert(body_raw, {x = 110, y = 52})
+  table.insert(body_raw, {x = 122, y = 53})
+  table.insert(body_raw, {x = 112, y = 55})
+  table.insert(body_raw, {x = 125, y = 56})
+  table.insert(body_raw, {x = 114, y = 58})
+  table.insert(body_raw, {x = 120, y = 60})
+  table.insert(body_raw, {x = 105, y = 60})
+  table.insert(body_raw, {x = 95, y = 58})
+  table.insert(body_raw, {x = 85, y = 58})
+  add_bezier(body_raw, 85, 58, 80, 59, 70, 60, 60, 59)
+  add_bezier(body_raw, 60, 59, 45, 58, 35, 55, 25, 52)
+  add_bezier(body_raw, 25, 52, 15, 50, 8, 48, 0, 46)
+  
+  local body = translate_vertices(body_raw, x, y, sc)
+  gfx.set(0.10, 0.015, 0.03, 1.0) -- solid core body tone
+  draw_filled_poly(body)
+  
+  gfx.set(0.48, 0.08, 0.17, 0.8) -- rich scarlet body highlights
+  draw_poly_outline(body)
+  
+  -- Tail split lines
+  local t1_x, t1_y = x + (95 - 60) * sc, y + (50 - 50) * sc
+  local t1_ex, t1_ey = x + (115 - 60) * sc, y + (52 - 50) * sc
+  gfx.line(t1_x, t1_y, t1_ex, t1_ey)
+  
+  local t2_x, t2_y = x + (95 - 60) * sc, y + (53 - 50) * sc
+  local t2_ex, t2_ey = x + (120 - 60) * sc, y + (55 - 50) * sc
+  gfx.line(t2_x, t2_y, t2_ex, t2_ey)
+  
+  local t3_x, t3_y = x + (95 - 60) * sc, y + (56 - 50) * sc
+  local t3_ex, t3_ey = x + (115 - 60) * sc, y + (58 - 50) * sc
+  gfx.line(t3_x, t3_y, t3_ex, t3_ey)
+  
+  -- 3. BEAK (Matches body color, splits cleanly)
+  local beak_raw = {}
+  table.insert(beak_raw, {x = 0, y = 46})
+  add_bezier(beak_raw, 0, 46, 4, 44.5, 8, 43, 12, 42)
+  table.insert(beak_raw, {x = 12, y = 48})
+  add_bezier(beak_raw, 12, 48, 8, 47.5, 4, 47, 0, 46)
+  
+  local beak = translate_vertices(beak_raw, x, y, sc)
+  gfx.set(0.12, 0.02, 0.04, 1.0) -- matching rich beak color
+  draw_filled_poly(beak)
+  
+  gfx.set(0.48, 0.08, 0.17, 0.70) -- beak outline splits
+  draw_poly_outline(beak)
+  local bs_x, bs_y = x + (0 - 60) * sc, y + (46 - 50) * sc
+  local bs_ex, bs_ey = x + (12 - 60) * sc, y + (45 - 50) * sc
+  gfx.line(bs_x, bs_y, bs_ex, bs_ey)
+  
+  -- 4. GLOWING SCARLET EYE (exactly as from website drop shadow)
+  local eye_x = x + (16 - 60) * sc
+  local eye_y = y + (41 - 50) * sc
+  local eye_r = math.max(1.5, 1.2 * sc * (state.scale or 1.0))
+  
+  gfx.set(1.0, 0.12, 0.34, 0.35) -- eye soft red outer glow
+  gfx.circle(eye_x, eye_y, eye_r * 2.5, 1)
+  
+  gfx.set(1.0, 0.12, 0.34, 1.0) -- bright red core
+  gfx.circle(eye_x, eye_y, eye_r, 1)
+  
+  -- 5. FRONT WING (Foremost layout depth layer)
+  local raw_w1 = get_front_wing_vertices(phase)
+  local w1 = translate_vertices(raw_w1, x, y, sc)
+  w1[1].x, w1[1].y = x + (38 - 60) * sc, y + (48 - 50) * sc  -- exact lock joint
+  
+  gfx.set(0.16, 0.02, 0.04, 1.0) -- bright rich magenta/maroon body wing
+  draw_filled_poly(w1, w1[1].x, w1[1].y)
+  
+  gfx.set(0.80, 0.12, 0.25, 0.9) -- highly brilliant scarlet wing strokes
+  draw_poly_outline(w1)
+end
+
+function draw_wind()
+  if #state.wind_lines == 0 then
+    for i = 1, 50 do
+      table.insert(state.wind_lines, {
+        x = math.random(-200, gfx.w + 400),
+        y = math.random(40, gfx.h - 100),
+        width = math.random(150, 450),
+        height = math.random(1, 3),
+        speed = math.random(35, 80) / 10,
+        alpha = math.random(6, 22) / 100
+      })
     end
   end
   
-  -- 2. Draw back wing (behind body)
-  gfx.set(0.04, 0.0, 0.01, 0.7) -- dimmer dark maroon
-  local wing2_tip_x = x + s_size * 0.1
-  local wing2_tip_y = y - flap * s_size * 0.85 - s_size * 0.15
-  gfx.triangle(x, y, x + s_size * 0.3, y, wing2_tip_x, wing2_tip_y)
-  
-  -- Back wing feather highlight
-  gfx.set(0.25, 0.04, 0.06, 0.6)
-  gfx.line(x, y, wing2_tip_x, wing2_tip_y)
-  
-  -- Draw tail
-  gfx.set(0.03, 0.0, 0.0, 0.9)
-  local tail_tip_x = x + s_size * 1.0
-  local tail_tip_y = y + s_size * 0.15
-  gfx.triangle(x, y, x + s_size * 0.25, y + s_size * 0.08, tail_tip_x, tail_tip_y)
-  
-  -- Draw main body
-  gfx.set(0.08, 0.01, 0.02, 1.0) -- Body fill (dark rich maroon)
-  local body_front_x = x - s_size * 0.65
-  local body_front_y = y - s_size * 0.08
-  local body_back_x = x + s_size * 0.55
-  local body_back_y = y + s_size * 0.08
-  
-  -- Body thickness triangles
-  gfx.triangle(body_front_x, body_front_y, body_back_x, body_back_y, x, y + s_size * 0.18)
-  gfx.triangle(body_front_x, body_front_y, body_back_x, body_back_y, x, y - s_size * 0.08)
-  
-  -- Draw beak/head (now matches identical clean solid body color as body)
-  gfx.set(0.08, 0.01, 0.02, 1.0)
-  local beak_tip_x = x - s_size * 1.0
-  local beak_tip_y = y
-  gfx.triangle(body_front_x, body_front_y, x - s_size * 0.65, y + s_size * 0.04, beak_tip_x, beak_tip_y)
-  
-  -- Draw front wing
-  gfx.set(0.12, 0.01, 0.03, 1.0) -- lighter maroon for front wing
-  local wing1_tip_x = x - s_size * 0.15
-  local wing1_tip_y = y - flap * s_size * 1.05
-  local wing1_mid_x = x + s_size * 0.25
-  local wing1_mid_y = y + s_size * 0.08
-  gfx.triangle(x - s_size * 0.18, y - s_size * 0.08, wing1_mid_x, wing1_mid_y, wing1_tip_x, wing1_tip_y)
-  
-  -- Front wing wing-tip highlights
-  gfx.set(0.48, 0.08, 0.17, 0.8) -- red feather highlights
-  gfx.line(x - s_size * 0.18, y - s_size * 0.08, wing1_tip_x, wing1_tip_y)
-  gfx.line(wing1_mid_x, wing1_mid_y, wing1_tip_x, wing1_tip_y)
-  
-  -- Draw glowing scarlet eyes
-  gfx.set(1.0, 0.12, 0.34, 1.0) -- bright red eye
-  local eye_x = x - s_size * 0.6
-  local eye_y = y - s_size * 0.12
-  local eye_r = math.max(1, math.floor(s_size * 0.08))
-  gfx.circle(eye_x, eye_y, eye_r, 1)
+  for _, line in ipairs(state.wind_lines) do
+    line.x = line.x - line.speed -- move fast leftwards
+    if line.x + line.width < -100 then
+      line.x = gfx.w + math.random(50, 250)
+      line.y = math.random(40, gfx.h - 100)
+    end
+    
+    -- Draw horizontal wind sweep gradient representation
+    -- fading from back to front
+    gfx.set(1.0, 0.3, 0.4, line.alpha * 0.15)
+    gfx.rect(line.x, line.y - 1, line.width, line.height + 2, 1)
+    
+    gfx.set(1.0, 1.0, 1.0, line.alpha)
+    gfx.rect(line.x, line.y, line.width, line.height, 1)
+  end
 end
 
 function draw_birds()
   if #state.birds == 0 then
     local s = state.scale or 1.0
-    for i = 1, 12 do
+    -- Replicate flock sizes from website
+    local flock_sizes = {160, 120, 140, 90, 110, 130, 100, 115, 75, 110, 145, 125, 85, 105, 120}
+    for i, size in ipairs(flock_sizes) do
       table.insert(state.birds, {
-        x = math.random(0, gfx.w + 200),
-        y = math.random(80, gfx.h - 120),
-        size = math.random(15, 28) * s,
-        speed_x = -math.random(15, 38) / 10 * s,
-        speed_y = math.random(-4, 4) / 10 * s,
-        flap_speed = math.random(10, 18),
-        flap_phase = math.random(0, 314) / 100,
-        bob_amp = math.random(2, 6) * s
+        x = math.random(0, gfx.w + 400),
+        y = math.random(80, gfx.h - 180),
+        size = size * 0.5 * s,
+        speed_x = -math.random(18, 45) / 10 * s,
+        speed_y = math.random(-3, 3) / 10 * s,
+        flap_speed = math.random(12, 19),
+        flap_phase = math.random(0, 100) / 100,
+        bob_amp = math.random(8, 26) * s
       })
     end
   end
@@ -264,20 +489,21 @@ function draw_birds()
   local t = os.clock()
   for _, b in ipairs(state.birds) do
     b.x = b.x + b.speed_x
-    b.y = b.y + b.speed_y + math.sin(t * b.flap_speed * 0.4) * (b.bob_amp * 0.05)
+    -- Bobbing effect matches CSS bobbing period perfectly
+    b.y = b.y + b.speed_y + math.sin(t * 3.5 + b.flap_phase * 10) * (b.bob_amp * 0.05)
     
     -- Wrap around
-    local pad = b.size * 2
+    local pad = b.size * 2.5
     if b.x < -pad then
       b.x = gfx.w + pad
-      b.y = math.random(80, gfx.h - 120)
+      b.y = math.random(80, gfx.h - 180)
     elseif b.x > gfx.w + pad then
       b.x = -pad
-      b.y = math.random(80, gfx.h - 120)
+      b.y = math.random(80, gfx.h - 180)
     end
     
-    if b.y < 50 then b.y = 50 b.speed_y = -b.speed_y end
-    if b.y > gfx.h - 100 then b.y = gfx.h - 100 b.speed_y = -b.speed_y end
+    if b.y < 80 then b.y = 80 b.speed_y = -b.speed_y end
+    if b.y > gfx.h - 120 then b.y = gfx.h - 120 b.speed_y = -b.speed_y end
     
     draw_flying_bird(b.x, b.y, b.size, b.flap_phase, b.flap_speed)
   end
@@ -373,15 +599,18 @@ function draw_top_controls(click_pressed)
       end
       state.snowflakes = {}
       state.birds = {}
+      state.wind_lines = {}
     elseif in_rect(gfx.mouse_x, gfx.mouse_y, mx1, my, mw, mw) then
       state.scale = math.max(0.7, state.scale - 0.1)
       state.snowflakes = {}
       state.birds = {}
+      state.wind_lines = {}
       update_fonts()
     elseif in_rect(gfx.mouse_x, gfx.mouse_y, mx2, my, mw, mw) then
       state.scale = math.min(1.8, state.scale + 0.1)
       state.snowflakes = {}
       state.birds = {}
+      state.wind_lines = {}
       update_fonts()
     end
   end
@@ -430,6 +659,7 @@ function draw_ui()
 
   -- Falling snowflakes or feathers in background (or crazy birds!)
   if state.theme == "crazy-bird" then
+    draw_wind()
     draw_birds()
   else
     draw_snow()
