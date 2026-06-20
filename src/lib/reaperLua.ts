@@ -197,7 +197,9 @@ end
 
 function draw_custom_cursor(mx, my)
   if mx < 0 or my < 0 or mx > gfx.w or my > gfx.h then return end
-  gfx.cursor = -1 -- hide native cursor
+  if gfx.setcursor then
+    gfx.setcursor(0) -- Safe REAPER native function to set/reset standard mouse cursor
+  end
   
   local s = state.scale or 1.0
   if s < 0.8 then s = 0.8 end
