@@ -97,7 +97,7 @@ export const Mascot: React.FC<MascotProps> = React.memo(({
         xmlns="http://www.w3.org/2000/svg"
         className="absolute inset-0"
         style={{ 
-          filter: `drop-shadow(0 0 ${size * 0.15}px ${glowColor}66)`,
+          filter: 'none',
           transition: 'filter 0.5s ease-in-out, height 0.3s ease-in-out, transform 0.3s ease-in-out',
           overflow: 'visible' 
         }}

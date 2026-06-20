@@ -60,6 +60,55 @@ end
 
 update_fonts()
 
+local function copy_to_clipboard(text)
+  local ok = false
+  if reaper.CF_SetClipboard then
+    pcall(function() reaper.CF_SetClipboard(text); ok = true end)
+  end
+  if not ok and reaper.CF_SetClipboardString then
+    pcall(function() reaper.CF_SetClipboardString(text); ok = true end)
+  end
+  if not ok then
+    local os_str = reaper.GetOS()
+    if string.find(os_str, "Win") then
+      pcall(function()
+        local f = io.popen("clip", "w")
+        if f then
+          f:write(text)
+          f:close()
+          ok = true
+        end
+      end)
+    elseif string.find(os_str, "OSX") then
+      pcall(function()
+        local f = io.popen("pbcopy", "w")
+        if f then
+          f:write(text)
+          f:close()
+          ok = true
+        end
+      end)
+    end
+  end
+  return ok
+end
+
+local function format_errors_text()
+  if not state.sync_errors or #state.sync_errors == 0 then
+    return "All cloud stem values healthy. No sync errors."
+  end
+  local lines = {}
+  table.insert(lines, "=== BEATGANGSTA REAPER NODE SYNC ERRORS ===")
+  table.insert(lines, "Linked Account: " .. tostring(state.email))
+  table.insert(lines, "Date: " .. os.date("%Y-%m-%d %H:%M:%S"))
+  table.insert(lines, "Number of Errors: " .. tostring(#state.sync_errors))
+  table.insert(lines, "==========================================")
+  for idx, err in ipairs(state.sync_errors) do
+    table.insert(lines, string.format("[%d] [%s] %s", idx, tostring(err.code), tostring(err.desc)))
+  end
+  return table.concat(lines, "\r\n")
+end
+
 function Msg(val)
   reaper.ShowConsoleMsg(tostring(val)..string.char(10))
 end
@@ -443,7 +492,50 @@ function draw_dashboard(start_y, click_pressed)
     if #state.sync_errors > 5 then
       gfx.set(thm.subtext_r, thm.subtext_g, thm.subtext_b, 0.5)
       gfx.x, gfx.y = 50, item_y
-      gfx.drawstr("And " .. (#state.sync_errors - 5) .. " more. Check Window console!")
+      gfx.drawstr("And " .. (#state.sync_errors - 5) .. " more.")
+      item_y = item_y + math.floor(20 * s)
+    else
+      item_y = item_y + math.floor(8 * s)
+    end
+
+    local copy_btn_y = item_y
+    local copy_btn_w = gfx.w - 100
+    local copy_btn_h = math.floor(30 * s)
+    if copy_btn_h < 24 then copy_btn_h = 24 end
+
+    local copy_text = "COPY COMPLETE ERROR REPORT"
+    if state.report_copied_at and os.time() - state.report_copied_at < 3 then
+      copy_text = "REPORT COPIED ✔"
+    end
+
+    local on_copy_hover = in_rect(gfx.mouse_x, gfx.mouse_y, 50, copy_btn_y, copy_btn_w, copy_btn_h)
+    if on_copy_hover then
+      state.hovering_interactive = true
+      gfx.set(thm.acc_r, thm.acc_g, thm.acc_b, 0.25)
+    else
+      gfx.set(thm.bg_r + 0.05, thm.bg_g + 0.05, thm.bg_b + 0.05, 0.4)
+    end
+    gfx.rect(50, copy_btn_y, copy_btn_w, copy_btn_h, 1)
+
+    gfx.set(thm.acc_r, thm.acc_g, thm.acc_b, on_copy_hover and 0.8 or 0.4)
+    gfx.rect(50, copy_btn_y, copy_btn_w, copy_btn_h, 0)
+
+    gfx.set(1, 1, 1, on_copy_hover and 1.0 or 0.8)
+    gfx.setfont(4)
+    local c_tw, c_th = gfx.measurestr(copy_text)
+    gfx.x = 50 + (copy_btn_w - c_tw) / 2
+    gfx.y = copy_btn_y + (copy_btn_h - c_th) / 2
+    gfx.drawstr(copy_text)
+
+    if click_pressed and on_copy_hover then
+      local full_text = format_errors_text()
+      local success = copy_to_clipboard(full_text)
+      state.report_copied_at = os.time()
+      if success then
+        state.status_msg = "COPIED REPORT TO OS CLIPBOARD"
+      else
+        state.status_msg = "ERROR COPYING REPORT"
+      end
     end
   else
     gfx.set(0.2, 0.8, 0.2, 0.6)
