@@ -33,6 +33,11 @@ local themes = {
   }
 }
 
+local function trim_str(s)
+  if not s then return "" end
+  return s:match("^%s*(.-)%s*$") or ""
+end
+
 local state = {
   email = "",
   pin = "",
@@ -57,14 +62,14 @@ local function load_settings()
     state.remember_email = true
   end
   if state.remember_email and reaper.HasExtState("BeatGangsta", "email") then
-    state.email = reaper.GetExtState("BeatGangsta", "email")
+    state.email = trim_str(reaper.GetExtState("BeatGangsta", "email")):lower()
   end
 end
 
 local function save_settings()
   reaper.SetExtState("BeatGangsta", "remember_email", state.remember_email and "true" or "false", true)
   if state.remember_email then
-    reaper.SetExtState("BeatGangsta", "email", state.email, true)
+    reaper.SetExtState("BeatGangsta", "email", trim_str(state.email):lower(), true)
   else
     reaper.SetExtState("BeatGangsta", "email", "", true)
   end
@@ -733,7 +738,7 @@ function draw_login(start_y, click_pressed)
   local status_y = btn_y + math.floor(50 * s) + math.floor(15 * s)
 
   draw_input(50, email_y, gfx.w - 100, input_h, "EMAIL", state.email, state.input_focus == "email")
-  draw_input(50, pin_y, gfx.w - 100, input_h, "SYNC PIN", string.rep("*", #state.pin), state.input_focus == "pin")
+  draw_input(50, pin_y, gfx.w - 100, input_h, "SYNC PIN", state.pin, state.input_focus == "pin")
 
   -- Remember email checkbox
   draw_checkbox(50, remember_y, "REMEMBER EMAIL ON THIS MACHINE", state.remember_email)
@@ -997,6 +1002,16 @@ function draw_dashboard(start_y, click_pressed)
   end
 end
 
+local function url_encode(str)
+  if not str then return "" end
+  str = str:gsub("\r\n", "\n")
+  str = str:gsub("\r", "\n")
+  str = str:gsub("([^%w%.%-%_])", function(c)
+    return string.format("%%%02X", string.byte(c))
+  end)
+  return str
+end
+
 function perform_sync()
   if state.email == "" or #state.pin < 4 then return end
   save_settings()
@@ -1004,7 +1019,9 @@ function perform_sync()
   state.status_msg = "POLLING BEATGANGSTA CLOUD API..."
   state.sync_errors = {}
 
-  local url = "${origin}/api/reaper-sync/pull?email=" .. state.email .. "&pin=" .. state.pin
+  local clean_email = trim_str(state.email):lower()
+  local clean_pin = trim_str(state.pin)
+  local url = "${origin}/api/reaper-sync/pull?email=" .. url_encode(clean_email) .. "&pin=" .. url_encode(clean_pin)
   local tmp = os.tmpname()
   if tmp:byte(1) == 92 then tmp = os.getenv("TMP") .. tmp end
 
@@ -1043,6 +1060,64 @@ function perform_sync()
     state.status_msg = "NETWORK ERROR"
   end
   state.is_loading = false
+end
+
+local function add_fx_fuzzy(track, fx_name)
+  -- 1. Try exact match
+  local idx = reaper.TrackFX_AddByName(track, fx_name, false, -1)
+  if idx >= 0 then return idx end
+
+  -- 2. Clean prefix and try
+  local clean_name = fx_name
+  if fx_name:sub(1, 4) == "JS: " then
+    clean_name = fx_name:sub(5)
+  end
+
+  local variations = {
+    clean_name,
+    "JS: " .. clean_name,
+    clean_name:lower(),
+    "JS: " .. clean_name:lower()
+  }
+
+  -- If it has a path, e.g. "SStillwell/1973", extract last part "1973"
+  local last_part = clean_name:match(".*/(.*)")
+  if last_part then
+    table.insert(variations, last_part)
+    table.insert(variations, "JS: " .. last_part)
+    table.insert(variations, last_part:lower())
+    table.insert(variations, "JS: " .. last_part:lower())
+  end
+
+  -- Try each variation
+  for _, var in ipairs(variations) do
+    local res = reaper.TrackFX_AddByName(track, var, false, -1)
+    if res >= 0 then return res end
+  end
+
+  -- Try spelling corrections like Stilwell with one "l" vs two, or directory names
+  local spelling_corrections = {
+    clean_name:gsub("SStillwell", "Stillwell"),
+    clean_name:gsub("SStillwell/1973", "1973"),
+    clean_name:gsub("SStillwell", "sstillwell"),
+    clean_name:gsub("LOSER/", ""),
+    clean_name:gsub("Saturation/", "")
+  }
+
+  for _, sc in ipairs(spelling_corrections) do
+    if sc ~= clean_name then
+      local res = reaper.TrackFX_AddByName(track, sc, false, -1)
+      if res >= 0 then return res end
+      res = reaper.TrackFX_AddByName(track, "JS: " .. sc, false, -1)
+      if res >= 0 then return res end
+      res = reaper.TrackFX_AddByName(track, sc:lower(), false, -1)
+      if res >= 0 then return res end
+      res = reaper.TrackFX_AddByName(track, "JS: " .. sc:lower(), false, -1)
+      if res >= 0 then return res end
+    end
+  end
+
+  return -1
 end
 
 function apply_sync(payload)
@@ -1143,7 +1218,7 @@ function apply_sync(payload)
     elseif line:sub(1,3) == "FX|" then
       local fx_name = line:sub(4)
       if current_track then
-        current_fx = reaper.TrackFX_AddByName(current_track, fx_name, false, -1)
+        current_fx = add_fx_fuzzy(current_track, fx_name)
         if current_fx < 0 then
           table.insert(state.sync_errors, {
             code = "ERR_FX_001",
