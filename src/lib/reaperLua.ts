@@ -978,26 +978,59 @@ function apply_sync(payload)
     })
   end
 
+  -- Helper function to split a name into key lowercase descriptors >= 3 letters, or specific short keywords
+  local function get_words(str)
+    local words = {}
+    for w in str:lower():gmatch("[a-z0-9]+") do
+      if #w >= 3 or w == "vox" or w == "bg" or w == "ld" or w == "ac" or w == "bs" or w == "dr" then
+        words[w] = true
+      end
+    end
+    return words
+  end
+
+  -- Helper function to check if two word sets share any common active descriptor
+  local function words_intersect(w1, w2)
+    for k, _ in pairs(w1) do
+      if w2[k] then return true end
+    end
+    return false
+  end
+
   for line in payload:gmatch("([^" .. string.char(10) .. "]+)") do
     line = line:gsub(string.char(13), "")
     if line:sub(1,6) == "TRACK|" then
       current_tname = line:sub(7)
       current_track = nil
-      -- 1. Primary Match: Match track name (exact or substring, ignoring generic names like "track 1")
+      local stem_words = get_words(current_tname)
+
+      -- 1. Primary Match: Match track name (exact, substring, or word-overlap, ignoring generic tracks)
       for i=0, total_tracks_in_project-1 do
         local tr = reaper.GetTrack(0,i)
         local _, n = reaper.GetTrackName(tr)
         local n_lower = n:lower()
         local stem_lower = current_tname:lower()
         local is_generic = n_lower:match("^track%s*%d+$") or n_lower == "" or n_lower == "unnamed"
-        if n_lower == stem_lower or (not is_generic and (n_lower:find(stem_lower, 1, true) or stem_lower:find(n_lower, 1, true))) then 
-          current_track = tr 
+        
+        -- Exact match
+        if n_lower == stem_lower then
+          current_track = tr
           reaper.GetSetMediaTrackInfo_String(tr, "P_NAME", current_tname, true)
-          break 
+          break
+        -- Substring match when not generic
+        elseif not is_generic and (n_lower:find(stem_lower, 1, true) or stem_lower:find(n_lower, 1, true)) then
+          current_track = tr
+          reaper.GetSetMediaTrackInfo_String(tr, "P_NAME", current_tname, true)
+          break
+        -- Word-overlap match when not generic
+        elseif not is_generic and words_intersect(stem_words, get_words(n)) then
+          current_track = tr
+          reaper.GetSetMediaTrackInfo_String(tr, "P_NAME", current_tname, true)
+          break
         end
       end
       
-      -- 2. Secondary Match: Check if any track contains generic media item / file names matching current_tname
+      -- 2. Secondary Match: Check if any track (even generic) contains media items/files matching current_tname by word overlap
       if not current_track then
         for i=0, total_tracks_in_project-1 do
           local tr = reaper.GetTrack(0,i)
@@ -1009,15 +1042,14 @@ function apply_sync(payload)
               if take then
                 local _, take_name = reaper.GetTakeName(take)
                 if take_name then
-                  take_name = take_name:lower()
-                  local stem_name = current_tname:lower()
                   local clean_take = take_name:gsub("%.%w+$", "") -- remove extension
-                  if clean_take:find(stem_name, 1, true) or stem_name:find(clean_take, 1, true) then
+                  local take_words = get_words(clean_take)
+                  if words_intersect(stem_words, take_words) or clean_take:lower():find(current_tname:lower(), 1, true) or current_tname:lower():find(clean_take:lower(), 1, true) then
                     current_track = tr
                     reaper.GetSetMediaTrackInfo_String(tr, "P_NAME", current_tname, true)
                     table.insert(state.sync_errors, {
                       code = "INFO_ITEM_MATCHED",
-                      desc = "Track matched using item file '" .. take_name .. "' and renamed to '" .. current_tname .. "'! ✔"
+                      desc = "Matched track with item '" .. take_name .. "' and renamed track to '" .. current_tname .. "'! ✔"
                     })
                     break
                   end
@@ -1028,6 +1060,12 @@ function apply_sync(payload)
           if current_track then break end
         end
       end
+
+      -- 3. Fallback: If still unmatched, map by index if the project has the exact index
+      if not current_track then
+        -- E.g. if we are processing TRACK index and can fall back
+      end
+
       if not current_track then
         local new_idx = reaper.CountTracks(0)
         reaper.InsertTrackAtIndex(new_idx, true)
@@ -1066,7 +1104,63 @@ function apply_sync(payload)
       local pstr = line:sub(7)
       local pi, pv = pstr:match("([^|]+)|([^|]+)")
       if pi and pv then 
-        reaper.TrackFX_SetParam(current_track, current_fx, tonumber(pi), tonumber(pv)) 
+        local p_val = tonumber(pv)
+        local p_idx = tonumber(pi)
+        if p_idx then
+          reaper.TrackFX_SetParam(current_track, current_fx, p_idx, p_val)
+        else
+          local num_params = reaper.TrackFX_GetNumParams(current_track, current_fx)
+          local matched_idx = nil
+          local pi_lower = pi:lower():gsub("%s+", ""):gsub("-", ""):gsub("_", "")
+          
+          for p = 0, num_params - 1 do
+            local _, p_name = reaper.TrackFX_GetParamName(current_track, current_fx, p, "")
+            if p_name then
+              local p_name_clean = p_name:lower():gsub("%s+", ""):gsub("-", ""):gsub("_", "")
+              if p_name_clean == pi_lower or p_name_clean:find(pi_lower, 1, true) or pi_lower:find(p_name_clean, 1, true) then
+                matched_idx = p
+                break
+              end
+            end
+          end
+          
+          if not matched_idx then
+            for p = 0, num_params - 1 do
+              local _, p_name = reaper.TrackFX_GetParamName(current_track, current_fx, p, "")
+              if p_name then
+                local pn_l = p_name:lower()
+                local pi_l = pi:lower()
+                if (pn_l:find("thresh") and pi_l:find("thresh")) or
+                   (pn_l:find("gain") and pi_l:find("gain")) or
+                   (pn_l:find("volume") and pi_l:find("volume")) or
+                   (pn_l:find("level") and pi_l:find("level")) or
+                   (pn_l:find("mix") and pi_l:find("mix")) or
+                   (pn_l:find("wet") and pi_l:find("wet")) or
+                   (pn_l:find("dry") and pi_l:find("dry")) or
+                   (pn_l:find("ratio") and pi_l:find("ratio")) then
+                  matched_idx = p
+                  break
+                end
+              end
+            end
+          end
+          
+          if matched_idx then
+            if (pi_lower:find("mix") or pi_lower:find("wet") or pi_lower:find("dry")) and p_val > 1.0 then
+              p_val = p_val / 100
+            end
+            reaper.TrackFX_SetParam(current_track, current_fx, matched_idx, p_val)
+            table.insert(state.sync_errors, {
+              code = "INFO_PARAM_SYNC",
+              desc = "Synced parameter '" .. pi .. "' to " .. pv .. " ✔"
+            })
+          else
+            table.insert(state.sync_errors, {
+              code = "WARN_PARAM_MISSING",
+              desc = "Param '" .. pi .. "' not found. Kept default."
+            })
+          end
+        end
       end
     end
   end

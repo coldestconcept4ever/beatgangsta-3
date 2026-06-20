@@ -474,14 +474,13 @@ export const CritiqueCard: React.FC<CritiqueCardProps> = ({ critique, stems = []
         txtContent += `TRACK|${plan.targetStem}\n`;
         plan.recommendedChain.forEach(req => {
           txtContent += `FX|${req.name}\n`;
-          let paramIdx = 0;
           if (req.deepDive) {
             req.deepDive.forEach(dive => {
               const numVal = parseFloat(String(dive.value).replace(/[^0-9.-]/g, ''));
-              if (!isNaN(numVal)) {
-                txtContent += `PARAM|${paramIdx}|${numVal}\n`;
+              if (!isNaN(numVal) && dive.parameter) {
+                // Keep name-based matching: PARAM|ParameterName|Value
+                txtContent += `PARAM|${dive.parameter}|${numVal}\n`;
               }
-              paramIdx++;
             });
           }
         });
