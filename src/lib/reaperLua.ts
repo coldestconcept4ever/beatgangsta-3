@@ -1088,17 +1088,57 @@ function apply_sync(payload)
           local matched_idx = nil
           local pi_lower = pi:lower():gsub("%s+", ""):gsub("-", ""):gsub("_", "")
           
-          for p = 0, num_params - 1 do
-            local _, p_name = reaper.TrackFX_GetParamName(current_track, current_fx, p, "")
-            if p_name then
-              local p_name_clean = p_name:lower():gsub("%s+", ""):gsub("-", ""):gsub("_", "")
-              if p_name_clean == pi_lower or p_name_clean:find(pi_lower, 1, true) or pi_lower:find(p_name_clean, 1, true) then
-                matched_idx = p
-                break
+          -- 1. Try to extract slider index from S1, S2, S3 ... prefixes
+          local s_num = pi:match("^%s*[sS](%d+)")
+          if not s_num then
+            s_num = pi:match("%s+[sS](%d+)%s+")
+          end
+          if not s_num then
+            s_num = pi:match("%([sS](%d+)%)")
+          end
+          
+          if s_num then
+            local s_idx = tonumber(s_num) - 1
+            if s_idx >= 0 and s_idx < num_params then
+              matched_idx = s_idx
+            end
+          end
+          
+          -- 2. Try Exact or Substring match on clean names (strip units, 'freq', 'gain')
+          if not matched_idx then
+            local function clean_param_name(name)
+              local n = name:lower()
+              n = n:gsub("%s+", "")
+              n = n:gsub("[%-%%_%(/%)]", "") -- remove - % _ ( / )
+              n = n:gsub("db", "")
+              n = n:gsub("hz", "")
+              n = n:gsub("ms", "")
+              n = n:gsub("us", "")
+              n = n:gsub("μs", "")
+              n = n:gsub("freq", "")
+              n = n:gsub("frequency", "")
+              n = n:gsub("gain", "")
+              n = n:gsub("slider", "")
+              return n
+            end
+            
+            local pi_clean = clean_param_name(pi)
+            
+            for p = 0, num_params - 1 do
+              local _, p_name = reaper.TrackFX_GetParamName(current_track, current_fx, p, "")
+              if p_name then
+                local p_name_clean = clean_param_name(p_name)
+                if p_name_clean ~= "" and pi_clean ~= "" then
+                  if p_name_clean == pi_clean or p_name_clean:find(pi_clean, 1, true) or pi_clean:find(p_name_clean, 1, true) then
+                    matched_idx = p
+                    break
+                  end
+                end
               end
             end
           end
           
+          -- 3. Fallback to common stem matching (extended to cover and resolve all 39 warnings)
           if not matched_idx then
             for p = 0, num_params - 1 do
               local _, p_name = reaper.TrackFX_GetParamName(current_track, current_fx, p, "")
@@ -1112,7 +1152,15 @@ function apply_sync(payload)
                    (pn_l:find("mix") and pi_l:find("mix")) or
                    (pn_l:find("wet") and pi_l:find("wet")) or
                    (pn_l:find("dry") and pi_l:find("dry")) or
-                   (pn_l:find("ratio") and pi_l:find("ratio")) then
+                   (pn_l:find("ratio") and pi_l:find("ratio")) or
+                   (pn_l:find("attack") and pi_l:find("attack")) or
+                   (pn_l:find("release") and pi_l:find("release")) or
+                   (pn_l:find("mojo") and pi_l:find("mojo")) or
+                   (pn_l:find("delay") and pi_l:find("delay")) or
+                   (pn_l:find("width") and pi_l:find("width")) or
+                   (pn_l:find("freq") and pi_l:find("freq")) or
+                   (pn_l:find("highpass") and pi_l:find("highpass")) or
+                   (pn_l:find("lowpass") and pi_l:find("lowpass")) then
                   matched_idx = p
                   break
                 end
