@@ -7654,18 +7654,14 @@ Provide the exact JSFX plugin name and required sliders/parameters.`;
                                 const content = await zip.generateAsync({ type: "blob" });
                                 saveAs(content, "BeatGangsta_ReaperLink.zip");
                               }}
-                              className={`inline-flex items-center gap-2 rounded-l-full px-4 py-2 font-black text-[10px] uppercase tracking-widest transition-colors ${
-                                theme === 'coldest' ? 'bg-[#10b981] text-white hover:bg-[#059669]' : 'bg-[#10b981]/20 text-[#10b981] hover:bg-[#10b981]/30'
-                              }`}
+                              className={`inline-flex items-center gap-2 rounded-l-full px-4 py-2 font-black text-[10px] uppercase tracking-widest transition-colors bg-[#10b981] text-white hover:bg-[#059669]`}
                             >
                               <Download className="w-3 h-3" />
                               BeatGangsta Connect (.zip)
                             </button>
                             <button 
                               onClick={() => setShowJsfxHelpModal(true)}
-                              className={`rounded-r-full pr-3 pl-1 py-2 transition-colors flex items-center justify-center ${
-                                theme === 'coldest' ? 'bg-[#10b981] text-white hover:bg-[#059669]' : 'bg-[#10b981]/20 text-[#10b981] hover:bg-[#10b981]/30'
-                              }`}
+                              className={`rounded-r-full pr-3 pl-1 py-2 transition-colors flex items-center justify-center bg-[#10b981] text-white hover:bg-[#059669] border-l border-[#059669]/30`}
                               title="How to use BeatGangsta Connect"
                             >
                               <HelpCircle className="w-3.5 h-3.5" />
