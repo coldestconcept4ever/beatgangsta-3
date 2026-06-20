@@ -36,6 +36,7 @@ local themes = {
 local state = {
   email = "",
   pin = "",
+  remember_email = true,
   is_logged_in = false,
   is_loading = false,
   status_msg = "READY TO CONNECT",
@@ -48,6 +49,29 @@ local state = {
   last_mouse_cap = 0,    -- detects single click transitions
   sync_errors = {}       -- sync diagnostic logs
 }
+
+local function load_settings()
+  if reaper.HasExtState("BeatGangsta", "remember_email") then
+    state.remember_email = (reaper.GetExtState("BeatGangsta", "remember_email") == "true")
+  else
+    state.remember_email = true
+  end
+  if state.remember_email and reaper.HasExtState("BeatGangsta", "email") then
+    state.email = reaper.GetExtState("BeatGangsta", "email")
+  end
+end
+
+local function save_settings()
+  reaper.SetExtState("BeatGangsta", "remember_email", state.remember_email and "true" or "false", true)
+  if state.remember_email then
+    reaper.SetExtState("BeatGangsta", "email", state.email, true)
+  else
+    reaper.SetExtState("BeatGangsta", "email", "", true)
+  end
+end
+
+-- Load on script load
+load_settings()
 
 gfx.init("BEATGANGSTA • CONNECT", 1260, 1860)
 
@@ -704,11 +728,15 @@ function draw_login(start_y, click_pressed)
   
   local email_y = start_y + math.floor(25 * s)
   local pin_y = email_y + input_h + input_gap
-  local btn_y = pin_y + input_h + input_gap
+  local remember_y = pin_y + input_h + math.floor(15 * s)
+  local btn_y = remember_y + math.floor(20 * s) + input_gap
   local status_y = btn_y + math.floor(50 * s) + math.floor(15 * s)
 
   draw_input(50, email_y, gfx.w - 100, input_h, "EMAIL", state.email, state.input_focus == "email")
   draw_input(50, pin_y, gfx.w - 100, input_h, "SYNC PIN", string.rep("*", #state.pin), state.input_focus == "pin")
+
+  -- Remember email checkbox
+  draw_checkbox(50, remember_y, "REMEMBER EMAIL ON THIS MACHINE", state.remember_email)
 
   -- Action Button
   draw_button(50, btn_y, gfx.w - 100, math.floor(50 * s), state.is_loading and "POLLING..." or "LINK REAPER NODE")
@@ -726,6 +754,8 @@ function draw_login(start_y, click_pressed)
       state.hovering_interactive = true
     elseif gfx.mouse_y > pin_y and gfx.mouse_y < pin_y + input_h then
       state.hovering_interactive = true
+    elseif gfx.mouse_y > remember_y and gfx.mouse_y < remember_y + math.floor(20 * s) and gfx.mouse_x < 450 * s then
+      state.hovering_interactive = true
     elseif gfx.mouse_y > btn_y and gfx.mouse_y < btn_y + math.floor(50 * s) and not state.is_loading then
       state.hovering_interactive = true
     end
@@ -737,6 +767,9 @@ function draw_login(start_y, click_pressed)
       state.input_focus = "email"
     elseif gfx.mouse_y > pin_y and gfx.mouse_y < pin_y + input_h then
       state.input_focus = "pin"
+    elseif gfx.mouse_y > remember_y and gfx.mouse_y < remember_y + math.floor(20 * s) and gfx.mouse_x < 450 * s then
+      state.remember_email = not state.remember_email
+      save_settings()
     elseif gfx.mouse_y > btn_y and gfx.mouse_y < btn_y + math.floor(50 * s) and not state.is_loading then
       perform_sync()
     end
@@ -757,6 +790,43 @@ function draw_login(start_y, click_pressed)
       elseif #state.pin < 6 then state.pin = state.pin .. string.char(char) end
     end
   end
+end
+
+function draw_checkbox(x, y, label, checked)
+  local s = state.scale or 1.0
+  local thm = themes[state.theme] or themes["coldest"]
+  local size = math.floor(16 * s)
+  
+  -- box
+  gfx.set(thm.bg_r, thm.bg_g, thm.bg_b, 1.0)
+  gfx.rect(x, y, size, size, 1) -- background fill
+  
+  if checked then
+    gfx.set(thm.acc_r, thm.acc_g, thm.acc_b, 1)
+    gfx.rect(x, y, size, size, 1) -- fill
+    gfx.set(thm.btn_text_r, thm.btn_text_g, thm.btn_text_b, 1)
+    -- draw a checkmark
+    local start_cx = x + math.floor(3 * s)
+    local start_cy = y + math.floor(8 * s)
+    local mid_cx = x + math.floor(7 * s)
+    local mid_cy = y + math.floor(12 * s)
+    local end_cx = x + math.floor(13 * s)
+    local end_cy = y + math.floor(4 * s)
+    
+    gfx.line(start_cx, start_cy, mid_cx, mid_cy)
+    gfx.line(mid_cx, mid_cy, end_cx, end_cy)
+  else
+    gfx.set(thm.acc_r * 0.4, thm.acc_g * 0.4, thm.acc_b * 0.4, 1.0)
+    gfx.rect(x, y, size, size, 0) -- stroke
+  end
+  
+  -- text label
+  gfx.set(thm.subtext_r, thm.subtext_g, thm.subtext_b, 0.8)
+  gfx.setfont(4) -- Subtitle / Micro font
+  local _, th = gfx.measurestr(label)
+  gfx.x = x + size + math.floor(10 * s)
+  gfx.y = y + (size - th) / 2
+  gfx.drawstr(label)
 end
 
 function draw_input(x, y, w, h, label, val, focused)
@@ -805,6 +875,7 @@ function draw_dashboard(start_y, click_pressed)
   local line2_y = line1_y + math.floor(30 * s)
   local btn_y = line2_y + math.floor(40 * s)
   local btn_h = math.floor(50 * s)
+  local btn2_y = btn_y + btn_h + math.floor(15 * s)
 
   gfx.x, gfx.y = 50, line1_y
   gfx.drawstr("LINKED AS: " .. state.email)
@@ -812,10 +883,13 @@ function draw_dashboard(start_y, click_pressed)
   gfx.drawstr("STATUS: MONITORING CLOUD NODE")
   
   draw_button(50, btn_y, gfx.w - 100, btn_h, state.is_loading and "PULLING..." or "FORCE PULL SYNC")
+  draw_button(50, btn2_y, gfx.w - 100, btn_h, "RESYNC (ENTER NEW PIN)")
 
-  -- Hover tracking for force pull button
+  -- Hover tracking for buttons
   if gfx.mouse_x > 50 and gfx.mouse_x < gfx.w - 50 then
     if gfx.mouse_y > btn_y and gfx.mouse_y < btn_y + btn_h and not state.is_loading then
+      state.hovering_interactive = true
+    elseif gfx.mouse_y > btn2_y and gfx.mouse_y < btn2_y + btn_h and not state.is_loading then
       state.hovering_interactive = true
     end
   end
@@ -823,10 +897,16 @@ function draw_dashboard(start_y, click_pressed)
   if click_pressed then
     if gfx.mouse_y > btn_y and gfx.mouse_y < btn_y + btn_h and not state.is_loading then
       perform_sync()
+    elseif gfx.mouse_y > btn2_y and gfx.mouse_y < btn2_y + btn_h and not state.is_loading then
+      -- Reset pin, prompt for a new one
+      state.pin = ""
+      state.is_logged_in = false
+      state.input_focus = "pin"
+      state.status_msg = "ENTER NEW SYNC PIN TO RESYNC"
     end
   end
 
-  local diag_y = btn_y + btn_h + math.floor(25 * s)
+  local diag_y = btn2_y + btn_h + math.floor(25 * s)
   if state.sync_errors and #state.sync_errors > 0 then
     gfx.set(thm.acc_r, thm.acc_g, thm.acc_b, 0.9)
     gfx.setfont(2)
@@ -919,6 +999,7 @@ end
 
 function perform_sync()
   if state.email == "" or #state.pin < 4 then return end
+  save_settings()
   state.is_loading = true
   state.status_msg = "POLLING BEATGANGSTA CLOUD API..."
   state.sync_errors = {}
