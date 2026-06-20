@@ -983,12 +983,49 @@ function apply_sync(payload)
     if line:sub(1,6) == "TRACK|" then
       current_tname = line:sub(7)
       current_track = nil
+      -- 1. Primary Match: Match track name (exact or substring, ignoring generic names like "track 1")
       for i=0, total_tracks_in_project-1 do
         local tr = reaper.GetTrack(0,i)
         local _, n = reaper.GetTrackName(tr)
-        if n:lower() == current_tname:lower() or n == current_tname then 
+        local n_lower = n:lower()
+        local stem_lower = current_tname:lower()
+        local is_generic = n_lower:match("^track%s*%d+$") or n_lower == "" or n_lower == "unnamed"
+        if n_lower == stem_lower or (not is_generic and (n_lower:find(stem_lower, 1, true) or stem_lower:find(n_lower, 1, true))) then 
           current_track = tr 
+          reaper.GetSetMediaTrackInfo_String(tr, "P_NAME", current_tname, true)
           break 
+        end
+      end
+      
+      -- 2. Secondary Match: Check if any track contains generic media item / file names matching current_tname
+      if not current_track then
+        for i=0, total_tracks_in_project-1 do
+          local tr = reaper.GetTrack(0,i)
+          local item_count = reaper.CountTrackMediaItems(tr)
+          for j=0, item_count-1 do
+            local item = reaper.GetTrackMediaItem(tr, j)
+            if item then
+              local take = reaper.GetActiveTake(item)
+              if take then
+                local _, take_name = reaper.GetTakeName(take)
+                if take_name then
+                  take_name = take_name:lower()
+                  local stem_name = current_tname:lower()
+                  local clean_take = take_name:gsub("%.%w+$", "") -- remove extension
+                  if clean_take:find(stem_name, 1, true) or stem_name:find(clean_take, 1, true) then
+                    current_track = tr
+                    reaper.GetSetMediaTrackInfo_String(tr, "P_NAME", current_tname, true)
+                    table.insert(state.sync_errors, {
+                      code = "INFO_ITEM_MATCHED",
+                      desc = "Track matched using item file '" .. take_name .. "' and renamed to '" .. current_tname .. "'! ✔"
+                    })
+                    break
+                  end
+                end
+              end
+            end
+          end
+          if current_track then break end
         end
       end
       if not current_track then
