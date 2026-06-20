@@ -40,7 +40,7 @@ local state = {
   is_loading = false,
   status_msg = "READY TO CONNECT",
   input_focus = "email", -- "email" or "pin"
-  scale = 1.0,           -- adjustable size modifier
+  scale = 1.3,           -- adjustable size modifier
   theme = "coldest",     -- "coldest" or "crazy-bird"
   snowflakes = {},       -- falling snowflake particles
   clicks = {},           -- click coordinate tracking for animation
@@ -48,7 +48,7 @@ local state = {
   sync_errors = {}       -- sync diagnostic logs
 }
 
-gfx.init("BEATGANGSTA • CONNECT", 420, 620)
+gfx.init("BEATGANGSTA • CONNECT", 800, 680)
 
 local function update_fonts()
   local s = state.scale or 1.0
@@ -155,14 +155,42 @@ function draw_snow()
 end
 
 function draw_top_controls(click_pressed)
-  local my = 15
-  local mw = 25
+  local s = state.scale or 1.0
   local thm = themes[state.theme] or themes["coldest"]
   
-  -- Theme switch button (labeled like [THEME: COLD] or [THEME: BIRD])
-  local tx_th = gfx.w - 180
-  local tw_th = 95
+  -- Use scaled values for heights and margins
+  local my = math.floor(15 * s)
+  local mw = math.floor(25 * s)
+  if mw < 25 then mw = 25 end
   
+  -- Label for theme
+  local labelTheme = "THEME: COLD"
+  if state.theme == "crazy-bird" then labelTheme = "THEME: BIRD" end
+  
+  -- Measure theme label under Font 2 (Button Font)
+  gfx.setfont(2)
+  local twt, tht = gfx.measurestr(labelTheme)
+  
+  -- Comfortably pad the theme button width around the measured text to prevent cropping
+  local tw_th = twt + math.floor(16 * s)
+  
+  -- Calculate horizontal positions from right to left dynamically so they never overlap
+  local margin = math.floor(15 * s)
+  if margin < 15 then margin = 15 end
+  
+  local gap = math.floor(10 * s)
+  if gap < 8 then gap = 8 end
+  
+  -- Button '+' is furthest to the right
+  local mx2 = gfx.w - margin - mw
+  
+  -- Button '-' is to the left of '+'
+  local mx1 = mx2 - gap - mw
+  
+  -- Theme switcher button is to the left of '-'
+  local tx_th = mx1 - gap - tw_th
+  
+  -- 1. Draw Theme Switcher Button
   if in_rect(gfx.mouse_x, gfx.mouse_y, tx_th, my, tw_th, mw) then
     state.hovering_interactive = true
     gfx.set(thm.acc_r, thm.acc_g, thm.acc_b, 0.3)
@@ -173,15 +201,10 @@ function draw_top_controls(click_pressed)
   gfx.set(thm.acc_r, thm.acc_g, thm.acc_b, 1)
   gfx.rect(tx_th, my, tw_th, mw, 0)
   
-  gfx.setfont(2)
-  local labelTheme = "THEME: COLD"
-  if state.theme == "crazy-bird" then labelTheme = "THEME: BIRD" end
-  local twt, tht = gfx.measurestr(labelTheme)
   gfx.x, gfx.y = tx_th + (tw_th - twt)/2, my + (mw - tht)/2
   gfx.drawstr(labelTheme)
-
-  -- Button '-'
-  local mx1 = gfx.w - 75
+  
+  -- 2. Draw '-' Button
   if in_rect(gfx.mouse_x, gfx.mouse_y, mx1, my, mw, mw) then
     state.hovering_interactive = true
     gfx.set(thm.acc_r, thm.acc_g, thm.acc_b, 0.3)
@@ -191,12 +214,12 @@ function draw_top_controls(click_pressed)
   gfx.rect(mx1, my, mw, mw, 1)
   gfx.set(thm.acc_r, thm.acc_g, thm.acc_b, 1)
   gfx.rect(mx1, my, mw, mw, 0)
+  
   local tw, th = gfx.measurestr("-")
   gfx.x, gfx.y = mx1 + (mw - tw)/2, my + (mw - th)/2
   gfx.drawstr("-")
   
-  -- Button '+'
-  local mx2 = gfx.w - 40
+  -- 3. Draw '+' Button
   if in_rect(gfx.mouse_x, gfx.mouse_y, mx2, my, mw, mw) then
     state.hovering_interactive = true
     gfx.set(thm.acc_r, thm.acc_g, thm.acc_b, 0.3)
@@ -206,11 +229,12 @@ function draw_top_controls(click_pressed)
   gfx.rect(mx2, my, mw, mw, 1)
   gfx.set(thm.acc_r, thm.acc_g, thm.acc_b, 1)
   gfx.rect(mx2, my, mw, mw, 0)
+  
   local tw2, th2 = gfx.measurestr("+")
   gfx.x, gfx.y = mx2 + (mw - tw2)/2, my + (mw - th2)/2
   gfx.drawstr("+")
   
-  -- Handle click
+  -- 4. Click interaction handling
   if click_pressed then
     if in_rect(gfx.mouse_x, gfx.mouse_y, tx_th, my, tw_th, mw) then
       if state.theme == "coldest" then
@@ -481,9 +505,19 @@ function draw_dashboard(start_y, click_pressed)
         gfx.drawstr("[" .. err.code .. "] ")
         
         gfx.set(1, 1, 1, 0.70)
-        gfx.x = 130 * s
+        local start_msg_x = math.floor(135 * s)
+        gfx.x = start_msg_x
         local msg = err.desc
-        if #msg > 35 then msg = msg:sub(1, 33) .. "..." end
+        local max_w = (gfx.w - 50) - start_msg_x
+        local tw_msg, _ = gfx.measurestr(msg)
+        if tw_msg > max_w then
+          -- Truncate cleanly based on actual pixel width
+          while #msg > 5 and tw_msg > max_w - 15 do
+            msg = msg:sub(1, #msg - 1)
+            tw_msg, _ = gfx.measurestr(msg .. "...")
+          end
+          msg = msg .. "..."
+        end
         gfx.drawstr(msg)
         
         item_y = item_y + math.floor(16 * s)
@@ -620,10 +654,22 @@ function apply_sync(payload)
         end
       end
       if not current_track then
-        table.insert(state.sync_errors, {
-          code = "ERR_TR_002",
-          desc = "Track '" .. current_tname .. "' not found. Create a track with this exact name."
-        })
+        local new_idx = reaper.CountTracks(0)
+        reaper.InsertTrackAtIndex(new_idx, true)
+        current_track = reaper.GetTrack(0, new_idx)
+        if current_track then
+          reaper.GetSetMediaTrackInfo_String(current_track, "P_NAME", current_tname, true)
+          table.insert(state.sync_errors, {
+            code = "INFO_AUTO_CREATED",
+            desc = "Track '" .. current_tname .. "' was missing, so we auto-created it! ✔"
+          })
+          total_tracks_in_project = reaper.CountTracks(0)
+        else
+          table.insert(state.sync_errors, {
+            code = "ERR_TR_002",
+            desc = "Track '" .. current_tname .. "' not found and auto-creation failed."
+          })
+        end
       end
     elseif line:sub(1,3) == "FX|" then
       local fx_name = line:sub(4)
