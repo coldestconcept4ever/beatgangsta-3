@@ -40,7 +40,7 @@ local state = {
   is_loading = false,
   status_msg = "READY TO CONNECT",
   input_focus = "email", -- "email" or "pin"
-  scale = 1.3,           -- adjustable size modifier
+  scale = 3.0,           -- adjustable size modifier
   theme = "coldest",     -- "coldest" or "crazy-bird"
   snowflakes = {},       -- falling snowflake particles
   birds = {},            -- active flying ravens
@@ -49,7 +49,7 @@ local state = {
   sync_errors = {}       -- sync diagnostic logs
 }
 
-gfx.init("BEATGANGSTA • CONNECT", 800, 680)
+gfx.init("BEATGANGSTA • CONNECT", 1260, 1860)
 
 local function update_fonts()
   local s = state.scale or 1.0
@@ -159,7 +159,38 @@ function draw_flying_bird(x, y, s_size, flap_phase, flap_speed)
   local t = os.clock()
   local flap = math.sin(t * flap_speed + flap_phase) -- oscillates between -1 and 1
   
-  -- Draw back wing (behind body)
+  -- 1. Draw wind sweep speed streaks trailing behind the bird (flowing to the right)
+  for i = 1, 3 do
+    local offset_y = (i - 2) * s_size * 0.18
+    local wave = math.sin(t * flap_speed * 0.4 + i) * (s_size * 0.12)
+    local start_x = x + s_size * 0.25
+    local end_x = x + s_size * (2.8 + i * 1.0)
+    
+    local steps = 6
+    local prev_x = start_x
+    local prev_y = y + offset_y
+    for step = 1, steps do
+      local f = step / steps
+      local curr_x = start_x + (end_x - start_x) * f
+      local curr_y = y + offset_y + wave * math.sin(f * math.pi + t * 3.5)
+      
+      -- Smooth fading alpha
+      local alpha = (1.0 - f) * 0.26
+      
+      -- Main scarlet wind streak
+      gfx.set(0.9, 0.12, 0.2, alpha)
+      gfx.line(prev_x, prev_y, curr_x, curr_y)
+      
+      -- Subtle dark smoke parallel highlight
+      gfx.set(0.12, 0.01, 0.03, alpha * 0.4)
+      gfx.line(prev_x, prev_y + 1, curr_x, curr_y + 1)
+      
+      prev_x = curr_x
+      prev_y = curr_y
+    end
+  end
+  
+  -- 2. Draw back wing (behind body)
   gfx.set(0.04, 0.0, 0.01, 0.7) -- dimmer dark maroon
   local wing2_tip_x = x + s_size * 0.1
   local wing2_tip_y = y - flap * s_size * 0.85 - s_size * 0.15
@@ -186,8 +217,8 @@ function draw_flying_bird(x, y, s_size, flap_phase, flap_speed)
   gfx.triangle(body_front_x, body_front_y, body_back_x, body_back_y, x, y + s_size * 0.18)
   gfx.triangle(body_front_x, body_front_y, body_back_x, body_back_y, x, y - s_size * 0.08)
   
-  -- Draw beak (bold bright red / scarlet edge)
-  gfx.set(0.9, 0.15, 0.15, 1.0)
+  -- Draw beak/head (now matches identical clean solid body color as body)
+  gfx.set(0.08, 0.01, 0.02, 1.0)
   local beak_tip_x = x - s_size * 1.0
   local beak_tip_y = y
   gfx.triangle(body_front_x, body_front_y, x - s_size * 0.65, y + s_size * 0.04, beak_tip_x, beak_tip_y)
@@ -206,7 +237,7 @@ function draw_flying_bird(x, y, s_size, flap_phase, flap_speed)
   gfx.line(wing1_mid_x, wing1_mid_y, wing1_tip_x, wing1_tip_y)
   
   -- Draw glowing scarlet eyes
-  gfx.set(1.0, 0.12, 0.34, 1.0) -- bright eye
+  gfx.set(1.0, 0.12, 0.34, 1.0) -- bright red eye
   local eye_x = x - s_size * 0.6
   local eye_y = y - s_size * 0.12
   local eye_r = math.max(1, math.floor(s_size * 0.08))
