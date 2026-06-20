@@ -929,7 +929,7 @@ core_thread_loop()
             onClick={() => setMode('guides')} 
             className={`flex-1 py-3 px-4 rounded-2xl text-[10px] font-black uppercase tracking-wider transition-all duration-200 border ${modeBtnClasses(mode === 'guides')}`}
           >
-            📋 Import Library Guides
+            📋 {t('import_plugin_library_tab', 'Import Plugin Library')}
           </button>
           <button 
             onClick={() => setMode('diagnostics')} 
@@ -1507,7 +1507,7 @@ core_thread_loop()
                                 <span className="text-[10px] opacity-60 font-mono select-all">Device ID: {plug.deviceID || 'None'}</span>
                                 <p className={`text-[10px] font-bold mt-1.5 pt-1.5 border-t border-white/5 leading-relaxed ${
                                   status === 'matched' ? 'text-emerald-400/80' : status === 'fallback' ? 'text-yellow-500/80' : 'text-red-400/80'
-                                }`}>
+                                }}`}>
                                   💡 {plug.match.message}
                                 </p>
                               </div>

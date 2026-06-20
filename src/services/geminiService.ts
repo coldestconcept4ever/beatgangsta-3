@@ -187,16 +187,46 @@ const FUNCTION_AUTOMATION_PROMPT = `
 `;
 const GLOBAL_PARAMETER_STRICTNESS_PROMPT = `
     CRITICAL - STRICT PARAMETER REALISM, UNITS, & O'CLOCK POSITIONING:
-    1. ZERO HALLUCINATION (FIREABLE OFFENSE): You MUST ONLY suggest parameters that actually exist on the real-world interface of the specified plugin as documented in its official manual. NEVER invent, guess, hallucinate, or inject parameters that do not exist on that plugin (e.g., do not invent "LF Driver" for a tape plugin, or "Warmth" for an EQ unless it specifically has it). If you do not know the exact name of a parameter on the UI, DO NOT list it at all. It is better to have fewer accurate parameters than fake ones.
-    2. STRICT UNIT ACCURACY: You MUST use the exact, correct unit of measurement for every parameter:
-       - Frequency: MUST be in Hz or kHz.
-       - Gain/Threshold/Noise/Volume: MUST be in dB (e.g., -6dB, +2dB). DO NOT use percentages (%) for dB values!
-       - Time: MUST be in ms, s, or beat fractions.
-       - Percentage (%): Use ONLY when the plugin explicitly uses % (like Dry/Wet, Mix, or specific saturation amounts).
-    3. 'O'CLOCK' POSITIONING FOR UNLABELED KNOBS: If a plugin features a vintage or analog-style interface with knobs that DO NOT provide numerical value readouts in its UI (e.g., analog compressor clones, guitar pedals, vintage saturators), you MUST use 'o'clock' values (e.g., "10 o'clock", "2 o'clock") instead of inventing exact numerical percentages. STRICTLY apply this ONLY to plugins without numerical readouts. For modern digital plugins with numerical displays, provide the exact numbers.
-    4. EXHAUSTIVE COVERAGE: Provide the real parameters available on the plugin's UI. Do not generate fake parameters just to inflate the count. Only provide the parameters the plugin actually has.
-    5. DO NOT recommend metering-only plugins (like PreSonus VU Meter or BL VU Meter) because they do not process audio and cannot be adjusted.
-    6. GAIN MATCHING & MAINTAINING LOUDNESS: Anytime you use a plugin that reduces volume (like EQ cuts, compression, tape saturation, limiters, etc.), you MUST explicitly include the parameter to compensate for it (e.g., Output/Makeup Gain, Trim, Level). The resulting sound MUST always maintain or improve loudness. Never output settings that significantly reduce the overall volume.
+    1. ZERO HALLUCINATION (FIREABLE OFFENSE): You MUST ONLY suggest parameters that actually exist on the real-world interface of the specified plugin as documented in its official manual. NEVER invent, guess, hallucinate, or inject parameters that do not exist on that plugin.
+    2. STRICT UNIT ACCURACY: You MUST use the exact, correct unit of measurement for every parameter (e.g. Hz, kHz, dB, ms, %, etc.).
+    3. REAPER JSFX MASTER RESEARCH PROFILES (USE FOR COCKOS JSFX RECOMMENDATIONS):
+       - "JS: SStillwell/1175" (1175 Compressor):
+         - S1 (Threshold (dB)): -60 to 0 dB (Default: -15).
+         - S2 (Ratio): Selection (0 = 4:1, 1 = 8:1, 2 = 12:1, 3 = 20:1).
+         - S3 (Attack (ms)): 0.02 to 0.8 ms.
+         - S4 (Release (ms)): 50 to 1100 ms.
+         - S5 (Makeup Gain (dB)): -20 to 40 dB. CRITICAL: When using 1175, you MUST set S5 to a nice warm boost (e.g., +6dB to +18dB) to preserve upfront presence! ALWAYS compensate for Threshold gains.
+       - "JS: Volume/Pan":
+         - S1 (Volume (dB)): -150 to 12 dB. Perfect for final clear leveling.
+         - S2 (Pan): -1 to 1 (0 is Center).
+         - S3 (Max Volume (dB)): -150 to 12 dB.
+       - "JS: SStillwell/eventhorizon" (Event Horizon Clipper/Limiter):
+         - S1 (Threshold (dB)): -30 to 0 dB.
+         - S2 (Ceiling (dB)): -30 to 0 dB (Keep around -0.1 to -0.5 for brickwall safety).
+         - S3 (Soft Clip (dB)): -30 to 0 dB.
+       - "JS: LOSER/3BandEQ" (3-Band EQ):
+         - S1 (Low Gain (dB)): -72 to 12 dB.
+         - S2 (Mid Gain (dB)): -72 to 12 dB.
+         - S3 (High Gain (dB)): -72 to 12 dB.
+         - S4 (Low X-over (Hz)): 20 to 500 Hz.
+         - S5 (High X-over (Hz)): 500 to 20000 Hz.
+       - "JS: Chorus" (Stereo Chorus):
+         - S1 (Delay (ms)): 0 to 100 ms.
+         - S2 (Width (ms)): 0 to 5 ms.
+         - S3 (Frequency (Hz)): 0.05 to 10 Hz.
+         - S4 (Voices): 1 to 16.
+         - S5 (Wet Mix (dB)): -100 to 12 dB.
+         - S6 (Dry Mix (dB)): -100 to 12 dB.
+       - "JS: Delay" (Digital Delay):
+         - S1 (Delay (ms)): 0 to 2000 ms.
+         - S2 (Feedback (dB)): -100 to 0 dB.
+         - S3 (Wet Mix (dB)): -100 to 12 dB.
+         - S4 (Dry Mix (dB)): -100 to 12 dB.
+    4. DEEP COCKOS JSFX BEHIND-THE-SCENES UNDERSTANDING:
+       - You must leverage detailed, expert knowledge of how these JSFX work internally. 
+       - Vocals must sit upfront and never be quiet. When using FET style compressor "1175", any clamp on the threshold (S1) MUST be offset by Makeup Gain (S5) by at least +12dB to +18dB depending on the gain reduction to prevent vocals from getting lost or sounding awful.
+       - A premium 6-plugin chain MUST be modeled all the time for vocal or stem processing to ensure a grammy-level sound.
+    5. GAIN MATCHING & MAINTAINING LOUDNESS: Anytime you use a plugin that reduces volume (like EQ cuts, compression, tape saturation, limiters, etc.), you MUST explicitly include the parameter to compensate for it (e.g., Output/Makeup Gain, Trim, Level). The resulting sound MUST always maintain or improve loudness. Never output settings that significantly reduce the overall volume.
     CRITICAL WARNING: NEVER RETURN AN EMPTY RECIPES ARRAY. You MUST ALWAYS generate at least one complete recipe that fulfills the user's request, regardless of strictness constraints.
 `;
 function postProcessResult(result: any) {
@@ -2320,7 +2350,7 @@ ${previousCritiqueStr}
     - 'strengths': An array of 4-6 specific things that sound good (e.g., specific frequency ranges, dynamic control, spatial imaging).
     - 'weaknesses': An array of 4-6 specific issues that need fixing, categorized by their impact on the mix.
     - 'deviationMetrics': (ONLY IF A REFERENCE TRACK IS PROVIDED): Generate 2-4 analytical deviation metrics comparing the mix analytically to the reference (e.g. Dynamic Range: 2dB narrower than reference, High-end Air: 15% darker).
-    - 'actionPlan': A comprehensive array of actionable steps to fix the issues. ${isMasterMode ? `CRITICAL: Since you are in MASTER mode, the action plan MUST focus exclusively on master bus fader / master fader processing elements. Provide 4 sequential mastering-chain steps to apply (e.g., Linear Phase EQ, Master Bus Saturation/Exciter, Vintage or Glue Compressor, Stereo Width/Imaging, and Final Brickwall Limiting/Maximizer). If stems are uploaded, explain stem leveling and routing in these steps, but target them for the collective mix ending on the Master Bus.` : (hasStems && uploadedStems && uploadedStems.length > 0 ? (isMultiBandMode ? `CRITICAL: Because the user uploaded ${uploadedStems.length} stems, you MUST provide EXACTLY one step per stem. For EACH stem's step, provide the multiBandDetails, then provide an adequate number of plugins to handle all the bands.` : `CRITICAL: Because the user uploaded ${uploadedStems.length} stems, you MUST provide EXACTLY one step per stem. For EACH stem's step, you MUST provide EXACTLY 6 plugins in the 'recommendedChain' to provide detailed, deep JSFX guides (e.g. surgical EQ, multi-band compression, rich saturation/dynamics, spatial tools, parallel processes, and a clean gain/limiter stage). The final (6th) plugin MUST be explicitly dedicated to robust volume leveling, maximizing, and output makeup gain so that the mix remains nice, hot, and beautifully polished instead of sounding quiet.`) : "For each step, provide a robust chain of plugins (at least 6 plugins).")} For each step, provide:
+    - 'actionPlan': A comprehensive array of actionable steps to fix the issues. ${isMasterMode ? `CRITICAL: Since you are in MASTER mode, the action plan MUST focus exclusively on master bus fader / master fader processing elements. Provide 4 sequential mastering-chain steps to apply (e.g., Linear Phase EQ, Master Bus Saturation/Exciter, Vintage or Glue Compressor, Stereo Width/Imaging, and Final Brickwall Limiting/Maximizer). If stems are uploaded, explain stem leveling and routing in these steps, but target them for the collective mix ending on the Master Bus.` : (hasStems && uploadedStems && uploadedStems.length > 0 ? (isMultiBandMode ? `CRITICAL: Because the user uploaded ${uploadedStems.length} stems, you MUST provide EXACTLY one step per stem. For EACH stem's step, provide the multiBandDetails, then provide an adequate number of plugins to handle all the bands.` : `CRITICAL: Because the user uploaded ${uploadedStems.length} stems, you MUST provide EXACTLY one step per stem. For EACH stem's step, you MUST provide EXACTLY 6 plugins in the 'recommendedChain' to provide a complete, pristine, Grammy-award winning JSFX custom layout (1st: surgical subtraction EQ/high-pass, 2nd: vintage analogue FET compressor, 3rd: opto or levelling amplifier, 4th: precise mid-range tonal EQ, 5th: spatial widening/saturation/modulation, and 6th: dedicated high-headroom output volume staging via a tool like JS: Volume/Pan to gain-match completely). The 6th plugin MUST be explicitly dedicated to volume gain-staging, ensuring absolutely no volume loss or signal degradation, making the vocal sit with intense gravity and clarity directly in the face of the listener. Ensure that any compression peak levels reduction is offset by matching makeup gain inside the plugin settings.`) : "For each step, provide a robust chain of plugins (at least 6 plugins).")} For each step, provide:
       - 'targetStem': The exact name of the stem this step applies to (if stems were uploaded).
       - 'issue': The specific problem.
       - 'solution': A detailed technical explanation of how to fix it.
@@ -2358,7 +2388,7 @@ ${previousCritiqueStr}
             solution: { type: "STRING" },
             recommendedChain: {
               type: "ARRAY",
-              description: hasStems && uploadedStems && uploadedStems.length > 0 ? (isMultiBandMode ? "CRITICAL: You MUST provide an adequate number of plugins to handle the multi-band split across all bands. Do NOT limit to 6 plugins." : "CRITICAL: You MUST provide EXACTLY 6 plugins for this stem to provide deep JSFX guides, with the final 6th explicitly dedicated to volume maximizing and makeup gain to restore and polish core loudness.") : "Chain of plugins (at least 6 plugins).",
+              description: hasStems && uploadedStems && uploadedStems.length > 0 ? (isMultiBandMode ? "CRITICAL: You MUST provide an adequate number of plugins to handle the multi-band split across all bands. Do NOT limit to 6 plugins." : "CRITICAL: You MUST provide EXACTLY 6 plugins for this stem to provide detailed JSFX guidance, with the 6th dedicated to level normalization and output gain matching.") : "Chain of plugins (at least 6 plugins).",
               minItems: 1,
               items: {
                 type: "OBJECT",

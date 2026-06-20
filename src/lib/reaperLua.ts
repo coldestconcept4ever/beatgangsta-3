@@ -978,33 +978,13 @@ function apply_sync(payload)
     })
   end
 
-  -- Helper function to split a name into key lowercase descriptors >= 3 letters, or specific short keywords
-  local function get_words(str)
-    local words = {}
-    for w in str:lower():gmatch("[a-z0-9]+") do
-      if #w >= 3 or w == "vox" or w == "bg" or w == "ld" or w == "ac" or w == "bs" or w == "dr" then
-        words[w] = true
-      end
-    end
-    return words
-  end
-
-  -- Helper function to check if two word sets share any common active descriptor
-  local function words_intersect(w1, w2)
-    for k, _ in pairs(w1) do
-      if w2[k] then return true end
-    end
-    return false
-  end
-
   for line in payload:gmatch("([^" .. string.char(10) .. "]+)") do
     line = line:gsub(string.char(13), "")
     if line:sub(1,6) == "TRACK|" then
       current_tname = line:sub(7)
       current_track = nil
-      local stem_words = get_words(current_tname)
 
-      -- 1. Primary Match: Match track name (exact, substring, or word-overlap, ignoring generic tracks)
+      -- 1. Primary Match: Match track name (exact or substring, ignoring generic tracks)
       for i=0, total_tracks_in_project-1 do
         local tr = reaper.GetTrack(0,i)
         local _, n = reaper.GetTrackName(tr)
@@ -1017,20 +997,15 @@ function apply_sync(payload)
           current_track = tr
           reaper.GetSetMediaTrackInfo_String(tr, "P_NAME", current_tname, true)
           break
-        -- Substring match when not generic
+        -- Substring match when not generic (to catch 'Kick' in 'Kick Stem' or vice versa)
         elseif not is_generic and (n_lower:find(stem_lower, 1, true) or stem_lower:find(n_lower, 1, true)) then
-          current_track = tr
-          reaper.GetSetMediaTrackInfo_String(tr, "P_NAME", current_tname, true)
-          break
-        -- Word-overlap match when not generic
-        elseif not is_generic and words_intersect(stem_words, get_words(n)) then
           current_track = tr
           reaper.GetSetMediaTrackInfo_String(tr, "P_NAME", current_tname, true)
           break
         end
       end
       
-      -- 2. Secondary Match: Check if any track (even generic) contains media items/files matching current_tname by word overlap
+      -- 2. Secondary Match: Check if any track (even generic) contains media items/files matching current_tname
       if not current_track then
         for i=0, total_tracks_in_project-1 do
           local tr = reaper.GetTrack(0,i)
@@ -1042,9 +1017,9 @@ function apply_sync(payload)
               if take then
                 local _, take_name = reaper.GetTakeName(take)
                 if take_name then
-                  local clean_take = take_name:gsub("%.%w+$", "") -- remove extension
-                  local take_words = get_words(clean_take)
-                  if words_intersect(stem_words, take_words) or clean_take:lower():find(current_tname:lower(), 1, true) or current_tname:lower():find(clean_take:lower(), 1, true) then
+                  local clean_take = take_name:gsub("%.%w+$", ""):lower() -- remove extension & lowercase
+                  local tname_lower = current_tname:lower()
+                  if clean_take == tname_lower or clean_take:find(tname_lower, 1, true) or tname_lower:find(clean_take, 1, true) then
                     current_track = tr
                     reaper.GetSetMediaTrackInfo_String(tr, "P_NAME", current_tname, true)
                     table.insert(state.sync_errors, {
