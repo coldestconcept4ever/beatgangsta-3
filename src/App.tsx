@@ -4584,13 +4584,36 @@ The AI was unable to verify these parameters. Please investigate.`;
     const pin = reaperSyncPin || Math.floor(1000 + Math.random() * 9000).toString();
     
     try {
+      let txtContent = "";
+      if (payload && payload.actionPlan) {
+        payload.actionPlan.forEach((plan: any) => {
+          if (!plan.targetStem) return;
+          txtContent += `TRACK|${plan.targetStem}\n`;
+          plan.recommendedChain.forEach((req: any) => {
+            txtContent += `FX|${req.name}\n`;
+            if (req.deepDive) {
+              req.deepDive.forEach((dive: any) => {
+                const numVal = parseFloat(String(dive.value).replace(/[^0-9.-]/g, ''));
+                if (!isNaN(numVal) && dive.parameter) {
+                  txtContent += `PARAM|${dive.parameter}|${numVal}\n`;
+                }
+              });
+            }
+          });
+        });
+      } else if (typeof payload === 'string') {
+        txtContent = payload;
+      } else {
+        txtContent = String(payload || "");
+      }
+
       const response = await fetchWithDetailedError('/api/reaper-sync/push', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           email: user.email,
           pin: pin,
-          payload: payload
+          payload: txtContent
         })
       });
       

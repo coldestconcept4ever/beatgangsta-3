@@ -1065,7 +1065,7 @@ end
 local function add_fx_fuzzy(track, fx_name)
   -- 1. Try exact match
   local idx = reaper.TrackFX_AddByName(track, fx_name, false, -1)
-  if idx >= 0 then return idx end
+  if idx >= 0 then return idx, fx_name end
 
   -- 2. Clean prefix and try
   local clean_name = fx_name
@@ -1092,7 +1092,7 @@ local function add_fx_fuzzy(track, fx_name)
   -- Try each variation
   for _, var in ipairs(variations) do
     local res = reaper.TrackFX_AddByName(track, var, false, -1)
-    if res >= 0 then return res end
+    if res >= 0 then return res, var end
   end
 
   -- Try spelling corrections like Stilwell with one "l" vs two, or directory names
@@ -1101,23 +1101,51 @@ local function add_fx_fuzzy(track, fx_name)
     clean_name:gsub("SStillwell/1973", "1973"),
     clean_name:gsub("SStillwell", "sstillwell"),
     clean_name:gsub("LOSER/", ""),
-    clean_name:gsub("Saturation/", "")
+    clean_name:gsub("Saturation/", ""),
+    clean_name:gsub("Liteon/", "")
   }
 
   for _, sc in ipairs(spelling_corrections) do
     if sc ~= clean_name then
       local res = reaper.TrackFX_AddByName(track, sc, false, -1)
-      if res >= 0 then return res end
+      if res >= 0 then return res, sc end
       res = reaper.TrackFX_AddByName(track, "JS: " .. sc, false, -1)
-      if res >= 0 then return res end
+      if res >= 0 then return res, "JS: " .. sc end
       res = reaper.TrackFX_AddByName(track, sc:lower(), false, -1)
-      if res >= 0 then return res end
+      if res >= 0 then return res, sc:lower() end
       res = reaper.TrackFX_AddByName(track, "JS: " .. sc:lower(), false, -1)
-      if res >= 0 then return res end
+      if res >= 0 then return res, "JS: " .. sc:lower() end
     end
   end
 
-  return -1
+  -- 3. High-Quality Stock Fallbacks to resolve all installation failures
+  local fx_lower = fx_name:lower()
+  local fallbacks = {}
+  
+  if fx_lower:find("eq") or fx_lower:find("filter") or fx_lower:find("1073") or fx_lower:find("tilt") then
+    fallbacks = { "JS: LOSER/3BandEQ", "JS: 3-Band EQ", "VST: ReaEQ (Cockos)", "VST: ReaEQ", "JS: SStillwell/1973" }
+  elseif fx_lower:find("comp") or fx_lower:find("limiter") or fx_lower:find("limit") or fx_lower:find("1175") or fx_lower:find("eventhorizon") or fx_lower:find("dyno") or fx_lower:find("gate") or fx_lower:find("clipper") or fx_lower:find("compressor") then
+    fallbacks = { "JS: SStillwell/1175", "JS: 1175 Compressor", "VST: ReaComp (Cockos)", "VST: ReaComp" }
+  elseif fx_lower:find("delay") or fx_lower:find("echo") then
+    fallbacks = { "JS: Delay", "VST: ReaDelay" }
+  elseif fx_lower:find("chorus") or fx_lower:find("modulation") or fx_lower:find("flanger") or fx_lower:find("phaser") then
+    fallbacks = { "JS: Chorus", "VST: ReaChorus" }
+  elseif fx_lower:find("stereo") or fx_lower:find("enhancer") or fx_lower:find("width") then
+    fallbacks = { "JS: Volume/Pan", "VST: ReaEQ (Cockos)" }
+  end
+
+  for _, fb in ipairs(fallbacks) do
+    local res = reaper.TrackFX_AddByName(track, fb, false, -1)
+    if res >= 0 then
+      table.insert(state.sync_errors, {
+        code = "INFO_FX_FALLBACK",
+        desc = "'" .. fx_name .. "' load failed. Auto-fell back to stock '" .. fb .. "'! ✔"
+      })
+      return res, fb
+    end
+  end
+
+  return -1, nil
 end
 
 function apply_sync(payload)
@@ -1125,6 +1153,7 @@ function apply_sync(payload)
   local current_track = nil
   local current_tname = "unknown"
   local current_fx = -1
+  local current_fx_name = "unknown"
   
   local total_tracks_in_project = reaper.CountTracks(0)
   if total_tracks_in_project == 0 then
@@ -1139,6 +1168,8 @@ function apply_sync(payload)
     if line:sub(1,6) == "TRACK|" then
       current_tname = line:sub(7)
       current_track = nil
+      current_fx = -1
+      current_fx_name = "unknown"
 
       -- 1. Primary Match: Match track name (exact or substring, ignoring generic tracks)
       for i=0, total_tracks_in_project-1 do
@@ -1218,7 +1249,9 @@ function apply_sync(payload)
     elseif line:sub(1,3) == "FX|" then
       local fx_name = line:sub(4)
       if current_track then
-        current_fx = add_fx_fuzzy(current_track, fx_name)
+        local idx, resolved_name = add_fx_fuzzy(current_track, fx_name)
+        current_fx = idx
+        current_fx_name = resolved_name or fx_name
         if current_fx < 0 then
           table.insert(state.sync_errors, {
             code = "ERR_FX_001",
@@ -1315,8 +1348,8 @@ function apply_sync(payload)
                    (pn_l:find("delay") and pi_l:find("delay")) or
                    (pn_l:find("width") and pi_l:find("width")) or
                    (pn_l:find("freq") and pi_l:find("freq")) or
-                   (pn_l:find("highpass") and pi_l:find("highpass")) or
-                   (pn_l:find("lowpass") and pi_l:find("lowpass")) then
+                   ((pn_l:find("highpass") or pn_l:find("hp") or pn_l:find("low cut") or pn_l:find("lowcut")) and (pi_l:find("highpass") or pi_l:find("hp") or pi_l:find("low cut") or pi_l:find("lowcut"))) or
+                   ((pn_l:find("lowpass") or pn_l:find("lp") or pn_l:find("high cut") or pn_l:find("highcut")) and (pi_l:find("lowpass") or pi_l:find("lp") or pi_l:find("high cut") or pi_l:find("highcut"))) then
                   matched_idx = p
                   break
                 end
@@ -1331,12 +1364,12 @@ function apply_sync(payload)
             reaper.TrackFX_SetParam(current_track, current_fx, matched_idx, p_val)
             table.insert(state.sync_errors, {
               code = "INFO_PARAM_SYNC",
-              desc = "Synced parameter '" .. pi .. "' to " .. pv .. " ✔"
+              desc = "Synced parameter '" .. pi .. "' to " .. pv .. " in '" .. current_fx_name .. "' ✔"
             })
           else
             table.insert(state.sync_errors, {
               code = "WARN_PARAM_MISSING",
-              desc = "Param '" .. pi .. "' not found. Kept default."
+              desc = "Param '" .. pi .. "' not found in '" .. current_fx_name .. "'. Kept default."
             })
           end
         end
