@@ -4892,7 +4892,7 @@ The AI was unable to verify these parameters. Please investigate.`;
       // Format stems context for Gemini
       const stemsContext = uploadedStems.map(s => `Stem: ${s.file!.name} (Type: ${s.type === 'Other' && s.customType ? s.customType : s.type}) - URI: ${s.uri}`).join('\n');
       let fullContext = `The user has uploaded ${activeStems.length} stems for analysis.\n\n${stemsContext}\n\nUser Context: ${critiqueContext}`;
-      if ((dawType === 'REAPER' || dawType === 'Reaper') && isJsfxMode) {
+      if (isJsfxMode) {
         fullContext += `\n\nCRITICAL DIRECTIVE: YOU MUST ONLY RECOMMEND JSFX PLUGINS FOR THIS MIX CRITIQUE. DO NOT RECOMMEND ANY VST/AU PLUGINS. 
 Only use valid, default REAPER JSFX (JS:). Here is a comprehensive list of actual standard JSFX categories and plugins to use as a reference:
 - Compressors/Dynamics/Limiters: JS: 1175 Compressor, JS: Auto Expander, JS: Event Horizon Clipper/Limiter, JS: Fairly Childish Compressor/Limiter, JS: General Dynamics, JS: LOSER/1175, JS: LOSER/MGA_JSLimiter, JS: LOSER/MasterLimiter, JS: LOSER/MasterTom, JS: LOSER/compciter, JS: LOSER/gate, JS: LOSER/DDC, JS: Liteon/np1136peaklimiter, JS: Multi-Band Compressor, JS: SStillwell/1175, JS: SStillwell/bombastic, JS: SStillwell/dyno, JS: SStillwell/eventhorizon, JS: SStillwell/eventhorizon2, JS: SStillwell/expander, JS: SStillwell/fairlychildish, JS: SStillwell/hugebooty, JS: SStillwell/majorTom, JS: 5-Band Compressor, JS: 3-Band Compressor, JS: Expander / Gate.
@@ -4906,9 +4906,10 @@ Provide the exact JSFX plugin name and required sliders/parameters.`;
       
       const activePlugins = plugins.filter(p => p.type !== 'Studio One Function');
 
-      const critique = await getMixCritique(activePlugins, null, null, 'audio/mpeg', isGangstaVox, true, fullContext, null, finalReferenceTrack, referenceAudioBase64, null, referenceGeminiFileUri, i18n.language, uploadedStems, analogInstruments, analogHardware, isBusMode, isMultiBandMode, isMasterMode);
+      const critique = await getMixCritique(activePlugins, null, null, 'audio/mpeg', isGangstaVox, true, fullContext, null, finalReferenceTrack, referenceAudioBase64, null, referenceGeminiFileUri, i18n.language, uploadedStems, analogInstruments, analogHardware, isBusMode, isMultiBandMode, isMasterMode, isJsfxMode);
       critique.id = Math.random().toString(36).substr(2, 9);
       critique.isMasterMode = isMasterMode;
+      critique.isJsfxMode = isJsfxMode;
       critique.audioBase64 = null;
       critique.mimeType = 'audio/mpeg';
 
@@ -5183,7 +5184,7 @@ Provide the exact JSFX plugin name and required sliders/parameters.`;
         const activePlugins = plugins.filter(p => p.type !== 'Studio One Function');
 
         let fullContext = critiqueContext;
-        if ((dawType === 'REAPER' || dawType === 'Reaper') && isJsfxMode) {
+        if (isJsfxMode) {
           fullContext += `\n\nCRITICAL DIRECTIVE: YOU MUST ONLY RECOMMEND JSFX PLUGINS FOR THIS MIX CRITIQUE. DO NOT RECOMMEND ANY VST/AU PLUGINS. 
 Only use valid, default REAPER JSFX (JS:). Here is a comprehensive list of actual standard JSFX categories and plugins to use as a reference:
 - Compressors/Dynamics/Limiters: JS: 1175 Compressor, JS: Auto Expander, JS: Event Horizon Clipper/Limiter, JS: Fairly Childish Compressor/Limiter, JS: General Dynamics, JS: LOSER/1175, JS: LOSER/MGA_JSLimiter, JS: LOSER/MasterLimiter, JS: LOSER/MasterTom, JS: LOSER/compciter, JS: LOSER/gate, JS: LOSER/DDC, JS: Liteon/np1136peaklimiter, JS: Multi-Band Compressor, JS: SStillwell/1175, JS: SStillwell/bombastic, JS: SStillwell/dyno, JS: SStillwell/eventhorizon, JS: SStillwell/eventhorizon2, JS: SStillwell/expander, JS: SStillwell/fairlychildish, JS: SStillwell/hugebooty, JS: SStillwell/majorTom, JS: 5-Band Compressor, JS: 3-Band Compressor, JS: Expander / Gate.
@@ -5195,9 +5196,10 @@ Only use valid, default REAPER JSFX (JS:). Here is a comprehensive list of actua
 Provide the exact JSFX plugin name and required sliders/parameters.`;
         }
 
-        const critique = await getMixCritique(activePlugins, audioBase64, audioUrl, mimeType, isGangstaVox, hasStems, fullContext, null, finalReferenceTrack, referenceAudioBase64, geminiFileUri, referenceGeminiFileUri, i18n.language, undefined, analogInstruments, analogHardware, isBusMode, isMultiBandMode, isMasterMode);
+        const critique = await getMixCritique(activePlugins, audioBase64, audioUrl, mimeType, isGangstaVox, hasStems, fullContext, null, finalReferenceTrack, referenceAudioBase64, geminiFileUri, referenceGeminiFileUri, i18n.language, undefined, analogInstruments, analogHardware, isBusMode, isMultiBandMode, isMasterMode, isJsfxMode);
         critique.id = Math.random().toString(36).substr(2, 9);
         critique.isMasterMode = isMasterMode;
+        critique.isJsfxMode = isJsfxMode;
         critique.audioBase64 = audioBase64;
         critique.geminiFileUri = geminiFileUri;
         critique.mimeType = mimeType;

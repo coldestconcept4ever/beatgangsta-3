@@ -2269,7 +2269,8 @@ export const getMixCritique = async (
   analogHardware: Hardware[] = [],
   isBusMode: boolean = false,
   isMultiBandMode: boolean = false,
-  isMasterMode: boolean = false
+  isMasterMode: boolean = false,
+  isJsfxMode: boolean = false
 ): Promise<any> => {
   const ai = getAI();
   const pluginListStr = plugins.map(p => {
@@ -2316,8 +2317,25 @@ export const getMixCritique = async (
   const previousCritiqueStr = previousCritique ? `\nPREVIOUS CRITIQUE CONTEXT: The user is uploading a new version of the track based on a previous critique. Here are the details of the previous critique:\nTitle: ${previousCritique.title}\nFeedback: ${previousCritique.overallFeedback}\nStrengths: ${JSON.stringify(previousCritique.strengths)}\nWeaknesses: ${JSON.stringify(previousCritique.weaknesses)}\nAction Plan: ${JSON.stringify(previousCritique.actionPlan)}\n\nPlease analyze the new audio, compare it with the previous critique, and provide further guidance to help the user achieve their desired sound. Focus on what has improved, what still needs work, and suggest further parameter adjustments or new plugins if necessary.\n` : "";
   const referenceTrackStr = referenceTrack ? `\nREFERENCE TRACK: The user wants their mix to sound like this reference track: "${referenceTrack}". Please provide a guide for the critiqued MP3 to sound as accurately as possible like this reference track. If the reference track is a known song, use your knowledge to compare the sonic characteristics. If it's a URL, try to understand the context.\n` : "";
   const languageInstruction = getLanguageInstruction(language);
+
+  let jsfxDiktat = "";
+  if (isJsfxMode) {
+    jsfxDiktat = `
+      ==================================================
+      🚨🚨 ULTRA-CRITICAL JSFX-ONLY OVERRIDE DIRECTIVE 🚨🚨
+      JSFX MODE IS ACTIVATED ON THE USER'S DEVICE.
+      YOU ARE ABSOLUTELY, STRICTLY, UNDER NO CIRCUMSTANCES ALLOWED TO SUGGEST ANY VST, VST3, AU, CLAP, AAX OR OTHER FORMAT PLUGINS. 
+      ALL recommended plugins in the entire 'actionPlan' and all steps MUST EXCLUSIVELY be default Cockos REAPER JSFX.
+      Every recommended plugin name in your action plan json MUST start with 'JS: ' (for example: 'JS: 1175 Compressor', 'JS: SStillwell/1973', 'JS: Delay').
+      DO NOT suggest any third-party plugins like FabFilter, Waves, Soundtoys, iZotope, Universal Audio, RC-20, Sonible, Gullfoss, etc. Even if they appear in any other part of the context or instructions, they are STRICTLY DISALLOWED for this session.
+      Only use valid, default REAPER JSFX (e.g., SStillwell, LOSER, Liteon, IX, and standard Utility directories).
+      ==================================================
+    `;
+  }
+
   let prompt = `
     You are an expert audio engineer and producer.
+    ${jsfxDiktat}
     CRITICAL RULE FOR IMPROVEMENT: The end result MUST ALWAYS be a concrete improvement to the audio. You must apply proper gain staging and makeup gain on every step that involves compression, saturation, or equalization that reduces peak levels. NEVER reduce the overall volume unintentionally.
 I am uploading an MP3 of a full song project that needs work.
     ${focusInstruction}

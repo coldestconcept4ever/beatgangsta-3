@@ -567,21 +567,26 @@ export const CritiqueCard: React.FC<CritiqueCardProps> = ({ critique, stems = []
       }
 
       const newCritique = await getMixCritique(
-        plugins,
-        base64,
-        audioUrl,
-        file.type,
-        critique.isGangstaVox,
-        false,
-        reCritiqueContext,
-        critique,
-        "",
-        null,
-        null,
-        i18n.language,
-        undefined,
-        analogInstruments,
-        analogHardware
+        plugins, // 1
+        base64, // 2
+        audioUrl, // 3
+        file.type, // 4
+        critique.isGangstaVox, // 5
+        false, // 6
+        reCritiqueContext, // 7
+        critique, // 8
+        "", // 9
+        null, // 10 (referenceAudioBase64)
+        null, // 11 (geminiFileUri)
+        null, // 12 (referenceGeminiFileUri)
+        i18n.language, // 13 (language)
+        undefined, // 14 (uploadedStems)
+        analogInstruments, // 15 (analogInstruments)
+        analogHardware, // 16 (analogHardware)
+        false, // 17 (isBusMode)
+        isMultiBandMode || false, // 18 (isMultiBandMode)
+        critique.isMasterMode || false, // 19 (isMasterMode)
+        critique.isJsfxMode || false // 20 (isJsfxMode)
       );
       const isWav = file.type.includes('audio/wav');
       if (onLogReceipt) onLogReceipt('Re-Critique Mix', isWav ? 25 : 10);

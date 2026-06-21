@@ -416,6 +416,7 @@ export interface MixCritique {
   previousCritiqueId?: string;
   reCritiqueContext?: string;
   isMasterMode?: boolean;
+  isJsfxMode?: boolean;
 }
 
 export interface RecommendationResponse {
