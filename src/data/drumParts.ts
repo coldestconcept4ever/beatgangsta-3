@@ -73,7 +73,12 @@ export const DRUM_PART_MODELS: Record<string, { brand: string; model: string; co
     { brand: "Noble & Cooley", model: "CD Maple Kick", commonSizes: ["22x16"] },
     { brand: "Ludwig", model: "Vistalite Kick", commonSizes: ["22x16"] },
     { brand: "Tama", model: "Starclassic Bubinga Kick", commonSizes: ["22x18"] },
-    { brand: "Yamaha", model: "Absolute Hybrid Kick", commonSizes: ["22x18"] }
+    { brand: "Yamaha", model: "Absolute Hybrid Kick", commonSizes: ["22x18"] },
+    { brand: "Percussion Plus", model: "PP1000 Kick", commonSizes: ["22x16"] },
+    { brand: "Percussion Plus", model: "PP3000 Kick", commonSizes: ["22x18"] },
+    { brand: "Percussion Plus", model: "PP200R Kick", commonSizes: ["16x11"] },
+    { brand: "Percussion Plus", model: "PP500 Kick", commonSizes: ["16x12"] },
+    { brand: "Percussion Plus", model: "PP900 Kick", commonSizes: ["20x16"] }
   ],
   "Snare Drum": [
     { brand: "Ludwig", model: "Supraphonic 402", commonSizes: ["14x5", "14x6.5"] },
@@ -119,7 +124,12 @@ export const DRUM_PART_MODELS: Record<string, { brand: string; model: string; co
     { brand: "Craviotto", model: "Solid Shell Snare", commonSizes: ["14x5.5"] },
     { brand: "Ludwig", model: "Vistalite Snare", commonSizes: ["14x6.5"] },
     { brand: "Tama", model: "Starclassic Bubinga Snare", commonSizes: ["14x6.5"] },
-    { brand: "Yamaha", model: "Absolute Hybrid Snare", commonSizes: ["14x6"] }
+    { brand: "Yamaha", model: "Absolute Hybrid Snare", commonSizes: ["14x6"] },
+    { brand: "Percussion Plus", model: "PP1000 Snare", commonSizes: ["14x5.5"] },
+    { brand: "Percussion Plus", model: "PP3000 Snare", commonSizes: ["14x5.5"] },
+    { brand: "Percussion Plus", model: "PP200R Snare", commonSizes: ["10x4"] },
+    { brand: "Percussion Plus", model: "PP500 Snare", commonSizes: ["12x4"] },
+    { brand: "Percussion Plus", model: "PP900 Snare", commonSizes: ["14x5.5"] }
   ],
   "Rack & Floor Toms": [
     { brand: "DW (Drum Workshop)", model: "Collector's Series Maple", commonSizes: ["10x8", "12x9", "14x14", "16x16"] },
@@ -151,7 +161,12 @@ export const DRUM_PART_MODELS: Record<string, { brand: string; model: string; co
     { brand: "Noble & Cooley", model: "CD Maple Tom", commonSizes: ["10x8", "12x9", "16x14"] },
     { brand: "Ludwig", model: "Vistalite Tom", commonSizes: ["12x8", "13x9", "16x16"] },
     { brand: "Tama", model: "Starclassic Bubinga Tom", commonSizes: ["10x8", "12x9", "16x14"] },
-    { brand: "Yamaha", model: "Absolute Hybrid Tom", commonSizes: ["10x7", "12x8", "16x15"] }
+    { brand: "Yamaha", model: "Absolute Hybrid Tom", commonSizes: ["10x7", "12x8", "16x15"] },
+    { brand: "Percussion Plus", model: "PP1000 Tom", commonSizes: ["12x10, 13x11, 16x16"] },
+    { brand: "Percussion Plus", model: "PP3000 Tom", commonSizes: ["10x8, 12x9, 16x14"] },
+    { brand: "Percussion Plus", model: "PP200R Tom", commonSizes: ["8x5"] },
+    { brand: "Percussion Plus", model: "PP500 Tom", commonSizes: ["8x5, 10x6, 13x10"] },
+    { brand: "Percussion Plus", model: "PP900 Tom", commonSizes: ["10x7, 12x8, 14x14"] }
   ],
   "Hi-Hats": [
     { brand: "Zildjian", model: "A Custom Mastersound", commonSizes: ["14\"", "13\""] },
@@ -171,7 +186,11 @@ export const DRUM_PART_MODELS: Record<string, { brand: string; model: string; co
     { brand: "Zildjian", model: "A", commonSizes: ["14\""] },
     { brand: "Sabian", model: "AA", commonSizes: ["14\""] },
     { brand: "Sabian", model: "B8X", commonSizes: ["14\""] },
-    { brand: "Meinl", model: "Classics", commonSizes: ["14\""] }
+    { brand: "Meinl", model: "Classics", commonSizes: ["14\""] },
+    { brand: "Percussion Plus", model: "Brass Hats", commonSizes: ["14\""] },
+    { brand: "Percussion Plus", model: "Classic Hats", commonSizes: ["14\""] },
+    { brand: "Percussion Plus", model: "Junior Hats", commonSizes: ["10\""] },
+    { brand: "Percussion Plus", model: "Pro Hats", commonSizes: ["14\""] }
   ],
   "Cymbals": [
     { brand: "Zildjian", model: "A Custom Crash", commonSizes: ["16\"", "18\"", "19\""] },
@@ -192,7 +211,11 @@ export const DRUM_PART_MODELS: Record<string, { brand: string; model: string; co
     { brand: "Sabian", model: "AA", commonSizes: ["16\"", "18\"", "20\""] },
     { brand: "Sabian", model: "B8X", commonSizes: ["16\"", "18\"", "20\""] },
     { brand: "Meinl", model: "Classics", commonSizes: ["16\"", "18\"", "20\""] },
-    { brand: "Paiste", model: "2002", commonSizes: ["18\"", "20\""] }
+    { brand: "Paiste", model: "2002", commonSizes: ["18\"", "20\""] },
+    { brand: "Percussion Plus", model: "Brass Crash", commonSizes: ["16\""] },
+    { brand: "Percussion Plus", model: "Classic Crash-Ride", commonSizes: ["16\"", "18\"", "20\""] },
+    { brand: "Percussion Plus", model: "Junior Crash", commonSizes: ["10\"", "12\""] },
+    { brand: "Percussion Plus", model: "Pro Crash-Ride", commonSizes: ["16\"", "20\""] }
   ],
   "Cowbell": [
     { brand: "LP (Latin Percussion)", model: "Rock Ridge Rider", commonSizes: ["8\""] },

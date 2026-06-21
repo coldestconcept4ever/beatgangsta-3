@@ -25,7 +25,7 @@ export const SONG_EXAMPLES = [
 ];
 
 export const DRUM_BRANDS = [
-  "Mapex", "Ludwig", "Gretsch", "Tama", "Pearl", "Yamaha", "DW (Drum Workshop)", "Sonor", "Rogers", "Slingerland", "Premier", "PDP", "Odery", "Canopus", "Craviotto", "Noble & Cooley"
+  "Mapex", "Ludwig", "Gretsch", "Tama", "Pearl", "Yamaha", "DW (Drum Workshop)", "Sonor", "Rogers", "Slingerland", "Premier", "PDP", "Odery", "Canopus", "Craviotto", "Noble & Cooley", "Percussion Plus"
 ];
 
 export const BANDLAB_FREE_PLUGINS_LATEST = [

@@ -197,16 +197,16 @@ const DownloadableLogoText = ({ currentAppName, theme }: { currentAppName: strin
       ctx.textBaseline = 'top';
       
       // Line 1
-      ctx.font = '900 20px system-ui, -apple-system, sans-serif';
+      ctx.font = '32px "UnifrakturMaguntia", cursive';
       ctx.fillStyle = color1;
-      (ctx as any).letterSpacing = '-1px';
+      (ctx as any).letterSpacing = 'normal';
       ctx.fillText(currentAppName, 10, 10);
       
       // Line 2
       ctx.font = '900 9px system-ui, -apple-system, sans-serif';
       ctx.fillStyle = color2;
       (ctx as any).letterSpacing = '2.7px';
-      ctx.fillText('COLDESTCONCEPT', 10, 30);
+      ctx.fillText('COLDESTCONCEPT', 10, 36);
       
       // Crop canvas to fit text
       const metrics1 = ctx.measureText(currentAppName);
@@ -222,15 +222,15 @@ const DownloadableLogoText = ({ currentAppName, theme }: { currentAppName: strin
       fctx.scale(scale, scale);
       fctx.textBaseline = 'top';
       
-      fctx.font = '900 20px system-ui, -apple-system, sans-serif';
+      fctx.font = '32px "UnifrakturMaguntia", cursive';
       fctx.fillStyle = color1;
-      (fctx as any).letterSpacing = '-1px';
+      (fctx as any).letterSpacing = 'normal';
       fctx.fillText(currentAppName, 10, 10);
       
       fctx.font = '900 9px system-ui, -apple-system, sans-serif';
       fctx.fillStyle = color2;
       (fctx as any).letterSpacing = '2.7px';
-      fctx.fillText('COLDESTCONCEPT', 10, 30);
+      fctx.fillText('COLDESTCONCEPT', 10, 36);
       
       resolve(finalCanvas.toDataURL('image/png'));
     });
@@ -279,8 +279,8 @@ const DownloadableLogoText = ({ currentAppName, theme }: { currentAppName: strin
       onClick={handleDownload}
     >
       <div className="flex flex-col p-2 -m-2">
-        <h1 className={`text-xl font-black tracking-tighter leading-none select-none ${theme === 'coldest' ? 'text-[#0c4a6e]' : theme === 'chef-mode' ? 'text-[#431407]' : 'text-white'}`}>{currentAppName}</h1>
-        <span className={`text-[9px] font-black uppercase tracking-[0.3em] select-none ${theme === 'coldest' ? 'text-[#0369a1]' : theme === 'hustle-time' ? 'text-[#eab308]' : theme === 'chef-mode' ? 'text-[#ea580c]' : 'text-[#ef4444]'}`}>
+        <h1 className={`text-3xl font-script tracking-normal leading-none select-none ${theme === 'coldest' ? 'text-[#0c4a6e]' : theme === 'chef-mode' ? 'text-[#431407]' : 'text-white'}`}>{currentAppName}</h1>
+        <span className={`text-[9px] font-black uppercase tracking-[0.3em] select-none -mt-1 ${theme === 'coldest' ? 'text-[#0369a1]' : theme === 'hustle-time' ? 'text-[#eab308]' : theme === 'chef-mode' ? 'text-[#ea580c]' : 'text-[#ef4444]'}`}>
           ColdestConcept
         </span>
       </div>
@@ -7206,7 +7206,7 @@ Provide the exact JSFX plugin name and required sliders/parameters.`;
                     <Logo size={240} grillStyle={grillStyle} knifeStyle={knifeStyle} duragStyle={duragStyle} pendantStyle={pendantStyle} chainStyle={chainStyle} theme={theme} saberColor={saberColor} mascotColor={mascotColor} showChain={showChain} highEyes={highEyes} isCigarEquipped={isCigarEquipped} isTossingCigar={isTossingCigar} showSparkles={showSparkles} onClick={cycleGrill} />
                   </div>
                   <div className="flex flex-col justify-center -mt-4 sm:mt-0">
-                    <h2 className={`text-4xl sm:text-6xl font-black tracking-tighter select-none ${theme === 'coldest' || theme === 'chef-mode' ? 'text-slate-800' : 'text-white'}`}>{t('studio_info')}</h2>
+                    <h2 className={`text-4xl sm:text-6xl font-script select-none ${theme === 'coldest' || theme === 'chef-mode' ? 'text-slate-800' : 'text-white'}`}>{t('studio_info')}</h2>
                     <p className="text-sm sm:text-lg font-bold opacity-70 select-none mt-2">{t('loaded_plugins_count', { count: allActivePlugins.length })}</p>
                   </div>
                 </div>
