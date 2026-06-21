@@ -13,6 +13,7 @@ import { initAudio } from './utils/midiPlayer';
 import { fetchWithDetailedError } from './lib/api';
 import { parseRpp } from './utils/reaperUtils';
 import { getReaperLua } from './lib/reaperLua';
+import { JSFX_DATABASE } from './data/jsfxResearch';
 
 import { AvianField } from './components/RavenField';
 import { PluginCard } from './components/PluginCard';
@@ -4631,6 +4632,126 @@ The AI was unable to verify these parameters. Please investigate.`;
     }
   };
 
+  const handlePushExhaustiveJSFXSync = async () => {
+    if (!user?.email) {
+      setError("Please sign in to use REAPER Cloud Sync.");
+      return;
+    }
+    
+    setIsPushingReaperSync(true);
+    setError(null);
+    
+    const pin = reaperSyncPin || Math.floor(1000 + Math.random() * 9000).toString();
+    
+    try {
+      let txtContent = "";
+      
+      // 1. Process all rich JSFX from JSFX_DATABASE
+      JSFX_DATABASE.forEach((profile) => {
+        const trackName = `${profile.shortName} (Ref Test)`;
+        txtContent += `TRACK|${trackName}\n`;
+        txtContent += `FX|${profile.name}\n`;
+        
+        // Push every single parameter
+        profile.sliders.forEach((slider_param) => {
+          // Push name-based
+          txtContent += `PARAM|${slider_param.name}|${slider_param.defaultVal}\n`;
+          // Push S-prefixed
+          const sPrefix = `S${slider_param.index + 1}`;
+          txtContent += `PARAM|${sPrefix}|${slider_param.defaultVal}\n`;
+        });
+      });
+      
+      // 2. Process extra JSFX to test load/existence in REAPER
+      const EXTRA_JSFX_NAMES = [
+        // Compressors/Dynamics/Limiters
+        "JS: 1175 Compressor", "JS: Auto Expander", "JS: Event Horizon Clipper/Limiter",
+        "JS: Fairly Childish Compressor/Limiter", "JS: General Dynamics", "JS: LOSER/1175",
+        "JS: LOSER/MGA_JSLimiter", "JS: LOSER/MasterLimiter", "JS: LOSER/MasterTom",
+        "JS: LOSER/compciter", "JS: LOSER/gate", "JS: LOSER/DDC", "JS: Liteon/np1136peaklimiter",
+        "JS: Multi-Band Compressor", "JS: SStillwell/1175", "JS: SStillwell/bombastic",
+        "JS: SStillwell/dyno", "JS: SStillwell/eventhorizon", "JS: SStillwell/eventhorizon2",
+        "JS: SStillwell/expander", "JS: SStillwell/fairlychildish", "JS: SStillwell/hugebooty",
+        "JS: SStillwell/majorTom", "JS: 5-Band Compressor", "JS: 3-Band Compressor", "JS: Expander / Gate",
+
+        // EQ/Enhancers/Filters
+        "JS: 3-Band EQ", "JS: 4-Band EQ", "JS: 5-Band Stereo EQ", "JS: Auto-peaker",
+        "JS: Bandpass Filter", "JS: DC Filter", "JS: Exciter", "JS: Huge Booty Bass Enhancer",
+        "JS: LOSER/3BandEQ", "JS: LOSER/4BandEQ", "JS: LOSER/5BandEQ", "JS: LOSER/BasiQ",
+        "JS: LOSER/Filter", "JS: LOSER/Filter_RC", "JS: LOSER/MIDI_EQ", "JS: LOSER/VCF",
+        "JS: LOSER/saturation", "JS: LOSER/stereo_enhancer", "JS: Liteon/3bandpeakfilter",
+        "JS: Liteon/applefilter12db", "JS: Liteon/applefilter24db", "JS: Liteon/butterworth24db",
+        "JS: Liteon/cheb24db", "JS: Liteon/moog24db", "JS: Liteon/presenceeq", "JS: Liteon/rbj1073",
+        "JS: Liteon/rbjeq", "JS: Liteon/saturator", "JS: Liteon/shelveq", "JS: Liteon/statevariable",
+        "JS: Liteon/statevariable2", "JS: RBJ 1073 EQ", "JS: RBJ 4-Band Semi-Parametric EQ",
+        "JS: RBJ 7-Band Graphic EQ", "JS: RBJ Highpass/Lowpass Filters", "JS: SStillwell/1973",
+        "JS: SStillwell/badbussmojo", "JS: SStillwell/equo", "JS: SStillwell/rbj1073",
+        "JS: SStillwell/realoud", "JS: SStillwell/thunderkick", "JS: SStillwell/tilt",
+        "JS: Saturation/Soft Clipper", "JS: Teej/rbj12eq-teej", "JS: 12-Band EQ", "JS: Graphic EQ",
+
+        // Modulation/Time
+        "JS: Chorus", "JS: Chorus (Stereo)", "JS: Delay", "JS: Delay w/ Chorus",
+        "JS: Delay w/ Tempo Ping-Pong", "JS: Flanger", "JS: Flanger (Stereo)", "JS: LOSER/FBDelay",
+        "JS: LOSER/FBFlanger", "JS: LOSER/Flanger", "JS: LOSER/Phaser", "JS: LOSER/Tremolo",
+        "JS: Phaser", "JS: Reverb", "JS: SStillwell/chorus", "JS: SStillwell/chorus_stereo",
+        "JS: SStillwell/delay", "JS: SStillwell/delay_pong", "JS: SStillwell/delay_tempo",
+        "JS: SStillwell/flanger", "JS: SStillwell/flanger_ext", "JS: SStillwell/ozzifier",
+        "JS: SStillwell/width", "JS: Tremolo", "JS: Delay (L/R)",
+
+        // Guitar/Amp/Distortion
+        "JS: Distortion", "JS: SStillwell/dirtymouth", "JS: SStillwell/dirtmouth", "JS: SStillwell/guitar/AmpModel",
+        "JS: SStillwell/guitar/chorus", "JS: SStillwell/guitar/distortion", "JS: SStillwell/guitar/flanger",
+        "JS: SStillwell/guitar/phaser", "JS: SStillwell/guitar/tremolo", "JS: Tube Harmonics",
+        "JS: Wah-Wah", "JS: Wig-Wah",
+
+        // Utility/Routing/Imaging/Pitch
+        "JS: 8-Channel Mixer", "JS: Audio To MIDI Drum Trigger", "JS: Band Splitter", "JS: Band Joiner",
+        "JS: Dual Pan", "JS: FFT Splitter", "JS: FFT Splitter (3-band)", "JS: LOSER/CenterCanceler",
+        "JS: LOSER/Dither", "JS: LOSER/Downjumper", "JS: LOSER/TransientController", "JS: LOSER/Upjumper",
+        "JS: LOSER/WaveShaper", "JS: LOSER/WhiteNoise", "JS: LOSER/goniometer", "JS: LOSER/phase_rotator",
+        "JS: LOSER/pitch_shifter_2", "JS: LOSER/stereofield", "JS: Liteon/deesser", "JS: Liteon/pinknoisegen",
+        "JS: Liteon/pseudostereo", "JS: Multichannel Routing/Channel Mapper", "JS: Phase Rotator",
+        "JS: Pitch Down-Shifter", "JS: Pitch Octave Up", "JS: Pitch Shifter", "JS: Pitch/Detune",
+        "JS: SMPTE LTC Generator", "JS: SMPTE LTC Reader/Meter", "JS: Stereo Field", "JS: Time Adjustment",
+        "JS: Volume/Pan Smoother v5", "JS: 3-Band Splitter", "JS: 4-Band Splitter", "JS: 5-Band Splitter",
+        "JS: 8x8 Matrix Mixer", "JS: 8-Way Panner", "JS: Channel Mixer", "JS: Super Pitch",
+        "JS: Transient Enhancer", "JS: Tonifier", "JS: Vocoder", "JS: MS Decoder", "JS: MS Encoder",
+        "JS: Stereo Upmix", "JS: IX/Mixer_8xM-1xS", "JS: IX/StereoPhaseInverter", "JS: IX/PhaseAdjust",
+        "JS: IX/SwixMitz"
+      ];
+      
+      EXTRA_JSFX_NAMES.forEach((name) => {
+        const cleanNamePart = name.replace("JS: ", "").replace(/\//g, " ");
+        txtContent += `TRACK|JSFX ${cleanNamePart}\n`;
+        txtContent += `FX|${name}\n`;
+        // Send index-based parameters 1 through 5 to test standard slider binding
+        for (let i = 1; i <= 5; i++) {
+          txtContent += `PARAM|S${i}|0.5\n`;
+        }
+      });
+      
+      const response = await fetchWithDetailedError('/api/reaper-sync/push', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          email: user.email,
+          pin: pin,
+          payload: txtContent
+        })
+      });
+      
+      if (response) {
+        setReaperSyncPin(pin);
+        setShowSyncSuccess(true);
+        setTimeout(() => setShowSyncSuccess(false), 5000);
+      }
+    } catch (err: any) {
+      setError(err.message || "Failed to push exhaustive REAPER sync test.");
+    } finally {
+      setIsPushingReaperSync(false);
+    }
+  };
+
   const handleGenerate = async () => {
     if (!requireAuth()) return;
     
@@ -7543,22 +7664,39 @@ Provide the exact JSFX plugin name and required sliders/parameters.`;
                                 {isPushingReaperSync ? <Loader2 className="w-3 h-3 animate-spin" /> : <Zap className="w-3 h-3" />}
                                 {showSyncSuccess ? "SYNCCED TO CLOUD!" : "Push REAPER Sync"}
                               </button>
-                              
-                              {reaperSyncPin && (
-                                <div className={`flex items-center justify-center gap-3 px-4 py-2 rounded-2xl border-2 border-dashed animate-in fade-in slide-in-from-top-2 duration-300 ${
-                                  theme === 'coldest' ? 'bg-purple-50 border-purple-200 text-purple-600' : 'bg-purple-500/10 border-purple-500/30 text-purple-400'
-                                }`}>
-                                  <div className="flex flex-col">
-                                    <span className="text-[8px] font-black uppercase tracking-[0.2em] opacity-60">Connect PIN</span>
-                                    <span className="text-lg font-black tracking-[0.3em] leading-none">{reaperSyncPin}</span>
-                                  </div>
-                                  <div className={`h-8 w-[2px] ${theme === 'coldest' ? 'bg-purple-200' : 'bg-purple-500/30'}`} />
-                                  <div className="flex flex-col">
-                                    <span className="text-[8px] font-black uppercase tracking-[0.2em] opacity-60">Status</span>
-                                    <span className="text-[10px] font-bold uppercase tracking-widest">Awaiting Link</span>
-                                  </div>
-                                </div>
-                              )}
+                            </div>
+                          )}
+
+                          {user?.email === 'coldestconcept@gmail.com' && (
+                            <div className="flex flex-col gap-2">
+                              <button
+                                onClick={handlePushExhaustiveJSFXSync}
+                                disabled={isPushingReaperSync}
+                                className={`flex items-center justify-center gap-2 rounded-full px-6 py-2.5 font-black text-[10px] uppercase tracking-widest transition-all ${
+                                  theme === 'coldest'
+                                    ? isPushingReaperSync ? 'bg-slate-200 text-slate-400' : 'bg-red-500 text-white hover:bg-red-650 shadow-md active:scale-95'
+                                    : isPushingReaperSync ? 'bg-zinc-800 text-zinc-500' : 'bg-red-600 text-white hover:bg-red-550 shadow-md active:scale-95'
+                                }`}
+                              >
+                                {isPushingReaperSync ? <Loader2 className="w-3 h-3 animate-spin" /> : <Zap className="w-3 h-3 text-yellow-300" />}
+                                {showSyncSuccess ? "SYNCCED EXHAUSTIVE TEST!" : "Push EXHAUSTIVE JSFX SYNC TEST"}
+                              </button>
+                            </div>
+                          )}
+
+                          {reaperSyncPin && (
+                            <div className={`flex items-center justify-center gap-3 px-4 py-2 rounded-2xl border-2 border-dashed animate-in fade-in slide-in-from-top-2 duration-300 ${
+                              theme === 'coldest' ? 'bg-purple-50 border-purple-200 text-purple-600' : 'bg-purple-500/10 border-purple-500/30 text-purple-400'
+                            }`}>
+                              <div className="flex flex-col">
+                                <span className="text-[8px] font-black uppercase tracking-[0.2em] opacity-60">Connect PIN</span>
+                                <span className="text-lg font-black tracking-[0.3em] leading-none">{reaperSyncPin}</span>
+                              </div>
+                              <div className={`h-8 w-[2px] ${theme === 'coldest' ? 'bg-purple-200' : 'bg-purple-500/30'}`} />
+                              <div className="flex flex-col">
+                                <span className="text-[8px] font-black uppercase tracking-[0.2em] opacity-60">Status</span>
+                                <span className="text-[10px] font-bold uppercase tracking-widest">Awaiting Link</span>
+                              </div>
                             </div>
                           )}
 
