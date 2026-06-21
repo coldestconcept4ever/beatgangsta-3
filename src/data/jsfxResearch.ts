@@ -85,10 +85,10 @@ export const JSFX_DATABASE: JSFXProfile[] = [
     howItWorks: "An LFO modulates target delay lines back and forth to create slight pitch and timing discrepancies, simulating a multi-singer performance.",
     proTips: "Keep Wet Mix (S5) low (-12dB to -18dB) on main lead vocals to preserve punch, but boost it on backing vocals for a wider, floatier stereo field.",
     sliders: [
-      { index: 0, name: "Delay (ms)", unit: "ms", min: 0, max: 100, defaultVal: 10, description: "Base delay time offset of the chorus voices." },
-      { index: 1, name: "Width (ms)", unit: "ms", min: 0, max: 5, defaultVal: 2, description: "Range of LFO modulation on the delay times." },
-      { index: 2, name: "Frequency (Hz)", unit: "Hz", min: 0.05, max: 10, defaultVal: 0.5, description: "Modulation speed of the chorus effect." },
-      { index: 3, name: "Voices", unit: "count", min: 1, max: 16, defaultVal: 4, description: "Number of duplicated voices." },
+      { index: 0, name: "Voices", unit: "count", min: 1, max: 16, defaultVal: 4, description: "Number of duplicated voices." },
+      { index: 1, name: "Delay (ms)", unit: "ms", min: 0, max: 100, defaultVal: 10, description: "Base delay time offset of the chorus voices." },
+      { index: 2, name: "Width (ms)", unit: "ms", min: 0, max: 5, defaultVal: 2, description: "Range of LFO modulation on the delay times." },
+      { index: 3, name: "Frequency (Hz)", unit: "Hz", min: 0.05, max: 10, defaultVal: 0.5, description: "Modulation speed of the chorus effect." },
       { index: 4, name: "Wet Mix (dB)", unit: "dB", min: -100, max: 12, defaultVal: -6, description: "Volume level of the processed chorus effect." },
       { index: 5, name: "Dry Mix (dB)", unit: "dB", min: -100, max: 12, defaultVal: 0, description: "Volume level of the clean, unaffected dry audio." }
     ]

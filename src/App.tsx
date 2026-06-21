@@ -7436,28 +7436,8 @@ Provide the exact JSFX plugin name and required sliders/parameters.`;
               </div>
 
               {(inputMode === 'random' || inputMode === 'search') && (
-                <div className={`transition-all duration-700 flex flex-col sm:flex-row gap-4 max-w-xl mx-auto mt-4 mb-6 ${mainTab === null ? 'blur-[8px] pointer-events-none opacity-40' : 'animate-in fade-in slide-in-from-bottom-4 duration-300'}`}>
-                  <div className="flex flex-col gap-2 flex-1">
-                    <label className={`text-[10px] font-black uppercase tracking-widest opacity-60 ${theme === 'coldest' ? 'text-slate-900' : 'text-white'}`}>
-                      {t('vibe_context')} (Optional)
-                    </label>
-                    <textarea
-                      placeholder={t('vibe_context_placeholder', { artist: placeholderArtist })}
-                      value={generationContext}
-                      onChange={(e) => setGenerationContext(e.target.value)}
-                      rows={2}
-                      className={`w-full p-4 rounded-2xl text-xs font-medium transition-all outline-none border-2 resize-none ${
-                        theme === 'coldest' 
-                          ? 'bg-white/60 border-sky-100 focus:border-sky-400 text-slate-900 placeholder:text-slate-400' 
-                          : theme === 'crazy-bird'
-                          ? 'bg-red-950/40 border-red-900/50 focus:border-red-500 text-white placeholder:text-red-300/50'
-                          : theme === 'chef-mode'
-                          ? 'bg-orange-100/50 border-orange-200 focus:border-orange-400 text-slate-900 placeholder:text-orange-900/50'
-                          : 'bg-black/60 border-white/10 focus:border-white/30 text-white placeholder:text-gray-500'
-                      }`}
-                    />
-                  </div>
-                  <div className="flex flex-col gap-2 w-full sm:w-32">
+                <div className={`transition-all duration-700 flex flex-col items-center gap-4 max-w-[200px] mx-auto mt-4 mb-6 ${mainTab === null ? 'blur-[8px] pointer-events-none opacity-40' : 'animate-in fade-in slide-in-from-bottom-4 duration-300'}`}>
+                  <div className="flex flex-col gap-2 w-full text-center">
                     <label className={`text-[10px] font-black uppercase tracking-widest opacity-60 ${theme === 'coldest' ? 'text-slate-900' : 'text-white'}`}>
                       BPM (Optional)
                     </label>
@@ -7466,7 +7446,7 @@ Provide the exact JSFX plugin name and required sliders/parameters.`;
                       placeholder="e.g. 140"
                       value={generationBPM}
                       onChange={(e) => setGenerationBPM(e.target.value)}
-                      className={`w-full p-4 rounded-full text-xs font-medium transition-all outline-none border-2 ${
+                      className={`text-center w-full p-4 rounded-full text-xs font-medium transition-all outline-none border-2 ${
                         theme === 'coldest' 
                           ? 'bg-white/60 border-sky-100 focus:border-sky-400 text-slate-900 placeholder:text-slate-400' 
                           : theme === 'crazy-bird'

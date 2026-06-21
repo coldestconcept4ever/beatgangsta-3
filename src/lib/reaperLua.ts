@@ -917,42 +917,144 @@ function draw_dashboard(start_y, click_pressed)
     gfx.setfont(2)
     gfx.x, gfx.y = 50, diag_y
     gfx.drawstr("DIAGNOSTICS & SYNC ERRORS (" .. #state.sync_errors .. ")")
-    
+
     local item_y = diag_y + math.floor(20 * s)
     gfx.setfont(4)
-    for idx, err in ipairs(state.sync_errors) do
-      if idx <= 5 then -- show top 5
-        gfx.set(thm.acc_r, thm.acc_g, thm.acc_b, 1.0)
-        gfx.x = 50
-        gfx.y = item_y
-        gfx.drawstr("[" .. err.code .. "] ")
-        
-        gfx.set(1, 1, 1, 0.70)
-        local start_msg_x = math.floor(135 * s)
-        gfx.x = start_msg_x
-        local msg = err.desc
-        local max_w = (gfx.w - 50) - start_msg_x
-        local tw_msg, _ = gfx.measurestr(msg)
-        if tw_msg > max_w then
-          -- Truncate cleanly based on actual pixel width
-          while #msg > 5 and tw_msg > max_w - 15 do
-            msg = msg:sub(1, #msg - 1)
-            tw_msg, _ = gfx.measurestr(msg .. "...")
-          end
-          msg = msg .. "..."
+
+    local max_visible = 12
+    if not state.error_scroll_offset then state.error_scroll_offset = 1 end
+    if state.error_scroll_offset < 1 then state.error_scroll_offset = 1 end
+    local max_offset = math.max(1, #state.sync_errors - max_visible + 1)
+    if state.error_scroll_offset > max_offset then state.error_scroll_offset = max_offset end
+
+    -- Mouse wheel logic for diagnostics container
+    if gfx.mouse_wheel ~= 0 then
+      local list_h = max_visible * math.floor(18 * s) + math.floor(20 * s)
+      if gfx.mouse_x >= 50 and gfx.mouse_x <= gfx.w - 50 and gfx.mouse_y >= diag_y and gfx.mouse_y <= diag_y + list_h then
+        if gfx.mouse_wheel > 0 then
+          state.error_scroll_offset = math.max(1, state.error_scroll_offset - 1)
+        else
+          state.error_scroll_offset = math.min(max_offset, state.error_scroll_offset + 1)
         end
-        gfx.drawstr(msg)
-        
-        item_y = item_y + math.floor(16 * s)
       end
+      gfx.mouse_wheel = 0
     end
-    if #state.sync_errors > 5 then
+
+    -- Draw actual visible errors
+    local end_idx = math.min(#state.sync_errors, state.error_scroll_offset + max_visible - 1)
+    for idx = state.error_scroll_offset, end_idx do
+      local err = state.sync_errors[idx]
+      gfx.set(thm.acc_r, thm.acc_g, thm.acc_b, 1.0)
+      gfx.x = 50
+      gfx.y = item_y
+      gfx.drawstr("[" .. err.code .. "] ")
+
+      gfx.set(1, 1, 1, 0.70)
+      local start_msg_x = math.floor(135 * s)
+      gfx.x = start_msg_x
+      local msg = err.desc
+      local right_margin = (#state.sync_errors > max_visible) and 100 or 50
+      local max_w = (gfx.w - right_margin) - start_msg_x
+      local tw_msg, _ = gfx.measurestr(msg)
+      if tw_msg > max_w then
+        -- Truncate cleanly based on actual pixel width
+        while #msg > 5 and tw_msg > max_w - 15 do
+          msg = msg:sub(1, #msg - 1)
+          tw_msg, _ = gfx.measurestr(msg .. "...")
+        end
+        msg = msg .. "..."
+      end
+      gfx.drawstr(msg)
+
+      item_y = item_y + math.floor(18 * s)
+    end
+
+    -- Draw interactive scrollbar if there are more errors than max_visible
+    if #state.sync_errors > max_visible then
+      local sb_x = gfx.w - 85
+      local sb_w = math.floor(24 * s)
+      local sb_h = max_visible * math.floor(18 * s)
+      local sb_y = diag_y + math.floor(20 * s)
+
+      local on_up_hover = in_rect(gfx.mouse_x, gfx.mouse_y, sb_x, sb_y, sb_w, math.floor(24 * s))
+      local on_down_hover = in_rect(gfx.mouse_x, gfx.mouse_y, sb_x, sb_y + sb_h - math.floor(24 * s), sb_w, math.floor(24 * s))
+
+      if on_up_hover or on_down_hover then
+        state.hovering_interactive = true
+      end
+
+      if click_pressed then
+        if on_up_hover then
+          state.error_scroll_offset = math.max(1, state.error_scroll_offset - 1)
+        elseif on_down_hover then
+          state.error_scroll_offset = math.min(max_offset, state.error_scroll_offset + 1)
+        end
+      end
+
+      -- Up Button
+      if on_up_hover then
+        gfx.set(thm.acc_r, thm.acc_g, thm.acc_b, 0.4)
+      else
+        gfx.set(thm.acc_r, thm.acc_g, thm.acc_b, 0.15)
+      end
+      gfx.rect(sb_x, sb_y, sb_w, math.floor(24 * s), 1)
+      gfx.set(thm.acc_r, thm.acc_g, thm.acc_b, 0.3)
+      gfx.rect(sb_x, sb_y, sb_w, math.floor(24 * s), 0)
+
+      gfx.set(1, 1, 1, on_up_hover and 1.0 or 0.70)
+      local utw, uth = gfx.measurestr("▲")
+      gfx.x = sb_x + (sb_w - utw)/2
+      gfx.y = sb_y + (math.floor(24 * s) - uth)/2
+      gfx.drawstr("▲")
+
+      -- Down Button
+      if on_down_hover then
+        gfx.set(thm.acc_r, thm.acc_g, thm.acc_b, 0.4)
+      else
+        gfx.set(thm.acc_r, thm.acc_g, thm.acc_b, 0.15)
+      end
+      gfx.rect(sb_x, sb_y + sb_h - math.floor(24 * s), sb_w, math.floor(24 * s), 1)
+      gfx.set(thm.acc_r, thm.acc_g, thm.acc_b, 0.3)
+      gfx.rect(sb_x, sb_y + sb_h - math.floor(24 * s), sb_w, math.floor(24 * s), 0)
+
+      gfx.set(1, 1, 1, on_down_hover and 1.0 or 0.70)
+      local dtw, dth = gfx.measurestr("▼")
+      gfx.x = sb_x + (sb_w - dtw)/2
+      gfx.y = sb_y + sb_h - math.floor(24 * s) + (math.floor(24 * s) - dth)/2
+      gfx.drawstr("▼")
+
+      -- Track
+      local track_y1 = sb_y + math.floor(24 * s)
+      local track_h = sb_h - math.floor(48 * s)
+      gfx.set(thm.acc_r, thm.acc_g, thm.acc_b, 0.05)
+      gfx.rect(sb_x, track_y1, sb_w, track_h, 1)
+      gfx.set(thm.acc_r, thm.acc_g, thm.acc_b, 0.1)
+      gfx.rect(sb_x, track_y1, sb_w, track_h, 0)
+
+      -- Handle/Thumb
+      local handle_h = math.max(math.floor(15 * s), math.floor((track_h * max_visible) / #state.sync_errors))
+      if handle_h > track_h then handle_h = track_h end
+      local scroll_ratio = (state.error_scroll_offset - 1) / (#state.sync_errors - max_visible)
+      local handle_y = track_y1 + math.floor(scroll_ratio * (track_h - handle_h))
+
+      local on_handle_hover = in_rect(gfx.mouse_x, gfx.mouse_y, sb_x, handle_y, sb_w, handle_h)
+      if on_handle_hover then
+        state.hovering_interactive = true
+        gfx.set(thm.acc_r, thm.acc_g, thm.acc_b, 0.6)
+      else
+        gfx.set(thm.acc_r, thm.acc_g, thm.acc_b, 0.3)
+      end
+      gfx.rect(sb_x, handle_y, sb_w, handle_h, 1)
+    end
+
+    -- Scroll position indicator label
+    if #state.sync_errors > max_visible then
       gfx.set(thm.subtext_r, thm.subtext_g, thm.subtext_b, 0.5)
-      gfx.x, gfx.y = 50, item_y
-      gfx.drawstr("And " .. (#state.sync_errors - 5) .. " more.")
-      item_y = item_y + math.floor(20 * s)
+      gfx.x, gfx.y = 50, diag_y + max_visible * math.floor(18 * s) + math.floor(25 * s)
+      gfx.drawstr("Showing " .. state.error_scroll_offset .. " to " .. end_idx .. " of " .. #state.sync_errors .. " errors. (Use wheel or ▲/▼)")
+      item_y = diag_y + max_visible * math.floor(18 * s) + math.floor(45 * s)
     else
-      item_y = item_y + math.floor(8 * s)
+      item_y = item_y + math.floor(12 * s)
     end
 
     local copy_btn_y = item_y
@@ -1277,6 +1379,7 @@ function apply_sync(payload)
           local num_params = reaper.TrackFX_GetNumParams(current_track, current_fx)
           local matched_idx = nil
           local pi_lower = pi:lower():gsub("%s+", ""):gsub("-", ""):gsub("_", "")
+          local is_out_of_bounds_s = false
           
           -- 1. Try to extract slider index from S1, S2, S3 ... prefixes
           local s_num = pi:match("^%s*[sS](%d+)")
@@ -1291,11 +1394,13 @@ function apply_sync(payload)
             local s_idx = tonumber(s_num) - 1
             if s_idx >= 0 and s_idx < num_params then
               matched_idx = s_idx
+            else
+              is_out_of_bounds_s = true
             end
           end
           
           -- 2. Try Exact or Substring match on clean names (strip units, 'freq', 'gain')
-          if not matched_idx then
+          if not matched_idx and not is_out_of_bounds_s then
             local function clean_param_name(name)
               local n = name:lower()
               n = n:gsub("%s+", "")
@@ -1312,6 +1417,38 @@ function apply_sync(payload)
               return n
             end
             
+            local param_aliases = {
+              ["delay"] = {"delay", "delaytime", "delaylength", "time", "len"},
+              ["width"] = {"width", "depth", "spread", "size", "choruswidth"},
+              ["frequency"] = {"frequency", "freq", "rate", "speed", "speedhz", "modrate"},
+              ["voices"] = {"voices", "choirsize", "voicecount", "choir", "voicescount"},
+              ["threshold"] = {"threshold", "thresh", "limit", "clipping"},
+              ["ceiling"] = {"ceiling", "ceil", "outmax", "max", "limitceiling"},
+              ["ratio"] = {"ratio", "comp_ratio"},
+              ["attack"] = {"attack", "atk"},
+              ["release"] = {"release", "rel"},
+              ["makeup"] = {"makeup", "gain", "output", "outgain", "makeupgain", "out"},
+              ["low"] = {"lowgain", "low", "bass", "loweq"},
+              ["mid"] = {"midgain", "mid", "mids", "mideq"},
+              ["high"] = {"highgain", "high", "treble", "higheq"},
+              ["wet"] = {"wet", "wetmix", "mix", "wetlevel"},
+              ["dry"] = {"dry", "drymix", "bypass", "drylevel"}
+            }
+            
+            local function check_alias_match(pi_cl, pn_cl)
+              if pi_cl == pn_cl then return true end
+              for _, aliases in pairs(param_aliases) do
+                local pi_in_cat = false
+                local pn_in_cat = false
+                for _, alias in ipairs(aliases) do
+                  if pi_cl == alias or pi_cl:find(alias, 1, true) then pi_in_cat = true end
+                  if pn_cl == alias or pn_cl:find(alias, 1, true) then pn_in_cat = true end
+                end
+                if pi_in_cat and pn_in_cat then return true end
+              end
+              return false
+            end
+            
             local pi_clean = clean_param_name(pi)
             
             for p = 0, num_params - 1 do
@@ -1319,7 +1456,7 @@ function apply_sync(payload)
               if p_name then
                 local p_name_clean = clean_param_name(p_name)
                 if p_name_clean ~= "" and pi_clean ~= "" then
-                  if p_name_clean == pi_clean or p_name_clean:find(pi_clean, 1, true) or pi_clean:find(p_name_clean, 1, true) then
+                  if p_name_clean == pi_clean or p_name_clean:find(pi_clean, 1, true) or pi_clean:find(p_name_clean, 1, true) or check_alias_match(pi_clean, p_name_clean) then
                     matched_idx = p
                     break
                   end
@@ -1329,7 +1466,7 @@ function apply_sync(payload)
           end
           
           -- 3. Fallback to common stem matching (extended to cover and resolve all 39 warnings)
-          if not matched_idx then
+          if not matched_idx and not is_out_of_bounds_s then
             for p = 0, num_params - 1 do
               local _, p_name = reaper.TrackFX_GetParamName(current_track, current_fx, p, "")
               if p_name then
@@ -1358,20 +1495,22 @@ function apply_sync(payload)
             end
           end
           
-          if matched_idx then
-            if (pi_lower:find("mix") or pi_lower:find("wet") or pi_lower:find("dry")) and p_val > 1.0 then
-              p_val = p_val / 100
+          if not is_out_of_bounds_s then
+            if matched_idx then
+              if (pi_lower:find("mix") or pi_lower:find("wet") or pi_lower:find("dry")) and p_val > 1.0 then
+                p_val = p_val / 100
+              end
+              reaper.TrackFX_SetParam(current_track, current_fx, matched_idx, p_val)
+              table.insert(state.sync_errors, {
+                code = "INFO_PARAM_SYNC",
+                desc = "Synced parameter '" .. pi .. "' to " .. pv .. " in '" .. current_fx_name .. "' ✔"
+              })
+            else
+              table.insert(state.sync_errors, {
+                code = "WARN_PARAM_MISSING",
+                desc = "Param '" .. pi .. "' not found in '" .. current_fx_name .. "'. Kept default."
+              })
             end
-            reaper.TrackFX_SetParam(current_track, current_fx, matched_idx, p_val)
-            table.insert(state.sync_errors, {
-              code = "INFO_PARAM_SYNC",
-              desc = "Synced parameter '" .. pi .. "' to " .. pv .. " in '" .. current_fx_name .. "' ✔"
-            })
-          else
-            table.insert(state.sync_errors, {
-              code = "WARN_PARAM_MISSING",
-              desc = "Param '" .. pi .. "' not found in '" .. current_fx_name .. "'. Kept default."
-            })
           end
         end
       end
