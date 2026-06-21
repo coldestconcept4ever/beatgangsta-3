@@ -82,10 +82,10 @@ gfx.init("BEATGANGSTA • CONNECT", 1260, 1860)
 
 local function update_fonts()
   local s = state.scale or 1.0
-  gfx.setfont(1, "Arial", math.floor(28 * s), 98) -- Title Font
-  gfx.setfont(2, "Arial", math.floor(14 * s), 98) -- Button / Help Label Font
-  gfx.setfont(3, "Arial", math.floor(18 * s), 98) -- Input Value Font
-  gfx.setfont(4, "Arial", math.floor(12 * s), 98) -- Subtitle / Micro Font
+  gfx.setfont(1, "Outfit", math.floor(28 * s), 98) -- Title Font
+  gfx.setfont(2, "Outfit", math.floor(14 * s), 98) -- Button / Help Label Font
+  gfx.setfont(3, "Outfit", math.floor(18 * s), 98) -- Input Value Font
+  gfx.setfont(4, "Outfit", math.floor(12 * s), 98) -- Subtitle / Micro Font
 end
 
 update_fonts()
