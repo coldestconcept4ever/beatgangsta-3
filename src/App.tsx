@@ -578,6 +578,8 @@ const App: React.FC = () => {
 
   const [mainTab, setMainTab] = useState<'beat' | 'vox' | null>(null);
   const [inputMode, setInputMode] = useState<'random' | 'search' | 'upload'>('random');
+  const [generationBPM, setGenerationBPM] = useState<string>('');
+  const [generationContext, setGenerationContext] = useState<string>('');
   const [isGangstaVox, setIsGangstaVox] = useState<boolean>(false);
   const [csvInput, setCsvInput] = useState<string>('');
   const [plugins, setPlugins] = useState<VSTPlugin[]>(() => {
@@ -4651,7 +4653,7 @@ The AI was unable to verify these parameters. Please investigate.`;
 
     try {
       if (!requireAuth()) return;
-      const response = await getBeatRecommendations(plugins, analogInstruments, analogHardware, drumKits, excludeAnalog, dawType, starredPlugins, isGangstaVox, i18n.language, isMultiBandMode);
+      const response = await getBeatRecommendations(plugins, analogInstruments, analogHardware, drumKits, excludeAnalog, dawType, starredPlugins, isGangstaVox, i18n.language, isMultiBandMode, generationBPM, generationContext);
       clearInterval(progressInterval);
       setGenerationProgress(100);
       clearTimeout(timeoutId);
@@ -4702,7 +4704,7 @@ The AI was unable to verify these parameters. Please investigate.`;
 
     try {
       if (!requireAuth()) return;
-      const response = await getCustomBeatRecommendations(plugins, typeBeatSearch.trim(), analogInstruments, analogHardware, drumKits, excludeAnalog, dawType, starredPlugins, isGangstaVox, i18n.language, isMultiBandMode);
+      const response = await getCustomBeatRecommendations(plugins, typeBeatSearch.trim(), analogInstruments, analogHardware, drumKits, excludeAnalog, dawType, starredPlugins, isGangstaVox, i18n.language, isMultiBandMode, generationBPM, generationContext);
       clearInterval(progressInterval);
       setGenerationProgress(100);
       clearTimeout(timeoutId);
@@ -4754,7 +4756,7 @@ The AI was unable to verify these parameters. Please investigate.`;
 
     try {
       if (!requireAuth()) return;
-      const response = await getSongBeatRecommendations(plugins, songSearch.trim(), analogInstruments, analogHardware, drumKits, excludeAnalog, dawType, starredPlugins, isGangstaVox, i18n.language, isMultiBandMode);
+      const response = await getSongBeatRecommendations(plugins, songSearch.trim(), analogInstruments, analogHardware, drumKits, excludeAnalog, dawType, starredPlugins, isGangstaVox, i18n.language, isMultiBandMode, generationBPM, generationContext);
       clearInterval(progressInterval);
       setGenerationProgress(100);
       clearTimeout(timeoutId);
@@ -7311,6 +7313,31 @@ Provide the exact JSFX plugin name and required sliders/parameters.`;
                   </button>
                 </div>
               </div>
+
+              {(inputMode === 'random' || inputMode === 'search') && (
+                <div className={`transition-all duration-700 flex flex-col gap-4 max-w-xl mx-auto mb-6 ${mainTab === null ? 'blur-[8px] pointer-events-none opacity-40' : 'animate-in fade-in slide-in-from-bottom-4 duration-300'}`}>
+                  <div className="flex flex-col sm:flex-row gap-4">
+                    <div className="flex-1 relative group">
+                      <textarea
+                        placeholder="Context / Fine tune results (e.g. Dark, aggressive, wide synths...)"
+                        value={generationContext}
+                        onChange={(e) => setGenerationContext(e.target.value)}
+                        rows={2}
+                        className={`w-full py-4 pl-6 pr-4 rounded-2xl resize-none text-sm font-black focus:outline-none transition-all border-2 ${theme === 'coldest' ? 'bg-white/40 border-sky-100 focus:border-sky-400 text-slate-900 placeholder-slate-500' : theme === 'chef-mode' ? 'bg-white/60 border-orange-100 focus:border-orange-400 text-slate-900 placeholder-slate-500' : 'bg-black/60 border-white/10 focus:border-white/30 text-white placeholder-gray-400'}`}
+                      />
+                    </div>
+                    <div className="w-full sm:w-32 relative group">
+                      <input
+                        type="number"
+                        placeholder="BPM (opt)"
+                        value={generationBPM}
+                        onChange={(e) => setGenerationBPM(e.target.value)}
+                        className={`w-full py-4 pl-6 pr-4 rounded-full text-sm font-black focus:outline-none transition-all border-2 ${theme === 'coldest' ? 'bg-white/40 border-sky-100 focus:border-sky-400 text-slate-900 placeholder-slate-500' : theme === 'chef-mode' ? 'bg-white/60 border-orange-100 focus:border-orange-400 text-slate-900 placeholder-slate-500' : 'bg-black/60 border-white/10 focus:border-white/30 text-white placeholder-gray-400'}`}
+                      />
+                    </div>
+                  </div>
+                </div>
+              )}
 
               {inputMode === 'random' && (
                 <div className="animate-in fade-in slide-in-from-bottom-4 duration-300 flex justify-center mt-4 mb-4">

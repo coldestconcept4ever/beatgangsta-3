@@ -1097,6 +1097,7 @@ local function add_fx_fuzzy(track, fx_name)
 
   -- Try spelling corrections like Stilwell with one "l" vs two, or directory names
   local spelling_corrections = {
+    (clean_name:gsub("SStillwell", "stillwell")),
     (clean_name:gsub("SStillwell", "Stillwell")),
     (clean_name:gsub("SStillwell/1973", "1973")),
     (clean_name:gsub("SStillwell", "sstillwell")),
@@ -1106,7 +1107,7 @@ local function add_fx_fuzzy(track, fx_name)
   }
 
   for _, sc in ipairs(spelling_corrections) do
-    if sc ~= clean_name then
+    if type(sc) == "string" and sc ~= clean_name then
       local res = reaper.TrackFX_AddByName(track, sc, false, -1)
       if res >= 0 then return res, sc end
       res = reaper.TrackFX_AddByName(track, "JS: " .. sc, false, -1)
@@ -1123,9 +1124,9 @@ local function add_fx_fuzzy(track, fx_name)
   local fallbacks = {}
   
   if fx_lower:find("eq") or fx_lower:find("filter") or fx_lower:find("1073") or fx_lower:find("tilt") then
-    fallbacks = { "JS: LOSER/3BandEQ", "JS: 3-Band EQ", "VST: ReaEQ (Cockos)", "VST: ReaEQ", "JS: SStillwell/1973" }
+    fallbacks = { "JS: Stillwell/1973", "JS: sstillwell/1973", "JS: stillwell/1973", "JS: LOSER/3BandEQ", "JS: 3-Band EQ", "VST: ReaEQ (Cockos)", "VST: ReaEQ" }
   elseif fx_lower:find("comp") or fx_lower:find("limiter") or fx_lower:find("limit") or fx_lower:find("1175") or fx_lower:find("eventhorizon") or fx_lower:find("dyno") or fx_lower:find("gate") or fx_lower:find("clipper") or fx_lower:find("compressor") then
-    fallbacks = { "JS: SStillwell/1175", "JS: 1175 Compressor", "VST: ReaComp (Cockos)", "VST: ReaComp" }
+    fallbacks = { "JS: SStillwell/1175", "JS: sstillwell/1175", "JS: Stillwell/1175", "JS: stillwell/1175", "JS: 1175 Compressor", "VST: ReaComp (Cockos)", "VST: ReaComp" }
   elseif fx_lower:find("delay") or fx_lower:find("echo") then
     fallbacks = { "JS: Delay", "VST: ReaDelay" }
   elseif fx_lower:find("chorus") or fx_lower:find("modulation") or fx_lower:find("flanger") or fx_lower:find("phaser") then
