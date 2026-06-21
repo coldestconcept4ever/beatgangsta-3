@@ -1097,12 +1097,12 @@ local function add_fx_fuzzy(track, fx_name)
 
   -- Try spelling corrections like Stilwell with one "l" vs two, or directory names
   local spelling_corrections = {
-    clean_name:gsub("SStillwell", "Stillwell"),
-    clean_name:gsub("SStillwell/1973", "1973"),
-    clean_name:gsub("SStillwell", "sstillwell"),
-    clean_name:gsub("LOSER/", ""),
-    clean_name:gsub("Saturation/", ""),
-    clean_name:gsub("Liteon/", "")
+    (clean_name:gsub("SStillwell", "Stillwell")),
+    (clean_name:gsub("SStillwell/1973", "1973")),
+    (clean_name:gsub("SStillwell", "sstillwell")),
+    (clean_name:gsub("LOSER/", "")),
+    (clean_name:gsub("Saturation/", "")),
+    (clean_name:gsub("Liteon/", ""))
   }
 
   for _, sc in ipairs(spelling_corrections) do
