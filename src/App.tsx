@@ -46,11 +46,12 @@ const LegalConsentBanner = React.lazy(() => import('./components/LegalConsentBan
 const RecipeViewerModal = React.lazy(() => import('./components/RecipeViewerModal').then(m => ({ default: m.RecipeViewerModal })));
 import { TutorialOverlay } from './components/TutorialOverlay';
 import { StatusPage } from './components/StatusPage';
+import { JSFXDatabaseViewer } from './components/JSFXDatabaseViewer';
 import { AdminDashboard } from './components/AdminDashboard';
 import { BetaApplicationModal } from './components/BetaApplicationModal';
 import { AnimatePresence, motion } from 'motion/react';
 import { useTranslation } from 'react-i18next';
-import { Download, Globe, Languages, Star, X, Upload, Cpu, Folder as FolderIcon, ShieldCheck, Check, Zap, Rocket, Eye, EyeOff, AlertTriangle, Lock, Shield, Loader2, Gem, Sword, User as UserIcon, Link, Link2, Palette, Sparkles, Drum, Image as ImageIcon, Crown, CheckCircle2, ExternalLink, Facebook, Instagram, Linkedin, Twitter, Activity, Database, Trash2, Music, Video, Cloud, Settings2, HelpCircle, Copy } from 'lucide-react';
+import { Download, Globe, Languages, Star, X, Upload, Cpu, Folder as FolderIcon, ShieldCheck, Check, Zap, Rocket, Eye, EyeOff, AlertTriangle, Lock, Shield, Loader2, Gem, Sword, User as UserIcon, Link, Layers, Link2, Palette, Sparkles, Drum, Image as ImageIcon, Crown, CheckCircle2, ExternalLink, Facebook, Instagram, Linkedin, Twitter, Activity, Database, Trash2, Music, Video, Cloud, Settings2, HelpCircle, Copy } from 'lucide-react';
 import { saveAs } from 'file-saver';
 import tinycolor from 'tinycolor2';
 import Turnstile from 'react-turnstile';
@@ -436,6 +437,7 @@ const App: React.FC = () => {
     }
     return false;
   });
+  const [showJsfxDatabase, setShowJsfxDatabase] = useState(false);
   const [showAdminDashboard, setShowAdminDashboard] = useState(false);
   const [showBetaApplyModal, setShowBetaApplyModal] = useState(false);
   const [showInternationalizationModal, setShowInternationalizationModal] = useState(false);
@@ -4665,7 +4667,7 @@ The AI was unable to verify these parameters. Please investigate.`;
       // 2. Process extra JSFX to test load/existence in REAPER
       const EXTRA_JSFX_NAMES = [
         // Compressors/Dynamics/Limiters
-        "JS: 1175 Compressor", "JS: Auto Expander", "JS: Event Horizon Clipper/Limiter",
+        "JS: 1175 Compressor", "JS: Auto Expander", "JS: LOSER/EventHorizon",
         "JS: Fairly Childish Compressor/Limiter", "JS: General Dynamics", "JS: LOSER/1175",
         "JS: LOSER/MGA_JSLimiter", "JS: LOSER/MasterLimiter", "JS: LOSER/MasterTom",
         "JS: LOSER/compciter", "JS: LOSER/gate", "JS: LOSER/DDC", "JS: Liteon/np1136peaklimiter",
@@ -5008,7 +5010,7 @@ The AI was unable to verify these parameters. Please investigate.`;
       if (isJsfxMode) {
         fullContext += `\n\nCRITICAL DIRECTIVE: YOU MUST ONLY RECOMMEND JSFX PLUGINS FOR THIS MIX CRITIQUE. DO NOT RECOMMEND ANY VST/AU PLUGINS. 
 Only use valid, default REAPER JSFX (JS:). Here is a comprehensive list of actual standard JSFX categories and plugins to use as a reference:
-- Compressors/Dynamics/Limiters: JS: 1175 Compressor, JS: Auto Expander, JS: Event Horizon Clipper/Limiter, JS: Fairly Childish Compressor/Limiter, JS: General Dynamics, JS: LOSER/1175, JS: LOSER/MGA_JSLimiter, JS: LOSER/MasterLimiter, JS: LOSER/MasterTom, JS: LOSER/compciter, JS: LOSER/gate, JS: LOSER/DDC, JS: Liteon/np1136peaklimiter, JS: Multi-Band Compressor, JS: 5-Band Compressor, JS: 3-Band Compressor, JS: Expander / Gate.
+- Compressors/Dynamics/Limiters: JS: 1175 Compressor, JS: Auto Expander, JS: LOSER/EventHorizon, JS: Fairly Childish Compressor/Limiter, JS: General Dynamics, JS: LOSER/1175, JS: LOSER/MGA_JSLimiter, JS: LOSER/MasterLimiter, JS: LOSER/MasterTom, JS: LOSER/compciter, JS: LOSER/gate, JS: LOSER/DDC, JS: Liteon/np1136peaklimiter, JS: Multi-Band Compressor, JS: 5-Band Compressor, JS: 3-Band Compressor, JS: Expander / Gate.
 - EQ/Enhancers/Filters: JS: 3-Band EQ, JS: 4-Band EQ, JS: 5-Band Stereo EQ, JS: Auto-peaker, JS: Bandpass Filter, JS: DC Filter, JS: Exciter, JS: Huge Booty Bass Enhancer, JS: LOSER/3BandEQ, JS: LOSER/4BandEQ, JS: LOSER/5BandEQ, JS: LOSER/BasiQ, JS: LOSER/Filter, JS: LOSER/Filter_RC, JS: LOSER/MIDI_EQ, JS: LOSER/VCF, JS: LOSER/saturation, JS: LOSER/stereo_enhancer, JS: Liteon/3bandpeakfilter, JS: Liteon/applefilter12db, JS: Liteon/applefilter24db, JS: Liteon/butterworth24db, JS: Liteon/cheb24db, JS: Liteon/moog24db, JS: Liteon/presenceeq, JS: Liteon/rbj1073, JS: Liteon/rbjeq, JS: Liteon/saturator, JS: Liteon/shelveq, JS: Liteon/statevariable, JS: Liteon/statevariable2, JS: RBJ 1073 EQ, JS: RBJ 4-Band Semi-Parametric EQ, JS: RBJ 7-Band Graphic EQ, JS: RBJ Highpass/Lowpass Filters, JS: Saturation/Soft Clipper, JS: Teej/rbj12eq-teej, JS: 12-Band EQ, JS: Graphic EQ.
 - Modulation/Time: JS: Chorus, JS: Chorus (Stereo), JS: Delay, JS: Delay w/ Chorus, JS: Delay w/ Tempo Ping-Pong, JS: Flanger, JS: Flanger (Stereo), JS: LOSER/FBDelay, JS: LOSER/FBFlanger, JS: LOSER/Flanger, JS: LOSER/Phaser, JS: LOSER/Tremolo, JS: Phaser, JS: Reverb, JS: Tremolo, JS: Delay (L/R).
 - Guitar/Amp/Distortion: JS: Distortion, JS: Tube Harmonics, JS: Wah-Wah, JS: Wig-Wah.
@@ -5300,7 +5302,7 @@ Provide the exact JSFX plugin name and required sliders/parameters.`;
         if (isJsfxMode) {
           fullContext += `\n\nCRITICAL DIRECTIVE: YOU MUST ONLY RECOMMEND JSFX PLUGINS FOR THIS MIX CRITIQUE. DO NOT RECOMMEND ANY VST/AU PLUGINS. 
 Only use valid, default REAPER JSFX (JS:). Here is a comprehensive list of actual standard JSFX categories and plugins to use as a reference:
-- Compressors/Dynamics/Limiters: JS: 1175 Compressor, JS: Auto Expander, JS: Event Horizon Clipper/Limiter, JS: Fairly Childish Compressor/Limiter, JS: General Dynamics, JS: LOSER/1175, JS: LOSER/MGA_JSLimiter, JS: LOSER/MasterLimiter, JS: LOSER/MasterTom, JS: LOSER/compciter, JS: LOSER/gate, JS: LOSER/DDC, JS: Liteon/np1136peaklimiter, JS: Multi-Band Compressor, JS: 5-Band Compressor, JS: 3-Band Compressor, JS: Expander / Gate.
+- Compressors/Dynamics/Limiters: JS: 1175 Compressor, JS: Auto Expander, JS: LOSER/EventHorizon, JS: Fairly Childish Compressor/Limiter, JS: General Dynamics, JS: LOSER/1175, JS: LOSER/MGA_JSLimiter, JS: LOSER/MasterLimiter, JS: LOSER/MasterTom, JS: LOSER/compciter, JS: LOSER/gate, JS: LOSER/DDC, JS: Liteon/np1136peaklimiter, JS: Multi-Band Compressor, JS: 5-Band Compressor, JS: 3-Band Compressor, JS: Expander / Gate.
 - EQ/Enhancers/Filters: JS: 3-Band EQ, JS: 4-Band EQ, JS: 5-Band Stereo EQ, JS: Auto-peaker, JS: Bandpass Filter, JS: DC Filter, JS: Exciter, JS: Huge Booty Bass Enhancer, JS: LOSER/3BandEQ, JS: LOSER/4BandEQ, JS: LOSER/5BandEQ, JS: LOSER/BasiQ, JS: LOSER/Filter, JS: LOSER/Filter_RC, JS: LOSER/MIDI_EQ, JS: LOSER/VCF, JS: LOSER/saturation, JS: LOSER/stereo_enhancer, JS: Liteon/3bandpeakfilter, JS: Liteon/applefilter12db, JS: Liteon/applefilter24db, JS: Liteon/butterworth24db, JS: Liteon/cheb24db, JS: Liteon/moog24db, JS: Liteon/presenceeq, JS: Liteon/rbj1073, JS: Liteon/rbjeq, JS: Liteon/saturator, JS: Liteon/shelveq, JS: Liteon/statevariable, JS: Liteon/statevariable2, JS: RBJ 1073 EQ, JS: RBJ 4-Band Semi-Parametric EQ, JS: RBJ 7-Band Graphic EQ, JS: RBJ Highpass/Lowpass Filters, JS: Saturation/Soft Clipper, JS: Teej/rbj12eq-teej, JS: 12-Band EQ, JS: Graphic EQ.
 - Modulation/Time: JS: Chorus, JS: Chorus (Stereo), JS: Delay, JS: Delay w/ Chorus, JS: Delay w/ Tempo Ping-Pong, JS: Flanger, JS: Flanger (Stereo), JS: LOSER/FBDelay, JS: LOSER/FBFlanger, JS: LOSER/Flanger, JS: LOSER/Phaser, JS: LOSER/Tremolo, JS: Phaser, JS: Reverb, JS: Tremolo, JS: Delay (L/R).
 - Guitar/Amp/Distortion: JS: Distortion, JS: Tube Harmonics, JS: Wah-Wah, JS: Wig-Wah.
@@ -5721,6 +5723,10 @@ Provide the exact JSFX plugin name and required sliders/parameters.`;
     );
   }
 
+  if (showJsfxDatabase) {
+    return <JSFXDatabaseViewer onBack={() => setShowJsfxDatabase(false)} theme={theme} />;
+  }
+
   if (showAdminDashboard) {
     return <AdminDashboard onBack={() => setShowAdminDashboard(false)} theme={theme} />;
   }
@@ -6119,6 +6125,21 @@ Provide the exact JSFX plugin name and required sliders/parameters.`;
                           <div>
                             <div className="text-xs font-bold uppercase tracking-wider">Admin Dashboard</div>
                             <div className="text-[9px] opacity-50 mt-0.5">Manage users & plugin data</div>
+                          </div>
+                        </button>
+                        <button 
+                          onClick={() => {
+                            setShowJsfxDatabase(true);
+                            setIsUserMenuOpen(false);
+                          }}
+                          className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-left transition-colors group ${getDropdownTheme(theme).itemHover}`}
+                        >
+                          <div className={`w-7 h-7 rounded-full flex items-center justify-center transition-colors ${theme === 'coldest' ? 'bg-fuchsia-500 text-white' : 'bg-fuchsia-500/20 text-fuchsia-400'}`}>
+                            <Layers size={14} />
+                          </div>
+                          <div>
+                            <div className="text-xs font-bold uppercase tracking-wider">JSFX DB</div>
+                            <div className="text-[9px] opacity-50 mt-0.5">View full plugin reference</div>
                           </div>
                         </button>
                         <div className={`h-px w-full my-1 ${getDropdownTheme(theme).divider}`} />

@@ -1,3 +1,4 @@
+import { JSFX_DATABASE } from "../data/jsfxResearch";
 
 export enum Type {
   TYPE_UNSPECIFIED = "TYPE_UNSPECIFIED",
@@ -191,40 +192,52 @@ const GLOBAL_PARAMETER_STRICTNESS_PROMPT = `
     2. STRICT UNIT ACCURACY: You MUST use the exact, correct unit of measurement for every parameter (e.g. Hz, kHz, dB, ms, %, etc.).
     3. REAPER JSFX MASTER RESEARCH PROFILES (USE FOR COCKOS JSFX RECOMMENDATIONS):
        - "JS: 1175 Compressor" (1175 Compressor - Stock Cockos REAPER JSFX):
-         - S1 (Threshold (dB)): -60 to 0 dB (Default: -15).
-         - S2 (Ratio): Selection (0 = 4:1, 1 = 8:1, 2 = 12:1, 3 = 20:1).
-         - S3 (Attack (ms)): 0.02 to 0.8 ms.
-         - S4 (Release (ms)): 50 to 1100 ms.
-         - S5 (Makeup Gain (dB)): -20 to 40 dB. CRITICAL: When using 1175, you MUST set S5 to a nice warm boost (e.g., +6dB to +18dB) to preserve upfront presence! ALWAYS compensate for Threshold gains.
-       - "JS: Volume/Pan":
-         - S1 (Volume (dB)): -150 to 12 dB. Perfect for final clear leveling.
-         - S2 (Pan): -1 to 1 (0 is Center).
-         - S3 (Max Volume (dB)): -150 to 12 dB.
-       - "JS: Event Horizon Clipper/Limiter" (Event Horizon Clipper/Limiter - Stock Cockos REAPER JSFX):
-         - S1 (Threshold (dB)): -30 to 0 dB.
-         - S2 (Ceiling (dB)): -30 to 0 dB (Keep around -0.1 to -0.5 for brickwall safety).
-         - S3 (Soft Clip (dB)): -30 to 0 dB.
+         - S1 (Threshold (dB)): -60 to 0 dB (Default: 0).
+         - S2 (Ratio): Selection 0 to 9 (Default: 5).
+         - S3 (Gain (dB)): -20 to 20 dB. CRITICAL: When using 1175, you MUST set S3 to a nice warm boost (e.g., +6dB to +18dB) to preserve upfront presence! ALWAYS compensate for Threshold gains.
+         - S4 (Attack (uS)): 20 to 2000 uS.
+         - S5 (Release (mS)): 20 to 1000 mS.
+         - S6 (Mix (%)): 0 to 100 %.
+       - "JS: Volume/Pan Smoother":
+         - S1 (Volume (dB)): -60 to 12 dB. Perfect for final clear leveling.
+         - S2 (Pan): -100 to 100 (0 is Center).
+         - S3 (Pan Law (dB)): -6 to 6 dB.
+       - "JS: LOSER/EventHorizon" (Event Horizon Clipper/Limiter - Stock Cockos REAPER JSFX):
+         - S1 (Threshold): -30 to 0 dB.
+         - S2 (Ceiling): -20 to 0 dB (Keep around -0.1 to -0.5 for brickwall safety).
+         - S3 (Release (ms)): 0 to 1200 ms.
        - "JS: LOSER/3BandEQ" (3-Band EQ):
-         - S1 (Low Gain (dB)): -72 to 12 dB.
-         - S2 (Mid Gain (dB)): -72 to 12 dB.
-         - S3 (High Gain (dB)): -72 to 12 dB.
-         - S4 (Low X-over (Hz)): 20 to 500 Hz.
-         - S5 (High X-over (Hz)): 500 to 20000 Hz.
+         - S1 (Low (dB)): -24 to 24 dB.
+         - S2 (Frequency (Hz)): 0 to 22000 Hz.
+         - S3 (Mid (dB)): -24 to 24 dB.
+         - S4 (Frequency (Hz)): 0 to 22000 Hz.
+         - S5 (High (dB)): -24 to 24 dB.
+         - S6 (Output (dB)): -24 to 24 dB.
        - "JS: Chorus" (Stereo Chorus):
-         - S1 (Delay (ms)): 0 to 100 ms.
-         - S2 (Width (ms)): 0 to 5 ms.
-         - S3 (Frequency (Hz)): 0.05 to 10 Hz.
-         - S4 (Voices): 1 to 16.
+         - S1 (Chorus Length (ms)): 1 to 500 ms.
+         - S2 (Number Of Voices): 1 to 8.
+         - S3 (Rate (Hz)): 0 to 16 Hz.
+         - S4 (Pitch Fudge Factor): 0 to 1 (Keep around 0.5 for optimal chorus modulation).
          - S5 (Wet Mix (dB)): -100 to 12 dB.
          - S6 (Dry Mix (dB)): -100 to 12 dB.
-       - "JS: Delay" (Digital Delay):
-         - S1 (Delay (ms)): 0 to 2000 ms.
-         - S2 (Feedback (dB)): -100 to 0 dB.
-         - S3 (Wet Mix (dB)): -100 to 12 dB.
-         - S4 (Dry Mix (dB)): -100 to 12 dB.
+         - S7 (Channel Rate Offset (Hz)): -1 to 1 Hz.
+         - S8 (Tempo Sync): 0.0625 to 4.
+       - "JS: Delay" (Delay Tone Control):
+         - S1 (Length (ms)): 0 to 4000 ms.
+         - S2 (Feedback (dB)): -120 to 6 dB.
+         - S3 (Bass Gain (dB)): -60 to 60 dB.
+         - S4 (Bass Frequency (Hz)): 20 to 24000 Hz.
+         - S5 (Treble Gain (dB)): -60 to 60 dB.
+         - S6 (Treble Frequency (Hz)): 20 to 24000 Hz.
+         - S7 (Output Mix): 0 to 1.
     4. DEEP COCKOS JSFX BEHIND-THE-SCENES UNDERSTANDING:
        - You must leverage detailed, expert knowledge of how these JSFX work internally. 
-       - Vocals must sit upfront and never be quiet. When using FET style compressor "1175", any clamp on the threshold (S1) MUST be offset by Makeup Gain (S5) by at least +12dB to +18dB depending on the gain reduction to prevent vocals from getting lost or sounding awful.
+       - STRICT PARAMETER RESTRICTION: You are strictly forbidden from suggesting non-existent parameters or plugins. Specifically:
+         - NEVER suggest 'Width (ms)', 'Width', 'Frequency (Hz)', 'Voices', 'Delay (ms)' or 'Wet (dB)' for 'JS: Chorus'. The exact slider parameters are S1: 'Chorus Length (ms)', S2: 'Number Of Voices', S3: 'Rate (Hz)', S4: 'Pitch Fudge Factor', S5: 'Wet Mix (dB)', S6: 'Dry Mix (dB)', S7: 'Channel Rate Offset (Hz)', S8: 'Tempo Sync'.
+         - NEVER suggest 'Ceiling (dB)' or 'Makeup Gain' for 'JS: 1175 Compressor' (since they do not exist on the 1175, it uses Gain S3).
+         - NEVER suggest the plugin name 'JS: Event Horizon Clipper/Limiter' as a raw display; always use its correct stock filename path: 'JS: LOSER/EventHorizon'.
+         - Never output parameters that do not exist on default stock Cockos REAPER JSFX plugins.
+       - Vocals must sit upfront and never be quiet. When using FET style compressor "1175", any clamp on the threshold (S1) MUST be offset by Gain (S3) by at least +12dB to +18dB depending on the gain reduction to prevent vocals from getting lost or sounding awful.
        - A premium 6-plugin chain MUST be modeled all the time for vocal or stem processing to ensure a grammy-level sound.
     5. GAIN MATCHING & MAINTAINING LOUDNESS: Anytime you use a plugin that reduces volume (like EQ cuts, compression, tape saturation, limiters, etc.), you MUST explicitly include the parameter to compensate for it (e.g., Output/Makeup Gain, Trim, Level). The resulting sound MUST always maintain or improve loudness. Never output settings that significantly reduce the overall volume.
     CRITICAL WARNING: NEVER RETURN AN EMPTY RECIPES ARRAY. You MUST ALWAYS generate at least one complete recipe that fulfills the user's request, regardless of strictness constraints.
@@ -2343,19 +2356,32 @@ export const getMixCritique = async (
   const languageInstruction = getLanguageInstruction(language);
 
   let jsfxDiktat = "";
-  if (isJsfxMode) {
+if (isJsfxMode) {
+    const simplifiedDB = JSFX_DATABASE.map(p => ({
+      name: p.name.startsWith('JS: ') ? p.name : 'JS: ' + p.name,
+      sliders: p.sliders.map(s => `[${s.index}] ${s.name} (min:${s.min}, max:${s.max})`)
+    }));
+    
+    // Convert to JSON and take measures not to blow up the prompt size
+    const dbContextString = JSON.stringify(simplifiedDB);
+
     jsfxDiktat = `
       ==================================================
       🚨🚨 ULTRA-CRITICAL JSFX-ONLY OVERRIDE DIRECTIVE 🚨🚨
       JSFX MODE IS ACTIVATED ON THE USER'S DEVICE.
       YOU ARE ABSOLUTELY, STRICTLY, UNDER NO CIRCUMSTANCES ALLOWED TO SUGGEST ANY VST, VST3, AU, CLAP, AAX OR OTHER FORMAT PLUGINS. 
-      ALL recommended plugins in the entire 'actionPlan' and all steps MUST EXCLUSIVELY be default Cockos REAPER JSFX.
-      Every recommended plugin name in your action plan json MUST start with 'JS: ' (for example: 'JS: 1175 Compressor', 'JS: LOSER/3BandEQ', 'JS: Delay').
-      DO NOT suggest any third-party plugins like FabFilter, Waves, Soundtoys, iZotope, Universal Audio, RC-20, Sonible, Gullfoss, etc. Even if they appear in any other part of the context or instructions, they are STRICTLY DISALLOWED for this session.
-      Only use valid, default REAPER JSFX (e.g., LOSER, Liteon, IX, and standard Utility directories).
+      ALL recommended plugins in the entire 'actionPlan' and all steps MUST EXCLUSIVELY be from the provided JSFX database below.
+      Every recommended plugin name in your action plan json MUST exactly match a 'name' from the database.
+      DO NOT suggest any third-party plugins like FabFilter, Waves, Soundtoys, iZotope, Universal Audio, RC-20, Sonible, Gullfoss, etc.
+      
+      Furthermore, YOU MUST ONLY use the sliders and parameters defined in the database for each plugin. Do not invent parameter names. Refer to parameter indices or exact names from this database:
+      
+      JSFX DATABASE:
+      ${dbContextString}
       ==================================================
     `;
   }
+
 
   let prompt = `
     You are an expert audio engineer and producer.
