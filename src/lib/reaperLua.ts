@@ -913,10 +913,26 @@ function draw_dashboard(start_y, click_pressed)
 
   local diag_y = btn2_y + btn_h + math.floor(25 * s)
   if state.sync_errors and #state.sync_errors > 0 then
-    gfx.set(thm.acc_r, thm.acc_g, thm.acc_b, 0.9)
+    local has_real_errors = false
+    for _, err in ipairs(state.sync_errors) do
+      if err.code and err.code:find("^ERR_") then
+        has_real_errors = true
+        break
+      end
+    end
+
+    if has_real_errors then
+      gfx.set(thm.acc_r, thm.acc_g, thm.acc_b, 0.9)
+    else
+      gfx.set(0.1, 0.8, 0.4, 0.9) -- Vibrant successful green!
+    end
     gfx.setfont(2)
     gfx.x, gfx.y = 50, diag_y
-    gfx.drawstr("DIAGNOSTICS & SYNC ERRORS (" .. #state.sync_errors .. ")")
+    if has_real_errors then
+      gfx.drawstr("DIAGNOSTICS & SYNC ERRORS (" .. #state.sync_errors .. ")")
+    else
+      gfx.drawstr("✔ SYNC SUCCESSFUL (" .. #state.sync_errors .. " PARAM STATS/LOGS)")
+    end
 
     local item_y = diag_y + math.floor(20 * s)
     gfx.setfont(4)
@@ -1090,10 +1106,17 @@ function draw_dashboard(start_y, click_pressed)
       local full_text = format_errors_text()
       local success = copy_to_clipboard(full_text)
       state.report_copied_at = os.time()
+      
+      -- Bulletproof console output back-up so they can manually copy or investigate
+      pcall(function()
+        reaper.ClearConsole()
+        reaper.ShowConsoleMsg(full_text)
+      end)
+      
       if success then
-        state.status_msg = "COPIED REPORT TO OS CLIPBOARD"
+        state.status_msg = "REPORT COPIED & PRINTED TO REAPER CONSOLE"
       else
-        state.status_msg = "ERROR COPYING REPORT"
+        state.status_msg = "PRINTED REPORT TO CONSOLE (MANUAL COPY)"
       end
     end
   else
@@ -1381,86 +1404,92 @@ function apply_sync(payload)
           local pi_lower = pi:lower():gsub("%s+", ""):gsub("-", ""):gsub("_", "")
           local is_out_of_bounds_s = false
           
-          -- 1. Try to extract slider index from S1, S2, S3 ... prefixes
-          local s_num = pi:match("^%s*[sS](%d+)")
-          if not s_num then
-            s_num = pi:match("%s+[sS](%d+)%s+")
-          end
-          if not s_num then
-            s_num = pi:match("%([sS](%d+)%)")
+          local function clean_param_name(name)
+            local n = name:lower()
+            -- Strip leading numeric guides, S-prefixes, or slider numbers (e.g., "1: ", "S5 ", "slider 2:")
+            n = n:gsub("^%s*slider%d*%s*:*%s*", "")
+            n = n:gsub("^%s*[sS]%d+%s*", "")
+            n = n:gsub("^%s*%([sS]%d+%)%s*", "")
+            n = n:gsub("^%s*%d+%s*:*%s*", "")
+            n = n:gsub("%s+", "")
+            n = n:gsub("[%-%%_%(/%):]", "") -- remove - % _ ( / ) :
+            n = n:gsub("db", "")
+            n = n:gsub("hz", "")
+            n = n:gsub("ms", "")
+            n = n:gsub("us", "")
+            n = n:gsub("μs", "")
+            n = n:gsub("freq", "")
+            n = n:gsub("frequency", "")
+            n = n:gsub("gain", "")
+            n = n:gsub("slider", "")
+            return n
           end
           
-          if s_num then
-            local s_idx = tonumber(s_num) - 1
-            if s_idx >= 0 and s_idx < num_params then
-              matched_idx = s_idx
-            else
-              is_out_of_bounds_s = true
-            end
-          end
+          local param_aliases = {
+            ["delay"] = {"delay", "delaytime", "delaylength", "time", "len"},
+            ["width"] = {"width", "depth", "spread", "size", "choruswidth"},
+            ["frequency"] = {"frequency", "freq", "rate", "speed", "speedhz", "modrate"},
+            ["voices"] = {"voices", "choirsize", "voicecount", "choir", "voicescount"},
+            ["threshold"] = {"threshold", "thresh", "limit", "clipping"},
+            ["ceiling"] = {"ceiling", "ceil", "outmax", "max", "limitceiling"},
+            ["ratio"] = {"ratio", "comp_ratio"},
+            ["attack"] = {"attack", "atk"},
+            ["release"] = {"release", "rel"},
+            ["makeup"] = {"makeup", "gain", "output", "outgain", "makeupgain", "out"},
+            ["low"] = {"lowgain", "low", "bass", "loweq"},
+            ["mid"] = {"midgain", "mid", "mids", "mideq"},
+            ["high"] = {"highgain", "high", "treble", "higheq"},
+            ["wet"] = {"wet", "wetmix", "mix", "wetlevel"},
+            ["dry"] = {"dry", "drymix", "bypass", "drylevel"}
+          }
           
-          -- 2. Try Exact or Substring match on clean names (strip units, 'freq', 'gain')
-          if not matched_idx and not is_out_of_bounds_s then
-            local function clean_param_name(name)
-              local n = name:lower()
-              n = n:gsub("%s+", "")
-              n = n:gsub("[%-%%_%(/%)]", "") -- remove - % _ ( / )
-              n = n:gsub("db", "")
-              n = n:gsub("hz", "")
-              n = n:gsub("ms", "")
-              n = n:gsub("us", "")
-              n = n:gsub("μs", "")
-              n = n:gsub("freq", "")
-              n = n:gsub("frequency", "")
-              n = n:gsub("gain", "")
-              n = n:gsub("slider", "")
-              return n
-            end
-            
-            local param_aliases = {
-              ["delay"] = {"delay", "delaytime", "delaylength", "time", "len"},
-              ["width"] = {"width", "depth", "spread", "size", "choruswidth"},
-              ["frequency"] = {"frequency", "freq", "rate", "speed", "speedhz", "modrate"},
-              ["voices"] = {"voices", "choirsize", "voicecount", "choir", "voicescount"},
-              ["threshold"] = {"threshold", "thresh", "limit", "clipping"},
-              ["ceiling"] = {"ceiling", "ceil", "outmax", "max", "limitceiling"},
-              ["ratio"] = {"ratio", "comp_ratio"},
-              ["attack"] = {"attack", "atk"},
-              ["release"] = {"release", "rel"},
-              ["makeup"] = {"makeup", "gain", "output", "outgain", "makeupgain", "out"},
-              ["low"] = {"lowgain", "low", "bass", "loweq"},
-              ["mid"] = {"midgain", "mid", "mids", "mideq"},
-              ["high"] = {"highgain", "high", "treble", "higheq"},
-              ["wet"] = {"wet", "wetmix", "mix", "wetlevel"},
-              ["dry"] = {"dry", "drymix", "bypass", "drylevel"}
-            }
-            
-            local function check_alias_match(pi_cl, pn_cl)
-              if pi_cl == pn_cl then return true end
-              for _, aliases in pairs(param_aliases) do
-                local pi_in_cat = false
-                local pn_in_cat = false
-                for _, alias in ipairs(aliases) do
-                  if pi_cl == alias or pi_cl:find(alias, 1, true) then pi_in_cat = true end
-                  if pn_cl == alias or pn_cl:find(alias, 1, true) then pn_in_cat = true end
-                end
-                if pi_in_cat and pn_in_cat then return true end
+          local function check_alias_match(pi_cl, pn_cl)
+            if pi_cl == pn_cl then return true end
+            for _, aliases in pairs(param_aliases) do
+              local pi_in_cat = false
+              local pn_in_cat = false
+              for _, alias in ipairs(aliases) do
+                if pi_cl == alias or pi_cl:find(alias, 1, true) then pi_in_cat = true end
+                if pn_cl == alias or pn_cl:find(alias, 1, true) then pn_in_cat = true end
               end
-              return false
+              if pi_in_cat and pn_in_cat then return true end
             end
-            
-            local pi_clean = clean_param_name(pi)
-            
+            return false
+          end
+
+          -- 1. Try Precise/Alias Name Match FIRST (No more mismatching due to slider indexes)
+          local pi_clean = clean_param_name(pi)
+          if pi_clean ~= "" then
             for p = 0, num_params - 1 do
               local _, p_name = reaper.TrackFX_GetParamName(current_track, current_fx, p, "")
               if p_name then
                 local p_name_clean = clean_param_name(p_name)
-                if p_name_clean ~= "" and pi_clean ~= "" then
+                if p_name_clean ~= "" then
                   if p_name_clean == pi_clean or p_name_clean:find(pi_clean, 1, true) or pi_clean:find(p_name_clean, 1, true) or check_alias_match(pi_clean, p_name_clean) then
                     matched_idx = p
                     break
                   end
                 end
+              end
+            end
+          end
+
+          -- 2. Fallback to extracting Slider index from S1, S2, S3 ... prefix
+          if not matched_idx then
+            local s_num = pi:match("^%s*[sS](%d+)")
+            if not s_num then
+              s_num = pi:match("%s+[sS](%d+)%s+")
+            end
+            if not s_num then
+              s_num = pi:match("%([sS](%d+)%)")
+            end
+            
+            if s_num then
+              local s_idx = tonumber(s_num) - 1
+              if s_idx >= 0 and s_idx < num_params then
+                matched_idx = s_idx
+              else
+                is_out_of_bounds_s = true
               end
             end
           end
