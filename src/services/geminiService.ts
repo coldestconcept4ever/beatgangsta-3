@@ -190,7 +190,7 @@ const GLOBAL_PARAMETER_STRICTNESS_PROMPT = `
     1. ZERO HALLUCINATION (FIREABLE OFFENSE): You MUST ONLY suggest parameters that actually exist on the real-world interface of the specified plugin as documented in its official manual. NEVER invent, guess, hallucinate, or inject parameters that do not exist on that plugin.
     2. STRICT UNIT ACCURACY: You MUST use the exact, correct unit of measurement for every parameter (e.g. Hz, kHz, dB, ms, %, etc.).
     3. REAPER JSFX MASTER RESEARCH PROFILES (USE FOR COCKOS JSFX RECOMMENDATIONS):
-       - "JS: SStillwell/1175" (1175 Compressor):
+       - "JS: 1175 Compressor" (1175 Compressor - Stock Cockos REAPER JSFX):
          - S1 (Threshold (dB)): -60 to 0 dB (Default: -15).
          - S2 (Ratio): Selection (0 = 4:1, 1 = 8:1, 2 = 12:1, 3 = 20:1).
          - S3 (Attack (ms)): 0.02 to 0.8 ms.
@@ -200,7 +200,7 @@ const GLOBAL_PARAMETER_STRICTNESS_PROMPT = `
          - S1 (Volume (dB)): -150 to 12 dB. Perfect for final clear leveling.
          - S2 (Pan): -1 to 1 (0 is Center).
          - S3 (Max Volume (dB)): -150 to 12 dB.
-       - "JS: SStillwell/eventhorizon" (Event Horizon Clipper/Limiter):
+       - "JS: Event Horizon Clipper/Limiter" (Event Horizon Clipper/Limiter - Stock Cockos REAPER JSFX):
          - S1 (Threshold (dB)): -30 to 0 dB.
          - S2 (Ceiling (dB)): -30 to 0 dB (Keep around -0.1 to -0.5 for brickwall safety).
          - S3 (Soft Clip (dB)): -30 to 0 dB.
@@ -2350,9 +2350,9 @@ export const getMixCritique = async (
       JSFX MODE IS ACTIVATED ON THE USER'S DEVICE.
       YOU ARE ABSOLUTELY, STRICTLY, UNDER NO CIRCUMSTANCES ALLOWED TO SUGGEST ANY VST, VST3, AU, CLAP, AAX OR OTHER FORMAT PLUGINS. 
       ALL recommended plugins in the entire 'actionPlan' and all steps MUST EXCLUSIVELY be default Cockos REAPER JSFX.
-      Every recommended plugin name in your action plan json MUST start with 'JS: ' (for example: 'JS: 1175 Compressor', 'JS: SStillwell/1973', 'JS: Delay').
+      Every recommended plugin name in your action plan json MUST start with 'JS: ' (for example: 'JS: 1175 Compressor', 'JS: LOSER/3BandEQ', 'JS: Delay').
       DO NOT suggest any third-party plugins like FabFilter, Waves, Soundtoys, iZotope, Universal Audio, RC-20, Sonible, Gullfoss, etc. Even if they appear in any other part of the context or instructions, they are STRICTLY DISALLOWED for this session.
-      Only use valid, default REAPER JSFX (e.g., SStillwell, LOSER, Liteon, IX, and standard Utility directories).
+      Only use valid, default REAPER JSFX (e.g., LOSER, Liteon, IX, and standard Utility directories).
       ==================================================
     `;
   }

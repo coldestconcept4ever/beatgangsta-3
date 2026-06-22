@@ -4669,10 +4669,7 @@ The AI was unable to verify these parameters. Please investigate.`;
         "JS: Fairly Childish Compressor/Limiter", "JS: General Dynamics", "JS: LOSER/1175",
         "JS: LOSER/MGA_JSLimiter", "JS: LOSER/MasterLimiter", "JS: LOSER/MasterTom",
         "JS: LOSER/compciter", "JS: LOSER/gate", "JS: LOSER/DDC", "JS: Liteon/np1136peaklimiter",
-        "JS: Multi-Band Compressor", "JS: SStillwell/1175", "JS: SStillwell/bombastic",
-        "JS: SStillwell/dyno", "JS: SStillwell/eventhorizon", "JS: SStillwell/eventhorizon2",
-        "JS: SStillwell/expander", "JS: SStillwell/fairlychildish", "JS: SStillwell/hugebooty",
-        "JS: SStillwell/majorTom", "JS: 5-Band Compressor", "JS: 3-Band Compressor", "JS: Expander / Gate",
+        "JS: Multi-Band Compressor", "JS: 5-Band Compressor", "JS: 3-Band Compressor", "JS: Expander / Gate",
 
         // EQ/Enhancers/Filters
         "JS: 3-Band EQ", "JS: 4-Band EQ", "JS: 5-Band Stereo EQ", "JS: Auto-peaker",
@@ -4684,24 +4681,17 @@ The AI was unable to verify these parameters. Please investigate.`;
         "JS: Liteon/cheb24db", "JS: Liteon/moog24db", "JS: Liteon/presenceeq", "JS: Liteon/rbj1073",
         "JS: Liteon/rbjeq", "JS: Liteon/saturator", "JS: Liteon/shelveq", "JS: Liteon/statevariable",
         "JS: Liteon/statevariable2", "JS: RBJ 1073 EQ", "JS: RBJ 4-Band Semi-Parametric EQ",
-        "JS: RBJ 7-Band Graphic EQ", "JS: RBJ Highpass/Lowpass Filters", "JS: SStillwell/1973",
-        "JS: SStillwell/badbussmojo", "JS: SStillwell/equo", "JS: SStillwell/rbj1073",
-        "JS: SStillwell/realoud", "JS: SStillwell/thunderkick", "JS: SStillwell/tilt",
+        "JS: RBJ 7-Band Graphic EQ", "JS: RBJ Highpass/Lowpass Filters",
         "JS: Saturation/Soft Clipper", "JS: Teej/rbj12eq-teej", "JS: 12-Band EQ", "JS: Graphic EQ",
 
         // Modulation/Time
         "JS: Chorus", "JS: Chorus (Stereo)", "JS: Delay", "JS: Delay w/ Chorus",
         "JS: Delay w/ Tempo Ping-Pong", "JS: Flanger", "JS: Flanger (Stereo)", "JS: LOSER/FBDelay",
         "JS: LOSER/FBFlanger", "JS: LOSER/Flanger", "JS: LOSER/Phaser", "JS: LOSER/Tremolo",
-        "JS: Phaser", "JS: Reverb", "JS: SStillwell/chorus", "JS: SStillwell/chorus_stereo",
-        "JS: SStillwell/delay", "JS: SStillwell/delay_pong", "JS: SStillwell/delay_tempo",
-        "JS: SStillwell/flanger", "JS: SStillwell/flanger_ext", "JS: SStillwell/ozzifier",
-        "JS: SStillwell/width", "JS: Tremolo", "JS: Delay (L/R)",
+        "JS: Phaser", "JS: Reverb", "JS: Tremolo", "JS: Delay (L/R)",
 
         // Guitar/Amp/Distortion
-        "JS: Distortion", "JS: SStillwell/dirtymouth", "JS: SStillwell/dirtmouth", "JS: SStillwell/guitar/AmpModel",
-        "JS: SStillwell/guitar/chorus", "JS: SStillwell/guitar/distortion", "JS: SStillwell/guitar/flanger",
-        "JS: SStillwell/guitar/phaser", "JS: SStillwell/guitar/tremolo", "JS: Tube Harmonics",
+        "JS: Distortion", "JS: Tube Harmonics",
         "JS: Wah-Wah", "JS: Wig-Wah",
 
         // Utility/Routing/Imaging/Pitch
@@ -5018,12 +5008,12 @@ The AI was unable to verify these parameters. Please investigate.`;
       if (isJsfxMode) {
         fullContext += `\n\nCRITICAL DIRECTIVE: YOU MUST ONLY RECOMMEND JSFX PLUGINS FOR THIS MIX CRITIQUE. DO NOT RECOMMEND ANY VST/AU PLUGINS. 
 Only use valid, default REAPER JSFX (JS:). Here is a comprehensive list of actual standard JSFX categories and plugins to use as a reference:
-- Compressors/Dynamics/Limiters: JS: 1175 Compressor, JS: Auto Expander, JS: Event Horizon Clipper/Limiter, JS: Fairly Childish Compressor/Limiter, JS: General Dynamics, JS: LOSER/1175, JS: LOSER/MGA_JSLimiter, JS: LOSER/MasterLimiter, JS: LOSER/MasterTom, JS: LOSER/compciter, JS: LOSER/gate, JS: LOSER/DDC, JS: Liteon/np1136peaklimiter, JS: Multi-Band Compressor, JS: SStillwell/1175, JS: SStillwell/bombastic, JS: SStillwell/dyno, JS: SStillwell/eventhorizon, JS: SStillwell/eventhorizon2, JS: SStillwell/expander, JS: SStillwell/fairlychildish, JS: SStillwell/hugebooty, JS: SStillwell/majorTom, JS: 5-Band Compressor, JS: 3-Band Compressor, JS: Expander / Gate.
-- EQ/Enhancers/Filters: JS: 3-Band EQ, JS: 4-Band EQ, JS: 5-Band Stereo EQ, JS: Auto-peaker, JS: Bandpass Filter, JS: DC Filter, JS: Exciter, JS: Huge Booty Bass Enhancer, JS: LOSER/3BandEQ, JS: LOSER/4BandEQ, JS: LOSER/5BandEQ, JS: LOSER/BasiQ, JS: LOSER/Filter, JS: LOSER/Filter_RC, JS: LOSER/MIDI_EQ, JS: LOSER/VCF, JS: LOSER/saturation, JS: LOSER/stereo_enhancer, JS: Liteon/3bandpeakfilter, JS: Liteon/applefilter12db, JS: Liteon/applefilter24db, JS: Liteon/butterworth24db, JS: Liteon/cheb24db, JS: Liteon/moog24db, JS: Liteon/presenceeq, JS: Liteon/rbj1073, JS: Liteon/rbjeq, JS: Liteon/saturator, JS: Liteon/shelveq, JS: Liteon/statevariable, JS: Liteon/statevariable2, JS: RBJ 1073 EQ, JS: RBJ 4-Band Semi-Parametric EQ, JS: RBJ 7-Band Graphic EQ, JS: RBJ Highpass/Lowpass Filters, JS: SStillwell/1973, JS: SStillwell/badbussmojo, JS: SStillwell/equo, JS: SStillwell/rbj1073, JS: SStillwell/realoud, JS: SStillwell/thunderkick, JS: SStillwell/tilt, JS: Saturation/Soft Clipper, JS: Teej/rbj12eq-teej, JS: 12-Band EQ, JS: Graphic EQ.
-- Modulation/Time: JS: Chorus, JS: Chorus (Stereo), JS: Delay, JS: Delay w/ Chorus, JS: Delay w/ Tempo Ping-Pong, JS: Flanger, JS: Flanger (Stereo), JS: LOSER/FBDelay, JS: LOSER/FBFlanger, JS: LOSER/Flanger, JS: LOSER/Phaser, JS: LOSER/Tremolo, JS: Phaser, JS: Reverb, JS: SStillwell/chorus, JS: SStillwell/chorus_stereo, JS: SStillwell/delay, JS: SStillwell/delay_pong, JS: SStillwell/delay_tempo, JS: SStillwell/flanger, JS: SStillwell/flanger_ext, JS: SStillwell/ozzifier, JS: SStillwell/width, JS: Tremolo, JS: Delay (L/R).
-- Guitar/Amp/Distortion: JS: Distortion, JS: SStillwell/dirtymouth, JS: SStillwell/guitar/AmpModel, JS: SStillwell/guitar/chorus, JS: SStillwell/guitar/distortion, JS: SStillwell/guitar/flanger, JS: SStillwell/guitar/phaser, JS: SStillwell/guitar/tremolo, JS: Tube Harmonics, JS: Wah-Wah, JS: Wig-Wah.
+- Compressors/Dynamics/Limiters: JS: 1175 Compressor, JS: Auto Expander, JS: Event Horizon Clipper/Limiter, JS: Fairly Childish Compressor/Limiter, JS: General Dynamics, JS: LOSER/1175, JS: LOSER/MGA_JSLimiter, JS: LOSER/MasterLimiter, JS: LOSER/MasterTom, JS: LOSER/compciter, JS: LOSER/gate, JS: LOSER/DDC, JS: Liteon/np1136peaklimiter, JS: Multi-Band Compressor, JS: 5-Band Compressor, JS: 3-Band Compressor, JS: Expander / Gate.
+- EQ/Enhancers/Filters: JS: 3-Band EQ, JS: 4-Band EQ, JS: 5-Band Stereo EQ, JS: Auto-peaker, JS: Bandpass Filter, JS: DC Filter, JS: Exciter, JS: Huge Booty Bass Enhancer, JS: LOSER/3BandEQ, JS: LOSER/4BandEQ, JS: LOSER/5BandEQ, JS: LOSER/BasiQ, JS: LOSER/Filter, JS: LOSER/Filter_RC, JS: LOSER/MIDI_EQ, JS: LOSER/VCF, JS: LOSER/saturation, JS: LOSER/stereo_enhancer, JS: Liteon/3bandpeakfilter, JS: Liteon/applefilter12db, JS: Liteon/applefilter24db, JS: Liteon/butterworth24db, JS: Liteon/cheb24db, JS: Liteon/moog24db, JS: Liteon/presenceeq, JS: Liteon/rbj1073, JS: Liteon/rbjeq, JS: Liteon/saturator, JS: Liteon/shelveq, JS: Liteon/statevariable, JS: Liteon/statevariable2, JS: RBJ 1073 EQ, JS: RBJ 4-Band Semi-Parametric EQ, JS: RBJ 7-Band Graphic EQ, JS: RBJ Highpass/Lowpass Filters, JS: Saturation/Soft Clipper, JS: Teej/rbj12eq-teej, JS: 12-Band EQ, JS: Graphic EQ.
+- Modulation/Time: JS: Chorus, JS: Chorus (Stereo), JS: Delay, JS: Delay w/ Chorus, JS: Delay w/ Tempo Ping-Pong, JS: Flanger, JS: Flanger (Stereo), JS: LOSER/FBDelay, JS: LOSER/FBFlanger, JS: LOSER/Flanger, JS: LOSER/Phaser, JS: LOSER/Tremolo, JS: Phaser, JS: Reverb, JS: Tremolo, JS: Delay (L/R).
+- Guitar/Amp/Distortion: JS: Distortion, JS: Tube Harmonics, JS: Wah-Wah, JS: Wig-Wah.
 - Utility/Routing/Imaging/Pitch: JS: 8-Channel Mixer, JS: Audio To MIDI Drum Trigger, JS: Band Splitter, JS: Band Joiner, JS: Dual Pan, JS: FFT Splitter, JS: FFT Splitter (3-band), JS: LOSER/CenterCanceler, JS: LOSER/Dither, JS: LOSER/Downjumper, JS: LOSER/TransientController, JS: LOSER/Upjumper, JS: LOSER/WaveShaper, JS: LOSER/WhiteNoise, JS: LOSER/goniometer, JS: LOSER/phase_rotator, JS: LOSER/pitch_shifter_2, JS: LOSER/stereofield, JS: Liteon/deesser, JS: Liteon/pinknoisegen, JS: Liteon/pseudostereo, JS: Multichannel Routing/Channel Mapper, JS: Phase Rotator, JS: Pitch Down-Shifter, JS: Pitch Octave Up, JS: Pitch Shifter, JS: Pitch/Detune, JS: SMPTE LTC Generator, JS: SMPTE LTC Reader/Meter, JS: Stereo Field, JS: Time Adjustment, JS: Volume/Pan Smoother v5, JS: 3-Band Splitter, JS: 4-Band Splitter, JS: 5-Band Splitter, JS: 8x8 Matrix Mixer, JS: 8-Way Panner, JS: Channel Mixer, JS: Super Pitch, JS: Transient Enhancer, JS: Tonifier, JS: Vocoder, JS: MS Decoder, JS: MS Encoder, JS: Stereo Upmix, JS: IX/Mixer_8xM-1xS, JS: IX/StereoPhaseInverter, JS: IX/PhaseAdjust, JS: IX/SwixMitz.
-(Note: You may also recommend other standard Cockos JSFX modules such as those under the SStillwell, LOSER, Liteon, IX, and Utility directories).
+(Note: You may also recommend other standard Cockos JSFX modules such as those under the LOSER, Liteon, IX, and Utility directories).
 Provide the exact JSFX plugin name and required sliders/parameters.`;
       }
       
@@ -5310,12 +5300,12 @@ Provide the exact JSFX plugin name and required sliders/parameters.`;
         if (isJsfxMode) {
           fullContext += `\n\nCRITICAL DIRECTIVE: YOU MUST ONLY RECOMMEND JSFX PLUGINS FOR THIS MIX CRITIQUE. DO NOT RECOMMEND ANY VST/AU PLUGINS. 
 Only use valid, default REAPER JSFX (JS:). Here is a comprehensive list of actual standard JSFX categories and plugins to use as a reference:
-- Compressors/Dynamics/Limiters: JS: 1175 Compressor, JS: Auto Expander, JS: Event Horizon Clipper/Limiter, JS: Fairly Childish Compressor/Limiter, JS: General Dynamics, JS: LOSER/1175, JS: LOSER/MGA_JSLimiter, JS: LOSER/MasterLimiter, JS: LOSER/MasterTom, JS: LOSER/compciter, JS: LOSER/gate, JS: LOSER/DDC, JS: Liteon/np1136peaklimiter, JS: Multi-Band Compressor, JS: SStillwell/1175, JS: SStillwell/bombastic, JS: SStillwell/dyno, JS: SStillwell/eventhorizon, JS: SStillwell/eventhorizon2, JS: SStillwell/expander, JS: SStillwell/fairlychildish, JS: SStillwell/hugebooty, JS: SStillwell/majorTom, JS: 5-Band Compressor, JS: 3-Band Compressor, JS: Expander / Gate.
-- EQ/Enhancers/Filters: JS: 3-Band EQ, JS: 4-Band EQ, JS: 5-Band Stereo EQ, JS: Auto-peaker, JS: Bandpass Filter, JS: DC Filter, JS: Exciter, JS: Huge Booty Bass Enhancer, JS: LOSER/3BandEQ, JS: LOSER/4BandEQ, JS: LOSER/5BandEQ, JS: LOSER/BasiQ, JS: LOSER/Filter, JS: LOSER/Filter_RC, JS: LOSER/MIDI_EQ, JS: LOSER/VCF, JS: LOSER/saturation, JS: LOSER/stereo_enhancer, JS: Liteon/3bandpeakfilter, JS: Liteon/applefilter12db, JS: Liteon/applefilter24db, JS: Liteon/butterworth24db, JS: Liteon/cheb24db, JS: Liteon/moog24db, JS: Liteon/presenceeq, JS: Liteon/rbj1073, JS: Liteon/rbjeq, JS: Liteon/saturator, JS: Liteon/shelveq, JS: Liteon/statevariable, JS: Liteon/statevariable2, JS: RBJ 1073 EQ, JS: RBJ 4-Band Semi-Parametric EQ, JS: RBJ 7-Band Graphic EQ, JS: RBJ Highpass/Lowpass Filters, JS: SStillwell/1973, JS: SStillwell/badbussmojo, JS: SStillwell/equo, JS: SStillwell/rbj1073, JS: SStillwell/realoud, JS: SStillwell/thunderkick, JS: SStillwell/tilt, JS: Saturation/Soft Clipper, JS: Teej/rbj12eq-teej, JS: 12-Band EQ, JS: Graphic EQ.
-- Modulation/Time: JS: Chorus, JS: Chorus (Stereo), JS: Delay, JS: Delay w/ Chorus, JS: Delay w/ Tempo Ping-Pong, JS: Flanger, JS: Flanger (Stereo), JS: LOSER/FBDelay, JS: LOSER/FBFlanger, JS: LOSER/Flanger, JS: LOSER/Phaser, JS: LOSER/Tremolo, JS: Phaser, JS: Reverb, JS: SStillwell/chorus, JS: SStillwell/chorus_stereo, JS: SStillwell/delay, JS: SStillwell/delay_pong, JS: SStillwell/delay_tempo, JS: SStillwell/flanger, JS: SStillwell/flanger_ext, JS: SStillwell/ozzifier, JS: SStillwell/width, JS: Tremolo, JS: Delay (L/R).
-- Guitar/Amp/Distortion: JS: Distortion, JS: SStillwell/dirtmouth, JS: SStillwell/guitar/AmpModel, JS: SStillwell/guitar/chorus, JS: SStillwell/guitar/distortion, JS: SStillwell/guitar/flanger, JS: SStillwell/guitar/phaser, JS: SStillwell/guitar/tremolo, JS: Tube Harmonics, JS: Wah-Wah, JS: Wig-Wah.
-- Utility/Routing/Imaging/Pitch: JS: 8-Channel Mixer, JS: Audio To MIDI Drum Trigger, JS: Band Splitter, JS: Band Joiner, JS: Dual Pan, JS: FFT Splitter, JS: FFT Splitter (3-band), JS: LOSER/CenterCanceler, JS: LOSER/Dither, JS: LOSER/Downjumper, JS: LOSER/TransientController, JS: LOSER/Upjumper, JS: LOSER/WaveShaper, JS: LOSER/WhiteNoise, JS: LOSER/goniometer, JS: LOSER/phase_rotator, JS: LOSER/pitch_shifter_2, JS: LOSER/stereofield, JS: Liteon/deesser, JS: Liteon/pinknoisegen, JS: Liteon/pseudostereo, JS: Multichannel Routing/Channel Mapper, JS: Phase Rotator, JS: Pitch Down-Shifter, JS: Pitch Octave Up, JS: Pitch Shifter, JS: Pitch/Detune, JS: SMPTE LTC Generator, JS: SMPTE LTC Reader/Meter, JS: Stereo Field, JS: Time Adjustment, JS: Volume/Pan Smoother v5, JS: 3-Band Splitter, JS: 4-Band Splitter, JS: 5-Band Splitter, JS: 8x8 Matrix Mixer, JS: 8-Way Panner, JS: Channel Mixer, JS: Super Pitch, JS: Transient Enhancer, JS: Tonifier, JS: Vocoder, JS: MS Decoder, JS: MS Encoder, JS: Stereo Upmix, JS: IX/Mixer_8xM-1xS, JS: IX/StereoPhaseInverter, JS: IX/PhaseAdjust, JS: IX/SwixMitz.
-(Note: You may also recommend other standard Cockos JSFX modules such as those under the SStillwell, LOSER, Liteon, IX, and Utility directories).
+- Compressors/Dynamics/Limiters: JS: 1175 Compressor, JS: Auto Expander, JS: Event Horizon Clipper/Limiter, JS: Fairly Childish Compressor/Limiter, JS: General Dynamics, JS: LOSER/1175, JS: LOSER/MGA_JSLimiter, JS: LOSER/MasterLimiter, JS: LOSER/MasterTom, JS: LOSER/compciter, JS: LOSER/gate, JS: LOSER/DDC, JS: Liteon/np1136peaklimiter, JS: Multi-Band Compressor, JS: 5-Band Compressor, JS: 3-Band Compressor, JS: Expander / Gate.
+- EQ/Enhancers/Filters: JS: 3-Band EQ, JS: 4-Band EQ, JS: 5-Band Stereo EQ, JS: Auto-peaker, JS: Bandpass Filter, JS: DC Filter, JS: Exciter, JS: Huge Booty Bass Enhancer, JS: LOSER/3BandEQ, JS: LOSER/4BandEQ, JS: LOSER/5BandEQ, JS: LOSER/BasiQ, JS: LOSER/Filter, JS: LOSER/Filter_RC, JS: LOSER/MIDI_EQ, JS: LOSER/VCF, JS: LOSER/saturation, JS: LOSER/stereo_enhancer, JS: Liteon/3bandpeakfilter, JS: Liteon/applefilter12db, JS: Liteon/applefilter24db, JS: Liteon/butterworth24db, JS: Liteon/cheb24db, JS: Liteon/moog24db, JS: Liteon/presenceeq, JS: Liteon/rbj1073, JS: Liteon/rbjeq, JS: Liteon/saturator, JS: Liteon/shelveq, JS: Liteon/statevariable, JS: Liteon/statevariable2, JS: RBJ 1073 EQ, JS: RBJ 4-Band Semi-Parametric EQ, JS: RBJ 7-Band Graphic EQ, JS: RBJ Highpass/Lowpass Filters, JS: Saturation/Soft Clipper, JS: Teej/rbj12eq-teej, JS: 12-Band EQ, JS: Graphic EQ.
+- Modulation/Time: JS: Chorus, JS: Chorus (Stereo), JS: Delay, JS: Delay w/ Chorus, JS: Delay w/ Tempo Ping-Pong, JS: Flanger, JS: Flanger (Stereo), JS: LOSER/FBDelay, JS: LOSER/FBFlanger, JS: LOSER/Flanger, JS: LOSER/Phaser, JS: LOSER/Tremolo, JS: Phaser, JS: Reverb, JS: Tremolo, JS: Delay (L/R).
+- Guitar/Amp/Distortion: JS: Distortion, JS: Tube Harmonics, JS: Wah-Wah, JS: Wig-Wah.
+- Utility/Routing/Imaging/Pitch: JS: 8-Channel Mixer, JS: Audio To MIDI Drum Trigger, JS: Band Splitter, JS: Band Joiner, JS: Dual Pan, JS: FFT Splitter, JS: FFT Splitter (3-band), JS: LOSER/CenterCanceler, JS: LOSER/Dither, JS: LOSER/Downjumper, JS: LOSER/TransientController, JS: LOSER/Upjumper, JS: LOSER/WaveShaper, JS: LOSER/WhiteNoise, JS: LOSER/goniometer, JS: LOSER/phase_rotator, JS: LOSER/pitch_shifter_2, JS: LOSER/stereofield, JS: Liteon/deesser, JS: Liteon/pinknoisegen, JS: Liteon/pseudostereo, JS: Multichannel Routing/Channel Mapper, JS: Phase Rotator, JS: Pitch Down-Shifter, JS: Pitch Octave Up, JS: Pitch Shifter, JS: Pitch/Detune, SMPTE LTC Generator, JS: SMPTE LTC Reader/Meter, JS: Stereo Field, JS: Time Adjustment, JS: Volume/Pan Smoother v5, JS: 3-Band Splitter, JS: 4-Band Splitter, JS: 5-Band Splitter, JS: 8x8 Matrix Mixer, JS: 8-Way Panner, JS: Channel Mixer, JS: Super Pitch, JS: Transient Enhancer, JS: Tonifier, JS: Vocoder, JS: MS Decoder, JS: MS Encoder, JS: Stereo Upmix, JS: IX/Mixer_8xM-1xS, JS: IX/StereoPhaseInverter, JS: IX/PhaseAdjust, JS: IX/SwixMitz.
+(Note: You may also recommend other standard Cockos JSFX modules such as those under the LOSER, Liteon, IX, and Utility directories).
 Provide the exact JSFX plugin name and required sliders/parameters.`;
         }
 
@@ -7436,9 +7426,9 @@ Provide the exact JSFX plugin name and required sliders/parameters.`;
               </div>
 
               {(inputMode === 'random' || inputMode === 'search') && (
-                <div className={`transition-all duration-700 flex flex-col items-center gap-4 max-w-[200px] mx-auto mt-4 mb-6 ${mainTab === null ? 'blur-[8px] pointer-events-none opacity-40' : 'animate-in fade-in slide-in-from-bottom-4 duration-300'}`}>
-                  <div className="flex flex-col gap-2 w-full text-center">
-                    <label className={`text-[10px] font-black uppercase tracking-widest opacity-60 ${theme === 'coldest' ? 'text-slate-900' : 'text-white'}`}>
+                <div className={`transition-all duration-700 flex flex-col items-center gap-1.5 max-w-[110px] mx-auto mt-3 mb-5 ${mainTab === null ? 'blur-[8px] pointer-events-none opacity-40' : 'animate-in fade-in slide-in-from-bottom-4 duration-300'}`}>
+                  <div className="flex flex-col gap-1 w-full text-center">
+                    <label className={`text-[9px] font-black uppercase tracking-widest opacity-50 ${theme === 'coldest' ? 'text-slate-900' : 'text-white'}`}>
                       BPM (Optional)
                     </label>
                     <input
@@ -7446,7 +7436,7 @@ Provide the exact JSFX plugin name and required sliders/parameters.`;
                       placeholder="e.g. 140"
                       value={generationBPM}
                       onChange={(e) => setGenerationBPM(e.target.value)}
-                      className={`text-center w-full p-4 rounded-full text-xs font-medium transition-all outline-none border-2 ${
+                      className={`text-center w-full py-1.5 px-3 rounded-full text-[11px] font-medium transition-all outline-none border-2 ${
                         theme === 'coldest' 
                           ? 'bg-white/60 border-sky-100 focus:border-sky-400 text-slate-900 placeholder:text-slate-400' 
                           : theme === 'crazy-bird'

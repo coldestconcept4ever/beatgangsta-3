@@ -1226,9 +1226,9 @@ local function add_fx_fuzzy(track, fx_name)
   local fallbacks = {}
   
   if fx_lower:find("eq") or fx_lower:find("filter") or fx_lower:find("1073") or fx_lower:find("tilt") then
-    fallbacks = { "JS: Stillwell/1973", "JS: sstillwell/1973", "JS: stillwell/1973", "JS: LOSER/3BandEQ", "JS: 3-Band EQ", "VST: ReaEQ (Cockos)", "VST: ReaEQ" }
+    fallbacks = { "JS: LOSER/3BandEQ", "JS: 3-Band EQ", "JS: Liteon/rbj1073", "VST: ReaEQ (Cockos)", "VST: ReaEQ" }
   elseif fx_lower:find("comp") or fx_lower:find("limiter") or fx_lower:find("limit") or fx_lower:find("1175") or fx_lower:find("eventhorizon") or fx_lower:find("dyno") or fx_lower:find("gate") or fx_lower:find("clipper") or fx_lower:find("compressor") then
-    fallbacks = { "JS: SStillwell/1175", "JS: sstillwell/1175", "JS: Stillwell/1175", "JS: stillwell/1175", "JS: 1175 Compressor", "VST: ReaComp (Cockos)", "VST: ReaComp" }
+    fallbacks = { "JS: 1175 Compressor", "JS: LOSER/1175", "JS: Event Horizon Clipper/Limiter", "VST: ReaComp (Cockos)", "VST: ReaComp" }
   elseif fx_lower:find("delay") or fx_lower:find("echo") then
     fallbacks = { "JS: Delay", "VST: ReaDelay" }
   elseif fx_lower:find("chorus") or fx_lower:find("modulation") or fx_lower:find("flanger") or fx_lower:find("phaser") then

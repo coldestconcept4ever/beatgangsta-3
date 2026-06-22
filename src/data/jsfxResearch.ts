@@ -21,7 +21,7 @@ export interface JSFXProfile {
 
 export const JSFX_DATABASE: JSFXProfile[] = [
   {
-    name: "JS: SStillwell/1175",
+    name: "JS: 1175 Compressor",
     shortName: "1175 Compressor",
     category: "Dynamics",
     description: "An emulation of the classic fast 1176 FET limiting amplifier, perfect for making vocals crisp, energetic, and up-front.",
@@ -50,7 +50,7 @@ export const JSFX_DATABASE: JSFXProfile[] = [
     ]
   },
   {
-    name: "JS: SStillwell/eventhorizon",
+    name: "JS: Event Horizon Clipper/Limiter",
     shortName: "Event Horizon Clipper/Limiter",
     category: "Dynamics",
     description: "A clean, aggressive peak clipper and brickwall maximizer, ideal for group buses or master outputs.",
