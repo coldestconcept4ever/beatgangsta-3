@@ -912,6 +912,8 @@ function draw_dashboard(start_y, click_pressed)
   end
 
   local diag_y = btn2_y + btn_h + math.floor(25 * s)
+  local copy_btn_y = nil
+
   if state.sync_errors and #state.sync_errors > 0 then
     local has_real_errors = false
     for _, err in ipairs(state.sync_errors) do
@@ -937,7 +939,14 @@ function draw_dashboard(start_y, click_pressed)
     local item_y = diag_y + math.floor(20 * s)
     gfx.setfont(4)
 
-    local max_visible = 12
+    -- Dynamic sizing based on window height to ensure everything fits perfectly on all screen resolutions!
+    local item_h_px = math.floor(18 * s)
+    local min_bottom_space = math.floor(30 * s) + math.floor(55 * s)
+    local available_h = gfx.h - diag_y - math.floor(25 * s) - min_bottom_space
+    local max_visible = math.floor(available_h / item_h_px)
+    if max_visible < 3 then max_visible = 3 end
+    if max_visible > 12 then max_visible = 12 end
+
     if not state.error_scroll_offset then state.error_scroll_offset = 1 end
     if state.error_scroll_offset < 1 then state.error_scroll_offset = 1 end
     local max_offset = math.max(1, #state.sync_errors - max_visible + 1)
@@ -945,7 +954,7 @@ function draw_dashboard(start_y, click_pressed)
 
     -- Mouse wheel logic for diagnostics container
     if gfx.mouse_wheel ~= 0 then
-      local list_h = max_visible * math.floor(18 * s) + math.floor(20 * s)
+      local list_h = max_visible * item_h_px + math.floor(20 * s)
       if gfx.mouse_x >= 50 and gfx.mouse_x <= gfx.w - 50 and gfx.mouse_y >= diag_y and gfx.mouse_y <= diag_y + list_h then
         if gfx.mouse_wheel > 0 then
           state.error_scroll_offset = math.max(1, state.error_scroll_offset - 1)
@@ -982,14 +991,14 @@ function draw_dashboard(start_y, click_pressed)
       end
       gfx.drawstr(msg)
 
-      item_y = item_y + math.floor(18 * s)
+      item_y = item_y + item_h_px
     end
 
     -- Draw interactive scrollbar if there are more errors than max_visible
     if #state.sync_errors > max_visible then
       local sb_x = gfx.w - 85
       local sb_w = math.floor(24 * s)
-      local sb_h = max_visible * math.floor(18 * s)
+      local sb_h = max_visible * item_h_px
       local sb_y = diag_y + math.floor(20 * s)
 
       local on_up_hover = in_rect(gfx.mouse_x, gfx.mouse_y, sb_x, sb_y, sb_w, math.floor(24 * s))
@@ -1066,19 +1075,44 @@ function draw_dashboard(start_y, click_pressed)
     -- Scroll position indicator label
     if #state.sync_errors > max_visible then
       gfx.set(thm.subtext_r, thm.subtext_g, thm.subtext_b, 0.5)
-      gfx.x, gfx.y = 50, diag_y + max_visible * math.floor(18 * s) + math.floor(25 * s)
+      gfx.x, gfx.y = 50, diag_y + max_visible * item_h_px + math.floor(25 * s)
       gfx.drawstr("Showing " .. state.error_scroll_offset .. " to " .. end_idx .. " of " .. #state.sync_errors .. " errors. (Use wheel or ▲/▼)")
-      item_y = diag_y + max_visible * math.floor(18 * s) + math.floor(45 * s)
+      item_y = diag_y + max_visible * item_h_px + math.floor(45 * s)
     else
       item_y = item_y + math.floor(12 * s)
     end
 
-    local copy_btn_y = item_y
+    copy_btn_y = item_y
+  else
+    gfx.set(0.1, 0.8, 0.4, 0.9) -- Vibrant successful green!
+    gfx.setfont(2)
+    gfx.x, gfx.y = 50, diag_y
+    gfx.drawstr("✔ ALL CLOUD STEM VALUES HEALTHY")
+
+    gfx.set(1, 1, 1, 0.65)
+    gfx.setfont(4)
+    gfx.x, gfx.y = 50, diag_y + math.floor(22 * s)
+    gfx.drawstr("System parameters are synchronized and operational.")
+
+    copy_btn_y = diag_y + math.floor(52 * s)
+  end
+
+  -- ALWAYS draw the copy button, perfectly aligned and bounded to stays on screen!
+  if copy_btn_y then
     local copy_btn_w = gfx.w - 100
     local copy_btn_h = math.floor(30 * s)
     if copy_btn_h < 24 then copy_btn_h = 24 end
 
-    local copy_text = "COPY COMPLETE ERROR REPORT"
+    -- Failsafe clip: Ensure the copy button is NEVER pushed below the visible window bottom!
+    local max_allowed_y = gfx.h - copy_btn_h - math.floor(15 * s)
+    if copy_btn_y > max_allowed_y then
+      copy_btn_y = max_allowed_y
+    end
+
+    local copy_text = "COPY SYSTEM DIAGNOSTICS & LOGS"
+    if state.sync_errors and #state.sync_errors > 0 then
+      copy_text = "COPY COMPLETE ERROR REPORT"
+    end
     if state.report_copied_at and os.time() - state.report_copied_at < 3 then
       copy_text = "REPORT COPIED ✔"
     end
@@ -1106,24 +1140,19 @@ function draw_dashboard(start_y, click_pressed)
       local full_text = format_errors_text()
       local success = copy_to_clipboard(full_text)
       state.report_copied_at = os.time()
-      
+
       -- Bulletproof console output back-up so they can manually copy or investigate
       pcall(function()
         reaper.ClearConsole()
         reaper.ShowConsoleMsg(full_text)
       end)
-      
+
       if success then
         state.status_msg = "REPORT COPIED & PRINTED TO REAPER CONSOLE"
       else
         state.status_msg = "PRINTED REPORT TO CONSOLE (MANUAL COPY)"
       end
     end
-  else
-    gfx.set(0.2, 0.8, 0.2, 0.6)
-    gfx.setfont(4)
-    gfx.x, gfx.y = 50, diag_y
-    gfx.drawstr("✔ ALL CLOUD STEM VALUES HEALTHY")
   end
 end
 
