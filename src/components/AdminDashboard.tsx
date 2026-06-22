@@ -116,6 +116,28 @@ export const AdminDashboard = ({ onBack, theme }: { onBack: () => void, theme: s
     }
   };
 
+
+  const handleDeleteUser = async () => {
+    if (!selectedUser) return;
+    if (!window.confirm(`WARNING: Are you absolutely sure you want to permanently delete user ${selectedUser.email}? This will erase all their plugins, recipes, receipts, and cannot be undone.`)) return;
+    
+    setLoading(true);
+    try {
+      const masterKey = localStorage.getItem('_master_key_temp') || '';
+      const res = await fetch(`/api/admin/users/${selectedUser.uid}?key=${masterKey}`, {
+        method: 'DELETE'
+      });
+      if (!res.ok) throw new Error('Failed to delete user');
+      
+      setUsers(prev => prev.filter(u => u.uid !== selectedUser.uid));
+      setSelectedUser(null);
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const [viewMode, setViewMode] = useState<'users' | 'beta'>('users');
   const [betaApplications, setBetaApplications] = useState<any[]>([]);
 
@@ -414,6 +436,13 @@ export const AdminDashboard = ({ onBack, theme }: { onBack: () => void, theme: s
                     <div className="flex items-center gap-1.5 truncate max-w-full">
                       <Clock size={14} className="shrink-0" />
                       <span className="truncate">ID: {selectedUser.uid}</span>
+                      <button
+                        onClick={handleDeleteUser}
+                        className="ml-2 text-[10px] font-bold text-red-500 hover:text-red-400 uppercase tracking-widest px-2 py-0.5 bg-red-500/10 rounded-lg transition-colors border border-red-500/20"
+                        title="Delete User Permanently"
+                      >
+                        Delete User
+                      </button>
                     </div>
                   </div>
                 </div>

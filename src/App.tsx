@@ -8482,7 +8482,7 @@ Provide the exact JSFX plugin name and required sliders/parameters.`;
                     </div>
                   )}
 
-                  {!hasStems && (
+                  {!hasStems && audioMode !== 'critique' && (
                     <div className="w-full mt-4 flex flex-col items-center">
                       <div className={`text-[10px] font-black uppercase tracking-widest opacity-60 mb-2 ${theme === 'coldest' ? 'text-slate-900' : 'text-white'}`}>
                         OR PASTE A LINK TO A SONG (YOUTUBE, SPOTIFY, SOUNDCLOUD, ETC.)
