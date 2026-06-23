@@ -1641,7 +1641,18 @@ export const getBeatRecommendations = async (plugins: VSTPlugin[], analogInstrum
   const additionalContextStr = context ? `\nUSER SPECIFIED CONTEXT: ${context}\nYou MUST incorporate these instructions or themes tightly into the generated recipe.` : '';
   const bpmStr = bpm ? `\nUSER SPECIFIED EXACT BPM: ${bpm}\nYou MUST use this exact BPM in the recipe, and tailor the midi, drums, and time-based effects (delay, reverb pre-delay) to align perfectly with it.` : '';
 
+  const nonJsfxDiktat = (dawType === 'REAPER' || dawType === 'Reaper') ? '' : `
+      ==================================================
+      🚨🚨 CRITICAL NON-JSFX DIRECTIVE 🚨🚨
+      THE USER IS NOT USING REAPER DAW.
+      YOU ARE ABSOLUTELY, STRICTLY, UNDER NO CIRCUMSTANCES ALLOWED TO SUGGEST OR RECOMMEND REAPER NATIVE PLUGINS OR COCKOS JSFX (e.g. plugins starting with "JS:" or "Rea" like ReaComp, ReaEQ).
+      Focus ONLY on standard 3rd-party industry VST/AU plugins and explicitly avoid JSFX logic.
+      ==================================================
+  `;
+
   const prompt = isGangstaVox ? `
+    You are an expert audio engineer and producer.
+    ${nonJsfxDiktat}
     Analyze my VST plugin list and suggest 1 high-level, extremely detailed "Vocal FX Chain Recipe" for the craziest vocal mix.
     ${additionalContextStr}
     ${bpmStr}
@@ -1683,6 +1694,8 @@ export const getBeatRecommendations = async (plugins: VSTPlugin[], analogInstrum
     - CRITICAL: Ensure rhythmic locking by synchronizing kick and bass patterns.
     ${ADVANCED_MIDI_PROMPT}
   ` : `
+    You are an expert audio engineer and producer.
+    ${nonJsfxDiktat}
     Analyze my VST plugin list and suggest 1 high-level, extremely detailed "Beat Recipe" for the craziest rap beat.
     ${additionalContextStr}
     ${bpmStr}
@@ -1788,7 +1801,18 @@ export const getCustomBeatRecommendations = async (plugins: VSTPlugin[], query: 
   const additionalContextStr = context ? `\nUSER SPECIFIED CONTEXT: ${context}\nYou MUST incorporate these instructions or themes tightly into the generated recipe.` : '';
   const bpmStr = bpm ? `\nUSER SPECIFIED EXACT BPM: ${bpm}\nYou MUST use this exact BPM in the recipe, and tailor the midi, drums, and time-based effects (delay, reverb pre-delay) to align perfectly with it.` : '';
 
+  const nonJsfxDiktat = (dawType === 'REAPER' || dawType === 'Reaper') ? '' : `
+      ==================================================
+      🚨🚨 CRITICAL NON-JSFX DIRECTIVE 🚨🚨
+      THE USER IS NOT USING REAPER DAW.
+      YOU ARE ABSOLUTELY, STRICTLY, UNDER NO CIRCUMSTANCES ALLOWED TO SUGGEST OR RECOMMEND REAPER NATIVE PLUGINS OR COCKOS JSFX (e.g. plugins starting with "JS:" or "Rea" like ReaComp, ReaEQ).
+      Focus ONLY on standard 3rd-party industry VST/AU plugins and explicitly avoid JSFX logic.
+      ==================================================
+  `;
+
   const prompt = isGangstaVox ? `
+    You are an expert audio engineer and producer.
+    ${nonJsfxDiktat}
     Analyze my VST plugin list and suggest 1 high-level, extremely detailed "Vocal FX Chain Recipe" specifically for a "${query} type vocal".
     ${additionalContextStr}
     ${bpmStr}
@@ -1830,6 +1854,8 @@ export const getCustomBeatRecommendations = async (plugins: VSTPlugin[], query: 
     - CRITICAL: Ensure rhythmic locking by synchronizing kick and bass patterns.
     ${ADVANCED_MIDI_PROMPT}
   ` : `
+    You are an expert audio engineer and producer.
+    ${nonJsfxDiktat}
     Analyze my VST plugin list and suggest 1 high-level, extremely detailed "Beat Recipe" specifically for a "${query} type beat".
     ${additionalContextStr}
     ${bpmStr}
@@ -1918,7 +1944,18 @@ export const getSongBeatRecommendations = async (plugins: VSTPlugin[], songQuery
   const additionalContextStr = context ? `\nUSER SPECIFIED CONTEXT: ${context}\nYou MUST incorporate these instructions or themes tightly into the generated recipe.` : '';
   const bpmStr = bpm ? `\nUSER SPECIFIED EXACT BPM: ${bpm}\nYou MUST use this exact BPM in the recipe, and tailor the midi, drums, and time-based effects (delay, reverb pre-delay) to align perfectly with it.` : '';
 
+  const nonJsfxDiktat = (dawType === 'REAPER' || dawType === 'Reaper') ? '' : `
+      ==================================================
+      🚨🚨 CRITICAL NON-JSFX DIRECTIVE 🚨🚨
+      THE USER IS NOT USING REAPER DAW.
+      YOU ARE ABSOLUTELY, STRICTLY, UNDER NO CIRCUMSTANCES ALLOWED TO SUGGEST OR RECOMMEND REAPER NATIVE PLUGINS OR COCKOS JSFX (e.g. plugins starting with "JS:" or "Rea" like ReaComp, ReaEQ).
+      Focus ONLY on standard 3rd-party industry VST/AU plugins and explicitly avoid JSFX logic.
+      ==================================================
+  `;
+
   const prompt = isGangstaVox ? `
+    You are an expert audio engineer and producer.
+    ${nonJsfxDiktat}
     Analyze my VST plugin list and suggest 1 high-level, extremely detailed "Vocal FX Chain Recipe" that recreate the vocal production style, effects, and mixing techniques of the song "${songQuery}".
     ${additionalContextStr}
     ${bpmStr}
@@ -1959,6 +1996,8 @@ export const getSongBeatRecommendations = async (plugins: VSTPlugin[], songQuery
     - CRITICAL: Ensure rhythmic locking by synchronizing kick and bass patterns.
     ${ADVANCED_MIDI_PROMPT}
   ` : `
+    You are an expert audio engineer and producer.
+    ${nonJsfxDiktat}
     Analyze my VST plugin list and suggest 1 high-level, extremely detailed "Beat Recipe" that recreate the production style, bounce, and sonic atmosphere of the song "${songQuery}".
     ${additionalContextStr}
     ${bpmStr}
@@ -2105,7 +2144,19 @@ export const getAudioBeatRecommendations = async (plugins: VSTPlugin[], audioBas
   const apolloModel = analogHardware.find(h => h.name.toLowerCase().includes('apollo'))?.name || 'Apollo';
   const hasTownsend = analogHardware.some(h => h.name.toLowerCase().includes('townsend') || h.name.toLowerCase().includes('sphere'));
   const hasOceanWayMic = plugins?.some(p => p.name.toLowerCase().includes('ocean way mic')) || false;
+  
+  const nonJsfxDiktat = (dawType === 'REAPER' || dawType === 'Reaper') ? '' : `
+      ==================================================
+      🚨🚨 CRITICAL NON-JSFX DIRECTIVE 🚨🚨
+      THE USER IS NOT USING REAPER DAW.
+      YOU ARE ABSOLUTELY, STRICTLY, UNDER NO CIRCUMSTANCES ALLOWED TO SUGGEST OR RECOMMEND REAPER NATIVE PLUGINS OR COCKOS JSFX (e.g. plugins starting with "JS:" or "Rea" like ReaComp, ReaEQ).
+      Focus ONLY on standard 3rd-party industry VST/AU plugins and explicitly avoid JSFX logic.
+      ==================================================
+  `;
+
   let prompt = isGangstaVox ? `
+    You are an expert audio engineer and producer.
+    ${nonJsfxDiktat}
     Analyze the attached audio file and suggest 1 high-level, extremely detailed "Vocal FX Chain Recipe" that recreate the vocal production style, effects, and mixing techniques heard in the provided audio.
     Only use mixing plugins from this list (for DAW processing):
     ${pluginListStr}
@@ -2159,6 +2210,8 @@ export const getAudioBeatRecommendations = async (plugins: VSTPlugin[], audioBas
   ` : `
     Analyze the attached audio file and suggest 1 high-level, extremely detailed "Beat Recipe"
  that recreate the production style, bounce, and sonic atmosphere of the provided audio.
+    You are an expert audio engineer and producer.
+    ${nonJsfxDiktat}
     Only use plugins from this list:
     ${pluginListStr}
     ${analogStr}
@@ -2356,7 +2409,7 @@ export const getMixCritique = async (
   const languageInstruction = getLanguageInstruction(language);
 
   let jsfxDiktat = "";
-if (isJsfxMode) {
+  if (isJsfxMode) {
     const simplifiedDB = JSFX_DATABASE.map(p => ({
       name: p.name.startsWith('JS: ') ? p.name : 'JS: ' + p.name,
       sliders: p.sliders.map(s => `[${s.index}] ${s.name} (min:${s.min}, max:${s.max})`)
@@ -2378,6 +2431,15 @@ if (isJsfxMode) {
       
       JSFX DATABASE:
       ${dbContextString}
+      ==================================================
+    `;
+  } else {
+    jsfxDiktat = `
+      ==================================================
+      🚨🚨 CRITICAL NON-JSFX DIRECTIVE 🚨🚨
+      THE USER IS NOT USING REAPER OR NOT IN JSFX MODE.
+      YOU ARE ABSOLUTELY, STRICTLY, UNDER NO CIRCUMSTANCES ALLOWED TO SUGGEST OR RECOMMEND REAPER NATIVE PLUGINS OR COCKOS JSFX (e.g. plugins starting with "JS:" or "Rea" like ReaComp, ReaEQ).
+      DO NOT USE OR BEAT RECIPE ANY JSFX. Focus ONLY on standard 3rd-party industry VST/AU plugins and explicitly avoid JSFX logic.
       ==================================================
     `;
   }

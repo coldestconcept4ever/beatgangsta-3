@@ -1926,6 +1926,9 @@ The AI was unable to verify these parameters. Please investigate.`;
   useEffect(() => {
     if (dawType) {
       localStorage.setItem('bg_daw_type', dawType);
+      if (dawType !== 'REAPER' && dawType !== 'Reaper') {
+        setIsJsfxMode(false);
+      }
     } else {
       localStorage.removeItem('bg_daw_type');
     }
