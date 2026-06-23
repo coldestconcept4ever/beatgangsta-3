@@ -7451,7 +7451,6 @@ Provide the exact JSFX plugin name and required sliders/parameters.`;
                 </div>
               </div>
 
-              {!isJsfxMode && (
               <div className={`transition-all duration-700 flex justify-center mt-6 mb-8 ${mainTab === null ? 'blur-[8px] pointer-events-none opacity-40' : ''}`}>
                 <div className={`flex flex-wrap sm:flex-nowrap justify-center items-center p-1 sm:rounded-full rounded-3xl backdrop-blur-md border ${
                   theme === 'coldest' ? 'bg-sky-500/10 border-sky-500/20' : 
@@ -7483,7 +7482,6 @@ Provide the exact JSFX plugin name and required sliders/parameters.`;
                   </button>
                 </div>
               </div>
-              )}
 
               {(inputMode === 'random' || inputMode === 'search') && (
                 <div className={`transition-all duration-700 flex flex-col items-center gap-1.5 max-w-[110px] mx-auto mt-3 mb-5 ${mainTab === null ? 'blur-[8px] pointer-events-none opacity-40' : 'animate-in fade-in slide-in-from-bottom-4 duration-300'}`}>
@@ -7511,8 +7509,22 @@ Provide the exact JSFX plugin name and required sliders/parameters.`;
               )}
 
               {inputMode === 'random' && (
-                <div className="animate-in fade-in slide-in-from-bottom-4 duration-300 flex justify-center mt-4 mb-4">
+                <div className="animate-in fade-in slide-in-from-bottom-4 duration-300 flex flex-col items-center mt-4 mb-4">
                   <button onClick={handleGenerate} disabled={loading || mainTab === null} className={`py-4 px-12 rounded-full font-black text-xs select-none shadow-lg hover:scale-105 active:scale-95 transition-all disabled:scale-100 ${theme === 'coldest' || theme === 'chef-mode' ? 'bg-sky-500 text-white' : 'bg-white text-black'} ${mainTab === null ? 'blur-[8px] opacity-40' : ''}`}>{loading ? t('architecting') : t('get_random_recipes')}</button>
+                  
+                  {(dawType === 'REAPER' || dawType === 'Reaper') && (
+                    <div className="flex justify-center mt-6">
+                      <div className={`inline-flex items-center gap-3 rounded-full px-4 py-2 ${theme === 'coldest' ? 'bg-white/40' : 'bg-black/40'}`}>
+                        <span className={`text-[10px] font-black uppercase tracking-widest transition-colors ${!isJsfxMode ? (theme === 'coldest' ? 'text-slate-900' : 'text-white') : (theme === 'coldest' ? 'text-slate-500' : 'text-white/50')}`}>REAPER JSFX ONLY</span>
+                        <button 
+                          onClick={() => setIsJsfxMode(!isJsfxMode)}
+                          className={`relative w-10 h-5 rounded-full transition-colors ${isJsfxMode ? 'bg-[#10b981]' : 'bg-slate-400/50'}`}
+                        >
+                          <div className={`absolute top-0.5 left-0.5 w-4 h-4 rounded-full bg-white transition-transform ${isJsfxMode ? 'translate-x-5' : 'translate-x-0'}`} />
+                        </button>
+                      </div>
+                    </div>
+                  )}
                 </div>
               )}
 
@@ -7587,6 +7599,20 @@ Provide the exact JSFX plugin name and required sliders/parameters.`;
                   </button>
                   </div>
                 </div>
+                
+                {(dawType === 'REAPER' || dawType === 'Reaper') && (
+                  <div className="flex justify-center mt-6">
+                    <div className={`inline-flex items-center gap-3 rounded-full px-4 py-2 ${theme === 'coldest' ? 'bg-white/40' : 'bg-black/40'}`}>
+                      <span className={`text-[10px] font-black uppercase tracking-widest transition-colors ${!isJsfxMode ? (theme === 'coldest' ? 'text-slate-900' : 'text-white') : (theme === 'coldest' ? 'text-slate-500' : 'text-white/50')}`}>REAPER JSFX ONLY</span>
+                      <button 
+                        onClick={() => setIsJsfxMode(!isJsfxMode)}
+                        className={`relative w-10 h-5 rounded-full transition-colors ${isJsfxMode ? 'bg-[#10b981]' : 'bg-slate-400/50'}`}
+                      >
+                        <div className={`absolute top-0.5 left-0.5 w-4 h-4 rounded-full bg-white transition-transform ${isJsfxMode ? 'translate-x-5' : 'translate-x-0'}`} />
+                      </button>
+                    </div>
+                  </div>
+                )}
               </div>
               )}
 
@@ -7605,7 +7631,7 @@ Provide the exact JSFX plugin name and required sliders/parameters.`;
                 </div>
 
                 <div className="flex justify-center mb-2">
-                  <div className={`${isJsfxMode ? 'hidden' : ''} inline-flex rounded-full p-1 ${theme === 'coldest' ? 'bg-white/40' : 'bg-black/40'}`}>
+                  <div className={`inline-flex rounded-full p-1 ${theme === 'coldest' ? 'bg-white/40' : 'bg-black/40'}`}>
                     <button
                       id="btn-audio-recipe"
                       onClick={() => setAudioMode('recipe')}
@@ -7917,17 +7943,7 @@ Provide the exact JSFX plugin name and required sliders/parameters.`;
                           <div className={`inline-flex items-center gap-3 rounded-full px-4 py-2 ${theme === 'coldest' ? 'bg-white/40' : 'bg-black/40'}`}>
                             <span className={`text-[10px] font-black uppercase tracking-widest transition-colors ${!isJsfxMode ? (theme === 'coldest' ? 'text-slate-900' : 'text-white') : (theme === 'coldest' ? 'text-slate-500' : 'text-white/50')}`}>REAPER JSFX ONLY</span>
                             <button 
-                              onClick={() => {
-                                const newMode = !isJsfxMode;
-                                setIsJsfxMode(newMode);
-                                if (newMode) {
-                                  setDawType('Reaper');
-                                  setAudioMode('critique');
-                                  setHasStems(true);
-                                  setInputMode('upload');
-                                  setMainTab('beat');
-                                }
-                              }}
+                              onClick={() => setIsJsfxMode(!isJsfxMode)}
                               className={`relative w-10 h-5 rounded-full transition-colors ${isJsfxMode ? 'bg-[#10b981]' : 'bg-slate-400/50'}`}
                             >
                               <div className={`absolute top-0.5 left-0.5 w-4 h-4 rounded-full bg-white transition-transform ${isJsfxMode ? 'translate-x-5' : 'translate-x-0'}`} />
