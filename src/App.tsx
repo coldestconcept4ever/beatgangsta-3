@@ -580,7 +580,7 @@ const App: React.FC = () => {
   } | null>(null);
 
   const [mainTab, setMainTab] = useState<'beat' | 'vox' | null>(null);
-  const [inputMode, setInputMode] = useState<'random' | 'search' | 'upload'>('random');
+  const [inputMode, setInputMode] = useState<'random' | 'search' | 'upload'>('upload');
   const [generationBPM, setGenerationBPM] = useState<string>('');
   const [generationContext, setGenerationContext] = useState<string>('');
   const [isGangstaVox, setIsGangstaVox] = useState<boolean>(false);
@@ -693,14 +693,14 @@ const App: React.FC = () => {
   const [recipes, setRecipes] = useState<BeatRecipe[]>([]);
   const [critiques, setCritiques] = useState<MixCritique[]>([]);
   const [latestErrorLog, setLatestErrorLog] = useState<string | null>(null);
-  const [audioMode, setAudioMode] = useState<'recipe' | 'critique'>('recipe');
+  const [audioMode, setAudioMode] = useState<'recipe' | 'critique'>('critique');
   const [critiqueContext, setCritiqueContext] = useState<string>('');
   const [referenceTrack, setReferenceTrack] = useState<string>('');
   const [referenceTrackFile, setReferenceTrackFile] = useState<File | null>(null);
   const referenceTrackInputRef = useRef<HTMLInputElement>(null);
   const [hasStems, setHasStems] = useState<boolean>(false);
   const [isBusMode, setIsBusMode] = useState<boolean>(false);
-  const [isJsfxMode, setIsJsfxMode] = useState<boolean>(false);
+  const [isJsfxMode, setIsJsfxMode] = useState<boolean>(true);
   const [isMultiBandMode, setIsMultiBandMode] = useState<boolean>(false);
   const [isMasterMode, setIsMasterMode] = useState<boolean>(false);
   const [forceResearch, setForceResearch] = useState<boolean>(false);
@@ -6127,23 +6127,26 @@ Provide the exact JSFX plugin name and required sliders/parameters.`;
                             <div className="text-[9px] opacity-50 mt-0.5">Manage users & plugin data</div>
                           </div>
                         </button>
-                        <button 
-                          onClick={() => {
-                            setShowJsfxDatabase(true);
-                            setIsUserMenuOpen(false);
-                          }}
-                          className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-left transition-colors group ${getDropdownTheme(theme).itemHover}`}
-                        >
-                          <div className={`w-7 h-7 rounded-full flex items-center justify-center transition-colors ${theme === 'coldest' ? 'bg-fuchsia-500 text-white' : 'bg-fuchsia-500/20 text-fuchsia-400'}`}>
-                            <Layers size={14} />
-                          </div>
-                          <div>
-                            <div className="text-xs font-bold uppercase tracking-wider">JSFX DB</div>
-                            <div className="text-[9px] opacity-50 mt-0.5">View full plugin reference</div>
-                          </div>
-                        </button>
                         <div className={`h-px w-full my-1 ${getDropdownTheme(theme).divider}`} />
                       </>
+                    )}
+
+                    {(user?.email === 'recognizemiracles@gmail.com' || user?.email === 'coldestconcept@gmail.com') && (
+                      <button 
+                        onClick={() => {
+                          setShowJsfxDatabase(true);
+                          setIsUserMenuOpen(false);
+                        }}
+                        className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-left transition-colors group ${getDropdownTheme(theme).itemHover}`}
+                      >
+                        <div className={`w-7 h-7 rounded-full flex items-center justify-center transition-colors ${theme === 'coldest' ? 'bg-fuchsia-500 text-white' : 'bg-fuchsia-500/20 text-fuchsia-400'}`}>
+                          <Layers size={14} />
+                        </div>
+                        <div>
+                          <div className="text-xs font-bold uppercase tracking-wider">JSFX DB</div>
+                          <div className="text-[9px] opacity-50 mt-0.5">View full plugin reference</div>
+                        </div>
+                      </button>
                     )}
 
                     <button 
@@ -7236,17 +7239,32 @@ Provide the exact JSFX plugin name and required sliders/parameters.`;
                     </span>
                   </label>
                 </div>
+
                 <div className="flex items-center gap-2 ml-2">
                   <label className="relative inline-flex items-center cursor-pointer">
                     <input 
                       type="checkbox" 
                       className="sr-only peer" 
-                      checked={forceResearch}
-                      onChange={(e) => setForceResearch(e.target.checked)}
+                      checked={false}
+                      onChange={(e) => {
+                        if (e.target.checked) {
+                          const dummyPlugins: VSTPlugin[] = [
+                            { name: 'REAPER JSFX Reference', vendor: 'Cockos', type: 'JSFX', readableParams: null }
+                          ];
+                          setPlugins(dummyPlugins);
+                          handleSaveUserPlugins(dummyPlugins);
+                          setDawType('Reaper');
+                          setAudioMode('critique');
+                          setIsJsfxMode(true);
+                          setHasStems(true);
+                          setInputMode('upload');
+                          setMainTab('beat');
+                        }
+                      }}
                     />
-                    <div className="w-11 h-6 bg-white/10 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-purple-500"></div>
-                    <span className={`ml-3 text-[10px] font-bold uppercase tracking-widest ${theme === 'coldest' || theme === 'chef-mode' ? 'text-slate-600' : 'text-white/70'}`}>
-                      Deep AI Research
+                    <div className="w-11 h-6 bg-white/10 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#10b981]"></div>
+                    <span className={`ml-3 text-[10px] font-bold uppercase tracking-widest leading-tight ${theme === 'coldest' || theme === 'chef-mode' ? 'text-slate-600' : 'text-white/70'}`}>
+                      REAPER JSFX<br/>ONLY
                     </span>
                   </label>
                 </div>
@@ -7414,6 +7432,7 @@ Provide the exact JSFX plugin name and required sliders/parameters.`;
                 </div>
               </div>
 
+              {false && (
               <div className={`transition-all duration-700 flex justify-center mt-6 mb-8 ${mainTab === null ? 'blur-[8px] pointer-events-none opacity-40' : ''}`}>
                 <div className={`flex flex-wrap sm:flex-nowrap justify-center items-center p-1 sm:rounded-full rounded-3xl backdrop-blur-md border ${
                   theme === 'coldest' ? 'bg-sky-500/10 border-sky-500/20' : 
@@ -7445,6 +7464,7 @@ Provide the exact JSFX plugin name and required sliders/parameters.`;
                   </button>
                 </div>
               </div>
+              )}
 
               {(inputMode === 'random' || inputMode === 'search') && (
                 <div className={`transition-all duration-700 flex flex-col items-center gap-1.5 max-w-[110px] mx-auto mt-3 mb-5 ${mainTab === null ? 'blur-[8px] pointer-events-none opacity-40' : 'animate-in fade-in slide-in-from-bottom-4 duration-300'}`}>
@@ -7566,7 +7586,7 @@ Provide the exact JSFX plugin name and required sliders/parameters.`;
                 </div>
 
                 <div className="flex justify-center mb-2">
-                  <div className={`inline-flex rounded-full p-1 ${theme === 'coldest' ? 'bg-white/40' : 'bg-black/40'}`}>
+                  <div className={`${isJsfxMode ? 'hidden' : ''} inline-flex rounded-full p-1 ${theme === 'coldest' ? 'bg-white/40' : 'bg-black/40'}`}>
                     <button
                       id="btn-audio-recipe"
                       onClick={() => setAudioMode('recipe')}
@@ -7658,7 +7678,7 @@ Provide the exact JSFX plugin name and required sliders/parameters.`;
                             </div>
                           )}
 
-                          {user?.email === 'coldestconcept@gmail.com' && (
+                          {critiques.length > 0 && (user?.email === 'recognizemiracles@gmail.com' || user?.email === 'coldestconcept@gmail.com') && (
                             <div className="flex flex-col gap-2">
                               <button
                                 onClick={handlePushExhaustiveJSFXSync}
@@ -7869,7 +7889,7 @@ Provide the exact JSFX plugin name and required sliders/parameters.`;
                             </button>
                           </div>
                           <div className={`inline-flex items-center gap-3 rounded-full px-4 py-2 ${theme === 'coldest' ? 'bg-white/40' : 'bg-black/40'}`}>
-                            <span className={`text-[10px] font-black uppercase tracking-widest transition-colors ${!isJsfxMode ? (theme === 'coldest' ? 'text-slate-900' : 'text-white') : (theme === 'coldest' ? 'text-slate-500' : 'text-white/50')}`}>JSFX Mode</span>
+                            <span className={`text-[10px] font-black uppercase tracking-widest transition-colors ${!isJsfxMode ? (theme === 'coldest' ? 'text-slate-900' : 'text-white') : (theme === 'coldest' ? 'text-slate-500' : 'text-white/50')}`}>REAPER JSFX ONLY</span>
                             <button 
                               onClick={() => setIsJsfxMode(!isJsfxMode)}
                               className={`relative w-10 h-5 rounded-full transition-colors ${isJsfxMode ? 'bg-[#10b981]' : 'bg-slate-400/50'}`}
@@ -7974,8 +7994,7 @@ Provide the exact JSFX plugin name and required sliders/parameters.`;
                       <h3 className={`text-sm font-black uppercase tracking-widest ${theme === 'coldest' ? 'text-slate-900' : 'text-white'}`}>Stems ({stems.filter(s => s.file).length}/{stemsLimit})</h3>
                     </div>
 
-                    {isAdminDashboardAuthorized && (
-                      (dawType === 'REAPER' || dawType === 'Reaper') ? (
+                    {((dawType === 'REAPER' || dawType === 'Reaper')) ? (
                         <div className={`p-5 rounded-2xl border transition-all ${
                           theme === 'coldest' 
                             ? 'bg-purple-100/30 border-purple-200 text-slate-850' 
@@ -7986,7 +8005,7 @@ Provide the exact JSFX plugin name and required sliders/parameters.`;
                               <Cloud className="w-4 h-4 text-white" />
                             </div>
                             <h4 className="text-xs font-black uppercase tracking-widest text-purple-500">
-                              REAPER Project Folder Importer (Admin Active)
+                              REAPER Project Folder Importer
                             </h4>
                           </div>
                           <p className="text-xs opacity-75 mb-4 leading-relaxed">
@@ -8196,7 +8215,7 @@ Provide the exact JSFX plugin name and required sliders/parameters.`;
                           )}
                         </div>
                       ) : null
-                    )}
+                    }
 
                     <div className="flex flex-col gap-2">
                       <div className="flex justify-between gap-2">
@@ -8482,7 +8501,7 @@ Provide the exact JSFX plugin name and required sliders/parameters.`;
                     </div>
                   )}
 
-                  {!hasStems && audioMode !== 'critique' && (
+                  {audioMode !== 'critique' && (
                     <div className="w-full mt-4 flex flex-col items-center">
                       <div className={`text-[10px] font-black uppercase tracking-widest opacity-60 mb-2 ${theme === 'coldest' ? 'text-slate-900' : 'text-white'}`}>
                         OR PASTE A LINK TO A SONG (YOUTUBE, SPOTIFY, SOUNDCLOUD, ETC.)

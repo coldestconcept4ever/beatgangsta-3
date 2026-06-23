@@ -1592,6 +1592,13 @@ app.delete("/api/admin/users/:uid", async (req, res) => {
   try {
     const db = getDb();
     
+    // Get user email first for tables that use email instead of uid
+    const userResult = await db.execute({ sql: "SELECT email FROM users WHERE uid = ?", args: [uid] });
+    if (userResult.rows.length === 0) {
+      return res.status(404).json({ error: "User not found" });
+    }
+    const targetEmail = userResult.rows[0].email;
+    
     // Begin deleting associated user data across all tables that contain 'uid'
     // Following tables map to user's 'uid':
     await db.execute({ sql: "DELETE FROM user_plugins WHERE uid = ?", args: [uid] });
@@ -1599,7 +1606,10 @@ app.delete("/api/admin/users/:uid", async (req, res) => {
     await db.execute({ sql: "DELETE FROM user_feature_spend WHERE uid = ?", args: [uid] });
     await db.execute({ sql: "DELETE FROM plugin_usage WHERE uid = ?", args: [uid] });
     await db.execute({ sql: "DELETE FROM purchases WHERE uid = ?", args: [uid] });
-    await db.execute({ sql: "DELETE FROM reaper_syncs WHERE uid = ?", args: [uid] });
+    
+    if (targetEmail) {
+      await db.execute({ sql: "DELETE FROM reaper_syncs WHERE email = ?", args: [targetEmail] });
+    }
     
     // Once associations are cleared, delete the main user record
     const result = await db.execute({ sql: "DELETE FROM users WHERE uid = ?", args: [uid] });

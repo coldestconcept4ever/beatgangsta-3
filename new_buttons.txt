@@ -1,0 +1,23 @@
+                              <Download className="w-3 h-3" />
+                              BeatGangsta Connect (.zip)
+                            </button>
+                            <button 
+                              onClick={() => setShowJsfxHelpModal(true)}
+                              className={`rounded-r-full pr-3 pl-1 py-2 transition-colors flex items-center justify-center bg-[#10b981] text-white hover:bg-[#059669] border-l border-[#059669]/30`}
+                              title="How to use BeatGangsta Connect"
+                            >
+                              <HelpCircle className="w-3.5 h-3.5" />
+                            </button>
+                          </div>
+                          <div className={`inline-flex items-center gap-3 rounded-full px-4 py-2 ${theme === 'coldest' ? 'bg-white/40' : 'bg-black/40'}`}>
+                            <span className={`text-[10px] font-black uppercase tracking-widest transition-colors ${!isJsfxMode ? (theme === 'coldest' ? 'text-slate-900' : 'text-white') : (theme === 'coldest' ? 'text-slate-500' : 'text-white/50')}`}>JSFX Mode</span>
+                            <button 
+                              onClick={() => setIsJsfxMode(!isJsfxMode)}
+                              className={`relative w-10 h-5 rounded-full transition-colors ${isJsfxMode ? 'bg-[#10b981]' : 'bg-slate-400/50'}`}
+                            >
+                              <div className={`absolute top-0.5 left-0.5 w-4 h-4 rounded-full bg-white transition-transform ${isJsfxMode ? 'translate-x-5' : 'translate-x-0'}`} />
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                      )}

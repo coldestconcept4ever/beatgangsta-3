@@ -637,12 +637,12 @@ export const CritiqueCard: React.FC<CritiqueCardProps> = ({ critique, stems = []
           : 'bg-black/40 border-sky-500/30 text-white'
       }`}
     >
-      <div className="flex flex-col md:flex-row justify-between items-start gap-6 mb-8">
-        <div>
-          <h3 className="text-3xl sm:text-4xl font-black tracking-tighter mb-2 text-sky-600 dark:text-sky-400">
+      <div className="flex flex-col items-center gap-6 mb-12 text-center w-full">
+        <div className="flex flex-col items-center w-full max-w-5xl mx-auto">
+          <h3 className="text-3xl sm:text-5xl md:text-6xl font-black tracking-tighter mb-4 text-sky-600 dark:text-sky-400 max-w-4xl">
             {critique.title}
           </h3>
-          <div className="flex flex-wrap gap-2 mb-4">
+          <div className="flex flex-wrap justify-center gap-2 mb-6">
             <span className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest ${
               theme === 'coldest' ? 'bg-sky-100 text-sky-800' : 'bg-sky-500/20 text-sky-300'
             }`}>
@@ -656,16 +656,26 @@ export const CritiqueCard: React.FC<CritiqueCardProps> = ({ critique, stems = []
               {critique.isMasterMode ? 'Master Mode' : 'Mix Mode'}
             </span>
           </div>
-          <p className="text-sm font-bold opacity-80 max-w-2xl leading-relaxed">
+          <p className="text-lg md:text-xl font-bold opacity-90 max-w-4xl leading-relaxed text-center mb-4">
             {critique.overallFeedback}
           </p>
         </div>
         
-        <div className="flex flex-col sm:flex-row gap-3">
+        <div className="flex justify-center items-center flex-wrap gap-2 w-full max-w-4xl relative">
+          {isExporting && (
+            <div className="absolute -top-3 left-1/2 -translate-x-1/2 w-64 h-1 bg-black/10 rounded-full overflow-hidden">
+              <motion.div 
+                initial={{ width: 0 }}
+                animate={{ width: `${exportProgress}%` }}
+                className="h-full bg-sky-500"
+              />
+            </div>
+          )}
+
           {onMinimize && (
             <button
               onClick={onMinimize}
-              className={`shrink-0 px-4 py-2 rounded-full font-black text-xs uppercase tracking-widest transition-all ${
+              className={`shrink-0 px-3 py-1.5 rounded-full font-black text-[10px] uppercase tracking-widest transition-all ${
                 theme === 'coldest' ? 'bg-slate-200 text-slate-800 hover:bg-slate-300' : 'bg-white/10 text-white hover:bg-white/20'
               }`}
             >
@@ -675,51 +685,54 @@ export const CritiqueCard: React.FC<CritiqueCardProps> = ({ critique, stems = []
           <button 
             onClick={handleExportHTML}
             disabled={isExporting}
-            className={`shrink-0 px-8 py-4 rounded-full font-black text-xs uppercase tracking-widest transition-all shadow-xl hover:scale-105 active:scale-95 flex items-center gap-2 min-w-[160px] justify-center ${
+            className={`shrink-0 px-3 py-1.5 rounded-full font-black text-[10px] uppercase tracking-widest transition-all shadow-md hover:scale-105 active:scale-95 flex items-center gap-1.5 ${
               theme === 'coldest'
                 ? 'bg-slate-800 text-white hover:bg-slate-900'
                 : 'bg-white/10 text-white hover:bg-white/20'
             }`}
           >
-            {isExporting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />}
+            {isExporting ? <Loader2 className="w-3 h-3 animate-spin" /> : <Download className="w-3 h-3" />}
             {isExporting ? t('exporting', { progress: exportProgress }) : t('download_html')}
           </button>
-          <button 
-            onClick={handleExportDawProject}
-            disabled={isExportingDawProject}
-            className={`shrink-0 px-8 py-4 rounded-full font-black text-xs uppercase tracking-widest transition-all shadow-xl hover:scale-105 active:scale-95 flex items-center gap-2 min-w-[160px] justify-center ${
-              theme === 'coldest'
-                ? 'bg-sky-600 text-white hover:bg-sky-700'
-                : 'bg-sky-500/20 text-sky-300 hover:bg-sky-500/30'
-            }`}
-          >
-            {isExportingDawProject ? <Loader2 className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />}
-            {isExportingDawProject ? t('exporting', { progress: 100 }) : 'DAWProject'}
-          </button>
+          
+          {(dawType === 'Bitwig' || dawType === 'Bitwig Studio' || dawType === 'Studio One') && (
+            <button 
+              onClick={handleExportDawProject}
+              disabled={isExportingDawProject}
+              className={`shrink-0 px-3 py-1.5 rounded-full font-black text-[10px] uppercase tracking-widest transition-all shadow-md hover:scale-105 active:scale-95 flex items-center gap-1.5 ${
+                theme === 'coldest'
+                  ? 'bg-sky-600 text-white hover:bg-sky-700'
+                  : 'bg-sky-500/20 text-sky-300 hover:bg-sky-500/30'
+              }`}
+            >
+              {isExportingDawProject ? <Loader2 className="w-3 h-3 animate-spin" /> : <Download className="w-3 h-3" />}
+              {isExportingDawProject ? t('exporting', { progress: 100 }) : 'DAWProject'}
+            </button>
+          )}
           
           <button 
             onClick={handleExportReaperMarkers}
-            className={`shrink-0 px-8 py-4 rounded-full font-black text-xs uppercase tracking-widest transition-all shadow-xl hover:scale-105 active:scale-95 flex items-center gap-2 min-w-[160px] justify-center ${
+            className={`shrink-0 px-3 py-1.5 rounded-full font-black text-[10px] uppercase tracking-widest transition-all shadow-md hover:scale-105 active:scale-95 flex items-center gap-1.5 ${
               theme === 'coldest'
                 ? 'bg-emerald-600 text-white hover:bg-emerald-700'
                 : 'bg-emerald-500/20 text-emerald-300 hover:bg-emerald-500/30'
             }`}
           >
-            <Download className="w-4 h-4" />
+            <Download className="w-3 h-3" />
             REAPER Markers (.csv)
           </button>
 
-          <div className="flex flex-col gap-2">
+          <div className="flex flex-col gap-2 relative z-50">
             <button 
               onClick={handlePushReaperSync}
               disabled={isPushingSync}
-              className={`shrink-0 px-8 py-4 rounded-full font-black text-xs uppercase tracking-widest transition-all shadow-xl hover:scale-105 active:scale-95 flex items-center gap-2 min-w-[160px] justify-center ${
+              className={`shrink-0 px-3 py-1.5 rounded-full font-black text-[10px] uppercase tracking-widest transition-all shadow-md hover:scale-105 active:scale-95 flex items-center gap-1.5 ${
                 theme === 'coldest'
                   ? 'bg-blue-600 text-white hover:bg-blue-700'
                   : 'bg-blue-500/20 text-blue-300 hover:bg-blue-500/30'
               } ${syncPin ? 'border-2 border-emerald-400' : ''}`}
             >
-              {isPushingSync ? <Loader2 className="w-4 h-4 animate-spin" /> : (syncPin ? <Check className="w-4 h-4" /> : <RefreshCw className="w-4 h-4" />)}
+              {isPushingSync ? <Loader2 className="w-3 h-3 animate-spin" /> : (syncPin ? <Check className="w-3 h-3" /> : <RefreshCw className="w-3 h-3" />)}
               {syncPin ? 'Sync Pushed' : 'Push REAPER Sync'}
             </button>
             
@@ -729,16 +742,16 @@ export const CritiqueCard: React.FC<CritiqueCardProps> = ({ critique, stems = []
                   initial={{ opacity: 0, y: -10 }} 
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -10 }}
-                  className="flex flex-col gap-2 p-3 rounded-xl bg-blue-500/10 border border-blue-500/20"
+                  className="absolute top-10 left-1/2 -translate-x-1/2 w-72 z-[100] flex flex-col gap-2 p-3 rounded-xl bg-blue-900 border border-blue-500/50 shadow-2xl backdrop-blur-md"
                 >
-                  <label className="text-[10px] font-black uppercase tracking-widest opacity-60">Enter Email to Sync:</label>
+                  <label className="text-[10px] font-black uppercase tracking-widest opacity-90 text-white">Enter Email to Sync:</label>
                   <div className="flex gap-2">
                     <input 
                       type="email" 
                       value={syncEmail}
                       onChange={(e) => setSyncEmail(e.target.value)}
                       placeholder="mixer@gmail.com"
-                      className={`flex-1 px-3 py-2 rounded-lg text-xs bg-black/20 border border-white/10 focus:outline-none focus:border-blue-500`}
+                      className={`flex-1 px-3 py-2 rounded-lg text-xs bg-black/20 border border-white/10 text-white focus:outline-none focus:border-blue-500`}
                     />
                     <button 
                       onClick={handlePushReaperSync}
@@ -754,26 +767,26 @@ export const CritiqueCard: React.FC<CritiqueCardProps> = ({ critique, stems = []
                 <motion.div 
                   initial={{ opacity: 0, scale: 0.9 }} 
                   animate={{ opacity: 1, scale: 1 }}
-                  className={`p-4 rounded-xl border-2 border-emerald-400/50 bg-emerald-400/10 flex flex-col items-center text-center`}
+                  className={`absolute top-10 left-1/2 -translate-x-1/2 w-80 z-[100] p-4 rounded-xl border border-emerald-400/50 bg-emerald-950/90 backdrop-blur-md shadow-2xl flex flex-col items-center text-center`}
                 >
-                  <div className="flex items-center gap-2 mb-2 text-emerald-500">
+                  <div className="flex items-center gap-2 mb-2 text-white">
                     <CheckCircle2 className="w-4 h-4" />
                     <span className="text-xs font-black uppercase tracking-widest">Cloud Sync Active</span>
                   </div>
-                  <div className="text-[10px] opacity-60 uppercase mb-1">Enter in BeatGangsta Connect:</div>
-                  <div className="flex gap-4">
+                  <div className="text-[10px] text-white opacity-80 uppercase mb-1">Enter in BeatGangsta Connect:</div>
+                  <div className="flex gap-4 w-full justify-center">
                     <div className="flex flex-col">
-                      <span className="text-[8px] opacity-50 uppercase leading-none">Email</span>
-                      <span className="text-xs font-bold">{syncEmail}</span>
+                      <span className="text-[8px] text-white opacity-80 uppercase leading-none">Email</span>
+                      <span className="text-xs font-bold text-white shadow-sm px-1 overflow-hidden overflow-ellipsis max-w-[100px]">{syncEmail}</span>
                     </div>
                     <div className="flex flex-col">
-                      <span className="text-[8px] opacity-50 uppercase leading-none">PIN</span>
-                      <span className="text-xl font-black text-emerald-500 tracking-[0.2em]">{syncPin}</span>
+                      <span className="text-[8px] text-white opacity-80 uppercase leading-none">PIN</span>
+                      <span className="text-xl font-black text-white tracking-[0.2em]">{syncPin}</span>
                     </div>
                   </div>
                   <button 
                     onClick={() => { setSyncPin(null); setShowEmailInput(true); }}
-                    className="mt-3 text-[10px] opacity-40 hover:opacity-100 underline"
+                    className="mt-3 text-[10px] text-white opacity-70 hover:opacity-100 underline"
                   >
                     Resync / Change Email
                   </button>
@@ -782,7 +795,7 @@ export const CritiqueCard: React.FC<CritiqueCardProps> = ({ critique, stems = []
             </AnimatePresence>
           </div>
           {isExporting && (
-            <div className="absolute -bottom-2 left-0 right-0 h-1 bg-black/10 rounded-full overflow-hidden">
+            <div className="hidden">
               <motion.div 
                 initial={{ width: 0 }}
                 animate={{ width: `${exportProgress}%` }}
@@ -792,7 +805,7 @@ export const CritiqueCard: React.FC<CritiqueCardProps> = ({ critique, stems = []
           )}
           <button 
             onClick={() => setIsLyricToolExpanded(prev => !prev)}
-            className={`shrink-0 px-8 py-4 rounded-full font-black text-xs uppercase tracking-widest transition-all shadow-xl hover:scale-105 active:scale-95 flex items-center gap-2 ${
+            className={`shrink-0 px-3 py-1.5 rounded-full font-black text-[10px] uppercase tracking-widest transition-all shadow-md hover:scale-105 active:scale-95 flex items-center gap-1.5 ${
               isLyricToolExpanded
                 ? 'bg-sky-950 text-sky-400 border border-sky-400/50'
                 : theme === 'coldest'
@@ -800,13 +813,13 @@ export const CritiqueCard: React.FC<CritiqueCardProps> = ({ critique, stems = []
                 : 'bg-sky-500/20 text-sky-300 hover:bg-sky-500/30 border border-sky-500/30'
             }`}
           >
-            <Mic className="w-4 h-4" />
+            <Mic className="w-3 h-3" />
             {t('lyric_tool', 'Lyric Tool')}
           </button>
           <button 
             onClick={() => onSave(critique)}
             disabled={isSaved}
-            className={`shrink-0 px-8 py-4 rounded-full font-black text-xs uppercase tracking-widest transition-all shadow-xl hover:scale-105 active:scale-95 ${
+            className={`shrink-0 px-3 py-1.5 rounded-full font-black text-[10px] uppercase tracking-widest transition-all shadow-md hover:scale-105 active:scale-95 flex items-center gap-1.5 ${
               isSaved 
                 ? 'bg-black/10 text-current opacity-50 shadow-none' 
                 : theme === 'coldest'

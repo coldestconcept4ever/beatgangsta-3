@@ -1,35 +1,4 @@
-const { Project, Application, Channel, Vst3Plugin, Track } = require('dawproject-typescript');
-const p = new Project();
-const tr = new Track();
-p.structure = [tr];
-tr.channel = new Channel();
-const v = new Vst3Plugin();
-v.name='TestPlugin';
-v.deviceID='foo';
-v.vst3Id='foo';
-v.uniqueId='foo';
-v.pluginId='foo';
-tr.channel.devices = [v];
-let xml = p.toXml();
-
-console.log("Original:");
-console.log(xml);
-
-xml = xml
-  .replace(/<Vst3Plugin /g, '<vst3Plugin ')
-  .replace(/<\/Vst3Plugin>/g, '</vst3Plugin>')
-  .replace(/<Vst2Plugin /g, '<vst2Plugin ')
-  .replace(/<\/Vst2Plugin>/g, '</vst2Plugin>')
-  .replace(/<BuiltInDevice /g, '<builtInDevice ')
-  .replace(/<\/BuiltInDevice>/g, '</builtInDevice>');
-
-// Studio One expects pluginId for VST3 and uniqueId for VST2
-// The library outputs deviceID for both
-xml = xml.replace(/<vst3Plugin ([^>]+)deviceID="([^"]+)"/g, '<vst3Plugin $1pluginId="$2"');
-xml = xml.replace(/<vst2Plugin ([^>]+)deviceID="([^"]+)"/g, '<vst2Plugin $1uniqueId="$2"');
-
-// Fallback for any other deviceID remaining
-xml = xml.replace(/deviceID=/g, 'pluginId=');
-
-console.log("\nFixed:");
-console.log(xml);
+const fs = require('fs');
+let code = fs.readFileSync('src/components/CritiqueCard.tsx', 'utf8');
+const regex = /<div className="flex flex-col md:flex-row justify-between items-start gap-6 mb-8">[\s\S]*?<\/div>\s*<\/div>\s*\{\/\* Lyric Tool Expandable Section \*\/\}/m;
+console.log('Test result:', regex.test(code));
