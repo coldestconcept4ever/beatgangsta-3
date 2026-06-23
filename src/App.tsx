@@ -4585,7 +4585,7 @@ The AI was unable to verify these parameters. Please investigate.`;
 
   const handlePushReaperSync = async (payload: any) => {
     if (!user?.email) {
-      setError("Please sign in to use REAPER Cloud Sync.");
+      setError("[ERR_REAPER_SYNC_AUTH] Please sign in to use REAPER Cloud Sync.");
       return;
     }
     
@@ -4618,6 +4618,8 @@ The AI was unable to verify these parameters. Please investigate.`;
         txtContent = String(payload || "");
       }
 
+      console.log(`[BG-CONNECT-PUSH] Pushing payload to server: ${txtContent.length} chars, PIN: ${pin}`);
+
       const response = await fetchWithDetailedError('/api/reaper-sync/push', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -4634,7 +4636,10 @@ The AI was unable to verify these parameters. Please investigate.`;
         setTimeout(() => setShowSyncSuccess(false), 5000);
       }
     } catch (err: any) {
-      setError(err.message || "Failed to push REAPER sync.");
+      console.error("[BG-CONNECT-ERROR] [PUSH_REAPER_SYNC] Failed:", err);
+      const errTrace = err.stack || err.message || String(err);
+      setLatestErrorLog(`[ERR_REAPER_SYNC_PUSH] REAPER Push Sync failed.\nPIN: ${pin}\nUser: ${user.email}\nDetails:\n${errTrace}`);
+      setError(`[ERR_REAPER_SYNC_PUSH] Failed to push REAPER sync: ${err.message || "Unknown Error"}`);
     } finally {
       setIsPushingReaperSync(false);
     }
@@ -4642,7 +4647,7 @@ The AI was unable to verify these parameters. Please investigate.`;
 
   const handlePushExhaustiveJSFXSync = async () => {
     if (!user?.email) {
-      setError("Please sign in to use REAPER Cloud Sync.");
+      setError("[ERR_REAPER_SYNC_AUTH] Please sign in to use REAPER Cloud Sync.");
       return;
     }
     
@@ -4666,7 +4671,7 @@ The AI was unable to verify these parameters. Please investigate.`;
           txtContent += `PARAM|${slider_param.name}|${slider_param.defaultVal}\n`;
           // Push S-prefixed
           const sPrefix = `S${slider_param.index + 1}`;
-          txtContent += `PARAM|${sPrefix}|${slider_param.defaultVal}\n`;
+          txtContent += `PARAM|S${slider_param.index + 1}|${slider_param.defaultVal}\n`;
         });
       });
       
@@ -4678,7 +4683,7 @@ The AI was unable to verify these parameters. Please investigate.`;
         "JS: LOSER/MGA_JSLimiter", "JS: LOSER/MasterLimiter", "JS: LOSER/MasterTom",
         "JS: LOSER/compciter", "JS: LOSER/gate", "JS: LOSER/DDC", "JS: Liteon/np1136peaklimiter",
         "JS: Multi-Band Compressor", "JS: 5-Band Compressor", "JS: 3-Band Compressor", "JS: Expander / Gate",
-
+ 
         // EQ/Enhancers/Filters
         "JS: 3-Band EQ", "JS: 4-Band EQ", "JS: 5-Band Stereo EQ", "JS: Auto-peaker",
         "JS: Bandpass Filter", "JS: DC Filter", "JS: Exciter", "JS: Huge Booty Bass Enhancer",
@@ -4691,17 +4696,17 @@ The AI was unable to verify these parameters. Please investigate.`;
         "JS: Liteon/statevariable2", "JS: RBJ 1073 EQ", "JS: RBJ 4-Band Semi-Parametric EQ",
         "JS: RBJ 7-Band Graphic EQ", "JS: RBJ Highpass/Lowpass Filters",
         "JS: Saturation/Soft Clipper", "JS: Teej/rbj12eq-teej", "JS: 12-Band EQ", "JS: Graphic EQ",
-
+ 
         // Modulation/Time
         "JS: Chorus", "JS: Chorus (Stereo)", "JS: Delay", "JS: Delay w/ Chorus",
         "JS: Delay w/ Tempo Ping-Pong", "JS: Flanger", "JS: Flanger (Stereo)", "JS: LOSER/FBDelay",
         "JS: LOSER/FBFlanger", "JS: LOSER/Flanger", "JS: LOSER/Phaser", "JS: LOSER/Tremolo",
         "JS: Phaser", "JS: Reverb", "JS: Tremolo", "JS: Delay (L/R)",
-
+ 
         // Guitar/Amp/Distortion
         "JS: Distortion", "JS: Tube Harmonics",
         "JS: Wah-Wah", "JS: Wig-Wah",
-
+ 
         // Utility/Routing/Imaging/Pitch
         "JS: 8-Channel Mixer", "JS: Audio To MIDI Drum Trigger", "JS: Band Splitter", "JS: Band Joiner",
         "JS: Dual Pan", "JS: FFT Splitter", "JS: FFT Splitter (3-band)", "JS: LOSER/CenterCanceler",
@@ -4727,6 +4732,8 @@ The AI was unable to verify these parameters. Please investigate.`;
           txtContent += `PARAM|S${i}|0.5\n`;
         }
       });
+
+      console.log(`[BG-CONNECT-PUSH-EXHAUSTIVE] Pushing exhaustive test: ${txtContent.length} chars, PIN: ${pin}`);
       
       const response = await fetchWithDetailedError('/api/reaper-sync/push', {
         method: 'POST',
@@ -4744,7 +4751,10 @@ The AI was unable to verify these parameters. Please investigate.`;
         setTimeout(() => setShowSyncSuccess(false), 5000);
       }
     } catch (err: any) {
-      setError(err.message || "Failed to push exhaustive REAPER sync test.");
+      console.error("[BG-CONNECT-ERROR] [PUSH_REAPER_SYNC_EXHAUSTIVE] Failed:", err);
+      const errTrace = err.stack || err.message || String(err);
+      setLatestErrorLog(`[ERR_REAPER_SYNC_PUSH_EXHAUSTIVE] Exhaustive Sync Push failed.\nPIN: ${pin}\nUser: ${user.email}\nDetails:\n${errTrace}`);
+      setError(`[ERR_REAPER_SYNC_PUSH_EXHAUSTIVE] Failed to push exhaustive REAPER sync test: ${err.message || "Unknown Error"}`);
     } finally {
       setIsPushingReaperSync(false);
     }
@@ -7724,40 +7734,97 @@ Provide the exact JSFX plugin name and required sliders/parameters.`;
                             <div className="flex items-center gap-1 bg-[#10b981] rounded-full text-white">
                             <button
                               onClick={async () => {
-                                const zip = new JSZip();
-                                let logoBase64 = "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8/5+hHgAHggJ/PchI7wAAAABJRU5ErkJggg==";
-                                const svgEl = document.getElementById("mascot-svg") as any;
-                                
-                                if (svgEl) {
-                                  try {
-                                    const serializedSvg = new XMLSerializer().serializeToString(svgEl);
-                                    const blob = new Blob([serializedSvg], { type: "image/svg+xml;charset=utf-8" });
-                                    const url = URL.createObjectURL(blob);
-                                    
-                                    const img = new Image();
-                                    const loadedPromise = new Promise<string>((resolveImg, rejectImg) => {
-                                      img.onload = () => {
-                                        const canvas = document.createElement("canvas");
+                                try {
+                                  const zip = new JSZip();
+                                  let logoBase64 = "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8/5+hHgAHggJ/PchI7wAAAABJRU5ErkJggg==";
+                                  const svgEl = document.getElementById("mascot-svg") as any;
+                                  
+                                  if (svgEl) {
+                                    try {
+                                      const serializedSvg = new XMLSerializer().serializeToString(svgEl);
+                                      const blob = new Blob([serializedSvg], { type: "image/svg+xml;charset=utf-8" });
+                                      const url = URL.createObjectURL(blob);
+                                      
+                                      const img = new Image();
+                                      const loadedPromise = new Promise<string>((resolveImg, rejectImg) => {
+                                        img.onload = () => {
+                                          const canvas = document.createElement("canvas");
+                                          canvas.width = 400;
+                                          canvas.height = 400;
+                                          const ctx = canvas.getContext("2d");
+                                          if (ctx) {
+                                            ctx.clearRect(0, 0, canvas.width, canvas.height);
+                                            ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+                                            resolveImg(canvas.toDataURL("image/png").split(",")[1]);
+                                          } else {
+                                            rejectImg(new Error("No canvas context"));
+                                          }
+                                        };
+                                        img.onerror = () => rejectImg(new Error("Image load failed"));
+                                      });
+                                      img.src = url;
+                                      logoBase64 = await loadedPromise;
+                                      URL.revokeObjectURL(url);
+                                    } catch (err) {
+                                      console.error("Failed to dynamically convert Mascot SVG to PNG", err);
+                                      
+                                      // Fallback offscreen drawing from DAWGuide
+                                      try {
+                                        const canvas = document.createElement('canvas');
                                         canvas.width = 400;
                                         canvas.height = 400;
-                                        const ctx = canvas.getContext("2d");
+                                        const ctx = canvas.getContext('2d');
                                         if (ctx) {
-                                          ctx.clearRect(0, 0, canvas.width, canvas.height);
-                                          ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-                                          resolveImg(canvas.toDataURL("image/png").split(",")[1]);
-                                        } else {
-                                          rejectImg(new Error("No canvas context"));
+                                          const cx = 200, cy = 200, r = 150;
+                                          ctx.fillStyle = '#0f172a';
+                                          ctx.beginPath(); ctx.arc(cx, cy, r + 10, 0, Math.PI * 2); ctx.fill();
+                                          ctx.fillStyle = '#3b82f6'; // User's mascot color
+                                          ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI * 2); ctx.fill();
+                                          
+                                          // Durag cap
+                                          ctx.fillStyle = '#000000';
+                                          ctx.beginPath(); ctx.arc(cx, cy - 30, r + 3, Math.PI, 0); ctx.fill();
+                                          ctx.fillRect(cx - r - 5, cy - 45, r * 2 + 10, 45);
+                                          
+                                          // Knot
+                                          ctx.beginPath(); ctx.moveTo(cx + r, cy - 15); ctx.lineTo(cx + r + 80, cy + 50); ctx.lineTo(cx + r + 25, cy + 80); ctx.fill();
+                                          ctx.beginPath(); ctx.moveTo(cx + r, cy - 15); ctx.lineTo(cx + r + 50, cy + 90); ctx.lineTo(cx - 15 + r, cy + 115); ctx.fill();
+                                          
+                                          // Eyes
+                                          ctx.fillStyle = '#000000';
+                                          const lx = cx - 60, rx = cx + 60, ey = cy + 15;
+                                          ctx.beginPath(); ctx.arc(lx, ey, 32, 0, Math.PI*2); ctx.fill();
+                                          ctx.beginPath(); ctx.arc(rx, ey, 32, 0, Math.PI*2); ctx.fill();
+                                          
+                                          // Pupils
+                                          ctx.fillStyle = '#ffffff';
+                                          ctx.beginPath(); ctx.arc(lx + 10, ey + 6, 12, 0, Math.PI*2); ctx.fill();
+                                          ctx.beginPath(); ctx.arc(rx - 6, ey + 6, 12, 0, Math.PI*2); ctx.fill();
+                                          
+                                          // Grill
+                                          const gx = cx - 65, gy = cy + 70;
+                                          ctx.fillStyle = '#000000';
+                                          ctx.fillRect(gx - 10, gy - 10, 150, 50);
+                                          for (let i = 0; i < 6; i++) {
+                                            ctx.fillStyle = '#ffffff';
+                                            ctx.fillRect(gx + i * 22, gy, 18, 28);
+                                          }
+                                          
+                                          // Sword/Dagger
+                                          ctx.lineWidth = 12;
+                                          ctx.strokeStyle = '#94a3b8';
+                                          ctx.beginPath(); ctx.moveTo(cx - 130, cy + 130); ctx.lineTo(cx - 210, cy + 210); ctx.stroke();
+                                          ctx.strokeStyle = '#1e293b';
+                                          ctx.beginPath(); ctx.moveTo(cx - 210, cy + 210); ctx.lineTo(cx - 240, cy + 240); ctx.stroke();
+                                          
+                                          logoBase64 = canvas.toDataURL('image/png').split(',')[1];
                                         }
-                                      };
-                                      img.onerror = () => rejectImg(new Error("Image load failed"));
-                                    });
-                                    img.src = url;
-                                    logoBase64 = await loadedPromise;
-                                    URL.revokeObjectURL(url);
-                                  } catch (err) {
-                                    console.error("Failed to dynamically convert Mascot SVG to PNG", err);
-                                    
-                                    // Fallback offscreen drawing from DAWGuide
+                                      } catch (fallbackErr) {
+                                        console.error("Canvas draw fallback failed", fallbackErr);
+                                      }
+                                    }
+                                  } else {
+                                    // Direct Canvas drawing as accurate fallback if SVG element not found in DOM
                                     try {
                                       const canvas = document.createElement('canvas');
                                       canvas.width = 400;
@@ -7767,7 +7834,7 @@ Provide the exact JSFX plugin name and required sliders/parameters.`;
                                         const cx = 200, cy = 200, r = 150;
                                         ctx.fillStyle = '#0f172a';
                                         ctx.beginPath(); ctx.arc(cx, cy, r + 10, 0, Math.PI * 2); ctx.fill();
-                                        ctx.fillStyle = '#3b82f6'; // User's mascot color
+                                        ctx.fillStyle = '#3b82f6';
                                         ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI * 2); ctx.fill();
                                         
                                         // Durag cap
@@ -7809,80 +7876,30 @@ Provide the exact JSFX plugin name and required sliders/parameters.`;
                                         logoBase64 = canvas.toDataURL('image/png').split(',')[1];
                                       }
                                     } catch (fallbackErr) {
-                                      console.error("Canvas draw fallback failed", fallbackErr);
+                                      console.error("Direct canvas draw failed", fallbackErr);
                                     }
                                   }
-                                } else {
-                                  // Direct Canvas drawing as accurate fallback if SVG element not found in DOM
-                                  try {
-                                    const canvas = document.createElement('canvas');
-                                    canvas.width = 400;
-                                    canvas.height = 400;
-                                    const ctx = canvas.getContext('2d');
-                                    if (ctx) {
-                                      const cx = 200, cy = 200, r = 150;
-                                      ctx.fillStyle = '#0f172a';
-                                      ctx.beginPath(); ctx.arc(cx, cy, r + 10, 0, Math.PI * 2); ctx.fill();
-                                      ctx.fillStyle = '#3b82f6';
-                                      ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI * 2); ctx.fill();
-                                      
-                                      // Durag cap
-                                      ctx.fillStyle = '#000000';
-                                      ctx.beginPath(); ctx.arc(cx, cy - 30, r + 3, Math.PI, 0); ctx.fill();
-                                      ctx.fillRect(cx - r - 5, cy - 45, r * 2 + 10, 45);
-                                      
-                                      // Knot
-                                      ctx.beginPath(); ctx.moveTo(cx + r, cy - 15); ctx.lineTo(cx + r + 80, cy + 50); ctx.lineTo(cx + r + 25, cy + 80); ctx.fill();
-                                      ctx.beginPath(); ctx.moveTo(cx + r, cy - 15); ctx.lineTo(cx + r + 50, cy + 90); ctx.lineTo(cx - 15 + r, cy + 115); ctx.fill();
-                                      
-                                      // Eyes
-                                      ctx.fillStyle = '#000000';
-                                      const lx = cx - 60, rx = cx + 60, ey = cy + 15;
-                                      ctx.beginPath(); ctx.arc(lx, ey, 32, 0, Math.PI*2); ctx.fill();
-                                      ctx.beginPath(); ctx.arc(rx, ey, 32, 0, Math.PI*2); ctx.fill();
-                                      
-                                      // Pupils
-                                      ctx.fillStyle = '#ffffff';
-                                      ctx.beginPath(); ctx.arc(lx + 10, ey + 6, 12, 0, Math.PI*2); ctx.fill();
-                                      ctx.beginPath(); ctx.arc(rx - 6, ey + 6, 12, 0, Math.PI*2); ctx.fill();
-                                      
-                                      // Grill
-                                      const gx = cx - 65, gy = cy + 70;
-                                      ctx.fillStyle = '#000000';
-                                      ctx.fillRect(gx - 10, gy - 10, 150, 50);
-                                      for (let i = 0; i < 6; i++) {
-                                        ctx.fillStyle = '#ffffff';
-                                        ctx.fillRect(gx + i * 22, gy, 18, 28);
-                                      }
-                                      
-                                      // Sword/Dagger
-                                      ctx.lineWidth = 12;
-                                      ctx.strokeStyle = '#94a3b8';
-                                      ctx.beginPath(); ctx.moveTo(cx - 130, cy + 130); ctx.lineTo(cx - 210, cy + 210); ctx.stroke();
-                                      ctx.strokeStyle = '#1e293b';
-                                      ctx.beginPath(); ctx.moveTo(cx - 210, cy + 210); ctx.lineTo(cx - 240, cy + 240); ctx.stroke();
-                                      
-                                      logoBase64 = canvas.toDataURL('image/png').split(',')[1];
-                                    }
-                                  } catch (fallbackErr) {
-                                    console.error("Direct canvas draw failed", fallbackErr);
-                                  }
-                                }
 
-                                const finalLua = getReaperLua(window.location.origin);
-                                zip.file("BeatGangsta_Connect.lua", finalLua);
-                                
-                                // Convert base64 to binary for the PNG file
-                                const byteCharacters = atob(logoBase64);
-                                const byteNumbers = new Array(byteCharacters.length);
-                                for (let i = 0; i < byteCharacters.length; i++) {
-                                  byteNumbers[i] = byteCharacters.charCodeAt(i);
+                                  const finalLua = getReaperLua(window.location.origin);
+                                  zip.file("BeatGangsta_Connect.lua", finalLua);
+                                  
+                                  // Convert base64 to binary for the PNG file
+                                  const byteCharacters = atob(logoBase64);
+                                  const byteNumbers = new Array(byteCharacters.length);
+                                  for (let i = 0; i < byteCharacters.length; i++) {
+                                    byteNumbers[i] = byteCharacters.charCodeAt(i);
+                                  }
+                                  const byteArray = new Uint8Array(byteNumbers);
+                                  zip.file("beatgangsta_logo.png", byteArray);
+                                  
+                                  const content = await zip.generateAsync({ type: "blob" });
+                                  saveAs(content, "BeatGangsta_ReaperLink.zip");
+                                } catch (err: any) {
+                                  console.error("[BG-CONNECT-ERROR] [ZIP_GEN] Failed to generate BeatGangsta Connect ZIP:", err);
+                                  const errTrace = err.stack || err.message || String(err);
+                                  setLatestErrorLog(`[ERR_BG_ZIP_GEN] ZIP Generation failed.\nDetails:\n${errTrace}`);
+                                  setError(`[ERR_BG_ZIP_GEN] Failed to build BeatGangsta Connect package: ${err.message || "Unknown Error"}`);
                                 }
-                                const byteArray = new Uint8Array(byteNumbers);
-                                zip.file("beatgangsta_logo.png", byteArray);
-                                
-                                const content = await zip.generateAsync({ type: "blob" });
-                                saveAs(content, "BeatGangsta_ReaperLink.zip");
                               }}
                               className={`inline-flex items-center gap-2 rounded-l-full px-4 py-2 font-black text-[10px] uppercase tracking-widest transition-colors bg-[#10b981] text-white hover:bg-[#059669]`}
                             >

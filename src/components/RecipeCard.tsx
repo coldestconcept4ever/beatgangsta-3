@@ -314,17 +314,28 @@ export const RecipeCard: React.FC<RecipeCardProps> = ({ recipe: initialRecipe, i
       });
       
       if (!res.ok) {
-        const d = await res.json();
-        throw new Error(d.error || 'Failed to sync');
+        let errCode = "ERR_REAPER_SYNC_PUSH_FAILED";
+        let errMsg = "Failed to sync";
+        try {
+          const d = await res.json();
+          errCode = d.errorCode || errCode;
+          errMsg = d.error || errMsg;
+        } catch (_) {}
+        throw new Error(`[${errCode}] ${errMsg}`);
       }
       
       setSyncPin(generatedPin);
       setShowSyncSuccess(true);
       setTimeout(() => setShowSyncSuccess(false), 5000);
       setShowEmailInput(false);
-    } catch (error) {
-      console.error(error);
-      alert("Failed to push sync. Please try again.");
+    } catch (error: any) {
+      console.error("[BG-CONNECT-ERROR] [PUSH_RECIPE_SYNC] failed:", error);
+      setErrorModal({
+        isOpen: true,
+        title: "BeatGangsta Connect Error",
+        message: error.message || "Failed to push REAPER Sync to cloud.",
+        stack: error.stack || String(error)
+      });
     } finally {
       setIsPushingSync(false);
     }

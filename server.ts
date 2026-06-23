@@ -4631,56 +4631,221 @@ app.post("/api/debug/dawproject", (req, res) => {
 import { turso } from "./src/db/turso.js";
 import { v4 as uuidv4 } from "uuid";
 
+// Deep payload analyzer for BeatGangsta Connect
+function analyzeReaperPayload(payload: string) {
+  const lines = typeof payload === "string" ? payload.split(/\r?\n/) : [];
+  const counts = {
+    tracks: 0,
+    fx: 0,
+    params: 0,
+    tempo: 0,
+    key: 0,
+    marker: 0,
+    folder: 0,
+    midi_file: 0,
+    vol: 0,
+    pan: 0,
+    color: 0,
+    bus_send: 0,
+    region: 0,
+    auto: 0,
+    unknown: 0,
+    totalLines: lines.length
+  };
+
+  const trackNames: string[] = [];
+  const fxNames: string[] = [];
+
+  for (const line of lines) {
+    const trimmed = line.trim();
+    if (!trimmed) continue;
+    const firstPipe = trimmed.indexOf("|");
+    if (firstPipe === -1) {
+      counts.unknown++;
+      continue;
+    }
+    const cmd = trimmed.substring(0, firstPipe).toUpperCase();
+    const content = trimmed.substring(firstPipe + 1);
+
+    switch (cmd) {
+      case "TRACK":
+        counts.tracks++;
+        trackNames.push(content);
+        break;
+      case "FX":
+        counts.fx++;
+        fxNames.push(content);
+        break;
+      case "PARAM":
+        counts.params++;
+        break;
+      case "TEMPO":
+        counts.tempo++;
+        break;
+      case "KEY":
+        counts.key++;
+        break;
+      case "MARKER":
+        counts.marker++;
+        break;
+      case "FOLDER":
+        counts.folder++;
+        break;
+      case "MIDI_FILE":
+        counts.midi_file++;
+        break;
+      case "VOL":
+        counts.vol++;
+        break;
+      case "PAN":
+        counts.pan++;
+        break;
+      case "COLOR":
+        counts.color++;
+        break;
+      case "BUS_SEND":
+        counts.bus_send++;
+        break;
+      case "REGION":
+        counts.region++;
+        break;
+      case "AUTO":
+        counts.auto++;
+        break;
+      default:
+        counts.unknown++;
+        break;
+    }
+  }
+
+  return {
+    counts,
+    trackNames: Array.from(new Set(trackNames)),
+    fxNames: Array.from(new Set(fxNames))
+  };
+}
+
 app.post("/api/reaper-sync/push", express.json({limit: '5mb'}), async (req, res) => {
+  const requestTime = new Date().toISOString();
   try {
     const { email, pin, payload } = req.body;
     if (!email || !pin || !payload) {
-      return res.status(400).json({ error: "Missing email, pin or payload" });
+      const failLog = {
+        timestamp: requestTime,
+        event: "PUSH_FAILED",
+        errorCode: "ERR_REAPER_PUSH_MISSING_FIELDS",
+        error: "Missing email, pin or payload"
+      };
+      fs.appendFileSync(path.join(process.cwd(), "beatgangsta_connect.log"), JSON.stringify(failLog) + "\n---\n");
+      return res.status(400).json({ error: "Missing email, pin or payload", errorCode: "ERR_REAPER_PUSH_MISSING_FIELDS" });
     }
+
+    const cleanEmail = email.toLowerCase().trim();
+    const cleanPin = String(pin).trim();
+    const analysis = analyzeReaperPayload(payload);
+
+    // Write pushing event details to beatgangsta_connect.log
+    const logEntry = {
+      timestamp: requestTime,
+      event: "PUSH",
+      email: cleanEmail,
+      pin: cleanPin,
+      payloadSize: payload.length,
+      analysis: analysis
+    };
+    fs.appendFileSync(path.join(process.cwd(), "beatgangsta_connect.log"), JSON.stringify(logEntry) + "\n---\n");
 
     const client = getDb();
 
     // Delete existing sync for this email/pin if any, to keep it clean (or just keep one per email)
     await client.execute({
       sql: 'DELETE FROM reaper_syncs WHERE email = ?',
-      args: [email.toLowerCase().trim()]
+      args: [cleanEmail]
     });
 
     const id = crypto.randomUUID();
     await client.execute({
       sql: 'INSERT INTO reaper_syncs (id, email, pin, payload) VALUES (?, ?, ?, ?)',
-      args: [id, email.toLowerCase().trim(), String(pin).trim(), payload]
+      args: [id, cleanEmail, cleanPin, payload]
     });
 
-    res.json({ success: true });
+    res.json({ success: true, analysis });
   } catch (e: any) {
+    const errorTime = new Date().toISOString();
+    const errorLog = {
+      timestamp: errorTime,
+      event: "PUSH_ERROR",
+      errorCode: "ERR_REAPER_PUSH_DB_FAIL",
+      error: e.message || String(e)
+    };
+    fs.appendFileSync(path.join(process.cwd(), "beatgangsta_connect.log"), JSON.stringify(errorLog) + "\n---\n");
     console.error("Failed to push reaper sync:", e);
-    res.status(500).json({ error: "Failed to push sync to cloud" });
+    res.status(500).json({ error: "Failed to push sync to cloud", errorCode: "ERR_REAPER_PUSH_DB_FAIL" });
   }
 });
 
 app.get("/api/reaper-sync/pull", async (req, res) => {
+  const requestTime = new Date().toISOString();
   try {
     const { email, pin } = req.query;
     if (!email || !pin) {
-      return res.status(400).json({ error: "Missing email or pin" });
+      const failLog = {
+        timestamp: requestTime,
+        event: "PULL_FAILED",
+        errorCode: "ERR_REAPER_PULL_MISSING_FIELDS",
+        error: "Missing email or pin"
+      };
+      fs.appendFileSync(path.join(process.cwd(), "beatgangsta_connect.log"), JSON.stringify(failLog) + "\n---\n");
+      return res.status(400).json({ error: "Missing email or pin", errorCode: "ERR_REAPER_PULL_MISSING_FIELDS" });
     }
+
+    const cleanEmail = String(email).toLowerCase().trim();
+    const cleanPin = String(pin).trim();
 
     const client = getDb();
     const result = await client.execute({
       sql: 'SELECT payload FROM reaper_syncs WHERE email = ? AND pin = ? ORDER BY created_at DESC LIMIT 1',
-      args: [String(email).toLowerCase().trim(), String(pin).trim()]
+      args: [cleanEmail, cleanPin]
     });
 
     if (result.rows.length === 0) {
-      return res.status(404).json({ error: "No sync found for this email and PIN" });
+      const notFoundLog = {
+        timestamp: requestTime,
+        event: "PULL_NOT_FOUND",
+        errorCode: "ERR_REAPER_PULL_NOT_FOUND",
+        email: cleanEmail,
+        pin: cleanPin,
+        error: "No sync found for this email and PIN"
+      };
+      fs.appendFileSync(path.join(process.cwd(), "beatgangsta_connect.log"), JSON.stringify(notFoundLog) + "\n---\n");
+      return res.status(404).json({ error: "No sync found for this email and PIN", errorCode: "ERR_REAPER_PULL_NOT_FOUND" });
     }
 
-    const payload = result.rows[0].payload;
+    const payload = String(result.rows[0].payload || "");
+    const analysis = analyzeReaperPayload(payload);
+
+    const logEntry = {
+      timestamp: requestTime,
+      event: "PULL",
+      email: cleanEmail,
+      pin: cleanPin,
+      payloadSize: payload.length,
+      analysis: analysis
+    };
+    fs.appendFileSync(path.join(process.cwd(), "beatgangsta_connect.log"), JSON.stringify(logEntry) + "\n---\n");
+
     res.send(payload); // Send as text
   } catch (e: any) {
+    const errorTime = new Date().toISOString();
+    const errorLog = {
+      timestamp: errorTime,
+      event: "PULL_ERROR",
+      errorCode: "ERR_REAPER_PULL_DB_FAIL",
+      error: e.message || String(e)
+    };
+    fs.appendFileSync(path.join(process.cwd(), "beatgangsta_connect.log"), JSON.stringify(errorLog) + "\n---\n");
     console.error("Failed to pull reaper sync:", e);
-    res.status(500).json({ error: "Failed to pull sync from cloud" });
+    res.status(500).json({ error: "Failed to pull sync from cloud", errorCode: "ERR_REAPER_PULL_DB_FAIL" });
   }
 });
 

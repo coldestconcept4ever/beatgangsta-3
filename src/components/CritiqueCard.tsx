@@ -459,12 +459,15 @@ export const CritiqueCard: React.FC<CritiqueCardProps> = ({ critique, stems = []
   const [syncPin, setSyncPin] = useState<string | null>(null);
   const [syncEmail, setSyncEmail] = useState<string>(() => localStorage.getItem('beatgangsta_sync_email') || '');
   const [showEmailInput, setShowEmailInput] = useState(false);
+  const [syncError, setSyncError] = useState<string | null>(null);
 
   const handlePushReaperSync = async () => {
     if (!syncEmail) {
       setShowEmailInput(true);
       return;
     }
+
+    setSyncError(null);
 
     try {
       let txtContent = "";
@@ -504,13 +507,20 @@ export const CritiqueCard: React.FC<CritiqueCardProps> = ({ critique, stems = []
       });
 
       if (!res.ok) {
-        throw new Error("Failed to push sync");
+        let errCode = "ERR_REAPER_SYNC_PUSH_FAILED";
+        let errMsg = "Failed to push sync";
+        try {
+          const body = await res.json();
+          errCode = body.errorCode || errCode;
+          errMsg = body.error || errMsg;
+        } catch (_) {}
+        throw new Error(`[${errCode}] ${errMsg}`);
       }
 
       setSyncPin(generatedPin);
-    } catch (error) {
-      console.error("REAPER Sync Push failed:", error);
-      alert("Failed to push REAPER Sync to cloud.");
+    } catch (error: any) {
+      console.error("[BG-CONNECT-ERROR] [PUSH_CRITIQUE_SYNC] failed:", error);
+      setSyncError(error.message || "Failed to push REAPER Sync to cloud.");
     } finally {
       setIsPushingSync(false);
     }
@@ -737,6 +747,24 @@ export const CritiqueCard: React.FC<CritiqueCardProps> = ({ critique, stems = []
             </button>
             
             <AnimatePresence>
+              {syncError && (
+                <motion.div 
+                  initial={{ opacity: 0, y: -10 }} 
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -10 }}
+                  className="absolute top-10 left-1/2 -translate-x-1/2 w-80 z-[101] p-3 rounded-xl border border-red-500/50 bg-red-950/90 backdrop-blur-md shadow-2xl flex flex-col items-center text-center"
+                >
+                  <p className="text-[10px] text-red-400 font-bold mb-1 uppercase tracking-widest">Sync Error</p>
+                  <p className="text-[11px] text-white font-mono break-all leading-tight mb-2">{syncError}</p>
+                  <button 
+                    onClick={() => setSyncError(null)}
+                    className="text-[9px] text-white opacity-80 hover:opacity-100 underline"
+                  >
+                    Close
+                  </button>
+                </motion.div>
+              )}
+
               {showEmailInput && !syncPin && (
                 <motion.div 
                   initial={{ opacity: 0, y: -10 }} 
