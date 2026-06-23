@@ -2610,6 +2610,8 @@ The AI was unable to verify these parameters. Please investigate.`;
             setDeletedPlugins(data.gear.deletedPlugins || []);
             setDeletedInstruments(data.gear.deletedInstruments || []);
             setDeletedHardware(data.gear.deletedHardware || []);
+            setInputMode('search');
+            setHasRestoredBackup(true);
             setShowRigUI(true);
           }
           if (prefs.recipes && data.vault) {
