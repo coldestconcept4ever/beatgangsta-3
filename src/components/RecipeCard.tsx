@@ -8,10 +8,11 @@ import { regeneratePlugin, regenerateTrackingChain } from '../services/geminiSer
 const getRenderToStaticMarkup = () => import('react-dom/server').then(m => m.renderToStaticMarkup);
 import { RecipeHTMLTemplate } from './RecipeHTMLTemplate';
 import { motion } from 'motion/react';
-import { Loader2, Download, Music, Save, Cloud, Search, FileCode, RefreshCw, Layers } from 'lucide-react';
+import { Loader2, Download, Music, Save, Cloud, Search, FileCode, RefreshCw, Layers, Activity } from 'lucide-react';
 import { getSpecificMixHelp, getGangstaVoxRecipe } from '../services/geminiService';
 import { MidiDraggableButton } from './MidiDraggableButton';
-import { isMidiCapable } from '../utils/midiGenerator';
+import { isMidiCapable, getBeats, generateDrumMidiBaseData, generateMidiTrack } from '../utils/midiGenerator';
+import MidiWriter from 'midi-writer-js';
 import { generateAllMidiZip } from '../utils/exportAllMidi';
 import { generateDawProjectFromBeatRecipe } from '../utils/dawprojectUtils';
 import { stopMidiPreview } from '../utils/midiPlayer';
@@ -123,7 +124,212 @@ export const RecipeCard: React.FC<RecipeCardProps> = ({ recipe: initialRecipe, i
   }
   const [expanded, setExpanded] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  
+
+  const [isPushingSync, setIsPushingSync] = useState(false);
+  const [syncPin, setSyncPin] = useState<string | null>(null);
+  const [syncEmail, setSyncEmail] = useState<string>(() => localStorage.getItem('beatgangsta_sync_email') || '');
+  const [showEmailInput, setShowEmailInput] = useState(false);
+  const [showSyncSuccess, setShowSyncSuccess] = useState(false);
+
+  const handlePushReaperSync = async () => {
+    if (!syncEmail) {
+      setShowEmailInput(true);
+      return;
+    }
+
+    try {
+      let txtContent = "";
+      if (recipe.bpm) {
+        txtContent += `TEMPO|${recipe.bpm}\n`;
+      }
+      if (recipe.recommendedScale) {
+        txtContent += `KEY|${recipe.recommendedScale}\n`;
+      }
+
+      let currentBeatAcc = 0;
+      const songStructure = [
+        { section: 'intro', bars: 4 },
+        { section: 'hook', bars: 8 },
+        { section: 'verse', bars: 16 },
+        { section: 'hook', bars: 8 },
+        { section: 'verse', bars: 16 },
+        { section: 'hook', bars: 8 },
+        { section: 'bridge', bars: 8 },
+        { section: 'hook', bars: 8 },
+        { section: 'outro', bars: 8 },
+      ];
+      
+      for (const part of songStructure) {
+        if (recipe.drumPatterns || recipe.arrangement) {
+          txtContent += `MARKER|${currentBeatAcc/4 + 1}|${part.section.toUpperCase()}\n`;
+          txtContent += `REGION|${currentBeatAcc}|${currentBeatAcc + (part.bars * 4)}|${part.section.toUpperCase()}\n`;
+        }
+        currentBeatAcc += part.bars * 4;
+      }
+
+      const instruments = recipe.isGangstaVox ? recipe.gangstaVox?.vocalTracks || [] : recipe.instruments || [];
+      
+      instruments.forEach(inst => {
+        txtContent += `TRACK|${inst.name}\n`;
+        
+        const instNameLower = inst.name.toLowerCase();
+        const isDrumsRole = (inst as any).role ? ((inst as any).role.toLowerCase() === 'drums' || (inst as any).role.toLowerCase() === 'kick' || (inst as any).role.toLowerCase() === 'snare' || (inst as any).role.toLowerCase() === 'hihat' || (inst as any).role.toLowerCase() === '808' || (inst as any).role.toLowerCase() === 'bass') : (instNameLower.includes('drum') || instNameLower.includes('kick') || instNameLower.includes('snare') || instNameLower.includes('hat') || instNameLower.includes('perc') || instNameLower.includes('clap'));
+        
+        let color = '#ffffff';
+        if (isDrumsRole) color = '#ff5555';
+        else if (instNameLower.includes('bass') || instNameLower.includes('808')) color = '#5555ff';
+        else if (instNameLower.includes('key') || instNameLower.includes('piano') || instNameLower.includes('synth')) color = '#55ff55';
+        else if (instNameLower.includes('pad') || instNameLower.includes('string')) color = '#ffff55';
+        else if (instNameLower.includes('vox') || instNameLower.includes('vocal')) color = '#ff55ff';
+        else color = '#55ffff';
+        txtContent += `COLOR|${color}\n`;
+        
+        if (inst.busSend) {
+          txtContent += `BUS_SEND|${inst.busSend}\n`;
+        }
+
+        if (inst.fxPlugins) {
+          inst.fxPlugins.forEach(req => {
+            txtContent += `FX|${req.name}\n`;
+            if (req.deepDive && req.name.startsWith('JS:')) {
+              req.deepDive.forEach(dive => {
+                const numVal = parseFloat(String(dive.value).replace(/[^0-9.-]/g, ''));
+                if (!isNaN(numVal) && dive.parameter) {
+                  txtContent += `PARAM|${dive.parameter}|${numVal}\n`;
+                }
+              });
+            }
+          });
+        }
+        
+        if (isDrumsRole && recipe.drumPatterns) {
+           try {
+             const songStructure = [
+               { section: 'intro', bars: 4 },
+               { section: 'hook', bars: 8 },
+               { section: 'verse', bars: 16 },
+               { section: 'hook', bars: 8 },
+               { section: 'verse', bars: 16 },
+               { section: 'hook', bars: 8 },
+               { section: 'bridge', bars: 8 },
+               { section: 'hook', bars: 8 },
+               { section: 'outro', bars: 8 },
+             ];
+             let currentBeat = 0;
+             for (const part of songStructure) {
+               const pattern = (recipe.drumPatterns as any)[part.section] || recipe.drumPatterns.hook || recipe.drumPatterns.verse;
+               if (pattern) {
+                 const midiBytes = generateDrumMidiBaseData(pattern, recipe.title, part.section, recipe.bpm || 120, true, (part.bars === 16 ? 8 : part.bars) as any);
+                 const base64Midi = window.btoa(String.fromCharCode.apply(null, Array.from(midiBytes)));
+                 txtContent += `MIDI_FILE|${inst.name}|${currentBeat}|${part.bars} Bar ${part.section.toUpperCase()}|${base64Midi}\n`;
+               }
+               currentBeat += part.bars * 4;
+             }
+           } catch (e) {
+             console.error("Failed to generate MIDI_FILE for drums", inst.name, e);
+           }
+        } else if (isMidiCapable(inst.name, inst.loopGuide || '')) {
+           try {
+             let sectionMidiNotes: any = [];
+             if (Array.isArray(inst.midiNotes)) {
+               sectionMidiNotes = inst.midiNotes;
+             } else if (inst.midiNotes) {
+               sectionMidiNotes = inst.midiNotes.hook || inst.midiNotes.verse || [];
+             }
+             
+             const options = [
+               { bars: 4, variation: 'A', startBeat: 0 },
+               { bars: 4, variation: 'B', startBeat: 16 },
+               { bars: 8, variation: 'A', startBeat: 32 },
+               { bars: 8, variation: 'B', startBeat: 64 }
+             ];
+             
+             for (const opt of options) {
+               const track = generateMidiTrack(inst.name, inst.loopGuide || '', recipe.bpm || 120, opt.bars as any, opt.variation as any, recipe.title, sectionMidiNotes);
+               const write = new MidiWriter.Writer([track]);
+               const midiBytes = write.buildFile();
+               const base64Midi = window.btoa(String.fromCharCode.apply(null, Array.from(midiBytes)));
+               txtContent += `MIDI_FILE|${inst.name}|${opt.startBeat}|${opt.bars} Bar ${opt.variation}|${base64Midi}\n`;
+             }
+           } catch (e) {
+             console.error("Failed to generate MIDI_FILE for inst", inst.name, e);
+           }
+        }
+      });
+      
+      const buses = recipe.busses || [];
+      buses.forEach(bus => {
+        txtContent += `TRACK|${bus.name}\n`;
+        if (bus.fxPlugins) {
+          bus.fxPlugins.forEach(req => {
+            txtContent += `FX|${req.name}\n`;
+            if (req.deepDive && req.name.startsWith('JS:')) {
+              req.deepDive.forEach(dive => {
+                const numVal = parseFloat(String(dive.value).replace(/[^0-9.-]/g, ''));
+                if (!isNaN(numVal) && dive.parameter) {
+                  txtContent += `PARAM|${dive.parameter}|${numVal}\n`;
+                }
+              });
+            }
+          });
+        }
+      });
+
+      if (recipe.masterPlugins && recipe.masterPlugins.length > 0) {
+        txtContent += `TRACK|Master\n`;
+        txtContent += `VOL|-3.5\n`;
+        txtContent += `PAN|0\n`;
+        recipe.masterPlugins.forEach(req => {
+            txtContent += `FX|${req.name}\n`;
+            if (req.deepDive && req.name.startsWith('JS:')) {
+              req.deepDive.forEach(dive => {
+                const numVal = parseFloat(String(dive.value).replace(/[^0-9.-]/g, ''));
+                if (!isNaN(numVal) && dive.parameter) {
+                  txtContent += `PARAM|${dive.parameter}|${numVal}\n`;
+                }
+              });
+              
+              if (req.name.toLowerCase().includes('limit')) {
+                txtContent += `AUTO|Threshold|-1,-3.5;16,-3.5;32,-4.0;64,-4.5\n`;
+              }
+            }
+        });
+      }
+      
+      localStorage.setItem('beatgangsta_sync_email', syncEmail.trim());
+
+      setIsPushingSync(true);
+      const generatedPin = Math.floor(1000 + Math.random() * 9000).toString(); // 4 digit pin
+      
+      const res = await fetch('/api/reaper-sync/push', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          email: syncEmail.trim().toLowerCase(),
+          pin: generatedPin,
+          payload: txtContent
+        })
+      });
+      
+      if (!res.ok) {
+        const d = await res.json();
+        throw new Error(d.error || 'Failed to sync');
+      }
+      
+      setSyncPin(generatedPin);
+      setShowSyncSuccess(true);
+      setTimeout(() => setShowSyncSuccess(false), 5000);
+      setShowEmailInput(false);
+    } catch (error) {
+      console.error(error);
+      alert("Failed to push sync. Please try again.");
+    } finally {
+      setIsPushingSync(false);
+    }
+  };
+
   const [showGangstaVox, setShowGangstaVox] = useState(false);
   const [errorModal, setErrorModal] = useState<{ isOpen: boolean; title: string; message: string; stack?: string }>({
     isOpen: false,
@@ -485,6 +691,115 @@ export const RecipeCard: React.FC<RecipeCardProps> = ({ recipe: initialRecipe, i
             {isExportingDawProject || isLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />}
             DAWProject
           </button>
+          
+          {(dawType === 'Reaper' || dawType === 'REAPER') && (
+            <div className="relative">
+              <button 
+                onClick={handlePushReaperSync}
+                disabled={isPushingSync || isLoading}
+                className={`w-full sm:w-auto px-8 py-4 rounded-full font-black text-xs uppercase tracking-widest transition-all shadow-xl hover:scale-105 active:scale-95 flex items-center gap-2 justify-center ${
+                  showSyncSuccess
+                    ? 'bg-emerald-500 text-white shadow-[0_4px_15px_rgba(16,185,129,0.4)]'
+                    : theme === 'coldest' || theme === 'chef-mode'
+                    ? 'bg-emerald-600 text-white hover:bg-emerald-700'
+                    : 'bg-emerald-500/20 text-emerald-400 hover:bg-emerald-500/30'
+                }`}
+              >
+                {isPushingSync || isLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Activity className="w-4 h-4" />}
+                {showSyncSuccess ? t('synced') : t('sync_reaper_connect', 'Sync Connect')}
+              </button>
+
+              {showEmailInput && (
+                <div className={`absolute bottom-full right-0 mb-4 p-4 rounded-2xl border shadow-2xl z-50 w-72 backdrop-blur-xl animate-in fade-in slide-in-from-bottom-4 ${
+                  theme === 'coldest' || theme === 'chef-mode' 
+                    ? 'bg-white/95 border-emerald-200' 
+                    : 'bg-black/95 border-emerald-500/30'
+                }`}>
+                  <h4 className="font-bold text-sm mb-2 text-emerald-500">Connect to REAPER</h4>
+                  <p className={`text-xs mb-4 ${theme === 'coldest' || theme === 'chef-mode' ? 'text-slate-600' : 'text-slate-400'}`}>
+                    Enter your BeatGangsta email to sync this recipe directly to REAPER.
+                  </p>
+                  <input
+                    type="email"
+                    value={syncEmail}
+                    onChange={(e) => setSyncEmail(e.target.value)}
+                    placeholder="your@email.com"
+                    className={`w-full p-3 rounded-xl text-sm mb-3 border focus:outline-none focus:ring-2 focus:ring-emerald-500 transition-all ${
+                      theme === 'coldest' || theme === 'chef-mode'
+                        ? 'bg-slate-50 border-slate-200 text-slate-900'
+                        : 'bg-white/5 border-white/10 text-white'
+                    }`}
+                  />
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => setShowEmailInput(false)}
+                      className={`flex-1 p-2 rounded-xl text-xs font-bold transition-colors ${
+                        theme === 'coldest' || theme === 'chef-mode'
+                          ? 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                          : 'bg-white/10 text-slate-300 hover:bg-white/20'
+                      }`}
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      onClick={handlePushReaperSync}
+                      disabled={!syncEmail}
+                      className="flex-1 p-2 rounded-xl text-xs font-bold bg-emerald-500 text-white hover:bg-emerald-600 disabled:opacity-50 transition-colors"
+                    >
+                      Connect
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {syncPin && (
+                <div className={`absolute bottom-full right-0 mb-4 p-4 rounded-2xl border shadow-2xl z-50 min-w-[280px] backdrop-blur-xl animate-in fade-in slide-in-from-bottom-4 ${
+                  theme === 'coldest' || theme === 'chef-mode' 
+                    ? 'bg-white/95 border-emerald-200' 
+                    : 'bg-black/95 border-emerald-500/30'
+                }`}>
+                  <div className="flex items-center gap-3 mb-2">
+                    <div className="w-8 h-8 rounded-full bg-emerald-500/20 flex items-center justify-center">
+                      <Activity className="w-4 h-4 text-emerald-500" />
+                    </div>
+                    <div>
+                      <h4 className={`font-bold text-sm ${theme === 'coldest' || theme === 'chef-mode' ? 'text-slate-900' : 'text-white'}`}>
+                        Ready to Sync!
+                      </h4>
+                      <p className={`text-[10px] ${theme === 'coldest' || theme === 'chef-mode' ? 'text-slate-500' : 'text-slate-400'}`}>
+                        Sent to {syncEmail}
+                      </p>
+                    </div>
+                  </div>
+                  
+                  <div className={`mt-4 p-3 rounded-xl border flex flex-col items-center justify-center gap-1 ${
+                    theme === 'coldest' || theme === 'chef-mode'
+                      ? 'bg-emerald-50 border-emerald-100'
+                      : 'bg-emerald-500/10 border-emerald-500/20'
+                  }`}>
+                    <span className="text-[10px] font-bold uppercase tracking-widest text-emerald-600 dark:text-emerald-400">
+                      Your Connect PIN
+                    </span>
+                    <span className="font-mono text-3xl font-black text-emerald-600 dark:text-emerald-400 tracking-widest">
+                      {syncPin}
+                    </span>
+                  </div>
+                  
+                  <p className={`text-xs text-center mt-3 ${theme === 'coldest' || theme === 'chef-mode' ? 'text-slate-600' : 'text-slate-400'}`}>
+                    Open the <strong className="text-emerald-500">BeatGangsta Connect</strong> script in REAPER to apply this recipe.
+                  </p>
+
+                  <button 
+                    onClick={() => setSyncPin(null)}
+                    className="mt-4 w-full p-2 text-xs font-bold text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 transition-colors"
+                  >
+                    Close
+                  </button>
+                </div>
+              )}
+            </div>
+          )}
+
           <button 
             id="btn-save-recipe"
             onClick={handleSave}
@@ -919,24 +1234,198 @@ export const RecipeCard: React.FC<RecipeCardProps> = ({ recipe: initialRecipe, i
         </div>
       )}
 
-      {recipe.drumKitAdvice && drumKits?.length > 0 && !recipe.isGangstaVox && (
+      {recipe.drumKitAdvice && !recipe.isGangstaVox && (
         <div className="space-y-6 mb-8">
-          <h4 className={`text-sm font-black uppercase tracking-widest ${theme === 'coldest' ? 'text-sky-400' : 'opacity-40'}`}>{t('drum_kit_advice')}</h4>
-          <div className={`p-6 rounded-[2.5rem] border grid grid-cols-1 md:grid-cols-3 gap-6 ${
+          <h4 className={`text-sm font-black uppercase tracking-widest ${theme === 'coldest' ? 'text-sky-400' : 'opacity-40'}`}>{t('drum_kit_advice', 'Drum Kit & VST/JSFX Advice')}</h4>
+          <div className={`p-6 rounded-[2.5rem] border grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 ${
             theme === 'coldest' ? 'bg-orange-950/60 border-orange-500/40 shadow-md' : 'bg-orange-900/10 border-orange-500/20'
           }`}>
-            <div>
-              <h5 className={`font-black text-lg mb-2 ${theme === 'coldest' ? 'text-orange-300' : 'text-orange-600 dark:text-orange-400'}`}>{t('kick')}</h5>
-              <p className="text-xs font-bold opacity-90 leading-relaxed">{recipe.drumKitAdvice.kick}</p>
+            {/* KICK DRUM */}
+            <div className="space-y-3 p-4 rounded-3xl bg-black/30 border border-orange-500/10">
+              <h5 className={`font-black text-lg ${theme === 'coldest' ? 'text-orange-300' : 'text-orange-600 dark:text-orange-400'}`}>{t('kick')}</h5>
+              
+              {/* Muffling/Physical */}
+              {drumKits?.length > 0 && recipe.drumKitAdvice.kick && (
+                <div>
+                  <span className="text-[10px] uppercase font-black tracking-wider text-orange-400/70">Acoustic Tuning & Muffling</span>
+                  <p className="text-xs font-bold opacity-90 leading-relaxed mt-1">{recipe.drumKitAdvice.kick}</p>
+                </div>
+              )}
+
+              {/* Virtual Instrument */}
+              {recipe.drumKitAdvice.kickVirtualInstrument && (
+                <div className="pt-2 border-t border-orange-500/10">
+                  <span className="text-[10px] uppercase font-black tracking-wider text-orange-400/70">Virtual Instrument / Synth</span>
+                  <p className="text-xs font-black text-white mt-1">{recipe.drumKitAdvice.kickVirtualInstrument}</p>
+                </div>
+              )}
+
+              {/* FX Chain */}
+              {recipe.drumKitAdvice.kickFXPlugins && recipe.drumKitAdvice.kickFXPlugins.length > 0 && (
+                <div className="pt-2 border-t border-orange-500/10 space-y-1">
+                  <span className="text-[10px] uppercase font-black tracking-wider text-orange-400/70">Enhancement FX Chain</span>
+                  {recipe.drumKitAdvice.kickFXPlugins.map((fx, i) => (
+                    <div key={i} className="bg-black/40 p-2 rounded-xl text-left border border-white/5">
+                      <div className="text-xs font-black text-orange-200">{fx.name}</div>
+                      <div className="text-[10px] opacity-60 mt-0.5">{fx.purpose}</div>
+                      <div className="text-[10px] font-mono text-orange-300/80 mt-1 bg-black/20 p-1 rounded font-bold">{fx.settings}</div>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
-            <div>
-              <h5 className={`font-black text-lg mb-2 ${theme === 'coldest' ? 'text-orange-300' : 'text-orange-600 dark:text-orange-400'}`}>{t('snare')}</h5>
-              <p className="text-xs font-bold opacity-90 leading-relaxed">{recipe.drumKitAdvice.snare}</p>
+
+            {/* SNARE DRUM */}
+            <div className="space-y-3 p-4 rounded-3xl bg-black/30 border border-orange-500/10">
+              <h5 className={`font-black text-lg ${theme === 'coldest' ? 'text-orange-300' : 'text-orange-600 dark:text-orange-400'}`}>{t('snare')}</h5>
+              
+              {/* Muffling/Physical */}
+              {drumKits?.length > 0 && recipe.drumKitAdvice.snare && (
+                <div>
+                  <span className="text-[10px] uppercase font-black tracking-wider text-orange-400/70">Acoustic Tuning & Muffling</span>
+                  <p className="text-xs font-bold opacity-90 leading-relaxed mt-1">{recipe.drumKitAdvice.snare}</p>
+                </div>
+              )}
+
+              {/* Virtual Instrument */}
+              {recipe.drumKitAdvice.snareVirtualInstrument && (
+                <div className="pt-2 border-t border-orange-500/10">
+                  <span className="text-[10px] uppercase font-black tracking-wider text-orange-400/70">Virtual Instrument / Synth</span>
+                  <p className="text-xs font-black text-white mt-1">{recipe.drumKitAdvice.snareVirtualInstrument}</p>
+                </div>
+              )}
+
+              {/* FX Chain */}
+              {recipe.drumKitAdvice.snareFXPlugins && recipe.drumKitAdvice.snareFXPlugins.length > 0 && (
+                <div className="pt-2 border-t border-orange-500/10 space-y-1">
+                  <span className="text-[10px] uppercase font-black tracking-wider text-orange-400/70">Enhancement FX Chain</span>
+                  {recipe.drumKitAdvice.snareFXPlugins.map((fx, i) => (
+                    <div key={i} className="bg-black/40 p-2 rounded-xl text-left border border-white/5">
+                      <div className="text-xs font-black text-orange-200">{fx.name}</div>
+                      <div className="text-[10px] opacity-60 mt-0.5">{fx.purpose}</div>
+                      <div className="text-[10px] font-mono text-orange-300/80 mt-1 bg-black/20 p-1 rounded font-bold">{fx.settings}</div>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
-            <div>
-              <h5 className={`font-black text-lg mb-2 ${theme === 'coldest' ? 'text-orange-300' : 'text-orange-600 dark:text-orange-400'}`}>{t('toms')}</h5>
-              <p className="text-xs font-bold opacity-90 leading-relaxed">{recipe.drumKitAdvice.toms}</p>
+
+            {/* HI-HATS */}
+            <div className="space-y-3 p-4 rounded-3xl bg-black/30 border border-orange-500/10">
+              <h5 className={`font-black text-lg ${theme === 'coldest' ? 'text-orange-300' : 'text-orange-600 dark:text-orange-400'}`}>{t('hiHat', 'Hi-Hats')}</h5>
+              
+              {/* Muffling/Physical */}
+              {recipe.drumKitAdvice.hiHat && (
+                <div>
+                  <span className="text-[10px] uppercase font-black tracking-wider text-orange-400/70">Acoustic & Style Advice</span>
+                  <p className="text-xs font-bold opacity-90 leading-relaxed mt-1">{recipe.drumKitAdvice.hiHat}</p>
+                </div>
+              )}
+
+              {/* Virtual Instrument */}
+              {recipe.drumKitAdvice.hiHatVirtualInstrument && (
+                <div className="pt-2 border-t border-orange-500/10">
+                  <span className="text-[10px] uppercase font-black tracking-wider text-orange-400/70">Virtual Instrument / Synth</span>
+                  <p className="text-xs font-black text-white mt-1">{recipe.drumKitAdvice.hiHatVirtualInstrument}</p>
+                </div>
+              )}
+
+              {/* FX Chain */}
+              {recipe.drumKitAdvice.hiHatFXPlugins && recipe.drumKitAdvice.hiHatFXPlugins.length > 0 && (
+                <div className="pt-2 border-t border-orange-500/10 space-y-1">
+                  <span className="text-[10px] uppercase font-black tracking-wider text-orange-400/70">Enhancement FX Chain</span>
+                  {recipe.drumKitAdvice.hiHatFXPlugins.map((fx, i) => (
+                    <div key={i} className="bg-black/40 p-2 rounded-xl text-left border border-white/5">
+                      <div className="text-xs font-black text-orange-200">{fx.name}</div>
+                      <div className="text-[10px] opacity-60 mt-0.5">{fx.purpose}</div>
+                      <div className="text-[10px] font-mono text-orange-300/80 mt-1 bg-black/20 p-1 rounded font-bold">{fx.settings}</div>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {/* Toms (Fallback / Extra info) */}
+              {drumKits?.length > 0 && recipe.drumKitAdvice.toms && (
+                <div className="pt-2 border-t border-orange-500/10">
+                  <span className="text-[10px] uppercase font-black tracking-wider text-orange-400/70">Acoustic Toms Tuning</span>
+                  <p className="text-xs font-bold opacity-90 leading-relaxed mt-1">{recipe.drumKitAdvice.toms}</p>
+                </div>
+              )}
             </div>
+
+            {/* CLAPS & PERCUSSION */}
+            {(recipe.drumKitAdvice.clap || recipe.drumKitAdvice.clapVirtualInstrument || (recipe.drumKitAdvice.clapFXPlugins && recipe.drumKitAdvice.clapFXPlugins.length > 0)) && (
+              <div className="space-y-3 p-4 rounded-3xl bg-black/30 border border-orange-500/10">
+                <h5 className={`font-black text-lg ${theme === 'coldest' ? 'text-orange-300' : 'text-orange-600 dark:text-orange-400'}`}>{t('clap', 'Claps & Percussion')}</h5>
+                
+                {/* Acoustic / Style Advice */}
+                {recipe.drumKitAdvice.clap && (
+                  <div>
+                    <span className="text-[10px] uppercase font-black tracking-wider text-orange-400/70">Acoustic & Style Advice</span>
+                    <p className="text-xs font-bold opacity-90 leading-relaxed mt-1">{recipe.drumKitAdvice.clap}</p>
+                  </div>
+                )}
+
+                {/* Virtual Instrument */}
+                {recipe.drumKitAdvice.clapVirtualInstrument && (
+                  <div className="pt-2 border-t border-orange-500/10">
+                    <span className="text-[10px] uppercase font-black tracking-wider text-orange-400/70">Virtual Instrument / Synth</span>
+                    <p className="text-xs font-black text-white mt-1">{recipe.drumKitAdvice.clapVirtualInstrument}</p>
+                  </div>
+                )}
+
+                {/* FX Chain */}
+                {recipe.drumKitAdvice.clapFXPlugins && recipe.drumKitAdvice.clapFXPlugins.length > 0 && (
+                  <div className="pt-2 border-t border-orange-500/10 space-y-1">
+                    <span className="text-[10px] uppercase font-black tracking-wider text-orange-400/70">Enhancement FX Chain</span>
+                    {recipe.drumKitAdvice.clapFXPlugins.map((fx, i) => (
+                      <div key={i} className="bg-black/40 p-2 rounded-xl text-left border border-white/5">
+                        <div className="text-xs font-black text-orange-200">{fx.name}</div>
+                        <div className="text-[10px] opacity-60 mt-0.5">{fx.purpose}</div>
+                        <div className="text-[10px] font-mono text-orange-300/80 mt-1 bg-black/20 p-1 rounded font-bold">{fx.settings}</div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* BASS / 808 */}
+            {(recipe.drumKitAdvice.bass || recipe.drumKitAdvice.bassVirtualInstrument || (recipe.drumKitAdvice.bassFXPlugins && recipe.drumKitAdvice.bassFXPlugins.length > 0)) && (
+              <div className="space-y-3 p-4 rounded-3xl bg-black/30 border border-orange-500/10">
+                <h5 className={`font-black text-lg ${theme === 'coldest' ? 'text-orange-300' : 'text-orange-600 dark:text-orange-400'}`}>{t('bass', 'Bass & Sub/808')}</h5>
+                
+                {/* Acoustic / Style Advice */}
+                {recipe.drumKitAdvice.bass && (
+                  <div>
+                    <span className="text-[10px] uppercase font-black tracking-wider text-orange-400/70">Low End Tuning & Pocket</span>
+                    <p className="text-xs font-bold opacity-90 leading-relaxed mt-1">{recipe.drumKitAdvice.bass}</p>
+                  </div>
+                )}
+
+                {/* Virtual Instrument */}
+                {recipe.drumKitAdvice.bassVirtualInstrument && (
+                  <div className="pt-2 border-t border-orange-500/10">
+                    <span className="text-[10px] uppercase font-black tracking-wider text-orange-400/70">Virtual Instrument / Synth</span>
+                    <p className="text-xs font-black text-white mt-1">{recipe.drumKitAdvice.bassVirtualInstrument}</p>
+                  </div>
+                )}
+
+                {/* FX Chain */}
+                {recipe.drumKitAdvice.bassFXPlugins && recipe.drumKitAdvice.bassFXPlugins.length > 0 && (
+                  <div className="pt-2 border-t border-orange-500/10 space-y-1">
+                    <span className="text-[10px] uppercase font-black tracking-wider text-orange-400/70">Enhancement FX Chain</span>
+                    {recipe.drumKitAdvice.bassFXPlugins.map((fx, i) => (
+                      <div key={i} className="bg-black/40 p-2 rounded-xl text-left border border-white/5">
+                        <div className="text-xs font-black text-orange-200">{fx.name}</div>
+                        <div className="text-[10px] opacity-60 mt-0.5">{fx.purpose}</div>
+                        <div className="text-[10px] font-mono text-orange-300/80 mt-1 bg-black/20 p-1 rounded font-bold">{fx.settings}</div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
           </div>
         </div>
       )}

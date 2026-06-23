@@ -1,16 +1,16 @@
 export interface JSFXParameter {
   index: number;
   name: string;
-  unit: string;
+  unit?: string;
   min: number;
   max: number;
   defaultVal: number;
-  description: string;
+  description?: string;
 }
 
 export interface JSFXProfile {
   name: string;
-  category: "Dynamics" | "EQ & Filtering" | "Time & Modulation" | "Routing & Utility" | "Guitar & Amp";
+  category: string;
   shortName: string;
   description: string;
   howItWorks: string;

@@ -279,6 +279,7 @@ export interface BeatRecipe {
   bpm: number;
   description: string;
   artistTypes: string[];
+  isJsfxMode?: boolean;
   
   instruments: InstrumentTrack[];
   busses: BusTrack[];
@@ -307,6 +308,19 @@ export interface BeatRecipe {
     kick: string;
     snare: string;
     toms: string;
+    hiHat?: string;
+    clap?: string;
+    bass?: string;
+    kickVirtualInstrument?: string;
+    kickFXPlugins?: { name: string; purpose: string; settings: string }[];
+    snareVirtualInstrument?: string;
+    snareFXPlugins?: { name: string; purpose: string; settings: string }[];
+    hiHatVirtualInstrument?: string;
+    hiHatFXPlugins?: { name: string; purpose: string; settings: string }[];
+    clapVirtualInstrument?: string;
+    clapFXPlugins?: { name: string; purpose: string; settings: string }[];
+    bassVirtualInstrument?: string;
+    bassFXPlugins?: { name: string; purpose: string; settings: string }[];
   };
   audioBase64?: string;
   geminiFileUri?: string;

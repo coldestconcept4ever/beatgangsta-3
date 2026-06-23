@@ -50,6 +50,30 @@ For each stem, track, or bus that requires an effect:
 const ADVANCED_MIDI_PROMPT = `
     CRITICAL - ADVANCED MIDI & DRUM PATTERN GENERATION:
     Always include decent, best-in-class patterns instead of sometimes leaving it simple, so users don't feel cheated.
+    CRITICAL - DRUM INSTRUMENTS AND FX ADVICE in 'drumKitAdvice':
+    You MUST provide detailed and valid recommendations in the 'drumKitAdvice' object:
+    - 'hiHat': Specific tuning/muffling/style advice for the hi-hats.
+    - 'clap': Specific acoustic, layered, or performance-style advice for claps/rimshots/percussions (e.g., room acoustics, handclapping count, or synthetic layering).
+    - 'bass': Specific acoustic bass guitar tuning or synth bass/808 sub layering style advice (e.g., sidechain interaction with kick, glide settings, sub bass EQ cuts).
+    - 'kickVirtualInstrument': Recommend EXACTLY which virtual instrument / synth plugin to load for the Kick sound.
+      - If JSFX MODE IS ACTIVE, you MUST recommend a native JSFX instrument like "JS: Thunderkick" or "JS: 50 Hz Kicker" with exact slider/index settings (e.g. Freq: 55Hz, Decay: 70%, Click: 30%).
+      - If JSFX MODE IS INACTIVE, recommend a top VST virtual instrument like "SubLab", "Serum" (with a sub sine sweep patch), "EZdrummer 3", or "Sitala", with detailed preset/sound-shaping parameters.
+    - 'kickFXPlugins': An array of FX plugins to add onto the Kick track to make it sound industry-grade.
+      - If JSFX MODE IS ACTIVE, use JSFX from the database like "JS: Digital Drum Compressor", "JS: Saturation", "JS: Bad Buss Mojo Waveshaper", or "JS: Transient Controller" with exact settings.
+      - If JSFX MODE IS INACTIVE, use VSTs like "FabFilter Pro-C 2", "Decapitator", "rc-20 retro color", or "Devil-Loc" with exact settings.
+    - 'snareVirtualInstrument': Recommend which virtual instrument / sample-trigger to load for the Snare (e.g., "JS: Gaussian Noise Generator" or Cockos drum samplers in JSFX mode, or "Sitala", "Addictive Drums 2", or "Battery 4" in VST mode) and its parameters.
+    - 'snareFXPlugins': An array of FX plugins to enhance the Snare (e.g., "JS: Dirt Squeeze Compressor" or "JS: Delay" in JSFX mode, or "Pro-Q 3", "Decapitator", or "Valhalla VintageVerb" in VST mode) with exact settings.
+    - 'hiHatVirtualInstrument': Recommend which virtual instrument to use for the Hi-Hat (e.g. "JS: Gaussian Noise Generator" high-passed in JSFX mode, or "Sitala" / "Battery 4" in VST mode) with detailed parameters.
+    - 'hiHatFXPlugins': An array of FX plugins to enhance the Hi-Hat (e.g. "JS: Transient Controller" or "JS: Chorus" in JSFX mode, or "rc-20 retro color" wow/flutter & noise or "MicroShift" in VST mode) with exact settings.
+    - 'clapVirtualInstrument': Recommend which virtual instrument / sample-trigger to load for the Clap (e.g., "JS: White Noise Generator" or native JSFX samplers in JSFX mode, or "Sitala", "Battery 4", or custom clap samples in VST mode) with detailed parameters.
+    - 'clapFXPlugins': An array of FX plugins to enhance the Clap (e.g., "JS: Ozzifier Chorus", "JS: Delay" or "JS: Tremolo" in JSFX mode, or "Valhalla VintageVerb", "Soundtoys Decapitator", or "MicroShift" in VST mode) with exact settings.
+    - 'bassVirtualInstrument': Recommend EXACTLY which virtual instrument / synth plugin to load for the Bass / 808 sound.
+      - If JSFX MODE IS ACTIVE, you MUST recommend a native JSFX instrument or synth like "JS: Tone Generator" (configured as a sub sine/triangle wave), or a native Cockos synth plugin with precise settings.
+      - If JSFX MODE IS INACTIVE, recommend top VSTs like "SubLab", "Spectrasonics Trilian", "Serum" (for 808 glides/sub bass), "Arturia Mini V", or "Trilogy" with exact preset details.
+    - 'bassFXPlugins': An array of FX plugins to shape, saturate, compress, or sidechain the Bass/808.
+      - If JSFX MODE IS ACTIVE, use JSFX from the database like "JS: Saturation", "JS: Compciter", "JS: Bass Manager/Booster", or "JS: Non-Linear Processor" with exact settings.
+      - If JSFX MODE IS INACTIVE, use VSTs like "FabFilter Pro-MB", "Decapitator", "Pultec EQP-1A", or "CamelCrusher" with exact settings.
+
     CRITICAL - MIDI NOTE COMPLEXITY & REALISM (ANTI 2-NOTE GENERATION):
     - You MUST generate incredibly realistic, multi-note MIDI patterns. Aim for at least 15-40 notes per sequence for melodies and arps, at least 8-20 notes for chord progressions, and at least 15-30 notes for basslines/808s over 4/8 bars.
     - NEVER generate simple 2-note or 4-note patterns unless it is literally a static drone. Users complain when the system generates "shitty and unrealistic 2 note" patterns. It MUST be a proper 4 or 8 bar pattern.
@@ -64,8 +88,19 @@ const ADVANCED_MIDI_PROMPT = `
     - For Drum Patterns: 16 steps = 1 bar. Therefore, you MUST provide steps ranging from 1 to 64 (for 4 bars) or 1 to 128 (for 8 bars). If isDoubleTime is true, double these numbers (1-128 for 4 bars, 1-256 for 8 bars).
     - For 'duration' and 'wait' values, you MUST ONLY use valid musical subdivisions: '1' (whole), '2' (half), '4' (quarter), '8' (eighth), '16' (sixteenth), '32', '64', or triplet/dotted variations (e.g., '8t', '4d'). Do NOT use invalid numbers like '6', '3', or '5'.
     For Drum Patterns (kick, snare, hiHat):
-    - Velocity Dynamics: You MUST use a wide range of velocities (1-127). Include ghost notes (velocity 10-40), accents (velocity 100-127), and natural human variation. No two consecutive hits should have the exact same velocity unless it's a deliberate robotic effect.
-    - Groove & Micro-timing: Utilize the 'swing' parameters effectively. Create push/pull feels.
+    - Differentiated Swing Percentages: Utilize the 'swing' object parameters (0-100) to specify natural, realistic groove. 
+      - Hi-Hats: Typically carry the main pocket of the track. Use 15% to 55% swing for a standard modern trap bounce or up to 60-70% for heavy boom-bap and lofi beats.
+      - Snare/Clap: Add a very subtle swing (5% to 20%) to let the snare lag/drag slightly behind, creating a laid-back feel.
+      - Kick: Keep mostly locked (0% to 10% swing) to preserve the hard transient punch on downbeats, but you can increase up to 15-30% for loose boom-bap swing to gel with the bass.
+    - Velocity Dynamics & Humanization:
+      - Hi-Hats: MUST follow a dynamic pulse. Do not make velocities flat. Use alternating strong-weak-medium-weak velocity accents (e.g., step 1: 110, step 3: 75, step 5: 105, step 7: 70). For double-time (isDoubleTime: true) rolls and fills, use ramping crescendos/decrescendos (e.g., 40 -> 65 -> 90 -> 115) to sound natural.
+      - Snare: Main anchor hits (on beats 2 & 4, or beat 3 in half-time) must be hard-hitting and consistent (velocities 110-125). Accent/ghost snare notes and fills must use much softer velocities (25-50) to build realistic syncopation.
+      - Kick: Primary downbeats should have high, heavy velocities (112-125). Syncopated or off-beat kicks should use softer velocities (85-100) to create a "pocket" and human feel.
+    - Song Section Arrangement Dynamics: Match drum velocities, density, and swing directly to song sections to tell a narrative:
+      - Intro: Sparse drum placement, lower velocity (50-80) to feel filtered, low swing or straight to build expectation.
+      - Verse: Solid, driving groove. Moderate swing and steady velocities to anchor the groove without distracting from the vocals.
+      - Hook (Chorus): Maximum energy! Bring in high-velocity accents (115-127), complex/energetic hi-hat rolls with full swing, and aggressive, syncopated kicks to create a massive premium bounce.
+      - Bridge/Outro: Sparser patterns, declining velocities (60-90) to create a smooth comedown/fade-out feel.
     - Complexity: Use 'isDoubleTime' (32 steps) to create intricate hi-hat rolls, syncopated kick patterns, and complex snare fills.
     For Instrument MIDI Notes (midiNotes array):
     - Harmonic Depth: Generate complex chords (7ths, 9ths, 11ths, 13ths, suspended chords, inversions). Do not just use basic triads.
@@ -663,9 +698,77 @@ export const getUnifiedRecipeSchema = () => {
         properties: {
           kick: { type: Type.STRING },
           snare: { type: Type.STRING },
-          toms: { type: Type.STRING }
+          toms: { type: Type.STRING },
+          hiHat: { type: Type.STRING },
+          kickVirtualInstrument: { type: Type.STRING },
+          kickFXPlugins: {
+            type: Type.ARRAY,
+            items: {
+              type: Type.OBJECT,
+              properties: {
+                name: { type: Type.STRING },
+                purpose: { type: Type.STRING },
+                settings: { type: Type.STRING }
+              },
+              required: ["name", "purpose", "settings"]
+            }
+          },
+          snareVirtualInstrument: { type: Type.STRING },
+          snareFXPlugins: {
+            type: Type.ARRAY,
+            items: {
+              type: Type.OBJECT,
+              properties: {
+                name: { type: Type.STRING },
+                purpose: { type: Type.STRING },
+                settings: { type: Type.STRING }
+              },
+              required: ["name", "purpose", "settings"]
+            }
+          },
+          hiHatVirtualInstrument: { type: Type.STRING },
+          hiHatFXPlugins: {
+            type: Type.ARRAY,
+            items: {
+              type: Type.OBJECT,
+              properties: {
+                name: { type: Type.STRING },
+                purpose: { type: Type.STRING },
+                settings: { type: Type.STRING }
+              },
+              required: ["name", "purpose", "settings"]
+            }
+          },
+          clap: { type: Type.STRING },
+          clapVirtualInstrument: { type: Type.STRING },
+          clapFXPlugins: {
+            type: Type.ARRAY,
+            items: {
+              type: Type.OBJECT,
+              properties: {
+                name: { type: Type.STRING },
+                purpose: { type: Type.STRING },
+                settings: { type: Type.STRING }
+              },
+              required: ["name", "purpose", "settings"]
+            }
+          },
+          bass: { type: Type.STRING },
+          bassVirtualInstrument: { type: Type.STRING },
+          bassFXPlugins: {
+            type: Type.ARRAY,
+            items: {
+              type: Type.OBJECT,
+              properties: {
+                name: { type: Type.STRING },
+                purpose: { type: Type.STRING },
+                settings: { type: Type.STRING }
+              },
+              required: ["name", "purpose", "settings"]
+            }
+          }
         },
-        required: ["kick", "snare", "toms"]
+        required: ["kick", "snare", "toms", "hiHat"]
       },
       instruments: {
         type: Type.ARRAY,
@@ -679,18 +782,16 @@ export const getUnifiedRecipeSchema = () => {
             busSend: { type: Type.STRING },
             loopGuide: { type: Type.STRING },
             midiNotes: {
-              type: Type.ARRAY,
-              description: "MANDATORY. MIDI pattern for this instrument. You MUST include at least 15-40 notes for melodies/arps, 8-20 for chords, preventing basic 2-note loops. The sum of all 'duration' and 'wait' values MUST equal exactly 16 beats (for 4 bars) or 32 beats (for 8 bars).",
-              items: {
-                type: Type.OBJECT,
-                properties: {
-                  pitch: { type: Type.STRING },
-                  duration: { type: Type.STRING },
-                  wait: { type: Type.STRING },
-                  velocity: { type: Type.NUMBER }
-                },
-                required: ["pitch", "duration", "wait", "velocity"]
-              }
+              type: Type.OBJECT,
+              description: "MANDATORY. MIDI patterns for this instrument across different sections.",
+              properties: {
+                intro: { type: Type.ARRAY, items: { type: Type.OBJECT, properties: { pitch: { type: Type.STRING }, duration: { type: Type.STRING }, wait: { type: Type.STRING }, velocity: { type: Type.NUMBER } }, required: ["pitch", "duration", "wait", "velocity"] } },
+                verse: { type: Type.ARRAY, items: { type: Type.OBJECT, properties: { pitch: { type: Type.STRING }, duration: { type: Type.STRING }, wait: { type: Type.STRING }, velocity: { type: Type.NUMBER } }, required: ["pitch", "duration", "wait", "velocity"] } },
+                hook: { type: Type.ARRAY, items: { type: Type.OBJECT, properties: { pitch: { type: Type.STRING }, duration: { type: Type.STRING }, wait: { type: Type.STRING }, velocity: { type: Type.NUMBER } }, required: ["pitch", "duration", "wait", "velocity"] } },
+                bridge: { type: Type.ARRAY, items: { type: Type.OBJECT, properties: { pitch: { type: Type.STRING }, duration: { type: Type.STRING }, wait: { type: Type.STRING }, velocity: { type: Type.NUMBER } }, required: ["pitch", "duration", "wait", "velocity"] } },
+                outro: { type: Type.ARRAY, items: { type: Type.OBJECT, properties: { pitch: { type: Type.STRING }, duration: { type: Type.STRING }, wait: { type: Type.STRING }, velocity: { type: Type.NUMBER } }, required: ["pitch", "duration", "wait", "velocity"] } }
+              },
+              required: ["intro", "verse", "hook", "bridge", "outro"]
             },
             deepDive: {
               type: Type.ARRAY,
@@ -1621,7 +1722,7 @@ export const generateStructuralBlueprint = async (searchQuery: string, language:
     return {} as StructuralBlueprint;
   }
 };
-export const getBeatRecommendations = async (plugins: VSTPlugin[], analogInstruments: Hardware[] = [], analogHardware: Hardware[] = [], drumKits: Hardware[] = [], excludeAnalog: boolean = false, dawType: string | null = null, starredPlugins: string[] = [], isGangstaVox: boolean = false, language: string = 'en', isMultiBandMode: boolean = false, bpm?: string, context?: string): Promise<RecommendationResponse> => {
+export const getBeatRecommendations = async (plugins: VSTPlugin[], analogInstruments: Hardware[] = [], analogHardware: Hardware[] = [], drumKits: Hardware[] = [], excludeAnalog: boolean = false, dawType: string | null = null, starredPlugins: string[] = [], isGangstaVox: boolean = false, language: string = 'en', isMultiBandMode: boolean = false, bpm?: string, context?: string, isJsfxMode: boolean = false): Promise<RecommendationResponse> => {
   const ai = getAI();
   const pluginListStr = plugins.map(p => {
     let str = `${p.vendor} - ${p.name} (${p.type})`;
@@ -1650,9 +1751,28 @@ export const getBeatRecommendations = async (plugins: VSTPlugin[], analogInstrum
       ==================================================
   `;
 
+  let jsfxDiktat = "";
+  if (isJsfxMode) {
+    const simplifiedDB = JSFX_DATABASE.map(p => ({
+      name: p.name.startsWith('JS: ') ? p.name : 'JS: ' + p.name,
+      sliders: p.sliders.map(s => `[${s.index}] ${s.name} (min:${s.min}, max:${s.max})`)
+    }));
+    
+    jsfxDiktat = `
+      CRITICAL INSTRUCTION: JSFX MODE IS ENABLED.
+      You are FORBIDDEN from recommending any third-party VSTs, VST3s, or AUs.
+      You MUST ONLY recommend JSFX plugins from the provided 'JSFX Database' list below.
+      When providing 'deepDive' settings, you MUST include 'parameter' names that EXACTLY match the slider names from the JSFX Database, and you MUST ensure the values are within the allowed min/max range.
+
+      JSFX DATABASE (ONLY use these plugins):
+      ${JSON.stringify(simplifiedDB)}
+    `;
+  }
+
   const prompt = isGangstaVox ? `
     You are an expert audio engineer and producer.
     ${nonJsfxDiktat}
+    ${jsfxDiktat}
     Analyze my VST plugin list and suggest 1 high-level, extremely detailed "Vocal FX Chain Recipe" for the craziest vocal mix.
     ${additionalContextStr}
     ${bpmStr}
@@ -1728,7 +1848,7 @@ export const getBeatRecommendations = async (plugins: VSTPlugin[], analogInstrum
     CRITICAL: If the user has connected pedals or amps to an instrument (as listed in their analog hardware), you MUST include those specific pedals and amps in the fxPlugins array for that instrument and provide real, detailed parameter settings for them to achieve the desired sound.
     - ADVANCED ROUTING (OPTIONAL): If a plugin should be processed in parallel or on a specific frequency band (Multiband Split), use the 'routing' (e.g., "Parallel A (Crush)", "Parallel B (Space)") or 'band' (e.g., "Lows (0-150Hz)", "Highs (2kHz+)") properties in the fxPlugin object.
     - Specify which bus to send to (busSend).
-    - Provide a detailed MIDI pattern for this instrument in the 'midiNotes' array, tailored specifically to the tempo (BPM) and style of this beat. If the user searched for a specific song or uploaded an MP3, the MIDI pattern MUST closely match the iconic melodies, chords, and rhythms of that original song. Use synth-based sounds for all instruments, characteristic of modern rap production.
+    - Provide detailed MIDI patterns for this instrument in the 'midiNotes' object (intro, verse, hook, bridge, outro arrays), tailored to the tempo (BPM). Each array MUST equal exactly 16 beats (4 bars) or 32 beats (8 bars) based on the section. If the user provided a reference, match it.
       Each note in the array MUST have:
       - pitch: (e.g., 'C4')
       - duration: (e.g., '4', '8', '16')
@@ -1770,7 +1890,7 @@ export const getBeatRecommendations = async (plugins: VSTPlugin[], analogInstrum
     throw new Error(`Format error in getBeatRecommendations. Details: ${e.message || e}\nRaw: ${typeof jsonStr !== 'undefined' ? jsonStr.substring(0, 500) : "empty"}\nSafety: ${JSON.stringify(response?.candidates?.[0]?.safetyRatings || "none")}`);
   }
 };
-export const getCustomBeatRecommendations = async (plugins: VSTPlugin[], query: string, analogInstruments: Hardware[] = [], analogHardware: Hardware[] = [], drumKits: Hardware[] = [], excludeAnalog: boolean = false, dawType: string | null = null, starredPlugins: string[] = [], isGangstaVox: boolean = false, language: string = 'en', isMultiBandMode: boolean = false, bpm?: string, context?: string): Promise<RecommendationResponse> => {
+export const getCustomBeatRecommendations = async (plugins: VSTPlugin[], query: string, analogInstruments: Hardware[] = [], analogHardware: Hardware[] = [], drumKits: Hardware[] = [], excludeAnalog: boolean = false, dawType: string | null = null, starredPlugins: string[] = [], isGangstaVox: boolean = false, language: string = 'en', isMultiBandMode: boolean = false, bpm?: string, context?: string, isJsfxMode: boolean = false): Promise<RecommendationResponse> => {
   const ai = getAI();
   const pluginListStr = plugins.map(p => {
     let str = `${p.vendor} - ${p.name} (${p.type})`;
@@ -1810,9 +1930,27 @@ export const getCustomBeatRecommendations = async (plugins: VSTPlugin[], query: 
       ==================================================
   `;
 
+  let jsfxDiktat = "";
+  if (isJsfxMode) {
+    const simplifiedDB = JSFX_DATABASE.map(p => ({
+      name: p.name.startsWith('JS: ') ? p.name : 'JS: ' + p.name,
+      sliders: p.sliders.map(s => `[${s.index}] ${s.name} (min:${s.min}, max:${s.max})`)
+    }));
+    jsfxDiktat = `
+      CRITICAL INSTRUCTION: JSFX MODE IS ENABLED.
+      You are FORBIDDEN from recommending any third-party VSTs, VST3s, or AUs.
+      You MUST ONLY recommend JSFX plugins from the provided 'JSFX Database' list below.
+      When providing 'deepDive' settings, you MUST include 'parameter' names that EXACTLY match the slider names from the JSFX Database, and you MUST ensure the values are within the allowed min/max range.
+
+      JSFX DATABASE (ONLY use these plugins):
+      ${JSON.stringify(simplifiedDB)}
+    `;
+  }
+
   const prompt = isGangstaVox ? `
     You are an expert audio engineer and producer.
     ${nonJsfxDiktat}
+    ${jsfxDiktat}
     Analyze my VST plugin list and suggest 1 high-level, extremely detailed "Vocal FX Chain Recipe" specifically for a "${query} type vocal".
     ${additionalContextStr}
     ${bpmStr}
@@ -1880,7 +2018,7 @@ export const getCustomBeatRecommendations = async (plugins: VSTPlugin[], query: 
     CRITICAL: If the user has connected pedals or amps to an instrument (as listed in their analog hardware), you MUST include those specific pedals and amps in the fxPlugins array for that instrument and provide real, detailed parameter settings for them to achieve the desired sound.
     - ADVANCED ROUTING (OPTIONAL): If a plugin should be processed in parallel or on a specific frequency band (Multiband Split), use the 'routing' (e.g., "Parallel A (Crush)", "Parallel B (Space)") or 'band' (e.g., "Lows (0-150Hz)", "Highs (2kHz+)") properties in the fxPlugin object.
     - Specify which bus to send to (busSend).
-    - Provide a detailed MIDI pattern for this instrument in the 'midiNotes' array, tailored specifically to the tempo (BPM) and style of this beat. If the user searched for a specific song or uploaded an MP3, the MIDI pattern MUST closely match the iconic melodies, chords, and rhythms of that original song. Use synth-based sounds for all instruments, characteristic of modern rap production.
+    - Provide detailed MIDI patterns for this instrument in the 'midiNotes' object (intro, verse, hook, bridge, outro arrays), tailored to the tempo (BPM). Each array MUST equal exactly 16 beats (4 bars) or 32 beats (8 bars) based on the section. If the user provided a reference, match it.
       Each note in the array MUST have:
       - pitch: (e.g., 'C4')
       - duration: (e.g., '4', '8', '16')
@@ -1925,7 +2063,7 @@ export const getCustomBeatRecommendations = async (plugins: VSTPlugin[], query: 
   }
   return result;
 };
-export const getSongBeatRecommendations = async (plugins: VSTPlugin[], songQuery: string, analogInstruments: Hardware[] = [], analogHardware: Hardware[] = [], drumKits: Hardware[] = [], excludeAnalog: boolean = false, dawType: string | null = null, starredPlugins: string[] = [], isGangstaVox: boolean = false, language: string = 'en', isMultiBandMode: boolean = false, bpm?: string, context?: string): Promise<RecommendationResponse> => {
+export const getSongBeatRecommendations = async (plugins: VSTPlugin[], songQuery: string, analogInstruments: Hardware[] = [], analogHardware: Hardware[] = [], drumKits: Hardware[] = [], excludeAnalog: boolean = false, dawType: string | null = null, starredPlugins: string[] = [], isGangstaVox: boolean = false, language: string = 'en', isMultiBandMode: boolean = false, bpm?: string, context?: string, isJsfxMode: boolean = false): Promise<RecommendationResponse> => {
   const blueprint = await generateStructuralBlueprint(songQuery, language);
   const ai = getAI();
   const pluginListStr = plugins.map(p => {
@@ -1953,9 +2091,27 @@ export const getSongBeatRecommendations = async (plugins: VSTPlugin[], songQuery
       ==================================================
   `;
 
+  let jsfxDiktat = "";
+  if (isJsfxMode) {
+    const simplifiedDB = JSFX_DATABASE.map(p => ({
+      name: p.name.startsWith('JS: ') ? p.name : 'JS: ' + p.name,
+      sliders: p.sliders.map(s => `[${s.index}] ${s.name} (min:${s.min}, max:${s.max})`)
+    }));
+    jsfxDiktat = `
+      CRITICAL INSTRUCTION: JSFX MODE IS ENABLED.
+      You are FORBIDDEN from recommending any third-party VSTs, VST3s, or AUs.
+      You MUST ONLY recommend JSFX plugins from the provided 'JSFX Database' list below.
+      When providing 'deepDive' settings, you MUST include 'parameter' names that EXACTLY match the slider names from the JSFX Database, and you MUST ensure the values are within the allowed min/max range.
+
+      JSFX DATABASE (ONLY use these plugins):
+      ${JSON.stringify(simplifiedDB)}
+    `;
+  }
+
   const prompt = isGangstaVox ? `
     You are an expert audio engineer and producer.
     ${nonJsfxDiktat}
+    ${jsfxDiktat}
     Analyze my VST plugin list and suggest 1 high-level, extremely detailed "Vocal FX Chain Recipe" that recreate the vocal production style, effects, and mixing techniques of the song "${songQuery}".
     ${additionalContextStr}
     ${bpmStr}
@@ -2032,7 +2188,7 @@ export const getSongBeatRecommendations = async (plugins: VSTPlugin[], songQuery
     CRITICAL: If the user has connected pedals or amps to an instrument (as listed in their analog hardware), you MUST include those specific pedals and amps in the fxPlugins array for that instrument and provide real, detailed parameter settings for them to achieve the desired sound.
     - ADVANCED ROUTING (OPTIONAL): If a plugin should be processed in parallel or on a specific frequency band (Multiband Split), use the 'routing' (e.g., "Parallel A (Crush)", "Parallel B (Space)") or 'band' (e.g., "Lows (0-150Hz)", "Highs (2kHz+)") properties in the fxPlugin object.
     - Specify which bus to send to (busSend).
-    - Provide a detailed MIDI pattern for this instrument in the 'midiNotes' array, tailored specifically to the tempo (BPM) and style of this beat. If the user searched for a specific song or uploaded an MP3, the MIDI pattern MUST closely match the iconic melodies, chords, and rhythms of that original song. Use synth-based sounds for all instruments, characteristic of modern rap production.
+    - Provide detailed MIDI patterns for this instrument in the 'midiNotes' object (intro, verse, hook, bridge, outro arrays), tailored to the tempo (BPM). Each array MUST equal exactly 16 beats (4 bars) or 32 beats (8 bars) based on the section. If the user provided a reference, match it.
       Each note in the array MUST have:
       - pitch: (e.g., 'C4')
       - duration: (e.g., '4', '8', '16')
@@ -2121,7 +2277,7 @@ export const generateContentViaBackend = async (model: string, prompt: string, c
     config
   });
 };
-export const getAudioBeatRecommendations = async (plugins: VSTPlugin[], audioBase64: string | null, audioUrl: string | null, mimeType: string, analogInstruments: Hardware[] = [], analogHardware: Hardware[] = [], drumKits: Hardware[] = [], excludeAnalog: boolean = false, dawType: string | null = null, starredPlugins: string[] = [], isGangstaVox: boolean = false, userContext: string = "", geminiFileUri: string | null = null, language: string = 'en', isMultiBandMode: boolean = false): Promise<RecommendationResponse> => {
+export const getAudioBeatRecommendations = async (plugins: VSTPlugin[], audioBase64: string | null, audioUrl: string | null, mimeType: string, analogInstruments: Hardware[] = [], analogHardware: Hardware[] = [], drumKits: Hardware[] = [], excludeAnalog: boolean = false, dawType: string | null = null, starredPlugins: string[] = [], isGangstaVox: boolean = false, userContext: string = "", geminiFileUri: string | null = null, language: string = 'en', isMultiBandMode: boolean = false, isJsfxMode: boolean = false): Promise<RecommendationResponse> => {
   const ai = getAI();
   // Limit plugin list to 50 most relevant to avoid context/complexity limits
   const limitedPlugins = plugins.slice(0, 50);
@@ -2154,9 +2310,27 @@ export const getAudioBeatRecommendations = async (plugins: VSTPlugin[], audioBas
       ==================================================
   `;
 
+  let jsfxDiktat = "";
+  if (isJsfxMode) {
+    const simplifiedDB = JSFX_DATABASE.map(p => ({
+      name: p.name.startsWith('JS: ') ? p.name : 'JS: ' + p.name,
+      sliders: p.sliders.map(s => `[${s.index}] ${s.name} (min:${s.min}, max:${s.max})`)
+    }));
+    jsfxDiktat = `
+      CRITICAL INSTRUCTION: JSFX MODE IS ENABLED.
+      You are FORBIDDEN from recommending any third-party VSTs, VST3s, or AUs.
+      You MUST ONLY recommend JSFX plugins from the provided 'JSFX Database' list below.
+      When providing 'deepDive' settings, you MUST include 'parameter' names that EXACTLY match the slider names from the JSFX Database, and you MUST ensure the values are within the allowed min/max range.
+
+      JSFX DATABASE (ONLY use these plugins):
+      ${JSON.stringify(simplifiedDB)}
+    `;
+  }
+
   let prompt = isGangstaVox ? `
     You are an expert audio engineer and producer.
     ${nonJsfxDiktat}
+    ${jsfxDiktat}
     Analyze the attached audio file and suggest 1 high-level, extremely detailed "Vocal FX Chain Recipe" that recreate the vocal production style, effects, and mixing techniques heard in the provided audio.
     Only use mixing plugins from this list (for DAW processing):
     ${pluginListStr}
@@ -2239,7 +2413,7 @@ export const getAudioBeatRecommendations = async (plugins: VSTPlugin[], audioBas
     CRITICAL: If the user has connected pedals or amps to an instrument (as listed in their analog hardware), you MUST include those specific pedals and amps in the fxPlugins array for that instrument and provide real, detailed parameter settings for them to achieve the desired sound.
     - ADVANCED ROUTING (OPTIONAL): If a plugin should be processed in parallel or on a specific frequency band (Multiband Split), use the 'routing' (e.g., "Parallel A (Crush)", "Parallel B (Space)") or 'band' (e.g., "Lows (0-150Hz)", "Highs (2kHz+)") properties in the fxPlugin object.
     - Specify which bus to send to (busSend).
-    - Provide a detailed MIDI pattern for this instrument in the 'midiNotes' array, tailored specifically to the tempo (BPM) and style of this beat. If the user searched for a specific song or uploaded an MP3, the MIDI pattern MUST closely match the iconic melodies, chords, and rhythms of that original song. Use synth-based sounds for all instruments, characteristic of modern rap production.
+    - Provide detailed MIDI patterns for this instrument in the 'midiNotes' object (intro, verse, hook, bridge, outro arrays), tailored to the tempo (BPM). Each array MUST equal exactly 16 beats (4 bars) or 32 beats (8 bars) based on the section. If the user provided a reference, match it.
       Each note in the array MUST have:
       - pitch: (e.g., 'C4')
       - duration: (e.g., '4', '8', '16')
@@ -3003,10 +3177,10 @@ export const getLyricAnalysis = async (
     };
   } catch (error: any) {
     if (error?.status === 503 || error?.message?.includes('high demand') || error?.status === 'INVALID_ARGUMENT' || error?.status === 400 || String(error).includes('503')) {
-      console.warn("gemini-3.5-flash high demand or error, falling back to gemini-3.5-pro...");
+      console.warn("gemini-3-flash-preview high demand or error, falling back to gemini-3.1-pro-preview...");
       try {
         const responseListFallback = await ai.models.generateContent({
-          model: "gemini-3-flash-preview",
+          model: "gemini-3.1-pro-preview",
           contents: [{ role: 'user', parts }],
           config: {
             customAction: 'critique',
@@ -3030,7 +3204,7 @@ export const getLyricAnalysis = async (
           syncedLyrics: parsed.syncedLyrics || []
         };
       } catch (fallbackError: any) {
-        console.warn("Fallback gemini-3.5-pro also failed, trying gemini-3.1-pro-preview...");
+        console.warn("Fallback gemini-3.1-pro-preview also failed, trying gemini-3-flash-preview again...");
         try {
           const responseListFallback2 = await ai.models.generateContent({
             model: "gemini-3-flash-preview",

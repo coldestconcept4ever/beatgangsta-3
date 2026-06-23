@@ -1318,88 +1318,247 @@ function apply_sync(payload)
     })
   end
 
+  local function b64_dec(data)
+    local b = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/'
+    data = string.gsub(data, '[^'..b..'=]', '')
+    return (data:gsub('.', function(x)
+      if (x == '=') then return '' end
+      local r,f='',(b:find(x)-1)
+      for i=6,1,-1 do r=r..(f%2^i-f%2^(i-1)>0 and '1' or '0') end
+      return r;
+    end):gsub('%d%d%d?%d?%d?%d?%d?%d?', function(x)
+      if (#x ~= 8) then return '' end
+      local c=0
+      for i=1,8 do c=c+(x:sub(i,i)=='1' and 2^(8-i) or 0) end
+      return string.char(c)
+    end))
+  end
+
   for line in payload:gmatch("([^" .. string.char(10) .. "]+)") do
     line = line:gsub(string.char(13), "")
-    if line:sub(1,6) == "TRACK|" then
+    if line:sub(1,6) == "TEMPO|" then
+      local bpm = tonumber(line:sub(7))
+      if bpm then
+        reaper.CSurf_OnTempoChange(bpm)
+      end
+    elseif line:sub(1,4) == "KEY|" then
+      local key = line:sub(5)
+      reaper.AddProjectMarker(0, false, 0, 0, "Key: " .. key, -1)
+    elseif line:sub(1,7) == "MARKER|" then
+      local pstr = line:sub(8)
+      local bar, name = pstr:match("([^|]+)|([^|]+)")
+      local b_val = tonumber(bar)
+      if b_val and name then
+        local pos = reaper.TimeMap2_beatsToTime(0, 0, b_val - 1)
+        reaper.AddProjectMarker(0, false, pos, 0, name, -1)
+      end
+    elseif line:sub(1,5) == "AUTO|" then
+      local pstr = line:sub(6)
+      local param_name, points_str = pstr:match("([^|]+)|(.*)")
+      if current_track and current_fx and current_fx >= 0 and param_name and points_str then
+        local param_idx = -1
+        local num_params = reaper.TrackFX_GetNumParams(current_track, current_fx)
+        for i=0, num_params-1 do
+          local _, n = reaper.TrackFX_GetParamName(current_track, current_fx, i)
+          if n and (n:lower() == param_name:lower() or n:lower():find(param_name:lower(), 1, true)) then
+            param_idx = i
+            break
+          end
+        end
+        if param_idx >= 0 then
+          local env = reaper.GetFXEnvelope(current_track, current_fx, param_idx, true)
+          if env then
+            for pt in points_str:gmatch("([^;]+)") do
+              local beat_str, val_str = pt:match("([^,]+),([^,]+)")
+              if beat_str and val_str then
+                local t = reaper.TimeMap2_beatsToTime(0, 0, tonumber(beat_str) or 0)
+                reaper.InsertEnvelopePoint(env, t, tonumber(val_str), 0, 0, false, true)
+              end
+            end
+            reaper.Envelope_SortPoints(env)
+          end
+        end
+      end
+    elseif line:sub(1,7) == "FOLDER|" then
+      local action = line:sub(8)
+      if current_track then
+        if action == "start" then
+          reaper.SetMediaTrackInfo_Value(current_track, "I_FOLDERDEPTH", 1)
+        elseif action == "end" then
+          reaper.SetMediaTrackInfo_Value(current_track, "I_FOLDERDEPTH", -1)
+        end
+      end
+    elseif line:sub(1,10) == "MIDI_FILE|" then
+      local pstr = line:sub(11)
+      local tname, sbeat_str, item_name, b64 = pstr:match("([^|]+)|([^|]+)|([^|]+)|(.*)")
+      if not b64 then
+        tname, sbeat_str, b64 = pstr:match("([^|]+)|([^|]+)|(.*)")
+        item_name = tname
+      end
+      if tname and b64 then
+        local target_track = nil
+        for i=0, reaper.CountTracks(0)-1 do
+          local tr = reaper.GetTrack(0,i)
+          local _, n = reaper.GetTrackName(tr)
+          if n:lower() == tname:lower() or n:lower():find(tname:lower(), 1, true) then
+            target_track = tr
+            break
+          end
+        end
+        if not target_track then
+          reaper.InsertTrackAtIndex(reaper.CountTracks(0), true)
+          target_track = reaper.GetTrack(0, reaper.CountTracks(0)-1)
+          reaper.GetSetMediaTrackInfo_String(target_track, "P_NAME", tname, true)
+        end
+        if target_track then
+          local safe_item_name = item_name:gsub("[^%w%s%-]", "_")
+          local tmp_mid = os.tmpname() .. "_" .. safe_item_name .. ".mid"
+          local f = io.open(tmp_mid, "wb")
+          if f then
+            f:write(b64_dec(b64))
+            f:close()
+            local start_time = reaper.TimeMap2_beatsToTime(0, tonumber(sbeat_str) or 0, 0)
+            reaper.SetOnlyTrackSelected(target_track)
+            reaper.SetEditCurPos(start_time, true, false)
+            reaper.InsertMedia(tmp_mid, 0)
+            os.remove(tmp_mid)
+          end
+        end
+      end
+    elseif line:sub(1,6) == "TRACK|" then
       current_tname = line:sub(7)
       current_track = nil
       current_fx = -1
       current_fx_name = "unknown"
 
-      -- 1. Primary Match: Match track name (exact or substring, ignoring generic tracks)
-      for i=0, total_tracks_in_project-1 do
-        local tr = reaper.GetTrack(0,i)
-        local _, n = reaper.GetTrackName(tr)
-        local n_lower = n:lower()
-        local stem_lower = current_tname:lower()
-        local is_generic = n_lower:match("^track%s*%d+$") or n_lower == "" or n_lower == "unnamed"
-        
-        -- Exact match
-        if n_lower == stem_lower then
-          current_track = tr
-          reaper.GetSetMediaTrackInfo_String(tr, "P_NAME", current_tname, true)
-          break
-        -- Substring match when not generic (to catch 'Kick' in 'Kick Stem' or vice versa)
-        elseif not is_generic and (n_lower:find(stem_lower, 1, true) or stem_lower:find(n_lower, 1, true)) then
-          current_track = tr
-          reaper.GetSetMediaTrackInfo_String(tr, "P_NAME", current_tname, true)
-          break
-        end
-      end
-      
-      -- 2. Secondary Match: Check if any track (even generic) contains media items/files matching current_tname
-      if not current_track then
+      if current_tname:lower() == "master" then
+        current_track = reaper.GetMasterTrack(0)
+      else
+        -- 1. Primary Match: Match track name (exact or substring, ignoring generic tracks)
         for i=0, total_tracks_in_project-1 do
           local tr = reaper.GetTrack(0,i)
-          local item_count = reaper.CountTrackMediaItems(tr)
-          for j=0, item_count-1 do
-            local item = reaper.GetTrackMediaItem(tr, j)
-            if item then
-              local take = reaper.GetActiveTake(item)
-              if take then
-                local _, take_name = reaper.GetTakeName(take)
-                if take_name then
-                  local clean_take = take_name:gsub("%.%w+$", ""):lower() -- remove extension & lowercase
-                  local tname_lower = current_tname:lower()
-                  if clean_take == tname_lower or clean_take:find(tname_lower, 1, true) or tname_lower:find(clean_take, 1, true) then
-                    current_track = tr
-                    reaper.GetSetMediaTrackInfo_String(tr, "P_NAME", current_tname, true)
-                    table.insert(state.sync_errors, {
-                      code = "INFO_ITEM_MATCHED",
-                      desc = "Matched track with item '" .. take_name .. "' and renamed track to '" .. current_tname .. "'! ✔"
-                    })
-                    break
+          local _, n = reaper.GetTrackName(tr)
+          local n_lower = n:lower()
+          local stem_lower = current_tname:lower()
+          local is_generic = n_lower:match("^track%s*%d+$") or n_lower == "" or n_lower == "unnamed"
+          
+          -- Exact match
+          if n_lower == stem_lower then
+            current_track = tr
+            reaper.GetSetMediaTrackInfo_String(tr, "P_NAME", current_tname, true)
+            break
+          -- Substring match when not generic (to catch 'Kick' in 'Kick Stem' or vice versa)
+          elseif not is_generic and (n_lower:find(stem_lower, 1, true) or stem_lower:find(n_lower, 1, true)) then
+            current_track = tr
+            reaper.GetSetMediaTrackInfo_String(tr, "P_NAME", current_tname, true)
+            break
+          end
+        end
+        
+        -- 2. Secondary Match: Check if any track (even generic) contains media items/files matching current_tname
+        if not current_track then
+          for i=0, total_tracks_in_project-1 do
+            local tr = reaper.GetTrack(0,i)
+            local item_count = reaper.CountTrackMediaItems(tr)
+            for j=0, item_count-1 do
+              local item = reaper.GetTrackMediaItem(tr, j)
+              if item then
+                local take = reaper.GetActiveTake(item)
+                if take then
+                  local _, take_name = reaper.GetTakeName(take)
+                  if take_name then
+                    local clean_take = take_name:gsub("%.%w+$", ""):lower() -- remove extension & lowercase
+                    local tname_lower = current_tname:lower()
+                    if clean_take == tname_lower or clean_take:find(tname_lower, 1, true) or tname_lower:find(clean_take, 1, true) then
+                      current_track = tr
+                      reaper.GetSetMediaTrackInfo_String(tr, "P_NAME", current_tname, true)
+                      table.insert(state.sync_errors, {
+                        code = "INFO_ITEM_MATCHED",
+                        desc = "Matched track with item '" .. take_name .. "' and renamed track to '" .. current_tname .. "'! ✔"
+                      })
+                      break
+                    end
                   end
                 end
               end
             end
+            if current_track then break end
           end
-          if current_track then break end
+        end
+
+        -- 3. Fallback: If still unmatched, map by index if the project has the exact index
+        if not current_track then
+          -- E.g. if we are processing TRACK index and can fall back
+        end
+
+        if not current_track then
+          local new_idx = reaper.CountTracks(0)
+          reaper.InsertTrackAtIndex(new_idx, true)
+          current_track = reaper.GetTrack(0, new_idx)
+          if current_track then
+            reaper.GetSetMediaTrackInfo_String(current_track, "P_NAME", current_tname, true)
+            table.insert(state.sync_errors, {
+              code = "INFO_AUTO_CREATED",
+              desc = "Track '" .. current_tname .. "' was missing, so we auto-created it! ✔"
+            })
+            total_tracks_in_project = reaper.CountTracks(0)
+          else
+            table.insert(state.sync_errors, {
+              code = "ERR_TR_002",
+              desc = "Track '" .. current_tname .. "' not found and auto-creation failed."
+            })
+          end
         end
       end
-
-      -- 3. Fallback: If still unmatched, map by index if the project has the exact index
-      if not current_track then
-        -- E.g. if we are processing TRACK index and can fall back
+    elseif line:sub(1,4) == "VOL|" then
+      local vol_db = tonumber(line:sub(5))
+      if current_track and vol_db then
+        local vol_val = 10^(vol_db/20)
+        reaper.SetMediaTrackInfo_Value(current_track, "D_VOL", vol_val)
       end
-
-      if not current_track then
-        local new_idx = reaper.CountTracks(0)
-        reaper.InsertTrackAtIndex(new_idx, true)
-        current_track = reaper.GetTrack(0, new_idx)
-        if current_track then
-          reaper.GetSetMediaTrackInfo_String(current_track, "P_NAME", current_tname, true)
-          table.insert(state.sync_errors, {
-            code = "INFO_AUTO_CREATED",
-            desc = "Track '" .. current_tname .. "' was missing, so we auto-created it! ✔"
-          })
-          total_tracks_in_project = reaper.CountTracks(0)
-        else
-          table.insert(state.sync_errors, {
-            code = "ERR_TR_002",
-            desc = "Track '" .. current_tname .. "' not found and auto-creation failed."
-          })
+    elseif line:sub(1,4) == "PAN|" then
+      local pan_val = tonumber(line:sub(5))
+      if current_track and pan_val then
+        reaper.SetMediaTrackInfo_Value(current_track, "D_PAN", pan_val)
+      end
+    elseif line:sub(1,6) == "COLOR|" then
+      local hex = line:sub(7)
+      if current_track and hex then
+        hex = hex:gsub("#","")
+        local r = tonumber(hex:sub(1,2), 16) or 255
+        local g = tonumber(hex:sub(3,4), 16) or 255
+        local b = tonumber(hex:sub(5,6), 16) or 255
+        local col = reaper.ColorToNative(r, g, b)|0x1000000
+        reaper.SetMediaTrackInfo_Value(current_track, "I_CUSTOMCOLOR", col)
+      end
+    elseif line:sub(1,9) == "BUS_SEND|" then
+      local dst_name = line:sub(10)
+      if current_track and dst_name then
+        local dst_tr = nil
+        for i=0, reaper.CountTracks(0)-1 do
+          local tr = reaper.GetTrack(0,i)
+          local _, n = reaper.GetTrackName(tr)
+          if n:lower() == dst_name:lower() or n:lower():find(dst_name:lower(), 1, true) then
+            dst_tr = tr
+            break
+          end
         end
+        if not dst_tr then
+          reaper.InsertTrackAtIndex(reaper.CountTracks(0), true)
+          dst_tr = reaper.GetTrack(0, reaper.CountTracks(0)-1)
+          reaper.GetSetMediaTrackInfo_String(dst_tr, "P_NAME", dst_name, true)
+        end
+        if dst_tr then
+          reaper.CreateTrackSend(current_track, dst_tr)
+        end
+      end
+    elseif line:sub(1,7) == "REGION|" then
+      local pstr = line:sub(8)
+      local sbeat, ebeat, name = pstr:match("([^|]+)|([^|]+)|(.*)")
+      if sbeat and ebeat and name then
+        local pos1 = reaper.TimeMap2_beatsToTime(0, 0, tonumber(sbeat) or 0)
+        local pos2 = reaper.TimeMap2_beatsToTime(0, 0, tonumber(ebeat) or 0)
+        reaper.AddProjectMarker(0, true, pos1, pos2, name, -1)
       end
     elseif line:sub(1,3) == "FX|" then
       local fx_name = line:sub(4)

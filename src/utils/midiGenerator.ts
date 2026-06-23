@@ -13,7 +13,16 @@ export const generateDrumMidiBaseData = (
   activeSection: string,
   bpm: number,
   useVelocityHumanization: boolean,
-  bars: PatternLength = 4
+  bars: PatternLength = 4,
+  advancedSwingSettings?: {
+    mode: 'mpc' | 'carp' | 'shaperbox' | 'skaka' | 'fl_wrench';
+    swingPercentage: number;
+    carpTimeOffset?: number;
+    shaperboxCurveType?: 'triplet' | 'asymmetric' | 'early_push' | 'late_drag';
+    shaperboxTension?: number;
+    skakaHumanizeAmount?: number;
+    flShiftAmount?: number;
+  }
 ): Uint8Array => {
   if (!currentPattern) return new Uint8Array();
   
@@ -29,42 +38,173 @@ export const generateDrumMidiBaseData = (
   hatTrack.addTrackName(`${recipeTitle} - ${activeSection} HiHat`);
   hatTrack.setTempo(bpm);
 
-  const addDrumEvents = (track: MidiWriter.Track, steps: (number | { step: number, velocity: number })[], pitch: string, isDoubleTime: boolean) => {
+  const getNormalizedSwing = (val: any) => {
+    if (typeof val !== 'number') return 0;
+    if (val > 1) return val / 100;
+    return val;
+  };
+
+  const addDrumEvents = (
+    track: MidiWriter.Track,
+    steps: (number | { step: number, velocity: number })[],
+    pitch: string,
+    isDoubleTime: boolean,
+    swingVal: any
+  ) => {
     const safeSteps = Array.isArray(steps) ? steps : [];
     const totalStepsPerBar = isDoubleTime ? 32 : 16;
     const totalSteps = totalStepsPerBar * bars;
     const stepDuration = isDoubleTime ? '32' : '16';
     const ticksPerStep = isDoubleTime ? 16 : 32;
     const targetTicks = totalSteps * ticksPerStep;
+    const swingAmount = getNormalizedSwing(swingVal);
     
-    let currentWait = 0;
-    let totalTicksAdded = 0;
+    interface PlannedNote {
+      step: number;
+      targetTick: number;
+      velocity: number;
+    }
+    
+    const plannedNotes: PlannedNote[] = [];
     
     for (let i = 1; i <= totalSteps; i++) {
-      const stepInBar = i;
-      const stepData = safeSteps.find(s => typeof s === 'number' ? s === stepInBar : s.step === stepInBar);
-      
+      const stepData = safeSteps.find(s => typeof s === 'number' ? s === i : s.step === i);
       if (stepData) {
         let velocity = 100;
         if (typeof stepData === 'object' && stepData.velocity !== undefined) {
           velocity = stepData.velocity;
         } else if (useVelocityHumanization) {
-          velocity = Math.floor(60 + (Math.sin(i * 12.5) * 20 + 20));
+          // Natural humanized velocity curve using a sine wave with slight randomness
+          velocity = Math.floor(65 + (Math.sin(i * 12.5) * 20 + (Math.random() * 10 - 5)));
+          velocity = Math.max(20, Math.min(127, velocity));
         }
         
-        const waitTicks = currentWait * ticksPerStep;
-        const waitStr = waitTicks > 0 ? `T${waitTicks}` : '0';
-        track.addEvent(new MidiWriter.NoteEvent({ pitch: [pitch], duration: stepDuration, wait: waitStr, velocity }));
-        totalTicksAdded += waitTicks + ticksPerStep;
-        currentWait = 0;
-      } else {
-        currentWait++;
+        // Calculate base tick
+        let targetTick = (i - 1) * ticksPerStep;
+        
+        // Apply swing or micro-timing based on advanced settings or legacy swingAmount
+        if (advancedSwingSettings) {
+          const { mode, swingPercentage } = advancedSwingSettings;
+          
+          if (mode === 'mpc') {
+            const isEven = (i - 1) % 2 === 1;
+            if (isEven && swingPercentage > 0) {
+              // Classic MPC 16th swing delay
+              const delayTicks = Math.round((swingPercentage / 100) * ticksPerStep * 0.40);
+              targetTick += delayTicks;
+            }
+          } else if (mode === 'carp') {
+            const isEven = (i - 1) % 2 === 1;
+            if (isEven && swingPercentage > 0) {
+              // CARP Audio Swing Master: micro-delay offset on offbeats
+              const delayTicks = Math.round((swingPercentage / 100) * ticksPerStep * 0.32);
+              targetTick += delayTicks;
+            }
+          } else if (mode === 'shaperbox') {
+            const isEven = (i - 1) % 2 === 1;
+            if (isEven && swingPercentage > 0) {
+              // Cableguys ShaperBox curves
+              const tension = (advancedSwingSettings.shaperboxTension ?? 50) / 100;
+              const curveType = advancedSwingSettings.shaperboxCurveType ?? 'asymmetric';
+              
+              let curveMultiplier = 1.0;
+              if (curveType === 'asymmetric') {
+                curveMultiplier = Math.pow(swingPercentage / 100, 1.5 - tension) * 0.8;
+              } else if (curveType === 'triplet') {
+                curveMultiplier = 0.667 * (swingPercentage / 100);
+              } else if (curveType === 'late_drag') {
+                curveMultiplier = Math.pow(swingPercentage / 100, 2) * 1.0;
+              } else if (curveType === 'early_push') {
+                curveMultiplier = Math.sqrt(swingPercentage / 100) * 0.5;
+              }
+              
+              const delayTicks = Math.round(curveMultiplier * ticksPerStep * 0.50);
+              targetTick += delayTicks;
+            }
+          } else if (mode === 'skaka') {
+            // Klevgrand Skaka: smart velocity-timing humanizer (softer ghost notes lag more)
+            const humanize = (advancedSwingSettings.skakaHumanizeAmount ?? 50) / 100;
+            const velocityFactor = (127 - velocity) / 127;
+            const delayTicks = Math.round(velocityFactor * humanize * ticksPerStep * 0.45);
+            targetTick += delayTicks;
+          } else if (mode === 'fl_wrench') {
+            // FL Studio wrench Time Shift (delay applied to ALL notes on the track)
+            const shiftVal = advancedSwingSettings.flShiftAmount ?? swingPercentage;
+            const delayTicks = Math.round((shiftVal / 100) * ticksPerStep * 0.75);
+            targetTick += delayTicks;
+          }
+        } else {
+          // AUTOMATIC INTEGRATED groove engine:
+          const swingValPct = typeof swingVal === 'number' ? (swingVal > 1 ? swingVal : swingVal * 100) : 0;
+          
+          if (pitch === 'F#1') {
+            // HI-HATS: MPC 16th swing + Skaka-style velocity humanization!
+            const isOffbeat = (i - 1) % 2 === 1;
+            if (isOffbeat && swingValPct > 0) {
+              // Classic MPC 16th swing delay
+              const delayTicks = Math.round((swingValPct / 100) * ticksPerStep * 0.40);
+              targetTick += delayTicks;
+            }
+            
+            // Skaka Velocity Humanization (softer hits drag slightly to feel natural and lazy)
+            if (useVelocityHumanization && velocity < 100) {
+              const velocityFactor = (127 - velocity) / 127;
+              const skakaDelayTicks = Math.round(velocityFactor * 0.25 * ticksPerStep * 0.35);
+              targetTick += skakaDelayTicks;
+            }
+          } else if (pitch === 'D1' || pitch === 'D#1') {
+            // SNARE / CLAP: Lay-back pocket shift (FL Wrench style uniform delay)
+            // A classic production trick to make beats feel "heavy" and in-the-pocket is slightly delaying the snare
+            const snareShiftPct = swingValPct > 0 ? swingValPct : 8; // 8% default lay-back if straight but swing exists
+            const delayTicks = Math.round((snareShiftPct / 100) * ticksPerStep * 0.25);
+            targetTick += delayTicks;
+          } else if (pitch === 'C1') {
+            // KICK: Tight transient on-the-grid, with mild MPC swing if specifically requested
+            const isOffbeat = (i - 1) % 2 === 1;
+            if (isOffbeat && swingValPct > 0) {
+              // Mild kick swing (half of the normal ratio to preserve the downbeat anchor)
+              const delayTicks = Math.round((swingValPct / 100) * ticksPerStep * 0.20);
+              targetTick += delayTicks;
+            }
+          } else {
+            // Fallback legacy swing
+            const isOffbeat = (i - 1) % 2 === 1;
+            if (isOffbeat && swingAmount > 0) {
+              const delayTicks = Math.round(swingAmount * ticksPerStep * 0.35);
+              targetTick += delayTicks;
+            }
+          }
+        }
+        
+        plannedNotes.push({
+          step: i,
+          targetTick,
+          velocity
+        });
       }
+    }
+    
+    // Sort planned notes by targetTick
+    plannedNotes.sort((a, b) => a.targetTick - b.targetTick);
+    
+    let currentTotalTicks = 0;
+    for (const note of plannedNotes) {
+      const waitTicks = note.targetTick - currentTotalTicks;
+      const waitStr = waitTicks > 0 ? `T${waitTicks}` : '0';
+      
+      track.addEvent(new MidiWriter.NoteEvent({
+        pitch: [pitch],
+        duration: stepDuration,
+        wait: waitStr,
+        velocity: note.velocity
+      }));
+      
+      currentTotalTicks = note.targetTick + ticksPerStep;
     }
 
     // Ensure the track is exactly the requested length (4 or 8 bars)
-    if (totalTicksAdded < targetTicks) {
-      const remainingWait = targetTicks - totalTicksAdded;
+    if (currentTotalTicks < targetTicks) {
+      const remainingWait = targetTicks - currentTotalTicks;
       // Add a silent note at the very end to anchor the track length
       track.addEvent(new MidiWriter.NoteEvent({ 
         pitch: [pitch], 
@@ -76,10 +216,10 @@ export const generateDrumMidiBaseData = (
   };
 
   // General MIDI Drum Map: Kick = 36 (C1), Snare = 38 (D1), Clap = 39 (D#1), Hi-Hat = 42 (F#1)
-  addDrumEvents(kickTrack, currentPattern.kick?.steps || [], 'C1', currentPattern.kick?.isDoubleTime || false);
+  addDrumEvents(kickTrack, currentPattern.kick?.steps || [], 'C1', currentPattern.kick?.isDoubleTime || false, currentPattern.swing?.kick);
   const snareNote = currentPattern.snare?.isClap ? 'D#1' : 'D1';
-  addDrumEvents(snareTrack, currentPattern.snare?.steps || [], snareNote, currentPattern.snare?.isDoubleTime || false);
-  addDrumEvents(hatTrack, currentPattern.hiHat?.steps || [], 'F#1', currentPattern.hiHat?.isDoubleTime || false);
+  addDrumEvents(snareTrack, currentPattern.snare?.steps || [], snareNote, currentPattern.snare?.isDoubleTime || false, currentPattern.swing?.snare);
+  addDrumEvents(hatTrack, currentPattern.hiHat?.steps || [], 'F#1', currentPattern.hiHat?.isDoubleTime || false, currentPattern.swing?.hiHat);
 
   const write = new MidiWriter.Writer([kickTrack, snareTrack, hatTrack]);
   return write.buildFile();
@@ -207,7 +347,7 @@ function sanitizeDuration(val: string | undefined, defaultVal: string): string {
 }
 
 // Calculate the length of the generated MIDI in beats
-const getBeats = (val: string | undefined): number => {
+export const getBeats = (val: string | undefined): number => {
   if (!val || val === '0') return 0;
   const str = String(val).trim().toLowerCase();
   if (str.startsWith('t')) return parseInt(str.substring(1)) / 128;

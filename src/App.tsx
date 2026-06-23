@@ -700,7 +700,7 @@ const App: React.FC = () => {
   const referenceTrackInputRef = useRef<HTMLInputElement>(null);
   const [hasStems, setHasStems] = useState<boolean>(false);
   const [isBusMode, setIsBusMode] = useState<boolean>(false);
-  const [isJsfxMode, setIsJsfxMode] = useState<boolean>(true);
+  const [isJsfxMode, setIsJsfxMode] = useState<boolean>(false);
   const [isMultiBandMode, setIsMultiBandMode] = useState<boolean>(false);
   const [isMasterMode, setIsMasterMode] = useState<boolean>(false);
   const [forceResearch, setForceResearch] = useState<boolean>(false);
@@ -1299,7 +1299,7 @@ The AI was unable to verify these parameters. Please investigate.`;
     const addTurnstileStep = (steps: TutorialStep[]) => {
       if (isVerified) return;
       steps.push({
-        targetId: (plugins.length === 0 && !isEnrichingLibrary && !hasRestoredBackup) ? 'tutorial-turnstile' : 'tutorial-turnstile-studio',
+        targetId: ((plugins.length === 0 && !isJsfxMode) && !isEnrichingLibrary && !hasRestoredBackup) ? 'tutorial-turnstile' : 'tutorial-turnstile-studio',
         title: t('tutorial_security_title'),
         content: t('tutorial_security_content'),
         placement: 'bottom' as const,
@@ -1408,8 +1408,9 @@ The AI was unable to verify these parameters. Please investigate.`;
           content: t('tutorial_gear_rack_content_v2'),
           placement: 'bottom' as const,
           onEnter: () => {
-            if (!tutorialPlugin && plugins.length > 0) {
-              const randomPlugin = plugins[Math.floor(Math.random() * plugins.length)];
+            if (!tutorialPlugin && (plugins.length > 0 || isJsfxMode)) {
+              const targetPlugins: VSTPlugin[] = plugins.length > 0 ? plugins : [{ vendor: 'Cockos', name: 'JSFX Plugin', type: 'JSFX', version: '1.0', lastModified: new Date().toISOString() }];
+              const randomPlugin = targetPlugins[Math.floor(Math.random() * targetPlugins.length)];
               setTutorialPlugin(randomPlugin);
               const folder = sortBy === 'vendor' ? randomPlugin.vendor : randomPlugin.type;
               setTutorialFolder(folder);
@@ -1769,7 +1770,7 @@ The AI was unable to verify these parameters. Please investigate.`;
   const audioInputRef = useRef<HTMLInputElement>(null);
   
   useEffect(() => {
-    if ((!isEnrichingLibrary && plugins.length > 0) || hasRestoredBackup) {
+    if ((!isEnrichingLibrary && (plugins.length > 0 || isJsfxMode)) || hasRestoredBackup) {
       const vibeExamples = t('vibe_examples', { returnObjects: true }) as string[];
       const songExamples = t('song_examples', { returnObjects: true }) as string[];
       const artistExamples = t('artist_examples', { returnObjects: true }) as string[];
@@ -2182,7 +2183,7 @@ The AI was unable to verify these parameters. Please investigate.`;
       // If user is already logged in, decide whether to show cloud_sync or skip it
       if (isInitialUser) {
         // Returning user, skip cloud_sync
-        if (plugins.length > 0) {
+        if (plugins.length > 0 || isJsfxMode) {
           setTutorialPhase('library_populated');
         } else {
           setTutorialPhase('import');
@@ -2194,7 +2195,7 @@ The AI was unable to verify these parameters. Please investigate.`;
         // Logged in but not initial and not just signed in? 
         // This could happen on refresh if they haven't finished tutorial.
         // Default to skipping cloud_sync if they already have plugins.
-        if (plugins.length > 0) {
+        if (plugins.length > 0 || isJsfxMode) {
           setTutorialPhase('library_populated');
         } else {
           setTutorialPhase('import');
@@ -2205,7 +2206,7 @@ The AI was unable to verify these parameters. Please investigate.`;
     } else if (tutorialPhase === 'cloud_sync') {
       const hasPrefs = !!localStorage.getItem('bg_auto_backup_prefs');
       if (!showCloudSyncModal && !showRestoreModal && (hasPrefs || wasCloudSyncModalShown)) {
-        if (plugins.length > 0) {
+        if (plugins.length > 0 || isJsfxMode) {
           setTutorialPhase('library_populated');
         } else {
           setTutorialPhase('import');
@@ -2213,7 +2214,7 @@ The AI was unable to verify these parameters. Please investigate.`;
         setTutorialStep(0);
         setShowTutorial(true);
       }
-    } else if (tutorialPhase === 'analyzing' && !isEnrichingLibrary && plugins.length > 0) {
+    } else if (tutorialPhase === 'analyzing' && !isEnrichingLibrary && (plugins.length > 0 || isJsfxMode)) {
       setTutorialPhase('library_populated');
       setTutorialStep(0);
       setShowTutorial(true);
@@ -4752,7 +4753,7 @@ The AI was unable to verify these parameters. Please investigate.`;
   const handleGenerate = async () => {
     if (!requireAuth()) return;
     
-    if (plugins.length === 0) return;
+    if (plugins.length === 0 && !isJsfxMode) return;
     if (!isVerified) {
       window.scrollTo({ top: 0, behavior: "smooth" });
       setError("Please complete the security verification first.");
@@ -4771,7 +4772,7 @@ The AI was unable to verify these parameters. Please investigate.`;
 
     try {
       if (!requireAuth()) return;
-      const response = await getBeatRecommendations(plugins, analogInstruments, analogHardware, drumKits, excludeAnalog, dawType, starredPlugins, isGangstaVox, i18n.language, isMultiBandMode, generationBPM, generationContext);
+      const response = await getBeatRecommendations(plugins, analogInstruments, analogHardware, drumKits, excludeAnalog, dawType, starredPlugins, isGangstaVox, i18n.language, isMultiBandMode, generationBPM, generationContext, isJsfxMode);
       clearInterval(progressInterval);
       setGenerationProgress(100);
       clearTimeout(timeoutId);
@@ -4804,7 +4805,7 @@ The AI was unable to verify these parameters. Please investigate.`;
   const handleTypeBeatSearch = async () => {
     if (!requireAuth()) return;
     
-    if (plugins.length === 0 || !typeBeatSearch.trim()) return;
+    if ((plugins.length === 0 && !isJsfxMode) || !typeBeatSearch.trim()) return;
     if (!isVerified) {
       window.scrollTo({ top: 0, behavior: 'smooth' });
       setError("Please complete the security verification first.");
@@ -4822,7 +4823,7 @@ The AI was unable to verify these parameters. Please investigate.`;
 
     try {
       if (!requireAuth()) return;
-      const response = await getCustomBeatRecommendations(plugins, typeBeatSearch.trim(), analogInstruments, analogHardware, drumKits, excludeAnalog, dawType, starredPlugins, isGangstaVox, i18n.language, isMultiBandMode, generationBPM, generationContext);
+      const response = await getCustomBeatRecommendations(plugins, typeBeatSearch.trim(), analogInstruments, analogHardware, drumKits, excludeAnalog, dawType, starredPlugins, isGangstaVox, i18n.language, isMultiBandMode, generationBPM, generationContext, isJsfxMode);
       clearInterval(progressInterval);
       setGenerationProgress(100);
       clearTimeout(timeoutId);
@@ -4856,7 +4857,7 @@ The AI was unable to verify these parameters. Please investigate.`;
   const handleSongSearch = async () => {
     if (!requireAuth()) return;
     
-    if (plugins.length === 0 || !songSearch.trim()) return;
+    if ((plugins.length === 0 && !isJsfxMode) || !songSearch.trim()) return;
     if (!isVerified) {
       window.scrollTo({ top: 0, behavior: 'smooth' });
       setError("Please complete the security verification first.");
@@ -4874,7 +4875,7 @@ The AI was unable to verify these parameters. Please investigate.`;
 
     try {
       if (!requireAuth()) return;
-      const response = await getSongBeatRecommendations(plugins, songSearch.trim(), analogInstruments, analogHardware, drumKits, excludeAnalog, dawType, starredPlugins, isGangstaVox, i18n.language, isMultiBandMode, generationBPM, generationContext);
+      const response = await getSongBeatRecommendations(plugins, songSearch.trim(), analogInstruments, analogHardware, drumKits, excludeAnalog, dawType, starredPlugins, isGangstaVox, i18n.language, isMultiBandMode, generationBPM, generationContext, isJsfxMode);
       clearInterval(progressInterval);
       setGenerationProgress(100);
       clearTimeout(timeoutId);
@@ -4929,7 +4930,7 @@ The AI was unable to verify these parameters. Please investigate.`;
 
   const handleStemsSearch = async () => {
     if (!requireAuth()) return;
-    if (plugins.length === 0) return;
+    if (plugins.length === 0 && !isJsfxMode) return;
     if (!isVerified) {
       window.scrollTo({ top: 0, behavior: "smooth" });
       setError("Please complete the security verification first.");
@@ -5097,7 +5098,7 @@ Provide the exact JSFX plugin name and required sliders/parameters.`;
   const handleAudioSearch = async (file: File | null, linkUrl?: string) => {
     if (!requireAuth()) return;
     
-    if (plugins.length === 0) return;
+    if (plugins.length === 0 && !isJsfxMode) return;
     if (!isVerified) {
       window.scrollTo({ top: 0, behavior: "smooth" });
       setError("Please complete the security verification first.");
@@ -5367,7 +5368,8 @@ Provide the exact JSFX plugin name and required sliders/parameters.`;
             finalContext,
             geminiFileUri,
             i18n.language,
-            isMultiBandMode
+            isMultiBandMode,
+            isJsfxMode
           );
         } catch (apiErr: any) {
           console.warn("Initial audio analysis failed, retrying with minimal plugin list...", apiErr);
@@ -5394,7 +5396,9 @@ Provide the exact JSFX plugin name and required sliders/parameters.`;
               isGangstaVox,
               finalContext,
               geminiFileUri,
-              i18n.language
+              i18n.language,
+              false,
+              isJsfxMode
             );
           } catch (retryErr: any) {
             console.error("Retry audio analysis failed:", retryErr);
@@ -5406,6 +5410,10 @@ Provide the exact JSFX plugin name and required sliders/parameters.`;
         setGenerationProgress(100);
         clearTimeout(timeoutId);
         
+        if (response.recipes) {
+          response.recipes = response.recipes.map(r => ({ ...r, isJsfxMode }));
+        }
+
         const recipesWithAudio = response.recipes.map(r => ({
           ...r,
           audioBase64,
@@ -7161,7 +7169,7 @@ Provide the exact JSFX plugin name and required sliders/parameters.`;
               )}
             </div>
           </div>
-        ) : plugins.length === 0 && !isEnrichingLibrary && !hasRestoredBackup ? (
+        ) : ((plugins.length === 0 && !isJsfxMode) && !isEnrichingLibrary && !hasRestoredBackup) ? (
           <div className="max-w-3xl mx-auto mt-16 sm:mt-12 animate-in fade-in zoom-in duration-1000">
             <div className={`relative p-6 sm:p-12 transition-all ${mainBlurClass} border rounded-[3rem] sm:rounded-[4rem] shadow-2xl ${theme === 'coldest' ? 'bg-white/30 border-white/40' : theme === 'chef-mode' ? 'bg-white/40 border-white/40' : 'bg-black/40 border-white/10'}`}>
               <div className="flex flex-col items-center mb-10 text-center relative z-10">
@@ -7250,17 +7258,13 @@ Provide the exact JSFX plugin name and required sliders/parameters.`;
                     <input 
                       type="checkbox" 
                       className="sr-only peer" 
-                      checked={false}
+                      checked={isJsfxMode}
                       onChange={(e) => {
-                        if (e.target.checked) {
-                          const dummyPlugins: VSTPlugin[] = [
-                            { name: 'REAPER JSFX Reference', vendor: 'Cockos', type: 'JSFX', readableParams: null }
-                          ];
-                          setPlugins(dummyPlugins);
-                          handleSaveUserPlugins(dummyPlugins);
+                        const isChecked = e.target.checked;
+                        setIsJsfxMode(isChecked);
+                        if (isChecked) {
                           setDawType('Reaper');
                           setAudioMode('critique');
-                          setIsJsfxMode(true);
                           setHasStems(true);
                           setInputMode('upload');
                           setMainTab('beat');
@@ -7339,7 +7343,7 @@ Provide the exact JSFX plugin name and required sliders/parameters.`;
               </p>
             </div>
           </div>
-        ) : (!isEnrichingLibrary && plugins.length > 0) || hasRestoredBackup ? (
+        ) : (!isEnrichingLibrary && (plugins.length > 0 || isJsfxMode)) || hasRestoredBackup ? (
           <div className="space-y-12 mt-12 sm:mt-0">
             {!isVerified && (
               <div className="flex justify-center mt-6">
@@ -8518,9 +8522,7 @@ Provide the exact JSFX plugin name and required sliders/parameters.`;
                           onChange={(e) => setRecipeLinkUrl(e.target.value)}
                           placeholder="Paste song link here to get an exact recipe..."
                           className={`flex-1 p-4 text-xs font-medium rounded-2xl w-full sm:w-auto transition-all outline-none border-2 ${
-                            audioMode === 'critique'
-                              ? (theme === 'coldest' ? 'bg-white/60 border-purple-100 focus:border-purple-400 text-slate-900 placeholder:text-slate-400' : 'bg-black/40 border-purple-500/20 focus:border-purple-500/60 text-white placeholder:text-white/20')
-                              : (theme === 'coldest' ? 'bg-white/60 border-emerald-100 focus:border-emerald-400 text-slate-900 placeholder:text-slate-400' : 'bg-black/40 border-emerald-500/20 focus:border-emerald-500/60 text-white placeholder:text-white/20')
+                            theme === 'coldest' ? 'bg-white/60 border-emerald-100 focus:border-emerald-400 text-slate-900 placeholder:text-slate-400' : 'bg-black/40 border-emerald-500/20 focus:border-emerald-500/60 text-white placeholder:text-white/20'
                           }`}
                           onKeyDown={(e) => {
                             if (e.key === 'Enter' && recipeLinkUrl.trim() && !loading) {
@@ -8531,11 +8533,7 @@ Provide the exact JSFX plugin name and required sliders/parameters.`;
                         <button
                           onClick={() => handleAudioSearch(null, recipeLinkUrl.trim())}
                           disabled={!recipeLinkUrl.trim() || loading}
-                          className={`px-6 py-4 rounded-2xl font-black text-[10px] uppercase tracking-widest shadow-lg hover:scale-105 active:scale-95 transition-all disabled:opacity-50 disabled:scale-100 ${
-                            audioMode === 'critique'
-                              ? 'bg-purple-500 text-white'
-                              : 'bg-emerald-500 text-white'
-                          }`}
+                          className="px-6 py-4 rounded-2xl font-black text-[10px] uppercase tracking-widest shadow-lg hover:scale-105 active:scale-95 transition-all disabled:opacity-50 disabled:scale-100 bg-emerald-500 text-white"
                         >
                           {audioAnalysisLoading ? 'Analyzing...' : 'Analyze Link'}
                         </button>
