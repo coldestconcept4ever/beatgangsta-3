@@ -47,6 +47,98 @@ For each stem, track, or bus that requires an effect:
 ` : '';
 };
 
+const ELITE_PRODUCER_SECRETS_PROMPT = `
+      ==================================================
+      🏆 ELITE PRODUCER SECRETS & DYNAMIC JSFX AUTOMATION 🏆
+      When designing recipes, channel the advanced techniques of top-tier producers.
+
+      1. **Daft Punk / French House Pumping (Sidechain Compression)**:
+         - **MANDATORY FOR SIDECHAIN**: If the recipe involves "pumping" pads, synths, or samples (French House style), you MUST use \`JS: Transient-Driven Auto-Pan (Transmitter)\` on the kick track to send control signals (e.g. to reg00), and \`JS: Transient-Driven Auto-Pan (Receiver)\` on the synth/pad track receiving that signal to aggressively duck the volume. 
+         - Alternatively, use \`JS: Auto Expander [Stillwell]\` or \`JS: Major Tom Compressor [Stillwell]\` with the "Detector Input" slider set to "Sidechain" (value 1.0) for aggressive 4-on-the-floor ducking. Make sure to describe the routing in the explanation.
+
+      2. **Mike Dean Synth/Bass Mastery (Analog Moog & Distortion)**:
+         - Use \`JS: Moog 4-Pole Filter [Liteon]\` with heavy "Drive (%)" (e.g., 20-50%) and aggressive "Resonance" for thick, analog synth sweeps.
+         - For sub-basses and 808s, use \`JS: Huge Booty Bass Enhancer [Stillwell]\` or \`JS: Bass Manager/Booster [Liteon]\` to add rich lower harmonics and drive.
+         - Widen lead synths massively using \`JS: Ozzifier Chorus [Stillwell]\` or \`JS: Pseudo-Stereo [Liteon]\`.
+
+      3. **Kanye-style Lo-Fi & Vocal/Sample Mangling**:
+         - For aggressive sample chopping, bitcrushing, and "broken" artifacts, use \`JS: Paranoia Mangler [remaincalm.org]\` (set "Bitcrusher", "Thermonuclear War", and "Attitude" to aggressive values) or \`JS: Avocado Ducking Glitch Generator [remaincalm.org]\` for stuttering/glitching samples.
+         - For tape-echo delay that pitches and wavers, use \`JS: Floaty (Modulated Delay) [remaincalm.org]\` with high "Warp Amount".
+         - Use \`JS: Bad Buss Mojo Waveshaper [Stillwell]\` or \`JS: Non-Linear Processor [Liteon]\` for raw, analog clipping on drum buses or aggressive vocals.
+
+      4. **Chris Lord-Alge (CLA) - Punchy In-Your-Face Rock/Pop Drums & Vocals**:
+         - Use heavy 1176-style compression on vocals and drums (e.g. \`JS: 1175 Compressor\` or \`Tukan NC76\`). Use fast attack and fast release for explosive transients.
+         - Aggressive high-shelf EQ boosts using SSL-style EQs like \`JS: RBJ 1073 EQ [Stillwell]\` or \`Tukan SumChannel\`.
+
+      5. **Serban Ghenea - Clean, Wide, and Modern Pop/Hip-Hop**:
+         - Surgical subtractive EQing using \`JS: ReJJ/ReEQ\` to carve out muddiness (200-400Hz) while leaving highs pristine and airy.
+         - Keep the low-end perfectly phase-aligned and punchy by avoiding excessive spatial effects on the kick/bass. Use \`JS: Stereo Field Manipulator [LOSER]\` to strictly center the low frequencies.
+
+      6. **Jaycen Joshua - Saturated & Warm R&B/Hip-Hop**:
+         - Saturation and harmonic excitement on vocal and instrument buses to help them cut through dense mixes. Use \`JS: Saturation [LOSER]\` or \`JS: Louderizer [Stillwell]\` on auxiliary buses.
+         - Thick, parallel compression techniques using \`JS: Digital Drum Compressor (DDC) [LOSER]\` or \`Tukan Dis-Treasure\` blended with the dry signal.
+
+      7. **Manny Marroquin - Depth and Dimensionality**:
+         - Multiple cascading delays and reverbs. Use \`JS: Delay w/Chorus\` or \`Tukan Lexikan\` followed by \`JS: MGA JS Limiter\` to control the tail dynamics.
+         - Harmonize delays using \`JS: Pitch Down-Shifter\` or \`JS: Ozzifier Chorus [Stillwell]\` on the delay returns.
+
+      8. **Dave Pensado - Color and Character EQ**:
+         - Combine multiple EQs for color. Boost lows with a Pultec emulation (\`Tukan EQT-1A\`) and use \`JS: RBJ 4-Band Semi-Parametric EQ [Stillwell]\` for midrange character.
+         - Aggressive de-essing using \`JS: De-esser [Liteon]\` before hitting compressors so high frequencies don't trigger unnatural pumping.
+
+      9. **Skrillex / Thomas Bangalter - Max Loudness & Brightness (Electro House)**:
+         - Extreme clipping and limiting using \`JS: Event Horizon Clipper [Stillwell]\` and \`JS: MGA JS Limiter\` for that crushed, in-your-face loudness on the master or drum buses.
+         - Bright, airy top end using \`JS: Exciter (Treble Enhancer) [Stillwell]\` or \`JS: Exciter [LOSER]\` to sizzle the highs.
+
+      10. **Rick Rubin - Spatial Depth and Distinct Delays**:
+         - Pinpoint slap delays using \`JS: Delay (Lo-Fi)\` and \`JS: Delay w/Stereo Bounce\` to create tight spatial environments for vocals without washing them out in reverb.
+         - Thickening guitars by routing to hard-panned pitch shifters like \`JS: Pitch Shifter 2\` with slight offset (e.g., +/- 9 cents).
+
+      11. **Noah "40" Shebib - Submerged Underwater Drake-style Pads/Vocals**:
+         - Low-pass filters combined with bit reduction. Use \`JS: Apple 12-Pole Filter\` with an aggressive LP cutoff (e.g., 800-2000Hz) paired with \`JS: Bit Reduction/Dither w/Noise Shaping\` (set to 8-12 bit).
+         - Analog warmth and smear using \`JS: Chorus with Improved Shaping [Stillwell]\`.
+
+      12. **Illangelo - Spacy and Ethereal Weeknd-Style R&B**:
+         - Heavily modulated vocal reverbs and delays. Send vocals to \`Tukan Lexikan\` followed by \`JS: Flange Baby [Stillwell]\` or \`JS: 4-Tap Phaser\` to make the tails swirl.
+         - Deep subs using \`JS: Thunderkick\` to synthesize low end below existing kicks or basses.
+         
+      13. **Mick Guzauski - Intense Radio-Ready Rock Vocals**:
+         - Parallel distortion using \`JS: Distortion (Fuzz)\` or \`JS: Waveshaping Distortion [LOSER]\` mixed in very subtly underneath the clean vocal to add grit and presence.
+         - Super aggressive peak limiting using \`JS: NP1136 Peak Limiter [Liteon]\` catching just the loudest words.
+
+      14. **Deadmau5 - Snappy, Transient-Heavy Bass Music**:
+         - Punchy transients using \`JS: Transient Controller [LOSER]\` or \`JS: Transient Killer [LOSER]\` to heavily emphasize the attack on synths and drums.
+         - Stereo manipulation of mid-basses using \`JS: Stereo Width [Stillwell]\` to keep sub frequencies mono but aggressively widen the harmonics.
+
+      ==================================================
+      ⚙️ BEATGANGSTA CONNECT: GUI PLUGIN AUTOMATION ⚙️
+      Many advanced JSFX plugins (like ReEQ, Saike Filther, Tukan plugins, Sonic Anomaly, and all the graphical plugins above) have hidden or mapped sliders that control their beautiful GUIs.
+      - DETAILED PARAMETER MODULATION INSTRUCTIONS (MANDATORY): In the 'explanation' of ANY dynamic/modulated parameter for ANY GUI-enabled JSFX plugin (such as ReEQ, Saike Filther, Tukan, etc.), you MUST provide detailed, step-by-step instructions guiding the user through REAPER's Parameter Modulation/MIDI link window. Detail clicking the 'Param' button -> 'Parameter modulation/MIDI link' -> choosing the specific parameter (e.g. Gain or Frequency) -> checking 'Audio control signal' (sidechain) -> setting Track audio channels to 1+2 (self) or 3+4 (sidechain for ducking) -> setting Direction to Negative (for ducking/cuts) or Positive (for boosting) -> configuring strength, attack (speed of reaction), and release. 
+      - ALWAYS explicitly start this with a bold statement confirming: "**BeatGangsta Connect AUTOMATION**: This Parameter Modulation has been automatically configured and activated for you in REAPER! The following instructions are provided for your reference, inspection, or manual tweaking." This ensures the user is guided in detail, but knows that BeatGangsta Connect did all the work itself!
+
+      ==================================================
+      💡 RELEARNED JSFX & EEL2 AUTOMATION DIRECTIVES (TUKAN & JSFX CLONES) 💡
+      Many JSFX have dropdowns, toggles, or buttons rendered on their custom graphical GUIs.
+      In REAPER, these custom GUI interactions map directly to standard, automatable REAPER sliders. 
+      You MUST utilize these slider mappings to automate complex internal parameters, modes, and configurations:
+      - **JClones AC1 (Analog Channel)**: Mode (Slider 8) selects console saturation curves (0 = Classic warm analog, 1 = Modern aggressive). Auto Gain (Slider 2) automatically compensates loudness as drive increases (0 = Off, 1 = On).
+      - **JClones AC2 (Tape Emulator)**: Model (Slider 5) sets tape formulation physics (0=Swiss Studer high-fidelity, 1=Japan-O Otari warm, 2=USA-M MCI classic, 3=USA-A Ampex aggressive, 4=Japan-S Sony pristine, 5=Japan-T Tascam vintage). Speed (Slider 8) sets IPS (0=7.5 IPS tape saturation with head bump, 1=15 IPS standard tape, 2=30 IPS high-fidelity mastering speed). EQ Type (Slider 9) selects equalization curves (0=IEC-1 warm/vintage, 1=IEC-2@crisp mid-high emphasis). Tape (Slider 10) chooses tape types (0=Modern hi-fi, 1=Vintage saturated).
+      - **JClones CA2A (Optical Compressor)**: Mode (Slider 2) toggles compression knee (0=Compress soft-knee, 1=Limit hard limiting). Opto Cell (Slider 4) selects release kinetics behavior (0=Classic slow analog multi-stage release, 1=Fast rapid digital-style release). R37 (Slider 3) adjusts high-frequency emphasis for the sidechain (0=Flat detection, 1=Heavy HF attenuation for de-essing).
+      - **JClones CL1B (Tube Compressor)**: Attack/Release Select (Slider 4) selects speed models (0=Manual fully adjustable, 1=Preset fixed times, 2=Combined program-dependent dynamic recovery).
+      - **JClones OInflator (Oxford Inflator)**: Clip (Slider 3) enables 0dB ceiling clipping for tube-style warm distortion (0=Off, 1=On). BandSplit (Slider 4) splits processing (0=Single-band full range, 1=Three-band split).
+      - **JClones Molot (Vintage Compressor)**: Mode (Slider 5) selects tube topology modes (0=Sigma fast, 1=Alpha warm character). Filter (Slider 8) configures sidechain highpass filter.
+      - **JClones RS124 (Vintage Tube Compressor)**: Speed (Slider 3) selects release recovery profiles (0=Slow, 1=Medium, 2=Fast).
+      - **Tukan SumChannel (Channel Strip)**: Console (Slider 5) emulates console desks (0=A-type punchy American, 1=N-type fat British warm, 2=SSL precise & transparent console). Noise (Slider 4) adds console noise floor (0=Off, 1=On).
+      - **Tukan SumThing (Summing Mixer)**: Console (Slider 4) selects the summing console model. Crosstalk (Slider 2) sets summing desk stereo channel leakage.
+      - **Tukan Dis-Treasure (Distressor)**: Ratio (Slider 1) selects ratios (0=1:1, 1=2:1, 2=3:1, 3=4:1, 4=6:1, 5=10:1, 6=20:1, 7=Nuke brickwall). Detector Mode (Slider 5) configures sidechain (0=HP filter, 1=Bandpass filter, 2=Link). Audio Mode (Slider 6) sets distortion modes (0=Clean, 1=Dist2 tube-like second harmonics, 2=Dist3 tape-like third harmonics).
+      - **Tukan NC76 / NC76B (1176 Compressor)**: Ratio (Slider 1) selects ratios (0=4:1, 1=8:1, 2=12:1, 3=20:1, 4=All-Button/British Mode for heavy drum pumping).
+      - **Tukan Lexikan / Lexikan 2 (Lush Reverb)**: Mode/Algorithm (Slider 0) sets reverb styles (0=Plate, 1=Room, 2=Hall, 3=Cathedral). Pre-Delay (Slider 2) is fully automatable.
+      - **Tukan EQT-1A (Pultec EQ)**: Simultaneous Low Boost (Slider 1) and Low Cut (Slider 2) at the same Low Freq (Slider 0) produces the famous Pultec Low-End Trick for deep yet clean bass.
+      - **Tukan Deesser**: Mode (Slider 0) selects detection method (0=Wideband, 1=Split-band).
+      - **Tukan Compressor 2**: Knee (Slider 3) sets soft-knee curve width in dB. Sidechain (Slider 7) configures detector routing.
+      ==================================================
+`;
+
 const getSimplifiedJSFXDatabase = (installedJsfxPacks: string[], starredPlugins: string[] = []) => {
   let activeJSFX = JSFX_DATABASE.filter(p => {
     if (!p.packRequired) return true;
@@ -183,7 +275,7 @@ const JSFX_PRIORITY_SPEC_PROMPT = `
        - **MANDATORY - LOW CUT ON BAND 1**: Every single track's ReEQ/ReJJ instance MUST always start with a low cut filter on Band 1 (e.g. 'Filter 1 Type': 'Low Cut' or 'High Pass', with 'Filter 1 Frequency' set to an appropriate frequency such as 30Hz - 80Hz depending on the track type, and 'Filter 1 Gain': 0.0dB) to clean up low-end rumble, exactly like we do with FabFilter Pro-Q 3.
        - **MANDATORY - AT LEAST 1 DYNAMIC EQ BAND**: Every single track's ReEQ/ReJJ instance MUST have at least 1 dynamic EQ band. Choose a band (e.g. Filter 2, Filter 3, etc.) where dynamic control is highly beneficial (like vocal resonance taming, mud control around 200-400Hz, or harshness taming in highs), and explicitly set up dynamic parameter modulation for its Gain. Make sure to describe the Dynamic EQ setup in the explanation or parameter settings.
        - **MID/SIDE PROCESSING & CUTS**: When appropriate, give plenty of Mid and Side cuts using ReEQ/ReJJ's stereo routing or Mid/Side capabilities (though this is not mandatory for every single track, use it generously where mid/side separation or narrowing/widening helps the mix).
-       - DETAILED PARAMETER MODULATION INSTRUCTIONS (MANDATORY): In the 'explanation' of any dynamic ReEQ band, you MUST provide detailed, step-by-step instructions guiding the user through REAPER's Parameter Modulation/MIDI link window. Detail clicking the 'Param' button -> 'Parameter modulation/MIDI link' -> choosing the specific Gain parameter for that Filter band -> checking 'Audio control signal' (sidechain) -> setting Track audio channels to 1+2 (self) or 3+4 (sidechain for ducking) -> setting Direction to Negative (for ducking/cuts) or Positive (for boosting) -> configuring strength, attack (speed of reaction), and release. ALWAYS explicitly start this with a bold statement confirming: "**BeatGangsta Connect AUTOMATION**: This Parameter Modulation has been automatically configured and activated for you in REAPER! The following instructions are provided for your reference, inspection, or manual tweaking." This ensures the user is guided in detail, but knows that BeatGangsta Connect did all the work itself!
+       - DETAILED PARAMETER MODULATION INSTRUCTIONS (MANDATORY): In the 'explanation' of ANY dynamic/modulated parameter for ANY GUI-enabled JSFX plugin (such as ReEQ, Saike Filther, Tukan, etc.), you MUST provide detailed, step-by-step instructions guiding the user through REAPER's Parameter Modulation/MIDI link window. Detail clicking the 'Param' button -> 'Parameter modulation/MIDI link' -> choosing the specific parameter (e.g. Gain or Frequency) -> checking 'Audio control signal' (sidechain) -> setting Track audio channels to 1+2 (self) or 3+4 (sidechain for ducking) -> setting Direction to Negative (for ducking/cuts) or Positive (for boosting) -> configuring strength, attack (speed of reaction), and release. ALWAYS explicitly start this with a bold statement confirming: "**BeatGangsta Connect AUTOMATION**: This Parameter Modulation has been automatically configured and activated for you in REAPER! The following instructions are provided for your reference, inspection, or manual tweaking." This ensures the user is guided in detail, but knows that BeatGangsta Connect did all the work itself!
     2. **JS: Saike Filther (Saike)**:
        - Use this as Option 1 for dynamic/modulated filtering or creative saturation. Recommend it for heavy dynamic ducking, creative band modulation, and synth/vocal sound shaping.
     3. **JS: Saike Saike Smooth**:
@@ -1822,26 +1914,29 @@ export const getBeatRecommendations = async (plugins: VSTPlugin[], analogInstrum
       When providing 'deepDive' settings, you MUST include 'parameter' names that EXACTLY match the slider names from the JSFX Database, and you MUST ensure the values are within the allowed min/max range.
 
       ==================================================
-      💡 RELEARNED JSFX & EEL2 AUTOMATION DIRECTIVES (TUKAN & JSFX CLONES) 💡
-      Many JSFX have dropdowns, toggles, or buttons rendered on their custom graphical GUIs.
-      In REAPER, these custom GUI interactions map directly to standard, automatable REAPER sliders. 
-      You MUST utilize these slider mappings to automate complex internal parameters, modes, and configurations:
-      - **JClones AC1 (Analog Channel)**: Mode (Slider 8) selects console saturation curves (0 = Classic warm analog, 1 = Modern aggressive). Auto Gain (Slider 2) automatically compensates loudness as drive increases (0 = Off, 1 = On).
-      - **JClones AC2 (Tape Emulator)**: Model (Slider 5) sets tape formulation physics (0=Swiss Studer high-fidelity, 1=Japan-O Otari warm, 2=USA-M MCI classic, 3=USA-A Ampex aggressive, 4=Japan-S Sony pristine, 5=Japan-T Tascam vintage). Speed (Slider 8) sets IPS (0=7.5 IPS tape saturation with head bump, 1=15 IPS standard tape, 2=30 IPS high-fidelity mastering speed). EQ Type (Slider 9) selects equalization curves (0=IEC-1 warm/vintage, 1=IEC-2@crisp mid-high emphasis). Tape (Slider 10) chooses tape types (0=Modern hi-fi, 1=Vintage saturated).
-      - **JClones CA2A (Optical Compressor)**: Mode (Slider 2) toggles compression knee (0=Compress soft-knee, 1=Limit hard limiting). Opto Cell (Slider 4) selects release kinetics behavior (0=Classic slow analog multi-stage release, 1=Fast rapid digital-style release). R37 (Slider 3) adjusts high-frequency emphasis for the sidechain (0=Flat detection, 1=Heavy HF attenuation for de-essing).
-      - **JClones CL1B (Tube Compressor)**: Attack/Release Select (Slider 4) selects speed models (0=Manual fully adjustable, 1=Preset fixed times, 2=Combined program-dependent dynamic recovery).
-      - **JClones OInflator (Oxford Inflator)**: Clip (Slider 3) enables 0dB ceiling clipping for tube-style warm distortion (0=Off, 1=On). BandSplit (Slider 4) splits processing (0=Single-band full range, 1=Three-band split).
-      - **JClones Molot (Vintage Compressor)**: Mode (Slider 5) selects tube topology modes (0=Sigma fast, 1=Alpha warm character). Filter (Slider 8) configures sidechain highpass filter.
-      - **JClones RS124 (Vintage Tube Compressor)**: Speed (Slider 3) selects release recovery profiles (0=Slow, 1=Medium, 2=Fast).
-      - **Tukan SumChannel (Channel Strip)**: Console (Slider 5) emulates console desks (0=A-type punchy American, 1=N-type fat British warm, 2=SSL precise & transparent console). Noise (Slider 4) adds console noise floor (0=Off, 1=On).
-      - **Tukan SumThing (Summing Mixer)**: Console (Slider 4) selects the summing console model. Crosstalk (Slider 2) sets summing desk stereo channel leakage.
-      - **Tukan Dis-Treasure (Distressor)**: Ratio (Slider 1) selects ratios (0=1:1, 1=2:1, 2=3:1, 3=4:1, 4=6:1, 5=10:1, 6=20:1, 7=Nuke brickwall). Detector Mode (Slider 5) configures sidechain (0=HP filter, 1=Bandpass filter, 2=Link). Audio Mode (Slider 6) sets distortion modes (0=Clean, 1=Dist2 tube-like second harmonics, 2=Dist3 tape-like third harmonics).
-      - **Tukan NC76 / NC76B (1176 Compressor)**: Ratio (Slider 1) selects ratios (0=4:1, 1=8:1, 2=12:1, 3=20:1, 4=All-Button/British Mode for heavy drum pumping).
-      - **Tukan Lexikan / Lexikan 2 (Lush Reverb)**: Mode/Algorithm (Slider 0) sets reverb styles (0=Plate, 1=Room, 2=Hall, 3=Cathedral). Pre-Delay (Slider 2) is fully automatable.
-      - **Tukan EQT-1A (Pultec EQ)**: Simultaneous Low Boost (Slider 1) and Low Cut (Slider 2) at the same Low Freq (Slider 0) produces the famous Pultec Low-End Trick for deep yet clean bass.
-      - **Tukan Deesser**: Mode (Slider 0) selects detection method (0=Wideband, 1=Split-band).
-      - **Tukan Compressor 2**: Knee (Slider 3) sets soft-knee curve width in dB. Sidechain (Slider 7) configures detector routing.
+      🏆 ELITE PRODUCER SECRETS & DYNAMIC JSFX AUTOMATION 🏆
+      When designing recipes, channel the advanced techniques of top-tier producers (Mike Dean, Daft Punk, Kanye West).
+      
+      1. **Daft Punk / French House Pumping (Sidechain Compression)**:
+         - **MANDATORY FOR SIDECHAIN**: If the recipe involves "pumping" pads, synths, or samples (French House style), you MUST use \`JS: Transient-Driven Auto-Pan (Transmitter)\` on the kick track to send control signals (e.g. to reg00), and \`JS: Transient-Driven Auto-Pan (Receiver)\` on the synth/pad track receiving that signal to aggressively duck the volume. 
+         - Alternatively, use \`JS: Auto Expander [Stillwell]\` or \`JS: Major Tom Compressor [Stillwell]\` with the "Detector Input" slider set to "Sidechain" (value 1.0) for aggressive 4-on-the-floor ducking. Make sure to describe the routing in the explanation.
+
+      2. **Mike Dean Synth/Bass Mastery (Analog Moog & Distortion)**:
+         - Use \`JS: Moog 4-Pole Filter [Liteon]\` with heavy "Drive (%)" (e.g., 20-50%) and aggressive "Resonance" for thick, analog synth sweeps.
+         - For sub-basses and 808s, use \`JS: Huge Booty Bass Enhancer [Stillwell]\` or \`JS: Bass Manager/Booster [Liteon]\` to add rich lower harmonics and drive.
+         - Widen lead synths massively using \`JS: Ozzifier Chorus [Stillwell]\` or \`JS: Pseudo-Stereo [Liteon]\`.
+
+      3. **Kanye-style Lo-Fi & Vocal/Sample Mangling**:
+         - For aggressive sample chopping, bitcrushing, and "broken" artifacts, use \`JS: Paranoia Mangler [remaincalm.org]\` (set "Bitcrusher", "Thermonuclear War", and "Attitude" to aggressive values) or \`JS: Avocado Ducking Glitch Generator [remaincalm.org]\` for stuttering/glitching samples.
+         - For tape-echo delay that pitches and wavers, use \`JS: Floaty (Modulated Delay) [remaincalm.org]\` with high "Warp Amount".
+         - Use \`JS: Bad Buss Mojo Waveshaper [Stillwell]\` or \`JS: Non-Linear Processor [Liteon]\` for raw, analog clipping on drum buses or aggressive vocals.
+
       ==================================================
+      ⚙️ BEATGANGSTA CONNECT: GUI PLUGIN AUTOMATION ⚙️
+      Many advanced JSFX plugins (like ReEQ, Saike Filther, Tukan plugins, Sonic Anomaly, and all the graphical plugins above) have hidden or mapped sliders that control their beautiful GUIs.
+      - DETAILED PARAMETER MODULATION INSTRUCTIONS (MANDATORY): In the 'explanation' of ANY dynamic/modulated parameter for ANY GUI-enabled JSFX plugin (such as ReEQ, Saike Filther, Tukan, etc.), you MUST provide detailed, step-by-step instructions guiding the user through REAPER's Parameter Modulation/MIDI link window. Detail clicking the 'Param' button -> 'Parameter modulation/MIDI link' -> choosing the specific parameter (e.g. Gain or Frequency) -> checking 'Audio control signal' (sidechain) -> setting Track audio channels to 1+2 (self) or 3+4 (sidechain for ducking) -> setting Direction to Negative (for ducking/cuts) or Positive (for boosting) -> configuring strength, attack (speed of reaction), and release. 
+      - ALWAYS explicitly start this with a bold statement confirming: "**BeatGangsta Connect AUTOMATION**: This Parameter Modulation has been automatically configured and activated for you in REAPER! The following instructions are provided for your reference, inspection, or manual tweaking." This ensures the user is guided in detail, but knows that BeatGangsta Connect did all the work itself!
+      ${ELITE_PRODUCER_SECRETS_PROMPT}
 
       JSFX DATABASE (ONLY use these plugins):
       ${JSON.stringify(simplifiedDB)}
@@ -2019,28 +2114,7 @@ export const getCustomBeatRecommendations = async (plugins: VSTPlugin[], query: 
       You are FORBIDDEN from recommending any third-party VSTs, VST3s, or AUs.
       You MUST ONLY recommend JSFX plugins from the provided 'JSFX Database' list below.
       When providing 'deepDive' settings, you MUST include 'parameter' names that EXACTLY match the slider names from the JSFX Database, and you MUST ensure the values are within the allowed min/max range.
-
-      ==================================================
-      💡 RELEARNED JSFX & EEL2 AUTOMATION DIRECTIVES (TUKAN & JSFX CLONES) 💡
-      Many JSFX have dropdowns, toggles, or buttons rendered on their custom graphical GUIs.
-      In REAPER, these custom GUI interactions map directly to standard, automatable REAPER sliders. 
-      You MUST utilize these slider mappings to automate complex internal parameters, modes, and configurations:
-      - **JClones AC1 (Analog Channel)**: Mode (Slider 8) selects console saturation curves (0 = Classic warm analog, 1 = Modern aggressive). Auto Gain (Slider 2) automatically compensates loudness as drive increases (0 = Off, 1 = On).
-      - **JClones AC2 (Tape Emulator)**: Model (Slider 5) sets tape formulation physics (0=Swiss Studer high-fidelity, 1=Japan-O Otari warm, 2=USA-M MCI classic, 3=USA-A Ampex aggressive, 4=Japan-S Sony pristine, 5=Japan-T Tascam vintage). Speed (Slider 8) sets IPS (0=7.5 IPS tape saturation with head bump, 1=15 IPS standard tape, 2=30 IPS high-fidelity mastering speed). EQ Type (Slider 9) selects equalization curves (0=IEC-1 warm/vintage, 1=IEC-2@crisp mid-high emphasis). Tape (Slider 10) chooses tape types (0=Modern hi-fi, 1=Vintage saturated).
-      - **JClones CA2A (Optical Compressor)**: Mode (Slider 2) toggles compression knee (0=Compress soft-knee, 1=Limit hard limiting). Opto Cell (Slider 4) selects release kinetics behavior (0=Classic slow analog multi-stage release, 1=Fast rapid digital-style release). R37 (Slider 3) adjusts high-frequency emphasis for the sidechain (0=Flat detection, 1=Heavy HF attenuation for de-essing).
-      - **JClones CL1B (Tube Compressor)**: Attack/Release Select (Slider 4) selects speed models (0=Manual fully adjustable, 1=Preset fixed times, 2=Combined program-dependent dynamic recovery).
-      - **JClones OInflator (Oxford Inflator)**: Clip (Slider 3) enables 0dB ceiling clipping for tube-style warm distortion (0=Off, 1=On). BandSplit (Slider 4) splits processing (0=Single-band full range, 1=Three-band split).
-      - **JClones Molot (Vintage Compressor)**: Mode (Slider 5) selects tube topology modes (0=Sigma fast, 1=Alpha warm character). Filter (Slider 8) configures sidechain highpass filter.
-      - **JClones RS124 (Vintage Tube Compressor)**: Speed (Slider 3) selects release recovery profiles (0=Slow, 1=Medium, 2=Fast).
-      - **Tukan SumChannel (Channel Strip)**: Console (Slider 5) emulates console desks (0=A-type punchy American, 1=N-type fat British warm, 2=SSL precise & transparent console). Noise (Slider 4) adds console noise floor (0=Off, 1=On).
-      - **Tukan SumThing (Summing Mixer)**: Console (Slider 4) selects the summing console model. Crosstalk (Slider 2) sets summing desk stereo channel leakage.
-      - **Tukan Dis-Treasure (Distressor)**: Ratio (Slider 1) selects ratios (0=1:1, 1=2:1, 2=3:1, 3=4:1, 4=6:1, 5=10:1, 6=20:1, 7=Nuke brickwall). Detector Mode (Slider 5) configures sidechain (0=HP filter, 1=Bandpass filter, 2=Link). Audio Mode (Slider 6) sets distortion modes (0=Clean, 1=Dist2 tube-like second harmonics, 2=Dist3 tape-like third harmonics).
-      - **Tukan NC76 / NC76B (1176 Compressor)**: Ratio (Slider 1) selects ratios (0=4:1, 1=8:1, 2=12:1, 3=20:1, 4=All-Button/British Mode for heavy drum pumping).
-      - **Tukan Lexikan / Lexikan 2 (Lush Reverb)**: Mode/Algorithm (Slider 0) sets reverb styles (0=Plate, 1=Room, 2=Hall, 3=Cathedral). Pre-Delay (Slider 2) is fully automatable.
-      - **Tukan EQT-1A (Pultec EQ)**: Simultaneous Low Boost (Slider 1) and Low Cut (Slider 2) at the same Low Freq (Slider 0) produces the famous Pultec Low-End Trick for deep yet clean bass.
-      - **Tukan Deesser**: Mode (Slider 0) selects detection method (0=Wideband, 1=Split-band).
-      - **Tukan Compressor 2**: Knee (Slider 3) sets soft-knee curve width in dB. Sidechain (Slider 7) configures detector routing.
-      ==================================================
+      ${ELITE_PRODUCER_SECRETS_PROMPT}
 
       JSFX DATABASE (ONLY use these plugins):
       ${JSON.stringify(simplifiedDB)}
@@ -2200,28 +2274,7 @@ export const getSongBeatRecommendations = async (plugins: VSTPlugin[], songQuery
       You are FORBIDDEN from recommending any third-party VSTs, VST3s, or AUs.
       You MUST ONLY recommend JSFX plugins from the provided 'JSFX Database' list below.
       When providing 'deepDive' settings, you MUST include 'parameter' names that EXACTLY match the slider names from the JSFX Database, and you MUST ensure the values are within the allowed min/max range.
-
-      ==================================================
-      💡 RELEARNED JSFX & EEL2 AUTOMATION DIRECTIVES (TUKAN & JSFX CLONES) 💡
-      Many JSFX have dropdowns, toggles, or buttons rendered on their custom graphical GUIs.
-      In REAPER, these custom GUI interactions map directly to standard, automatable REAPER sliders. 
-      You MUST utilize these slider mappings to automate complex internal parameters, modes, and configurations:
-      - **JClones AC1 (Analog Channel)**: Mode (Slider 8) selects console saturation curves (0 = Classic warm analog, 1 = Modern aggressive). Auto Gain (Slider 2) automatically compensates loudness as drive increases (0 = Off, 1 = On).
-      - **JClones AC2 (Tape Emulator)**: Model (Slider 5) sets tape formulation physics (0=Swiss Studer high-fidelity, 1=Japan-O Otari warm, 2=USA-M MCI classic, 3=USA-A Ampex aggressive, 4=Japan-S Sony pristine, 5=Japan-T Tascam vintage). Speed (Slider 8) sets IPS (0=7.5 IPS tape saturation with head bump, 1=15 IPS standard tape, 2=30 IPS high-fidelity mastering speed). EQ Type (Slider 9) selects equalization curves (0=IEC-1 warm/vintage, 1=IEC-2@crisp mid-high emphasis). Tape (Slider 10) chooses tape types (0=Modern hi-fi, 1=Vintage saturated).
-      - **JClones CA2A (Optical Compressor)**: Mode (Slider 2) toggles compression knee (0=Compress soft-knee, 1=Limit hard limiting). Opto Cell (Slider 4) selects release kinetics behavior (0=Classic slow analog multi-stage release, 1=Fast rapid digital-style release). R37 (Slider 3) adjusts high-frequency emphasis for the sidechain (0=Flat detection, 1=Heavy HF attenuation for de-essing).
-      - **JClones CL1B (Tube Compressor)**: Attack/Release Select (Slider 4) selects speed models (0=Manual fully adjustable, 1=Preset fixed times, 2=Combined program-dependent dynamic recovery).
-      - **JClones OInflator (Oxford Inflator)**: Clip (Slider 3) enables 0dB ceiling clipping for tube-style warm distortion (0=Off, 1=On). BandSplit (Slider 4) splits processing (0=Single-band full range, 1=Three-band split).
-      - **JClones Molot (Vintage Compressor)**: Mode (Slider 5) selects tube topology modes (0=Sigma fast, 1=Alpha warm character). Filter (Slider 8) configures sidechain highpass filter.
-      - **JClones RS124 (Vintage Tube Compressor)**: Speed (Slider 3) selects release recovery profiles (0=Slow, 1=Medium, 2=Fast).
-      - **Tukan SumChannel (Channel Strip)**: Console (Slider 5) emulates console desks (0=A-type punchy American, 1=N-type fat British warm, 2=SSL precise & transparent console). Noise (Slider 4) adds console noise floor (0=Off, 1=On).
-      - **Tukan SumThing (Summing Mixer)**: Console (Slider 4) selects the summing console model. Crosstalk (Slider 2) sets summing desk stereo channel leakage.
-      - **Tukan Dis-Treasure (Distressor)**: Ratio (Slider 1) selects ratios (0=1:1, 1=2:1, 2=3:1, 3=4:1, 4=6:1, 5=10:1, 6=20:1, 7=Nuke brickwall). Detector Mode (Slider 5) configures sidechain (0=HP filter, 1=Bandpass filter, 2=Link). Audio Mode (Slider 6) sets distortion modes (0=Clean, 1=Dist2 tube-like second harmonics, 2=Dist3 tape-like third harmonics).
-      - **Tukan NC76 / NC76B (1176 Compressor)**: Ratio (Slider 1) selects ratios (0=4:1, 1=8:1, 2=12:1, 3=20:1, 4=All-Button/British Mode for heavy drum pumping).
-      - **Tukan Lexikan / Lexikan 2 (Lush Reverb)**: Mode/Algorithm (Slider 0) sets reverb styles (0=Plate, 1=Room, 2=Hall, 3=Cathedral). Pre-Delay (Slider 2) is fully automatable.
-      - **Tukan EQT-1A (Pultec EQ)**: Simultaneous Low Boost (Slider 1) and Low Cut (Slider 2) at the same Low Freq (Slider 0) produces the famous Pultec Low-End Trick for deep yet clean bass.
-      - **Tukan Deesser**: Mode (Slider 0) selects detection method (0=Wideband, 1=Split-band).
-      - **Tukan Compressor 2**: Knee (Slider 3) sets soft-knee curve width in dB. Sidechain (Slider 7) configures detector routing.
-      ==================================================
+      ${ELITE_PRODUCER_SECRETS_PROMPT}
 
       JSFX DATABASE (ONLY use these plugins):
       ${JSON.stringify(simplifiedDB)}
@@ -2440,28 +2493,7 @@ export const getAudioBeatRecommendations = async (plugins: VSTPlugin[], audioBas
       You are FORBIDDEN from recommending any third-party VSTs, VST3s, or AUs.
       You MUST ONLY recommend JSFX plugins from the provided 'JSFX Database' list below.
       When providing 'deepDive' settings, you MUST include 'parameter' names that EXACTLY match the slider names from the JSFX Database, and you MUST ensure the values are within the allowed min/max range.
-
-      ==================================================
-      💡 RELEARNED JSFX & EEL2 AUTOMATION DIRECTIVES (TUKAN & JSFX CLONES) 💡
-      Many JSFX have dropdowns, toggles, or buttons rendered on their custom graphical GUIs.
-      In REAPER, these custom GUI interactions map directly to standard, automatable REAPER sliders. 
-      You MUST utilize these slider mappings to automate complex internal parameters, modes, and configurations:
-      - **JClones AC1 (Analog Channel)**: Mode (Slider 8) selects console saturation curves (0 = Classic warm analog, 1 = Modern aggressive). Auto Gain (Slider 2) automatically compensates loudness as drive increases (0 = Off, 1 = On).
-      - **JClones AC2 (Tape Emulator)**: Model (Slider 5) sets tape formulation physics (0=Swiss Studer high-fidelity, 1=Japan-O Otari warm, 2=USA-M MCI classic, 3=USA-A Ampex aggressive, 4=Japan-S Sony pristine, 5=Japan-T Tascam vintage). Speed (Slider 8) sets IPS (0=7.5 IPS tape saturation with head bump, 1=15 IPS standard tape, 2=30 IPS high-fidelity mastering speed). EQ Type (Slider 9) selects equalization curves (0=IEC-1 warm/vintage, 1=IEC-2@crisp mid-high emphasis). Tape (Slider 10) chooses tape types (0=Modern hi-fi, 1=Vintage saturated).
-      - **JClones CA2A (Optical Compressor)**: Mode (Slider 2) toggles compression knee (0=Compress soft-knee, 1=Limit hard limiting). Opto Cell (Slider 4) selects release kinetics behavior (0=Classic slow analog multi-stage release, 1=Fast rapid digital-style release). R37 (Slider 3) adjusts high-frequency emphasis for the sidechain (0=Flat detection, 1=Heavy HF attenuation for de-essing).
-      - **JClones CL1B (Tube Compressor)**: Attack/Release Select (Slider 4) selects speed models (0=Manual fully adjustable, 1=Preset fixed times, 2=Combined program-dependent dynamic recovery).
-      - **JClones OInflator (Oxford Inflator)**: Clip (Slider 3) enables 0dB ceiling clipping for tube-style warm distortion (0=Off, 1=On). BandSplit (Slider 4) splits processing (0=Single-band full range, 1=Three-band split).
-      - **JClones Molot (Vintage Compressor)**: Mode (Slider 5) selects tube topology modes (0=Sigma fast, 1=Alpha warm character). Filter (Slider 8) configures sidechain highpass filter.
-      - **JClones RS124 (Vintage Tube Compressor)**: Speed (Slider 3) selects release recovery profiles (0=Slow, 1=Medium, 2=Fast).
-      - **Tukan SumChannel (Channel Strip)**: Console (Slider 5) emulates console desks (0=A-type punchy American, 1=N-type fat British warm, 2=SSL precise & transparent console). Noise (Slider 4) adds console noise floor (0=Off, 1=On).
-      - **Tukan SumThing (Summing Mixer)**: Console (Slider 4) selects the summing console model. Crosstalk (Slider 2) sets summing desk stereo channel leakage.
-      - **Tukan Dis-Treasure (Distressor)**: Ratio (Slider 1) selects ratios (0=1:1, 1=2:1, 2=3:1, 3=4:1, 4=6:1, 5=10:1, 6=20:1, 7=Nuke brickwall). Detector Mode (Slider 5) configures sidechain (0=HP filter, 1=Bandpass filter, 2=Link). Audio Mode (Slider 6) sets distortion modes (0=Clean, 1=Dist2 tube-like second harmonics, 2=Dist3 tape-like third harmonics).
-      - **Tukan NC76 / NC76B (1176 Compressor)**: Ratio (Slider 1) selects ratios (0=4:1, 1=8:1, 2=12:1, 3=20:1, 4=All-Button/British Mode for heavy drum pumping).
-      - **Tukan Lexikan / Lexikan 2 (Lush Reverb)**: Mode/Algorithm (Slider 0) sets reverb styles (0=Plate, 1=Room, 2=Hall, 3=Cathedral). Pre-Delay (Slider 2) is fully automatable.
-      - **Tukan EQT-1A (Pultec EQ)**: Simultaneous Low Boost (Slider 1) and Low Cut (Slider 2) at the same Low Freq (Slider 0) produces the famous Pultec Low-End Trick for deep yet clean bass.
-      - **Tukan Deesser**: Mode (Slider 0) selects detection method (0=Wideband, 1=Split-band).
-      - **Tukan Compressor 2**: Knee (Slider 3) sets soft-knee curve width in dB. Sidechain (Slider 7) configures detector routing.
-      ==================================================
+      ${ELITE_PRODUCER_SECRETS_PROMPT}
 
       JSFX DATABASE (ONLY use these plugins):
       ${JSON.stringify(simplifiedDB)}
@@ -2742,28 +2774,7 @@ export const getMixCritique = async (
       DO NOT suggest any third-party plugins like FabFilter, Waves, Soundtoys, iZotope, Universal Audio, RC-20, Sonible, Gullfoss, etc.
       
       Furthermore, YOU MUST ONLY use the sliders and parameters defined in the database for each plugin. Do not invent parameter names. Refer to parameter indices or exact names from this database:
-      
-      ==================================================
-      💡 RELEARNED JSFX & EEL2 AUTOMATION DIRECTIVES (TUKAN & JSFX CLONES) 💡
-      Many JSFX have dropdowns, toggles, or buttons rendered on their custom graphical GUIs.
-      In REAPER, these custom GUI interactions map directly to standard, automatable REAPER sliders. 
-      You MUST utilize these slider mappings to automate complex internal parameters, modes, and configurations:
-      - **JClones AC1 (Analog Channel)**: Mode (Slider 8) selects console saturation curves (0 = Classic warm analog, 1 = Modern aggressive). Auto Gain (Slider 2) automatically compensates loudness as drive increases (0 = Off, 1 = On).
-      - **JClones AC2 (Tape Emulator)**: Model (Slider 5) sets tape formulation physics (0=Swiss Studer high-fidelity, 1=Japan-O Otari warm, 2=USA-M MCI classic, 3=USA-A Ampex aggressive, 4=Japan-S Sony pristine, 5=Japan-T Tascam vintage). Speed (Slider 8) sets IPS (0=7.5 IPS tape saturation with head bump, 1=15 IPS standard tape, 2=30 IPS high-fidelity mastering speed). EQ Type (Slider 9) selects equalization curves (0=IEC-1 warm/vintage, 1=IEC-2@crisp mid-high emphasis). Tape (Slider 10) chooses tape types (0=Modern hi-fi, 1=Vintage saturated).
-      - **JClones CA2A (Optical Compressor)**: Mode (Slider 2) toggles compression knee (0=Compress soft-knee, 1=Limit hard limiting). Opto Cell (Slider 4) selects release kinetics behavior (0=Classic slow analog multi-stage release, 1=Fast rapid digital-style release). R37 (Slider 3) adjusts high-frequency emphasis for the sidechain (0=Flat detection, 1=Heavy HF attenuation for de-essing).
-      - **JClones CL1B (Tube Compressor)**: Attack/Release Select (Slider 4) selects speed models (0=Manual fully adjustable, 1=Preset fixed times, 2=Combined program-dependent dynamic recovery).
-      - **JClones OInflator (Oxford Inflator)**: Clip (Slider 3) enables 0dB ceiling clipping for tube-style warm distortion (0=Off, 1=On). BandSplit (Slider 4) splits processing (0=Single-band full range, 1=Three-band split).
-      - **JClones Molot (Vintage Compressor)**: Mode (Slider 5) selects tube topology modes (0=Sigma fast, 1=Alpha warm character). Filter (Slider 8) configures sidechain highpass filter.
-      - **JClones RS124 (Vintage Tube Compressor)**: Speed (Slider 3) selects release recovery profiles (0=Slow, 1=Medium, 2=Fast).
-      - **Tukan SumChannel (Channel Strip)**: Console (Slider 5) emulates console desks (0=A-type punchy American, 1=N-type fat British warm, 2=SSL precise & transparent console). Noise (Slider 4) adds console noise floor (0=Off, 1=On).
-      - **Tukan SumThing (Summing Mixer)**: Console (Slider 4) selects the summing console model. Crosstalk (Slider 2) sets summing desk stereo channel leakage.
-      - **Tukan Dis-Treasure (Distressor)**: Ratio (Slider 1) selects ratios (0=1:1, 1=2:1, 2=3:1, 3=4:1, 4=6:1, 5=10:1, 6=20:1, 7=Nuke brickwall). Detector Mode (Slider 5) configures sidechain (0=HP filter, 1=Bandpass filter, 2=Link). Audio Mode (Slider 6) sets distortion modes (0=Clean, 1=Dist2 tube-like second harmonics, 2=Dist3 tape-like third harmonics).
-      - **Tukan NC76 / NC76B (1176 Compressor)**: Ratio (Slider 1) selects ratios (0=4:1, 1=8:1, 2=12:1, 3=20:1, 4=All-Button/British Mode for heavy drum pumping).
-      - **Tukan Lexikan / Lexikan 2 (Lush Reverb)**: Mode/Algorithm (Slider 0) sets reverb styles (0=Plate, 1=Room, 2=Hall, 3=Cathedral). Pre-Delay (Slider 2) is fully automatable.
-      - **Tukan EQT-1A (Pultec EQ)**: Simultaneous Low Boost (Slider 1) and Low Cut (Slider 2) at the same Low Freq (Slider 0) produces the famous Pultec Low-End Trick for deep yet clean bass.
-      - **Tukan Deesser**: Mode (Slider 0) selects detection method (0=Wideband, 1=Split-band).
-      - **Tukan Compressor 2**: Knee (Slider 3) sets soft-knee curve width in dB. Sidechain (Slider 7) configures detector routing.
-      ==================================================
+      ${ELITE_PRODUCER_SECRETS_PROMPT}
 
       JSFX DATABASE:
       ${dbContextString}

@@ -1380,6 +1380,69 @@ function perform_sync()
   state.is_loading = false
 end
 
+local function is_gui_plugin(name)
+  if not name then return false end
+  local nameL = name:lower()
+  
+  -- Check known creators/packs
+  if nameL:find("tukan") or nameL:find("saike") or nameL:find("geraint") or nameL:find("sonic anomaly") or nameL:find("sonicanomaly") or nameL:find("rejj") or nameL:find("reeq") or nameL:find("suzuki") or nameL:find("lewloiwc") or nameL:find("erriez") or nameL:find("mip2") or nameL:find("souk21") or nameL:find("claudio") or nameL:find("chmaha") or nameL:find("mudra") or nameL:find("reapack") then
+    return true
+  end
+
+  -- Check specific stock or general GUI keywords we know have visual interfaces
+  local gui_keywords = {
+    "loudness meter",
+    "oscilloscope",
+    "goniometer",
+    "spectrograph",
+    "spectrogram",
+    "spectrum analyzer",
+    "general dynamics",
+    "gain reduction scope",
+    "graphical dynamic waveshaper",
+    "graphical waveshaper",
+    "super8",
+    "sequencer baby",
+    "sequencer megababy",
+    "midi logger",
+    "mtc logger",
+    "midi map to key v2",
+    "audio statistics",
+    "bit meter",
+    "channel mapper-downmixer",
+    "non-linear processor",
+    "np1136",
+    "ring modulator",
+    "saturation",
+    "simple 1-pole",
+    "apple 2-pole",
+    "apple 12-pole",
+    "butterworth 4-pole",
+    "chebyshev",
+    "mga js limiter",
+    "versatile compressor",
+    "dynamic range meter",
+    "lorenz attractor",
+    "smpte ltc",
+    "vu meter",
+    "waveshaping distortion",
+    "wigware",
+    "zoom analyzer",
+    "de-esser",
+    "moog 4-pole",
+    "stereo image filter",
+    "spectropaint"
+  }
+
+  for _, kw in ipairs(gui_keywords) do
+    if nameL:find(kw) then
+      return true
+    end
+  end
+
+  return false
+end
+
 local function add_fx_fuzzy(track, fx_name)
   -- 1. Try exact match
   local idx = reaper.TrackFX_AddByName(track, fx_name, false, -1)
@@ -1787,8 +1850,8 @@ function apply_sync(payload)
         current_fx_name = resolved_name or fx_name
         if current_fx >= 0 then
           reaper.TrackFX_SetOpen(current_track, current_fx, true)
-          if current_fx_name:lower():find("reeq") or current_fx_name:lower():find("rejj") then
-            reaper.TrackFX_Show(current_track, current_fx, 3) -- Float ReEQ for full GUI
+          if is_gui_plugin(current_fx_name) then
+            reaper.TrackFX_Show(current_track, current_fx, 3) -- Float GUI-enabled JSFX
           else
             reaper.TrackFX_Show(current_track, current_fx, 1) -- Show in standard FX Chain
           end

@@ -4793,14 +4793,12 @@ The AI was unable to verify these parameters. Please investigate.`;
     };
 
     const getParamModulationLine = (fxName: string, dive: { parameter: string; value: string; explanation?: string }): string => {
-      const fxLower = fxName.toLowerCase();
       const paramLower = (dive.parameter || '').toLowerCase();
       const expLower = (dive.explanation || '').toLowerCase();
       const valLower = (dive.value || '').toLowerCase();
 
+      // Check if the parameter has automation keywords
       if (
-        (fxLower.includes('reeq') || fxLower.includes('rejj')) &&
-        paramLower.includes('gain') &&
         (expLower.includes('dynamic') || expLower.includes('modulat') || expLower.includes('duck') || expLower.includes('sidechain') || expLower.includes('compress') || expLower.includes('expansion') ||
          valLower.includes('dynamic') || valLower.includes('modulat') || valLower.includes('duck'))
       ) {

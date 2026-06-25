@@ -12,12 +12,82 @@ const getUiType = (plugin: JSFXProfile): 'gui' | 'slider' => {
     'Suzuki (RCGN) JSFX',
     'Suzuki-Scripts (lewloiwc / Suzuki)',
     'ReJJ',
-    'chmaha Scripts' // Optionally some others
+    'Souk21 ReaPack',
+    'Erriez',
+    'MIP2 Michael-P JSFX'
   ];
   if (plugin.packRequired && guiPacks.includes(plugin.packRequired)) return 'gui';
   
   const nameL = plugin.name.toLowerCase();
-  if (nameL.includes('tukan') || nameL.includes('saike') || nameL.includes('geraint') || nameL.includes('sonic anomaly') || nameL.includes('reeq')) return 'gui';
+  const shortL = plugin.shortName.toLowerCase();
+  const packL = (plugin.packRequired || '').toLowerCase();
+
+  // Known GUI packs or visual-oriented creators
+  if (
+    nameL.includes('tukan') || 
+    nameL.includes('saike') || 
+    nameL.includes('geraint') || 
+    nameL.includes('sonic anomaly') || 
+    nameL.includes('reeq') ||
+    nameL.includes('respectrum') ||
+    packL.includes('tukan') ||
+    packL.includes('saike') ||
+    packL.includes('geraint') ||
+    packL.includes('sonic anomaly') ||
+    packL.includes('rejj')
+  ) {
+    return 'gui';
+  }
+
+  // Stock / third-party plugins known to have @gfx visual/interactive interfaces
+  const guiKeywords = [
+    'loudness meter',
+    'oscilloscope',
+    'goniometer',
+    'spectrograph',
+    'spectrogram',
+    'spectrum analyzer',
+    'general dynamics',
+    'gain reduction scope',
+    'graphical dynamic waveshaper',
+    'graphical waveshaper',
+    'super8',
+    'sequencer baby',
+    'sequencer megababy',
+    'midi logger',
+    'mtc logger',
+    'midi map to key v2',
+    'audio statistics',
+    'bit meter',
+    'channel mapper-downmixer',
+    'non-linear processor',
+    'np1136',
+    'ring modulator',
+    'saturation',
+    'simple 1-pole',
+    'apple 2-pole',
+    'apple 12-pole',
+    'butterworth 4-pole',
+    'chebyshev',
+    'mga js limiter',
+    'versatile compressor',
+    'dynamic range meter',
+    'lorenz attractor',
+    'smpte ltc',
+    'vu meter',
+    'waveshaping distortion',
+    'wigware',
+    'zoom analyzer',
+    'de-esser',
+    'moog 4-pole',
+    'stereo image filter',
+    'spectropaint',
+    'gonionmeter'
+  ];
+
+  if (guiKeywords.some(keyword => nameL.includes(keyword) || shortL.includes(keyword))) {
+    return 'gui';
+  }
 
   return 'slider';
 };
