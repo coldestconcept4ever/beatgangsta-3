@@ -732,15 +732,92 @@ function import_beatgangsta_sync()
       current_fx_idx = reaper.TrackFX_AddByName(current_track, fx_name, false, -1)
       if current_fx_idx >= 0 then
         reaper.TrackFX_SetOpen(current_track, current_fx_idx, true)
+        if fx_name:lower():find("reeq") or fx_name:lower():find("rejj") then
+          reaper.TrackFX_Show(current_track, current_fx_idx, 3) -- Float ReEQ for full GUI
+        else
+          reaper.TrackFX_Show(current_track, current_fx_idx, 1) -- Show in standard FX Chain
+        end
       end
     elseif line:sub(1, 6) == "PARAM|" and current_track and current_fx_idx >= 0 then
       local p_data = line:sub(7)
       local split_pos = p_data:find("|")
       if split_pos then
-        local p_idx = tonumber(p_data:sub(1, split_pos - 1))
+        local p_name_raw = p_data:sub(1, split_pos - 1)
         local p_val = tonumber(p_data:sub(split_pos + 1))
-        if p_idx and p_val then
-          reaper.TrackFX_SetParam(current_track, current_fx_idx, p_idx, p_val)
+        if p_name_raw and p_val then
+          local matched_idx = tonumber(p_name_raw)
+          
+          if not matched_idx then
+            local fx_name_lower = ""
+            local _, fx_name_raw = reaper.TrackFX_GetFXName(current_track, current_fx_idx, "")
+            if fx_name_raw then fx_name_lower = fx_name_raw:lower() end
+            
+            -- ReEQ Precise mapping
+            if fx_name_lower:find("reeq") or fx_name_lower:find("rejj") then
+              local f_idx_str, p_type = p_name_raw:match("[fF]ilter(%d+)%s+([a-zA-Z]+)")
+              if f_idx_str and p_type then
+                local f_idx = tonumber(f_idx_str)
+                p_type = p_type:lower()
+                if f_idx >= 1 and f_idx <= 16 then
+                  local base_idx = 19 + (f_idx - 1) * 7
+                  if p_type == "type" then
+                    matched_idx = base_idx
+                  elseif p_type == "frequency" or p_type == "freq" then
+                    matched_idx = base_idx + 1
+                  elseif p_type == "gain" then
+                    matched_idx = base_idx + 2
+                  elseif p_type == "q" then
+                    matched_idx = base_idx + 3
+                  elseif p_type == "slope" then
+                    matched_idx = base_idx + 4
+                  end
+                end
+              end
+            end
+          end
+          
+          if not matched_idx then
+            -- Fallback to fuzzy mapping
+            local num_params = reaper.TrackFX_GetNumParams(current_track, current_fx_idx)
+            local p_name_clean = p_name_raw:lower():gsub("%s+", ""):gsub("-", "")
+            for p = 0, num_params - 1 do
+              local _, param_n = reaper.TrackFX_GetParamName(current_track, current_fx_idx, p, "")
+              if param_n then
+                local param_n_clean = param_n:lower():gsub("%s+", ""):gsub("-", "")
+                if param_n_clean == p_name_clean or param_n_clean:find(p_name_clean, 1, true) or p_name_clean:find(param_n_clean, 1, true) then
+                  matched_idx = p
+                  break
+                end
+              end
+            end
+          end
+          
+          if matched_idx then
+            -- ReEQ Value Conversions (from raw Hz/Q to ReEQ Slider values)
+            local _, fx_name_raw = reaper.TrackFX_GetFXName(current_track, current_fx_idx, "")
+            local fx_name_lower_full = fx_name_raw and fx_name_raw:lower() or ""
+            if fx_name_lower_full:find("reeq") or fx_name_lower_full:find("rejj") then
+              -- Frequency indices: 20, 27, 34 ... (matched_idx - 20) % 7 == 0
+              if matched_idx >= 20 and matched_idx <= 125 and (matched_idx - 20) % 7 == 0 then
+                if p_val > 10.0 then
+                  local hz = p_val
+                  if hz < 10 then hz = 10 end
+                  if hz > 24000 then hz = 24000 end
+                  p_val = 100 * math.log(hz / 10, 10) / math.log(2400, 10)
+                end
+              -- Q indices: 22, 29, 36 ... (matched_idx - 22) % 7 == 0
+              elseif matched_idx >= 22 and matched_idx <= 127 and (matched_idx - 22) % 7 == 0 then
+                if p_val < 20.0 then
+                  local q = p_val
+                  if q < 0.05 then q = 0.05 end
+                  if q > 20 then q = 20 end
+                  p_val = 100 * math.log(q / 0.05, 10) / math.log(400, 10)
+                end
+              end
+            end
+            
+            reaper.TrackFX_SetParam(current_track, current_fx_idx, matched_idx, p_val)
+          end
         end
       end
     end

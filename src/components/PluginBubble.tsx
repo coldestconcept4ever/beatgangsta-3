@@ -13,11 +13,12 @@ export interface PluginBubbleProps {
   onRegenerate: () => void;
   onCorrect?: (pluginName: string, corrections: { parameter: string, value: string }[], version: string) => Promise<{ success: boolean, message: string, plugin?: VSTPlugin }>;
   onContactSupport?: (pluginInfo: any) => void;
+  onUpdateParameters?: (newParams: any[]) => void;
   theme: string;
   className?: string;
 }
 
-export const PluginBubble: React.FC<PluginBubbleProps> = ({ name, purpose, deepDive, band, routing, isRegenerating, onRegenerate, onCorrect, onContactSupport, theme, className = '' }) => {
+export const PluginBubble: React.FC<PluginBubbleProps> = ({ name, purpose, deepDive, band, routing, isRegenerating, onRegenerate, onCorrect, onContactSupport, onUpdateParameters, theme, className = '' }) => {
   const [isCorrectionMode, setIsCorrectionMode] = useState(false);
   const [corrections, setCorrections] = useState<{ parameter: string, value: string }[]>(() => {
     return (deepDive || []).map(d => ({ parameter: d.parameter, value: d.value }));
@@ -186,7 +187,7 @@ export const PluginBubble: React.FC<PluginBubbleProps> = ({ name, purpose, deepD
           )}
           
           {((name || '').toLowerCase().includes('eq') || (name || '').toLowerCase().includes('equalizer') || (purpose || '').toLowerCase().includes('eq') || (purpose || '').toLowerCase().includes('equaliz')) && Array.isArray(deepDive) && deepDive.length > 0 && (
-            <EQVisualizer parameters={deepDive} theme={theme} />
+            <EQVisualizer parameters={deepDive} theme={theme} onUpdateParameters={onUpdateParameters} />
           )}
 
           {Array.isArray(deepDive) && deepDive.map((s, sIdx) => (

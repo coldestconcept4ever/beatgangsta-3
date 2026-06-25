@@ -47,11 +47,27 @@ For each stem, track, or bus that requires an effect:
 ` : '';
 };
 
-const getSimplifiedJSFXDatabase = (installedJsfxPacks: string[]) => {
-  const activeJSFX = JSFX_DATABASE.filter(p => {
+const getSimplifiedJSFXDatabase = (installedJsfxPacks: string[], starredPlugins: string[] = []) => {
+  let activeJSFX = JSFX_DATABASE.filter(p => {
     if (!p.packRequired) return true;
     return installedJsfxPacks.includes(p.packRequired);
   });
+
+  // Filter strictly to starred JSFX plugins
+  activeJSFX = activeJSFX.filter(p => {
+    const name = p.name;
+    const shortName = p.shortName;
+    const cleanName = name.startsWith('JS: ') ? name.substring(4) : name;
+    return starredPlugins.some(sp => {
+      const cleanSp = sp.startsWith('JS: ') ? sp.substring(4) : sp;
+      return sp === name || 
+             sp === shortName || 
+             cleanSp === cleanName || 
+             cleanSp === shortName || 
+             sp === cleanName;
+    });
+  });
+
   return activeJSFX.map(p => ({
     name: p.name.startsWith('JS: ') ? p.name : 'JS: ' + p.name,
     category: p.category,
@@ -156,6 +172,25 @@ const PRO_Q_3_LAYOUT_PROMPT = `
     - Type: Bell, Low Shelf, High Shelf, Low Cut, High Cut, Notch, Band Pass, Tilt Shelf, Flat Tilt.
     - Slope: 6dB/oct, 12dB/oct, 18dB/oct, 24dB/oct, 30dB/oct, 36dB/oct, 48dB/oct, 72dB/oct, 96dB/oct.
     - Stereo: Left, Right, Stereo, Mid, Side.
+`;
+const JSFX_PRIORITY_SPEC_PROMPT = `
+    CRITICAL - JSFX PRIORITIZATION & EQ DEEP-DIVE RULES:
+    When JSFX Mode is active, you MUST prioritize the following plugins for EQ, dynamic filtering, de-harshing, and resonance suppression:
+    1. **JS: ReJJ/ReEQ**:
+       - Use this as the primary surgical parametric EQ (supports up to 16 bands).
+       - In 'deepDive' parameters, use the format: 'Filter X Type', 'Filter X Frequency', 'Filter X Gain', 'Filter X Q' (where X is the band number from 1 to 16, e.g. 'Filter 1 Frequency', 'Filter 2 Gain').
+       - **MANDATORY - ALWAYS AT LEAST 7 BANDS**: For every track's EQ setup, you MUST ALWAYS configure at least 7 bands of ReEQ/ReJJ (e.g., specifying parameters for Filter 1, Filter 2, Filter 3, Filter 4, Filter 5, Filter 6, and Filter 7 in the deepDive section).
+       - **MANDATORY - LOW CUT ON BAND 1**: Every single track's ReEQ/ReJJ instance MUST always start with a low cut filter on Band 1 (e.g. 'Filter 1 Type': 'Low Cut' or 'High Pass', with 'Filter 1 Frequency' set to an appropriate frequency such as 30Hz - 80Hz depending on the track type, and 'Filter 1 Gain': 0.0dB) to clean up low-end rumble, exactly like we do with FabFilter Pro-Q 3.
+       - **MANDATORY - AT LEAST 1 DYNAMIC EQ BAND**: Every single track's ReEQ/ReJJ instance MUST have at least 1 dynamic EQ band. Choose a band (e.g. Filter 2, Filter 3, etc.) where dynamic control is highly beneficial (like vocal resonance taming, mud control around 200-400Hz, or harshness taming in highs), and explicitly set up dynamic parameter modulation for its Gain. Make sure to describe the Dynamic EQ setup in the explanation or parameter settings.
+       - **MID/SIDE PROCESSING & CUTS**: When appropriate, give plenty of Mid and Side cuts using ReEQ/ReJJ's stereo routing or Mid/Side capabilities (though this is not mandatory for every single track, use it generously where mid/side separation or narrowing/widening helps the mix).
+       - DETAILED PARAMETER MODULATION INSTRUCTIONS (MANDATORY): In the 'explanation' of any dynamic ReEQ band, you MUST provide detailed, step-by-step instructions guiding the user through REAPER's Parameter Modulation/MIDI link window. Detail clicking the 'Param' button -> 'Parameter modulation/MIDI link' -> choosing the specific Gain parameter for that Filter band -> checking 'Audio control signal' (sidechain) -> setting Track audio channels to 1+2 (self) or 3+4 (sidechain for ducking) -> setting Direction to Negative (for ducking/cuts) or Positive (for boosting) -> configuring strength, attack (speed of reaction), and release. ALWAYS explicitly start this with a bold statement confirming: "**BeatGangsta Connect AUTOMATION**: This Parameter Modulation has been automatically configured and activated for you in REAPER! The following instructions are provided for your reference, inspection, or manual tweaking." This ensures the user is guided in detail, but knows that BeatGangsta Connect did all the work itself!
+    2. **JS: Saike Filther (Saike)**:
+       - Use this as Option 1 for dynamic/modulated filtering or creative saturation. Recommend it for heavy dynamic ducking, creative band modulation, and synth/vocal sound shaping.
+    3. **JS: Saike Saike Smooth**:
+       - Use this for dynamic resonance suppression and spectral de-harshing.
+       - EVERY single track's FX chain (and buses) MUST end with "JS: Saike Saike Smooth" as the final plugin to suppress harshness and clean up the high-frequency spectrum.
+    4. **JS: Mudra/Spectral-Shaper**:
+       - Use this as the intelligent spectral dynamics and high-frequency resonance controller. Recommend placing it on vocals, harsh instruments, or groups to smooth out problematic frequencies dynamically.
 `;
 const GULLFOSS_SPEC_PROMPT = `
     CRITICAL - GULLFOSS / GULLFOSS LIVE / GULLFOSS MASTER:
@@ -528,6 +563,7 @@ export const regeneratePlugin = async (
     You are an expert music producer. The user wants to replace a plugin in their recipe.
     ${getLanguageInstruction(language)}
     ${PRO_Q_3_LAYOUT_PROMPT}
+    ${JSFX_PRIORITY_SPEC_PROMPT}
     ${GULLFOSS_SPEC_PROMPT}
     ${OZONE_SPEC_PROMPT}
     ${SONIBLE_SPEC_PROMPT}
@@ -1777,7 +1813,7 @@ export const getBeatRecommendations = async (plugins: VSTPlugin[], analogInstrum
  
   let jsfxDiktat = "";
   if (isJsfxMode) {
-    const simplifiedDB = getSimplifiedJSFXDatabase(installedJsfxPacks);
+    const simplifiedDB = getSimplifiedJSFXDatabase(installedJsfxPacks, starredPlugins);
     
     jsfxDiktat = `
       CRITICAL INSTRUCTION: JSFX MODE IS ENABLED.
@@ -1829,6 +1865,7 @@ export const getBeatRecommendations = async (plugins: VSTPlugin[], analogInstrum
     ${sphereMicStr}
     ${languageInstruction}
     ${PRO_Q_3_LAYOUT_PROMPT}
+    ${JSFX_PRIORITY_SPEC_PROMPT}
     ${GULLFOSS_SPEC_PROMPT}
     ${OZONE_SPEC_PROMPT}
     ${SONIBLE_SPEC_PROMPT}
@@ -1872,6 +1909,7 @@ export const getBeatRecommendations = async (plugins: VSTPlugin[], analogInstrum
     ${sphereMicStr}
     ${languageInstruction}
     ${PRO_Q_3_LAYOUT_PROMPT}
+    ${JSFX_PRIORITY_SPEC_PROMPT}
     ${GULLFOSS_SPEC_PROMPT}
     ${OZONE_SPEC_PROMPT}
     ${SONIBLE_SPEC_PROMPT}
@@ -1975,7 +2013,7 @@ export const getCustomBeatRecommendations = async (plugins: VSTPlugin[], query: 
 
   let jsfxDiktat = "";
   if (isJsfxMode) {
-    const simplifiedDB = getSimplifiedJSFXDatabase(installedJsfxPacks);
+    const simplifiedDB = getSimplifiedJSFXDatabase(installedJsfxPacks, starredPlugins);
     jsfxDiktat = `
       CRITICAL INSTRUCTION: JSFX MODE IS ENABLED.
       You are FORBIDDEN from recommending any third-party VSTs, VST3s, or AUs.
@@ -2027,6 +2065,7 @@ export const getCustomBeatRecommendations = async (plugins: VSTPlugin[], query: 
     ${ruhedraStyle}
     ${getLanguageInstruction(language)}
     ${PRO_Q_3_LAYOUT_PROMPT}
+    ${JSFX_PRIORITY_SPEC_PROMPT}
     ${GULLFOSS_SPEC_PROMPT}
     ${OZONE_SPEC_PROMPT}
     ${SONIBLE_SPEC_PROMPT}
@@ -2155,7 +2194,7 @@ export const getSongBeatRecommendations = async (plugins: VSTPlugin[], songQuery
 
   let jsfxDiktat = "";
   if (isJsfxMode) {
-    const simplifiedDB = getSimplifiedJSFXDatabase(installedJsfxPacks);
+    const simplifiedDB = getSimplifiedJSFXDatabase(installedJsfxPacks, starredPlugins);
     jsfxDiktat = `
       CRITICAL INSTRUCTION: JSFX MODE IS ENABLED.
       You are FORBIDDEN from recommending any third-party VSTs, VST3s, or AUs.
@@ -2207,6 +2246,7 @@ export const getSongBeatRecommendations = async (plugins: VSTPlugin[], songQuery
     ${getLanguageInstruction(language)}
     ${GULLFOSS_SPEC_PROMPT}
     ${PRO_Q_3_LAYOUT_PROMPT}
+    ${JSFX_PRIORITY_SPEC_PROMPT}
     ${OZONE_SPEC_PROMPT}
     ${SONIBLE_SPEC_PROMPT}
     ${RC20_SPEC_PROMPT}
@@ -2246,6 +2286,7 @@ export const getSongBeatRecommendations = async (plugins: VSTPlugin[], songQuery
     ${sphereMicStr}
     ${getLanguageInstruction(language)}
     ${PRO_Q_3_LAYOUT_PROMPT}
+    ${JSFX_PRIORITY_SPEC_PROMPT}
     ${GULLFOSS_SPEC_PROMPT}
     ${OZONE_SPEC_PROMPT}
     ${SONIBLE_SPEC_PROMPT}
@@ -2393,7 +2434,7 @@ export const getAudioBeatRecommendations = async (plugins: VSTPlugin[], audioBas
 
   let jsfxDiktat = "";
   if (isJsfxMode) {
-    const simplifiedDB = getSimplifiedJSFXDatabase(installedJsfxPacks);
+    const simplifiedDB = getSimplifiedJSFXDatabase(installedJsfxPacks, starredPlugins);
     jsfxDiktat = `
       CRITICAL INSTRUCTION: JSFX MODE IS ENABLED.
       You are FORBIDDEN from recommending any third-party VSTs, VST3s, or AUs.
@@ -2635,7 +2676,8 @@ export const getMixCritique = async (
   isMultiBandMode: boolean = false,
   isMasterMode: boolean = false,
   isJsfxMode: boolean = false,
-  installedJsfxPacks: string[] = []
+  installedJsfxPacks: string[] = [],
+  starredPlugins: string[] = []
 ): Promise<any> => {
   const ai = getAI();
   const pluginListStr = plugins.map(p => {
@@ -2685,7 +2727,7 @@ export const getMixCritique = async (
 
   let jsfxDiktat = "";
   if (isJsfxMode) {
-    const simplifiedDB = getSimplifiedJSFXDatabase(installedJsfxPacks);
+    const simplifiedDB = getSimplifiedJSFXDatabase(installedJsfxPacks, starredPlugins);
     
     // Convert to JSON and take measures not to blow up the prompt size
     const dbContextString = JSON.stringify(simplifiedDB);
@@ -2750,6 +2792,7 @@ ${previousCritiqueStr}
     ${referenceTrackStr}
     ${languageInstruction}
     ${PRO_Q_3_LAYOUT_PROMPT}
+    ${JSFX_PRIORITY_SPEC_PROMPT}
     ${GULLFOSS_SPEC_PROMPT}
     ${OZONE_SPEC_PROMPT}
     ${SONIBLE_SPEC_PROMPT}
@@ -3044,6 +3087,7 @@ ${getLanguageInstruction(language)}
     ${query.toLowerCase().includes('guitar') ? "CRITICAL: If the user is asking about guitars, acoustic or electric, strongly consider recommending the use of a capo (e.g. on the 2nd to 5th fret) to achieve a brighter, more distinctive, and chiming sound without breaking strings. Reference Johnny Marr, Jingle-Jangle styles, and The Smiths as examples." : ""}
 
     ${PRO_Q_3_LAYOUT_PROMPT}
+    ${JSFX_PRIORITY_SPEC_PROMPT}
     ${GULLFOSS_SPEC_PROMPT}
     ${OZONE_SPEC_PROMPT}
     ${SONIBLE_SPEC_PROMPT}
@@ -3161,6 +3205,7 @@ export const getLyricAnalysis = async (
     3. Proper gain staging must be applied on compressing or EQ actions.
     
     ${PRO_Q_3_LAYOUT_PROMPT}
+    ${JSFX_PRIORITY_SPEC_PROMPT}
     ${GULLFOSS_SPEC_PROMPT}
     ${OZONE_SPEC_PROMPT}
     ${SONIBLE_SPEC_PROMPT}

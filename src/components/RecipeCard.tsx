@@ -122,6 +122,89 @@ export const RecipeCard: React.FC<RecipeCardProps> = ({ recipe: initialRecipe, i
       setRegeneratingPluginId(null);
     }
   }
+
+  const handleUpdatePluginParameters = (type: 'instrument' | 'bus' | 'master' | 'instrument_fx' | 'bus_fx' | 'layer_fx' | 'tracking-unison' | 'tracking-insert' | 'tracking-aux1' | 'tracking-aux2', index: number, fxIndex: number, newParams: any[]) => {
+    const updatedRecipe = { ...recipe };
+    if (type === 'master') {
+      if (updatedRecipe.masterPlugins?.[index]) {
+        updatedRecipe.masterPlugins[index] = {
+          ...updatedRecipe.masterPlugins[index],
+          deepDive: newParams
+        };
+      }
+    } else if (type === 'instrument') {
+      if (updatedRecipe.instruments?.[index]) {
+        updatedRecipe.instruments[index] = {
+          ...updatedRecipe.instruments[index],
+          deepDive: newParams
+        };
+      }
+    } else if (type === 'instrument_fx') {
+      if (updatedRecipe.instruments?.[index]?.fxPlugins?.[fxIndex]) {
+        updatedRecipe.instruments[index].fxPlugins[fxIndex] = {
+          ...updatedRecipe.instruments[index].fxPlugins[fxIndex],
+          deepDive: newParams
+        };
+      }
+    } else if (type === 'bus') {
+      if (updatedRecipe.busses?.[index]) {
+        updatedRecipe.busses[index] = {
+          ...updatedRecipe.busses[index],
+          deepDive: newParams
+        } as any;
+      }
+    } else if (type === 'bus_fx') {
+      if (updatedRecipe.busses?.[index]?.fxPlugins?.[fxIndex]) {
+        updatedRecipe.busses[index].fxPlugins[fxIndex] = {
+          ...updatedRecipe.busses[index].fxPlugins[fxIndex],
+          deepDive: newParams
+        };
+      }
+    } else if (type === 'layer_fx') {
+      if (updatedRecipe.gangstaVox?.vocalTracks?.[index]?.fxPlugins?.[fxIndex]) {
+        updatedRecipe.gangstaVox.vocalTracks[index].fxPlugins[fxIndex] = {
+          ...updatedRecipe.gangstaVox.vocalTracks[index].fxPlugins[fxIndex],
+          deepDive: newParams
+        };
+      } else if (updatedRecipe.vocalElements?.vocalTracks?.[index]?.fxPlugins?.[fxIndex]) {
+        updatedRecipe.vocalElements.vocalTracks[index].fxPlugins[fxIndex] = {
+          ...updatedRecipe.vocalElements.vocalTracks[index].fxPlugins[fxIndex],
+          deepDive: newParams
+        };
+      }
+    } else if (type === 'tracking-unison') {
+      if (updatedRecipe.gangstaVox?.trackingChain?.unisonPlugin) {
+        updatedRecipe.gangstaVox.trackingChain.unisonPlugin = {
+          ...updatedRecipe.gangstaVox.trackingChain.unisonPlugin,
+          deepDive: newParams
+        };
+      }
+    } else if (type === 'tracking-insert') {
+      if (updatedRecipe.gangstaVox?.trackingChain?.inserts?.[fxIndex]) {
+        updatedRecipe.gangstaVox.trackingChain.inserts[fxIndex] = {
+          ...updatedRecipe.gangstaVox.trackingChain.inserts[fxIndex],
+          deepDive: newParams
+        };
+      }
+    } else if (type === 'tracking-aux1') {
+      if (updatedRecipe.gangstaVox?.trackingChain?.aux1?.[fxIndex]) {
+        updatedRecipe.gangstaVox.trackingChain.aux1[fxIndex] = {
+          ...updatedRecipe.gangstaVox.trackingChain.aux1[fxIndex],
+          deepDive: newParams
+        };
+      }
+    } else if (type === 'tracking-aux2') {
+      if (updatedRecipe.gangstaVox?.trackingChain?.aux2?.[fxIndex]) {
+        updatedRecipe.gangstaVox.trackingChain.aux2[fxIndex] = {
+          ...updatedRecipe.gangstaVox.trackingChain.aux2[fxIndex],
+          deepDive: newParams
+        };
+      }
+    }
+    setRecipe(updatedRecipe);
+    onSave(updatedRecipe);
+  };
+
   const [expanded, setExpanded] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
@@ -130,6 +213,54 @@ export const RecipeCard: React.FC<RecipeCardProps> = ({ recipe: initialRecipe, i
   const [syncEmail, setSyncEmail] = useState<string>(() => localStorage.getItem('beatgangsta_sync_email') || '');
   const [showEmailInput, setShowEmailInput] = useState(false);
   const [showSyncSuccess, setShowSyncSuccess] = useState(false);
+
+  const getParamSyncValue = (pluginName: string, paramName: string, rawValue: any): number | null => {
+    const valStr = String(rawValue).trim();
+    const lowerPlugin = pluginName.toLowerCase();
+    
+    if (lowerPlugin.includes('reeq') || lowerPlugin.includes('rejj')) {
+      const lowerParam = paramName.toLowerCase();
+      if (lowerParam.includes('type')) {
+        const valLower = valStr.toLowerCase();
+        if (valLower.includes('bell') || valLower.includes('peak') || valLower.includes('parametric')) return 0;
+        if (valLower.includes('low shelf') || valLower.includes('lowshelf')) return 1;
+        if (valLower.includes('high shelf') || valLower.includes('highshelf')) return 2;
+        if (valLower.includes('low pass') || valLower.includes('lowpass') || valLower.includes('high cut') || valLower.includes('highcut')) return 3;
+        if (valLower.includes('high pass') || valLower.includes('highpass') || valLower.includes('low cut') || valLower.includes('lowcut')) return 4;
+        if (valLower.includes('notch')) return 6;
+      }
+    }
+    
+    const numVal = parseFloat(valStr.replace(/[^0-9.-]/g, ''));
+    return isNaN(numVal) ? null : numVal;
+  };
+
+  const getParamModulationLine = (fxName: string, dive: { parameter: string; value: string; explanation?: string }): string => {
+    const fxLower = fxName.toLowerCase();
+    const paramLower = (dive.parameter || '').toLowerCase();
+    const expLower = (dive.explanation || '').toLowerCase();
+    const valLower = (dive.value || '').toLowerCase();
+
+    if (
+      (fxLower.includes('reeq') || fxLower.includes('rejj')) &&
+      paramLower.includes('gain') &&
+      (expLower.includes('dynamic') || expLower.includes('modulat') || expLower.includes('duck') || expLower.includes('sidechain') || expLower.includes('compress') || expLower.includes('expansion') ||
+       valLower.includes('dynamic') || valLower.includes('modulat') || valLower.includes('duck'))
+    ) {
+      let dir = 1; // Negative / ducking
+      if (expLower.includes('boost') || expLower.includes('expand') || expLower.includes('positive') || valLower.includes('boost')) {
+        dir = 0; // Positive / boost
+      }
+
+      let chan = 0; // 1+2 self
+      if (expLower.includes('sidechain') || expLower.includes('aux') || valLower.includes('sidechain')) {
+        chan = 3; // 3+4 sidechain
+      }
+
+      return `PARAM_MOD|${dive.parameter}|active=1;chan=${chan};dir=${dir};strength=0.5;attack=10;release=100\n`;
+    }
+    return '';
+  };
 
   const handlePushReaperSync = async () => {
     if (!syncEmail) {
@@ -191,15 +322,21 @@ export const RecipeCard: React.FC<RecipeCardProps> = ({ recipe: initialRecipe, i
         if (inst.fxPlugins) {
           inst.fxPlugins.forEach(req => {
             txtContent += `FX|${req.name}\n`;
-            if (req.deepDive && req.name.startsWith('JS:')) {
+            if (req.deepDive && (req.name.startsWith('JS:') || req.name.toLowerCase().includes('reeq') || req.name.toLowerCase().includes('rejj'))) {
               req.deepDive.forEach(dive => {
-                const numVal = parseFloat(String(dive.value).replace(/[^0-9.-]/g, ''));
-                if (!isNaN(numVal) && dive.parameter) {
+                const numVal = getParamSyncValue(req.name, dive.parameter, dive.value);
+                if (numVal !== null && dive.parameter) {
                   txtContent += `PARAM|${dive.parameter}|${numVal}\n`;
+                  txtContent += getParamModulationLine(req.name, dive);
                 }
               });
             }
           });
+        }
+        // Saike Smooth as last plugin on every track
+        const hasSmoothInst = inst.fxPlugins ? inst.fxPlugins.some(p => p.name.toLowerCase().includes('smooth')) : false;
+        if (!hasSmoothInst) {
+          txtContent += `FX|JS: Saike Saike Smooth\n`;
         }
         
         if (isDrumsRole && recipe.drumPatterns) {
@@ -263,15 +400,21 @@ export const RecipeCard: React.FC<RecipeCardProps> = ({ recipe: initialRecipe, i
         if (bus.fxPlugins) {
           bus.fxPlugins.forEach(req => {
             txtContent += `FX|${req.name}\n`;
-            if (req.deepDive && req.name.startsWith('JS:')) {
+            if (req.deepDive && (req.name.startsWith('JS:') || req.name.toLowerCase().includes('reeq') || req.name.toLowerCase().includes('rejj'))) {
               req.deepDive.forEach(dive => {
-                const numVal = parseFloat(String(dive.value).replace(/[^0-9.-]/g, ''));
-                if (!isNaN(numVal) && dive.parameter) {
+                const numVal = getParamSyncValue(req.name, dive.parameter, dive.value);
+                if (numVal !== null && dive.parameter) {
                   txtContent += `PARAM|${dive.parameter}|${numVal}\n`;
+                  txtContent += getParamModulationLine(req.name, dive);
                 }
               });
             }
           });
+        }
+        // Saike Smooth as last plugin on every track (bus)
+        const hasSmoothBus = bus.fxPlugins ? bus.fxPlugins.some(p => p.name.toLowerCase().includes('smooth')) : false;
+        if (!hasSmoothBus) {
+          txtContent += `FX|JS: Saike Saike Smooth\n`;
         }
       });
 
@@ -281,11 +424,12 @@ export const RecipeCard: React.FC<RecipeCardProps> = ({ recipe: initialRecipe, i
         txtContent += `PAN|0\n`;
         recipe.masterPlugins.forEach(req => {
             txtContent += `FX|${req.name}\n`;
-            if (req.deepDive && req.name.startsWith('JS:')) {
+            if (req.deepDive && (req.name.startsWith('JS:') || req.name.toLowerCase().includes('reeq') || req.name.toLowerCase().includes('rejj'))) {
               req.deepDive.forEach(dive => {
-                const numVal = parseFloat(String(dive.value).replace(/[^0-9.-]/g, ''));
-                if (!isNaN(numVal) && dive.parameter) {
+                const numVal = getParamSyncValue(req.name, dive.parameter, dive.value);
+                if (numVal !== null && dive.parameter) {
                   txtContent += `PARAM|${dive.parameter}|${numVal}\n`;
+                  txtContent += getParamModulationLine(req.name, dive);
                 }
               });
               
@@ -979,6 +1123,7 @@ export const RecipeCard: React.FC<RecipeCardProps> = ({ recipe: initialRecipe, i
                                   onRegenerate={() => handleRegenerate(dive, idx, originalIdx, 'track')}
                                   onCorrect={onCorrectPlugin}
                                   onContactSupport={onContactSupport}
+                                  onUpdateParameters={(newParams) => handleUpdatePluginParameters('instrument_fx', idx, originalIdx, newParams)}
                                   theme={theme}
                                   className={theme === 'coldest' ? 'bg-purple-900/40 border-purple-500/40 shadow-md' : 'bg-purple-900/20 border-purple-500/30'}
                                 />
@@ -1001,6 +1146,7 @@ export const RecipeCard: React.FC<RecipeCardProps> = ({ recipe: initialRecipe, i
                         onRegenerate={() => handleRegenerate(dive, idx, dIdx, 'track')}
                         onCorrect={onCorrectPlugin}
                         onContactSupport={onContactSupport}
+                        onUpdateParameters={(newParams) => handleUpdatePluginParameters('instrument_fx', idx, dIdx, newParams)}
                         theme={theme}
                         className={theme === 'coldest' ? 'bg-purple-900/40 border-purple-500/40 shadow-md' : 'bg-purple-900/20 border-purple-500/30'}
                       />
@@ -1078,6 +1224,7 @@ export const RecipeCard: React.FC<RecipeCardProps> = ({ recipe: initialRecipe, i
                       onRegenerate={() => handleRegenerate(dive, idx, dIdx, 'layer')}
                       onCorrect={onCorrectPlugin}
                       onContactSupport={onContactSupport}
+                      onUpdateParameters={(newParams) => handleUpdatePluginParameters('layer_fx', idx, dIdx, newParams)}
                       theme={theme}
                     />
                   ))}
@@ -1176,6 +1323,7 @@ export const RecipeCard: React.FC<RecipeCardProps> = ({ recipe: initialRecipe, i
                                   onRegenerate={() => handleRegenerate(dive, idx, originalIdx, 'bus')}
                                   onCorrect={onCorrectPlugin}
                                   onContactSupport={onContactSupport}
+                                  onUpdateParameters={(newParams) => handleUpdatePluginParameters('bus_fx', idx, originalIdx, newParams)}
                                   theme={theme}
                                   className={theme === 'coldest' ? 'bg-black/40 border-orange-500/20' : 'bg-black/30 border-white/10'}
                                 />
@@ -1198,6 +1346,7 @@ export const RecipeCard: React.FC<RecipeCardProps> = ({ recipe: initialRecipe, i
                         onRegenerate={() => handleRegenerate(dive, idx, dIdx, 'bus')}
                         onCorrect={onCorrectPlugin}
                         onContactSupport={onContactSupport}
+                        onUpdateParameters={(newParams) => handleUpdatePluginParameters('bus_fx', idx, dIdx, newParams)}
                         theme={theme}
                         className={theme === 'coldest' ? 'bg-black/40 border-orange-500/20' : 'bg-black/30 border-white/10'}
                       />
@@ -1226,6 +1375,7 @@ export const RecipeCard: React.FC<RecipeCardProps> = ({ recipe: initialRecipe, i
                 onRegenerate={() => handleRegenerate(dive, 0, idx, 'master')}
                 onCorrect={onCorrectPlugin}
                 onContactSupport={onContactSupport}
+                onUpdateParameters={(newParams) => handleUpdatePluginParameters('master', 0, idx, newParams)}
                 theme={theme}
                 className={theme === 'coldest' ? 'bg-emerald-950/60 border-emerald-500/40 shadow-md' : 'bg-emerald-900/10 border-emerald-500/20'}
               />
@@ -1536,6 +1686,7 @@ export const RecipeCard: React.FC<RecipeCardProps> = ({ recipe: initialRecipe, i
                       onRegenerate={() => handleRegenerate(recipe.gangstaVox!.trackingChain!.unisonPlugin, 0, 0, 'tracking-unison')}
                       onCorrect={onCorrectPlugin}
                       onContactSupport={onContactSupport}
+                      onUpdateParameters={(newParams) => handleUpdatePluginParameters('tracking-unison', 0, 0, newParams)}
                       theme={theme}
                       className={theme === 'coldest' ? 'bg-sky-900/40 border-sky-500/40 shadow-md' : 'bg-white/5 border-white/10'}
                     />
@@ -1554,6 +1705,7 @@ export const RecipeCard: React.FC<RecipeCardProps> = ({ recipe: initialRecipe, i
                         onRegenerate={() => handleRegenerate(dive, 0, dIdx, 'tracking-insert')}
                         onCorrect={onCorrectPlugin}
                         onContactSupport={onContactSupport}
+                        onUpdateParameters={(newParams) => handleUpdatePluginParameters('tracking-insert', 0, dIdx, newParams)}
                         theme={theme}
                         className={theme === 'coldest' ? 'bg-sky-900/40 border-sky-500/40 shadow-md' : 'bg-white/5 border-white/10'}
                       />
@@ -1576,6 +1728,7 @@ export const RecipeCard: React.FC<RecipeCardProps> = ({ recipe: initialRecipe, i
                             onRegenerate={() => handleRegenerate(dive, 0, dIdx, 'vocal-track-fx')} 
                             onCorrect={onCorrectPlugin}
                             onContactSupport={onContactSupport}
+                            onUpdateParameters={(newParams) => handleUpdatePluginParameters('tracking-aux1', 0, dIdx, newParams)}
                             theme={theme}
                             className={theme === 'coldest' ? 'bg-sky-900/40 border-sky-500/40 shadow-md' : 'bg-white/5 border-white/10'}
                           />
@@ -1597,6 +1750,7 @@ export const RecipeCard: React.FC<RecipeCardProps> = ({ recipe: initialRecipe, i
                             onRegenerate={() => handleRegenerate(dive, 0, dIdx, 'vocal-track-fx')}
                             onCorrect={onCorrectPlugin}
                             onContactSupport={onContactSupport}
+                            onUpdateParameters={(newParams) => handleUpdatePluginParameters('tracking-aux2', 0, dIdx, newParams)}
                             theme={theme}
                             className={theme === 'coldest' ? 'bg-sky-900/40 border-sky-500/40 shadow-md' : 'bg-white/5 border-white/10'}
                           />
@@ -1733,6 +1887,7 @@ export const RecipeCard: React.FC<RecipeCardProps> = ({ recipe: initialRecipe, i
                           onRegenerate={() => handleRegenerate(dive, idx, dIdx, 'vocal-track-fx')}
                           onCorrect={onCorrectPlugin}
                           onContactSupport={onContactSupport}
+                          onUpdateParameters={(newParams) => handleUpdatePluginParameters('layer_fx', idx, dIdx, newParams)}
                           theme={theme}
                           className={theme === 'coldest' ? 'bg-purple-900/40 border-purple-500/40 shadow-md' : 'bg-white/5 border-white/10'}
                         />

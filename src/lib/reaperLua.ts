@@ -1442,7 +1442,7 @@ local function add_fx_fuzzy(track, fx_name)
   local fallbacks = {}
   
   if fx_lower:find("eq") or fx_lower:find("filter") or fx_lower:find("1073") or fx_lower:find("tilt") then
-    fallbacks = { "JS: LOSER/3BandEQ", "JS: 3-Band EQ", "JS: Liteon/rbj1073", "VST: ReaEQ (Cockos)", "VST: ReaEQ" }
+    fallbacks = { "JS: ReJJ/ReEQ", "JS: Saike Saike Smooth", "JS: Mudra/Spectral-Shaper", "JS: LOSER/3BandEQ", "JS: 3-Band EQ", "JS: Liteon/rbj1073", "VST: ReaEQ (Cockos)", "VST: ReaEQ" }
   elseif fx_lower:find("comp") or fx_lower:find("limiter") or fx_lower:find("limit") or fx_lower:find("1175") or fx_lower:find("eventhorizon") or fx_lower:find("dyno") or fx_lower:find("gate") or fx_lower:find("clipper") or fx_lower:find("compressor") then
     fallbacks = { "JS: 1175 Compressor", "JS: LOSER/1175", "JS: Event Horizon Clipper/Limiter", "VST: ReaComp (Cockos)", "VST: ReaComp" }
   elseif fx_lower:find("delay") or fx_lower:find("echo") then
@@ -1498,6 +1498,59 @@ function apply_sync(payload)
       for i=1,8 do c=c+(x:sub(i,i)=='1' and 2^(8-i) or 0) end
       return string.char(c)
     end))
+  end
+
+  local function clean_param_name(name)
+    local n = name:lower()
+    -- Strip leading numeric guides, S-prefixes, or slider numbers (e.g., "1: ", "S5 ", "slider 2:")
+    n = n:gsub("^%s*slider%d*%s*:*%s*", "")
+    n = n:gsub("^%s*[sS]%d+%s*", "")
+    n = n:gsub("^%s*%([sS]%d+%)%s*", "")
+    n = n:gsub("^%s*%d+%s*:*%s*", "")
+    n = n:gsub("%s+", "")
+    n = n:gsub("[%-%%_%(/%):]", "") -- remove - % _ ( / ) :
+    n = n:gsub("db", "")
+    n = n:gsub("hz", "")
+    n = n:gsub("ms", "")
+    n = n:gsub("us", "")
+    n = n:gsub("μs", "")
+    n = n:gsub("freq", "")
+    n = n:gsub("frequency", "")
+    n = n:gsub("gain", "")
+    n = n:gsub("slider", "")
+    return n
+  end
+  
+  local param_aliases = {
+    ["delay"] = {"delay", "delaytime", "delaylength", "time", "len"},
+    ["width"] = {"width", "depth", "spread", "size", "choruswidth"},
+    ["frequency"] = {"frequency", "freq", "rate", "speed", "speedhz", "modrate"},
+    ["voices"] = {"voices", "choirsize", "voicecount", "choir", "voicescount"},
+    ["threshold"] = {"threshold", "thresh", "limit", "clipping"},
+    ["ceiling"] = {"ceiling", "ceil", "outmax", "max", "limitceiling"},
+    ["ratio"] = {"ratio", "comp_ratio"},
+    ["attack"] = {"attack", "atk"},
+    ["release"] = {"release", "rel"},
+    ["makeup"] = {"makeup", "gain", "output", "outgain", "makeupgain", "out"},
+    ["low"] = {"lowgain", "low", "bass", "loweq"},
+    ["mid"] = {"midgain", "mid", "mids", "mideq"},
+    ["high"] = {"highgain", "high", "treble", "higheq"},
+    ["wet"] = {"wet", "wetmix", "mix", "wetlevel"},
+    ["dry"] = {"dry", "drymix", "bypass", "drylevel"}
+  }
+  
+  local function check_alias_match(pi_cl, pn_cl)
+    if pi_cl == pn_cl then return true end
+    for _, aliases in pairs(param_aliases) do
+      local pi_in_cat = false
+      local pn_in_cat = false
+      for _, alias in ipairs(aliases) do
+        if pi_cl == alias or pi_cl:find(alias, 1, true) then pi_in_cat = true end
+        if pn_cl == alias or pn_cl:find(alias, 1, true) then pn_in_cat = true end
+      end
+      if pi_in_cat and pn_in_cat then return true end
+    end
+    return false
   end
 
   for line in payload:gmatch("([^" .. string.char(10) .. "]+)") do
@@ -1732,7 +1785,14 @@ function apply_sync(payload)
         local idx, resolved_name = add_fx_fuzzy(current_track, fx_name)
         current_fx = idx
         current_fx_name = resolved_name or fx_name
-        if current_fx < 0 then
+        if current_fx >= 0 then
+          reaper.TrackFX_SetOpen(current_track, current_fx, true)
+          if current_fx_name:lower():find("reeq") or current_fx_name:lower():find("rejj") then
+            reaper.TrackFX_Show(current_track, current_fx, 3) -- Float ReEQ for full GUI
+          else
+            reaper.TrackFX_Show(current_track, current_fx, 1) -- Show in standard FX Chain
+          end
+        else
           table.insert(state.sync_errors, {
             code = "ERR_FX_001",
             desc = "JSFX '" .. fx_name .. "' load failed. Check installation."
@@ -1758,61 +1818,32 @@ function apply_sync(payload)
           local pi_lower = pi:lower():gsub("%s+", ""):gsub("-", ""):gsub("_", "")
           local is_out_of_bounds_s = false
           
-          local function clean_param_name(name)
-            local n = name:lower()
-            -- Strip leading numeric guides, S-prefixes, or slider numbers (e.g., "1: ", "S5 ", "slider 2:")
-            n = n:gsub("^%s*slider%d*%s*:*%s*", "")
-            n = n:gsub("^%s*[sS]%d+%s*", "")
-            n = n:gsub("^%s*%([sS]%d+%)%s*", "")
-            n = n:gsub("^%s*%d+%s*:*%s*", "")
-            n = n:gsub("%s+", "")
-            n = n:gsub("[%-%%_%(/%):]", "") -- remove - % _ ( / ) :
-            n = n:gsub("db", "")
-            n = n:gsub("hz", "")
-            n = n:gsub("ms", "")
-            n = n:gsub("us", "")
-            n = n:gsub("μs", "")
-            n = n:gsub("freq", "")
-            n = n:gsub("frequency", "")
-            n = n:gsub("gain", "")
-            n = n:gsub("slider", "")
-            return n
-          end
-          
-          local param_aliases = {
-            ["delay"] = {"delay", "delaytime", "delaylength", "time", "len"},
-            ["width"] = {"width", "depth", "spread", "size", "choruswidth"},
-            ["frequency"] = {"frequency", "freq", "rate", "speed", "speedhz", "modrate"},
-            ["voices"] = {"voices", "choirsize", "voicecount", "choir", "voicescount"},
-            ["threshold"] = {"threshold", "thresh", "limit", "clipping"},
-            ["ceiling"] = {"ceiling", "ceil", "outmax", "max", "limitceiling"},
-            ["ratio"] = {"ratio", "comp_ratio"},
-            ["attack"] = {"attack", "atk"},
-            ["release"] = {"release", "rel"},
-            ["makeup"] = {"makeup", "gain", "output", "outgain", "makeupgain", "out"},
-            ["low"] = {"lowgain", "low", "bass", "loweq"},
-            ["mid"] = {"midgain", "mid", "mids", "mideq"},
-            ["high"] = {"highgain", "high", "treble", "higheq"},
-            ["wet"] = {"wet", "wetmix", "mix", "wetlevel"},
-            ["dry"] = {"dry", "drymix", "bypass", "drylevel"}
-          }
-          
-          local function check_alias_match(pi_cl, pn_cl)
-            if pi_cl == pn_cl then return true end
-            for _, aliases in pairs(param_aliases) do
-              local pi_in_cat = false
-              local pn_in_cat = false
-              for _, alias in ipairs(aliases) do
-                if pi_cl == alias or pi_cl:find(alias, 1, true) then pi_in_cat = true end
-                if pn_cl == alias or pn_cl:find(alias, 1, true) then pn_in_cat = true end
+          -- Direct precise mapping for ReEQ (by ReJJ) to prevent name mismatching or stripping issues
+          if current_fx_name and (current_fx_name:lower():find("reeq") or current_fx_name:lower():find("rejj")) then
+            local f_idx_str, p_type = pi:match("[fF]ilter(%d+)%s+([a-zA-Z]+)")
+            if f_idx_str and p_type then
+              local f_idx = tonumber(f_idx_str)
+              p_type = p_type:lower()
+              if f_idx >= 1 and f_idx <= 16 then
+                local base_idx = 19 + (f_idx - 1) * 7
+                if p_type == "type" then
+                  matched_idx = base_idx
+                elseif p_type == "frequency" or p_type == "freq" then
+                  matched_idx = base_idx + 1
+                elseif p_type == "gain" then
+                  matched_idx = base_idx + 2
+                elseif p_type == "q" then
+                  matched_idx = base_idx + 3
+                elseif p_type == "slope" then
+                  matched_idx = base_idx + 4
+                end
               end
-              if pi_in_cat and pn_in_cat then return true end
             end
-            return false
           end
 
-          -- 1. Try Precise/Alias Name Match FIRST (No more mismatching due to slider indexes)
-          local pi_clean = clean_param_name(pi)
+          if not matched_idx then
+            -- 1. Try Precise/Alias Name Match FIRST (No more mismatching due to slider indexes)
+            local pi_clean = clean_param_name(pi)
           if pi_clean ~= "" then
             for p = 0, num_params - 1 do
               local _, p_name = reaper.TrackFX_GetParamName(current_track, current_fx, p, "")
@@ -1826,6 +1857,7 @@ function apply_sync(payload)
                 end
               end
             end
+          end
           end
 
           -- 2. Fallback to extracting Slider index from S1, S2, S3 ... prefix
@@ -1883,6 +1915,28 @@ function apply_sync(payload)
               if (pi_lower:find("mix") or pi_lower:find("wet") or pi_lower:find("dry")) and p_val > 1.0 then
                 p_val = p_val / 100
               end
+              
+              -- ReEQ Value Conversions (from raw Hz/Q to ReEQ Slider values)
+              if current_fx_name and (current_fx_name:lower():find("reeq") or current_fx_name:lower():find("rejj")) then
+                -- Frequency indices: 20, 27, 34 ... (matched_idx - 20) % 7 == 0 up to Filter 16 (125)
+                if matched_idx >= 20 and matched_idx <= 125 and (matched_idx - 20) % 7 == 0 then
+                  if p_val > 10.0 then
+                    local hz = p_val
+                    if hz < 10 then hz = 10 end
+                    if hz > 24000 then hz = 24000 end
+                    p_val = 100 * math.log(hz / 10, 10) / math.log(2400, 10)
+                  end
+                -- Q indices: 22, 29, 36 ... (matched_idx - 22) % 7 == 0 up to Filter 16 (127)
+                elseif matched_idx >= 22 and matched_idx <= 127 and (matched_idx - 22) % 7 == 0 then
+                  if p_val < 20.0 then
+                    local q = p_val
+                    if q < 0.05 then q = 0.05 end
+                    if q > 20 then q = 20 end
+                    p_val = 100 * math.log(q / 0.05, 10) / math.log(400, 10)
+                  end
+                end
+              end
+
               reaper.TrackFX_SetParam(current_track, current_fx, matched_idx, p_val)
               table.insert(state.sync_errors, {
                 code = "INFO_PARAM_SYNC",
@@ -1895,6 +1949,78 @@ function apply_sync(payload)
               })
             end
           end
+        end
+      end
+    elseif line:sub(1,10) == "PARAM_MOD|" and current_track and current_fx >= 0 then
+      local pstr = line:sub(11)
+      local pi, pmod_settings = pstr:match("([^|]+)|([^|]+)")
+      if pi and pmod_settings then
+        local p_idx = tonumber(pi)
+        if not p_idx then
+          -- Resolve parameter index by name (fuzzy matching ReEQ)
+          local num_params = reaper.TrackFX_GetNumParams(current_track, current_fx)
+          if current_fx_name and (current_fx_name:lower():find("reeq") or current_fx_name:lower():find("rejj")) then
+            local f_idx_str, p_type = pi:match("[fF]ilter(%d+)%s+([a-zA-Z]+)")
+            if f_idx_str and p_type then
+              local f_idx = tonumber(f_idx_str)
+              p_type = p_type:lower()
+              if f_idx >= 1 and f_idx <= 16 then
+                local base_idx = 19 + (f_idx - 1) * 7
+                if p_type == "type" then
+                  p_idx = base_idx
+                elseif p_type == "frequency" or p_type == "freq" then
+                  p_idx = base_idx + 1
+                elseif p_type == "gain" then
+                  p_idx = base_idx + 2
+                elseif p_type == "q" then
+                  p_idx = base_idx + 3
+                elseif p_type == "slope" then
+                  p_idx = base_idx + 4
+                end
+              end
+            end
+          end
+          -- Fallback fuzzy search if not ReEQ or ReEQ match failed
+          if not p_idx then
+            local pi_clean = clean_param_name(pi)
+            if pi_clean ~= "" then
+              for p = 0, num_params - 1 do
+                local _, p_name = reaper.TrackFX_GetParamName(current_track, current_fx, p, "")
+                if p_name then
+                  local p_name_clean = clean_param_name(p_name)
+                  if p_name_clean ~= "" then
+                    if p_name_clean == pi_clean or p_name_clean:find(pi_clean, 1, true) or pi_clean:find(p_name_clean, 1, true) or check_alias_match(pi_clean, p_name_clean) then
+                      p_idx = p
+                      break
+                    end
+                  end
+                end
+              end
+            end
+          end
+        end
+
+        if p_idx then
+          -- Parse parameters
+          local active = pmod_settings:match("active=(%d+)") or "1"
+          local chan = pmod_settings:match("chan=(%d+)") or "0"
+          local dir = pmod_settings:match("dir=(%d+)") or "1"
+          local strength = pmod_settings:match("strength=([%d%.%-]+)") or "0.5"
+          local attack = pmod_settings:match("attack=(%d+)") or "10"
+          local release = pmod_settings:match("release=(%d+)") or "100"
+
+          reaper.TrackFX_SetNamedConfigParm(current_track, current_fx, "param." .. p_idx .. ".mod.active", active)
+          reaper.TrackFX_SetNamedConfigParm(current_track, current_fx, "param." .. p_idx .. ".acs.active", active)
+          reaper.TrackFX_SetNamedConfigParm(current_track, current_fx, "param." .. p_idx .. ".acs.chan", chan)
+          reaper.TrackFX_SetNamedConfigParm(current_track, current_fx, "param." .. p_idx .. ".acs.dir", dir)
+          reaper.TrackFX_SetNamedConfigParm(current_track, current_fx, "param." .. p_idx .. ".acs.strength", strength)
+          reaper.TrackFX_SetNamedConfigParm(current_track, current_fx, "param." .. p_idx .. ".acs.attack", attack)
+          reaper.TrackFX_SetNamedConfigParm(current_track, current_fx, "param." .. p_idx .. ".acs.release", release)
+
+          table.insert(state.sync_errors, {
+            code = "INFO_PARAM_MOD",
+            desc = "Automated parameter modulation for '" .. pi .. "' (Dir: " .. (dir == "1" and "Duck" or "Boost") .. ") ✔"
+          })
         end
       end
     end

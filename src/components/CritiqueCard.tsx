@@ -461,6 +461,54 @@ export const CritiqueCard: React.FC<CritiqueCardProps> = ({ critique, stems = []
   const [showEmailInput, setShowEmailInput] = useState(false);
   const [syncError, setSyncError] = useState<string | null>(null);
 
+  const getParamSyncValue = (pluginName: string, paramName: string, rawValue: any): number | null => {
+    const valStr = String(rawValue).trim();
+    const lowerPlugin = pluginName.toLowerCase();
+    
+    if (lowerPlugin.includes('reeq') || lowerPlugin.includes('rejj')) {
+      const lowerParam = paramName.toLowerCase();
+      if (lowerParam.includes('type')) {
+        const valLower = valStr.toLowerCase();
+        if (valLower.includes('bell') || valLower.includes('peak') || valLower.includes('parametric')) return 0;
+        if (valLower.includes('low shelf') || valLower.includes('lowshelf')) return 1;
+        if (valLower.includes('high shelf') || valLower.includes('highshelf')) return 2;
+        if (valLower.includes('low pass') || valLower.includes('lowpass') || valLower.includes('high cut') || valLower.includes('highcut')) return 3;
+        if (valLower.includes('high pass') || valLower.includes('highpass') || valLower.includes('low cut') || valLower.includes('lowcut')) return 4;
+        if (valLower.includes('notch')) return 6;
+      }
+    }
+    
+    const numVal = parseFloat(valStr.replace(/[^0-9.-]/g, ''));
+    return isNaN(numVal) ? null : numVal;
+  };
+
+  const getParamModulationLine = (fxName: string, dive: { parameter: string; value: string; explanation?: string }): string => {
+    const fxLower = fxName.toLowerCase();
+    const paramLower = (dive.parameter || '').toLowerCase();
+    const expLower = (dive.explanation || '').toLowerCase();
+    const valLower = (dive.value || '').toLowerCase();
+
+    if (
+      (fxLower.includes('reeq') || fxLower.includes('rejj')) &&
+      paramLower.includes('gain') &&
+      (expLower.includes('dynamic') || expLower.includes('modulat') || expLower.includes('duck') || expLower.includes('sidechain') || expLower.includes('compress') || expLower.includes('expansion') ||
+       valLower.includes('dynamic') || valLower.includes('modulat') || valLower.includes('duck'))
+    ) {
+      let dir = 1; // Negative / ducking
+      if (expLower.includes('boost') || expLower.includes('expand') || expLower.includes('positive') || valLower.includes('boost')) {
+        dir = 0; // Positive / boost
+      }
+
+      let chan = 0; // 1+2 self
+      if (expLower.includes('sidechain') || expLower.includes('aux') || valLower.includes('sidechain')) {
+        chan = 3; // 3+4 sidechain
+      }
+
+      return `PARAM_MOD|${dive.parameter}|active=1;chan=${chan};dir=${dir};strength=0.5;attack=10;release=100\n`;
+    }
+    return '';
+  };
+
   const handlePushReaperSync = async () => {
     if (!syncEmail) {
       setShowEmailInput(true);
@@ -479,14 +527,20 @@ export const CritiqueCard: React.FC<CritiqueCardProps> = ({ critique, stems = []
           txtContent += `FX|${req.name}\n`;
           if (req.deepDive) {
             req.deepDive.forEach(dive => {
-              const numVal = parseFloat(String(dive.value).replace(/[^0-9.-]/g, ''));
-              if (!isNaN(numVal) && dive.parameter) {
+              const numVal = getParamSyncValue(req.name, dive.parameter, dive.value);
+              if (numVal !== null && dive.parameter) {
                 // Keep name-based matching: PARAM|ParameterName|Value
                 txtContent += `PARAM|${dive.parameter}|${numVal}\n`;
+                txtContent += getParamModulationLine(req.name, dive);
               }
             });
           }
         });
+        // Saike Smooth as last plugin on every track
+        const hasSmoothCritique = plan.recommendedChain ? plan.recommendedChain.some(p => p.name.toLowerCase().includes('smooth')) : false;
+        if (!hasSmoothCritique) {
+          txtContent += `FX|JS: Saike Saike Smooth\n`;
+        }
       });
       
       localStorage.setItem('beatgangsta_sync_email', syncEmail.trim());
@@ -1897,6 +1951,17 @@ export const CritiqueCard: React.FC<CritiqueCardProps> = ({ critique, stems = []
                                     onRegenerate={() => handleRegenerate(plugin, idx, originalIdx)}
                                     onCorrect={onCorrectPlugin}
                                     onContactSupport={onContactSupport}
+                                    onUpdateParameters={(newParams) => {
+                                      onUpdateCritique(
+                                        critique.id,
+                                        idx,
+                                        originalIdx,
+                                        {
+                                          ...plugin,
+                                          deepDive: newParams
+                                        }
+                                      );
+                                    }}
                                     theme={theme}
                                     className={theme === 'coldest' ? 'bg-white border-sky-100' : 'bg-black/40 border-sky-500/30'}
                                   />
@@ -1919,6 +1984,17 @@ export const CritiqueCard: React.FC<CritiqueCardProps> = ({ critique, stems = []
                           onRegenerate={() => handleRegenerate(plugin, idx, pIdx)}
                           onCorrect={onCorrectPlugin}
                           onContactSupport={onContactSupport}
+                          onUpdateParameters={(newParams) => {
+                            onUpdateCritique(
+                              critique.id,
+                              idx,
+                              pIdx,
+                              {
+                                ...plugin,
+                                deepDive: newParams
+                              }
+                            );
+                          }}
                           theme={theme}
                           className={theme === 'coldest' ? 'bg-white border-sky-100' : 'bg-black/40 border-sky-500/30'}
                         />

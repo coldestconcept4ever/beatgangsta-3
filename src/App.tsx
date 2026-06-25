@@ -17,6 +17,7 @@ import { JSFX_DATABASE } from './data/jsfxResearch';
 
 import { AvianField } from './components/RavenField';
 import { PluginCard } from './components/PluginCard';
+import { JSFXCard } from './components/JSFXCard';
 import { HardwareCard } from './components/HardwareCard';
 import { ErrorBoundary } from './components/ErrorBoundary';
 const RecipeCard = React.lazy(() => import('./components/RecipeCard').then(m => ({ default: m.RecipeCard })));
@@ -602,6 +603,7 @@ const App: React.FC = () => {
     }
   });
   const [sortBy, setSortBy] = useState<'name' | 'vendor' | 'type'>('type');
+  const [gearRackTab, setGearRackTab] = useState<'vst' | 'jsfx'>('vst');
   const [selectedFolder, setSelectedFolder] = useState<string | null>(null);
   const [folderToRemove, setFolderToRemove] = useState<string | null>(null);
   const [deletedPlugins, setDeletedPlugins] = useState<VSTPlugin[]>(() => {
@@ -2230,7 +2232,8 @@ The AI was unable to verify these parameters. Please investigate.`;
     } else if (starredHardware.includes(itemName)) {
       setStarredHardware(starredHardware.filter(h => h !== itemName));
     } else {
-      if (plugins.some(p => p.name === itemName)) {
+      const isJsfx = JSFX_DATABASE.some(j => j.name === itemName || j.shortName === itemName);
+      if (plugins.some(p => p.name === itemName) || isJsfx) {
         if (starredPlugins.length < 10) {
           setStarredPlugins([...starredPlugins, itemName]);
         } else {
@@ -3462,6 +3465,70 @@ The AI was unable to verify these parameters. Please investigate.`;
     // Sort groups by key
     return Object.fromEntries(Object.entries(groups).sort(([a], [b]) => a.localeCompare(b)));
   }, [plugins, searchTerm, sortBy]);
+
+  const userOwnedJsfx = useMemo(() => {
+    return JSFX_DATABASE.filter(p => {
+      if (!p.packRequired) return true;
+      return installedJsfxPacks.includes(p.packRequired);
+    });
+  }, [installedJsfxPacks]);
+
+  const filteredJsfx = useMemo(() => {
+    let filtered = userOwnedJsfx;
+
+    if (searchTerm) {
+      filtered = filtered.filter(p => 
+        p.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (p.packRequired || "Cockos (Built-in)").toLowerCase().includes(searchTerm.toLowerCase()) ||
+        p.category.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        p.description.toLowerCase().includes(searchTerm.toLowerCase())
+      );
+    }
+
+    if (selectedFolder) {
+      filtered = filtered.filter(p => 
+        sortBy === 'vendor' 
+          ? (p.packRequired || "Cockos (Built-in)") === selectedFolder 
+          : p.category === selectedFolder
+      );
+    }
+
+    // Sort by: Favorite first, then alphabetical
+    filtered = [...filtered].sort((a, b) => {
+      const aFav = starredPlugins.includes(a.name);
+      const bFav = starredPlugins.includes(b.name);
+      if (aFav && !bFav) return -1;
+      if (!aFav && bFav) return 1;
+
+      return a.name.localeCompare(b.name);
+    });
+
+    return filtered;
+  }, [userOwnedJsfx, searchTerm, sortBy, starredPlugins, selectedFolder]);
+
+  const groupedJsfx = useMemo(() => {
+    if (sortBy === 'name') return null;
+
+    let filtered = userOwnedJsfx;
+
+    if (searchTerm) {
+      filtered = filtered.filter(p => 
+        p.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (p.packRequired || "Cockos (Built-in)").toLowerCase().includes(searchTerm.toLowerCase()) ||
+        p.category.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        p.description.toLowerCase().includes(searchTerm.toLowerCase())
+      );
+    }
+
+    const groups: Record<string, typeof JSFX_DATABASE> = {};
+    filtered.forEach(p => {
+      const key = sortBy === 'vendor' ? (p.packRequired || "Cockos (Built-in)") : p.category;
+      if (!groups[key]) groups[key] = [];
+      groups[key].push(p);
+    });
+
+    return Object.fromEntries(Object.entries(groups).sort(([a], [b]) => a.localeCompare(b)));
+  }, [userOwnedJsfx, searchTerm, sortBy]);
 
   const parsePlugins = async (input: string) => {
     if (!requireAuth()) return;
@@ -4704,6 +4771,54 @@ The AI was unable to verify these parameters. Please investigate.`;
     
     const pin = reaperSyncPin || Math.floor(1000 + Math.random() * 9000).toString();
     
+    const getParamSyncValue = (pluginName: string, paramName: string, rawValue: any): number | null => {
+      const valStr = String(rawValue).trim();
+      const lowerPlugin = pluginName.toLowerCase();
+      
+      if (lowerPlugin.includes('reeq') || lowerPlugin.includes('rejj')) {
+        const lowerParam = paramName.toLowerCase();
+        if (lowerParam.includes('type')) {
+          const valLower = valStr.toLowerCase();
+          if (valLower.includes('bell') || valLower.includes('peak') || valLower.includes('parametric')) return 0;
+          if (valLower.includes('low shelf') || valLower.includes('lowshelf')) return 1;
+          if (valLower.includes('high shelf') || valLower.includes('highshelf')) return 2;
+          if (valLower.includes('low pass') || valLower.includes('lowpass') || valLower.includes('high cut') || valLower.includes('highcut')) return 3;
+          if (valLower.includes('high pass') || valLower.includes('highpass') || valLower.includes('low cut') || valLower.includes('lowcut')) return 4;
+          if (valLower.includes('notch')) return 6;
+        }
+      }
+      
+      const numVal = parseFloat(valStr.replace(/[^0-9.-]/g, ''));
+      return isNaN(numVal) ? null : numVal;
+    };
+
+    const getParamModulationLine = (fxName: string, dive: { parameter: string; value: string; explanation?: string }): string => {
+      const fxLower = fxName.toLowerCase();
+      const paramLower = (dive.parameter || '').toLowerCase();
+      const expLower = (dive.explanation || '').toLowerCase();
+      const valLower = (dive.value || '').toLowerCase();
+
+      if (
+        (fxLower.includes('reeq') || fxLower.includes('rejj')) &&
+        paramLower.includes('gain') &&
+        (expLower.includes('dynamic') || expLower.includes('modulat') || expLower.includes('duck') || expLower.includes('sidechain') || expLower.includes('compress') || expLower.includes('expansion') ||
+         valLower.includes('dynamic') || valLower.includes('modulat') || valLower.includes('duck'))
+      ) {
+        let dir = 1; // Negative / ducking
+        if (expLower.includes('boost') || expLower.includes('expand') || expLower.includes('positive') || valLower.includes('boost')) {
+          dir = 0; // Positive / boost
+        }
+
+        let chan = 0; // 1+2 self
+        if (expLower.includes('sidechain') || expLower.includes('aux') || valLower.includes('sidechain')) {
+          chan = 3; // 3+4 sidechain
+        }
+
+        return `PARAM_MOD|${dive.parameter}|active=1;chan=${chan};dir=${dir};strength=0.5;attack=10;release=100\n`;
+      }
+      return '';
+    };
+    
     try {
       let txtContent = "";
       if (payload && payload.actionPlan) {
@@ -4714,13 +4829,19 @@ The AI was unable to verify these parameters. Please investigate.`;
             txtContent += `FX|${req.name}\n`;
             if (req.deepDive) {
               req.deepDive.forEach((dive: any) => {
-                const numVal = parseFloat(String(dive.value).replace(/[^0-9.-]/g, ''));
-                if (!isNaN(numVal) && dive.parameter) {
+                const numVal = getParamSyncValue(req.name, dive.parameter, dive.value);
+                if (numVal !== null && dive.parameter) {
                   txtContent += `PARAM|${dive.parameter}|${numVal}\n`;
+                  txtContent += getParamModulationLine(req.name, dive);
                 }
               });
             }
           });
+          // Saike Smooth as last plugin on every track
+          const hasSmoothApp = plan.recommendedChain ? plan.recommendedChain.some((p: any) => p.name.toLowerCase().includes('smooth')) : false;
+          if (!hasSmoothApp) {
+            txtContent += `FX|JS: Saike Saike Smooth\n`;
+          }
         });
       } else if (typeof payload === 'string') {
         txtContent = payload;
@@ -5147,7 +5268,7 @@ Provide the exact JSFX plugin name and required sliders/parameters.`;
       
       const activePlugins = plugins.filter(p => p.type !== 'Studio One Function');
 
-      const critique = await getMixCritique(activePlugins, null, null, 'audio/mpeg', isGangstaVox, true, fullContext, null, finalReferenceTrack, referenceAudioBase64, null, referenceGeminiFileUri, i18n.language, uploadedStems, analogInstruments, analogHardware, isBusMode, isMultiBandMode, isMasterMode, isJsfxMode, installedJsfxPacks);
+      const critique = await getMixCritique(activePlugins, null, null, 'audio/mpeg', isGangstaVox, true, fullContext, null, finalReferenceTrack, referenceAudioBase64, null, referenceGeminiFileUri, i18n.language, uploadedStems, analogInstruments, analogHardware, isBusMode, isMultiBandMode, isMasterMode, isJsfxMode, installedJsfxPacks, starredPlugins);
       critique.id = Math.random().toString(36).substr(2, 9);
       critique.isMasterMode = isMasterMode;
       critique.isJsfxMode = isJsfxMode;
@@ -5437,7 +5558,7 @@ Only use valid, default REAPER JSFX (JS:). Here is a comprehensive list of actua
 Provide the exact JSFX plugin name and required sliders/parameters.`;
         }
 
-        const critique = await getMixCritique(activePlugins, audioBase64, audioUrl, mimeType, isGangstaVox, hasStems, fullContext, null, finalReferenceTrack, referenceAudioBase64, geminiFileUri, referenceGeminiFileUri, i18n.language, undefined, analogInstruments, analogHardware, isBusMode, isMultiBandMode, isMasterMode, isJsfxMode, installedJsfxPacks);
+        const critique = await getMixCritique(activePlugins, audioBase64, audioUrl, mimeType, isGangstaVox, hasStems, fullContext, null, finalReferenceTrack, referenceAudioBase64, geminiFileUri, referenceGeminiFileUri, i18n.language, undefined, analogInstruments, analogHardware, isBusMode, isMultiBandMode, isMasterMode, isJsfxMode, installedJsfxPacks, starredPlugins);
         critique.id = Math.random().toString(36).substr(2, 9);
         critique.isMasterMode = isMasterMode;
         critique.isJsfxMode = isJsfxMode;
@@ -5489,7 +5610,8 @@ Provide the exact JSFX plugin name and required sliders/parameters.`;
             geminiFileUri,
             i18n.language,
             isMultiBandMode,
-            isJsfxMode
+            isJsfxMode,
+            installedJsfxPacks
           );
         } catch (apiErr: any) {
           console.warn("Initial audio analysis failed, retrying with minimal plugin list...", apiErr);
@@ -5518,7 +5640,8 @@ Provide the exact JSFX plugin name and required sliders/parameters.`;
               geminiFileUri,
               i18n.language,
               false,
-              isJsfxMode
+              isJsfxMode,
+              installedJsfxPacks
             );
           } catch (retryErr: any) {
             console.error("Retry audio analysis failed:", retryErr);
@@ -8981,7 +9104,8 @@ Provide the exact JSFX plugin name and required sliders/parameters.`;
                           </button>
                           <button
                             onClick={() => {
-                            if (plugins.some(p => p.name === name)) {
+                            const isJsfx = JSFX_DATABASE.some(j => j.name === name || j.shortName === name);
+                            if (plugins.some(p => p.name === name) || isJsfx) {
                               toggleStar(name);
                             } else {
                               setStarredHardware(prev => prev.filter(n => n !== name));
@@ -9057,157 +9181,254 @@ Provide the exact JSFX plugin name and required sliders/parameters.`;
               )}
 
               <div className="mb-12">
-                <div className="flex items-center justify-between mb-6">
-                  <h4 className={`text-sm font-black uppercase tracking-widest opacity-70 ${theme === 'coldest' || theme === 'chef-mode' ? 'text-slate-800' : 'text-white'}`}>Plugins</h4>
+                <div className="flex items-center justify-between border-b border-white/10 pb-3 mb-6">
+                  <div className="flex gap-6">
+                    <button
+                      onClick={() => {
+                        setGearRackTab('vst');
+                        setSelectedFolder(null);
+                      }}
+                      className={`text-sm font-black uppercase tracking-widest pb-3 border-b-2 transition-all ${
+                        gearRackTab === 'vst' 
+                          ? (theme === 'coldest' || theme === 'chef-mode' ? 'border-slate-800 text-slate-800 font-black' : 'border-white text-white font-black')
+                          : 'border-transparent text-current opacity-40 hover:opacity-75 font-bold'
+                      }`}
+                    >
+                      Uploaded VSTs
+                    </button>
+                    <button
+                      onClick={() => {
+                        setGearRackTab('jsfx');
+                        setSelectedFolder(null);
+                      }}
+                      className={`text-sm font-black uppercase tracking-widest pb-3 border-b-2 transition-all ${
+                        gearRackTab === 'jsfx' 
+                          ? (theme === 'coldest' || theme === 'chef-mode' ? 'border-slate-800 text-slate-800 font-black' : 'border-white text-white font-black')
+                          : 'border-transparent text-current opacity-40 hover:opacity-75 font-bold'
+                      }`}
+                    >
+                      JSFX Gear Rack
+                    </button>
+                  </div>
                 </div>
-                {groupedPlugins && !selectedFolder ? (
-                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-6">
-                    {(() => {
-                      const items: any[] = Object.entries(groupedPlugins).map(([groupName, groupPlugins]) => ({ type: 'folder', name: groupName, plugins: groupPlugins }));
-                    const placeholders = pendingPlaceholders.filter(p => p.type === 'folder').sort((a, b) => a.index - b.index);
-                    placeholders.forEach(p => {
-                      items.splice(p.index, 0, { type: 'folder', name: p.name, plugins: p.plugins, isPlaceholder: true, placeholderId: p.id });
-                    });
-                    
-                    return items.map((item, idx) => {
-                      if (item.isPlaceholder) {
-                        return (
-                          <div key={`placeholder-${item.placeholderId}`} className={`flex flex-col items-center justify-center p-6 rounded-[2rem] border border-dashed transition-all ${theme === 'coldest' ? 'border-sky-300 bg-sky-50' : theme === 'chef-mode' ? 'border-orange-300 bg-orange-50' : 'border-white/20 bg-white/5'} h-full min-h-[12rem]`}>
-                            <p className={`text-xs font-bold opacity-50 mb-4 text-center ${theme === 'coldest' ? 'text-sky-800' : theme === 'chef-mode' ? 'text-orange-800' : 'text-white'}`}>Removed {item.name}</p>
-                            <button 
-                              onClick={(e) => { e.stopPropagation(); handleUndo(item.placeholderId); }}
-                              className={`px-4 py-2 rounded-full text-xs font-black uppercase tracking-widest hover:scale-105 active:scale-95 transition-all ${theme === 'coldest' ? 'bg-sky-500 text-white' : theme === 'chef-mode' ? 'bg-orange-500 text-white' : 'bg-white text-black'}`}
-                            >
-                              Undo
-                            </button>
-                          </div>
-                        );
-                      }
-                      
-                      const groupName = item.name;
-                      const groupPlugins = item.plugins;
-                      return (
-                        <div 
-                          key={groupName}
-                          onClick={() => setSelectedFolder(groupName)}
-                          className={`cursor-pointer group relative flex flex-col items-center justify-center p-6 rounded-[2rem] border transition-all hover:scale-105 active:scale-95 shadow-sm hover:shadow-xl ${theme === 'coldest' ? 'bg-white/60 border-sky-100 hover:bg-white/80' : theme === 'chef-mode' ? 'bg-white/60 border-orange-100 hover:bg-white/80' : 'bg-white/5 border-white/10 hover:bg-white/10'}`}
-                        >
-                          {/* Top Actions */}
-                          <div className="absolute top-3 right-3 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity z-10">
-                            <button 
-                              onClick={(e) => { e.stopPropagation(); setFolderToRemove(groupName); }}
-                              className="p-1.5 rounded-full bg-red-500/80 text-white hover:bg-red-600 backdrop-blur-md transition-all"
-                              title={`Remove ${sortBy === 'vendor' ? 'Brand' : 'Type'}`}
-                            >
-                              <X size={14} />
-                            </button>
-                          </div>
 
-                          {/* Confirmation Popup */}
-                          {folderToRemove === groupName && (
-                            <div className="absolute inset-0 z-20 flex items-center justify-center bg-black/80 backdrop-blur-md rounded-[2rem] p-4 animate-in fade-in zoom-in duration-200" onClick={(e) => e.stopPropagation()}>
-                              <div className="text-center">
-                                <p className="text-white text-xs font-bold mb-3">Remove all {groupName}?</p>
-                                <div className="flex justify-center gap-2">
-                                  <button 
-                                    onClick={(e) => { e.stopPropagation(); setFolderToRemove(null); }}
-                                    className="px-3 py-1.5 rounded-full bg-white/20 text-white text-[10px] font-bold hover:bg-white/30 transition-colors"
-                                  >
-                                    Cancel
-                                  </button>
-                                  <button 
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      const pluginsInFolder = plugins.filter(p => (sortBy === 'vendor' ? p.vendor : p.type) === groupName);
-                                      const folderIndex = Object.keys(groupedPlugins).indexOf(groupName);
-                                      
-                                      setPlugins(prev => prev.filter(p => (sortBy === 'vendor' ? p.vendor : p.type) !== groupName));
-                                      setDeletedPlugins(prev => [...prev, ...pluginsInFolder]);
-                                      setStarredPlugins(prev => {
-                                        const names = pluginsInFolder.map(p => p.name);
-                                        return prev.filter(name => !names.includes(name));
-                                      });
-                                      
-                                      setPendingPlaceholders(prev => [
-                                        ...prev, 
-                                        { id: Date.now().toString() + Math.random(), type: 'folder', name: groupName, index: folderIndex, plugins: pluginsInFolder }
-                                      ]);
-                                      resetDeletionTimer();
-                                      setFolderToRemove(null);
-                                    }}
-                                    className="px-3 py-1.5 rounded-full bg-red-500 text-white text-[10px] font-bold hover:bg-red-600 transition-colors"
-                                  >
-                                    Remove
-                                  </button>
-                                </div>
-                              </div>
+                {gearRackTab === 'jsfx' ? (
+                  <>
+                    {groupedJsfx && !selectedFolder ? (
+                      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-6">
+                        {Object.entries(groupedJsfx).map(([groupName, groupPlugins]) => (
+                          <div 
+                            key={groupName}
+                            onClick={() => setSelectedFolder(groupName)}
+                            className={`cursor-pointer group relative flex flex-col items-center justify-center p-6 rounded-[2rem] border transition-all hover:scale-105 active:scale-95 shadow-sm hover:shadow-xl ${theme === 'coldest' ? 'bg-white/60 border-sky-100 hover:bg-white/80' : theme === 'chef-mode' ? 'bg-white/60 border-orange-100 hover:bg-white/80' : 'bg-white/5 border-white/10 hover:bg-white/10'}`}
+                          >
+                            <div className={`w-16 h-16 mb-4 rounded-2xl flex items-center justify-center shadow-inner ${theme === 'coldest' ? 'bg-sky-100 text-sky-600' : theme === 'chef-mode' ? 'bg-orange-100 text-orange-600' : 'bg-black/40 text-white'}`}>
+                              <svg className="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" />
+                              </svg>
+                            </div>
+                            <h4 className="text-sm font-black text-center truncate w-full px-2">{groupName}</h4>
+                            <span className="text-[10px] font-bold opacity-50 mt-1 uppercase tracking-widest">{t('items_count', { count: groupPlugins.length })}</span>
+                          </div>
+                        ))}
+                        {Object.keys(groupedJsfx).length === 0 && (
+                          <div className="col-span-full text-center py-12 opacity-50 text-sm font-bold">
+                            No JSFX found in your library. Add packages via the REAPER synchronization tool!
+                          </div>
+                        )}
+                      </div>
+                    ) : (
+                      <div className="space-y-6">
+                        {selectedFolder && (
+                          <button 
+                            onClick={() => setSelectedFolder(null)}
+                            className={`mb-4 px-4 py-2 rounded-full text-xs font-black uppercase tracking-widest hover:scale-105 active:scale-95 transition-all ${theme === 'coldest' ? 'bg-sky-500 text-white' : theme === 'chef-mode' ? 'bg-orange-500 text-white' : 'bg-white/10 text-white hover:bg-white/20'}`}
+                          >
+                            ← Back to Folders
+                          </button>
+                        )}
+                        <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                          {filteredJsfx.map((jsfx, idx) => (
+                            <JSFXCard 
+                              key={`${jsfx.name}-${idx}`}
+                              id={`jsfx-card-${jsfx.name.replace(/[^\w\s-]/g, '').replace(/\s+/g, '-').toLowerCase()}`}
+                              jsfx={jsfx}
+                              isFavorite={starredPlugins.includes(jsfx.name)}
+                              onToggleFavorite={(j) => toggleStar(j.name)}
+                              theme={theme}
+                            />
+                          ))}
+                          {filteredJsfx.length === 0 && (
+                            <div className="col-span-full text-center py-12 opacity-50 text-sm font-bold">
+                              No JSFX found matching your filters.
                             </div>
                           )}
-
-                          <div className={`w-16 h-16 mb-4 rounded-2xl flex items-center justify-center shadow-inner ${theme === 'coldest' ? 'bg-sky-100 text-sky-600' : theme === 'chef-mode' ? 'bg-orange-100 text-orange-600' : 'bg-black/40 text-white'}`}>
-                            <svg className="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" />
-                            </svg>
-                          </div>
-                          <h4 className="text-sm font-black text-center truncate w-full px-2">{groupName}</h4>
-                          <span className="text-[10px] font-bold opacity-50 mt-1 uppercase tracking-widest">{t('items_count', { count: groupPlugins.length })}</span>
                         </div>
-                      );
-                    });
-                  })()}
-                </div>
-              ) : (
-                <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                  {(() => {
-                    const items: any[] = filteredPlugins.map(p => ({ type: 'plugin', plugin: p }));
-                    const placeholders = pendingPlaceholders.filter(p => p.type === 'plugin').sort((a, b) => a.index - b.index);
-                    placeholders.forEach(p => {
-                      items.splice(p.index, 0, { type: 'plugin', plugin: p.plugins[0], isPlaceholder: true, placeholderId: p.id });
-                    });
-
-                    return items.map((item, idx) => {
-                      if (item.isPlaceholder) {
-                        return (
-                          <div key={`placeholder-${item.placeholderId}`} className={`flex flex-col items-center justify-center p-6 rounded-[2rem] border border-dashed transition-all ${theme === 'coldest' ? 'border-sky-300 bg-sky-50' : theme === 'chef-mode' ? 'border-orange-300 bg-orange-50' : 'border-white/20 bg-white/5'} h-full min-h-[12rem]`}>
-                            <p className={`text-xs font-bold opacity-50 mb-4 text-center ${theme === 'coldest' ? 'text-sky-800' : theme === 'chef-mode' ? 'text-orange-800' : 'text-white'}`}>Removed {item.plugin.name}</p>
-                            <button 
-                              onClick={(e) => { e.stopPropagation(); handleUndo(item.placeholderId); }}
-                              className={`px-4 py-2 rounded-full text-xs font-black uppercase tracking-widest hover:scale-105 active:scale-95 transition-all ${theme === 'coldest' ? 'bg-sky-500 text-white' : theme === 'chef-mode' ? 'bg-orange-500 text-white' : 'bg-white text-black'}`}
+                      </div>
+                    )}
+                  </>
+                ) : (
+                  <>
+                    {groupedPlugins && !selectedFolder ? (
+                      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-6">
+                        {(() => {
+                          const items: any[] = Object.entries(groupedPlugins).map(([groupName, groupPlugins]) => ({ type: 'folder', name: groupName, plugins: groupPlugins }));
+                        const placeholders = pendingPlaceholders.filter(p => p.type === 'folder').sort((a, b) => a.index - b.index);
+                        placeholders.forEach(p => {
+                          items.splice(p.index, 0, { type: 'folder', name: p.name, plugins: p.plugins, isPlaceholder: true, placeholderId: p.id });
+                        });
+                        
+                        return items.map((item, idx) => {
+                          if (item.isPlaceholder) {
+                            return (
+                              <div key={`placeholder-${item.placeholderId}`} className={`flex flex-col items-center justify-center p-6 rounded-[2rem] border border-dashed transition-all ${theme === 'coldest' ? 'border-sky-300 bg-sky-50' : theme === 'chef-mode' ? 'border-orange-300 bg-orange-50' : 'border-white/20 bg-white/5'} h-full min-h-[12rem]`}>
+                                <p className={`text-xs font-bold opacity-50 mb-4 text-center ${theme === 'coldest' ? 'text-sky-800' : theme === 'chef-mode' ? 'text-orange-800' : 'text-white'}`}>Removed {item.name}</p>
+                                <button 
+                                  onClick={(e) => { e.stopPropagation(); handleUndo(item.placeholderId); }}
+                                  className={`px-4 py-2 rounded-full text-xs font-black uppercase tracking-widest hover:scale-105 active:scale-95 transition-all ${theme === 'coldest' ? 'bg-sky-500 text-white' : theme === 'chef-mode' ? 'bg-orange-500 text-white' : 'bg-white text-black'}`}
+                                >
+                                  Undo
+                                </button>
+                              </div>
+                            );
+                          }
+                          
+                          const groupName = item.name;
+                          const groupPlugins = item.plugins;
+                          return (
+                            <div 
+                              key={groupName}
+                              onClick={() => setSelectedFolder(groupName)}
+                              className={`cursor-pointer group relative flex flex-col items-center justify-center p-6 rounded-[2rem] border transition-all hover:scale-105 active:scale-95 shadow-sm hover:shadow-xl ${theme === 'coldest' ? 'bg-white/60 border-sky-100 hover:bg-white/80' : theme === 'chef-mode' ? 'bg-white/60 border-orange-100 hover:bg-white/80' : 'bg-white/5 border-white/10 hover:bg-white/10'}`}
                             >
-                              Undo
-                            </button>
-                          </div>
-                        );
-                      }
+                              {/* Top Actions */}
+                              <div className="absolute top-3 right-3 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity z-10">
+                                <button 
+                                  onClick={(e) => { e.stopPropagation(); setFolderToRemove(groupName); }}
+                                  className="p-1.5 rounded-full bg-red-500/80 text-white hover:bg-red-600 backdrop-blur-md transition-all"
+                                  title={`Remove ${sortBy === 'vendor' ? 'Brand' : 'Type'}`}
+                                >
+                                  <X size={14} />
+                                </button>
+                              </div>
 
-                      const plugin = item.plugin;
-                      if (!plugin || !plugin.name) return null;
-                      
-                      return (
-                        <PluginCard 
-                          id={`plugin-card-${plugin.name.replace(/[^\w\s-]/g, '').replace(/\s+/g, '-').toLowerCase()}`}
-                          key={`${plugin.vendor}-${plugin.name}-${idx}`} 
-                          plugin={plugin} 
-                          isFavorite={starredPlugins.includes(plugin.name)}
-                          onUpdatePlugin={handleUpdatePlugin}
-                          onToggleFavorite={(p) => toggleStar(p.name)}
-                          onRemove={(p) => {
-                            const pluginIndex = filteredPlugins.findIndex(pl => pl.name === p.name && pl.vendor === p.vendor);
-                            setPlugins(prev => prev.filter(pl => pl.name !== p.name || pl.vendor !== p.vendor));
-                            setDeletedPlugins(prev => [...prev, p]);
-                            setStarredPlugins(prev => prev.filter(n => n !== p.name));
+                              {/* Confirmation Popup */}
+                              {folderToRemove === groupName && (
+                                <div className="absolute inset-0 z-20 flex items-center justify-center bg-black/80 backdrop-blur-md rounded-[2rem] p-4 animate-in fade-in zoom-in duration-200" onClick={(e) => e.stopPropagation()}>
+                                  <div className="text-center">
+                                    <p className="text-white text-xs font-bold mb-3">Remove all {groupName}?</p>
+                                    <div className="flex justify-center gap-2">
+                                      <button 
+                                        onClick={(e) => { e.stopPropagation(); setFolderToRemove(null); }}
+                                        className="px-3 py-1.5 rounded-full bg-white/20 text-white text-[10px] font-bold hover:bg-white/30 transition-colors"
+                                      >
+                                        Cancel
+                                      </button>
+                                      <button 
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          const pluginsInFolder = plugins.filter(p => (sortBy === 'vendor' ? p.vendor : p.type) === groupName);
+                                          const folderIndex = Object.keys(groupedPlugins).indexOf(groupName);
+                                          
+                                          setPlugins(prev => prev.filter(p => (sortBy === 'vendor' ? p.vendor : p.type) !== groupName));
+                                          setDeletedPlugins(prev => [...prev, ...pluginsInFolder]);
+                                          setStarredPlugins(prev => {
+                                            const names = pluginsInFolder.map(p => p.name);
+                                            return prev.filter(name => !names.includes(name));
+                                          });
+                                          
+                                          setPendingPlaceholders(prev => [
+                                            ...prev, 
+                                            { id: Date.now().toString() + Math.random(), type: 'folder', name: groupName, index: folderIndex, plugins: pluginsInFolder }
+                                          ]);
+                                          resetDeletionTimer();
+                                          setFolderToRemove(null);
+                                        }}
+                                        className="px-3 py-1.5 rounded-full bg-red-500 text-white text-[10px] font-bold hover:bg-red-600 transition-colors"
+                                      >
+                                        Remove
+                                      </button>
+                                    </div>
+                                  </div>
+                                </div>
+                              )}
+
+                              <div className={`w-16 h-16 mb-4 rounded-2xl flex items-center justify-center shadow-inner ${theme === 'coldest' ? 'bg-sky-100 text-sky-600' : theme === 'chef-mode' ? 'bg-orange-100 text-orange-600' : 'bg-black/40 text-white'}`}>
+                                <svg className="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" />
+                                </svg>
+                              </div>
+                              <h4 className="text-sm font-black text-center truncate w-full px-2">{groupName}</h4>
+                              <span className="text-[10px] font-bold opacity-50 mt-1 uppercase tracking-widest">{t('items_count', { count: groupPlugins.length })}</span>
+                            </div>
+                          );
+                        });
+                      })()}
+                    </div>
+                  ) : (
+                    <div className="space-y-6">
+                      {selectedFolder && (
+                        <button 
+                          onClick={() => setSelectedFolder(null)}
+                          className={`mb-4 px-4 py-2 rounded-full text-xs font-black uppercase tracking-widest hover:scale-105 active:scale-95 transition-all ${theme === 'coldest' ? 'bg-sky-500 text-white' : theme === 'chef-mode' ? 'bg-orange-500 text-white' : 'bg-white/10 text-white hover:bg-white/20'}`}
+                        >
+                          ← Back to Folders
+                        </button>
+                      )}
+                      <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                        {(() => {
+                          const items: any[] = filteredPlugins.map(p => ({ type: 'plugin', plugin: p }));
+                          const placeholders = pendingPlaceholders.filter(p => p.type === 'plugin').sort((a, b) => a.index - b.index);
+                          placeholders.forEach(p => {
+                            items.splice(p.index, 0, { type: 'plugin', plugin: p.plugins[0], isPlaceholder: true, placeholderId: p.id });
+                          });
+
+                          return items.map((item, idx) => {
+                            if (item.isPlaceholder) {
+                              return (
+                                <div key={`placeholder-${item.placeholderId}`} className={`flex flex-col items-center justify-center p-6 rounded-[2rem] border border-dashed transition-all ${theme === 'coldest' ? 'border-sky-300 bg-sky-50' : theme === 'chef-mode' ? 'border-orange-300 bg-orange-50' : 'border-white/20 bg-white/5'} h-full min-h-[12rem]`}>
+                                  <p className={`text-xs font-bold opacity-50 mb-4 text-center ${theme === 'coldest' ? 'text-sky-800' : theme === 'chef-mode' ? 'text-orange-800' : 'text-white'}`}>Removed {item.plugin.name}</p>
+                                  <button 
+                                    onClick={(e) => { e.stopPropagation(); handleUndo(item.placeholderId); }}
+                                    className={`px-4 py-2 rounded-full text-xs font-black uppercase tracking-widest hover:scale-105 active:scale-95 transition-all ${theme === 'coldest' ? 'bg-sky-500 text-white' : theme === 'chef-mode' ? 'bg-orange-500 text-white' : 'bg-white text-black'}`}
+                                  >
+                                    Undo
+                                  </button>
+                                </div>
+                              );
+                            }
+
+                            const plugin = item.plugin;
+                            if (!plugin || !plugin.name) return null;
                             
-                            setPendingPlaceholders(prev => [
-                              ...prev, 
-                              { id: Date.now().toString() + Math.random(), type: 'plugin', index: pluginIndex, plugins: [p] }
-                            ]);
-                            resetDeletionTimer();
-                          }}
-                        />
-                      );
-                    });
-                  })()}
-                </div>
+                            return (
+                              <PluginCard 
+                                id={`plugin-card-${plugin.name.replace(/[^\w\s-]/g, '').replace(/\s+/g, '-').toLowerCase()}`}
+                                key={`${plugin.vendor}-${plugin.name}-${idx}`} 
+                                plugin={plugin} 
+                                isFavorite={starredPlugins.includes(plugin.name)}
+                                onUpdatePlugin={handleUpdatePlugin}
+                                onToggleFavorite={(p) => toggleStar(p.name)}
+                                onRemove={(p) => {
+                                  const pluginIndex = filteredPlugins.findIndex(pl => pl.name === p.name && pl.vendor === p.vendor);
+                                  setPlugins(prev => prev.filter(pl => pl.name !== p.name || pl.vendor !== p.vendor));
+                                  setDeletedPlugins(prev => [...prev, p]);
+                                  setStarredPlugins(prev => prev.filter(n => n !== p.name));
+                                  
+                                  setPendingPlaceholders(prev => [
+                                    ...prev, 
+                                    { id: Date.now().toString() + Math.random(), type: 'plugin', index: pluginIndex, plugins: [p] }
+                                  ]);
+                                  resetDeletionTimer();
+                                }}
+                              />
+                            );
+                          });
+                        })()}
+                      </div>
+                    </div>
+                  )}
+                </>
               )}
               </div>
             </section>
