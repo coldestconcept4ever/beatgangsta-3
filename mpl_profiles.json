@@ -1,0 +1,1245 @@
+[
+  {
+    "name": "JS: MPL/mpl_RS5k_manager_MacroControls",
+    "shortName": "mpl_RS5k_manager_MacroControls",
+    "category": "Utility",
+    "description": "Specialized utility from Michael Pilyavskiy (MPL).",
+    "howItWorks": "Professional REAPER script integration and DSP routing.",
+    "proTips": "Check the MPL forum thread on Cockos for advanced usage.",
+    "sliders": [
+      {
+        "index": 0,
+        "name": "is_slave",
+        "min": 0,
+        "max": 1,
+        "defaultVal": 0,
+        "description": "is_slave",
+        "options": null
+      },
+      {
+        "index": 1,
+        "name": "Macro 1",
+        "min": 0,
+        "max": 1,
+        "defaultVal": 0,
+        "description": "Macro 1",
+        "options": null
+      },
+      {
+        "index": 2,
+        "name": "Macro 2",
+        "min": 0,
+        "max": 1,
+        "defaultVal": 0,
+        "description": "Macro 2",
+        "options": null
+      },
+      {
+        "index": 3,
+        "name": "Macro 3",
+        "min": 0,
+        "max": 1,
+        "defaultVal": 0,
+        "description": "Macro 3",
+        "options": null
+      },
+      {
+        "index": 4,
+        "name": "Macro 4",
+        "min": 0,
+        "max": 1,
+        "defaultVal": 0,
+        "description": "Macro 4",
+        "options": null
+      },
+      {
+        "index": 5,
+        "name": "Macro 5",
+        "min": 0,
+        "max": 1,
+        "defaultVal": 0,
+        "description": "Macro 5",
+        "options": null
+      },
+      {
+        "index": 6,
+        "name": "Macro 6",
+        "min": 0,
+        "max": 1,
+        "defaultVal": 0,
+        "description": "Macro 6",
+        "options": null
+      },
+      {
+        "index": 7,
+        "name": "Macro 7",
+        "min": 0,
+        "max": 1,
+        "defaultVal": 0,
+        "description": "Macro 7",
+        "options": null
+      },
+      {
+        "index": 8,
+        "name": "Macro 8",
+        "min": 0,
+        "max": 1,
+        "defaultVal": 0,
+        "description": "Macro 8",
+        "options": null
+      },
+      {
+        "index": 9,
+        "name": "Macro 9",
+        "min": 0,
+        "max": 1,
+        "defaultVal": 0,
+        "description": "Macro 9",
+        "options": null
+      },
+      {
+        "index": 10,
+        "name": "Macro 10",
+        "min": 0,
+        "max": 1,
+        "defaultVal": 0,
+        "description": "Macro 10",
+        "options": null
+      },
+      {
+        "index": 11,
+        "name": "Macro 11",
+        "min": 0,
+        "max": 1,
+        "defaultVal": 0,
+        "description": "Macro 11",
+        "options": null
+      },
+      {
+        "index": 12,
+        "name": "Macro 12",
+        "min": 0,
+        "max": 1,
+        "defaultVal": 0,
+        "description": "Macro 12",
+        "options": null
+      },
+      {
+        "index": 13,
+        "name": "Macro 13",
+        "min": 0,
+        "max": 1,
+        "defaultVal": 0,
+        "description": "Macro 13",
+        "options": null
+      },
+      {
+        "index": 14,
+        "name": "Macro 14",
+        "min": 0,
+        "max": 1,
+        "defaultVal": 0,
+        "description": "Macro 14",
+        "options": null
+      },
+      {
+        "index": 15,
+        "name": "Macro 15",
+        "min": 0,
+        "max": 1,
+        "defaultVal": 0,
+        "description": "Macro 15",
+        "options": null
+      },
+      {
+        "index": 16,
+        "name": "Macro 16",
+        "min": 0,
+        "max": 1,
+        "defaultVal": 0,
+        "description": "Macro 16",
+        "options": null
+      },
+      {
+        "index": 17,
+        "name": "gmem sourceID for Macro 1",
+        "min": 0,
+        "max": 1024,
+        "defaultVal": 0,
+        "description": "gmem sourceID for Macro 1",
+        "options": null
+      },
+      {
+        "index": 18,
+        "name": "gmem sourceID for Macro 2",
+        "min": 0,
+        "max": 1024,
+        "defaultVal": 0,
+        "description": "gmem sourceID for Macro 2",
+        "options": null
+      },
+      {
+        "index": 19,
+        "name": "gmem sourceID for Macro 3",
+        "min": 0,
+        "max": 1024,
+        "defaultVal": 0,
+        "description": "gmem sourceID for Macro 3",
+        "options": null
+      },
+      {
+        "index": 20,
+        "name": "gmem sourceID for Macro 4",
+        "min": 0,
+        "max": 1024,
+        "defaultVal": 0,
+        "description": "gmem sourceID for Macro 4",
+        "options": null
+      },
+      {
+        "index": 21,
+        "name": "gmem sourceID for Macro 5",
+        "min": 0,
+        "max": 1024,
+        "defaultVal": 0,
+        "description": "gmem sourceID for Macro 5",
+        "options": null
+      },
+      {
+        "index": 22,
+        "name": "gmem sourceID for Macro 6",
+        "min": 0,
+        "max": 1024,
+        "defaultVal": 0,
+        "description": "gmem sourceID for Macro 6",
+        "options": null
+      },
+      {
+        "index": 23,
+        "name": "gmem sourceID for Macro 7",
+        "min": 0,
+        "max": 1024,
+        "defaultVal": 0,
+        "description": "gmem sourceID for Macro 7",
+        "options": null
+      },
+      {
+        "index": 24,
+        "name": "gmem sourceID for Macro 8",
+        "min": 0,
+        "max": 1024,
+        "defaultVal": 0,
+        "description": "gmem sourceID for Macro 8",
+        "options": null
+      },
+      {
+        "index": 25,
+        "name": "gmem sourceID for Macro 9",
+        "min": 0,
+        "max": 1024,
+        "defaultVal": 0,
+        "description": "gmem sourceID for Macro 9",
+        "options": null
+      },
+      {
+        "index": 26,
+        "name": "gmem sourceID for Macro 10",
+        "min": 0,
+        "max": 1024,
+        "defaultVal": 0,
+        "description": "gmem sourceID for Macro 10",
+        "options": null
+      },
+      {
+        "index": 27,
+        "name": "gmem sourceID for Macro 11",
+        "min": 0,
+        "max": 1024,
+        "defaultVal": 0,
+        "description": "gmem sourceID for Macro 11",
+        "options": null
+      },
+      {
+        "index": 28,
+        "name": "gmem sourceID for Macro 12",
+        "min": 0,
+        "max": 1024,
+        "defaultVal": 0,
+        "description": "gmem sourceID for Macro 12",
+        "options": null
+      },
+      {
+        "index": 29,
+        "name": "gmem sourceID for Macro 13",
+        "min": 0,
+        "max": 1024,
+        "defaultVal": 0,
+        "description": "gmem sourceID for Macro 13",
+        "options": null
+      },
+      {
+        "index": 30,
+        "name": "gmem sourceID for Macro 14",
+        "min": 0,
+        "max": 1024,
+        "defaultVal": 0,
+        "description": "gmem sourceID for Macro 14",
+        "options": null
+      },
+      {
+        "index": 31,
+        "name": "gmem sourceID for Macro 15",
+        "min": 0,
+        "max": 1024,
+        "defaultVal": 0,
+        "description": "gmem sourceID for Macro 15",
+        "options": null
+      },
+      {
+        "index": 32,
+        "name": "gmem sourceID for Macro 16",
+        "min": 0,
+        "max": 1024,
+        "defaultVal": 0,
+        "description": "gmem sourceID for Macro 16",
+        "options": null
+      },
+      {
+        "index": 33,
+        "name": "gmem destID for Macro 1",
+        "min": 0,
+        "max": 1024,
+        "defaultVal": 0,
+        "description": "gmem destID for Macro 1",
+        "options": null
+      },
+      {
+        "index": 34,
+        "name": "gmem destID for Macro 2",
+        "min": 0,
+        "max": 1024,
+        "defaultVal": 0,
+        "description": "gmem destID for Macro 2",
+        "options": null
+      },
+      {
+        "index": 35,
+        "name": "gmem destID for Macro 3",
+        "min": 0,
+        "max": 1024,
+        "defaultVal": 0,
+        "description": "gmem destID for Macro 3",
+        "options": null
+      },
+      {
+        "index": 36,
+        "name": "gmem destID for Macro 4",
+        "min": 0,
+        "max": 1024,
+        "defaultVal": 0,
+        "description": "gmem destID for Macro 4",
+        "options": null
+      },
+      {
+        "index": 37,
+        "name": "gmem destID for Macro 5",
+        "min": 0,
+        "max": 1024,
+        "defaultVal": 0,
+        "description": "gmem destID for Macro 5",
+        "options": null
+      },
+      {
+        "index": 38,
+        "name": "gmem destID for Macro 6",
+        "min": 0,
+        "max": 1024,
+        "defaultVal": 0,
+        "description": "gmem destID for Macro 6",
+        "options": null
+      },
+      {
+        "index": 39,
+        "name": "gmem destID for Macro 7",
+        "min": 0,
+        "max": 1024,
+        "defaultVal": 0,
+        "description": "gmem destID for Macro 7",
+        "options": null
+      },
+      {
+        "index": 40,
+        "name": "gmem destID for Macro 8",
+        "min": 0,
+        "max": 1024,
+        "defaultVal": 0,
+        "description": "gmem destID for Macro 8",
+        "options": null
+      },
+      {
+        "index": 41,
+        "name": "gmem destID for Macro 9",
+        "min": 0,
+        "max": 1024,
+        "defaultVal": 0,
+        "description": "gmem destID for Macro 9",
+        "options": null
+      },
+      {
+        "index": 42,
+        "name": "gmem destID for Macro 10",
+        "min": 0,
+        "max": 1024,
+        "defaultVal": 0,
+        "description": "gmem destID for Macro 10",
+        "options": null
+      },
+      {
+        "index": 43,
+        "name": "gmem destID for Macro 11",
+        "min": 0,
+        "max": 1024,
+        "defaultVal": 0,
+        "description": "gmem destID for Macro 11",
+        "options": null
+      },
+      {
+        "index": 44,
+        "name": "gmem destID for Macro 12",
+        "min": 0,
+        "max": 1024,
+        "defaultVal": 0,
+        "description": "gmem destID for Macro 12",
+        "options": null
+      },
+      {
+        "index": 45,
+        "name": "gmem destID for Macro 13",
+        "min": 0,
+        "max": 1024,
+        "defaultVal": 0,
+        "description": "gmem destID for Macro 13",
+        "options": null
+      },
+      {
+        "index": 46,
+        "name": "gmem destID for Macro 14",
+        "min": 0,
+        "max": 1024,
+        "defaultVal": 0,
+        "description": "gmem destID for Macro 14",
+        "options": null
+      },
+      {
+        "index": 47,
+        "name": "gmem destID for Macro 15",
+        "min": 0,
+        "max": 1024,
+        "defaultVal": 0,
+        "description": "gmem destID for Macro 15",
+        "options": null
+      },
+      {
+        "index": 48,
+        "name": "gmem destID for Macro 16",
+        "min": 0,
+        "max": 1024,
+        "defaultVal": 0,
+        "description": "gmem destID for Macro 16",
+        "options": null
+      }
+    ],
+    "packRequired": "MPL Scripts"
+  },
+  {
+    "name": "JS: MPL/mpl_RS5K_manager_MIDIBUS_choke",
+    "shortName": "mpl_RS5K_manager_MIDIBUS_choke",
+    "category": "Utility",
+    "description": "Specialized utility from Michael Pilyavskiy (MPL).",
+    "howItWorks": "Professional REAPER script integration and DSP routing.",
+    "proTips": "Check the MPL forum thread on Cockos for advanced usage.",
+    "sliders": [
+      {
+        "index": 0,
+        "name": "src",
+        "min": 0,
+        "max": 127,
+        "defaultVal": 0,
+        "description": "src",
+        "options": null
+      },
+      {
+        "index": 1,
+        "name": "dest",
+        "min": 0,
+        "max": 127,
+        "defaultVal": 0,
+        "description": "dest",
+        "options": null
+      }
+    ],
+    "packRequired": "MPL Scripts"
+  },
+  {
+    "name": "JS: MPL/mpl_RS5K_manager_sysex_handler",
+    "shortName": "mpl_RS5K_manager_sysex_handler",
+    "category": "Utility",
+    "description": "Specialized utility from Michael Pilyavskiy (MPL).",
+    "howItWorks": "Professional REAPER script integration and DSP routing.",
+    "proTips": "Check the MPL forum thread on Cockos for advanced usage.",
+    "sliders": [
+      {
+        "index": 0,
+        "name": "src",
+        "min": 0,
+        "max": 127,
+        "defaultVal": 0,
+        "description": "src",
+        "options": null
+      }
+    ],
+    "packRequired": "MPL Scripts"
+  },
+  {
+    "name": "JS: MPL/mpl_MappingPanel_master",
+    "shortName": "mpl_MappingPanel_master",
+    "category": "Utility",
+    "description": "Specialized utility from Michael Pilyavskiy (MPL).",
+    "howItWorks": "Professional REAPER script integration and DSP routing.",
+    "proTips": "Check the MPL forum thread on Cockos for advanced usage.",
+    "sliders": [
+      {
+        "index": 0,
+        "name": "Macro 1",
+        "min": 0,
+        "max": 1,
+        "defaultVal": 0,
+        "description": "Macro 1",
+        "options": null
+      },
+      {
+        "index": 1,
+        "name": "Macro 2",
+        "min": 0,
+        "max": 1,
+        "defaultVal": 0,
+        "description": "Macro 2",
+        "options": null
+      },
+      {
+        "index": 2,
+        "name": "Macro 3",
+        "min": 0,
+        "max": 1,
+        "defaultVal": 0,
+        "description": "Macro 3",
+        "options": null
+      },
+      {
+        "index": 3,
+        "name": "Macro 4",
+        "min": 0,
+        "max": 1,
+        "defaultVal": 0,
+        "description": "Macro 4",
+        "options": null
+      },
+      {
+        "index": 4,
+        "name": "Macro 5",
+        "min": 0,
+        "max": 1,
+        "defaultVal": 0,
+        "description": "Macro 5",
+        "options": null
+      },
+      {
+        "index": 5,
+        "name": "Macro 6",
+        "min": 0,
+        "max": 1,
+        "defaultVal": 0,
+        "description": "Macro 6",
+        "options": null
+      },
+      {
+        "index": 6,
+        "name": "Macro 7",
+        "min": 0,
+        "max": 1,
+        "defaultVal": 0,
+        "description": "Macro 7",
+        "options": null
+      },
+      {
+        "index": 7,
+        "name": "Macro 8",
+        "min": 0,
+        "max": 1,
+        "defaultVal": 0,
+        "description": "Macro 8",
+        "options": null
+      },
+      {
+        "index": 8,
+        "name": "Macro 9",
+        "min": 0,
+        "max": 1,
+        "defaultVal": 0,
+        "description": "Macro 9",
+        "options": null
+      },
+      {
+        "index": 9,
+        "name": "Macro 10",
+        "min": 0,
+        "max": 1,
+        "defaultVal": 0,
+        "description": "Macro 10",
+        "options": null
+      },
+      {
+        "index": 10,
+        "name": "Macro 11",
+        "min": 0,
+        "max": 1,
+        "defaultVal": 0,
+        "description": "Macro 11",
+        "options": null
+      },
+      {
+        "index": 11,
+        "name": "Macro 12",
+        "min": 0,
+        "max": 1,
+        "defaultVal": 0,
+        "description": "Macro 12",
+        "options": null
+      },
+      {
+        "index": 12,
+        "name": "Macro 13",
+        "min": 0,
+        "max": 1,
+        "defaultVal": 0,
+        "description": "Macro 13",
+        "options": null
+      },
+      {
+        "index": 13,
+        "name": "Macro 14",
+        "min": 0,
+        "max": 1,
+        "defaultVal": 0,
+        "description": "Macro 14",
+        "options": null
+      },
+      {
+        "index": 14,
+        "name": "Macro 15",
+        "min": 0,
+        "max": 1,
+        "defaultVal": 0,
+        "description": "Macro 15",
+        "options": null
+      },
+      {
+        "index": 15,
+        "name": "Macro 16",
+        "min": 0,
+        "max": 1,
+        "defaultVal": 0,
+        "description": "Macro 16",
+        "options": null
+      }
+    ],
+    "packRequired": "MPL Scripts"
+  },
+  {
+    "name": "JS: MPL/mpl_MappingPanel_slave",
+    "shortName": "mpl_MappingPanel_slave",
+    "category": "Utility",
+    "description": "Specialized utility from Michael Pilyavskiy (MPL).",
+    "howItWorks": "Professional REAPER script integration and DSP routing.",
+    "proTips": "Check the MPL forum thread on Cockos for advanced usage.",
+    "sliders": [
+      {
+        "index": 0,
+        "name": "-Macro 1",
+        "min": 0,
+        "max": 1,
+        "defaultVal": 0,
+        "description": "-Macro 1",
+        "options": null
+      },
+      {
+        "index": 1,
+        "name": "-Macro 2",
+        "min": 0,
+        "max": 1,
+        "defaultVal": 0,
+        "description": "-Macro 2",
+        "options": null
+      },
+      {
+        "index": 2,
+        "name": "-Macro 3",
+        "min": 0,
+        "max": 1,
+        "defaultVal": 0,
+        "description": "-Macro 3",
+        "options": null
+      },
+      {
+        "index": 3,
+        "name": "-Macro 4",
+        "min": 0,
+        "max": 1,
+        "defaultVal": 0,
+        "description": "-Macro 4",
+        "options": null
+      },
+      {
+        "index": 4,
+        "name": "-Macro 5",
+        "min": 0,
+        "max": 1,
+        "defaultVal": 0,
+        "description": "-Macro 5",
+        "options": null
+      },
+      {
+        "index": 5,
+        "name": "-Macro 6",
+        "min": 0,
+        "max": 1,
+        "defaultVal": 0,
+        "description": "-Macro 6",
+        "options": null
+      },
+      {
+        "index": 6,
+        "name": "-Macro 7",
+        "min": 0,
+        "max": 1,
+        "defaultVal": 0,
+        "description": "-Macro 7",
+        "options": null
+      },
+      {
+        "index": 7,
+        "name": "-Macro 8",
+        "min": 0,
+        "max": 1,
+        "defaultVal": 0,
+        "description": "-Macro 8",
+        "options": null
+      },
+      {
+        "index": 8,
+        "name": "-Macro 9",
+        "min": 0,
+        "max": 1,
+        "defaultVal": 0,
+        "description": "-Macro 9",
+        "options": null
+      },
+      {
+        "index": 9,
+        "name": "-Macro 10",
+        "min": 0,
+        "max": 1,
+        "defaultVal": 0,
+        "description": "-Macro 10",
+        "options": null
+      },
+      {
+        "index": 10,
+        "name": "-Macro 11",
+        "min": 0,
+        "max": 1,
+        "defaultVal": 0,
+        "description": "-Macro 11",
+        "options": null
+      },
+      {
+        "index": 11,
+        "name": "-Macro 12",
+        "min": 0,
+        "max": 1,
+        "defaultVal": 0,
+        "description": "-Macro 12",
+        "options": null
+      },
+      {
+        "index": 12,
+        "name": "-Macro 13",
+        "min": 0,
+        "max": 1,
+        "defaultVal": 0,
+        "description": "-Macro 13",
+        "options": null
+      },
+      {
+        "index": 13,
+        "name": "-Macro 14",
+        "min": 0,
+        "max": 1,
+        "defaultVal": 0,
+        "description": "-Macro 14",
+        "options": null
+      },
+      {
+        "index": 14,
+        "name": "-Macro 15",
+        "min": 0,
+        "max": 1,
+        "defaultVal": 0,
+        "description": "-Macro 15",
+        "options": null
+      },
+      {
+        "index": 15,
+        "name": "-Macro 16",
+        "min": 0,
+        "max": 1,
+        "defaultVal": 0,
+        "description": "-Macro 16",
+        "options": null
+      },
+      {
+        "index": 16,
+        "name": "-Macro 1 master link",
+        "min": 0,
+        "max": 16,
+        "defaultVal": 0,
+        "description": "-Macro 1 master link",
+        "options": null
+      },
+      {
+        "index": 17,
+        "name": "-Macro 2 master link",
+        "min": 0,
+        "max": 16,
+        "defaultVal": 0,
+        "description": "-Macro 2 master link",
+        "options": null
+      },
+      {
+        "index": 18,
+        "name": "-Macro 3 master link",
+        "min": 0,
+        "max": 16,
+        "defaultVal": 0,
+        "description": "-Macro 3 master link",
+        "options": null
+      },
+      {
+        "index": 19,
+        "name": "-Macro 4 master link",
+        "min": 0,
+        "max": 16,
+        "defaultVal": 0,
+        "description": "-Macro 4 master link",
+        "options": null
+      },
+      {
+        "index": 20,
+        "name": "-Macro 5 master link",
+        "min": 0,
+        "max": 16,
+        "defaultVal": 0,
+        "description": "-Macro 5 master link",
+        "options": null
+      },
+      {
+        "index": 21,
+        "name": "-Macro 6 master link",
+        "min": 0,
+        "max": 16,
+        "defaultVal": 0,
+        "description": "-Macro 6 master link",
+        "options": null
+      },
+      {
+        "index": 22,
+        "name": "-Macro 7 master link",
+        "min": 0,
+        "max": 16,
+        "defaultVal": 0,
+        "description": "-Macro 7 master link",
+        "options": null
+      },
+      {
+        "index": 23,
+        "name": "-Macro 8 master link",
+        "min": 0,
+        "max": 16,
+        "defaultVal": 0,
+        "description": "-Macro 8 master link",
+        "options": null
+      },
+      {
+        "index": 24,
+        "name": "-Macro 9 master link",
+        "min": 0,
+        "max": 16,
+        "defaultVal": 0,
+        "description": "-Macro 9 master link",
+        "options": null
+      },
+      {
+        "index": 25,
+        "name": "-Macro 10 master link",
+        "min": 0,
+        "max": 16,
+        "defaultVal": 0,
+        "description": "-Macro 10 master link",
+        "options": null
+      },
+      {
+        "index": 26,
+        "name": "-Macro 11 master link",
+        "min": 0,
+        "max": 16,
+        "defaultVal": 0,
+        "description": "-Macro 11 master link",
+        "options": null
+      },
+      {
+        "index": 27,
+        "name": "-Macro 12 master link",
+        "min": 0,
+        "max": 16,
+        "defaultVal": 0,
+        "description": "-Macro 12 master link",
+        "options": null
+      },
+      {
+        "index": 28,
+        "name": "-Macro 13 master link",
+        "min": 0,
+        "max": 16,
+        "defaultVal": 0,
+        "description": "-Macro 13 master link",
+        "options": null
+      },
+      {
+        "index": 29,
+        "name": "-Macro 14 master link",
+        "min": 0,
+        "max": 16,
+        "defaultVal": 0,
+        "description": "-Macro 14 master link",
+        "options": null
+      },
+      {
+        "index": 30,
+        "name": "-Macro 15 master link",
+        "min": 0,
+        "max": 16,
+        "defaultVal": 0,
+        "description": "-Macro 15 master link",
+        "options": null
+      },
+      {
+        "index": 31,
+        "name": "-Macro 16 master link",
+        "min": 0,
+        "max": 16,
+        "defaultVal": 0,
+        "description": "-Macro 16 master link",
+        "options": null
+      },
+      {
+        "index": 32,
+        "name": "-Macro 1 flags",
+        "min": 0,
+        "max": 131072,
+        "defaultVal": 0,
+        "description": "-Macro 1 flags",
+        "options": null
+      },
+      {
+        "index": 33,
+        "name": "-Macro 2 flags",
+        "min": 0,
+        "max": 131072,
+        "defaultVal": 0,
+        "description": "-Macro 2 flags",
+        "options": null
+      },
+      {
+        "index": 34,
+        "name": "-Macro 3 flags",
+        "min": 0,
+        "max": 131072,
+        "defaultVal": 0,
+        "description": "-Macro 3 flags",
+        "options": null
+      },
+      {
+        "index": 35,
+        "name": "-Macro 4 flags",
+        "min": 0,
+        "max": 131072,
+        "defaultVal": 0,
+        "description": "-Macro 4 flags",
+        "options": null
+      },
+      {
+        "index": 36,
+        "name": "-Macro 5 flags",
+        "min": 0,
+        "max": 131072,
+        "defaultVal": 0,
+        "description": "-Macro 5 flags",
+        "options": null
+      },
+      {
+        "index": 37,
+        "name": "-Macro 6 flags",
+        "min": 0,
+        "max": 131072,
+        "defaultVal": 0,
+        "description": "-Macro 6 flags",
+        "options": null
+      },
+      {
+        "index": 38,
+        "name": "-Macro 7 flags",
+        "min": 0,
+        "max": 131072,
+        "defaultVal": 0,
+        "description": "-Macro 7 flags",
+        "options": null
+      },
+      {
+        "index": 39,
+        "name": "-Macro 8 flags",
+        "min": 0,
+        "max": 131072,
+        "defaultVal": 0,
+        "description": "-Macro 8 flags",
+        "options": null
+      },
+      {
+        "index": 40,
+        "name": "-Macro 9 flags",
+        "min": 0,
+        "max": 131072,
+        "defaultVal": 0,
+        "description": "-Macro 9 flags",
+        "options": null
+      },
+      {
+        "index": 41,
+        "name": "-Macro 10 flags",
+        "min": 0,
+        "max": 131072,
+        "defaultVal": 0,
+        "description": "-Macro 10 flags",
+        "options": null
+      },
+      {
+        "index": 42,
+        "name": "-Macro 11 flags",
+        "min": 0,
+        "max": 131072,
+        "defaultVal": 0,
+        "description": "-Macro 11 flags",
+        "options": null
+      },
+      {
+        "index": 43,
+        "name": "-Macro 12 flags",
+        "min": 0,
+        "max": 131072,
+        "defaultVal": 0,
+        "description": "-Macro 12 flags",
+        "options": null
+      },
+      {
+        "index": 44,
+        "name": "-Macro 13 flags",
+        "min": 0,
+        "max": 131072,
+        "defaultVal": 0,
+        "description": "-Macro 13 flags",
+        "options": null
+      },
+      {
+        "index": 45,
+        "name": "-Macro 14 flags",
+        "min": 0,
+        "max": 131072,
+        "defaultVal": 0,
+        "description": "-Macro 14 flags",
+        "options": null
+      },
+      {
+        "index": 46,
+        "name": "-Macro 15 flags",
+        "min": 0,
+        "max": 131072,
+        "defaultVal": 0,
+        "description": "-Macro 15 flags",
+        "options": null
+      },
+      {
+        "index": 47,
+        "name": "-Macro 16 flags",
+        "min": 0,
+        "max": 131072,
+        "defaultVal": 0,
+        "description": "-Macro 16 flags",
+        "options": null
+      },
+      {
+        "index": 48,
+        "name": "-Macro 1 hex, 0xFF per param",
+        "min": 0,
+        "max": 4294967295,
+        "defaultVal": 0,
+        "description": "-Macro 1 hex, 0xFF per param",
+        "options": null
+      },
+      {
+        "index": 49,
+        "name": "-Macro 2 hex, FF per param",
+        "min": 0,
+        "max": 4294967295,
+        "defaultVal": 0,
+        "description": "-Macro 2 hex, FF per param",
+        "options": null
+      },
+      {
+        "index": 50,
+        "name": "-Macro 3 hex, FF per param",
+        "min": 0,
+        "max": 4294967295,
+        "defaultVal": 0,
+        "description": "-Macro 3 hex, FF per param",
+        "options": null
+      },
+      {
+        "index": 51,
+        "name": "-Macro 4 hex, FF per param",
+        "min": 0,
+        "max": 4294967295,
+        "defaultVal": 0,
+        "description": "-Macro 4 hex, FF per param",
+        "options": null
+      },
+      {
+        "index": 52,
+        "name": "-Macro 5 hex, FF per param",
+        "min": 0,
+        "max": 4294967295,
+        "defaultVal": 0,
+        "description": "-Macro 5 hex, FF per param",
+        "options": null
+      },
+      {
+        "index": 53,
+        "name": "-Macro 6 hex, FF per param",
+        "min": 0,
+        "max": 4294967295,
+        "defaultVal": 0,
+        "description": "-Macro 6 hex, FF per param",
+        "options": null
+      },
+      {
+        "index": 54,
+        "name": "-Macro 7 hex, FF per param",
+        "min": 0,
+        "max": 4294967295,
+        "defaultVal": 0,
+        "description": "-Macro 7 hex, FF per param",
+        "options": null
+      },
+      {
+        "index": 55,
+        "name": "-Macro 8 hex, FF per param",
+        "min": 0,
+        "max": 4294967295,
+        "defaultVal": 0,
+        "description": "-Macro 8 hex, FF per param",
+        "options": null
+      },
+      {
+        "index": 56,
+        "name": "-Macro 9 hex, FF per param",
+        "min": 0,
+        "max": 4294967295,
+        "defaultVal": 0,
+        "description": "-Macro 9 hex, FF per param",
+        "options": null
+      },
+      {
+        "index": 57,
+        "name": "-Macro 10 hex, FF per param",
+        "min": 0,
+        "max": 4294967295,
+        "defaultVal": 0,
+        "description": "-Macro 10 hex, FF per param",
+        "options": null
+      },
+      {
+        "index": 58,
+        "name": "-Macro 11 hex, FF per param",
+        "min": 0,
+        "max": 4294967295,
+        "defaultVal": 0,
+        "description": "-Macro 11 hex, FF per param",
+        "options": null
+      },
+      {
+        "index": 59,
+        "name": "-Macro 12 hex, FF per param",
+        "min": 0,
+        "max": 4294967295,
+        "defaultVal": 0,
+        "description": "-Macro 12 hex, FF per param",
+        "options": null
+      },
+      {
+        "index": 60,
+        "name": "-Macro 13 hex, FF per param",
+        "min": 0,
+        "max": 4294967295,
+        "defaultVal": 0,
+        "description": "-Macro 13 hex, FF per param",
+        "options": null
+      },
+      {
+        "index": 61,
+        "name": "-Macro 14 hex, FF per param",
+        "min": 0,
+        "max": 4294967295,
+        "defaultVal": 0,
+        "description": "-Macro 14 hex, FF per param",
+        "options": null
+      },
+      {
+        "index": 62,
+        "name": "-Macro 15 hex, FF per param",
+        "min": 0,
+        "max": 4294967295,
+        "defaultVal": 0,
+        "description": "-Macro 15 hex, FF per param",
+        "options": null
+      },
+      {
+        "index": 63,
+        "name": "-Macro 16 hex, FF per param",
+        "min": 0,
+        "max": 4294967295,
+        "defaultVal": 0,
+        "description": "-Macro 16 hex, FF per param",
+        "options": null
+      }
+    ],
+    "packRequired": "MPL Scripts"
+  }
+]

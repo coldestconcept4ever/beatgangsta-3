@@ -6,6 +6,7 @@ export interface JSFXParameter {
   max: number;
   defaultVal: number;
   description?: string;
+  options?: string[] | null;
 }
 
 export interface JSFXProfile {
@@ -20,97 +21,316 @@ export interface JSFXProfile {
   packRequired?: string;
   eel2Logic?: string;
   internalCodeMappers?: string;
+  filename?: string;
+  relativePath?: string;
 }
 
 export const JSFX_DATABASE: JSFXProfile[] = [
   {
-    name: "JS: 1175 Compressor",
-    shortName: "1175 Compressor",
-    category: "Dynamics",
-    description: "An emulation of the classic fast 1176 FET limiting amplifier, perfect for making vocals crisp, energetic, and up-front.",
-    howItWorks: "Using ultra-fast attack and release envelopes, it clamps down on fast peaks. As with all classic FET compressions, clamping peaks reduces the peak output energy significantly.",
-    proTips: "To bring vocals right to the front instead of burying them, you MUST match any compressor Threshold reduction with equal or greater S3 (Gain) to restore presence and maintain excellent vocal level consistency.",
-    volumeStagingWarning: "CRITICAL: Using S1 (Threshold) at -20dB to -30dB will make your vocals extremely quiet. You must boost S3 (Gain) to +12dB to +18dB to compensate and bring the volume back up!",
-    sliders: [
-      {"index":0,"name":"Threshold","min":-60,"max":0,"defaultVal":0,"unit":"dB"},
-      {"index":1,"name":"Ratio","min":0,"max":9,"defaultVal":5},
-      {"index":2,"name":"Gain","min":-20,"max":20,"defaultVal":0,"unit":"dB"},
-      {"index":3,"name":"Attack","min":20,"max":2000,"defaultVal":20,"unit":"uS"},
-      {"index":4,"name":"Release","min":20,"max":1000,"defaultVal":250,"unit":"ms"},
-      {"index":5,"name":"Mix","min":0,"max":100,"defaultVal":100,"unit":"%"}    ]
-  },
-  {
-    name: "JS: Volume/Pan Smoother",
-    shortName: "Volume & Pan Controller",
-    category: "Routing & Utility",
-    description: "A super-clean utility slider for precise track gain adjustment, leveling, and overall volume matching.",
-    howItWorks: "Directly attenuates or boosts the raw audio sample buffer with zero phase distortion or coloration.",
-    proTips: "Use this plugin as the very last plugin on a track's FX chain to ensure accurate staging and absolute control of track leveling without affecting the gain going into pre-fader compressors.",
-    sliders: [
-      {"index":0,"name":"Volume","min":-60,"max":12,"defaultVal":0,"unit":"dB"},
-      {"index":1,"name":"Pan","min":-100,"max":100,"defaultVal":0},
-      {"index":2,"name":"Pan Law","min":-6,"max":6,"defaultVal":0,"unit":"dB"}
+    "name": "JS: 1175 Compressor",
+    "shortName": "1175 Compressor",
+    "category": "Dynamics",
+    "description": "An emulation of the classic fast 1176 FET limiting amplifier, perfect for making vocals crisp, energetic, and up-front.",
+    "howItWorks": "Using ultra-fast attack and release envelopes, it clamps down on fast peaks. As with all classic FET compressions, clamping peaks reduces the peak output energy significantly.",
+    "proTips": "To bring vocals right to the front instead of burying them, you MUST match any compressor Threshold reduction with equal or greater S3 (Gain) to restore presence and maintain excellent vocal level consistency.",
+    "volumeStagingWarning": "CRITICAL: Using S1 (Threshold) at -20dB to -30dB will make your vocals extremely quiet. You must boost S3 (Gain) to +12dB to +18dB to compensate and bring the volume back up!",
+    "sliders": [
+        {
+            "index": 0,
+            "name": "Threshold",
+            "min": -60,
+            "max": 0,
+            "defaultVal": 0,
+            "unit": "dB"
+        },
+        {
+            "index": 1,
+            "name": "Ratio",
+            "min": 0,
+            "max": 9,
+            "defaultVal": 5
+        },
+        {
+            "index": 2,
+            "name": "Gain",
+            "min": -20,
+            "max": 20,
+            "defaultVal": 0,
+            "unit": "dB"
+        },
+        {
+            "index": 3,
+            "name": "Attack",
+            "min": 20,
+            "max": 2000,
+            "defaultVal": 20,
+            "unit": "uS"
+        },
+        {
+            "index": 4,
+            "name": "Release",
+            "min": 20,
+            "max": 1000,
+            "defaultVal": 250,
+            "unit": "ms"
+        },
+        {
+            "index": 5,
+            "name": "Mix",
+            "min": 0,
+            "max": 100,
+            "defaultVal": 100,
+            "unit": "%"
+        }
     ]
-  },
+},
   {
-    name: "JS: LOSER/EventHorizon",
-    shortName: "Event Horizon Clipper/Limiter",
-    category: "Dynamics",
-    description: "A clean, aggressive peak clipper and brickwall maximizer, ideal for group buses or master outputs.",
-    howItWorks: "Shaves off transient peaks above the Threshold point, transferring energy into perceived average loudness (RMS) through soft clipping before hard brickwall capping.",
-    proTips: "When designing track dynamic ranges on vocals or the master bus, S1 (Threshold) pulls the ceiling down to squash peaks. Keep S2 (Ceiling) around -0.1dB to -0.5dB to prevent digital clipping at the output.",
-    sliders: [
-      {"index":0,"name":"Threshold (dB)","unit":"dB","min":-30,"max":0,"defaultVal":-0.1,"description":"Threshold"},
-      {"index":1,"name":"Ceiling (dB)","unit":"dB","min":-30,"max":0,"defaultVal":-0.1,"description":"Ceiling"},
-      {"index":2,"name":"Soft Clip (dB)","unit":"dB","min":0,"max":6,"defaultVal":2,"description":"Soft Clip"}    ]
-  },
-  {
-    name: "JS: LOSER/3BandEQ",
-    shortName: "3-Band Equalizer",
-    category: "EQ & Filtering",
-    description: "A simple, phase-coherent 3-band sweepable frequency equalizer designed for tonal balance.",
-    howItWorks: "Crossover networks separate incoming audio into low, mid, and high frequency ranges using Butterworth filters before applying independent gain stages.",
-    proTips: "Clean muddy boxiness in vocals by reducing the Mid Gain (-2dB) around the crossover frequency, and boost High Gain slightly for brilliance.",
-    sliders: [
-      { index: 0, name: "Low (dB)", unit: "dB", min: -24, max: 24, defaultVal: 0, description: "Gain boost or attenuation for low frequencies." },
-      { index: 1, name: "Frequency (Hz)", unit: "Hz", min: 0, max: 22000, defaultVal: 200, description: "Frequency boundary dividing Low and Mid bands." },
-      { index: 2, name: "Mid (dB)", unit: "dB", min: -24, max: 24, defaultVal: 0, description: "Gain boost or attenuation for mid frequencies." },
-      { index: 3, name: "Frequency (Hz)", unit: "Hz", min: 0, max: 22000, defaultVal: 2000, description: "Frequency boundary dividing Mid and High bands." },
-      { index: 4, name: "High (dB)", unit: "dB", min: -24, max: 24, defaultVal: 0, description: "Gain boost or attenuation for high frequencies." },
-      { index: 5, name: "Output (dB)", unit: "dB", min: -24, max: 24, defaultVal: 0, description: "Output gain adjustment." }
+    "name": "JS: Volume/Pan Smoother",
+    "shortName": "Volume & Pan Controller",
+    "category": "Routing & Utility",
+    "description": "A super-clean utility slider for precise track gain adjustment, leveling, and overall volume matching.",
+    "howItWorks": "Directly attenuates or boosts the raw audio sample buffer with zero phase distortion or coloration.",
+    "proTips": "Use this plugin as the very last plugin on a track's FX chain to ensure accurate staging and absolute control of track leveling without affecting the gain going into pre-fader compressors.",
+    "sliders": [
+        {
+            "index": 0,
+            "name": "Volume",
+            "min": -60,
+            "max": 12,
+            "defaultVal": 0,
+            "unit": "dB"
+        },
+        {
+            "index": 1,
+            "name": "Pan",
+            "min": -100,
+            "max": 100,
+            "defaultVal": 0
+        },
+        {
+            "index": 2,
+            "name": "Pan Law",
+            "min": -6,
+            "max": 6,
+            "defaultVal": 0,
+            "unit": "dB"
+        }
     ]
-  },
+},
   {
-    name: "JS: Chorus",
-    shortName: "Stereo Chorus",
-    category: "Time & Modulation",
-    description: "Creates thick, lush, and wider vocal backings or melodies by duplicating signals and modulating delay.",
-    howItWorks: "An LFO modulates target delay lines back and forth to create slight pitch and timing discrepancies, simulating a multi-singer performance.",
-    proTips: "Keep Wet Mix (S5) low (-12dB to -18dB) on main lead vocals to preserve punch, but boost it on backing vocals for a wider, floatier stereo field.",
-    sliders: [
-      {"index":0,"name":"Chorus Length","min":1,"max":250,"defaultVal":15,"unit":"ms"},
-      {"index":1,"name":"Number Of Voices","min":1,"max":8,"defaultVal":1},
-      {"index":2,"name":"Rate","min":0.1,"max":16,"defaultVal":0.5,"unit":"Hz"},
-      {"index":3,"name":"Pitch Fudge Factor","min":0,"max":1,"defaultVal":0.7},
-      {"index":4,"name":"Wet Mix","min":-100,"max":12,"defaultVal":-6,"unit":"dB"},
-      {"index":5,"name":"Dry Mix","min":-100,"max":12,"defaultVal":-6,"unit":"dB"}    ]
-  },
-  {
-    name: "JS: Delay",
-    shortName: "Delay Tone Control",
-    category: "Time & Modulation",
-    description: "An echo engine designed to create spatial depth, trailing echoes, or slapbacks.",
-    howItWorks: "Samples incoming audio into a circular buffer and reads it back after a specified delay time, feeding some of the output back into the input.",
-    proTips: "For a wider high-quality vocal space without washing out the center image, feed a slight 80ms slapback delay into a wide Chorus, keeping the Wet level low.",
-    sliders: [
-      {"index":0,"name":"Delay","min":0,"max":4000,"defaultVal":300,"unit":"ms"},
-      {"index":1,"name":"Feedback","min":-120,"max":6,"defaultVal":-5,"unit":"dB"},
-      {"index":2,"name":"Mix In","min":-120,"max":6,"defaultVal":0,"unit":"dB"},
-      {"index":3,"name":"Output Wet","min":-120,"max":6,"defaultVal":-6,"unit":"dB"},
-      {"index":4,"name":"Output Dry","min":-120,"max":6,"defaultVal":0,"unit":"dB"},
-      {"index":5,"name":"Resample On Length Change","min":0,"max":1,"defaultVal":0}
+    "name": "JS: LOSER/EventHorizon",
+    "shortName": "Event Horizon Clipper/Limiter",
+    "category": "Dynamics",
+    "description": "A clean, aggressive peak clipper and brickwall maximizer, ideal for group buses or master outputs.",
+    "howItWorks": "Shaves off transient peaks above the Threshold point, transferring energy into perceived average loudness (RMS) through soft clipping before hard brickwall capping.",
+    "proTips": "When designing track dynamic ranges on vocals or the master bus, S1 (Threshold) pulls the ceiling down to squash peaks. Keep S2 (Ceiling) around -0.1dB to -0.5dB to prevent digital clipping at the output.",
+    "sliders": [
+        {
+            "index": 0,
+            "name": "Threshold (dB)",
+            "unit": "dB",
+            "min": -30,
+            "max": 0,
+            "defaultVal": -0.1,
+            "description": "Threshold"
+        },
+        {
+            "index": 1,
+            "name": "Ceiling (dB)",
+            "unit": "dB",
+            "min": -30,
+            "max": 0,
+            "defaultVal": -0.1,
+            "description": "Ceiling"
+        },
+        {
+            "index": 2,
+            "name": "Soft Clip (dB)",
+            "unit": "dB",
+            "min": 0,
+            "max": 6,
+            "defaultVal": 2,
+            "description": "Soft Clip"
+        }
     ]
-  },
+},
+  {
+    "name": "JS: LOSER/3BandEQ",
+    "shortName": "3-Band Equalizer",
+    "category": "EQ & Filtering",
+    "description": "A simple, phase-coherent 3-band sweepable frequency equalizer designed for tonal balance.",
+    "howItWorks": "Crossover networks separate incoming audio into low, mid, and high frequency ranges using Butterworth filters before applying independent gain stages.",
+    "proTips": "Clean muddy boxiness in vocals by reducing the Mid Gain (-2dB) around the crossover frequency, and boost High Gain slightly for brilliance.",
+    "sliders": [
+        {
+            "index": 0,
+            "name": "Low (dB)",
+            "unit": "dB",
+            "min": -24,
+            "max": 24,
+            "defaultVal": 0,
+            "description": "Gain boost or attenuation for low frequencies."
+        },
+        {
+            "index": 1,
+            "name": "Frequency (Hz)",
+            "unit": "Hz",
+            "min": 0,
+            "max": 22000,
+            "defaultVal": 200,
+            "description": "Frequency boundary dividing Low and Mid bands."
+        },
+        {
+            "index": 2,
+            "name": "Mid (dB)",
+            "unit": "dB",
+            "min": -24,
+            "max": 24,
+            "defaultVal": 0,
+            "description": "Gain boost or attenuation for mid frequencies."
+        },
+        {
+            "index": 3,
+            "name": "Frequency (Hz)",
+            "unit": "Hz",
+            "min": 0,
+            "max": 22000,
+            "defaultVal": 2000,
+            "description": "Frequency boundary dividing Mid and High bands."
+        },
+        {
+            "index": 4,
+            "name": "High (dB)",
+            "unit": "dB",
+            "min": -24,
+            "max": 24,
+            "defaultVal": 0,
+            "description": "Gain boost or attenuation for high frequencies."
+        },
+        {
+            "index": 5,
+            "name": "Output (dB)",
+            "unit": "dB",
+            "min": -24,
+            "max": 24,
+            "defaultVal": 0,
+            "description": "Output gain adjustment."
+        }
+    ]
+},
+  {
+    "name": "JS: Chorus",
+    "shortName": "Stereo Chorus",
+    "category": "Time & Modulation",
+    "description": "Creates thick, lush, and wider vocal backings or melodies by duplicating signals and modulating delay.",
+    "howItWorks": "An LFO modulates target delay lines back and forth to create slight pitch and timing discrepancies, simulating a multi-singer performance.",
+    "proTips": "Keep Wet Mix (S5) low (-12dB to -18dB) on main lead vocals to preserve punch, but boost it on backing vocals for a wider, floatier stereo field.",
+    "sliders": [
+        {
+            "index": 0,
+            "name": "Chorus Length",
+            "min": 1,
+            "max": 250,
+            "defaultVal": 15,
+            "unit": "ms"
+        },
+        {
+            "index": 1,
+            "name": "Number Of Voices",
+            "min": 1,
+            "max": 8,
+            "defaultVal": 1
+        },
+        {
+            "index": 2,
+            "name": "Rate",
+            "min": 0.1,
+            "max": 16,
+            "defaultVal": 0.5,
+            "unit": "Hz"
+        },
+        {
+            "index": 3,
+            "name": "Pitch Fudge Factor",
+            "min": 0,
+            "max": 1,
+            "defaultVal": 0.7
+        },
+        {
+            "index": 4,
+            "name": "Wet Mix",
+            "min": -100,
+            "max": 12,
+            "defaultVal": -6,
+            "unit": "dB"
+        },
+        {
+            "index": 5,
+            "name": "Dry Mix",
+            "min": -100,
+            "max": 12,
+            "defaultVal": -6,
+            "unit": "dB"
+        }
+    ]
+},
+  {
+    "name": "JS: Delay",
+    "shortName": "Delay Tone Control",
+    "category": "Time & Modulation",
+    "description": "An echo engine designed to create spatial depth, trailing echoes, or slapbacks.",
+    "howItWorks": "Samples incoming audio into a circular buffer and reads it back after a specified delay time, feeding some of the output back into the input.",
+    "proTips": "For a wider high-quality vocal space without washing out the center image, feed a slight 80ms slapback delay into a wide Chorus, keeping the Wet level low.",
+    "sliders": [
+        {
+            "index": 0,
+            "name": "Delay",
+            "min": 0,
+            "max": 4000,
+            "defaultVal": 300,
+            "unit": "ms"
+        },
+        {
+            "index": 1,
+            "name": "Feedback",
+            "min": -120,
+            "max": 6,
+            "defaultVal": -5,
+            "unit": "dB"
+        },
+        {
+            "index": 2,
+            "name": "Mix In",
+            "min": -120,
+            "max": 6,
+            "defaultVal": 0,
+            "unit": "dB"
+        },
+        {
+            "index": 3,
+            "name": "Output Wet",
+            "min": -120,
+            "max": 6,
+            "defaultVal": -6,
+            "unit": "dB"
+        },
+        {
+            "index": 4,
+            "name": "Output Dry",
+            "min": -120,
+            "max": 6,
+            "defaultVal": 0,
+            "unit": "dB"
+        },
+        {
+            "index": 5,
+            "name": "Resample On Length Change",
+            "min": 0,
+            "max": 1,
+            "defaultVal": 0
+        }
+    ]
+},
   {
     "name": "JS: Auto Expander",
     "shortName": "Auto Expander",
@@ -839,8 +1059,7 @@ export const JSFX_DATABASE: JSFXProfile[] = [
             "description": "Hard Clip"
         }
     ]
-}
-,
+},
   {
     "name": "JS: LOSER/3BandJoiner",
     "shortName": "3-Band Joiner",
@@ -1527,8 +1746,7 @@ export const JSFX_DATABASE: JSFXProfile[] = [
             "description": "Modulation frequency."
         }
     ]
-}
-,
+},
   {
     "name": "JS: Apple 2-Pole Lowpass Filter",
     "shortName": "2-Pole LP Filter",
@@ -1833,8 +2051,7 @@ export const JSFX_DATABASE: JSFXProfile[] = [
             "description": "Passband Ripple"
         }
     ]
-}
-,
+},
   {
     "name": "JS: Downward Expander",
     "shortName": "Downward Expander",
@@ -2189,10 +2406,31 @@ export const JSFX_DATABASE: JSFXProfile[] = [
     "description": "A specialized bass exciter/saturator.",
     "howItWorks": "Creates harmonic distortion focused purely on low end frequencies.",
     "proTips": "Add to sub bass channels to make them audible on small speakers/phones.",
-    sliders: [
-      {"index":0,"name":"Mix","min":0,"max":100,"defaultVal":0,"unit":"%"},
-      {"index":1,"name":"Drive","min":0,"max":100,"defaultVal":0,"unit":"%"},
-      {"index":2,"name":"Frequency","min":20,"max":200,"defaultVal":100,"unit":"Hz"}
+    "sliders": [
+        {
+            "index": 0,
+            "name": "Mix",
+            "min": 0,
+            "max": 100,
+            "defaultVal": 0,
+            "unit": "%"
+        },
+        {
+            "index": 1,
+            "name": "Drive",
+            "min": 0,
+            "max": 100,
+            "defaultVal": 0,
+            "unit": "%"
+        },
+        {
+            "index": 2,
+            "name": "Frequency",
+            "min": 20,
+            "max": 200,
+            "defaultVal": 100,
+            "unit": "Hz"
+        }
     ]
 },
   {
@@ -2259,8 +2497,7 @@ export const JSFX_DATABASE: JSFXProfile[] = [
             "description": "Release"
         }
     ]
-}
-,
+},
   {
     "name": "JS: Ring Modulator",
     "shortName": "Ring Mod",
@@ -2558,8 +2795,7 @@ export const JSFX_DATABASE: JSFXProfile[] = [
             "description": "Maximizer Threshold"
         }
     ]
-}
-,
+},
   {
     "name": "JS: LOSER/gate",
     "shortName": "LOSER Gate",
@@ -2879,8 +3115,7 @@ export const JSFX_DATABASE: JSFXProfile[] = [
             "description": "Release"
         }
     ]
-}
-,
+},
   {
     "name": "JS: 3-Band EQ",
     "shortName": "3-Band EQ",
@@ -3302,8 +3537,7 @@ export const JSFX_DATABASE: JSFXProfile[] = [
             "description": "Band 4"
         }
     ]
-}
-,
+},
   {
     "name": "JS: Chorus (Stereo)",
     "shortName": "Stereo Chorus",
@@ -3542,8 +3776,7 @@ export const JSFX_DATABASE: JSFXProfile[] = [
             "description": "Wet/Dry Blend"
         }
     ]
-}
-,
+},
   {
     "name": "JS: Distortion",
     "shortName": "Distortion",
@@ -3663,8 +3896,7 @@ export const JSFX_DATABASE: JSFXProfile[] = [
             "description": "Highest Frequency"
         }
     ]
-}
-,
+},
   {
     "name": "JS: Audio To MIDI Drum Trigger",
     "shortName": "Drum Trigger",
@@ -3894,8 +4126,7 @@ export const JSFX_DATABASE: JSFXProfile[] = [
     "howItWorks": "Creates a mono Mid channel and a difference Side channel.",
     "proTips": "Put this before an EQ to EQ the sides (width) differently than the center.",
     "sliders": []
-}
-,
+},
   {
     "name": "JS: LOSER/WhiteNoise",
     "shortName": "White Noise Generator",
@@ -4118,8 +4349,7 @@ export const JSFX_DATABASE: JSFXProfile[] = [
             "description": "Wet Level"
         }
     ]
-}
-,
+},
   {
     "name": "JS: LOSER/1175",
     "shortName": "1175",
@@ -4799,8 +5029,15 @@ export const JSFX_DATABASE: JSFXProfile[] = [
     "description": "Standard Lowpass Filters implementation.",
     "howItWorks": "Processes the input signal accordingly.",
     "proTips": "Adjust sliders to taste to fit your mix.",
-    sliders: [
-      {"index":0,"name":"Delay","min":0,"max":250,"defaultVal":125,"unit":"ms"}
+    "sliders": [
+        {
+            "index": 0,
+            "name": "Delay",
+            "min": 0,
+            "max": 250,
+            "defaultVal": 125,
+            "unit": "ms"
+        }
     ]
 },
   {
@@ -6006,8 +6243,7 @@ export const JSFX_DATABASE: JSFXProfile[] = [
             "description": "Gain adjustment"
         }
     ]
-}
-,
+},
   {
     "name": "JS: MIDI EQ Ducker [LOSER]",
     "shortName": "MIDI EQ Ducker [LOSER]",
@@ -6116,8 +6352,7 @@ export const JSFX_DATABASE: JSFXProfile[] = [
             "description": "Gate/Pump React To MIDI Velocity"
         }
     ]
-}
-,
+},
   {
     "name": "JS: MIDI Velocity and Timing Humanizer",
     "shortName": "MIDI Velocity and Timing Humanizer",
@@ -6172,8 +6407,7 @@ export const JSFX_DATABASE: JSFXProfile[] = [
             "description": "Velocity Humanization Level"
         }
     ]
-}
-,
+},
   {
     "name": "JS: MIDI Modal Randomness",
     "shortName": "MIDI Modal Randomness",
@@ -6273,8 +6507,7 @@ export const JSFX_DATABASE: JSFXProfile[] = [
             "description": "Number Of Simultaneous Notes"
         }
     ]
-}
-,
+},
   {
     "name": "JS: IX/MIDI_MapToKey",
     "shortName": "MIDI Map To Key v2 [IXix]",
@@ -6329,8 +6562,7 @@ export const JSFX_DATABASE: JSFXProfile[] = [
             "description": "Reload Mapping"
         }
     ]
-}
-,
+},
   {
     "name": "JS: MIDI Pitch Wheel LFO Generator",
     "shortName": "MIDI Pitch Wheel LFO Generator",
@@ -6394,145 +6626,7 @@ export const JSFX_DATABASE: JSFXProfile[] = [
             "description": "On/Off"
         }
     ]
-}
-,
-  {
-    "name": "JS: Liteon/np1136peaklimiter",
-    "shortName": "NP1136 Peak Limiter",
-    "category": "Dynamics",
-    "description": "Accurate sliders for NP1136 Peak Limiter.",
-    "howItWorks": "",
-    "proTips": "",
-    "sliders": [
-        {
-            "index": 0,
-            "name": "Threshold (dB)",
-            "unit": "dB",
-            "min": -60,
-            "max": 0,
-            "defaultVal": 0,
-            "description": "Threshold"
-        },
-        {
-            "index": 1,
-            "name": "Ratio",
-            "unit": "ratio",
-            "min": 1,
-            "max": 20,
-            "defaultVal": 10,
-            "description": "Ratio"
-        },
-        {
-            "index": 2,
-            "name": "Attack (µs)",
-            "unit": "µs",
-            "min": 0,
-            "max": 1000,
-            "defaultVal": 100,
-            "description": "Attack"
-        },
-        {
-            "index": 3,
-            "name": "Release (ms)",
-            "unit": "ms",
-            "min": 0,
-            "max": 1000,
-            "defaultVal": 100,
-            "description": "Release"
-        },
-        {
-            "index": 4,
-            "name": "Detector HP (Hz)",
-            "unit": "Hz",
-            "min": 20,
-            "max": 500,
-            "defaultVal": 100,
-            "description": "Detector HP"
-        },
-        {
-            "index": 5,
-            "name": "GR Limit (dB)",
-            "unit": "dB",
-            "min": -30,
-            "max": 0,
-            "defaultVal": -12,
-            "description": "GR Limit"
-        },
-        {
-            "index": 6,
-            "name": "Makeup Gain (dB)",
-            "unit": "dB",
-            "min": 0,
-            "max": 24,
-            "defaultVal": 0,
-            "description": "Makeup Gain"
-        },
-        {
-            "index": 7,
-            "name": "Tilt EQ Center (Hz)",
-            "unit": "Hz",
-            "min": 200,
-            "max": 2000,
-            "defaultVal": 1000,
-            "description": "Tilt EQ Center"
-        },
-        {
-            "index": 8,
-            "name": "Tilt EQ Low/High (dB)",
-            "unit": "dB",
-            "min": -12,
-            "max": 12,
-            "defaultVal": 0,
-            "description": "Tilt EQ"
-        },
-        {
-            "index": 9,
-            "name": "Wet Mix (%)",
-            "unit": "%",
-            "min": 0,
-            "max": 100,
-            "defaultVal": 100,
-            "description": "Wet Mix"
-        },
-        {
-            "index": 10,
-            "name": "Processing Mode",
-            "unit": "",
-            "min": 0,
-            "max": 2,
-            "defaultVal": 0,
-            "description": "Processing Mode"
-        },
-        {
-            "index": 11,
-            "name": "Detector Mode",
-            "unit": "",
-            "min": 0,
-            "max": 2,
-            "defaultVal": 0,
-            "description": "Detector Mode"
-        },
-        {
-            "index": 12,
-            "name": "Detector Input",
-            "unit": "",
-            "min": 0,
-            "max": 2,
-            "defaultVal": 0,
-            "description": "Detector Input"
-        },
-        {
-            "index": 13,
-            "name": "Hard Clip",
-            "unit": "",
-            "min": 0,
-            "max": 1,
-            "defaultVal": 0,
-            "description": "Hard Clip"
-        }
-    ]
-}
-,
+},
   {
     "name": "JS: Dirt Squeeze Compressor",
     "shortName": "Dirt Squeeze Compressor [Stillwell]",
@@ -6540,11 +6634,16 @@ export const JSFX_DATABASE: JSFXProfile[] = [
     "description": "Accurate sliders for Dirt Squeeze Compressor [Stillwell].",
     "howItWorks": "",
     "proTips": "",
-    sliders: [
-      {"index":0,"name":"Frame Rate","min":0,"max":3,"defaultVal":0}
+    "sliders": [
+        {
+            "index": 0,
+            "name": "Frame Rate",
+            "min": 0,
+            "max": 3,
+            "defaultVal": 0
+        }
     ]
-  }
-,
+},
   {
     "name": "JS: Ozzifier Chorus",
     "shortName": "Ozzifier Chorus [Stillwell]",
@@ -6608,102 +6707,7 @@ export const JSFX_DATABASE: JSFXProfile[] = [
             "description": "Pan Spread"
         }
     ]
-}
-,
-  {
-    "name": "JS: Pitch Octave Up",
-    "shortName": "Pitch an Octave Up",
-    "category": "Time & Modulation",
-    "description": "Accurate sliders for Pitch an Octave Up.",
-    "howItWorks": "",
-    "proTips": "",
-    "sliders": [
-        {
-            "index": 0,
-            "name": "Chunk (ms)",
-            "unit": "ms",
-            "min": 10,
-            "max": 200,
-            "defaultVal": 50,
-            "description": "Chunk (ms)"
-        },
-        {
-            "index": 1,
-            "name": "Overlap",
-            "unit": "",
-            "min": 1,
-            "max": 8,
-            "defaultVal": 4,
-            "description": "Overlap"
-        },
-        {
-            "index": 2,
-            "name": "Wet Mix (dB)",
-            "unit": "dB",
-            "min": -120,
-            "max": 12,
-            "defaultVal": 0,
-            "description": "Wet Mix"
-        },
-        {
-            "index": 3,
-            "name": "Dry Mix (dB)",
-            "unit": "dB",
-            "min": -120,
-            "max": 12,
-            "defaultVal": -120,
-            "description": "Dry Mix"
-        }
-    ]
-}
-,
-  {
-    "name": "JS: Pitch Down-Shifter",
-    "shortName": "Pitch an Octave Down",
-    "category": "Time & Modulation",
-    "description": "Accurate sliders for Pitch an Octave Down.",
-    "howItWorks": "",
-    "proTips": "",
-    "sliders": [
-        {
-            "index": 0,
-            "name": "Chunk (ms)",
-            "unit": "ms",
-            "min": 10,
-            "max": 200,
-            "defaultVal": 50,
-            "description": "Chunk (ms)"
-        },
-        {
-            "index": 1,
-            "name": "Overlap",
-            "unit": "",
-            "min": 1,
-            "max": 8,
-            "defaultVal": 4,
-            "description": "Overlap"
-        },
-        {
-            "index": 2,
-            "name": "Wet Mix (dB)",
-            "unit": "dB",
-            "min": -120,
-            "max": 12,
-            "defaultVal": 0,
-            "description": "Wet Mix"
-        },
-        {
-            "index": 3,
-            "name": "Dry Mix (dB)",
-            "unit": "dB",
-            "min": -120,
-            "max": 12,
-            "defaultVal": -120,
-            "description": "Dry Mix"
-        }
-    ]
-}
-,
+},
   {
     "name": "JS: 4-Tap Phaser",
     "shortName": "4-Tap Phaser",
@@ -6758,8 +6762,7 @@ export const JSFX_DATABASE: JSFXProfile[] = [
             "description": "Wet Mix"
         }
     ]
-}
-,
+},
   {
     "name": "JS: Avocado Ducking Glitch Generator",
     "shortName": "Avocado Ducking Glitch Generator",
@@ -6868,67 +6871,7 @@ export const JSFX_DATABASE: JSFXProfile[] = [
             "description": "Tempo Sync"
         }
     ]
-}
-,
-  {
-    "name": "JS: 3-Band EQ",
-    "shortName": "3-Band EQ [LOSER]",
-    "category": "EQ & Filtering",
-    "description": "3-Band EQ",
-    "howItWorks": "",
-    "proTips": "",
-    "sliders": [
-        {
-            "index": 0,
-            "name": "Low",
-            "min": -24,
-            "max": 24,
-            "defaultVal": 0,
-            "unit": "dB"
-        },
-        {
-            "index": 1,
-            "name": "Frequency",
-            "min": 0,
-            "max": 22000,
-            "defaultVal": 200,
-            "unit": "Hz"
-        },
-        {
-            "index": 2,
-            "name": "Mid",
-            "min": -24,
-            "max": 24,
-            "defaultVal": 0,
-            "unit": "dB"
-        },
-        {
-            "index": 3,
-            "name": "Frequency",
-            "min": 0,
-            "max": 22000,
-            "defaultVal": 2000,
-            "unit": "Hz"
-        },
-        {
-            "index": 4,
-            "name": "High",
-            "min": -24,
-            "max": 24,
-            "defaultVal": 0,
-            "unit": "dB"
-        },
-        {
-            "index": 5,
-            "name": "Output",
-            "min": -24,
-            "max": 24,
-            "defaultVal": 0,
-            "unit": "dB"
-        }
-    ]
-}
-,
+},
   {
     "name": "JS: 3-Band Joiner",
     "shortName": "3-Band-Joiner (Combines Signal From 3-Band Splitter) [LOSER]",
@@ -6962,8 +6905,7 @@ export const JSFX_DATABASE: JSFXProfile[] = [
             "unit": "dB"
         }
     ]
-}
-,
+},
   {
     "name": "JS: 3-Band Peak Filter",
     "shortName": "3-Band Peak Filter (PF-3A, PF-3B, Apple: HP, LP) [Liteon]",
@@ -7090,35 +7032,7 @@ export const JSFX_DATABASE: JSFXProfile[] = [
             "defaultVal": 0
         }
     ]
-}
-,
-  {
-    "name": "JS: 3-Band Splitter",
-    "shortName": "3-Band Splitter (Splits In Low:1+2,Mid:3+4,High:5+6) [LOSER]",
-    "category": "Routing & Utility",
-    "description": "Splits In Low:1+2,Mid:3+4,High:5+6",
-    "howItWorks": "",
-    "proTips": "",
-    "sliders": [
-        {
-            "index": 0,
-            "name": "Crossover 1",
-            "min": 0,
-            "max": 22000,
-            "defaultVal": 200,
-            "unit": "Hz"
-        },
-        {
-            "index": 1,
-            "name": "Crossover 2",
-            "min": 0,
-            "max": 22000,
-            "defaultVal": 2000,
-            "unit": "Hz"
-        }
-    ]
-}
-,
+},
   {
     "name": "JS: 3x3 EQ (1-Pole Crossover)",
     "shortName": "3x3 EQ (1-Pole Crossover) [Stillwell]",
@@ -7192,233 +7106,7 @@ export const JSFX_DATABASE: JSFXProfile[] = [
             "unit": "Hz"
         }
     ]
-}
-,
-  {
-    "name": "JS: 3x3 EQ",
-    "shortName": "3x3 EQ [Stillwell]",
-    "category": "EQ & Filtering",
-    "description": "3x3 EQ",
-    "howItWorks": "",
-    "proTips": "",
-    "sliders": [
-        {
-            "index": 0,
-            "name": "Low Drive",
-            "min": 0,
-            "max": 100,
-            "defaultVal": 0,
-            "unit": "%"
-        },
-        {
-            "index": 1,
-            "name": "Low Gain",
-            "min": -12,
-            "max": 12,
-            "defaultVal": 0,
-            "unit": "dB"
-        },
-        {
-            "index": 2,
-            "name": "Mid Drive",
-            "min": 0,
-            "max": 100,
-            "defaultVal": 0,
-            "unit": "%"
-        },
-        {
-            "index": 3,
-            "name": "Mid Gain",
-            "min": -12,
-            "max": 12,
-            "defaultVal": 0,
-            "unit": "dB"
-        },
-        {
-            "index": 4,
-            "name": "High Drive",
-            "min": 0,
-            "max": 100,
-            "defaultVal": 0,
-            "unit": "%"
-        },
-        {
-            "index": 5,
-            "name": "High Gain",
-            "min": -12,
-            "max": 12,
-            "defaultVal": 0,
-            "unit": "dB"
-        },
-        {
-            "index": 6,
-            "name": "Low-Mid Freq",
-            "min": 60,
-            "max": 680,
-            "defaultVal": 240,
-            "unit": "Hz"
-        },
-        {
-            "index": 7,
-            "name": "Mid-High Freq",
-            "min": 720,
-            "max": 12000,
-            "defaultVal": 2400,
-            "unit": "Hz"
-        }
-    ]
-}
-,
-  {
-    "name": "JS: 4-Band EQ",
-    "shortName": "4-Band EQ [LOSER]",
-    "category": "EQ & Filtering",
-    "description": "4-Band EQ",
-    "howItWorks": "",
-    "proTips": "",
-    "sliders": [
-        {
-            "index": 0,
-            "name": "Low",
-            "min": -24,
-            "max": 24,
-            "defaultVal": 0,
-            "unit": "dB"
-        },
-        {
-            "index": 1,
-            "name": "Frequency",
-            "min": 0,
-            "max": 22000,
-            "defaultVal": 200,
-            "unit": "Hz"
-        },
-        {
-            "index": 2,
-            "name": "Low Mid",
-            "min": -24,
-            "max": 24,
-            "defaultVal": 0,
-            "unit": "dB"
-        },
-        {
-            "index": 3,
-            "name": "Frequency",
-            "min": 0,
-            "max": 22000,
-            "defaultVal": 2000,
-            "unit": "Hz"
-        },
-        {
-            "index": 4,
-            "name": "High Mid",
-            "min": -24,
-            "max": 24,
-            "defaultVal": 0,
-            "unit": "dB"
-        },
-        {
-            "index": 5,
-            "name": "Frequency",
-            "min": 0,
-            "max": 22000,
-            "defaultVal": 5000,
-            "unit": "Hz"
-        },
-        {
-            "index": 6,
-            "name": "High",
-            "min": -24,
-            "max": 24,
-            "defaultVal": 0,
-            "unit": "dB"
-        },
-        {
-            "index": 7,
-            "name": "Output",
-            "min": -24,
-            "max": 24,
-            "defaultVal": 0,
-            "unit": "dB"
-        }
-    ]
-}
-,
-  {
-    "name": "JS: 4x4 EQ",
-    "shortName": "4x4 EQ [Stillwell]",
-    "category": "EQ & Filtering",
-    "description": "4x4 EQ",
-    "howItWorks": "",
-    "proTips": "",
-    "sliders": [
-        {
-            "index": 0,
-            "name": "Low Drive",
-            "min": 0,
-            "max": 100,
-            "defaultVal": 0,
-            "unit": "%"
-        },
-        {
-            "index": 1,
-            "name": "Low Gain",
-            "min": -12,
-            "max": 12,
-            "defaultVal": 0,
-            "unit": "dB"
-        },
-        {
-            "index": 2,
-            "name": "Mid Drive",
-            "min": 0,
-            "max": 100,
-            "defaultVal": 0,
-            "unit": "%"
-        },
-        {
-            "index": 3,
-            "name": "Mid Gain",
-            "min": -12,
-            "max": 12,
-            "defaultVal": 0,
-            "unit": "dB"
-        },
-        {
-            "index": 4,
-            "name": "High Drive",
-            "min": 0,
-            "max": 100,
-            "defaultVal": 0,
-            "unit": "%"
-        },
-        {
-            "index": 5,
-            "name": "High Gain",
-            "min": -12,
-            "max": 12,
-            "defaultVal": 0,
-            "unit": "dB"
-        },
-        {
-            "index": 6,
-            "name": "Low-Mid Crossover",
-            "min": 60,
-            "max": 500,
-            "defaultVal": 240,
-            "unit": "Hz"
-        },
-        {
-            "index": 7,
-            "name": "Mid-High Crossover",
-            "min": 510,
-            "max": 10000,
-            "defaultVal": 2400,
-            "unit": "Hz"
-        }
-    ]
-}
-,
+},
   {
     "name": "JS: 5-Band Joiner",
     "shortName": "5-Band Joiner (Combines Signal From 5-Band Splitter) [LOSER]",
@@ -7468,8 +7156,7 @@ export const JSFX_DATABASE: JSFXProfile[] = [
             "unit": "dB"
         }
     ]
-}
-,
+},
   {
     "name": "JS: 50 Hz Kicker",
     "shortName": "50 Hz Kicker (Kick Drum Enhancer) [LOSER]",
@@ -7503,91 +7190,7 @@ export const JSFX_DATABASE: JSFXProfile[] = [
             "unit": "dB"
         }
     ]
-}
-,
-  {
-    "name": "JS: 5-Band Splitter",
-    "shortName": "5-Band Splitter (Splits In Low:1+2,Mid:3+4,High:5+6,UberHigh:7+8,SomeMore:9+10) [LOSER]",
-    "category": "Routing & Utility",
-    "description": "Splits In Low:1+2,Mid:3+4,High:5+6,UberHigh:7+8,SomeMore:9+10",
-    "howItWorks": "",
-    "proTips": "",
-    "sliders": [
-        {
-            "index": 0,
-            "name": "Crossover 1",
-            "min": 0,
-            "max": 22000,
-            "defaultVal": 200,
-            "unit": "Hz"
-        },
-        {
-            "index": 1,
-            "name": "Crossover 2",
-            "min": 0,
-            "max": 22000,
-            "defaultVal": 2000,
-            "unit": "Hz"
-        },
-        {
-            "index": 2,
-            "name": "Crossover 3",
-            "min": 0,
-            "max": 22000,
-            "defaultVal": 5000,
-            "unit": "Hz"
-        },
-        {
-            "index": 3,
-            "name": "Crossover 4",
-            "min": 0,
-            "max": 22000,
-            "defaultVal": 8000,
-            "unit": "Hz"
-        }
-    ]
-}
-,
-  {
-    "name": "JS: ADPCM Simulator",
-    "shortName": "ADPCM Simulator",
-    "category": "Analysis & Utility",
-    "description": "ADPCM Simulator",
-    "howItWorks": "",
-    "proTips": "",
-    "sliders": [
-        {
-            "index": 0,
-            "name": "Bits",
-            "min": 1,
-            "max": 4,
-            "defaultVal": 4
-        },
-        {
-            "index": 1,
-            "name": "Block Size",
-            "min": 2,
-            "max": 65538,
-            "defaultVal": 4096
-        },
-        {
-            "index": 2,
-            "name": "Bit Bias",
-            "min": 0,
-            "max": 7,
-            "defaultVal": 0
-        },
-        {
-            "index": 3,
-            "name": "Gain",
-            "min": -60,
-            "max": 60,
-            "defaultVal": 0,
-            "unit": "dB"
-        }
-    ]
-}
-,
+},
   {
     "name": "JS: Convolution Dual Amp Modeler",
     "shortName": "Convolution Dual Amp Modeler (mono->stereo)",
@@ -7640,192 +7243,7 @@ export const JSFX_DATABASE: JSFXProfile[] = [
             "defaultVal": 0
         }
     ]
-}
-,
-  {
-    "name": "JS: Convolution Amp/Cab Modeler",
-    "shortName": "Convolution Amp/Cab Modeler",
-    "category": "Guitar Amp/Cabinet",
-    "description": "Convolution Amp/Cab Modeler",
-    "howItWorks": "",
-    "proTips": "",
-    "sliders": [
-        {
-            "index": 0,
-            "name": "Model",
-            "min": 0,
-            "max": 0,
-            "defaultVal": 0
-        },
-        {
-            "index": 1,
-            "name": "Preamp",
-            "min": -120,
-            "max": 30,
-            "defaultVal": 0,
-            "unit": "dB"
-        },
-        {
-            "index": 2,
-            "name": "Upsample Impulse If Required",
-            "min": 0,
-            "max": 2,
-            "defaultVal": 2
-        },
-        {
-            "index": 3,
-            "name": "Channel Mode",
-            "min": 0,
-            "max": 1,
-            "defaultVal": 0
-        },
-        {
-            "index": 4,
-            "name": "Filter Size",
-            "min": 0,
-            "max": 0,
-            "defaultVal": 0
-        },
-        {
-            "index": 5,
-            "name": "FFT Size",
-            "min": 0,
-            "max": 0,
-            "defaultVal": 0
-        }
-    ]
-}
-,
-  {
-    "name": "JS: Amplitude Modulator",
-    "shortName": "Amplitude Modulator [LOSER]",
-    "category": "Modulation",
-    "description": "Amplitude Modulator",
-    "howItWorks": "",
-    "proTips": "",
-    "sliders": [
-        {
-            "index": 0,
-            "name": "Frequency",
-            "min": 80,
-            "max": 1000,
-            "defaultVal": 440,
-            "unit": "Hz"
-        }
-    ]
-}
-,
-  {
-    "name": "JS: Apple 2-Pole Lowpass Filter",
-    "shortName": "Apple 2-Pole Lowpass Filter [Liteon]",
-    "category": "EQ & Filtering",
-    "description": "Apple 2-Pole Lowpass Filter, port from Apple.com AU tutorial",
-    "howItWorks": "",
-    "proTips": "",
-    "sliders": [
-        {
-            "index": 0,
-            "name": "Processing",
-            "min": 0,
-            "max": 1,
-            "defaultVal": 0
-        },
-        {
-            "index": 1,
-            "name": "Cutoff (Scale)",
-            "min": 0,
-            "max": 100,
-            "defaultVal": 100
-        },
-        {
-            "index": 2,
-            "name": "Resonance",
-            "min": -25,
-            "max": 25,
-            "defaultVal": 0,
-            "unit": "dB"
-        },
-        {
-            "index": 3,
-            "name": "Output",
-            "min": -25,
-            "max": 25,
-            "defaultVal": 0,
-            "unit": "dB"
-        }
-    ]
-}
-,
-  {
-    "name": "JS: Apple 12-Pole Filter",
-    "shortName": "Apple 12-Pole Filter [Liteon]",
-    "category": "EQ & Filtering",
-    "description": "Apple 12-Pole Filter - Butterworth filter implementation",
-    "howItWorks": "",
-    "proTips": "",
-    "sliders": [
-        {
-            "index": 0,
-            "name": "Processing",
-            "min": 0,
-            "max": 1,
-            "defaultVal": 0
-        },
-        {
-            "index": 1,
-            "name": "HP Slope",
-            "min": 0,
-            "max": 6,
-            "defaultVal": 0
-        },
-        {
-            "index": 2,
-            "name": "HP Cutoff (Scale)",
-            "min": 0,
-            "max": 100,
-            "defaultVal": 0
-        },
-        {
-            "index": 3,
-            "name": "HP Resonance",
-            "min": -16,
-            "max": 16,
-            "defaultVal": 0,
-            "unit": "dB"
-        },
-        {
-            "index": 4,
-            "name": "LP Slope",
-            "min": 0,
-            "max": 6,
-            "defaultVal": 0
-        },
-        {
-            "index": 5,
-            "name": "LP Cutoff (Scale)",
-            "min": 0,
-            "max": 100,
-            "defaultVal": 100
-        },
-        {
-            "index": 6,
-            "name": "LP Resonance",
-            "min": -16,
-            "max": 16,
-            "defaultVal": 0,
-            "unit": "dB"
-        },
-        {
-            "index": 7,
-            "name": "Output",
-            "min": -24,
-            "max": 24,
-            "defaultVal": 0,
-            "unit": "dB"
-        }
-    ]
-}
-,
+},
   {
     "name": "JS: Audio Statistics",
     "shortName": "Audio Statistics [Schwa]",
@@ -7961,63 +7379,7 @@ export const JSFX_DATABASE: JSFXProfile[] = [
             "defaultVal": 0
         }
     ]
-}
-,
-  {
-    "name": "JS: Auto Expander",
-    "shortName": "Auto Expander [Stillwell]",
-    "category": "Dynamics",
-    "description": "Auto Expander",
-    "howItWorks": "",
-    "proTips": "",
-    "sliders": [
-        {
-            "index": 0,
-            "name": "Threshold",
-            "min": -120,
-            "max": 0,
-            "defaultVal": -120,
-            "unit": "dB"
-        },
-        {
-            "index": 1,
-            "name": "Ratio",
-            "min": 1,
-            "max": 20,
-            "defaultVal": 1
-        },
-        {
-            "index": 2,
-            "name": "Gain",
-            "min": -20,
-            "max": 20,
-            "defaultVal": 0,
-            "unit": "dB"
-        },
-        {
-            "index": 3,
-            "name": "Knee",
-            "min": 0,
-            "max": 3,
-            "defaultVal": 2
-        },
-        {
-            "index": 4,
-            "name": "Detector Input",
-            "min": 0,
-            "max": 1,
-            "defaultVal": 0
-        },
-        {
-            "index": 6,
-            "name": "Detection",
-            "min": 0,
-            "max": 1,
-            "defaultVal": 0
-        }
-    ]
-}
-,
+},
   {
     "name": "JS: Auto Looper",
     "shortName": "Auto Looper [Cockos]",
@@ -8097,8 +7459,7 @@ export const JSFX_DATABASE: JSFXProfile[] = [
             "defaultVal": 0
         }
     ]
-}
-,
+},
   {
     "name": "JS: FFT Peak-Following Filter",
     "shortName": "FFT Peak-Following Filter [Cockos]",
@@ -8170,8 +7531,7 @@ export const JSFX_DATABASE: JSFXProfile[] = [
             "defaultVal": 1.29
         }
     ]
-}
-,
+},
   {
     "name": "JS: De-esser",
     "shortName": "De-esser [Liteon]",
@@ -8248,8 +7608,7 @@ export const JSFX_DATABASE: JSFXProfile[] = [
             "unit": "dB"
         }
     ]
-}
-,
+},
   {
     "name": "JS: Bad Buss Mojo Waveshaper w/AA",
     "shortName": "Bad Buss Mojo Waveshaper w/AA [Stillwell]",
@@ -8333,262 +7692,7 @@ export const JSFX_DATABASE: JSFXProfile[] = [
             "defaultVal": 0
         }
     ]
-}
-,
-  {
-    "name": "JS: Bad Buss Mojo Waveshaper",
-    "shortName": "Bad Buss Mojo Waveshaper [Stillwell]",
-    "category": "Distortion",
-    "description": "Bad Buss Mojo Waveshaper",
-    "howItWorks": "",
-    "proTips": "",
-    "sliders": [
-        {
-            "index": 0,
-            "name": "Pos Threshold",
-            "min": -60,
-            "max": 0,
-            "defaultVal": 0,
-            "unit": "dB"
-        },
-        {
-            "index": 1,
-            "name": "Neg Threshold",
-            "min": -60,
-            "max": 0,
-            "defaultVal": 0,
-            "unit": "dB"
-        },
-        {
-            "index": 2,
-            "name": "Pos Nonlinearity",
-            "min": 1,
-            "max": 2,
-            "defaultVal": 1
-        },
-        {
-            "index": 3,
-            "name": "Neg Nonlinearity",
-            "min": 1,
-            "max": 2,
-            "defaultVal": 1
-        },
-        {
-            "index": 4,
-            "name": "Pos Knee",
-            "min": 0,
-            "max": 6,
-            "defaultVal": 0,
-            "unit": "dB"
-        },
-        {
-            "index": 5,
-            "name": "Neg Knee",
-            "min": 0,
-            "max": 6,
-            "defaultVal": 0,
-            "unit": "dB"
-        },
-        {
-            "index": 6,
-            "name": "Mod A",
-            "min": 0,
-            "max": 100,
-            "defaultVal": 0
-        },
-        {
-            "index": 7,
-            "name": "Mod B",
-            "min": 0,
-            "max": 100,
-            "defaultVal": 0
-        }
-    ]
-}
-,
-  {
-    "name": "JS: Bass Manager/Booster",
-    "shortName": "BassManager (plugin for boosting bass) [Liteon]",
-    "category": "EQ & Filtering",
-    "description": "BassManager for boosting bass",
-    "howItWorks": "",
-    "proTips": "",
-    "sliders": [
-        {
-            "index": 0,
-            "name": "Processing",
-            "min": 0,
-            "max": 1,
-            "defaultVal": 0
-        },
-        {
-            "index": 1,
-            "name": "Spread",
-            "min": 0,
-            "max": 1,
-            "defaultVal": 0
-        },
-        {
-            "index": 2,
-            "name": "Frequency",
-            "min": 30,
-            "max": 250,
-            "defaultVal": 90,
-            "unit": "Hz"
-        },
-        {
-            "index": 3,
-            "name": "Boost",
-            "min": 0,
-            "max": 24,
-            "defaultVal": 0,
-            "unit": "dB"
-        },
-        {
-            "index": 4,
-            "name": "Drive",
-            "min": 0,
-            "max": 100,
-            "defaultVal": 0,
-            "unit": "%"
-        },
-        {
-            "index": 5,
-            "name": "Muffle",
-            "min": 0,
-            "max": 100,
-            "defaultVal": 0,
-            "unit": "%"
-        },
-        {
-            "index": 6,
-            "name": "Output",
-            "min": -24,
-            "max": 24,
-            "defaultVal": 0,
-            "unit": "dB"
-        },
-        {
-            "index": 7,
-            "name": "Highpass",
-            "min": 0,
-            "max": 4,
-            "defaultVal": 0,
-            "unit": "Hz"
-        },
-        {
-            "index": 8,
-            "name": "Limiter",
-            "min": 0,
-            "max": 1,
-            "defaultVal": 0
-        },
-        {
-            "index": 9,
-            "name": "Oversample (x2)",
-            "min": 0,
-            "max": 1,
-            "defaultVal": 0
-        }
-    ]
-}
-,
-  {
-    "name": "JS: Avocado Ducking Glitch Generator",
-    "shortName": "Avocado Ducking Glitch Generator [remaincalm.org]",
-    "category": "Modulation & Pitch",
-    "description": "Avocado Ducking Glitch Generator",
-    "howItWorks": "",
-    "proTips": "",
-    "sliders": [
-        {
-            "index": 0,
-            "name": "Buffer Length",
-            "min": 0,
-            "max": 4000,
-            "defaultVal": 50,
-            "unit": "ms"
-        },
-        {
-            "index": 1,
-            "name": "Mix",
-            "min": 0,
-            "max": 100,
-            "defaultVal": 90,
-            "unit": "%"
-        },
-        {
-            "index": 2,
-            "name": "Buffers",
-            "min": 1,
-            "max": 16,
-            "defaultVal": 8
-        },
-        {
-            "index": 3,
-            "name": "Repeat Probability",
-            "min": 0,
-            "max": 99,
-            "defaultVal": 70,
-            "unit": "%"
-        },
-        {
-            "index": 4,
-            "name": "Pitch Modulation Probability",
-            "min": 0,
-            "max": 100,
-            "defaultVal": 5,
-            "unit": "%"
-        },
-        {
-            "index": 5,
-            "name": "Reverse Probability",
-            "min": 0,
-            "max": 99,
-            "defaultVal": 10,
-            "unit": "%"
-        },
-        {
-            "index": 6,
-            "name": "Fadeout Probability",
-            "min": 0,
-            "max": 99,
-            "defaultVal": 18,
-            "unit": "%"
-        },
-        {
-            "index": 7,
-            "name": "Threshold",
-            "min": 0,
-            "max": 99,
-            "defaultVal": 8,
-            "unit": "%"
-        },
-        {
-            "index": 8,
-            "name": "Glitch Attack",
-            "min": 0,
-            "max": 99,
-            "defaultVal": 15,
-            "unit": "%"
-        },
-        {
-            "index": 9,
-            "name": "Arpeggiator Mode",
-            "min": 0,
-            "max": 4,
-            "defaultVal": 0
-        },
-        {
-            "index": 10,
-            "name": "Tempo Sync",
-            "min": 0,
-            "max": 64,
-            "defaultVal": 0
-        }
-    ]
-}
-,
+},
   {
     "name": "JS: Bit Meter",
     "shortName": "Bit Meter (Cockos)",
@@ -8597,62 +7701,7 @@ export const JSFX_DATABASE: JSFXProfile[] = [
     "howItWorks": "",
     "proTips": "",
     "sliders": []
-}
-,
-  {
-    "name": "JS: Butterworth 4-Pole Filter",
-    "shortName": "Butterworth 4-Pole Filter",
-    "category": "EQ & Filtering",
-    "description": "Butterworth 4-Pole Filter",
-    "howItWorks": "",
-    "proTips": "",
-    "sliders": [
-        {
-            "index": 0,
-            "name": "Processing",
-            "min": 0,
-            "max": 1,
-            "defaultVal": 0
-        },
-        {
-            "index": 1,
-            "name": "Filter Type",
-            "min": 0,
-            "max": 1,
-            "defaultVal": 0
-        },
-        {
-            "index": 2,
-            "name": "Cutoff (Scale)",
-            "min": 0,
-            "max": 100,
-            "defaultVal": 100
-        },
-        {
-            "index": 3,
-            "name": "Resonance",
-            "min": 0,
-            "max": 0.9,
-            "defaultVal": 0
-        },
-        {
-            "index": 4,
-            "name": "Output",
-            "min": -25,
-            "max": 25,
-            "defaultVal": 0,
-            "unit": "dB"
-        },
-        {
-            "index": 5,
-            "name": "Limiter",
-            "min": 0,
-            "max": 1,
-            "defaultVal": 0
-        }
-    ]
-}
-,
+},
   {
     "name": "JS: Center Canceler",
     "shortName": "Center Canceler [LOSER]",
@@ -8670,63 +7719,7 @@ export const JSFX_DATABASE: JSFXProfile[] = [
             "unit": "%"
         }
     ]
-}
-,
-  {
-    "name": "JS: Stereo Channel Volume/Pan/Polarity Control",
-    "shortName": "Stereo Channel Volume/Pan/Polarity Control",
-    "category": "Analysis & Utility",
-    "description": "Stereo Channel Volume/Pan/Polarity Control",
-    "howItWorks": "",
-    "proTips": "",
-    "sliders": [
-        {
-            "index": 0,
-            "name": "Left Volume",
-            "min": -120,
-            "max": 12,
-            "defaultVal": 0,
-            "unit": "dB"
-        },
-        {
-            "index": 1,
-            "name": "Left Pan",
-            "min": -1,
-            "max": 1,
-            "defaultVal": -1
-        },
-        {
-            "index": 2,
-            "name": "Left Phase",
-            "min": 0,
-            "max": 1,
-            "defaultVal": 0
-        },
-        {
-            "index": 3,
-            "name": "Right Volume",
-            "min": -120,
-            "max": 12,
-            "defaultVal": 0,
-            "unit": "dB"
-        },
-        {
-            "index": 4,
-            "name": "Right Pan",
-            "min": -1,
-            "max": 1,
-            "defaultVal": 1
-        },
-        {
-            "index": 5,
-            "name": "Right Phase",
-            "min": 0,
-            "max": 1,
-            "defaultVal": 0
-        }
-    ]
-}
-,
+},
   {
     "name": "JS: Channel Mapper-Downmixer",
     "shortName": "Channel Mapper-Downmixer (Cockos)",
@@ -8735,105 +7728,7 @@ export const JSFX_DATABASE: JSFXProfile[] = [
     "howItWorks": "",
     "proTips": "",
     "sliders": []
-}
-,
-  {
-    "name": "JS: Channel Mixer",
-    "shortName": "Channel Mixer [Cockos]",
-    "category": "Routing & Utility",
-    "description": "Channel Mixer",
-    "howItWorks": "",
-    "proTips": "",
-    "sliders": [
-        {
-            "index": 0,
-            "name": "L->L Mix",
-            "min": -120,
-            "max": 6,
-            "defaultVal": -6,
-            "unit": "dB"
-        },
-        {
-            "index": 1,
-            "name": "R->R Mix",
-            "min": -120,
-            "max": 6,
-            "defaultVal": -6,
-            "unit": "dB"
-        },
-        {
-            "index": 2,
-            "name": "L->R Mix",
-            "min": -120,
-            "max": 6,
-            "defaultVal": -6,
-            "unit": "dB"
-        },
-        {
-            "index": 3,
-            "name": "R->L Mix",
-            "min": -120,
-            "max": 6,
-            "defaultVal": -6,
-            "unit": "dB"
-        }
-    ]
-}
-,
-  {
-    "name": "JS: Chebyshev 4-Pole Filter",
-    "shortName": "Chebyshev 4-Pole Filter [Liteon]",
-    "category": "EQ & Filtering",
-    "description": "Chebyshev 4-Pole Filter",
-    "howItWorks": "",
-    "proTips": "",
-    "sliders": [
-        {
-            "index": 0,
-            "name": "Processing",
-            "min": 0,
-            "max": 1,
-            "defaultVal": 0
-        },
-        {
-            "index": 1,
-            "name": "Filter Type",
-            "min": 0,
-            "max": 2,
-            "defaultVal": 0
-        },
-        {
-            "index": 2,
-            "name": "Cutoff (Scale)",
-            "min": 0,
-            "max": 100,
-            "defaultVal": 100
-        },
-        {
-            "index": 3,
-            "name": "Passband Ripple (Less/More)",
-            "min": 0,
-            "max": 0.9,
-            "defaultVal": 0.3
-        },
-        {
-            "index": 4,
-            "name": "Output",
-            "min": -25,
-            "max": 25,
-            "defaultVal": 0,
-            "unit": "dB"
-        },
-        {
-            "index": 5,
-            "name": "Limiter",
-            "min": 0,
-            "max": 1,
-            "defaultVal": 0
-        }
-    ]
-}
-,
+},
   {
     "name": "JS: Chorus (Improved Shaping)",
     "shortName": "Chorus with Improved Shaping [Stillwell]",
@@ -8889,80 +7784,7 @@ export const JSFX_DATABASE: JSFXProfile[] = [
             "unit": "dB"
         }
     ]
-}
-,
-  {
-    "name": "JS: Chorus (Stereo)",
-    "shortName": "Chorus Stereo [Stillwell]",
-    "category": "Modulation",
-    "description": "Chorus Stereo",
-    "howItWorks": "",
-    "proTips": "",
-    "sliders": [
-        {
-            "index": 0,
-            "name": "Chorus Length",
-            "min": 1,
-            "max": 500,
-            "defaultVal": 15,
-            "unit": "ms"
-        },
-        {
-            "index": 1,
-            "name": "Number Of Voices",
-            "min": 1,
-            "max": 8,
-            "defaultVal": 1
-        },
-        {
-            "index": 2,
-            "name": "Rate (0=tempo sync)",
-            "min": 0,
-            "max": 16,
-            "defaultVal": 0.5,
-            "unit": "Hz"
-        },
-        {
-            "index": 3,
-            "name": "Pitch Fudge Factor",
-            "min": 0,
-            "max": 1,
-            "defaultVal": 0.7
-        },
-        {
-            "index": 4,
-            "name": "Wet Mix",
-            "min": -100,
-            "max": 12,
-            "defaultVal": -6,
-            "unit": "dB"
-        },
-        {
-            "index": 5,
-            "name": "Dry Mix",
-            "min": -100,
-            "max": 12,
-            "defaultVal": -6,
-            "unit": "dB"
-        },
-        {
-            "index": 6,
-            "name": "Channel Rate Offset",
-            "min": -1,
-            "max": 1,
-            "defaultVal": 0,
-            "unit": "Hz"
-        },
-        {
-            "index": 7,
-            "name": "Tempo Sync",
-            "min": 0.0625,
-            "max": 4,
-            "defaultVal": 0.25
-        }
-    ]
-}
-,
+},
   {
     "name": "JS: Compciter",
     "shortName": "Compciter [LOSER]",
@@ -9012,18 +7834,7 @@ export const JSFX_DATABASE: JSFXProfile[] = [
             "unit": "dB"
         }
     ]
-}
-,
-  {
-    "name": "JS: DC Filter",
-    "shortName": "DC Filter [Cockos]",
-    "category": "EQ & Filtering",
-    "description": "DC Filter",
-    "howItWorks": "",
-    "proTips": "",
-    "sliders": []
-}
-,
+},
   {
     "name": "JS: Delay w/Stereo Bounce",
     "shortName": "Delay w/Stereo Bounce [Cockos]",
@@ -9080,8 +7891,7 @@ export const JSFX_DATABASE: JSFXProfile[] = [
             "defaultVal": 0
         }
     ]
-}
-,
+},
   {
     "name": "JS: Delay w/Chorus",
     "shortName": "Delay w/Chorus [Cockos]",
@@ -9147,8 +7957,7 @@ export const JSFX_DATABASE: JSFXProfile[] = [
             "unit": "ms"
         }
     ]
-}
-,
+},
   {
     "name": "JS: Delay (Lo-Fi)",
     "shortName": "Delay (Lo-Fi) [Cockos]",
@@ -9213,8 +8022,7 @@ export const JSFX_DATABASE: JSFXProfile[] = [
             "defaultVal": 0
         }
     ]
-}
-,
+},
   {
     "name": "JS: Delay w/Tempo Ping-Pong",
     "shortName": "Delay with Tempo Ping-Pong [Stillwell]",
@@ -9279,8 +8087,7 @@ export const JSFX_DATABASE: JSFXProfile[] = [
             "defaultVal": 0.25
         }
     ]
-}
-,
+},
   {
     "name": "JS: Delay w/Sustain",
     "shortName": "Delay w/Sustain [Cockos]",
@@ -9346,8 +8153,7 @@ export const JSFX_DATABASE: JSFXProfile[] = [
             "unit": "dB"
         }
     ]
-}
-,
+},
   {
     "name": "JS: Delay w/Tempo Length",
     "shortName": "Delay with Tempo Length [Stillwell]",
@@ -9411,8 +8217,7 @@ export const JSFX_DATABASE: JSFXProfile[] = [
             "defaultVal": 0.25
         }
     ]
-}
-,
+},
   {
     "name": "JS: Delay w/Tone Control",
     "shortName": "Delay w/Tone Control",
@@ -9477,8 +8282,7 @@ export const JSFX_DATABASE: JSFXProfile[] = [
             "defaultVal": 0.5
         }
     ]
-}
-,
+},
   {
     "name": "JS: Distortion (Fuzz)",
     "shortName": "Distortion (Fuzz)",
@@ -9526,8 +8330,7 @@ export const JSFX_DATABASE: JSFXProfile[] = [
             "defaultVal": 0
         }
     ]
-}
-,
+},
   {
     "name": "JS: Bit Reduction/Dither w/Noise Shaping",
     "shortName": "Bit Reduction and Dither with Psychoacoustic Noise Shaping",
@@ -9565,8 +8368,7 @@ export const JSFX_DATABASE: JSFXProfile[] = [
             "defaultVal": 2
         }
     ]
-}
-,
+},
   {
     "name": "JS: Delay w/LFO-Modulated Length",
     "shortName": "Delay w/LFO-Modulated Length",
@@ -9632,8 +8434,7 @@ export const JSFX_DATABASE: JSFXProfile[] = [
             "unit": "ratio"
         }
     ]
-}
-,
+},
   {
     "name": "JS: Digital Drum Compressor",
     "shortName": "Digital Drum Compressor (DDC) [LOSER]",
@@ -9719,8 +8520,7 @@ export const JSFX_DATABASE: JSFXProfile[] = [
             "defaultVal": 0
         }
     ]
-}
-,
+},
   {
     "name": "JS: Digital Versatile Compressor v2",
     "shortName": "Digital Versatile Compressor v2 [LOSER]",
@@ -9791,8 +8591,7 @@ export const JSFX_DATABASE: JSFXProfile[] = [
             "defaultVal": 0
         }
     ]
-}
-,
+},
   {
     "name": "JS: Digital Versatile Compressor",
     "shortName": "Digital Versatile Compressor (DVC) [LOSER]",
@@ -9848,8 +8647,7 @@ export const JSFX_DATABASE: JSFXProfile[] = [
             "unit": "dB"
         }
     ]
-}
-,
+},
   {
     "name": "JS: Event Horizon Clipper",
     "shortName": "Event Horizon Clipper [Stillwell]",
@@ -9883,8 +8681,7 @@ export const JSFX_DATABASE: JSFXProfile[] = [
             "unit": "dB"
         }
     ]
-}
-,
+},
   {
     "name": "JS: Event Horizon Limiter/Clipper",
     "shortName": "Event Horizon Limiter/Clipper [Stillwell]",
@@ -9916,8 +8713,7 @@ export const JSFX_DATABASE: JSFXProfile[] = [
             "unit": "ms"
         }
     ]
-}
-,
+},
   {
     "name": "JS: Exciter (Treble Enhancer)",
     "shortName": "Exciter (Treble Enhancer) [Stillwell]",
@@ -9951,8 +8747,7 @@ export const JSFX_DATABASE: JSFXProfile[] = [
             "unit": "Hz"
         }
     ]
-}
-,
+},
   {
     "name": "JS: Gaussian Noise Generator",
     "shortName": "Gaussian Noise Generator [Schwa]",
@@ -9998,8 +8793,7 @@ export const JSFX_DATABASE: JSFXProfile[] = [
             "defaultVal": 1
         }
     ]
-}
-,
+},
   {
     "name": "JS: Frequency Spectrum Analyzer Meter",
     "shortName": "Frequency Spectrum Analyzer Meter (Cockos)",
@@ -10062,8 +8856,7 @@ export const JSFX_DATABASE: JSFXProfile[] = [
             "unit": "Hz"
         }
     ]
-}
-,
+},
   {
     "name": "JS: Goniometer",
     "shortName": "Goniometer [LOSER]",
@@ -10080,8 +8873,7 @@ export const JSFX_DATABASE: JSFXProfile[] = [
             "defaultVal": 0
         }
     ]
-}
-,
+},
   {
     "name": "JS: Oscilloscope Meter",
     "shortName": "Oscilloscope Meter (Cockos)",
@@ -10114,8 +8906,7 @@ export const JSFX_DATABASE: JSFXProfile[] = [
             "defaultVal": 0
         }
     ]
-}
-,
+},
   {
     "name": "JS: Spectrograph Spectrogram Meter",
     "shortName": "Spectrograph Spectrogram Meter (Cockos)",
@@ -10168,8 +8959,7 @@ export const JSFX_DATABASE: JSFXProfile[] = [
             "defaultVal": 1
         }
     ]
-}
-,
+},
   {
     "name": "JS: Graphical Dynamic Waveshaper",
     "shortName": "Graphical Dynamic Waveshaper",
@@ -10233,8 +9023,7 @@ export const JSFX_DATABASE: JSFXProfile[] = [
             "unit": "dB"
         }
     ]
-}
-,
+},
   {
     "name": "JS: Graphical Waveshaper",
     "shortName": "Graphical Waveshaper",
@@ -10274,8 +9063,7 @@ export const JSFX_DATABASE: JSFXProfile[] = [
             "defaultVal": 1
         }
     ]
-}
-,
+},
   {
     "name": "JS: Mid/Side Decoder",
     "shortName": "Mid/Side Decoder",
@@ -10307,8 +9095,7 @@ export const JSFX_DATABASE: JSFXProfile[] = [
             "defaultVal": 0
         }
     ]
-}
-,
+},
   {
     "name": "JS: Mid/Side Encoder",
     "shortName": "Mid/Side Encoder",
@@ -10317,8 +9104,7 @@ export const JSFX_DATABASE: JSFXProfile[] = [
     "howItWorks": "",
     "proTips": "",
     "sliders": []
-}
-,
+},
   {
     "name": "JS: Loop Sampler w/MIDI Triggers",
     "shortName": "Loop Sampler w/MIDI Triggers",
@@ -10326,15 +9112,44 @@ export const JSFX_DATABASE: JSFXProfile[] = [
     "description": "Loop Sampler w/MIDI Triggers",
     "howItWorks": "",
     "proTips": "",
-    sliders: [
-      {"index":0,"name":"Rate (Hz)","min":0,"max":10,"defaultVal":0.5},
-      {"index":1,"name":"Range Min (Hz)","min":40,"max":20000,"defaultVal":440},
-      {"index":2,"name":"Range Max (Hz)","min":40,"max":20000,"defaultVal":1600},
-      {"index":3,"name":"Feedback (dB)","min":-120,"max":-1,"defaultVal":-3},
-      {"index":4,"name":"Wet Mix (dB)","min":-120,"max":12,"defaultVal":0}
+    "sliders": [
+        {
+            "index": 0,
+            "name": "Rate (Hz)",
+            "min": 0,
+            "max": 10,
+            "defaultVal": 0.5
+        },
+        {
+            "index": 1,
+            "name": "Range Min (Hz)",
+            "min": 40,
+            "max": 20000,
+            "defaultVal": 440
+        },
+        {
+            "index": 2,
+            "name": "Range Max (Hz)",
+            "min": 40,
+            "max": 20000,
+            "defaultVal": 1600
+        },
+        {
+            "index": 3,
+            "name": "Feedback (dB)",
+            "min": -120,
+            "max": -1,
+            "defaultVal": -3
+        },
+        {
+            "index": 4,
+            "name": "Wet Mix (dB)",
+            "min": -120,
+            "max": 12,
+            "defaultVal": 0
+        }
     ]
-  }
-,
+},
   {
     "name": "JS: Loop Sampler",
     "shortName": "Loop Sampler",
@@ -10342,17 +9157,70 @@ export const JSFX_DATABASE: JSFXProfile[] = [
     "description": "Loop Sampler",
     "howItWorks": "",
     "proTips": "",
-    sliders: [
-      {"index":0,"name":"Loop Volume","min":-120,"max":12,"defaultVal":0,"unit":"dB"},
-      {"index":1,"name":"Play Speed (neg=reverse)","min":-8,"max":8,"defaultVal":1},
-      {"index":2,"name":"Play Start Position","min":0,"max":30000,"defaultVal":0,"unit":"ms"},
-      {"index":3,"name":"Play End Position","min":0,"max":30000,"defaultVal":0,"unit":"ms"},
-      {"index":4,"name":"Trigger Base","min":0,"max":10,"defaultVal":1},
-      {"index":5,"name":"Edge Overlap","min":0,"max":1000,"defaultVal":10,"unit":"ms"},
-      {"index":6,"name":"Silence Removal Threshold","min":-120,"max":0,"defaultVal":-120,"unit":"dB"},
-      {"index":7,"name":"State","min":0,"max":6,"defaultVal":0}
+    "sliders": [
+        {
+            "index": 0,
+            "name": "Loop Volume",
+            "min": -120,
+            "max": 12,
+            "defaultVal": 0,
+            "unit": "dB"
+        },
+        {
+            "index": 1,
+            "name": "Play Speed (neg=reverse)",
+            "min": -8,
+            "max": 8,
+            "defaultVal": 1
+        },
+        {
+            "index": 2,
+            "name": "Play Start Position",
+            "min": 0,
+            "max": 30000,
+            "defaultVal": 0,
+            "unit": "ms"
+        },
+        {
+            "index": 3,
+            "name": "Play End Position",
+            "min": 0,
+            "max": 30000,
+            "defaultVal": 0,
+            "unit": "ms"
+        },
+        {
+            "index": 4,
+            "name": "Trigger Base",
+            "min": 0,
+            "max": 10,
+            "defaultVal": 1
+        },
+        {
+            "index": 5,
+            "name": "Edge Overlap",
+            "min": 0,
+            "max": 1000,
+            "defaultVal": 10,
+            "unit": "ms"
+        },
+        {
+            "index": 6,
+            "name": "Silence Removal Threshold",
+            "min": -120,
+            "max": 0,
+            "defaultVal": -120,
+            "unit": "dB"
+        },
+        {
+            "index": 7,
+            "name": "State",
+            "min": 0,
+            "max": 6,
+            "defaultVal": 0
+        }
     ]
-  },
+},
   {
     "name": "JS: Lorenz Attractor",
     "shortName": "Lorenz Attractor [Liteon]",
@@ -10360,16 +9228,59 @@ export const JSFX_DATABASE: JSFXProfile[] = [
     "description": "Lorenz Attractor",
     "howItWorks": "",
     "proTips": "",
-    sliders: [
-      {"index":0,"name":"Rate (Fast/Slow)","min":1,"max":10000,"defaultVal":3000},
-      {"index":1,"name":"Plot (OSC 1+2/1)","min":0,"max":1,"defaultVal":0},
-      {"index":2,"name":"Prandtl Number","min":10,"max":28,"defaultVal":14},
-      {"index":3,"name":"Rayleigh Number","min":14,"max":46,"defaultVal":28},
-      {"index":4,"name":"Color (Mod Min/Max)","min":0,"max":1,"defaultVal":0.5},
-      {"index":5,"name":"Tune","min":-4,"max":4,"defaultVal":0},
-      {"index":6,"name":"Gain","min":-25,"max":25,"defaultVal":0,"unit":"dB"}
+    "sliders": [
+        {
+            "index": 0,
+            "name": "Rate (Fast/Slow)",
+            "min": 1,
+            "max": 10000,
+            "defaultVal": 3000
+        },
+        {
+            "index": 1,
+            "name": "Plot (OSC 1+2/1)",
+            "min": 0,
+            "max": 1,
+            "defaultVal": 0
+        },
+        {
+            "index": 2,
+            "name": "Prandtl Number",
+            "min": 10,
+            "max": 28,
+            "defaultVal": 14
+        },
+        {
+            "index": 3,
+            "name": "Rayleigh Number",
+            "min": 14,
+            "max": 46,
+            "defaultVal": 28
+        },
+        {
+            "index": 4,
+            "name": "Color (Mod Min/Max)",
+            "min": 0,
+            "max": 1,
+            "defaultVal": 0.5
+        },
+        {
+            "index": 5,
+            "name": "Tune",
+            "min": -4,
+            "max": 4,
+            "defaultVal": 0
+        },
+        {
+            "index": 6,
+            "name": "Gain",
+            "min": -25,
+            "max": 25,
+            "defaultVal": 0,
+            "unit": "dB"
+        }
     ]
-  },
+},
   {
     "name": "JS: Granular Loop Sampler",
     "shortName": "Granular Loop Sampler",
@@ -10440,8 +9351,7 @@ export const JSFX_DATABASE: JSFXProfile[] = [
             "defaultVal": 0
         }
     ]
-}
-,
+},
   {
     "name": "JS: Loudness Meter Peak/RMS/LUFS",
     "shortName": "Loudness Meter Peak/RMS/LUFS (Cockos)",
@@ -10605,8 +9515,7 @@ export const JSFX_DATABASE: JSFXProfile[] = [
             "defaultVal": 0
         }
     ]
-}
-,
+},
   {
     "name": "JS: Louderizer LP",
     "shortName": "Louderizer LP [Stillwell]",
@@ -10654,8 +9563,7 @@ export const JSFX_DATABASE: JSFXProfile[] = [
             "defaultVal": 1
         }
     ]
-}
-,
+},
   {
     "name": "JS: Louderizer",
     "shortName": "Louderizer [stillwell]",
@@ -10681,8 +9589,7 @@ export const JSFX_DATABASE: JSFXProfile[] = [
             "unit": "%"
         }
     ]
-}
-,
+},
   {
     "name": "JS: Major Tom Compressor",
     "shortName": "Major Tom Compressor [Stillwell]",
@@ -10749,8 +9656,7 @@ export const JSFX_DATABASE: JSFXProfile[] = [
             "defaultVal": 0
         }
     ]
-}
-,
+},
   {
     "name": "JS: Master Limiter",
     "shortName": "Master Limiter [LOSER]",
@@ -10817,5183 +9723,5232 @@ export const JSFX_DATABASE: JSFXProfile[] = [
     ]
 },
   {
-      "name": "JS: Master Tom Compressor",
-      "shortName": "Master Tom Compressor [Stillwell]",
-      "category": "Dynamics",
-      "description": "Master Tom Compressor",
-      "howItWorks": "",
-      "proTips": "",
-      "sliders": [
-          {
-              "index": 0,
-              "name": "Threshold",
-              "min": -60,
-              "max": 0,
-              "defaultVal": 0,
-              "unit": "dB"
-          },
-          {
-              "index": 1,
-              "name": "Ratio",
-              "min": 1,
-              "max": 20,
-              "defaultVal": 1
-          },
-          {
-              "index": 2,
-              "name": "Gain",
-              "min": -20,
-              "max": 20,
-              "defaultVal": 0
-          },
-          {
-              "index": 3,
-              "name": "Knee",
-              "min": 0,
-              "max": 3,
-              "defaultVal": 2
-          },
-          {
-              "index": 4,
-              "name": "Detector Input",
-              "min": 0,
-              "max": 1,
-              "defaultVal": 0
-          },
-          {
-              "index": 5,
-              "name": "Automatic Make-Up",
-              "min": 0,
-              "max": 1,
-              "defaultVal": 0
-          },
-          {
-              "index": 6,
-              "name": "Detection",
-              "min": 0,
-              "max": 1,
-              "defaultVal": 0
-          },
-          {
-              "index": 7,
-              "name": "Detection Source",
-              "min": 0,
-              "max": 1,
-              "defaultVal": 0
-          }
-      ]
-  },
-  {
-      "name": "JS: MDCT Filter",
-      "shortName": "MDCT Filter",
-      "category": "Filter",
-      "description": "MDCT Filter",
-      "howItWorks": "",
-      "proTips": "",
-      "sliders": [
-          {
-              "index": 0,
-              "name": "Bands",
-              "min": 32,
-              "max": 512,
-              "defaultVal": 128
-          },
-          {
-              "index": 1,
-              "name": "Start Band",
-              "min": 0,
-              "max": 512,
-              "defaultVal": 4
-          },
-          {
-              "index": 2,
-              "name": "End Band",
-              "min": 0,
-              "max": 512,
-              "defaultVal": 8
-          },
-          {
-              "index": 3,
-              "name": "Adjust",
-              "min": -120,
-              "max": 120,
-              "defaultVal": 0,
-              "unit": "dB"
-          }
-      ]
-  },
-  {
-      "name": "JS: MDCT Shifter",
-      "shortName": "MDCT Shifter",
-      "category": "Pitch",
-      "description": "MDCT Shifter",
-      "howItWorks": "",
-      "proTips": "",
-      "sliders": [
-          {
-              "index": 0,
-              "name": "Bands",
-              "min": 32,
-              "max": 512,
-              "defaultVal": 128
-          },
-          {
-              "index": 1,
-              "name": "Band Shift (neg=down, pos=up)",
-              "min": -512,
-              "max": 512,
-              "defaultVal": 4
-          }
-      ]
-  },
-  {
-      "name": "JS: MDCT Sweeping Filter",
-      "shortName": "MDCT Sweeping Filter",
-      "category": "Filter",
-      "description": "MDCT Sweeping Filter",
-      "howItWorks": "",
-      "proTips": "",
-      "sliders": [
-          {
-              "index": 0,
-              "name": "Min Frequency (0..1)",
-              "min": 0,
-              "max": 1,
-              "defaultVal": 0
-          },
-          {
-              "index": 1,
-              "name": "Max Frequency (0..1)",
-              "min": 0,
-              "max": 1,
-              "defaultVal": 0.05
-          },
-          {
-              "index": 2,
-              "name": "Sweep Interval",
-              "min": 10,
-              "max": 30000,
-              "defaultVal": 1000,
-              "unit": "ms"
-          },
-          {
-              "index": 3,
-              "name": "Low Gain",
-              "min": -120,
-              "max": 120,
-              "defaultVal": -6,
-              "unit": "dB"
-          },
-          {
-              "index": 4,
-              "name": "High Gain",
-              "min": -120,
-              "max": 120,
-              "defaultVal": 12,
-              "unit": "dB"
-          }
-      ]
-  },
-  {
-      "name": "JS: MGA JS Limiter",
-      "shortName": "MGA JS Limiter",
-      "category": "Dynamics",
-      "description": "MGA JS Limiter",
-      "howItWorks": "",
-      "proTips": "",
-      "sliders": [
-          {
-              "index": 0,
-              "name": "Threshold",
-              "min": -30,
-              "max": 0,
-              "defaultVal": 0,
-              "unit": "dB"
-          },
-          {
-              "index": 1,
-              "name": "Release",
-              "min": 0,
-              "max": 500,
-              "defaultVal": 200,
-              "unit": "ms"
-          },
-          {
-              "index": 2,
-              "name": "Ceiling",
-              "min": -6,
-              "max": 0,
-              "defaultVal": -0.1
-          }
-      ]
-  },
-  {
-      "name": "JS: MGA JS Limiter (Unlinked Stereo)",
-      "shortName": "MGA JS Limiter (Unlinked Stereo)",
-      "category": "Dynamics",
-      "description": "MGA JS Limiter (Unlinked Stereo)",
-      "howItWorks": "",
-      "proTips": "",
-      "sliders": [
-          {
-              "index": 0,
-              "name": "Threshold",
-              "min": -30,
-              "max": 0,
-              "defaultVal": 0,
-              "unit": "dB"
-          },
-          {
-              "index": 1,
-              "name": "Release",
-              "min": 0,
-              "max": 500,
-              "defaultVal": 200,
-              "unit": "ms"
-          },
-          {
-              "index": 2,
-              "name": "Link Stereo",
-              "min": 0,
-              "max": 100,
-              "defaultVal": 75,
-              "unit": "%"
-          },
-          {
-              "index": 3,
-              "name": "Ceiling",
-              "min": -6,
-              "max": 0,
-              "defaultVal": -0.1
-          }
-      ]
-  },
-  {
-      "name": "JS: MIDI Arpeggiator",
-      "shortName": "MIDI Arpeggiator",
-      "category": "MIDI",
-      "description": "MIDI Arpeggiator",
-      "howItWorks": "",
-      "proTips": "",
-      "sliders": [
-          {
-              "index": 0,
-              "name": "Rate (x BPM)",
-              "min": 0,
-              "max": 16,
-              "defaultVal": 1
-          },
-          {
-              "index": 1,
-              "name": "Note Length",
-              "min": 0.01,
-              "max": 1,
-              "defaultVal": 1
-          },
-          {
-              "index": 2,
-              "name": "Mode",
-              "min": 0,
-              "max": 3,
-              "defaultVal": 0
-          },
-          {
-              "index": 3,
-              "name": "Number Of Variants",
-              "min": 0,
-              "max": 3,
-              "defaultVal": 0
-          },
-          {
-              "index": 4,
-              "name": "Variant 1",
-              "min": -64,
-              "max": 64,
-              "defaultVal": 0
-          },
-          {
-              "index": 5,
-              "name": "Variant 2",
-              "min": -64,
-              "max": 64,
-              "defaultVal": 0
-          },
-          {
-              "index": 6,
-              "name": "Variant 3",
-              "min": -64,
-              "max": 64,
-              "defaultVal": 0
-          },
-          {
-              "index": 7,
-              "name": "Velocity (0=use played velocity)",
-              "min": 0,
-              "max": 127,
-              "defaultVal": 127
-          }
-      ]
-  },
-  {
-      "name": "JS: MIDI CC Mapper",
-      "shortName": "MIDI CC Mapper",
-      "category": "MIDI",
-      "description": "MIDI CC Mapper",
-      "howItWorks": "",
-      "proTips": "",
-      "sliders": [
-          {
-              "index": 0,
-              "name": "Controller Source",
-              "min": 0,
-              "max": 127,
-              "defaultVal": 1
-          },
-          {
-              "index": 1,
-              "name": "Controller Target",
-              "min": 0,
-              "max": 127,
-              "defaultVal": 1
-          },
-          {
-              "index": 2,
-              "name": "Clamp Low Value",
-              "min": 0,
-              "max": 127,
-              "defaultVal": 0
-          },
-          {
-              "index": 3,
-              "name": "Clamp High Value",
-              "min": 0,
-              "max": 127,
-              "defaultVal": 127
-          },
-          {
-              "index": 4,
-              "name": "Pass Through CC Source",
-              "min": 0,
-              "max": 1,
-              "defaultVal": 0
-          }
-      ]
-  },
-  {
-      "name": "JS: MIDI CC LFO Generator",
-      "shortName": "MIDI CC LFO Generator [IXix]",
-      "category": "MIDI",
-      "description": "MIDI CC LFO Generator",
-      "howItWorks": "",
-      "proTips": "",
-      "sliders": [
-          {
-              "index": 0,
-              "name": "MIDI Channel",
-              "min": 0,
-              "max": 15,
-              "defaultVal": 0
-          },
-          {
-              "index": 1,
-              "name": "Controller",
-              "min": 0,
-              "max": 127,
-              "defaultVal": 1
-          },
-          {
-              "index": 2,
-              "name": "Center",
-              "min": 0,
-              "max": 127,
-              "defaultVal": 0
-          },
-          {
-              "index": 3,
-              "name": "Range (+/-)",
-              "min": 0,
-              "max": 127,
-              "defaultVal": 0
-          },
-          {
-              "index": 4,
-              "name": "Off Value",
-              "min": 0,
-              "max": 127,
-              "defaultVal": 0
-          },
-          {
-              "index": 5,
-              "name": "LFO Shape",
-              "min": 0,
-              "max": 0,
-              "defaultVal": 0
-          },
-          {
-              "index": 6,
-              "name": "LFO Frequency",
-              "min": 0,
-              "max": 32,
-              "defaultVal": 1
-          },
-          {
-              "index": 7,
-              "name": "LFO Units",
-              "min": 0,
-              "max": 1,
-              "defaultVal": 0
-          },
-          {
-              "index": 8,
-              "name": "Updates Per Beat",
-              "min": 0,
-              "max": 9,
-              "defaultVal": 6
-          },
-          {
-              "index": 9,
-              "name": "On/Off",
-              "min": 0,
-              "max": 1,
-              "defaultVal": 1
-          }
-      ]
-  },
-  {
-      "name": "JS: MIDI Choke Group",
-      "shortName": "MIDI Choke Group",
-      "category": "MIDI",
-      "description": "MIDI Choke Group",
-      "howItWorks": "",
-      "proTips": "",
-      "sliders": [
-          {
-              "index": 0,
-              "name": "MIDI Channel",
-              "min": 1,
-              "max": 16,
-              "defaultVal": 1
-          },
-          {
-              "index": 1,
-              "name": "Choke Note Range Start",
-              "min": 0,
-              "max": 127,
-              "defaultVal": 60
-          },
-          {
-              "index": 2,
-              "name": "Number Of Choke Notes",
-              "min": 1,
-              "max": 128,
-              "defaultVal": 8
-          }
-      ]
-  },
-  {
-      "name": "JS: MIDI Chorderizer",
-      "shortName": "MIDI Chorderizer",
-      "category": "MIDI",
-      "description": "MIDI Chorderizer",
-      "howItWorks": "",
-      "proTips": "",
-      "sliders": [
-          {
-              "index": 0,
-              "name": "Voice 1 Offset (st)",
-              "min": 1,
-              "max": 24,
-              "defaultVal": 5,
-              "unit": "st"
-          },
-          {
-              "index": 1,
-              "name": "Voice 2 Offset (st)",
-              "min": 1,
-              "max": 24,
-              "defaultVal": 0,
-              "unit": "st"
-          },
-          {
-              "index": 2,
-              "name": "Voice 3 Offset (st)",
-              "min": 1,
-              "max": 24,
-              "defaultVal": 0,
-              "unit": "st"
-          },
-          {
-              "index": 3,
-              "name": "Voice 4 Offset (st)",
-              "min": 1,
-              "max": 24,
-              "defaultVal": 0,
-              "unit": "st"
-          },
-          {
-              "index": 4,
-              "name": "Velocity Scale @ 1",
-              "min": 0,
-              "max": 1,
-              "defaultVal": 1
-          },
-          {
-              "index": 5,
-              "name": "Velocity Scale @ 4",
-              "min": 0,
-              "max": 1,
-              "defaultVal": 1
-          },
-          {
-              "index": 6,
-              "name": "Lowest Key (MIDI Note #)",
-              "min": 0,
-              "max": 127,
-              "defaultVal": 0
-          },
-          {
-              "index": 7,
-              "name": "Highest Key (MIDI Note #)",
-              "min": 0,
-              "max": 127,
-              "defaultVal": 127
-          }
-      ]
-  },
-  {
-      "name": "JS: MIDI Chord In Key",
-      "shortName": "MIDI Chord In Key",
-      "category": "MIDI",
-      "description": "MIDI Chord In Key",
-      "howItWorks": "",
-      "proTips": "",
-      "sliders": [
-          {
-              "index": 0,
-              "name": "Notes In Key Advance For Note 1",
-              "min": -24,
-              "max": 24,
-              "defaultVal": 2
-          },
-          {
-              "index": 1,
-              "name": "Notes In Key Advance For Note 2",
-              "min": -24,
-              "max": 24,
-              "defaultVal": 4
-          },
-          {
-              "index": 2,
-              "name": "Key",
-              "min": 0,
-              "max": 11,
-              "defaultVal": 0
-          },
-          {
-              "index": 3,
-              "name": "Velocity Scale For Additional Notes",
-              "min": 0,
-              "max": 1,
-              "defaultVal": 1
-          },
-          {
-              "index": 4,
-              "name": "Lowest Key (MIDI Note #)",
-              "min": 0,
-              "max": 127,
-              "defaultVal": 0
-          },
-          {
-              "index": 5,
-              "name": "Highest Key (MIDI Note #)",
-              "min": 0,
-              "max": 127,
-              "defaultVal": 127
-          }
-      ]
-  },
-  {
-      "name": "JS: MIDI Choke",
-      "shortName": "MIDI Choke",
-      "category": "MIDI",
-      "description": "MIDI Choke",
-      "howItWorks": "",
-      "proTips": "",
-      "sliders": [
-          {
-              "index": 0,
-              "name": "MIDI Channel",
-              "min": 1,
-              "max": 16,
-              "defaultVal": 1
-          },
-          {
-              "index": 1,
-              "name": "Choke Note Range Start",
-              "min": 0,
-              "max": 127,
-              "defaultVal": 42
-          },
-          {
-              "index": 2,
-              "name": "Number Of Choke Notes",
-              "min": 1,
-              "max": 16,
-              "defaultVal": 1
-          },
-          {
-              "index": 3,
-              "name": "Affected Note Range Start",
-              "min": 0,
-              "max": 127,
-              "defaultVal": 46
-          },
-          {
-              "index": 4,
-              "name": "Number Of Affected Notes",
-              "min": 1,
-              "max": 16,
-              "defaultVal": 1
-          },
-          {
-              "index": 5,
-              "name": "Action During Choke",
-              "min": 0,
-              "max": 1,
-              "defaultVal": 0
-          },
-          {
-              "index": 6,
-              "name": "Additional Choke Note",
-              "min": -1,
-              "max": 127,
-              "defaultVal": -1
-          },
-          {
-              "index": 7,
-              "name": "Additional Choke Note",
-              "min": -1,
-              "max": 127,
-              "defaultVal": -1
-          },
-          {
-              "index": 8,
-              "name": "Additional Choke Note",
-              "min": -1,
-              "max": 127,
-              "defaultVal": -1
-          },
-          {
-              "index": 9,
-              "name": "Additional Choke Note",
-              "min": -1,
-              "max": 127,
-              "defaultVal": -1
-          }
-      ]
-  },
-  {
-      "name": "JS: MIDI Delay",
-      "shortName": "MIDI Delay",
-      "category": "MIDI",
-      "description": "MIDI Delay",
-      "howItWorks": "",
-      "proTips": "",
-      "sliders": [
-          {
-              "index": 0,
-              "name": "Delay",
-              "min": 0,
-              "max": 1000,
-              "defaultVal": 0,
-              "unit": "ms"
-          },
-          {
-              "index": 1,
-              "name": "Delay (QN)",
-              "min": 0,
-              "max": 16,
-              "defaultVal": 0
-          },
-          {
-              "index": 2,
-              "name": "Delay (samples)",
-              "min": 0,
-              "max": 10000,
-              "defaultVal": 0
-          },
-          {
-              "index": 3,
-              "name": "Channel (0=omni)",
-              "min": 0,
-              "max": 16,
-              "defaultVal": 0
-          },
-          {
-              "index": 4,
-              "name": "Bus (0=all buses)",
-              "min": 0,
-              "max": 16,
-              "defaultVal": 0
-          }
-      ]
-  },
-  {
-      "name": "JS: MIDI Duplicate Note Filter",
-      "shortName": "MIDI Duplicate Note Filter [IXix]",
-      "category": "MIDI",
-      "description": "MIDI Duplicate Note Filter",
-      "howItWorks": "",
-      "proTips": "",
-      "sliders": [
-          {
-              "index": 0,
-              "name": "Input Channel",
-              "min": 0,
-              "max": 15,
-              "defaultVal": 0
-          }
-      ]
-  },
-  {
-      "name": "JS: MIDI EQ Ducker",
-      "shortName": "MIDI EQ Ducker [LOSER]",
-      "category": "EQ & Filtering",
-      "description": "MIDI EQ Ducker",
-      "howItWorks": "",
-      "proTips": "",
-      "sliders": [
-          {
-              "index": 0,
-              "name": "MIDI Note #",
-              "min": 0,
-              "max": 129,
-              "defaultVal": 0
-          },
-          {
-              "index": 1,
-              "name": "Attack",
-              "min": 0,
-              "max": 75,
-              "defaultVal": 10,
-              "unit": "ms"
-          },
-          {
-              "index": 2,
-              "name": "Attack Shape",
-              "min": 0,
-              "max": 4,
-              "defaultVal": 1
-          },
-          {
-              "index": 3,
-              "name": "Release",
-              "min": 0,
-              "max": 500,
-              "defaultVal": 100,
-              "unit": "ms"
-          },
-          {
-              "index": 4,
-              "name": "Release Shape",
-              "min": 0,
-              "max": 4,
-              "defaultVal": 1
-          },
-          {
-              "index": 5,
-              "name": "Frequency Coarse",
-              "min": 0,
-              "max": 15000,
-              "defaultVal": 0,
-              "unit": "Hz"
-          },
-          {
-              "index": 6,
-              "name": "Frequency Fine",
-              "min": 0,
-              "max": 100,
-              "defaultVal": 60,
-              "unit": "Hz"
-          },
-          {
-              "index": 7,
-              "name": "Width",
-              "min": 0,
-              "max": 2,
-              "defaultVal": 1,
-              "unit": "Oct"
-          },
-          {
-              "index": 8,
-              "name": "Volume",
-              "min": -32,
-              "max": 32,
-              "defaultVal": 0,
-              "unit": "dB"
-          },
-          {
-              "index": 9,
-              "name": "Mode",
-              "min": 0,
-              "max": 4,
-              "defaultVal": 0
-          },
-          {
-              "index": 10,
-              "name": "Gate/Pump React To MIDI Velocity",
-              "min": 0,
-              "max": 1,
-              "defaultVal": 0
-          }
-      ]
-  },
-  {
-      "name": "JS: MIDI Examiner",
-      "shortName": "MIDI Examiner [Schwa]",
-      "category": "Analysis & Utility",
-      "description": "MIDI Examiner",
-      "howItWorks": "",
-      "proTips": "",
-      "sliders": [
-          {
-              "index": 0,
-              "name": "Sample Offset Within @block",
-              "min": 0,
-              "max": 255,
-              "defaultVal": 0
-          },
-          {
-              "index": 1,
-              "name": "Status Byte",
-              "min": 0,
-              "max": 255,
-              "defaultVal": 0
-          },
-          {
-              "index": 2,
-              "name": "Data Byte 1",
-              "min": 0,
-              "max": 127,
-              "defaultVal": 0
-          },
-          {
-              "index": 3,
-              "name": "Data Byte 2",
-              "min": 0,
-              "max": 127,
-              "defaultVal": 0
-          },
-          {
-              "index": 4,
-              "name": "Status High Bits",
-              "min": 0,
-              "max": 16,
-              "defaultVal": 0
-          },
-          {
-              "index": 5,
-              "name": "Status Low Bits",
-              "min": 0,
-              "max": 16,
-              "defaultVal": 0
-          },
-          {
-              "index": 6,
-              "name": "Status High Bits Interpretation",
-              "min": 0,
-              "max": 8,
-              "defaultVal": 0
-          }
-      ]
-  },
-  {
-      "name": "JS: MIDI Snap To Key",
-      "shortName": "MIDI Snap To Key [IXix]",
-      "category": "MIDI",
-      "description": "MIDI Snap To Key",
-      "howItWorks": "",
-      "proTips": "",
-      "sliders": [
-          {
-              "index": 0,
-              "name": "Input Channel",
-              "min": 0,
-              "max": 15,
-              "defaultVal": 0
-          },
-          {
-              "index": 1,
-              "name": "Note Min",
-              "min": 0,
-              "max": 127,
-              "defaultVal": 0
-          },
-          {
-              "index": 2,
-              "name": "Note Max",
-              "min": 0,
-              "max": 127,
-              "defaultVal": 127
-          },
-          {
-              "index": 3,
-              "name": "Root Note",
-              "min": 0,
-              "max": 11,
-              "defaultVal": 0
-          },
-          {
-              "index": 4,
-              "name": "Scale File",
-              "min": 0,
-              "max": 0,
-              "defaultVal": 0
-          },
-          {
-              "index": 5,
-              "name": "Mode",
-              "min": 0,
-              "max": 1,
-              "defaultVal": 1
-          },
-          {
-              "index": 6,
-              "name": "On/Off",
-              "min": 0,
-              "max": 1,
-              "defaultVal": 1
-          }
-      ]
-  },
-  {
-      "name": "JS: MIDI Map To Key v2",
-      "shortName": "MIDI Map To Key v2 [IXix]",
-      "category": "MIDI",
-      "description": "MIDI Map To Key v2",
-      "howItWorks": "",
-      "proTips": "",
-      "sliders": [
-          {
-              "index": 0,
-              "name": "Input Channel",
-              "min": 0,
-              "max": 15,
-              "defaultVal": 0
-          },
-          {
-              "index": 1,
-              "name": "Mapping File",
-              "min": 0,
-              "max": 0,
-              "defaultVal": 0
-          },
-          {
-              "index": 2,
-              "name": "Note In",
-              "min": 0,
-              "max": 127,
-              "defaultVal": 0
-          },
-          {
-              "index": 3,
-              "name": "Note Out",
-              "min": 0,
-              "max": 127,
-              "defaultVal": 0
-          },
-          {
-              "index": 4,
-              "name": "Reload Mapping",
-              "min": 0,
-              "max": 1,
-              "defaultVal": 0
-          }
-      ]
-  },
-  {
-      "name": "JS: MIDI Map To Key",
-      "shortName": "MIDI Map To Key",
-      "category": "MIDI",
-      "description": "MIDI Map To Key",
-      "howItWorks": "",
-      "proTips": "",
-      "sliders": [
-          {
-              "index": 0,
-              "name": "Key",
-              "min": 0,
-              "max": 11,
-              "defaultVal": 0
-          },
-          {
-              "index": 2,
-              "name": "Lowest Key (MIDI Note #)",
-              "min": 0,
-              "max": 127,
-              "defaultVal": 0
-          },
-          {
-              "index": 3,
-              "name": "Highest Key (MIDI Note #)",
-              "min": 0,
-              "max": 127,
-              "defaultVal": 127
-          }
-      ]
-  },
-  {
-      "name": "JS: MIDI Note Filter",
-      "shortName": "MIDI Note Filter",
-      "category": "MIDI",
-      "description": "MIDI Note Filter",
-      "howItWorks": "",
-      "proTips": "",
-      "sliders": [
-          {
-              "index": 0,
-              "name": "Lowest Key (MIDI Note #)",
-              "min": 0,
-              "max": 127,
-              "defaultVal": 21
-          },
-          {
-              "index": 1,
-              "name": "Highest Key (MIDI Note #)",
-              "min": 0,
-              "max": 127,
-              "defaultVal": 108
-          },
-          {
-              "index": 2,
-              "name": "Other events (CC, etc) pass through",
-              "min": 0,
-              "max": 1,
-              "defaultVal": 0
-          }
-      ]
-  },
-  {
-      "name": "JS: MIDI Logger",
-      "shortName": "MIDI Logger",
-      "category": "MIDI",
-      "description": "MIDI Logger",
-      "howItWorks": "",
-      "proTips": "",
-      "sliders": [
-          {
-              "index": 0,
-              "name": "note-on/off analysis mode",
-              "min": 0,
-              "max": 2,
-              "defaultVal": 0
-          }
-      ]
-  },
-  {
-      "name": "JS: MIDI Note Hold",
-      "shortName": "MIDI Note Hold",
-      "category": "MIDI",
-      "description": "MIDI Note Hold",
-      "howItWorks": "",
-      "proTips": "",
-      "sliders": [
-          {
-              "index": 0,
-              "name": "Channel (0=omni)",
-              "min": 0,
-              "max": 16,
-              "defaultVal": 0
-          }
-      ]
-  },
-  {
-      "name": "JS: MIDI Note Repeater",
-      "shortName": "MIDI Note Repeater",
-      "category": "MIDI",
-      "description": "MIDI Note Repeater",
-      "howItWorks": "",
-      "proTips": "",
-      "sliders": [
-          {
-              "index": 0,
-              "name": "Size",
-              "min": 0.1,
-              "max": 4,
-              "defaultVal": 1,
-              "unit": "beats"
-          }
-      ]
-  },
-  {
-      "name": "JS: MIDI note sanitizer",
-      "shortName": "MIDI note sanitizer",
-      "category": "MIDI",
-      "description": "MIDI note sanitizer",
-      "howItWorks": "",
-      "proTips": "",
-      "sliders": [
-          {
-              "index": 0,
-              "name": "retrigger threshold (1/32nds, 0=no retrigger)",
-              "min": 0,
-              "max": 128,
-              "defaultVal": 0
-          }
-      ]
-  },
-  {
-      "name": "JS: MIDI Route Note To Channel",
-      "shortName": "MIDI Route Note To Channel",
-      "category": "MIDI",
-      "description": "MIDI Route Note To Channel",
-      "howItWorks": "",
-      "proTips": "",
-      "sliders": [
-          {
-              "index": 0,
-              "name": "Note",
-              "min": 0,
-              "max": 127,
-              "defaultVal": 60
-          },
-          {
-              "index": 1,
-              "name": "Channel",
-              "min": 0,
-              "max": 15,
-              "defaultVal": 0
-          }
-      ]
-  },
-  {
-      "name": "JS: MIDI Router/Transpose",
-      "shortName": "MIDI Router/Transpose [IXix]",
-      "category": "MIDI",
-      "description": "MIDI Router/Transpose",
-      "howItWorks": "",
-      "proTips": "",
-      "sliders": [
-          {
-              "index": 0,
-              "name": "Input Channel",
-              "min": 0,
-              "max": 15,
-              "defaultVal": 0
-          },
-          {
-              "index": 1,
-              "name": "Output Channel",
-              "min": 0,
-              "max": 15,
-              "defaultVal": 0
-          },
-          {
-              "index": 2,
-              "name": "Mode",
-              "min": 0,
-              "max": 3,
-              "defaultVal": 3
-          },
-          {
-              "index": 3,
-              "name": "Note Min",
-              "min": 0,
-              "max": 127,
-              "defaultVal": 0
-          },
-          {
-              "index": 4,
-              "name": "Note Max",
-              "min": 0,
-              "max": 127,
-              "defaultVal": 127
-          },
-          {
-              "index": 5,
-              "name": "Transpose",
-              "min": -60,
-              "max": 60,
-              "defaultVal": 0
-          }
-      ]
-  },
-  {
-      "name": "JS: MIDI Tool v2",
-      "shortName": "MIDI Tool v2 [IXix]",
-      "category": "MIDI",
-      "description": "MIDI Tool v2",
-      "howItWorks": "",
-      "proTips": "",
-      "sliders": [
-          {
-              "index": 0,
-              "name": "Input Channel",
-              "min": 0,
-              "max": 16,
-              "defaultVal": 0
-          },
-          {
-              "index": 1,
-              "name": "Note Min",
-              "min": 0,
-              "max": 127,
-              "defaultVal": 0
-          },
-          {
-              "index": 2,
-              "name": "Note Max",
-              "min": 0,
-              "max": 127,
-              "defaultVal": 127
-          },
-          {
-              "index": 3,
-              "name": "Input Velocity Min",
-              "min": 0,
-              "max": 127,
-              "defaultVal": 0
-          },
-          {
-              "index": 4,
-              "name": "Input Velocity Max",
-              "min": 0,
-              "max": 127,
-              "defaultVal": 127
-          },
-          {
-              "index": 5,
-              "name": "Input Velocity Mode",
-              "min": 0,
-              "max": 1,
-              "defaultVal": 0
-          },
-          {
-              "index": 6,
-              "name": "Velocity Scaling(%)",
-              "min": 0,
-              "max": 1000,
-              "defaultVal": 100
-          },
-          {
-              "index": 7,
-              "name": "Random Velocity (%)",
-              "min": 0,
-              "max": 100,
-              "defaultVal": 0
-          },
-          {
-              "index": 8,
-              "name": "Output Velocity Min",
-              "min": 0,
-              "max": 127,
-              "defaultVal": 0
-          },
-          {
-              "index": 9,
-              "name": "Output Velocity Max",
-              "min": 0,
-              "max": 127,
-              "defaultVal": 127
-          },
-          {
-              "index": 10,
-              "name": "Transpose (semitones)",
-              "min": -60,
-              "max": 60,
-              "defaultVal": 0
-          },
-          {
-              "index": 11,
-              "name": "Random Pitch (%)",
-              "min": 0,
-              "max": 100,
-              "defaultVal": 0
-          },
-          {
-              "index": 12,
-              "name": "Pitch Reset",
-              "min": 0,
-              "max": 1,
-              "defaultVal": 1
-          },
-          {
-              "index": 13,
-              "name": "Output Channel",
-              "min": 0,
-              "max": 16,
-              "defaultVal": 0
-          },
-          {
-              "index": 14,
-              "name": "Controller Routing",
-              "min": 0,
-              "max": 2,
-              "defaultVal": 0
-          }
-      ]
-  },
-  {
-      "name": "JS: MIDI Tool",
-      "shortName": "MIDI Tool [IXix]",
-      "category": "MIDI",
-      "description": "MIDI Tool",
-      "howItWorks": "",
-      "proTips": "",
-      "sliders": [
-          {
-              "index": 0,
-              "name": "Input Channel",
-              "min": 0,
-              "max": 15,
-              "defaultVal": 0
-          },
-          {
-              "index": 1,
-              "name": "Note Min",
-              "min": 0,
-              "max": 127,
-              "defaultVal": 0
-          },
-          {
-              "index": 2,
-              "name": "Note Max",
-              "min": 0,
-              "max": 127,
-              "defaultVal": 127
-          },
-          {
-              "index": 3,
-              "name": "Input Velocity Min",
-              "min": 0,
-              "max": 127,
-              "defaultVal": 0
-          },
-          {
-              "index": 4,
-              "name": "Input Velocity Max",
-              "min": 0,
-              "max": 127,
-              "defaultVal": 127
-          },
-          {
-              "index": 5,
-              "name": "Random Velocity (%)",
-              "min": 0,
-              "max": 100,
-              "defaultVal": 0
-          },
-          {
-              "index": 6,
-              "name": "Output Velocity Min",
-              "min": 0,
-              "max": 127,
-              "defaultVal": 0
-          },
-          {
-              "index": 7,
-              "name": "Output Velocity Max",
-              "min": 0,
-              "max": 127,
-              "defaultVal": 127
-          },
-          {
-              "index": 8,
-              "name": "Transpose (st)",
-              "min": -60,
-              "max": 60,
-              "defaultVal": 0
-          },
-          {
-              "index": 9,
-              "name": "Random Pitch (%)",
-              "min": 0,
-              "max": 100,
-              "defaultVal": 0
-          },
-          {
-              "index": 10,
-              "name": "Output Channel",
-              "min": 0,
-              "max": 16,
-              "defaultVal": 0
-          }
-      ]
-  },
-  {
-      "name": "JS: MIDI Transpose Notes",
-      "shortName": "MIDI Transpose Notes",
-      "category": "MIDI",
-      "description": "MIDI Transpose Notes",
-      "howItWorks": "",
-      "proTips": "",
-      "sliders": [
-          {
-              "index": 0,
-              "name": "Transpose Semitones",
-              "min": -64,
-              "max": 64,
-              "defaultVal": 0
-          },
-          {
-              "index": 1,
-              "name": "Premultiply",
-              "min": -16,
-              "max": 16,
-              "defaultVal": 1
-          },
-          {
-              "index": 2,
-              "name": "Lowest Key (MIDI Note #)",
-              "min": 0,
-              "max": 127,
-              "defaultVal": 0
-          },
-          {
-              "index": 3,
-              "name": "Highest Key (MIDI Note #)",
-              "min": 0,
-              "max": 127,
-              "defaultVal": 127
-          }
-      ]
-  },
-  {
-      "name": "JS: MIDI Pattern/Scale Variation Generator",
-      "shortName": "MIDI Pattern/Scale Variation Generator [IXix]",
-      "category": "MIDI",
-      "description": "MIDI Pattern/Scale Variation Generator",
-      "howItWorks": "",
-      "proTips": "",
-      sliders: [
-      {"index":0,"name":"Input Channel","min":0,"max":15,"defaultVal":0},
-      {"index":1,"name":"Note Min","min":0,"max":127,"defaultVal":0},
-      {"index":2,"name":"Note Max","min":0,"max":127,"defaultVal":127},
-      {"index":3,"name":"Root Note","min":0,"max":11,"defaultVal":0},
-      {"index":4,"name":"Scale File","min":0,"max":0,"defaultVal":0},
-      {"index":5,"name":"Low Octave","min":0,"max":10,"defaultVal":5},
-      {"index":6,"name":"High Octave","min":0,"max":10,"defaultVal":5},
-      {"index":7,"name":"Sequence File","min":0,"max":0,"defaultVal":0},
-      {"index":8,"name":"On/Off","min":0,"max":1,"defaultVal":1}
+    "name": "JS: Master Tom Compressor",
+    "shortName": "Master Tom Compressor [Stillwell]",
+    "category": "Dynamics",
+    "description": "Master Tom Compressor",
+    "howItWorks": "",
+    "proTips": "",
+    "sliders": [
+        {
+            "index": 0,
+            "name": "Threshold",
+            "min": -60,
+            "max": 0,
+            "defaultVal": 0,
+            "unit": "dB"
+        },
+        {
+            "index": 1,
+            "name": "Ratio",
+            "min": 1,
+            "max": 20,
+            "defaultVal": 1
+        },
+        {
+            "index": 2,
+            "name": "Gain",
+            "min": -20,
+            "max": 20,
+            "defaultVal": 0
+        },
+        {
+            "index": 3,
+            "name": "Knee",
+            "min": 0,
+            "max": 3,
+            "defaultVal": 2
+        },
+        {
+            "index": 4,
+            "name": "Detector Input",
+            "min": 0,
+            "max": 1,
+            "defaultVal": 0
+        },
+        {
+            "index": 5,
+            "name": "Automatic Make-Up",
+            "min": 0,
+            "max": 1,
+            "defaultVal": 0
+        },
+        {
+            "index": 6,
+            "name": "Detection",
+            "min": 0,
+            "max": 1,
+            "defaultVal": 0
+        },
+        {
+            "index": 7,
+            "name": "Detection Source",
+            "min": 0,
+            "max": 1,
+            "defaultVal": 0
+        }
     ]
-  },
+},
   {
-      "name": "JS: MIDI Velocity Variation Generator",
-      "shortName": "MIDI Velocity Variation Generator [IXix]",
-      "category": "MIDI",
-      "description": "MIDI Velocity Variation Generator",
-      "howItWorks": "",
-      "proTips": "",
-      sliders: [
-      {"index":0,"name":"Input Channel","min":0,"max":15,"defaultVal":0},
-      {"index":1,"name":"Note Min","min":0,"max":127,"defaultVal":0},
-      {"index":2,"name":"Note Max","min":0,"max":127,"defaultVal":127},
-      {"index":3,"name":"Base Velocity","min":0,"max":127,"defaultVal":64},
-      {"index":4,"name":"Variation (%)","min":0,"max":100,"defaultVal":0},
-      {"index":5,"name":"Sequence File","min":0,"max":0,"defaultVal":0},
-      {"index":6,"name":"On/Off","min":0,"max":1,"defaultVal":1}
+    "name": "JS: MDCT Filter",
+    "shortName": "MDCT Filter",
+    "category": "Filter",
+    "description": "MDCT Filter",
+    "howItWorks": "",
+    "proTips": "",
+    "sliders": [
+        {
+            "index": 0,
+            "name": "Bands",
+            "min": 32,
+            "max": 512,
+            "defaultVal": 128
+        },
+        {
+            "index": 1,
+            "name": "Start Band",
+            "min": 0,
+            "max": 512,
+            "defaultVal": 4
+        },
+        {
+            "index": 2,
+            "name": "End Band",
+            "min": 0,
+            "max": 512,
+            "defaultVal": 8
+        },
+        {
+            "index": 3,
+            "name": "Adjust",
+            "min": -120,
+            "max": 120,
+            "defaultVal": 0,
+            "unit": "dB"
+        }
     ]
-  },
+},
   {
-      "name": "JS: MIDI Velocity Control",
-      "shortName": "MIDI Velocity Control",
-      "category": "MIDI",
-      "description": "MIDI Velocity Control",
-      "howItWorks": "",
-      "proTips": "",
-      sliders: [
-      {"index":0,"name":"Velocity Multiply","min":-16,"max":16,"defaultVal":1},
-      {"index":1,"name":"Velocity Add","min":-128,"max":128,"defaultVal":0},
-      {"index":2,"name":"Min Velocity","min":0,"max":127,"defaultVal":0},
-      {"index":3,"name":"Max Velocity","min":0,"max":127,"defaultVal":127},
-      {"index":4,"name":"Lowest Key (MIDI Note #)","min":0,"max":127,"defaultVal":0},
-      {"index":5,"name":"Highest Key (MIDI Note #)","min":0,"max":127,"defaultVal":127}
+    "name": "JS: MDCT Shifter",
+    "shortName": "MDCT Shifter",
+    "category": "Pitch",
+    "description": "MDCT Shifter",
+    "howItWorks": "",
+    "proTips": "",
+    "sliders": [
+        {
+            "index": 0,
+            "name": "Bands",
+            "min": 32,
+            "max": 512,
+            "defaultVal": 128
+        },
+        {
+            "index": 1,
+            "name": "Band Shift (neg=down, pos=up)",
+            "min": -512,
+            "max": 512,
+            "defaultVal": 4
+        }
     ]
-  },
+},
   {
-      "name": "JS: MIDI Pitch Wheel LFO",
-      "shortName": "MIDI Pitch Wheel LFO Generator [IXix]",
-      "category": "MIDI",
-      "description": "MIDI Pitch Wheel LFO",
-      "howItWorks": "",
-      "proTips": "",
-      sliders: [
-      {"index":0,"name":"MIDI Channel","min":0,"max":15,"defaultVal":0},
-      {"index":1,"name":"Max Bend (%)","min":0,"max":100,"defaultVal":0},
-      {"index":2,"name":"LFO Frequency","min":0,"max":24,"defaultVal":1},
-      {"index":3,"name":"LFO Units","min":0,"max":1,"defaultVal":0},
-      {"index":4,"name":"Updates Per Beat","min":0,"max":9,"defaultVal":6},
-      {"index":5,"name":"On/Off","min":0,"max":1,"defaultVal":1}
+    "name": "JS: MDCT Sweeping Filter",
+    "shortName": "MDCT Sweeping Filter",
+    "category": "Filter",
+    "description": "MDCT Sweeping Filter",
+    "howItWorks": "",
+    "proTips": "",
+    "sliders": [
+        {
+            "index": 0,
+            "name": "Min Frequency (0..1)",
+            "min": 0,
+            "max": 1,
+            "defaultVal": 0
+        },
+        {
+            "index": 1,
+            "name": "Max Frequency (0..1)",
+            "min": 0,
+            "max": 1,
+            "defaultVal": 0.05
+        },
+        {
+            "index": 2,
+            "name": "Sweep Interval",
+            "min": 10,
+            "max": 30000,
+            "defaultVal": 1000,
+            "unit": "ms"
+        },
+        {
+            "index": 3,
+            "name": "Low Gain",
+            "min": -120,
+            "max": 120,
+            "defaultVal": -6,
+            "unit": "dB"
+        },
+        {
+            "index": 4,
+            "name": "High Gain",
+            "min": -120,
+            "max": 120,
+            "defaultVal": 12,
+            "unit": "dB"
+        }
     ]
-  },
+},
   {
-      "name": "JS: MIDI Note-On Delay",
-      "shortName": "MIDI Note-On Delay",
-      "category": "MIDI",
-      "description": "MIDI Note-On Delay",
-      "howItWorks": "",
-      "proTips": "",
-      sliders: [
-      {"index":0,"name":"Max Delay Samples","min":0,"max":4096,"defaultVal":0}
+    "name": "JS: MGA JS Limiter",
+    "shortName": "MGA JS Limiter",
+    "category": "Dynamics",
+    "description": "MGA JS Limiter",
+    "howItWorks": "",
+    "proTips": "",
+    "sliders": [
+        {
+            "index": 0,
+            "name": "Threshold",
+            "min": -30,
+            "max": 0,
+            "defaultVal": 0,
+            "unit": "dB"
+        },
+        {
+            "index": 1,
+            "name": "Release",
+            "min": 0,
+            "max": 500,
+            "defaultVal": 200,
+            "unit": "ms"
+        },
+        {
+            "index": 2,
+            "name": "Ceiling",
+            "min": -6,
+            "max": 0,
+            "defaultVal": -0.1
+        }
     ]
-  },
+},
   {
-      "name": "JS: 8x Stereo to 1x Stereo Mixer",
-      "shortName": "8x Stereo to 1x Stereo Mixer [IXix]",
-      "category": "Mixer",
-      "description": "8x Stereo to 1x Stereo Mixer",
-      "howItWorks": "",
-      "proTips": "",
-      sliders: [
-      {"index":0,"name":"Level 1+2","min":-60,"max":30,"defaultVal":0,"unit":"dB"},
-      {"index":1,"name":"Level 3+4","min":-60,"max":30,"defaultVal":0,"unit":"dB"},
-      {"index":2,"name":"Level 5+6","min":-60,"max":30,"defaultVal":0,"unit":"dB"},
-      {"index":3,"name":"Level 7+8","min":-60,"max":30,"defaultVal":0,"unit":"dB"},
-      {"index":4,"name":"Level 9+10","min":-60,"max":30,"defaultVal":0,"unit":"dB"},
-      {"index":5,"name":"Level 11+12","min":-60,"max":30,"defaultVal":0,"unit":"dB"},
-      {"index":6,"name":"Level 13+14","min":-60,"max":30,"defaultVal":0,"unit":"dB"},
-      {"index":7,"name":"Level 15+16","min":-60,"max":30,"defaultVal":0,"unit":"dB"}
+    "name": "JS: MGA JS Limiter (Unlinked Stereo)",
+    "shortName": "MGA JS Limiter (Unlinked Stereo)",
+    "category": "Dynamics",
+    "description": "MGA JS Limiter (Unlinked Stereo)",
+    "howItWorks": "",
+    "proTips": "",
+    "sliders": [
+        {
+            "index": 0,
+            "name": "Threshold",
+            "min": -30,
+            "max": 0,
+            "defaultVal": 0,
+            "unit": "dB"
+        },
+        {
+            "index": 1,
+            "name": "Release",
+            "min": 0,
+            "max": 500,
+            "defaultVal": 200,
+            "unit": "ms"
+        },
+        {
+            "index": 2,
+            "name": "Link Stereo",
+            "min": 0,
+            "max": 100,
+            "defaultVal": 75,
+            "unit": "%"
+        },
+        {
+            "index": 3,
+            "name": "Ceiling",
+            "min": -6,
+            "max": 0,
+            "defaultVal": -0.1
+        }
     ]
-  },
+},
   {
-      "name": "JS: Moog 4-Pole Filter",
-      "shortName": "Moog 4-Pole Filter",
-      "category": "Filter",
-      "description": "Moog 4-Pole Filter",
-      "howItWorks": "",
-      "proTips": "",
-      sliders: [
-      {"index":0,"name":"Processing","min":0,"max":1,"defaultVal":0},
-      {"index":1,"name":"Filter Type","min":0,"max":2,"defaultVal":0},
-      {"index":2,"name":"Cutoff (Scale)","min":0,"max":100,"defaultVal":100},
-      {"index":3,"name":"Resonance","min":0,"max":0.85,"defaultVal":0},
-      {"index":4,"name":"Drive (%)","min":0,"max":100,"defaultVal":0},
-      {"index":5,"name":"Output","min":-25,"max":25,"defaultVal":0,"unit":"dB"},
-      {"index":6,"name":"Limiter","min":0,"max":1,"defaultVal":0},
-      {"index":7,"name":"Oversample (x2)","min":0,"max":1,"defaultVal":0}
+    "name": "JS: MIDI Arpeggiator",
+    "shortName": "MIDI Arpeggiator",
+    "category": "MIDI",
+    "description": "MIDI Arpeggiator",
+    "howItWorks": "",
+    "proTips": "",
+    "sliders": [
+        {
+            "index": 0,
+            "name": "Rate (x BPM)",
+            "min": 0,
+            "max": 16,
+            "defaultVal": 1
+        },
+        {
+            "index": 1,
+            "name": "Note Length",
+            "min": 0.01,
+            "max": 1,
+            "defaultVal": 1
+        },
+        {
+            "index": 2,
+            "name": "Mode",
+            "min": 0,
+            "max": 3,
+            "defaultVal": 0
+        },
+        {
+            "index": 3,
+            "name": "Number Of Variants",
+            "min": 0,
+            "max": 3,
+            "defaultVal": 0
+        },
+        {
+            "index": 4,
+            "name": "Variant 1",
+            "min": -64,
+            "max": 64,
+            "defaultVal": 0
+        },
+        {
+            "index": 5,
+            "name": "Variant 2",
+            "min": -64,
+            "max": 64,
+            "defaultVal": 0
+        },
+        {
+            "index": 6,
+            "name": "Variant 3",
+            "min": -64,
+            "max": 64,
+            "defaultVal": 0
+        },
+        {
+            "index": 7,
+            "name": "Velocity (0=use played velocity)",
+            "min": 0,
+            "max": 127,
+            "defaultVal": 127
+        }
     ]
-  },
+},
   {
-      "name": "JS: 8x Mono to 1x Stereo Mixer",
-      "shortName": "8x Mono to 1x Stereo Mixer [IXix]",
-      "category": "Mixer",
-      "description": "8x Mono to 1x Stereo Mixer",
-      "howItWorks": "",
-      "proTips": "",
-      sliders: [
-      {"index":0,"name":"Level 1","min":-120,"max":30,"defaultVal":0,"unit":"dB"},
-      {"index":1,"name":"Level 2","min":-120,"max":30,"defaultVal":0,"unit":"dB"},
-      {"index":2,"name":"Level 3","min":-120,"max":30,"defaultVal":0,"unit":"dB"},
-      {"index":3,"name":"Level 4","min":-120,"max":30,"defaultVal":0,"unit":"dB"},
-      {"index":4,"name":"Level 5","min":-120,"max":30,"defaultVal":0,"unit":"dB"},
-      {"index":5,"name":"Level 6","min":-120,"max":30,"defaultVal":0,"unit":"dB"},
-      {"index":6,"name":"Level 7","min":-120,"max":30,"defaultVal":0,"unit":"dB"},
-      {"index":7,"name":"Level 8","min":-120,"max":30,"defaultVal":0,"unit":"dB"},
-      {"index":8,"name":"Pan 1 L<>R","min":0,"max":1,"defaultVal":0},
-      {"index":9,"name":"Pan 2 L<>R","min":0,"max":1,"defaultVal":1},
-      {"index":10,"name":"Pan 3 L<>R","min":0,"max":1,"defaultVal":0},
-      {"index":11,"name":"Pan 4 L<>R","min":0,"max":1,"defaultVal":1},
-      {"index":12,"name":"Pan 5 L<>R","min":0,"max":1,"defaultVal":0},
-      {"index":13,"name":"Pan 6 L<>R","min":0,"max":1,"defaultVal":1},
-      {"index":14,"name":"Pan 7 L<>R","min":0,"max":1,"defaultVal":0},
-      {"index":15,"name":"Pan 8 L<>R","min":0,"max":1,"defaultVal":1}
+    "name": "JS: MIDI CC Mapper",
+    "shortName": "MIDI CC Mapper",
+    "category": "MIDI",
+    "description": "MIDI CC Mapper",
+    "howItWorks": "",
+    "proTips": "",
+    "sliders": [
+        {
+            "index": 0,
+            "name": "Controller Source",
+            "min": 0,
+            "max": 127,
+            "defaultVal": 1
+        },
+        {
+            "index": 1,
+            "name": "Controller Target",
+            "min": 0,
+            "max": 127,
+            "defaultVal": 1
+        },
+        {
+            "index": 2,
+            "name": "Clamp Low Value",
+            "min": 0,
+            "max": 127,
+            "defaultVal": 0
+        },
+        {
+            "index": 3,
+            "name": "Clamp High Value",
+            "min": 0,
+            "max": 127,
+            "defaultVal": 127
+        },
+        {
+            "index": 4,
+            "name": "Pass Through CC Source",
+            "min": 0,
+            "max": 1,
+            "defaultVal": 0
+        }
     ]
-  },
-  {
-      "name": "JS: MTC Logger",
-      "shortName": "MTC Logger",
-      "category": "Analysis & Utility",
-      "description": "MTC Logger",
-      "howItWorks": "",
-      "proTips": "",
-      "sliders": []
-  },
-  {
-      "name": "JS: Non-Linear Processor",
-      "shortName": "Non-Linear Processor",
-      "category": "Distortion",
-      "description": "Non-Linear Processor",
-      "howItWorks": "",
-      "proTips": "",
-      "sliders": [
-          {
-              "index": 0,
-              "name": "Saturation Amount (%)",
-              "min": 0,
-              "max": 100,
-              "defaultVal": 30
-          },
-          {
-              "index": 1,
-              "name": "Fluctuation Amount (%)",
-              "min": 0,
-              "max": 100,
-              "defaultVal": 50
-          },
-          {
-              "index": 2,
-              "name": "Noise Floor At",
-              "min": 0,
-              "max": 32,
-              "defaultVal": 16,
-              "unit": "Bits"
-          },
-          {
-              "index": 3,
-              "name": "Output",
-              "min": -24,
-              "max": 24,
-              "defaultVal": 0,
-              "unit": "dB"
-          },
-          {
-              "index": 4,
-              "name": "Output Polarity",
-              "min": 0,
-              "max": 1,
-              "defaultVal": 0
-          }
-      ]
-  },
-  {
-      "name": "JS: NP1136 Peak Limiter",
-      "shortName": "NP1136 Peak Limiter",
-      "category": "Dynamics",
-      "description": "NP1136 Peak Limiter",
-      "howItWorks": "",
-      "proTips": "",
-      "sliders": [
-          {
-              "index": 0,
-              "name": "Threshold",
-              "min": -40,
-              "max": 0,
-              "defaultVal": -12,
-              "unit": "dB"
-          },
-          {
-              "index": 1,
-              "name": "Ratio (20:1 - PD Mode)",
-              "min": 1,
-              "max": 20,
-              "defaultVal": 4
-          },
-          {
-              "index": 2,
-              "name": "Attack",
-              "min": 0,
-              "max": 100,
-              "defaultVal": 30,
-              "unit": "us"
-          },
-          {
-              "index": 3,
-              "name": "Release",
-              "min": 0,
-              "max": 100,
-              "defaultVal": 45,
-              "unit": "ms"
-          },
-          {
-              "index": 4,
-              "name": "Detector HP",
-              "min": 0,
-              "max": 100,
-              "defaultVal": 0,
-              "unit": "Hz"
-          },
-          {
-              "index": 5,
-              "name": "GR Limit",
-              "min": -40,
-              "max": 0,
-              "defaultVal": -18,
-              "unit": "dB"
-          },
-          {
-              "index": 6,
-              "name": "Makeup Gain",
-              "min": 0,
-              "max": 30,
-              "defaultVal": 0,
-              "unit": "dB"
-          },
-          {
-              "index": 7,
-              "name": "Tilt EQ Center",
-              "min": 0,
-              "max": 100,
-              "defaultVal": 50,
-              "unit": "Hz"
-          },
-          {
-              "index": 8,
-              "name": "Tilt EQ Low/High",
-              "min": -6,
-              "max": 6,
-              "defaultVal": 0,
-              "unit": "dB"
-          },
-          {
-              "index": 9,
-              "name": "Wet Mix (%)",
-              "min": 0,
-              "max": 100,
-              "defaultVal": 100
-          },
-          {
-              "index": 10,
-              "name": "Processing Mode",
-              "min": 0,
-              "max": 1,
-              "defaultVal": 0
-          },
-          {
-              "index": 11,
-              "name": "Detector Mode",
-              "min": 0,
-              "max": 1,
-              "defaultVal": 1
-          },
-          {
-              "index": 12,
-              "name": "Detector Input",
-              "min": 0,
-              "max": 1,
-              "defaultVal": 0
-          },
-          {
-              "index": 13,
-              "name": "Hard Clip",
-              "min": 0,
-              "max": 1,
-              "defaultVal": 0
-          }
-      ]
-  },
-  {
-      "name": "JS: Pitch an Octave Down",
-      "shortName": "Pitch an Octave Down",
-      "category": "Pitch",
-      "description": "Pitch an Octave Down",
-      "howItWorks": "",
-      "proTips": "",
-      "sliders": [
-          {
-              "index": 0,
-              "name": "Chunk",
-              "min": 4,
-              "max": 500,
-              "defaultVal": 150,
-              "unit": "ms"
-          },
-          {
-              "index": 1,
-              "name": "Overlap",
-              "min": 0,
-              "max": 1,
-              "defaultVal": 0.5
-          },
-          {
-              "index": 2,
-              "name": "Wet Mix",
-              "min": -120,
-              "max": 6,
-              "defaultVal": 0,
-              "unit": "dB"
-          },
-          {
-              "index": 3,
-              "name": "Dry Mix",
-              "min": -120,
-              "max": 6,
-              "defaultVal": -120,
-              "unit": "dB"
-          }
-      ]
-  },
-  {
-      "name": "JS: Pitch an Octave Up",
-      "shortName": "Pitch an Octave Up",
-      "category": "Pitch",
-      "description": "Pitch an Octave Up",
-      "howItWorks": "",
-      "proTips": "",
-      "sliders": [
-          {
-              "index": 0,
-              "name": "Chunk",
-              "min": 4,
-              "max": 500,
-              "defaultVal": 120,
-              "unit": "ms"
-          },
-          {
-              "index": 1,
-              "name": "Overlap",
-              "min": 0,
-              "max": 1,
-              "defaultVal": 0.4
-          },
-          {
-              "index": 2,
-              "name": "Wet Mix",
-              "min": -120,
-              "max": 6,
-              "defaultVal": 0,
-              "unit": "dB"
-          },
-          {
-              "index": 3,
-              "name": "Dry Mix",
-              "min": -120,
-              "max": 6,
-              "defaultVal": -120,
-              "unit": "dB"
-          }
-      ]
-  },
-  {
-      "name": "JS: Paranoia Mangler",
-      "shortName": "paranoia mangler [remaincalm.org]",
-      "category": "Distortion",
-      "description": "Paranoia Mangler",
-      "howItWorks": "",
-      "proTips": "",
-      "sliders": [
-          {
-              "index": 0,
-              "name": "Input Gain",
-              "min": -24,
-              "max": 12,
-              "defaultVal": 0,
-              "unit": "dB"
-          },
-          {
-              "index": 1,
-              "name": "Dry Out",
-              "min": -96,
-              "max": 12,
-              "defaultVal": -3,
-              "unit": "dB"
-          },
-          {
-              "index": 2,
-              "name": "Wet Out",
-              "min": -96,
-              "max": 12,
-              "defaultVal": -3,
-              "unit": "dB"
-          },
-          {
-              "index": 3,
-              "name": "Bad Resampler",
-              "min": 125,
-              "max": 33150,
-              "defaultVal": 12000,
-              "unit": "Hz"
-          },
-          {
-              "index": 4,
-              "name": "Bitcrusher",
-              "min": 0,
-              "max": 2,
-              "defaultVal": 1
-          },
-          {
-              "index": 5,
-              "name": "Thermonuclear War",
-              "min": 0,
-              "max": 16,
-              "defaultVal": 0
-          },
-          {
-              "index": 6,
-              "name": "Bitdepth",
-              "min": 3,
-              "max": 10,
-              "defaultVal": 8
-          },
-          {
-              "index": 7,
-              "name": "Gate (%)",
-              "min": 0,
-              "max": 100,
-              "defaultVal": 0
-          },
-          {
-              "index": 12,
-              "name": "Love (%)",
-              "min": 0,
-              "max": 100,
-              "defaultVal": 75
-          },
-          {
-              "index": 13,
-              "name": "Jive (%)",
-              "min": 0,
-              "max": 150,
-              "defaultVal": 15
-          },
-          {
-              "index": 14,
-              "name": "Attitude",
-              "min": 0,
-              "max": 3,
-              "defaultVal": 1
-          }
-      ]
-  },
-  {
-      "name": "JS: Channel Router w/Polarity",
-      "shortName": "Channel Router w/Polarity [IXix]",
-      "category": "Routing",
-      "description": "Channel Router w/Polarity",
-      "howItWorks": "",
-      "proTips": "",
-      "sliders": [
-          {
-              "index": 0,
-              "name": "Input Channels",
-              "min": 0,
-              "max": 31,
-              "defaultVal": 0
-          },
-          {
-              "index": 1,
-              "name": "Polarity Mode",
-              "min": 0,
-              "max": 3,
-              "defaultVal": 0
-          },
-          {
-              "index": 2,
-              "name": "Output Channels",
-              "min": 0,
-              "max": 31,
-              "defaultVal": 0
-          },
-          {
-              "index": 3,
-              "name": "Output Mode",
-              "min": 0,
-              "max": 1,
-              "defaultVal": 0
-          }
-      ]
-  },
-  {
-      "name": "JS: Channel Phase Meter",
-      "shortName": "Channel Phase Meter",
-      "category": "Analysis & Utility",
-      "description": "Channel Phase Meter",
-      "howItWorks": "",
-      "proTips": "",
-      "sliders": [
-          {
-              "index": 0,
-              "name": "Sample Rate",
-              "min": 0,
-              "max": 192000,
-              "defaultVal": 0
-          },
-          {
-              "index": 1,
-              "name": "Output",
-              "min": 0,
-              "max": 1,
-              "defaultVal": 0
-          },
-          {
-              "index": 2,
-              "name": "Stereo Channels",
-              "min": 0,
-              "max": 2,
-              "defaultVal": 0
-          },
-          {
-              "index": 3,
-              "name": "Check Interval",
-              "min": 0,
-              "max": 1000,
-              "defaultVal": 200,
-              "unit": "ms"
-          }
-      ]
-  },
-  {
-      "name": "JS: Pink Noise Generator",
-      "shortName": "Pink Noise Generator",
-      "category": "Synthesis",
-      "description": "Pink Noise Generator",
-      "howItWorks": "",
-      "proTips": "",
-      "sliders": [
-          {
-              "index": 0,
-              "name": "Mode",
-              "min": 0,
-              "max": 1,
-              "defaultVal": 0
-          },
-          {
-              "index": 1,
-              "name": "Noise",
-              "min": -25,
-              "max": 25,
-              "defaultVal": -6,
-              "unit": "dB"
-          },
-          {
-              "index": 2,
-              "name": "Dry",
-              "min": -25,
-              "max": 25,
-              "defaultVal": -6,
-              "unit": "dB"
-          },
-          {
-              "index": 3,
-              "name": "Output",
-              "min": -25,
-              "max": 25,
-              "defaultVal": 0,
-              "unit": "dB"
-          }
-      ]
-  },
-  {
-      "name": "JS: Pitch Down-Shifter 2",
-      "shortName": "Pitch Down-Shifter 2",
-      "category": "Pitch",
-      "description": "Pitch Down-Shifter 2",
-      "howItWorks": "",
-      "proTips": "",
-      "sliders": [
-          {
-              "index": 0,
-              "name": "Octaves Down",
-              "min": 0,
-              "max": 6,
-              "defaultVal": 1
-          },
-          {
-              "index": 1,
-              "name": "Semitones Down",
-              "min": 0,
-              "max": 11,
-              "defaultVal": 0
-          },
-          {
-              "index": 2,
-              "name": "Cents Down",
-              "min": 0,
-              "max": 99,
-              "defaultVal": 0
-          },
-          {
-              "index": 3,
-              "name": "Chunk Size (ms)",
-              "min": 4,
-              "max": 500,
-              "defaultVal": 250
-          },
-          {
-              "index": 4,
-              "name": "Overlap Size",
-              "min": 0.001,
-              "max": 1,
-              "defaultVal": 0.5
-          },
-          {
-              "index": 5,
-              "name": "Dry Mix (dB)",
-              "min": -120,
-              "max": 6,
-              "defaultVal": -120
-          },
-          {
-              "index": 6,
-              "name": "Subdivide Ratio",
-              "min": 0.1,
-              "max": 1,
-              "defaultVal": 0.9
-          },
-          {
-              "index": 7,
-              "name": "Subdivide",
-              "min": 1,
-              "max": 8,
-              "defaultVal": 4
-          }
-      ]
-  },
-  {
-      "name": "JS: Ping Pong Pan",
-      "shortName": "Ping Pong Pan",
-      "category": "Modulation",
-      "description": "Ping Pong Pan",
-      "howItWorks": "",
-      "proTips": "",
-      "sliders": [
-          {
-              "index": 0,
-              "name": "Frequency (Hz)",
-              "min": 0,
-              "max": 20,
-              "defaultVal": 0.25
-          },
-          {
-              "index": 1,
-              "name": "Width (%)",
-              "min": 0,
-              "max": 100,
-              "defaultVal": 75
-          }
-      ]
-  },
-  {
-      "name": "JS: Presence EQ",
-      "shortName": "Presence EQ (Moorer)",
-      "category": "EQ & Filtering",
-      "description": "Presence EQ",
-      "howItWorks": "",
-      "proTips": "",
-      "sliders": [
-          {
-              "index": 0,
-              "name": "Processing",
-              "min": 0,
-              "max": 1,
-              "defaultVal": 0
-          },
-          {
-              "index": 1,
-              "name": "Frequency",
-              "min": 3100,
-              "max": 18500,
-              "defaultVal": 7700,
-              "unit": "Hz"
-          },
-          {
-              "index": 2,
-              "name": "Cut/Boost",
-              "min": -15,
-              "max": 15,
-              "defaultVal": 0,
-              "unit": "dB"
-          },
-          {
-              "index": 3,
-              "name": "Bandwidth",
-              "min": 0.07,
-              "max": 0.4,
-              "defaultVal": 0.2
-          },
-          {
-              "index": 4,
-              "name": "Output",
-              "min": -25,
-              "max": 25,
-              "defaultVal": 0,
-              "unit": "dB"
-          }
-      ]
-  },
-  {
-      "name": "JS: MIDI Program/Bank Switch on Load",
-      "shortName": "MIDI Program/Bank Switch on Load",
-      "category": "MIDI",
-      "description": "MIDI Program/Bank Switch on Load",
-      "howItWorks": "",
-      "proTips": "",
-      "sliders": [
-          {
-              "index": 0,
-              "name": "MIDI Channel",
-              "min": 1,
-              "max": 16,
-              "defaultVal": 1
-          },
-          {
-              "index": 1,
-              "name": "MSB",
-              "min": 0,
-              "max": 127,
-              "defaultVal": 0
-          },
-          {
-              "index": 2,
-              "name": "LSB",
-              "min": 0,
-              "max": 127,
-              "defaultVal": 0
-          },
-          {
-              "index": 3,
-              "name": "Program",
-              "min": 0,
-              "max": 127,
-              "defaultVal": 0
-          },
-          {
-              "index": 4,
-              "name": "Has Sent",
-              "min": 0,
-              "max": 1,
-              "defaultVal": 0
-          }
-      ]
-  },
-  {
-      "name": "JS: MDA Pseudo-Stereo",
-      "shortName": "MDA Pseudo-Stereo",
-      "category": "Stereo & Spatial",
-      "description": "Pseudo-Stereo",
-      "howItWorks": "",
-      "proTips": "",
-      "sliders": [
-          {
-              "index": 0,
-              "name": "Amount/Type (%) (neg=Haas,pos=Comb)",
-              "min": -100,
-              "max": 100,
-              "defaultVal": 0
-          },
-          {
-              "index": 1,
-              "name": "Delay",
-              "min": 1,
-              "max": 50,
-              "defaultVal": 20,
-              "unit": "ms"
-          },
-          {
-              "index": 2,
-              "name": "Balance (L/R)",
-              "min": -100,
-              "max": 100,
-              "defaultVal": 0
-          },
-          {
-              "index": 3,
-              "name": "Output",
-              "min": -20,
-              "max": 20,
-              "defaultVal": 0,
-              "unit": "dB"
-          }
-      ]
-  },
-  {
-      "name": "JS: MIDI Note Randomize",
-      "shortName": "MIDI Note Randomize [Stillwell]",
-      "category": "MIDI",
-      "description": "MIDI Note Randomize",
-      "howItWorks": "",
-      "proTips": "",
-      "sliders": [
-          {
-              "index": 0,
-              "name": "Input MIDI Note #",
-              "min": 0,
-              "max": 127,
-              "defaultVal": 60
-          },
-          {
-              "index": 1,
-              "name": "Input Channel (0=omni)",
-              "min": 0,
-              "max": 16,
-              "defaultVal": 0
-          },
-          {
-              "index": 2,
-              "name": "Lowest Output Note",
-              "min": 0,
-              "max": 127,
-              "defaultVal": 48
-          },
-          {
-              "index": 3,
-              "name": "Highest Output Note",
-              "min": 0,
-              "max": 127,
-              "defaultVal": 72
-          },
-          {
-              "index": 4,
-              "name": "Mix (%)",
-              "min": 0,
-              "max": 100,
-              "defaultVal": 0
-          }
-      ]
-  },
-  {
-      "name": "JS: RBJ 12-Band EQ w/HPF",
-      "shortName": "RBJ 12-Band EQ w/HPF",
-      "category": "EQ & Filtering",
-      "description": "RBJ 12-Band EQ w/HPF",
-      "howItWorks": "",
-      "proTips": "",
-      "sliders": [
-          {
-              "index": 0,
-              "name": "HPF",
-              "min": 0,
-              "max": 400,
-              "defaultVal": 0,
-              "unit": "dB"
-          },
-          {
-              "index": 1,
-              "name": "Low Shelf",
-              "min": -12,
-              "max": 12,
-              "defaultVal": 0,
-              "unit": "dB"
-          },
-          {
-              "index": 2,
-              "name": "80 Hz",
-              "min": -12,
-              "max": 12,
-              "defaultVal": 0,
-              "unit": "dB"
-          },
-          {
-              "index": 3,
-              "name": "150 Hz",
-              "min": -12,
-              "max": 12,
-              "defaultVal": 0,
-              "unit": "dB"
-          },
-          {
-              "index": 4,
-              "name": "250 Hz",
-              "min": -12,
-              "max": 12,
-              "defaultVal": 0,
-              "unit": "dB"
-          },
-          {
-              "index": 5,
-              "name": "400 Hz",
-              "min": -12,
-              "max": 12,
-              "defaultVal": 0,
-              "unit": "dB"
-          },
-          {
-              "index": 6,
-              "name": "630 Hz",
-              "min": -12,
-              "max": 12,
-              "defaultVal": 0,
-              "unit": "dB"
-          },
-          {
-              "index": 7,
-              "name": "800 Hz",
-              "min": -12,
-              "max": 12,
-              "defaultVal": 0,
-              "unit": "dB"
-          },
-          {
-              "index": 8,
-              "name": "1.6 kHz",
-              "min": -12,
-              "max": 12,
-              "defaultVal": 0,
-              "unit": "dB"
-          },
-          {
-              "index": 9,
-              "name": "3 kHz",
-              "min": -12,
-              "max": 12,
-              "defaultVal": 0,
-              "unit": "dB"
-          },
-          {
-              "index": 10,
-              "name": "5 kHz",
-              "min": -12,
-              "max": 12,
-              "defaultVal": 0,
-              "unit": "dB"
-          },
-          {
-              "index": 11,
-              "name": "7 kHz",
-              "min": -12,
-              "max": 12,
-              "defaultVal": 0,
-              "unit": "dB"
-          },
-          {
-              "index": 12,
-              "name": "10 kHz",
-              "min": -12,
-              "max": 12,
-              "defaultVal": 0,
-              "unit": "dB"
-          },
-          {
-              "index": 13,
-              "name": "12 kHz",
-              "min": -12,
-              "max": 12,
-              "defaultVal": 0,
-              "unit": "dB"
-          },
-          {
-              "index": 14,
-              "name": "LPF",
-              "min": 400,
-              "max": 22000,
-              "defaultVal": 22000,
-              "unit": "dB"
-          },
-          {
-              "index": 15,
-              "name": "Output Gain",
-              "min": -12,
-              "max": 12,
-              "defaultVal": 0,
-              "unit": "dB"
-          }
-      ]
-  },
-  {
-      "name": "JS: RBJ 4-Band Semi-Parametric EQ v2",
-      "shortName": "RBJ 4-Band Semi-Parametric EQ v2 [teej]",
-      "category": "EQ & Filtering",
-      "description": "RBJ 4-Band Semi-Parametric EQ v2",
-      "howItWorks": "",
-      "proTips": "",
-      "sliders": [
-          {
-              "index": 0,
-              "name": "HPF",
-              "min": 0,
-              "max": 400,
-              "defaultVal": 0,
-              "unit": "Hz"
-          },
-          {
-              "index": 1,
-              "name": "Freq 1",
-              "min": 0,
-              "max": 10000,
-              "defaultVal": 0,
-              "unit": "Hz"
-          },
-          {
-              "index": 2,
-              "name": "Q 1",
-              "min": 0.5,
-              "max": 10,
-              "defaultVal": 1
-          },
-          {
-              "index": 3,
-              "name": "Gain 1",
-              "min": -12,
-              "max": 6,
-              "defaultVal": 0,
-              "unit": "dB"
-          },
-          {
-              "index": 4,
-              "name": "Freq 2",
-              "min": 0,
-              "max": 10000,
-              "defaultVal": 0,
-              "unit": "Hz"
-          },
-          {
-              "index": 5,
-              "name": "Q 2",
-              "min": 0.5,
-              "max": 10,
-              "defaultVal": 1
-          },
-          {
-              "index": 6,
-              "name": "Gain 2",
-              "min": -12,
-              "max": 6,
-              "defaultVal": 0,
-              "unit": "dB"
-          },
-          {
-              "index": 7,
-              "name": "Freq 3",
-              "min": 0,
-              "max": 10000,
-              "defaultVal": 0,
-              "unit": "Hz"
-          },
-          {
-              "index": 8,
-              "name": "Q 3",
-              "min": 0.5,
-              "max": 10,
-              "defaultVal": 1
-          },
-          {
-              "index": 9,
-              "name": "Gain 3",
-              "min": -12,
-              "max": 6,
-              "defaultVal": 0,
-              "unit": "dB"
-          },
-          {
-              "index": 10,
-              "name": "Freq 4",
-              "min": 0,
-              "max": 10000,
-              "defaultVal": 0,
-              "unit": "Hz"
-          },
-          {
-              "index": 11,
-              "name": "Q 4",
-              "min": 0.5,
-              "max": 10,
-              "defaultVal": 1
-          },
-          {
-              "index": 12,
-              "name": "Gain 4",
-              "min": -12,
-              "max": 6,
-              "defaultVal": 0,
-              "unit": "dB"
-          },
-          {
-              "index": 13,
-              "name": "LPF",
-              "min": 400,
-              "max": 22000,
-              "defaultVal": 22000,
-              "unit": "Hz"
-          },
-          {
-              "index": 14,
-              "name": "Output Gain",
-              "min": -12,
-              "max": 12,
-              "defaultVal": 0,
-              "unit": "dB"
-          }
-      ]
-  },
-  {
-      "name": "JS: RBJ 4-Band Notch Filter",
-      "shortName": "RBJ 4-Band Notch Filter",
-      "category": "EQ & Filtering",
-      "description": "RBJ 4-Band Notch Filter",
-      "howItWorks": "",
-      "proTips": "",
-      "sliders": [
-          {
-              "index": 0,
-              "name": "HPF",
-              "min": 0,
-              "max": 400,
-              "defaultVal": 0
-          },
-          {
-              "index": 1,
-              "name": "Sweep",
-              "min": 0,
-              "max": 10000,
-              "defaultVal": 0
-          },
-          {
-              "index": 2,
-              "name": "Notch 1",
-              "min": 0,
-              "max": 10000,
-              "defaultVal": 0
-          },
-          {
-              "index": 3,
-              "name": "Notch 2",
-              "min": 0,
-              "max": 10000,
-              "defaultVal": 0
-          },
-          {
-              "index": 4,
-              "name": "Notch 3",
-              "min": 0,
-              "max": 10000,
-              "defaultVal": 0
-          },
-          {
-              "index": 5,
-              "name": "Notch 4",
-              "min": 0,
-              "max": 10000,
-              "defaultVal": 0
-          },
-          {
-              "index": 6,
-              "name": "LPF",
-              "min": 400,
-              "max": 22000,
-              "defaultVal": 22000
-          },
-          {
-              "index": 7,
-              "name": "Output Gain",
-              "min": -12,
-              "max": 12,
-              "defaultVal": 0
-          }
-      ]
-  },
-  {
-      "name": "JS: ReaLoud LP",
-      "shortName": "ReaLoud LP [stillwell]",
-      "category": "Dynamics",
-      "description": "ReaLoud LP",
-      "howItWorks": "",
-      "proTips": "",
-      "sliders": [
-          {
-              "index": 0,
-              "name": "Mix (%)",
-              "min": 0,
-              "max": 100,
-              "defaultVal": 0
-          },
-          {
-              "index": 2,
-              "name": "LP Frequency (Hz)",
-              "min": 1,
-              "max": 22000,
-              "defaultVal": 22000
-          },
-          {
-              "index": 3,
-              "name": "LP Size (1/Q) (0=resonant, 1=dull)",
-              "min": 0,
-              "max": 1,
-              "defaultVal": 0.2
-          },
-          {
-              "index": 4,
-              "name": "Drive Circuit",
-              "min": 0,
-              "max": 1,
-              "defaultVal": 1
-          }
-      ]
-  },
-  {
-      "name": "JS: ReaLoud",
-      "shortName": "ReaLoud [Stillwell]",
-      "category": "Dynamics",
-      "description": "ReaLoud",
-      "howItWorks": "",
-      "proTips": "",
-      "sliders": [
-          {
-              "index": 0,
-              "name": "Mix (%)",
-              "min": 0,
-              "max": 100,
-              "defaultVal": 0
-          }
-      ]
-  },
-  {
-      "name": "JS: Resonant Lowpass Filter",
-      "shortName": "Resonant Lowpass Filter",
-      "category": "Filter",
-      "description": "Resonant Lowpass Filter",
-      "howItWorks": "",
-      "proTips": "",
-      "sliders": [
-          {
-              "index": 0,
-              "name": "Frequency (Hz)",
-              "min": 20,
-              "max": 20000,
-              "defaultVal": 1000
-          },
-          {
-              "index": 1,
-              "name": "Resonance",
-              "min": 0,
-              "max": 1,
-              "defaultVal": 0.8
-          }
-      ]
-  },
-  {
-      "name": "JS: Delay w/Reverseness",
-      "shortName": "Delay w/Reverseness",
-      "category": "Delay",
-      "description": "Delay w/Reverseness",
-      "howItWorks": "",
-      "proTips": "",
-      "sliders": [
-          {
-              "index": 0,
-              "name": "Length (ms)",
-              "min": 0,
-              "max": 4000,
-              "defaultVal": 500
-          },
-          {
-              "index": 1,
-              "name": "Wet Mix (dB)",
-              "min": -120,
-              "max": 6,
-              "defaultVal": -6
-          },
-          {
-              "index": 2,
-              "name": "Dry Mix (dB)",
-              "min": -120,
-              "max": 6,
-              "defaultVal": -6
-          },
-          {
-              "index": 3,
-              "name": "Edge Overlap",
-              "min": 0,
-              "max": 1,
-              "defaultVal": 0.1
-          },
-          {
-              "index": 4,
-              "name": "Old Compatible And Clicky Mode",
-              "min": 0,
-              "max": 1,
-              "defaultVal": 0
-          }
-      ]
-  },
-  {
-      "name": "JS: RBJ Stereo Image Filter",
-      "shortName": "RBJ Stereo Image Filter",
-      "category": "Filter",
-      "description": "RBJ Stereo Image Filter",
-      "howItWorks": "",
-      "proTips": "",
-      "sliders": [
-          {
-              "index": 0,
-              "name": "S - Filter Amount (%)",
-              "min": 0,
-              "max": 100,
-              "defaultVal": 100
-          },
-          {
-              "index": 1,
-              "name": "S - HP (Scale)",
-              "min": 0,
-              "max": 100,
-              "defaultVal": 0
-          },
-          {
-              "index": 2,
-              "name": "S - LP (Scale)",
-              "min": 0,
-              "max": 100,
-              "defaultVal": 100
-          },
-          {
-              "index": 3,
-              "name": "S - Drive (%)",
-              "min": 0,
-              "max": 100,
-              "defaultVal": 0
-          },
-          {
-              "index": 4,
-              "name": "Side (%)",
-              "min": 0,
-              "max": 200,
-              "defaultVal": 100
-          },
-          {
-              "index": 5,
-              "name": "Mid (%)",
-              "min": 0,
-              "max": 200,
-              "defaultVal": 100
-          },
-          {
-              "index": 6,
-              "name": "Output M+S (dB)",
-              "min": -25,
-              "max": 25,
-              "defaultVal": 0
-          },
-          {
-              "index": 7,
-              "name": "Oversample (x2)",
-              "min": 0,
-              "max": 1,
-              "defaultVal": 0
-          }
-      ]
-  },
-  {
-      "name": "JS: Saturation",
-      "shortName": "Saturation [LOSER]",
-      "category": "Distortion",
-      "description": "Saturation",
-      "howItWorks": "",
-      "proTips": "",
-      "sliders": [
-          {
-              "index": 0,
-              "name": "Amount (%)",
-              "min": 0,
-              "max": 100,
-              "defaultVal": 0
-          }
-      ]
-  },
-  {
-      "name": "JS: MIDI Sequencer Baby v2",
-      "shortName": "MIDI Sequencer Baby v2",
-      "category": "MIDI",
-      "description": "MIDI Sequencer Baby v2",
-      "howItWorks": "",
-      "proTips": "",
-      "sliders": [
-          {
-              "index": 0,
-              "name": "Pattern",
-              "min": 0,
-              "max": 15,
-              "defaultVal": 0
-          },
-          {
-              "index": 1,
-              "name": "Note Start",
-              "min": 0,
-              "max": 127,
-              "defaultVal": 60
-          },
-          {
-              "index": 2,
-              "name": "Sequence Length",
-              "min": 4,
-              "max": 128,
-              "defaultVal": 16
-          },
-          {
-              "index": 3,
-              "name": "Number Of Notes",
-              "min": 1,
-              "max": 32,
-              "defaultVal": 16
-          },
-          {
-              "index": 4,
-              "name": "Rate",
-              "min": 0.125,
-              "max": 4,
-              "defaultVal": 1
-          }
-      ]
-  },
-  {
-      "name": "JS: MIDI Sequencer Baby",
-      "shortName": "MIDI Sequencer Baby",
-      "category": "MIDI",
-      "description": "MIDI Sequencer Baby",
-      "howItWorks": "",
-      "proTips": "",
-      "sliders": [
-          {
-              "index": 0,
-              "name": "Pattern",
-              "min": 0,
-              "max": 15,
-              "defaultVal": 0
-          },
-          {
-              "index": 1,
-              "name": "Note Start",
-              "min": 0,
-              "max": 127,
-              "defaultVal": 60
-          }
-      ]
-  },
-  {
-      "name": "JS: MIDI Sequencer Megababy",
-      "shortName": "MIDI Sequencer Megababy [jnif]",
-      "category": "MIDI",
-      "description": "MIDI Sequencer Megababy",
-      "howItWorks": "",
-      "proTips": "",
-      "sliders": [
-          {
-              "index": 0,
-              "name": "Pattern",
-              "min": 0,
-              "max": 15,
-              "defaultVal": 0
-          },
-          {
-              "index": 1,
-              "name": "--Note Start",
-              "min": 0,
-              "max": 127,
-              "defaultVal": 36
-          },
-          {
-              "index": 2,
-              "name": "Sequence Length",
-              "min": 4,
-              "max": 128,
-              "defaultVal": 16
-          },
-          {
-              "index": 3,
-              "name": "--Number Of Notes",
-              "min": 1,
-              "max": 32,
-              "defaultVal": 16
-          },
-          {
-              "index": 4,
-              "name": "Rate",
-              "min": 0.125,
-              "max": 4,
-              "defaultVal": 1
-          },
-          {
-              "index": 5,
-              "name": "--Note Length",
-              "min": 1,
-              "max": 100,
-              "defaultVal": 100
-          },
-          {
-              "index": 6,
-              "name": "--Mode",
-              "min": 0,
-              "max": 1,
-              "defaultVal": 1
-          },
-          {
-              "index": 7,
-              "name": "--Swing",
-              "min": 0,
-              "max": 100,
-              "defaultVal": 0
-          },
-          {
-              "index": 8,
-              "name": "Steps Per Beat",
-              "min": 1,
-              "max": 16,
-              "defaultVal": 4
-          },
-          {
-              "index": 9,
-              "name": "MIDI Trigger",
-              "min": 0,
-              "max": 8,
-              "defaultVal": 0
-          },
-          {
-              "index": 10,
-              "name": "--Trigger Note Start",
-              "min": 0,
-              "max": 127,
-              "defaultVal": 72
-          },
-          {
-              "index": 11,
-              "name": "--Chain",
-              "min": 0,
-              "max": 15,
-              "defaultVal": 0
-          },
-          {
-              "index": 12,
-              "name": "--Lane Height Percent",
-              "min": 0,
-              "max": 1,
-              "defaultVal": 0.2
-          },
-          {
-              "index": 13,
-              "name": "--CC To Adjust (Active For Editing)",
-              "min": 0,
-              "max": 3,
-              "defaultVal": 0
-          },
-          {
-              "index": 14,
-              "name": "Drum Map Note Names",
-              "min": 0,
-              "max": 0,
-              "defaultVal": 0
-          },
-          {
-              "index": 19,
-              "name": "--Controller 1 Type",
-              "min": 0,
-              "max": 127,
-              "defaultVal": 1
-          },
-          {
-              "index": 20,
-              "name": "--Controller 2 Type",
-              "min": 0,
-              "max": 127,
-              "defaultVal": 7
-          },
-          {
-              "index": 21,
-              "name": "--Controller 3 Type",
-              "min": 0,
-              "max": 127,
-              "defaultVal": 10
-          },
-          {
-              "index": 22,
-              "name": "--Controller 4 Type",
-              "min": 0,
-              "max": 127,
-              "defaultVal": 11
-          },
-          {
-              "index": 29,
-              "name": "--Controller 1 Channel",
-              "min": 0,
-              "max": 15,
-              "defaultVal": 0
-          },
-          {
-              "index": 30,
-              "name": "--Controller 2 Channel",
-              "min": 0,
-              "max": 15,
-              "defaultVal": 0
-          },
-          {
-              "index": 31,
-              "name": "--Controller 3 Channel",
-              "min": 0,
-              "max": 15,
-              "defaultVal": 0
-          },
-          {
-              "index": 32,
-              "name": "--Controller 4 Channel",
-              "min": 0,
-              "max": 15,
-              "defaultVal": 0
-          },
-          {
-              "index": 39,
-              "name": "--Start Beat Position",
-              "min": -99,
-              "max": 9999,
-              "defaultVal": 0
-          },
-          {
-              "index": 40,
-              "name": "--Play Before Start",
-              "min": 0,
-              "max": 1,
-              "defaultVal": 1
-          },
-          {
-              "index": 41,
-              "name": "--End Beat Position",
-              "min": -99,
-              "max": 9999,
-              "defaultVal": -99
-          }
-      ]
-  },
-  {
-      "name": "JS: Sine Sweep Generator",
-      "shortName": "Sine Sweep Generator",
-      "category": "Synthesis",
-      "description": "Sine Sweep Generator",
-      "howItWorks": "",
-      "proTips": "",
-      "sliders": [
-          {
-              "index": 0,
-              "name": "Approx Sweep Length",
-              "min": 1,
-              "max": 100,
-              "defaultVal": 8,
-              "unit": "sec"
-          }
-      ]
-  },
-  {
-      "name": "JS: Spectral Hold",
-      "shortName": "Spectral Hold (Cockos)",
-      "category": "Processing",
-      "description": "Spectral Hold",
-      "howItWorks": "",
-      "proTips": "",
-      "sliders": [
-          {
-              "index": 0,
-              "name": "FFT Size",
-              "min": 0,
-              "max": 6,
-              "defaultVal": 6
-          },
-          {
-              "index": 1,
-              "name": "analysis overlap",
-              "min": 0.01,
-              "max": 0.99,
-              "defaultVal": 0.5
-          },
-          {
-              "index": 2,
-              "name": "output overlap",
-              "min": 0.1,
-              "max": 0.9,
-              "defaultVal": 0.75
-          },
-          {
-              "index": 3,
-              "name": "hold volume",
-              "min": -150,
-              "max": 32,
-              "defaultVal": 0,
-              "unit": "dB"
-          },
-          {
-              "index": 4,
-              "name": "dry mix during hold",
-              "min": -150,
-              "max": 32,
-              "defaultVal": -150,
-              "unit": "dB"
-          },
-          {
-              "index": 5,
-              "name": "dry mix when not holding",
-              "min": -150,
-              "max": 32,
-              "defaultVal": 0,
-              "unit": "dB"
-          },
-          {
-              "index": 6,
-              "name": "phase increase",
-              "min": 0,
-              "max": 12,
-              "defaultVal": 0
-          },
-          {
-              "index": 7,
-              "name": "hold",
-              "min": 0,
-              "max": 2,
-              "defaultVal": 0
-          },
-          {
-              "index": 8,
-              "name": "update state",
-              "min": 0,
-              "max": 1,
-              "defaultVal": 1
-          },
-          {
-              "index": 9,
-              "name": "transport start behavior",
-              "min": 0,
-              "max": 1,
-              "defaultVal": 0
-          },
-          {
-              "index": 10,
-              "name": "mix-in on update",
-              "min": 0,
-              "max": 1,
-              "defaultVal": 1
-          },
-          {
-              "index": 11,
-              "name": "auto-update every",
-              "min": 0,
-              "max": 30,
-              "defaultVal": 0,
-              "unit": "s"
-          }
-      ]
-  },
-  {
-      "name": "JS: Spectropaint Filter",
-      "shortName": "Spectropaint Filter",
-      "category": "Processing",
-      "description": "Spectropaint Filter",
-      "howItWorks": "",
-      "proTips": "",
-      "sliders": [
-          {
-              "index": 0,
-              "name": "Period",
-              "min": 1,
-              "max": 100,
-              "defaultVal": 20,
-              "unit": "sec"
-          },
-          {
-              "index": 1,
-              "name": "Background Gain",
-              "min": -144,
-              "max": 0,
-              "defaultVal": -144,
-              "unit": "dB"
-          },
-          {
-              "index": 2,
-              "name": "Foreground Gain",
-              "min": -144,
-              "max": 64,
-              "defaultVal": 0,
-              "unit": "dB"
-          },
-          {
-              "index": 3,
-              "name": "FFT Size",
-              "min": 0,
-              "max": 11,
-              "defaultVal": 4
-          },
-          {
-              "index": 4,
-              "name": "Project Sync Offset (-1 to disable)",
-              "min": -1,
-              "max": 100,
-              "defaultVal": 0
-          },
-          {
-              "index": 5,
-              "name": "Mode",
-              "min": 0,
-              "max": 1,
-              "defaultVal": 1
-          }
-      ]
-  },
-  {
-      "name": "JS: Spectropaint Synthesis",
-      "shortName": "Spectropaint Synthesis",
-      "category": "Synthesis",
-      "description": "Spectropaint Synthesis",
-      "howItWorks": "",
-      "proTips": "",
-      "sliders": [
-          {
-              "index": 0,
-              "name": "period",
-              "min": 1,
-              "max": 100,
-              "defaultVal": 20,
-              "unit": "sec"
-          },
-          {
-              "index": 1,
-              "name": "amplitude",
-              "min": -144,
-              "max": 0,
-              "defaultVal": -40,
-              "unit": "dB"
-          },
-          {
-              "index": 2,
-              "name": "FFT size",
-              "min": 0,
-              "max": 11,
-              "defaultVal": 4
-          },
-          {
-              "index": 3,
-              "name": "project sync offset (-1 to disable)",
-              "min": -1,
-              "max": 100,
-              "defaultVal": 0
-          },
-          {
-              "index": 4,
-              "name": "mode",
-              "min": 0,
-              "max": 1,
-              "defaultVal": 0
-          }
-      ]
-  },
-  {
-      "name": "JS: Stereo Enhancer",
-      "shortName": "Stereo Enhancer",
-      "category": "Stereo & Spatial",
-      "description": "Stereo Enhancer",
-      "howItWorks": "",
-      "proTips": "",
-      "sliders": [
-          {
-              "index": 0,
-              "name": "Width Low (%)",
-              "min": 0,
-              "max": 200,
-              "defaultVal": 100
-          },
-          {
-              "index": 1,
-              "name": "Crossover (Hz)",
-              "min": 0,
-              "max": 20000,
-              "defaultVal": 500
-          },
-          {
-              "index": 2,
-              "name": "Width High (%)",
-              "min": 0,
-              "max": 200,
-              "defaultVal": 100
-          }
-      ]
-  },
-  {
-      "name": "JS: Stereo Field Manipulator",
-      "shortName": "Stereo Field Manipulator [LOSER]",
-      "category": "Stereo & Spatial",
-      "description": "Stereo Field Manipulator",
-      "howItWorks": "",
-      "proTips": "",
-      "sliders": [
-          {
-              "index": 0,
-              "name": "Rotate",
-              "min": -90,
-              "max": 90,
-              "defaultVal": 0,
-              "unit": "deg"
-          },
-          {
-              "index": 1,
-              "name": "Width (%)",
-              "min": 0,
-              "max": 200,
-              "defaultVal": 100
-          },
-          {
-              "index": 2,
-              "name": "Center (%)",
-              "min": -100,
-              "max": 100,
-              "defaultVal": 0
-          },
-          {
-              "index": 3,
-              "name": "Left/Right (%)",
-              "min": -100,
-              "max": 100,
-              "defaultVal": 0
-          }
-      ]
-  },
-  {
-      "name": "JS: Channel Polarity Control",
-      "shortName": "Channel Polarity Control [IXix]",
-      "category": "Analysis & Utility",
-      "description": "Channel Polarity Control",
-      "howItWorks": "",
-      "proTips": "",
-      "sliders": [
-          {
-              "index": 0,
-              "name": "Polarity Mode",
-              "min": 0,
-              "max": 3,
-              "defaultVal": 0
-          }
-      ]
-  },
-  {
-      "name": "JS: Stereo Width",
-      "shortName": "Stereo Width [Stillwell]",
-      "category": "Stereo & Spatial",
-      "description": "Stereo Width",
-      "howItWorks": "",
-      "proTips": "",
-      "sliders": [
-          {
-              "index": 0,
-              "name": "Width Boost",
-              "min": -20,
-              "max": 20,
-              "defaultVal": 0,
-              "unit": "dB"
-          },
-          {
-              "index": 1,
-              "name": "Center Boost",
-              "min": -20,
-              "max": 20,
-              "defaultVal": 0,
-              "unit": "dB"
-          },
-          {
-              "index": 2,
-              "name": "Gain",
-              "min": -20,
-              "max": 20,
-              "defaultVal": 0,
-              "unit": "dB"
-          },
-          {
-              "index": 3,
-              "name": "Width Balance (%)",
-              "min": -100,
-              "max": 100,
-              "defaultVal": 0
-          },
-          {
-              "index": 4,
-              "name": "Width Rotation",
-              "min": -90,
-              "max": 90,
-              "defaultVal": 0,
-              "unit": "deg"
-          }
-      ]
-  },
-  {
-      "name": "JS: Super8 MIDI-controlled synchronized looper",
-      "shortName": "Super8 MIDI-controlled synchronized looper (Cockos)",
-      "category": "MIDI",
-      "description": "Super8 MIDI-controlled synchronized looper",
-      "howItWorks": "",
-      "proTips": "",
-      "sliders": [
-          {
-              "index": 0,
-              "name": "-Sync",
-              "min": 0,
-              "max": 2,
-              "defaultVal": 0
-          },
-          {
-              "index": 3,
-              "name": "-Click count/length",
-              "min": 0,
-              "max": 64,
-              "defaultVal": 0
-          }
-      ]
-  },
-  {
-      "name": "JS: Pitch Shifter 2",
-      "shortName": "Pitch Shifter 2",
-      "category": "Pitch",
-      "description": "Pitch Shifter 2",
-      "howItWorks": "",
-      "proTips": "",
-      "sliders": [
-          {
-              "index": 0,
-              "name": "Pitch Adjust (cents)",
-              "min": -100,
-              "max": 100,
-              "defaultVal": 0
-          },
-          {
-              "index": 1,
-              "name": "Pitch Adjust (st)",
-              "min": -12,
-              "max": 12,
-              "defaultVal": 0
-          },
-          {
-              "index": 2,
-              "name": "Pitch Adjust (oct)",
-              "min": -12,
-              "max": 12,
-              "defaultVal": 0
-          },
-          {
-              "index": 3,
-              "name": "Window Size",
-              "min": 0,
-              "max": 200,
-              "defaultVal": 50,
-              "unit": "ms"
-          },
-          {
-              "index": 4,
-              "name": "Overlap Size",
-              "min": 0.05,
-              "max": 50,
-              "defaultVal": 20,
-              "unit": "ms"
-          },
-          {
-              "index": 5,
-              "name": "Wet Mix",
-              "min": -120,
-              "max": 6,
-              "defaultVal": 0,
-              "unit": "dB"
-          },
-          {
-              "index": 6,
-              "name": "Dry Mix",
-              "min": -120,
-              "max": 6,
-              "defaultVal": -120,
-              "unit": "dB"
-          },
-          {
-              "index": 7,
-              "name": "Filter",
-              "min": 0,
-              "max": 1,
-              "defaultVal": 1
-          }
-      ]
-  },
-  {
-      "name": "JS: Sweeping Resonant Lowpass Filter",
-      "shortName": "Sweeping Resonant Lowpass Filter",
-      "category": "Filter",
-      "description": "Sweeping Resonant Lowpass Filter",
-      "howItWorks": "",
-      "proTips": "",
-      "sliders": [
-          {
-              "index": 0,
-              "name": "Frequency 1",
-              "min": 20,
-              "max": 20000,
-              "defaultVal": 1000,
-              "unit": "Hz"
-          },
-          {
-              "index": 1,
-              "name": "Frequency 2",
-              "min": 20,
-              "max": 20000,
-              "defaultVal": 2000,
-              "unit": "Hz"
-          },
-          {
-              "index": 2,
-              "name": "Sweep Time",
-              "min": 0.1,
-              "max": 30,
-              "defaultVal": 2,
-              "unit": "sec"
-          },
-          {
-              "index": 3,
-              "name": "Resonance",
-              "min": 0,
-              "max": 1,
-              "defaultVal": 0.8
-          }
-      ]
-  },
-  {
-      "name": "JS: 8-Channel Input Switcher",
-      "shortName": "8-Channel Input Switcher [IXix]",
-      "category": "Routing",
-      "description": "8-Channel Input Switcher",
-      "howItWorks": "",
-      "proTips": "",
-      "sliders": [
-          {
-              "index": 0,
-              "name": "Output Source",
-              "min": 0,
-              "max": 3,
-              "defaultVal": 0
-          },
-          {
-              "index": 1,
-              "name": "Level 1+2",
-              "min": -60,
-              "max": 30,
-              "defaultVal": 0,
-              "unit": "dB"
-          },
-          {
-              "index": 2,
-              "name": "Level 3+4",
-              "min": -60,
-              "max": 30,
-              "defaultVal": 0,
-              "unit": "dB"
-          },
-          {
-              "index": 3,
-              "name": "Level 5+6",
-              "min": -60,
-              "max": 30,
-              "defaultVal": 0,
-              "unit": "dB"
-          },
-          {
-              "index": 4,
-              "name": "Level 7+8",
-              "min": -60,
-              "max": 30,
-              "defaultVal": 0,
-              "unit": "dB"
-          }
-      ]
-  },
-  {
-      "name": "JS: SwixMitch (4x Stereo In, 2 Bus X-Fader)",
-      "shortName": "SwixMitch 4x Stereo Input 2 Bus X-Fader [IXix]",
-      "category": "Mixer",
-      "description": "SwixMitch (4x Stereo In, 2 Bus X-Fader)",
-      "howItWorks": "",
-      "proTips": "",
-      "sliders": [
-          {
-              "index": 0,
-              "name": "Destination 1+2",
-              "min": 0,
-              "max": 3,
-              "defaultVal": 3
-          },
-          {
-              "index": 1,
-              "name": "Destination 3+4",
-              "min": 0,
-              "max": 3,
-              "defaultVal": 0
-          },
-          {
-              "index": 2,
-              "name": "Destination 5+6",
-              "min": 0,
-              "max": 3,
-              "defaultVal": 0
-          },
-          {
-              "index": 3,
-              "name": "Destination 7+8",
-              "min": 0,
-              "max": 3,
-              "defaultVal": 0
-          },
-          {
-              "index": 4,
-              "name": "Mix A<>B",
-              "min": 0,
-              "max": 1,
-              "defaultVal": 0.5
-          }
-      ]
-  },
-  {
-      "name": "JS: Thunderkick",
-      "shortName": "Thunderkick (MDCT subsynthesis filter) [Stillwell]",
-      "category": "Synthesis",
-      "description": "Thunderkick",
-      "howItWorks": "",
-      "proTips": "",
-      "sliders": [
-          {
-              "index": 0,
-              "name": "Effect",
-              "min": -40,
-              "max": 40,
-              "defaultVal": -6,
-              "unit": "dB"
-          },
-          {
-              "index": 1,
-              "name": "Cutoff",
-              "min": 1,
-              "max": 30,
-              "defaultVal": 4
-          },
-          {
-              "index": 2,
-              "name": "Gain",
-              "min": -40,
-              "max": 40,
-              "defaultVal": 0,
-              "unit": "dB"
-          },
-          {
-              "index": 3,
-              "name": "Shift",
-              "min": 0,
-              "max": 10,
-              "defaultVal": 1
-          }
-      ]
-  },
-  {
-      "name": "JS: Tilt Equalizer",
-      "shortName": "Tilt Equalizer",
-      "category": "EQ & Filtering",
-      "description": "Tilt Equalizer",
-      "howItWorks": "",
-      "proTips": "",
-      "sliders": [
-          {
-              "index": 0,
-              "name": "Processing",
-              "min": 0,
-              "max": 1,
-              "defaultVal": 0
-          },
-          {
-              "index": 1,
-              "name": "Center Frequency (Scale)",
-              "min": 0,
-              "max": 100,
-              "defaultVal": 50
-          },
-          {
-              "index": 2,
-              "name": "Tilt (Low/High)",
-              "min": -6,
-              "max": 6,
-              "defaultVal": 0,
-              "unit": "dB"
-          },
-          {
-              "index": 3,
-              "name": "Output Gain",
-              "min": -25,
-              "max": 25,
-              "defaultVal": 0,
-              "unit": "dB"
-          }
-      ]
-  },
-  {
-      "name": "JS: Time Adjustment Delay",
-      "shortName": "Time Adjustment Delay or Negative Delay",
-      "category": "Delay",
-      "description": "Time Adjustment Delay",
-      "howItWorks": "",
-      "proTips": "",
-      "sliders": [
-          {
-              "index": 0,
-              "name": "Delay Amount",
-              "min": -1000,
-              "max": 1000,
-              "defaultVal": 0,
-              "unit": "ms"
-          },
-          {
-              "index": 1,
-              "name": "Wet Mix",
-              "min": -120,
-              "max": 12,
-              "defaultVal": 0,
-              "unit": "dB"
-          },
-          {
-              "index": 2,
-              "name": "Dry Mix",
-              "min": -120,
-              "max": 12,
-              "defaultVal": -120,
-              "unit": "dB"
-          },
-          {
-              "index": 3,
-              "name": "Additional Delay Amount",
-              "min": -40000,
-              "max": 40000,
-              "defaultVal": 0,
-              "unit": "spls"
-          }
-      ]
-  },
-  {
-      "name": "JS: Channel Time Delayer",
-      "shortName": "Channel Time Delayer [LOSER]",
-      "category": "Delay",
-      "description": "Channel Time Delayer",
-      "howItWorks": "",
-      "proTips": "",
-      "sliders": [
-          {
-              "index": 0,
-              "name": "Delay L",
-              "min": -100,
-              "max": 100,
-              "defaultVal": 0,
-              "unit": "ms"
-          },
-          {
-              "index": 1,
-              "name": "Delay R",
-              "min": -100,
-              "max": 100,
-              "defaultVal": 0,
-              "unit": "ms"
-          }
-      ]
-  },
-  {
-      "name": "JS: Tone Gate",
-      "shortName": "Tone Gate [remaincalm.org]",
-      "category": "Dynamics",
-      "description": "Tone Gate",
-      "howItWorks": "",
-      "proTips": "",
-      "sliders": [
-          {
-              "index": 0,
-              "name": "Wet Mix",
-              "min": -120,
-              "max": 6,
-              "defaultVal": -15,
-              "unit": "dB"
-          },
-          {
-              "index": 1,
-              "name": "Dry Mix",
-              "min": -120,
-              "max": 6,
-              "defaultVal": -3,
-              "unit": "dB"
-          },
-          {
-              "index": 2,
-              "name": "Frequency",
-              "min": 20,
-              "max": 400,
-              "defaultVal": 80,
-              "unit": "Hz"
-          },
-          {
-              "index": 3,
-              "name": "Waveform",
-              "min": 0,
-              "max": 2,
-              "defaultVal": 0
-          },
-          {
-              "index": 4,
-              "name": "Lowpass",
-              "min": 50,
-              "max": 10000,
-              "defaultVal": 1000,
-              "unit": "Hz"
-          },
-          {
-              "index": 5,
-              "name": "Threshold",
-              "min": -120,
-              "max": 6,
-              "defaultVal": -20,
-              "unit": "dB"
-          },
-          {
-              "index": 6,
-              "name": "Silence Length For Fadeout",
-              "min": 1,
-              "max": 4000,
-              "defaultVal": 50,
-              "unit": "ms"
-          },
-          {
-              "index": 7,
-              "name": "Fade In Response",
-              "min": 1,
-              "max": 100,
-              "defaultVal": 10,
-              "unit": "ms"
-          },
-          {
-              "index": 8,
-              "name": "Fade Out Response",
-              "min": 1,
-              "max": 1000,
-              "defaultVal": 100,
-              "unit": "ms"
-          },
-          {
-              "index": 9,
-              "name": "Dynamic Pitch",
-              "min": 0,
-              "max": 4,
-              "defaultVal": 0
-          }
-      ]
-  },
-  {
-      "name": "JS: Tone Generator",
-      "shortName": "Tone Generator",
-      "category": "Synthesis",
-      "description": "Tone Generator",
-      "howItWorks": "",
-      "proTips": "",
-      "sliders": [
-          {
-              "index": 0,
-              "name": "Wet Mix",
-              "min": -120,
-              "max": 6,
-              "defaultVal": -12,
-              "unit": "dB"
-          },
-          {
-              "index": 1,
-              "name": "Dry Mix",
-              "min": -120,
-              "max": 6,
-              "defaultVal": -6,
-              "unit": "dB"
-          },
-          {
-              "index": 2,
-              "name": "Base Frequency",
-              "min": 20,
-              "max": 24000,
-              "defaultVal": 440,
-              "unit": "Hz"
-          },
-          {
-              "index": 3,
-              "name": "Note",
-              "min": 0,
-              "max": 11,
-              "defaultVal": 0
-          },
-          {
-              "index": 4,
-              "name": "Octave",
-              "min": -4,
-              "max": 4,
-              "defaultVal": 0
-          },
-          {
-              "index": 5,
-              "name": "Fine Tune",
-              "min": -100,
-              "max": 100,
-              "defaultVal": 0,
-              "unit": "cents"
-          },
-          {
-              "index": 6,
-              "name": "Shape",
-              "min": 0,
-              "max": 2,
-              "defaultVal": 0
-          }
-      ]
-  },
-  {
-      "name": "JS: Tonifier",
-      "shortName": "Tonifier",
-      "category": "Synthesis",
-      "description": "Tonifier",
-      "howItWorks": "",
-      "proTips": "",
-      "sliders": [
-          {
-              "index": 0,
-              "name": "Wet Mix",
-              "min": -100,
-              "max": 6,
-              "defaultVal": 0,
-              "unit": "dB"
-          },
-          {
-              "index": 1,
-              "name": "Dry Mix",
-              "min": -100,
-              "max": 6,
-              "defaultVal": -100,
-              "unit": "dB"
-          },
-          {
-              "index": 2,
-              "name": "Block Size",
-              "min": 1,
-              "max": 1000,
-              "defaultVal": 10,
-              "unit": "ms"
-          },
-          {
-              "index": 3,
-              "name": "Frequency Shift",
-              "min": -48,
-              "max": 48,
-              "defaultVal": 0,
-              "unit": "st"
-          },
-          {
-              "index": 4,
-              "name": "max auto shift",
-              "min": 0,
-              "max": 6,
-              "defaultVal": 0,
-              "unit": "octaves"
-          },
-          {
-              "index": 5,
-              "name": "auto shift min frequency",
-              "min": 0,
-              "max": 20000,
-              "defaultVal": 100,
-              "unit": "Hz"
-          },
-          {
-              "index": 6,
-              "name": "auto shift max frequency",
-              "min": 0,
-              "max": 20000,
-              "defaultVal": 1000,
-              "unit": "Hz"
-          },
-          {
-              "index": 7,
-              "name": "Output frequency",
-              "min": 0,
-              "max": 0,
-              "defaultVal": 0,
-              "unit": "Hz"
-          }
-      ]
-  },
-  {
-      "name": "JS: Time Difference Pan",
-      "shortName": "Time Difference Pan",
-      "category": "Stereo & Spatial",
-      "description": "Time Difference Pan",
-      "howItWorks": "",
-      "proTips": "",
-      "sliders": [
-          {
-              "index": 0,
-              "name": "Pan (%)",
-              "min": -100,
-              "max": 100,
-              "defaultVal": 0
-          }
-      ]
-  },
-  {
-      "name": "JS: Tonifier v2",
-      "shortName": "Tonifier v2",
-      "category": "Synthesis",
-      "description": "Tonifier v2",
-      "howItWorks": "",
-      "proTips": "",
-      "sliders": [
-          {
-              "index": 0,
-              "name": "Wet Mix",
-              "min": -100,
-              "max": 6,
-              "defaultVal": 0,
-              "unit": "dB"
-          },
-          {
-              "index": 1,
-              "name": "Dry Mix",
-              "min": -100,
-              "max": 6,
-              "defaultVal": -100,
-              "unit": "dB"
-          },
-          {
-              "index": 2,
-              "name": "Amplitude Falloff (factor)",
-              "min": 0.96,
-              "max": 1,
-              "defaultVal": 0.995
-          },
-          {
-              "index": 3,
-              "name": "Frequency Shift",
-              "min": -48,
-              "max": 48,
-              "defaultVal": 0,
-              "unit": "st"
-          },
-          {
-              "index": 4,
-              "name": "max auto shift",
-              "min": 0,
-              "max": 6,
-              "defaultVal": 4,
-              "unit": "octaves"
-          },
-          {
-              "index": 5,
-              "name": "auto shift min frequency",
-              "min": 0,
-              "max": 20000,
-              "defaultVal": 100,
-              "unit": "Hz"
-          },
-          {
-              "index": 6,
-              "name": "auto shift max frequency",
-              "min": 0,
-              "max": 20000,
-              "defaultVal": 300,
-              "unit": "Hz"
-          },
-          {
-              "index": 7,
-              "name": "Output frequency",
-              "min": 0,
-              "max": 0,
-              "defaultVal": 0,
-              "unit": "Hz"
-          }
-      ]
-  },
-  {
-      "name": "JS: Transient-Driven Auto-Pan (Receiver)",
-      "shortName": "Transient-Driven Auto-Pan (Receiver)",
-      "category": "Modulation",
-      "description": "Transient-Driven Auto-Pan (Receiver)",
-      "howItWorks": "",
-      "proTips": "",
-      "sliders": [
-          {
-              "index": 0,
-              "name": "Input",
-              "min": 0,
-              "max": 2,
-              "defaultVal": 0
-          },
-          {
-              "index": 1,
-              "name": "Receive Pan Data From",
-              "min": 0,
-              "max": 9,
-              "defaultVal": 0
-          },
-          {
-              "index": 2,
-              "name": "Received Pan",
-              "min": -100,
-              "max": 100,
-              "defaultVal": 0
-          },
-          {
-              "index": 3,
-              "name": "Sloppiness",
-              "min": 0,
-              "max": 10,
-              "defaultVal": 0
-          },
-          {
-              "index": 4,
-              "name": "Invert Received Pan",
-              "min": 0,
-              "max": 1,
-              "defaultVal": 0
-          },
-          {
-              "index": 5,
-              "name": "Multiply Received Pan",
-              "min": 0.2,
-              "max": 5,
-              "defaultVal": 1
-          },
-          {
-              "index": 6,
-              "name": "Max Pan",
-              "min": 1,
-              "max": 100,
-              "defaultVal": 100
-          },
-          {
-              "index": 7,
-              "name": "Max Delay",
-              "min": 0,
-              "max": 10,
-              "defaultVal": 0,
-              "unit": "ms"
-          },
-          {
-              "index": 8,
-              "name": "Look Ahead",
-              "min": 0,
-              "max": 100,
-              "defaultVal": 0,
-              "unit": "ms"
-          },
-          {
-              "index": 9,
-              "name": "Current Pan",
-              "min": -100,
-              "max": 100,
-              "defaultVal": 0
-          }
-      ]
-  },
-  {
-      "name": "JS: Transient-Driven Auto-Pan (Transmitter)",
-      "shortName": "Transient-Driven Auto-Pan (Transmitter)",
-      "category": "Modulation",
-      "description": "Transient-Driven Auto-Pan (Transmitter)",
-      "howItWorks": "",
-      "proTips": "",
-      "sliders": [
-          {
-              "index": 0,
-              "name": "Input",
-              "min": 0,
-              "max": 2,
-              "defaultVal": 0
-          },
-          {
-              "index": 1,
-              "name": "Pan Mode",
-              "min": 0,
-              "max": 3,
-              "defaultVal": 3
-          },
-          {
-              "index": 2,
-              "name": "Pan Step Size (%)",
-              "min": 0,
-              "max": 100,
-              "defaultVal": 10
-          },
-          {
-              "index": 3,
-              "name": "Random Step Size (%)",
-              "min": 0,
-              "max": 100,
-              "defaultVal": 0
-          },
-          {
-              "index": 4,
-              "name": "Max Pan",
-              "min": 1,
-              "max": 100,
-              "defaultVal": 100
-          },
-          {
-              "index": 5,
-              "name": "Fade Time",
-              "min": 0,
-              "max": 1000,
-              "defaultVal": 20,
-              "unit": "ms"
-          },
-          {
-              "index": 6,
-              "name": "Sloppiness (Transmitter Only)",
-              "min": 0,
-              "max": 10,
-              "defaultVal": 0
-          },
-          {
-              "index": 7,
-              "name": "Min Pause Between Pans",
-              "min": 20,
-              "max": 500,
-              "defaultVal": 250,
-              "unit": "ms"
-          },
-          {
-              "index": 8,
-              "name": "Max Delay",
-              "min": 0,
-              "max": 10,
-              "defaultVal": 0,
-              "unit": "ms"
-          },
-          {
-              "index": 10,
-              "name": "Director",
-              "min": 0,
-              "max": 5,
-              "defaultVal": 0
-          },
-          {
-              "index": 11,
-              "name": "Preview Director",
-              "min": 0,
-              "max": 1,
-              "defaultVal": 0
-          },
-          {
-              "index": 12,
-              "name": "Sensitivity",
-              "min": 0,
-              "max": 10,
-              "defaultVal": 5
-          },
-          {
-              "index": 13,
-              "name": "Look Ahead",
-              "min": 0,
-              "max": 100,
-              "defaultVal": 0,
-              "unit": "ms"
-          },
-          {
-              "index": 14,
-              "name": "Send Pan Data To",
-              "min": 0,
-              "max": 10,
-              "defaultVal": 0
-          },
-          {
-              "index": 15,
-              "name": "Current Pan",
-              "min": -100,
-              "max": 100,
-              "defaultVal": 0
-          }
-      ]
-  },
-  {
-      "name": "JS: Transient-Driven Auto-Pan v1.1 (Receiver)",
-      "shortName": "Transient-Driven Auto-Pan v1.1 (Receiver)",
-      "category": "Modulation",
-      "description": "Transient-Driven Auto-Pan v1.1 (Receiver)",
-      "howItWorks": "",
-      "proTips": "",
-      "sliders": [
-          {
-              "index": 0,
-              "name": "Input",
-              "min": 0,
-              "max": 2,
-              "defaultVal": 0
-          },
-          {
-              "index": 1,
-              "name": "Receive Pan Data From",
-              "min": 0,
-              "max": 9,
-              "defaultVal": 0
-          },
-          {
-              "index": 2,
-              "name": "Received Pan",
-              "min": -100,
-              "max": 100,
-              "defaultVal": 0
-          },
-          {
-              "index": 3,
-              "name": "Sloppiness",
-              "min": 0,
-              "max": 10,
-              "defaultVal": 0
-          },
-          {
-              "index": 4,
-              "name": "Invert Received Pan",
-              "min": 0,
-              "max": 1,
-              "defaultVal": 0
-          },
-          {
-              "index": 5,
-              "name": "Multiply Received Pan",
-              "min": 0.2,
-              "max": 5,
-              "defaultVal": 1
-          },
-          {
-              "index": 6,
-              "name": "Max Pan",
-              "min": 1,
-              "max": 100,
-              "defaultVal": 100
-          },
-          {
-              "index": 7,
-              "name": "Max Delay",
-              "min": 0,
-              "max": 10,
-              "defaultVal": 0,
-              "unit": "ms"
-          },
-          {
-              "index": 8,
-              "name": "Look Ahead",
-              "min": 0,
-              "max": 100,
-              "defaultVal": 0,
-              "unit": "ms"
-          },
-          {
-              "index": 9,
-              "name": "Current Pan",
-              "min": -100,
-              "max": 100,
-              "defaultVal": 0
-          }
-      ]
-  },
-  {
-      "name": "JS: Transient-Driven Auto-Pan v1.1 (Transmitter)",
-      "shortName": "Transient-Driven Auto-Pan v1.1 (Transmitter)",
-      "category": "Modulation",
-      "description": "Transient-Driven Auto-Pan v1.1 (Transmitter)",
-      "howItWorks": "",
-      "proTips": "",
-      "sliders": [
-          {
-              "index": 0,
-              "name": "Input",
-              "min": 0,
-              "max": 2,
-              "defaultVal": 0
-          },
-          {
-              "index": 1,
-              "name": "Pan Mode",
-              "min": 0,
-              "max": 3,
-              "defaultVal": 3
-          },
-          {
-              "index": 2,
-              "name": "Pan Step Size (%)",
-              "min": 0,
-              "max": 100,
-              "defaultVal": 10
-          },
-          {
-              "index": 3,
-              "name": "Random Step Size (%)",
-              "min": 0,
-              "max": 100,
-              "defaultVal": 0
-          },
-          {
-              "index": 4,
-              "name": "Max Pan",
-              "min": 1,
-              "max": 100,
-              "defaultVal": 100
-          },
-          {
-              "index": 5,
-              "name": "Fade Time",
-              "min": 0,
-              "max": 1000,
-              "defaultVal": 20,
-              "unit": "ms"
-          },
-          {
-              "index": 6,
-              "name": "Sloppiness (Transmitter Only)",
-              "min": 0,
-              "max": 10,
-              "defaultVal": 0
-          },
-          {
-              "index": 7,
-              "name": "Min Pause Between Pans",
-              "min": 20,
-              "max": 500,
-              "defaultVal": 250,
-              "unit": "ms"
-          },
-          {
-              "index": 8,
-              "name": "Max Delay",
-              "min": 0,
-              "max": 10,
-              "defaultVal": 0,
-              "unit": "ms"
-          },
-          {
-              "index": 10,
-              "name": "Director",
-              "min": 0,
-              "max": 5,
-              "defaultVal": 0
-          },
-          {
-              "index": 11,
-              "name": "Preview Director",
-              "min": 0,
-              "max": 1,
-              "defaultVal": 0
-          },
-          {
-              "index": 12,
-              "name": "Sensitivity",
-              "min": 0,
-              "max": 10,
-              "defaultVal": 5
-          },
-          {
-              "index": 13,
-              "name": "Look Ahead",
-              "min": 0,
-              "max": 100,
-              "defaultVal": 0,
-              "unit": "ms"
-          },
-          {
-              "index": 14,
-              "name": "Send Pan Data To",
-              "min": 0,
-              "max": 10,
-              "defaultVal": 0
-          },
-          {
-              "index": 15,
-              "name": "Current Pan",
-              "min": -100,
-              "max": 100,
-              "defaultVal": 0
-          }
-      ]
-  },
-  {
-      "name": "JS: Transient Controller",
-      "shortName": "Transient Controller [LOSER]",
-      "category": "Dynamics",
-      "description": "Transient Controller",
-      "howItWorks": "",
-      "proTips": "",
-      "sliders": [
-          {
-              "index": 0,
-              "name": "Attack (%)",
-              "min": -100,
-              "max": 100,
-              "defaultVal": 0
-          },
-          {
-              "index": 1,
-              "name": "Sustain (%)",
-              "min": -100,
-              "max": 100,
-              "defaultVal": 0
-          },
-          {
-              "index": 2,
-              "name": "Output",
-              "min": -12,
-              "max": 6,
-              "defaultVal": 0,
-              "unit": "dB"
-          }
-      ]
-  },
-  {
-      "name": "JS: Transient Killer",
-      "shortName": "Transient Killer (Instant Compressor) [LOSER]",
-      "category": "Dynamics",
-      "description": "Transient Killer",
-      "howItWorks": "",
-      "proTips": "",
-      "sliders": [
-          {
-              "index": 0,
-              "name": "Threshold",
-              "min": -12,
-              "max": 1,
-              "defaultVal": 0,
-              "unit": "dB"
-          },
-          {
-              "index": 1,
-              "name": "Ratio",
-              "min": 1,
-              "max": 50,
-              "defaultVal": 1
-          }
-      ]
-  },
-  {
-      "name": "JS: Tremolo",
-      "shortName": "Tremolo",
-      "category": "Modulation",
-      "description": "Tremolo",
-      "howItWorks": "",
-      "proTips": "",
-      "sliders": [
-          {
-              "index": 0,
-              "name": "Frequency",
-              "min": 0,
-              "max": 100,
-              "defaultVal": 4,
-              "unit": "Hz"
-          },
-          {
-              "index": 1,
-              "name": "Amount",
-              "min": -60,
-              "max": 0,
-              "defaultVal": -6,
-              "unit": "dB"
-          },
-          {
-              "index": 2,
-              "name": "Stereo Seperation",
-              "min": 0,
-              "max": 1,
-              "defaultVal": 0
-          }
-      ]
-  },
-  {
-      "name": "JS: Upward Expander",
-      "shortName": "Upward Expander [LOSER]",
-      "category": "Dynamics",
-      "description": "Upward Expander",
-      "howItWorks": "",
-      "proTips": "",
-      "sliders": [
-          {
-              "index": 0,
-              "name": "Threshold",
-              "min": -30,
-              "max": 0,
-              "defaultVal": 0,
-              "unit": "dB"
-          },
-          {
-              "index": 1,
-              "name": "Ratio",
-              "min": 0.25,
-              "max": 1,
-              "defaultVal": 1
-          },
-          {
-              "index": 2,
-              "name": "Attack",
-              "min": 0,
-              "max": 250,
-              "defaultVal": 20,
-              "unit": "ms"
-          },
-          {
-              "index": 3,
-              "name": "Release",
-              "min": 0,
-              "max": 500,
-              "defaultVal": 200,
-              "unit": "ms"
-          },
-          {
-              "index": 4,
-              "name": "RMS Size",
-              "min": 0,
-              "max": 250,
-              "defaultVal": 0,
-              "unit": "ms"
-          },
-          {
-              "index": 5,
-              "name": "Output",
-              "min": -6,
-              "max": 50,
-              "defaultVal": 0,
-              "unit": "dB"
-          },
-          {
-              "index": 6,
-              "name": "Feed",
-              "min": 0,
-              "max": 1,
-              "defaultVal": 0
-          },
-          {
-              "index": 7,
-              "name": "Expansion",
-              "min": 0,
-              "max": 0,
-              "defaultVal": 0,
-              "unit": "dB"
-          },
-          {
-              "index": 8,
-              "name": "Dry Mix",
-              "min": -120,
-              "max": 0,
-              "defaultVal": -120,
-              "unit": "dB"
-          }
-      ]
-  },
-  {
-      "name": "JS: VCA Follow",
-      "shortName": "VCA Follow",
-      "category": "Utility",
-      "description": "VCA Follow",
-      "howItWorks": "",
-      "proTips": "",
-      "sliders": [
-          {
-              "index": 0,
-              "name": "Transition Time",
-              "min": 0,
-              "max": 300,
-              "defaultVal": 50,
-              "unit": "ms"
-          }
-      ]
-  },
-  {
-      "name": "JS: VCA Lead",
-      "shortName": "VCA Lead",
-      "category": "Utility",
-      "description": "VCA Lead",
-      "howItWorks": "",
-      "proTips": "",
-      "sliders": [
-          {
-              "index": 0,
-              "name": "Volume",
-              "min": -120,
-              "max": 24,
-              "defaultVal": 0,
-              "unit": "dB"
-          }
-      ]
-  },
-  {
-      "name": "JS: video sample peeker",
-      "shortName": "video sample peeker",
-      "category": "Utility",
-      "description": "video sample peeker",
-      "howItWorks": "",
-      "proTips": "",
-      "sliders": [
-          {
-              "index": 0,
-              "name": "lookahead (seconds, 1.0 is normal)",
-              "min": 0,
-              "max": 1.8,
-              "defaultVal": 1
-          }
-      ]
-  },
-  {
-      "name": "JS: MIDI Velocity Scaler/Compressor",
-      "shortName": "MIDI Velocity Scaler/Compressor [Stillwell]",
-      "category": "MIDI",
-      "description": "MIDI Velocity Scaler/Compressor",
-      "howItWorks": "",
-      "proTips": "",
-      "sliders": [
-          {
-              "index": 0,
-              "name": "Input Channel (0=omni)",
-              "min": 0,
-              "max": 16,
-              "defaultVal": 0
-          },
-          {
-              "index": 1,
-              "name": "Scale Factor",
-              "min": 0,
-              "max": 3,
-              "defaultVal": 1
-          },
-          {
-              "index": 2,
-              "name": "Volume Offset",
-              "min": -127,
-              "max": 127,
-              "defaultVal": 0
-          },
-          {
-              "index": 3,
-              "name": "Mix (%)",
-              "min": 0,
-              "max": 100,
-              "defaultVal": 0
-          }
-      ]
-  },
-  {
-      "name": "JS: Volume/Pan Smoother v5",
-      "shortName": "Volume/Pan Smoother v5",
-      "category": "Utility",
-      "description": "Volume/Pan Smoother v5",
-      "howItWorks": "",
-      "proTips": "",
-      "sliders": [
-          {
-              "index": 0,
-              "name": "Volume",
-              "min": -60,
-              "max": 12,
-              "defaultVal": 0,
-              "unit": "dB"
-          },
-          {
-              "index": 1,
-              "name": "Pan",
-              "min": -100,
-              "max": 100,
-              "defaultVal": 0
-          },
-          {
-              "index": 2,
-              "name": "Pan Law",
-              "min": -6,
-              "max": 6,
-              "defaultVal": 0,
-              "unit": "dB"
-          }
-      ]
-  },
-  {
-      "name": "JS: Volume Adjustment",
-      "shortName": "Volume Adjustment",
-      "category": "Utility",
-      "description": "Volume Adjustment",
-      "howItWorks": "",
-      "proTips": "",
-      "sliders": [
-          {
-              "index": 0,
-              "name": "Adjustment",
-              "min": -150,
-              "max": 150,
-              "defaultVal": 6,
-              "unit": "dB"
-          },
-          {
-              "index": 1,
-              "name": "Max Volume",
-              "min": -150,
-              "max": 150,
-              "defaultVal": 0,
-              "unit": "dB"
-          }
-      ]
-  },
-  {
-      "name": "JS: VU Meter",
-      "shortName": "VU Meter",
-      "category": "Analysis & Utility",
-      "description": "VU Meter",
-      "howItWorks": "",
-      "proTips": "",
-      "sliders": [
-          {
-              "index": 0,
-              "name": "Response",
-              "min": 1,
-              "max": 300,
-              "defaultVal": 50,
-              "unit": "ms"
-          },
-          {
-              "index": 1,
-              "name": "Release (Slow/Fast)",
-              "min": 1,
-              "max": 10,
-              "defaultVal": 5
-          }
-      ]
-  },
-  {
-      "name": "JS: VU Meter (Summed)",
-      "shortName": "VU Meter (Summed)",
-      "category": "Analysis & Utility",
-      "description": "VU Meter (Summed)",
-      "howItWorks": "",
-      "proTips": "",
-      "sliders": [
-          {
-              "index": 0,
-              "name": "Response",
-              "min": 1,
-              "max": 300,
-              "defaultVal": 50,
-              "unit": "ms"
-          },
-          {
-              "index": 1,
-              "name": "Release (Slow/Fast)",
-              "min": 1,
-              "max": 10,
-              "defaultVal": 5
-          }
-      ]
-  },
-  {
-      "name": "JS: Wah-Wah",
-      "shortName": "Wah-Wah",
-      "category": "Filter",
-      "description": "Wah-Wah",
-      "howItWorks": "",
-      "proTips": "",
-      "sliders": [
-          {
-              "index": 0,
-              "name": "Position",
-              "min": 0,
-              "max": 1,
-              "defaultVal": 0
-          },
-          {
-              "index": 1,
-              "name": "Resonance (Top) (0..1)",
-              "min": 0,
-              "max": 1,
-              "defaultVal": 0.7
-          },
-          {
-              "index": 2,
-              "name": "Resonance (Bottom) (0..1)",
-              "min": 0,
-              "max": 1,
-              "defaultVal": 0.1
-          },
-          {
-              "index": 3,
-              "name": "Filter Distortion",
-              "min": 0,
-              "max": 0.1,
-              "defaultVal": 0.05
-          }
-      ]
-  },
-  {
-      "name": "JS: Multi Waveshaper",
-      "shortName": "Waveshaper Multi (Various Formulas)",
-      "category": "Distortion",
-      "description": "Multi Waveshaper",
-      "howItWorks": "",
-      "proTips": "",
-      "sliders": [
-          {
-              "index": 0,
-              "name": "Processing",
-              "min": 0,
-              "max": 1,
-              "defaultVal": 0
-          },
-          {
-              "index": 1,
-              "name": "Waveshaper",
-              "min": 0,
-              "max": 1,
-              "defaultVal": 0
-          },
-          {
-              "index": 2,
-              "name": "Drive (%)",
-              "min": 0,
-              "max": 100,
-              "defaultVal": 0
-          },
-          {
-              "index": 3,
-              "name": "Muffle (%)",
-              "min": 0,
-              "max": 100,
-              "defaultVal": 0
-          },
-          {
-              "index": 4,
-              "name": "Output",
-              "min": -25,
-              "max": 25,
-              "defaultVal": 0,
-              "unit": "dB"
-          },
-          {
-              "index": 5,
-              "name": "Limiter",
-              "min": 0,
-              "max": 1,
-              "defaultVal": 0
-          },
-          {
-              "index": 6,
-              "name": "Oversample (x2)",
-              "min": 0,
-              "max": 1,
-              "defaultVal": 0
-          }
-      ]
-  },
-  {
-      "name": "JS: Waveshaping Distortion",
-      "shortName": "Waveshaping Distortion",
-      "category": "Distortion",
-      "description": "Waveshaping Distortion",
-      "howItWorks": "",
-      "proTips": "",
-      "sliders": [
-          {
-              "index": 0,
-              "name": "Distortion (%)",
-              "min": 0,
-              "max": 100,
-              "defaultVal": 0
-          }
-      ]
-  },
-  {
-      "name": "JS: White Noise Generator",
-      "shortName": "White Noise Generator [LOSER]",
-      "category": "Synthesis",
-      "description": "White Noise Generator",
-      "howItWorks": "",
-      "proTips": "",
-      "sliders": [
-          {
-              "index": 0,
-              "name": "Dry Volume",
-              "min": -120,
-              "max": 0,
-              "defaultVal": -120,
-              "unit": "dB"
-          },
-          {
-              "index": 1,
-              "name": "Noise Volume",
-              "min": -120,
-              "max": 0,
-              "defaultVal": -12,
-              "unit": "dB"
-          }
-      ]
-  },
-  {
-      "name": "JS: Subtractive Stereo Enhancer",
-      "shortName": "Subtractive Stereo Enhancer [Stillwell]",
-      "category": "Stereo & Spatial",
-      "description": "Subtractive Stereo Enhancer",
-      "howItWorks": "",
-      "proTips": "",
-      "sliders": [
-          {
-              "index": 0,
-              "name": "Effect (%)",
-              "min": 0,
-              "max": 100,
-              "defaultVal": 0
-          },
-          {
-              "index": 1,
-              "name": "Make-Up Gain",
-              "min": 0,
-              "max": 20,
-              "defaultVal": 0,
-              "unit": "dB"
-          }
-      ]
-  },
-  {
-      "name": "JS: WigWare Multi-channel Peak VU Meter",
-      "shortName": "WigWare Multi-channel Peak VU Meter",
-      "category": "Analysis & Utility",
-      "description": "WigWare Multi-channel Peak VU Meter",
-      "howItWorks": "",
-      "proTips": "",
-      "sliders": [
-          {
-              "index": 0,
-              "name": "Number of Channels",
-              "min": 0,
-              "max": 64,
-              "defaultVal": 16
-          },
-          {
-              "index": 1,
-              "name": "Sample Time",
-              "min": 0,
-              "max": 500,
-              "defaultVal": 100,
-              "unit": "ms"
-          },
-          {
-              "index": 2,
-              "name": "min dB Value (-ve)",
-              "min": 0,
-              "max": 96,
-              "defaultVal": 60
-          },
-          {
-              "index": 3,
-              "name": "peak hold (x Sample Time)",
-              "min": 2,
-              "max": 20,
-              "defaultVal": 10
-          }
-      ]
-  },
-  {
-      "name": "JS: Zero Crossing Maximizer",
-      "shortName": "Zero Crossing Maximizer [LOSER]",
-      "category": "Dynamics",
-      "description": "Zero Crossing Maximizer",
-      "howItWorks": "",
-      "proTips": "",
-      "sliders": [
-          {
-              "index": 0,
-              "name": "Threshold",
-              "min": -12,
-              "max": 0,
-              "defaultVal": 0,
-              "unit": "dB"
-          },
-          {
-              "index": 1,
-              "name": "Ceiling",
-              "min": -12,
-              "max": 0,
-              "defaultVal": 0,
-              "unit": "dB"
-          },
-          {
-              "index": 2,
-              "name": "Buffer Size",
-              "min": 250,
-              "max": 1000,
-              "defaultVal": 500,
-              "unit": "ms"
-          }
-      ]
-  },
-  {
-      "name": "JS: Zoom Analyzer Demo",
-      "shortName": "Zoom Analyzer Demo",
-      "category": "Analysis & Utility",
-      "description": "Zoom Analyzer Demo",
-      "howItWorks": "",
-      "proTips": "",
-      "sliders": []
-  },
+},
+  {
+    "name": "JS: MIDI CC LFO Generator",
+    "shortName": "MIDI CC LFO Generator [IXix]",
+    "category": "MIDI",
+    "description": "MIDI CC LFO Generator",
+    "howItWorks": "",
+    "proTips": "",
+    "sliders": [
+        {
+            "index": 0,
+            "name": "MIDI Channel",
+            "min": 0,
+            "max": 15,
+            "defaultVal": 0
+        },
+        {
+            "index": 1,
+            "name": "Controller",
+            "min": 0,
+            "max": 127,
+            "defaultVal": 1
+        },
+        {
+            "index": 2,
+            "name": "Center",
+            "min": 0,
+            "max": 127,
+            "defaultVal": 0
+        },
+        {
+            "index": 3,
+            "name": "Range (+/-)",
+            "min": 0,
+            "max": 127,
+            "defaultVal": 0
+        },
+        {
+            "index": 4,
+            "name": "Off Value",
+            "min": 0,
+            "max": 127,
+            "defaultVal": 0
+        },
+        {
+            "index": 5,
+            "name": "LFO Shape",
+            "min": 0,
+            "max": 0,
+            "defaultVal": 0
+        },
+        {
+            "index": 6,
+            "name": "LFO Frequency",
+            "min": 0,
+            "max": 32,
+            "defaultVal": 1
+        },
+        {
+            "index": 7,
+            "name": "LFO Units",
+            "min": 0,
+            "max": 1,
+            "defaultVal": 0
+        },
+        {
+            "index": 8,
+            "name": "Updates Per Beat",
+            "min": 0,
+            "max": 9,
+            "defaultVal": 6
+        },
+        {
+            "index": 9,
+            "name": "On/Off",
+            "min": 0,
+            "max": 1,
+            "defaultVal": 1
+        }
+    ]
+},
+  {
+    "name": "JS: MIDI Choke Group",
+    "shortName": "MIDI Choke Group",
+    "category": "MIDI",
+    "description": "MIDI Choke Group",
+    "howItWorks": "",
+    "proTips": "",
+    "sliders": [
+        {
+            "index": 0,
+            "name": "MIDI Channel",
+            "min": 1,
+            "max": 16,
+            "defaultVal": 1
+        },
+        {
+            "index": 1,
+            "name": "Choke Note Range Start",
+            "min": 0,
+            "max": 127,
+            "defaultVal": 60
+        },
+        {
+            "index": 2,
+            "name": "Number Of Choke Notes",
+            "min": 1,
+            "max": 128,
+            "defaultVal": 8
+        }
+    ]
+},
+  {
+    "name": "JS: MIDI Chorderizer",
+    "shortName": "MIDI Chorderizer",
+    "category": "MIDI",
+    "description": "MIDI Chorderizer",
+    "howItWorks": "",
+    "proTips": "",
+    "sliders": [
+        {
+            "index": 0,
+            "name": "Voice 1 Offset (st)",
+            "min": 1,
+            "max": 24,
+            "defaultVal": 5,
+            "unit": "st"
+        },
+        {
+            "index": 1,
+            "name": "Voice 2 Offset (st)",
+            "min": 1,
+            "max": 24,
+            "defaultVal": 0,
+            "unit": "st"
+        },
+        {
+            "index": 2,
+            "name": "Voice 3 Offset (st)",
+            "min": 1,
+            "max": 24,
+            "defaultVal": 0,
+            "unit": "st"
+        },
+        {
+            "index": 3,
+            "name": "Voice 4 Offset (st)",
+            "min": 1,
+            "max": 24,
+            "defaultVal": 0,
+            "unit": "st"
+        },
+        {
+            "index": 4,
+            "name": "Velocity Scale @ 1",
+            "min": 0,
+            "max": 1,
+            "defaultVal": 1
+        },
+        {
+            "index": 5,
+            "name": "Velocity Scale @ 4",
+            "min": 0,
+            "max": 1,
+            "defaultVal": 1
+        },
+        {
+            "index": 6,
+            "name": "Lowest Key (MIDI Note #)",
+            "min": 0,
+            "max": 127,
+            "defaultVal": 0
+        },
+        {
+            "index": 7,
+            "name": "Highest Key (MIDI Note #)",
+            "min": 0,
+            "max": 127,
+            "defaultVal": 127
+        }
+    ]
+},
+  {
+    "name": "JS: MIDI Chord In Key",
+    "shortName": "MIDI Chord In Key",
+    "category": "MIDI",
+    "description": "MIDI Chord In Key",
+    "howItWorks": "",
+    "proTips": "",
+    "sliders": [
+        {
+            "index": 0,
+            "name": "Notes In Key Advance For Note 1",
+            "min": -24,
+            "max": 24,
+            "defaultVal": 2
+        },
+        {
+            "index": 1,
+            "name": "Notes In Key Advance For Note 2",
+            "min": -24,
+            "max": 24,
+            "defaultVal": 4
+        },
+        {
+            "index": 2,
+            "name": "Key",
+            "min": 0,
+            "max": 11,
+            "defaultVal": 0
+        },
+        {
+            "index": 3,
+            "name": "Velocity Scale For Additional Notes",
+            "min": 0,
+            "max": 1,
+            "defaultVal": 1
+        },
+        {
+            "index": 4,
+            "name": "Lowest Key (MIDI Note #)",
+            "min": 0,
+            "max": 127,
+            "defaultVal": 0
+        },
+        {
+            "index": 5,
+            "name": "Highest Key (MIDI Note #)",
+            "min": 0,
+            "max": 127,
+            "defaultVal": 127
+        }
+    ]
+},
+  {
+    "name": "JS: MIDI Choke",
+    "shortName": "MIDI Choke",
+    "category": "MIDI",
+    "description": "MIDI Choke",
+    "howItWorks": "",
+    "proTips": "",
+    "sliders": [
+        {
+            "index": 0,
+            "name": "MIDI Channel",
+            "min": 1,
+            "max": 16,
+            "defaultVal": 1
+        },
+        {
+            "index": 1,
+            "name": "Choke Note Range Start",
+            "min": 0,
+            "max": 127,
+            "defaultVal": 42
+        },
+        {
+            "index": 2,
+            "name": "Number Of Choke Notes",
+            "min": 1,
+            "max": 16,
+            "defaultVal": 1
+        },
+        {
+            "index": 3,
+            "name": "Affected Note Range Start",
+            "min": 0,
+            "max": 127,
+            "defaultVal": 46
+        },
+        {
+            "index": 4,
+            "name": "Number Of Affected Notes",
+            "min": 1,
+            "max": 16,
+            "defaultVal": 1
+        },
+        {
+            "index": 5,
+            "name": "Action During Choke",
+            "min": 0,
+            "max": 1,
+            "defaultVal": 0
+        },
+        {
+            "index": 6,
+            "name": "Additional Choke Note",
+            "min": -1,
+            "max": 127,
+            "defaultVal": -1
+        },
+        {
+            "index": 7,
+            "name": "Additional Choke Note",
+            "min": -1,
+            "max": 127,
+            "defaultVal": -1
+        },
+        {
+            "index": 8,
+            "name": "Additional Choke Note",
+            "min": -1,
+            "max": 127,
+            "defaultVal": -1
+        },
+        {
+            "index": 9,
+            "name": "Additional Choke Note",
+            "min": -1,
+            "max": 127,
+            "defaultVal": -1
+        }
+    ]
+},
+  {
+    "name": "JS: MIDI Delay",
+    "shortName": "MIDI Delay",
+    "category": "MIDI",
+    "description": "MIDI Delay",
+    "howItWorks": "",
+    "proTips": "",
+    "sliders": [
+        {
+            "index": 0,
+            "name": "Delay",
+            "min": 0,
+            "max": 1000,
+            "defaultVal": 0,
+            "unit": "ms"
+        },
+        {
+            "index": 1,
+            "name": "Delay (QN)",
+            "min": 0,
+            "max": 16,
+            "defaultVal": 0
+        },
+        {
+            "index": 2,
+            "name": "Delay (samples)",
+            "min": 0,
+            "max": 10000,
+            "defaultVal": 0
+        },
+        {
+            "index": 3,
+            "name": "Channel (0=omni)",
+            "min": 0,
+            "max": 16,
+            "defaultVal": 0
+        },
+        {
+            "index": 4,
+            "name": "Bus (0=all buses)",
+            "min": 0,
+            "max": 16,
+            "defaultVal": 0
+        }
+    ]
+},
+  {
+    "name": "JS: MIDI Duplicate Note Filter",
+    "shortName": "MIDI Duplicate Note Filter [IXix]",
+    "category": "MIDI",
+    "description": "MIDI Duplicate Note Filter",
+    "howItWorks": "",
+    "proTips": "",
+    "sliders": [
+        {
+            "index": 0,
+            "name": "Input Channel",
+            "min": 0,
+            "max": 15,
+            "defaultVal": 0
+        }
+    ]
+},
+  {
+    "name": "JS: MIDI EQ Ducker",
+    "shortName": "MIDI EQ Ducker [LOSER]",
+    "category": "EQ & Filtering",
+    "description": "MIDI EQ Ducker",
+    "howItWorks": "",
+    "proTips": "",
+    "sliders": [
+        {
+            "index": 0,
+            "name": "MIDI Note #",
+            "min": 0,
+            "max": 129,
+            "defaultVal": 0
+        },
+        {
+            "index": 1,
+            "name": "Attack",
+            "min": 0,
+            "max": 75,
+            "defaultVal": 10,
+            "unit": "ms"
+        },
+        {
+            "index": 2,
+            "name": "Attack Shape",
+            "min": 0,
+            "max": 4,
+            "defaultVal": 1
+        },
+        {
+            "index": 3,
+            "name": "Release",
+            "min": 0,
+            "max": 500,
+            "defaultVal": 100,
+            "unit": "ms"
+        },
+        {
+            "index": 4,
+            "name": "Release Shape",
+            "min": 0,
+            "max": 4,
+            "defaultVal": 1
+        },
+        {
+            "index": 5,
+            "name": "Frequency Coarse",
+            "min": 0,
+            "max": 15000,
+            "defaultVal": 0,
+            "unit": "Hz"
+        },
+        {
+            "index": 6,
+            "name": "Frequency Fine",
+            "min": 0,
+            "max": 100,
+            "defaultVal": 60,
+            "unit": "Hz"
+        },
+        {
+            "index": 7,
+            "name": "Width",
+            "min": 0,
+            "max": 2,
+            "defaultVal": 1,
+            "unit": "Oct"
+        },
+        {
+            "index": 8,
+            "name": "Volume",
+            "min": -32,
+            "max": 32,
+            "defaultVal": 0,
+            "unit": "dB"
+        },
+        {
+            "index": 9,
+            "name": "Mode",
+            "min": 0,
+            "max": 4,
+            "defaultVal": 0
+        },
+        {
+            "index": 10,
+            "name": "Gate/Pump React To MIDI Velocity",
+            "min": 0,
+            "max": 1,
+            "defaultVal": 0
+        }
+    ]
+},
+  {
+    "name": "JS: MIDI Examiner",
+    "shortName": "MIDI Examiner [Schwa]",
+    "category": "Analysis & Utility",
+    "description": "MIDI Examiner",
+    "howItWorks": "",
+    "proTips": "",
+    "sliders": [
+        {
+            "index": 0,
+            "name": "Sample Offset Within @block",
+            "min": 0,
+            "max": 255,
+            "defaultVal": 0
+        },
+        {
+            "index": 1,
+            "name": "Status Byte",
+            "min": 0,
+            "max": 255,
+            "defaultVal": 0
+        },
+        {
+            "index": 2,
+            "name": "Data Byte 1",
+            "min": 0,
+            "max": 127,
+            "defaultVal": 0
+        },
+        {
+            "index": 3,
+            "name": "Data Byte 2",
+            "min": 0,
+            "max": 127,
+            "defaultVal": 0
+        },
+        {
+            "index": 4,
+            "name": "Status High Bits",
+            "min": 0,
+            "max": 16,
+            "defaultVal": 0
+        },
+        {
+            "index": 5,
+            "name": "Status Low Bits",
+            "min": 0,
+            "max": 16,
+            "defaultVal": 0
+        },
+        {
+            "index": 6,
+            "name": "Status High Bits Interpretation",
+            "min": 0,
+            "max": 8,
+            "defaultVal": 0
+        }
+    ]
+},
+  {
+    "name": "JS: MIDI Snap To Key",
+    "shortName": "MIDI Snap To Key [IXix]",
+    "category": "MIDI",
+    "description": "MIDI Snap To Key",
+    "howItWorks": "",
+    "proTips": "",
+    "sliders": [
+        {
+            "index": 0,
+            "name": "Input Channel",
+            "min": 0,
+            "max": 15,
+            "defaultVal": 0
+        },
+        {
+            "index": 1,
+            "name": "Note Min",
+            "min": 0,
+            "max": 127,
+            "defaultVal": 0
+        },
+        {
+            "index": 2,
+            "name": "Note Max",
+            "min": 0,
+            "max": 127,
+            "defaultVal": 127
+        },
+        {
+            "index": 3,
+            "name": "Root Note",
+            "min": 0,
+            "max": 11,
+            "defaultVal": 0
+        },
+        {
+            "index": 4,
+            "name": "Scale File",
+            "min": 0,
+            "max": 0,
+            "defaultVal": 0
+        },
+        {
+            "index": 5,
+            "name": "Mode",
+            "min": 0,
+            "max": 1,
+            "defaultVal": 1
+        },
+        {
+            "index": 6,
+            "name": "On/Off",
+            "min": 0,
+            "max": 1,
+            "defaultVal": 1
+        }
+    ]
+},
+  {
+    "name": "JS: MIDI Map To Key v2",
+    "shortName": "MIDI Map To Key v2 [IXix]",
+    "category": "MIDI",
+    "description": "MIDI Map To Key v2",
+    "howItWorks": "",
+    "proTips": "",
+    "sliders": [
+        {
+            "index": 0,
+            "name": "Input Channel",
+            "min": 0,
+            "max": 15,
+            "defaultVal": 0
+        },
+        {
+            "index": 1,
+            "name": "Mapping File",
+            "min": 0,
+            "max": 0,
+            "defaultVal": 0
+        },
+        {
+            "index": 2,
+            "name": "Note In",
+            "min": 0,
+            "max": 127,
+            "defaultVal": 0
+        },
+        {
+            "index": 3,
+            "name": "Note Out",
+            "min": 0,
+            "max": 127,
+            "defaultVal": 0
+        },
+        {
+            "index": 4,
+            "name": "Reload Mapping",
+            "min": 0,
+            "max": 1,
+            "defaultVal": 0
+        }
+    ]
+},
+  {
+    "name": "JS: MIDI Map To Key",
+    "shortName": "MIDI Map To Key",
+    "category": "MIDI",
+    "description": "MIDI Map To Key",
+    "howItWorks": "",
+    "proTips": "",
+    "sliders": [
+        {
+            "index": 0,
+            "name": "Key",
+            "min": 0,
+            "max": 11,
+            "defaultVal": 0
+        },
+        {
+            "index": 2,
+            "name": "Lowest Key (MIDI Note #)",
+            "min": 0,
+            "max": 127,
+            "defaultVal": 0
+        },
+        {
+            "index": 3,
+            "name": "Highest Key (MIDI Note #)",
+            "min": 0,
+            "max": 127,
+            "defaultVal": 127
+        }
+    ]
+},
+  {
+    "name": "JS: MIDI Note Filter",
+    "shortName": "MIDI Note Filter",
+    "category": "MIDI",
+    "description": "MIDI Note Filter",
+    "howItWorks": "",
+    "proTips": "",
+    "sliders": [
+        {
+            "index": 0,
+            "name": "Lowest Key (MIDI Note #)",
+            "min": 0,
+            "max": 127,
+            "defaultVal": 21
+        },
+        {
+            "index": 1,
+            "name": "Highest Key (MIDI Note #)",
+            "min": 0,
+            "max": 127,
+            "defaultVal": 108
+        },
+        {
+            "index": 2,
+            "name": "Other events (CC, etc) pass through",
+            "min": 0,
+            "max": 1,
+            "defaultVal": 0
+        }
+    ]
+},
+  {
+    "name": "JS: MIDI Logger",
+    "shortName": "MIDI Logger",
+    "category": "MIDI",
+    "description": "MIDI Logger",
+    "howItWorks": "",
+    "proTips": "",
+    "sliders": [
+        {
+            "index": 0,
+            "name": "note-on/off analysis mode",
+            "min": 0,
+            "max": 2,
+            "defaultVal": 0
+        }
+    ]
+},
+  {
+    "name": "JS: MIDI Note Hold",
+    "shortName": "MIDI Note Hold",
+    "category": "MIDI",
+    "description": "MIDI Note Hold",
+    "howItWorks": "",
+    "proTips": "",
+    "sliders": [
+        {
+            "index": 0,
+            "name": "Channel (0=omni)",
+            "min": 0,
+            "max": 16,
+            "defaultVal": 0
+        }
+    ]
+},
+  {
+    "name": "JS: MIDI Note Repeater",
+    "shortName": "MIDI Note Repeater",
+    "category": "MIDI",
+    "description": "MIDI Note Repeater",
+    "howItWorks": "",
+    "proTips": "",
+    "sliders": [
+        {
+            "index": 0,
+            "name": "Size",
+            "min": 0.1,
+            "max": 4,
+            "defaultVal": 1,
+            "unit": "beats"
+        }
+    ]
+},
+  {
+    "name": "JS: MIDI note sanitizer",
+    "shortName": "MIDI note sanitizer",
+    "category": "MIDI",
+    "description": "MIDI note sanitizer",
+    "howItWorks": "",
+    "proTips": "",
+    "sliders": [
+        {
+            "index": 0,
+            "name": "retrigger threshold (1/32nds, 0=no retrigger)",
+            "min": 0,
+            "max": 128,
+            "defaultVal": 0
+        }
+    ]
+},
+  {
+    "name": "JS: MIDI Route Note To Channel",
+    "shortName": "MIDI Route Note To Channel",
+    "category": "MIDI",
+    "description": "MIDI Route Note To Channel",
+    "howItWorks": "",
+    "proTips": "",
+    "sliders": [
+        {
+            "index": 0,
+            "name": "Note",
+            "min": 0,
+            "max": 127,
+            "defaultVal": 60
+        },
+        {
+            "index": 1,
+            "name": "Channel",
+            "min": 0,
+            "max": 15,
+            "defaultVal": 0
+        }
+    ]
+},
+  {
+    "name": "JS: MIDI Router/Transpose",
+    "shortName": "MIDI Router/Transpose [IXix]",
+    "category": "MIDI",
+    "description": "MIDI Router/Transpose",
+    "howItWorks": "",
+    "proTips": "",
+    "sliders": [
+        {
+            "index": 0,
+            "name": "Input Channel",
+            "min": 0,
+            "max": 15,
+            "defaultVal": 0
+        },
+        {
+            "index": 1,
+            "name": "Output Channel",
+            "min": 0,
+            "max": 15,
+            "defaultVal": 0
+        },
+        {
+            "index": 2,
+            "name": "Mode",
+            "min": 0,
+            "max": 3,
+            "defaultVal": 3
+        },
+        {
+            "index": 3,
+            "name": "Note Min",
+            "min": 0,
+            "max": 127,
+            "defaultVal": 0
+        },
+        {
+            "index": 4,
+            "name": "Note Max",
+            "min": 0,
+            "max": 127,
+            "defaultVal": 127
+        },
+        {
+            "index": 5,
+            "name": "Transpose",
+            "min": -60,
+            "max": 60,
+            "defaultVal": 0
+        }
+    ]
+},
+  {
+    "name": "JS: MIDI Tool v2",
+    "shortName": "MIDI Tool v2 [IXix]",
+    "category": "MIDI",
+    "description": "MIDI Tool v2",
+    "howItWorks": "",
+    "proTips": "",
+    "sliders": [
+        {
+            "index": 0,
+            "name": "Input Channel",
+            "min": 0,
+            "max": 16,
+            "defaultVal": 0
+        },
+        {
+            "index": 1,
+            "name": "Note Min",
+            "min": 0,
+            "max": 127,
+            "defaultVal": 0
+        },
+        {
+            "index": 2,
+            "name": "Note Max",
+            "min": 0,
+            "max": 127,
+            "defaultVal": 127
+        },
+        {
+            "index": 3,
+            "name": "Input Velocity Min",
+            "min": 0,
+            "max": 127,
+            "defaultVal": 0
+        },
+        {
+            "index": 4,
+            "name": "Input Velocity Max",
+            "min": 0,
+            "max": 127,
+            "defaultVal": 127
+        },
+        {
+            "index": 5,
+            "name": "Input Velocity Mode",
+            "min": 0,
+            "max": 1,
+            "defaultVal": 0
+        },
+        {
+            "index": 6,
+            "name": "Velocity Scaling(%)",
+            "min": 0,
+            "max": 1000,
+            "defaultVal": 100
+        },
+        {
+            "index": 7,
+            "name": "Random Velocity (%)",
+            "min": 0,
+            "max": 100,
+            "defaultVal": 0
+        },
+        {
+            "index": 8,
+            "name": "Output Velocity Min",
+            "min": 0,
+            "max": 127,
+            "defaultVal": 0
+        },
+        {
+            "index": 9,
+            "name": "Output Velocity Max",
+            "min": 0,
+            "max": 127,
+            "defaultVal": 127
+        },
+        {
+            "index": 10,
+            "name": "Transpose (semitones)",
+            "min": -60,
+            "max": 60,
+            "defaultVal": 0
+        },
+        {
+            "index": 11,
+            "name": "Random Pitch (%)",
+            "min": 0,
+            "max": 100,
+            "defaultVal": 0
+        },
+        {
+            "index": 12,
+            "name": "Pitch Reset",
+            "min": 0,
+            "max": 1,
+            "defaultVal": 1
+        },
+        {
+            "index": 13,
+            "name": "Output Channel",
+            "min": 0,
+            "max": 16,
+            "defaultVal": 0
+        },
+        {
+            "index": 14,
+            "name": "Controller Routing",
+            "min": 0,
+            "max": 2,
+            "defaultVal": 0
+        }
+    ]
+},
+  {
+    "name": "JS: MIDI Tool",
+    "shortName": "MIDI Tool [IXix]",
+    "category": "MIDI",
+    "description": "MIDI Tool",
+    "howItWorks": "",
+    "proTips": "",
+    "sliders": [
+        {
+            "index": 0,
+            "name": "Input Channel",
+            "min": 0,
+            "max": 15,
+            "defaultVal": 0
+        },
+        {
+            "index": 1,
+            "name": "Note Min",
+            "min": 0,
+            "max": 127,
+            "defaultVal": 0
+        },
+        {
+            "index": 2,
+            "name": "Note Max",
+            "min": 0,
+            "max": 127,
+            "defaultVal": 127
+        },
+        {
+            "index": 3,
+            "name": "Input Velocity Min",
+            "min": 0,
+            "max": 127,
+            "defaultVal": 0
+        },
+        {
+            "index": 4,
+            "name": "Input Velocity Max",
+            "min": 0,
+            "max": 127,
+            "defaultVal": 127
+        },
+        {
+            "index": 5,
+            "name": "Random Velocity (%)",
+            "min": 0,
+            "max": 100,
+            "defaultVal": 0
+        },
+        {
+            "index": 6,
+            "name": "Output Velocity Min",
+            "min": 0,
+            "max": 127,
+            "defaultVal": 0
+        },
+        {
+            "index": 7,
+            "name": "Output Velocity Max",
+            "min": 0,
+            "max": 127,
+            "defaultVal": 127
+        },
+        {
+            "index": 8,
+            "name": "Transpose (st)",
+            "min": -60,
+            "max": 60,
+            "defaultVal": 0
+        },
+        {
+            "index": 9,
+            "name": "Random Pitch (%)",
+            "min": 0,
+            "max": 100,
+            "defaultVal": 0
+        },
+        {
+            "index": 10,
+            "name": "Output Channel",
+            "min": 0,
+            "max": 16,
+            "defaultVal": 0
+        }
+    ]
+},
+  {
+    "name": "JS: MIDI Transpose Notes",
+    "shortName": "MIDI Transpose Notes",
+    "category": "MIDI",
+    "description": "MIDI Transpose Notes",
+    "howItWorks": "",
+    "proTips": "",
+    "sliders": [
+        {
+            "index": 0,
+            "name": "Transpose Semitones",
+            "min": -64,
+            "max": 64,
+            "defaultVal": 0
+        },
+        {
+            "index": 1,
+            "name": "Premultiply",
+            "min": -16,
+            "max": 16,
+            "defaultVal": 1
+        },
+        {
+            "index": 2,
+            "name": "Lowest Key (MIDI Note #)",
+            "min": 0,
+            "max": 127,
+            "defaultVal": 0
+        },
+        {
+            "index": 3,
+            "name": "Highest Key (MIDI Note #)",
+            "min": 0,
+            "max": 127,
+            "defaultVal": 127
+        }
+    ]
+},
+  {
+    "name": "JS: MIDI Pattern/Scale Variation Generator",
+    "shortName": "MIDI Pattern/Scale Variation Generator [IXix]",
+    "category": "MIDI",
+    "description": "MIDI Pattern/Scale Variation Generator",
+    "howItWorks": "",
+    "proTips": "",
+    "sliders": [
+        {
+            "index": 0,
+            "name": "Input Channel",
+            "min": 0,
+            "max": 15,
+            "defaultVal": 0
+        },
+        {
+            "index": 1,
+            "name": "Note Min",
+            "min": 0,
+            "max": 127,
+            "defaultVal": 0
+        },
+        {
+            "index": 2,
+            "name": "Note Max",
+            "min": 0,
+            "max": 127,
+            "defaultVal": 127
+        },
+        {
+            "index": 3,
+            "name": "Root Note",
+            "min": 0,
+            "max": 11,
+            "defaultVal": 0
+        },
+        {
+            "index": 4,
+            "name": "Scale File",
+            "min": 0,
+            "max": 0,
+            "defaultVal": 0
+        },
+        {
+            "index": 5,
+            "name": "Low Octave",
+            "min": 0,
+            "max": 10,
+            "defaultVal": 5
+        },
+        {
+            "index": 6,
+            "name": "High Octave",
+            "min": 0,
+            "max": 10,
+            "defaultVal": 5
+        },
+        {
+            "index": 7,
+            "name": "Sequence File",
+            "min": 0,
+            "max": 0,
+            "defaultVal": 0
+        },
+        {
+            "index": 8,
+            "name": "On/Off",
+            "min": 0,
+            "max": 1,
+            "defaultVal": 1
+        }
+    ]
+},
+  {
+    "name": "JS: MIDI Velocity Variation Generator",
+    "shortName": "MIDI Velocity Variation Generator [IXix]",
+    "category": "MIDI",
+    "description": "MIDI Velocity Variation Generator",
+    "howItWorks": "",
+    "proTips": "",
+    "sliders": [
+        {
+            "index": 0,
+            "name": "Input Channel",
+            "min": 0,
+            "max": 15,
+            "defaultVal": 0
+        },
+        {
+            "index": 1,
+            "name": "Note Min",
+            "min": 0,
+            "max": 127,
+            "defaultVal": 0
+        },
+        {
+            "index": 2,
+            "name": "Note Max",
+            "min": 0,
+            "max": 127,
+            "defaultVal": 127
+        },
+        {
+            "index": 3,
+            "name": "Base Velocity",
+            "min": 0,
+            "max": 127,
+            "defaultVal": 64
+        },
+        {
+            "index": 4,
+            "name": "Variation (%)",
+            "min": 0,
+            "max": 100,
+            "defaultVal": 0
+        },
+        {
+            "index": 5,
+            "name": "Sequence File",
+            "min": 0,
+            "max": 0,
+            "defaultVal": 0
+        },
+        {
+            "index": 6,
+            "name": "On/Off",
+            "min": 0,
+            "max": 1,
+            "defaultVal": 1
+        }
+    ]
+},
+  {
+    "name": "JS: MIDI Velocity Control",
+    "shortName": "MIDI Velocity Control",
+    "category": "MIDI",
+    "description": "MIDI Velocity Control",
+    "howItWorks": "",
+    "proTips": "",
+    "sliders": [
+        {
+            "index": 0,
+            "name": "Velocity Multiply",
+            "min": -16,
+            "max": 16,
+            "defaultVal": 1
+        },
+        {
+            "index": 1,
+            "name": "Velocity Add",
+            "min": -128,
+            "max": 128,
+            "defaultVal": 0
+        },
+        {
+            "index": 2,
+            "name": "Min Velocity",
+            "min": 0,
+            "max": 127,
+            "defaultVal": 0
+        },
+        {
+            "index": 3,
+            "name": "Max Velocity",
+            "min": 0,
+            "max": 127,
+            "defaultVal": 127
+        },
+        {
+            "index": 4,
+            "name": "Lowest Key (MIDI Note #)",
+            "min": 0,
+            "max": 127,
+            "defaultVal": 0
+        },
+        {
+            "index": 5,
+            "name": "Highest Key (MIDI Note #)",
+            "min": 0,
+            "max": 127,
+            "defaultVal": 127
+        }
+    ]
+},
+  {
+    "name": "JS: MIDI Pitch Wheel LFO",
+    "shortName": "MIDI Pitch Wheel LFO Generator [IXix]",
+    "category": "MIDI",
+    "description": "MIDI Pitch Wheel LFO",
+    "howItWorks": "",
+    "proTips": "",
+    "sliders": [
+        {
+            "index": 0,
+            "name": "MIDI Channel",
+            "min": 0,
+            "max": 15,
+            "defaultVal": 0
+        },
+        {
+            "index": 1,
+            "name": "Max Bend (%)",
+            "min": 0,
+            "max": 100,
+            "defaultVal": 0
+        },
+        {
+            "index": 2,
+            "name": "LFO Frequency",
+            "min": 0,
+            "max": 24,
+            "defaultVal": 1
+        },
+        {
+            "index": 3,
+            "name": "LFO Units",
+            "min": 0,
+            "max": 1,
+            "defaultVal": 0
+        },
+        {
+            "index": 4,
+            "name": "Updates Per Beat",
+            "min": 0,
+            "max": 9,
+            "defaultVal": 6
+        },
+        {
+            "index": 5,
+            "name": "On/Off",
+            "min": 0,
+            "max": 1,
+            "defaultVal": 1
+        }
+    ]
+},
+  {
+    "name": "JS: MIDI Note-On Delay",
+    "shortName": "MIDI Note-On Delay",
+    "category": "MIDI",
+    "description": "MIDI Note-On Delay",
+    "howItWorks": "",
+    "proTips": "",
+    "sliders": [
+        {
+            "index": 0,
+            "name": "Max Delay Samples",
+            "min": 0,
+            "max": 4096,
+            "defaultVal": 0
+        }
+    ]
+},
+  {
+    "name": "JS: 8x Stereo to 1x Stereo Mixer",
+    "shortName": "8x Stereo to 1x Stereo Mixer [IXix]",
+    "category": "Mixer",
+    "description": "8x Stereo to 1x Stereo Mixer",
+    "howItWorks": "",
+    "proTips": "",
+    "sliders": [
+        {
+            "index": 0,
+            "name": "Level 1+2",
+            "min": -60,
+            "max": 30,
+            "defaultVal": 0,
+            "unit": "dB"
+        },
+        {
+            "index": 1,
+            "name": "Level 3+4",
+            "min": -60,
+            "max": 30,
+            "defaultVal": 0,
+            "unit": "dB"
+        },
+        {
+            "index": 2,
+            "name": "Level 5+6",
+            "min": -60,
+            "max": 30,
+            "defaultVal": 0,
+            "unit": "dB"
+        },
+        {
+            "index": 3,
+            "name": "Level 7+8",
+            "min": -60,
+            "max": 30,
+            "defaultVal": 0,
+            "unit": "dB"
+        },
+        {
+            "index": 4,
+            "name": "Level 9+10",
+            "min": -60,
+            "max": 30,
+            "defaultVal": 0,
+            "unit": "dB"
+        },
+        {
+            "index": 5,
+            "name": "Level 11+12",
+            "min": -60,
+            "max": 30,
+            "defaultVal": 0,
+            "unit": "dB"
+        },
+        {
+            "index": 6,
+            "name": "Level 13+14",
+            "min": -60,
+            "max": 30,
+            "defaultVal": 0,
+            "unit": "dB"
+        },
+        {
+            "index": 7,
+            "name": "Level 15+16",
+            "min": -60,
+            "max": 30,
+            "defaultVal": 0,
+            "unit": "dB"
+        }
+    ]
+},
+  {
+    "name": "JS: Moog 4-Pole Filter",
+    "shortName": "Moog 4-Pole Filter",
+    "category": "Filter",
+    "description": "Moog 4-Pole Filter",
+    "howItWorks": "",
+    "proTips": "",
+    "sliders": [
+        {
+            "index": 0,
+            "name": "Processing",
+            "min": 0,
+            "max": 1,
+            "defaultVal": 0
+        },
+        {
+            "index": 1,
+            "name": "Filter Type",
+            "min": 0,
+            "max": 2,
+            "defaultVal": 0
+        },
+        {
+            "index": 2,
+            "name": "Cutoff (Scale)",
+            "min": 0,
+            "max": 100,
+            "defaultVal": 100
+        },
+        {
+            "index": 3,
+            "name": "Resonance",
+            "min": 0,
+            "max": 0.85,
+            "defaultVal": 0
+        },
+        {
+            "index": 4,
+            "name": "Drive (%)",
+            "min": 0,
+            "max": 100,
+            "defaultVal": 0
+        },
+        {
+            "index": 5,
+            "name": "Output",
+            "min": -25,
+            "max": 25,
+            "defaultVal": 0,
+            "unit": "dB"
+        },
+        {
+            "index": 6,
+            "name": "Limiter",
+            "min": 0,
+            "max": 1,
+            "defaultVal": 0
+        },
+        {
+            "index": 7,
+            "name": "Oversample (x2)",
+            "min": 0,
+            "max": 1,
+            "defaultVal": 0
+        }
+    ]
+},
+  {
+    "name": "JS: 8x Mono to 1x Stereo Mixer",
+    "shortName": "8x Mono to 1x Stereo Mixer [IXix]",
+    "category": "Mixer",
+    "description": "8x Mono to 1x Stereo Mixer",
+    "howItWorks": "",
+    "proTips": "",
+    "sliders": [
+        {
+            "index": 0,
+            "name": "Level 1",
+            "min": -120,
+            "max": 30,
+            "defaultVal": 0,
+            "unit": "dB"
+        },
+        {
+            "index": 1,
+            "name": "Level 2",
+            "min": -120,
+            "max": 30,
+            "defaultVal": 0,
+            "unit": "dB"
+        },
+        {
+            "index": 2,
+            "name": "Level 3",
+            "min": -120,
+            "max": 30,
+            "defaultVal": 0,
+            "unit": "dB"
+        },
+        {
+            "index": 3,
+            "name": "Level 4",
+            "min": -120,
+            "max": 30,
+            "defaultVal": 0,
+            "unit": "dB"
+        },
+        {
+            "index": 4,
+            "name": "Level 5",
+            "min": -120,
+            "max": 30,
+            "defaultVal": 0,
+            "unit": "dB"
+        },
+        {
+            "index": 5,
+            "name": "Level 6",
+            "min": -120,
+            "max": 30,
+            "defaultVal": 0,
+            "unit": "dB"
+        },
+        {
+            "index": 6,
+            "name": "Level 7",
+            "min": -120,
+            "max": 30,
+            "defaultVal": 0,
+            "unit": "dB"
+        },
+        {
+            "index": 7,
+            "name": "Level 8",
+            "min": -120,
+            "max": 30,
+            "defaultVal": 0,
+            "unit": "dB"
+        },
+        {
+            "index": 8,
+            "name": "Pan 1 L<>R",
+            "min": 0,
+            "max": 1,
+            "defaultVal": 0
+        },
+        {
+            "index": 9,
+            "name": "Pan 2 L<>R",
+            "min": 0,
+            "max": 1,
+            "defaultVal": 1
+        },
+        {
+            "index": 10,
+            "name": "Pan 3 L<>R",
+            "min": 0,
+            "max": 1,
+            "defaultVal": 0
+        },
+        {
+            "index": 11,
+            "name": "Pan 4 L<>R",
+            "min": 0,
+            "max": 1,
+            "defaultVal": 1
+        },
+        {
+            "index": 12,
+            "name": "Pan 5 L<>R",
+            "min": 0,
+            "max": 1,
+            "defaultVal": 0
+        },
+        {
+            "index": 13,
+            "name": "Pan 6 L<>R",
+            "min": 0,
+            "max": 1,
+            "defaultVal": 1
+        },
+        {
+            "index": 14,
+            "name": "Pan 7 L<>R",
+            "min": 0,
+            "max": 1,
+            "defaultVal": 0
+        },
+        {
+            "index": 15,
+            "name": "Pan 8 L<>R",
+            "min": 0,
+            "max": 1,
+            "defaultVal": 1
+        }
+    ]
+},
+  {
+    "name": "JS: MTC Logger",
+    "shortName": "MTC Logger",
+    "category": "Analysis & Utility",
+    "description": "MTC Logger",
+    "howItWorks": "",
+    "proTips": "",
+    "sliders": []
+},
+  {
+    "name": "JS: Non-Linear Processor",
+    "shortName": "Non-Linear Processor",
+    "category": "Distortion",
+    "description": "Non-Linear Processor",
+    "howItWorks": "",
+    "proTips": "",
+    "sliders": [
+        {
+            "index": 0,
+            "name": "Saturation Amount (%)",
+            "min": 0,
+            "max": 100,
+            "defaultVal": 30
+        },
+        {
+            "index": 1,
+            "name": "Fluctuation Amount (%)",
+            "min": 0,
+            "max": 100,
+            "defaultVal": 50
+        },
+        {
+            "index": 2,
+            "name": "Noise Floor At",
+            "min": 0,
+            "max": 32,
+            "defaultVal": 16,
+            "unit": "Bits"
+        },
+        {
+            "index": 3,
+            "name": "Output",
+            "min": -24,
+            "max": 24,
+            "defaultVal": 0,
+            "unit": "dB"
+        },
+        {
+            "index": 4,
+            "name": "Output Polarity",
+            "min": 0,
+            "max": 1,
+            "defaultVal": 0
+        }
+    ]
+},
+  {
+    "name": "JS: NP1136 Peak Limiter",
+    "shortName": "NP1136 Peak Limiter",
+    "category": "Dynamics",
+    "description": "NP1136 Peak Limiter",
+    "howItWorks": "",
+    "proTips": "",
+    "sliders": [
+        {
+            "index": 0,
+            "name": "Threshold",
+            "min": -40,
+            "max": 0,
+            "defaultVal": -12,
+            "unit": "dB"
+        },
+        {
+            "index": 1,
+            "name": "Ratio (20:1 - PD Mode)",
+            "min": 1,
+            "max": 20,
+            "defaultVal": 4
+        },
+        {
+            "index": 2,
+            "name": "Attack",
+            "min": 0,
+            "max": 100,
+            "defaultVal": 30,
+            "unit": "us"
+        },
+        {
+            "index": 3,
+            "name": "Release",
+            "min": 0,
+            "max": 100,
+            "defaultVal": 45,
+            "unit": "ms"
+        },
+        {
+            "index": 4,
+            "name": "Detector HP",
+            "min": 0,
+            "max": 100,
+            "defaultVal": 0,
+            "unit": "Hz"
+        },
+        {
+            "index": 5,
+            "name": "GR Limit",
+            "min": -40,
+            "max": 0,
+            "defaultVal": -18,
+            "unit": "dB"
+        },
+        {
+            "index": 6,
+            "name": "Makeup Gain",
+            "min": 0,
+            "max": 30,
+            "defaultVal": 0,
+            "unit": "dB"
+        },
+        {
+            "index": 7,
+            "name": "Tilt EQ Center",
+            "min": 0,
+            "max": 100,
+            "defaultVal": 50,
+            "unit": "Hz"
+        },
+        {
+            "index": 8,
+            "name": "Tilt EQ Low/High",
+            "min": -6,
+            "max": 6,
+            "defaultVal": 0,
+            "unit": "dB"
+        },
+        {
+            "index": 9,
+            "name": "Wet Mix (%)",
+            "min": 0,
+            "max": 100,
+            "defaultVal": 100
+        },
+        {
+            "index": 10,
+            "name": "Processing Mode",
+            "min": 0,
+            "max": 1,
+            "defaultVal": 0
+        },
+        {
+            "index": 11,
+            "name": "Detector Mode",
+            "min": 0,
+            "max": 1,
+            "defaultVal": 1
+        },
+        {
+            "index": 12,
+            "name": "Detector Input",
+            "min": 0,
+            "max": 1,
+            "defaultVal": 0
+        },
+        {
+            "index": 13,
+            "name": "Hard Clip",
+            "min": 0,
+            "max": 1,
+            "defaultVal": 0
+        }
+    ]
+},
+  {
+    "name": "JS: Pitch an Octave Down",
+    "shortName": "Pitch an Octave Down",
+    "category": "Pitch",
+    "description": "Pitch an Octave Down",
+    "howItWorks": "",
+    "proTips": "",
+    "sliders": [
+        {
+            "index": 0,
+            "name": "Chunk",
+            "min": 4,
+            "max": 500,
+            "defaultVal": 150,
+            "unit": "ms"
+        },
+        {
+            "index": 1,
+            "name": "Overlap",
+            "min": 0,
+            "max": 1,
+            "defaultVal": 0.5
+        },
+        {
+            "index": 2,
+            "name": "Wet Mix",
+            "min": -120,
+            "max": 6,
+            "defaultVal": 0,
+            "unit": "dB"
+        },
+        {
+            "index": 3,
+            "name": "Dry Mix",
+            "min": -120,
+            "max": 6,
+            "defaultVal": -120,
+            "unit": "dB"
+        }
+    ]
+},
+  {
+    "name": "JS: Pitch an Octave Up",
+    "shortName": "Pitch an Octave Up",
+    "category": "Pitch",
+    "description": "Pitch an Octave Up",
+    "howItWorks": "",
+    "proTips": "",
+    "sliders": [
+        {
+            "index": 0,
+            "name": "Chunk",
+            "min": 4,
+            "max": 500,
+            "defaultVal": 120,
+            "unit": "ms"
+        },
+        {
+            "index": 1,
+            "name": "Overlap",
+            "min": 0,
+            "max": 1,
+            "defaultVal": 0.4
+        },
+        {
+            "index": 2,
+            "name": "Wet Mix",
+            "min": -120,
+            "max": 6,
+            "defaultVal": 0,
+            "unit": "dB"
+        },
+        {
+            "index": 3,
+            "name": "Dry Mix",
+            "min": -120,
+            "max": 6,
+            "defaultVal": -120,
+            "unit": "dB"
+        }
+    ]
+},
+  {
+    "name": "JS: Paranoia Mangler",
+    "shortName": "paranoia mangler [remaincalm.org]",
+    "category": "Distortion",
+    "description": "Paranoia Mangler",
+    "howItWorks": "",
+    "proTips": "",
+    "sliders": [
+        {
+            "index": 0,
+            "name": "Input Gain",
+            "min": -24,
+            "max": 12,
+            "defaultVal": 0,
+            "unit": "dB"
+        },
+        {
+            "index": 1,
+            "name": "Dry Out",
+            "min": -96,
+            "max": 12,
+            "defaultVal": -3,
+            "unit": "dB"
+        },
+        {
+            "index": 2,
+            "name": "Wet Out",
+            "min": -96,
+            "max": 12,
+            "defaultVal": -3,
+            "unit": "dB"
+        },
+        {
+            "index": 3,
+            "name": "Bad Resampler",
+            "min": 125,
+            "max": 33150,
+            "defaultVal": 12000,
+            "unit": "Hz"
+        },
+        {
+            "index": 4,
+            "name": "Bitcrusher",
+            "min": 0,
+            "max": 2,
+            "defaultVal": 1
+        },
+        {
+            "index": 5,
+            "name": "Thermonuclear War",
+            "min": 0,
+            "max": 16,
+            "defaultVal": 0
+        },
+        {
+            "index": 6,
+            "name": "Bitdepth",
+            "min": 3,
+            "max": 10,
+            "defaultVal": 8
+        },
+        {
+            "index": 7,
+            "name": "Gate (%)",
+            "min": 0,
+            "max": 100,
+            "defaultVal": 0
+        },
+        {
+            "index": 12,
+            "name": "Love (%)",
+            "min": 0,
+            "max": 100,
+            "defaultVal": 75
+        },
+        {
+            "index": 13,
+            "name": "Jive (%)",
+            "min": 0,
+            "max": 150,
+            "defaultVal": 15
+        },
+        {
+            "index": 14,
+            "name": "Attitude",
+            "min": 0,
+            "max": 3,
+            "defaultVal": 1
+        }
+    ]
+},
+  {
+    "name": "JS: Channel Router w/Polarity",
+    "shortName": "Channel Router w/Polarity [IXix]",
+    "category": "Routing",
+    "description": "Channel Router w/Polarity",
+    "howItWorks": "",
+    "proTips": "",
+    "sliders": [
+        {
+            "index": 0,
+            "name": "Input Channels",
+            "min": 0,
+            "max": 31,
+            "defaultVal": 0
+        },
+        {
+            "index": 1,
+            "name": "Polarity Mode",
+            "min": 0,
+            "max": 3,
+            "defaultVal": 0
+        },
+        {
+            "index": 2,
+            "name": "Output Channels",
+            "min": 0,
+            "max": 31,
+            "defaultVal": 0
+        },
+        {
+            "index": 3,
+            "name": "Output Mode",
+            "min": 0,
+            "max": 1,
+            "defaultVal": 0
+        }
+    ]
+},
+  {
+    "name": "JS: Channel Phase Meter",
+    "shortName": "Channel Phase Meter",
+    "category": "Analysis & Utility",
+    "description": "Channel Phase Meter",
+    "howItWorks": "",
+    "proTips": "",
+    "sliders": [
+        {
+            "index": 0,
+            "name": "Sample Rate",
+            "min": 0,
+            "max": 192000,
+            "defaultVal": 0
+        },
+        {
+            "index": 1,
+            "name": "Output",
+            "min": 0,
+            "max": 1,
+            "defaultVal": 0
+        },
+        {
+            "index": 2,
+            "name": "Stereo Channels",
+            "min": 0,
+            "max": 2,
+            "defaultVal": 0
+        },
+        {
+            "index": 3,
+            "name": "Check Interval",
+            "min": 0,
+            "max": 1000,
+            "defaultVal": 200,
+            "unit": "ms"
+        }
+    ]
+},
+  {
+    "name": "JS: Pink Noise Generator",
+    "shortName": "Pink Noise Generator",
+    "category": "Synthesis",
+    "description": "Pink Noise Generator",
+    "howItWorks": "",
+    "proTips": "",
+    "sliders": [
+        {
+            "index": 0,
+            "name": "Mode",
+            "min": 0,
+            "max": 1,
+            "defaultVal": 0
+        },
+        {
+            "index": 1,
+            "name": "Noise",
+            "min": -25,
+            "max": 25,
+            "defaultVal": -6,
+            "unit": "dB"
+        },
+        {
+            "index": 2,
+            "name": "Dry",
+            "min": -25,
+            "max": 25,
+            "defaultVal": -6,
+            "unit": "dB"
+        },
+        {
+            "index": 3,
+            "name": "Output",
+            "min": -25,
+            "max": 25,
+            "defaultVal": 0,
+            "unit": "dB"
+        }
+    ]
+},
+  {
+    "name": "JS: Pitch Down-Shifter 2",
+    "shortName": "Pitch Down-Shifter 2",
+    "category": "Pitch",
+    "description": "Pitch Down-Shifter 2",
+    "howItWorks": "",
+    "proTips": "",
+    "sliders": [
+        {
+            "index": 0,
+            "name": "Octaves Down",
+            "min": 0,
+            "max": 6,
+            "defaultVal": 1
+        },
+        {
+            "index": 1,
+            "name": "Semitones Down",
+            "min": 0,
+            "max": 11,
+            "defaultVal": 0
+        },
+        {
+            "index": 2,
+            "name": "Cents Down",
+            "min": 0,
+            "max": 99,
+            "defaultVal": 0
+        },
+        {
+            "index": 3,
+            "name": "Chunk Size (ms)",
+            "min": 4,
+            "max": 500,
+            "defaultVal": 250
+        },
+        {
+            "index": 4,
+            "name": "Overlap Size",
+            "min": 0.001,
+            "max": 1,
+            "defaultVal": 0.5
+        },
+        {
+            "index": 5,
+            "name": "Dry Mix (dB)",
+            "min": -120,
+            "max": 6,
+            "defaultVal": -120
+        },
+        {
+            "index": 6,
+            "name": "Subdivide Ratio",
+            "min": 0.1,
+            "max": 1,
+            "defaultVal": 0.9
+        },
+        {
+            "index": 7,
+            "name": "Subdivide",
+            "min": 1,
+            "max": 8,
+            "defaultVal": 4
+        }
+    ]
+},
+  {
+    "name": "JS: Ping Pong Pan",
+    "shortName": "Ping Pong Pan",
+    "category": "Modulation",
+    "description": "Ping Pong Pan",
+    "howItWorks": "",
+    "proTips": "",
+    "sliders": [
+        {
+            "index": 0,
+            "name": "Frequency (Hz)",
+            "min": 0,
+            "max": 20,
+            "defaultVal": 0.25
+        },
+        {
+            "index": 1,
+            "name": "Width (%)",
+            "min": 0,
+            "max": 100,
+            "defaultVal": 75
+        }
+    ]
+},
+  {
+    "name": "JS: Presence EQ",
+    "shortName": "Presence EQ (Moorer)",
+    "category": "EQ & Filtering",
+    "description": "Presence EQ",
+    "howItWorks": "",
+    "proTips": "",
+    "sliders": [
+        {
+            "index": 0,
+            "name": "Processing",
+            "min": 0,
+            "max": 1,
+            "defaultVal": 0
+        },
+        {
+            "index": 1,
+            "name": "Frequency",
+            "min": 3100,
+            "max": 18500,
+            "defaultVal": 7700,
+            "unit": "Hz"
+        },
+        {
+            "index": 2,
+            "name": "Cut/Boost",
+            "min": -15,
+            "max": 15,
+            "defaultVal": 0,
+            "unit": "dB"
+        },
+        {
+            "index": 3,
+            "name": "Bandwidth",
+            "min": 0.07,
+            "max": 0.4,
+            "defaultVal": 0.2
+        },
+        {
+            "index": 4,
+            "name": "Output",
+            "min": -25,
+            "max": 25,
+            "defaultVal": 0,
+            "unit": "dB"
+        }
+    ]
+},
+  {
+    "name": "JS: MIDI Program/Bank Switch on Load",
+    "shortName": "MIDI Program/Bank Switch on Load",
+    "category": "MIDI",
+    "description": "MIDI Program/Bank Switch on Load",
+    "howItWorks": "",
+    "proTips": "",
+    "sliders": [
+        {
+            "index": 0,
+            "name": "MIDI Channel",
+            "min": 1,
+            "max": 16,
+            "defaultVal": 1
+        },
+        {
+            "index": 1,
+            "name": "MSB",
+            "min": 0,
+            "max": 127,
+            "defaultVal": 0
+        },
+        {
+            "index": 2,
+            "name": "LSB",
+            "min": 0,
+            "max": 127,
+            "defaultVal": 0
+        },
+        {
+            "index": 3,
+            "name": "Program",
+            "min": 0,
+            "max": 127,
+            "defaultVal": 0
+        },
+        {
+            "index": 4,
+            "name": "Has Sent",
+            "min": 0,
+            "max": 1,
+            "defaultVal": 0
+        }
+    ]
+},
+  {
+    "name": "JS: MDA Pseudo-Stereo",
+    "shortName": "MDA Pseudo-Stereo",
+    "category": "Stereo & Spatial",
+    "description": "Pseudo-Stereo",
+    "howItWorks": "",
+    "proTips": "",
+    "sliders": [
+        {
+            "index": 0,
+            "name": "Amount/Type (%) (neg=Haas,pos=Comb)",
+            "min": -100,
+            "max": 100,
+            "defaultVal": 0
+        },
+        {
+            "index": 1,
+            "name": "Delay",
+            "min": 1,
+            "max": 50,
+            "defaultVal": 20,
+            "unit": "ms"
+        },
+        {
+            "index": 2,
+            "name": "Balance (L/R)",
+            "min": -100,
+            "max": 100,
+            "defaultVal": 0
+        },
+        {
+            "index": 3,
+            "name": "Output",
+            "min": -20,
+            "max": 20,
+            "defaultVal": 0,
+            "unit": "dB"
+        }
+    ]
+},
+  {
+    "name": "JS: MIDI Note Randomize",
+    "shortName": "MIDI Note Randomize [Stillwell]",
+    "category": "MIDI",
+    "description": "MIDI Note Randomize",
+    "howItWorks": "",
+    "proTips": "",
+    "sliders": [
+        {
+            "index": 0,
+            "name": "Input MIDI Note #",
+            "min": 0,
+            "max": 127,
+            "defaultVal": 60
+        },
+        {
+            "index": 1,
+            "name": "Input Channel (0=omni)",
+            "min": 0,
+            "max": 16,
+            "defaultVal": 0
+        },
+        {
+            "index": 2,
+            "name": "Lowest Output Note",
+            "min": 0,
+            "max": 127,
+            "defaultVal": 48
+        },
+        {
+            "index": 3,
+            "name": "Highest Output Note",
+            "min": 0,
+            "max": 127,
+            "defaultVal": 72
+        },
+        {
+            "index": 4,
+            "name": "Mix (%)",
+            "min": 0,
+            "max": 100,
+            "defaultVal": 0
+        }
+    ]
+},
+  {
+    "name": "JS: RBJ 12-Band EQ w/HPF",
+    "shortName": "RBJ 12-Band EQ w/HPF",
+    "category": "EQ & Filtering",
+    "description": "RBJ 12-Band EQ w/HPF",
+    "howItWorks": "",
+    "proTips": "",
+    "sliders": [
+        {
+            "index": 0,
+            "name": "HPF",
+            "min": 0,
+            "max": 400,
+            "defaultVal": 0,
+            "unit": "dB"
+        },
+        {
+            "index": 1,
+            "name": "Low Shelf",
+            "min": -12,
+            "max": 12,
+            "defaultVal": 0,
+            "unit": "dB"
+        },
+        {
+            "index": 2,
+            "name": "80 Hz",
+            "min": -12,
+            "max": 12,
+            "defaultVal": 0,
+            "unit": "dB"
+        },
+        {
+            "index": 3,
+            "name": "150 Hz",
+            "min": -12,
+            "max": 12,
+            "defaultVal": 0,
+            "unit": "dB"
+        },
+        {
+            "index": 4,
+            "name": "250 Hz",
+            "min": -12,
+            "max": 12,
+            "defaultVal": 0,
+            "unit": "dB"
+        },
+        {
+            "index": 5,
+            "name": "400 Hz",
+            "min": -12,
+            "max": 12,
+            "defaultVal": 0,
+            "unit": "dB"
+        },
+        {
+            "index": 6,
+            "name": "630 Hz",
+            "min": -12,
+            "max": 12,
+            "defaultVal": 0,
+            "unit": "dB"
+        },
+        {
+            "index": 7,
+            "name": "800 Hz",
+            "min": -12,
+            "max": 12,
+            "defaultVal": 0,
+            "unit": "dB"
+        },
+        {
+            "index": 8,
+            "name": "1.6 kHz",
+            "min": -12,
+            "max": 12,
+            "defaultVal": 0,
+            "unit": "dB"
+        },
+        {
+            "index": 9,
+            "name": "3 kHz",
+            "min": -12,
+            "max": 12,
+            "defaultVal": 0,
+            "unit": "dB"
+        },
+        {
+            "index": 10,
+            "name": "5 kHz",
+            "min": -12,
+            "max": 12,
+            "defaultVal": 0,
+            "unit": "dB"
+        },
+        {
+            "index": 11,
+            "name": "7 kHz",
+            "min": -12,
+            "max": 12,
+            "defaultVal": 0,
+            "unit": "dB"
+        },
+        {
+            "index": 12,
+            "name": "10 kHz",
+            "min": -12,
+            "max": 12,
+            "defaultVal": 0,
+            "unit": "dB"
+        },
+        {
+            "index": 13,
+            "name": "12 kHz",
+            "min": -12,
+            "max": 12,
+            "defaultVal": 0,
+            "unit": "dB"
+        },
+        {
+            "index": 14,
+            "name": "LPF",
+            "min": 400,
+            "max": 22000,
+            "defaultVal": 22000,
+            "unit": "dB"
+        },
+        {
+            "index": 15,
+            "name": "Output Gain",
+            "min": -12,
+            "max": 12,
+            "defaultVal": 0,
+            "unit": "dB"
+        }
+    ]
+},
+  {
+    "name": "JS: RBJ 4-Band Semi-Parametric EQ v2",
+    "shortName": "RBJ 4-Band Semi-Parametric EQ v2 [teej]",
+    "category": "EQ & Filtering",
+    "description": "RBJ 4-Band Semi-Parametric EQ v2",
+    "howItWorks": "",
+    "proTips": "",
+    "sliders": [
+        {
+            "index": 0,
+            "name": "HPF",
+            "min": 0,
+            "max": 400,
+            "defaultVal": 0,
+            "unit": "Hz"
+        },
+        {
+            "index": 1,
+            "name": "Freq 1",
+            "min": 0,
+            "max": 10000,
+            "defaultVal": 0,
+            "unit": "Hz"
+        },
+        {
+            "index": 2,
+            "name": "Q 1",
+            "min": 0.5,
+            "max": 10,
+            "defaultVal": 1
+        },
+        {
+            "index": 3,
+            "name": "Gain 1",
+            "min": -12,
+            "max": 6,
+            "defaultVal": 0,
+            "unit": "dB"
+        },
+        {
+            "index": 4,
+            "name": "Freq 2",
+            "min": 0,
+            "max": 10000,
+            "defaultVal": 0,
+            "unit": "Hz"
+        },
+        {
+            "index": 5,
+            "name": "Q 2",
+            "min": 0.5,
+            "max": 10,
+            "defaultVal": 1
+        },
+        {
+            "index": 6,
+            "name": "Gain 2",
+            "min": -12,
+            "max": 6,
+            "defaultVal": 0,
+            "unit": "dB"
+        },
+        {
+            "index": 7,
+            "name": "Freq 3",
+            "min": 0,
+            "max": 10000,
+            "defaultVal": 0,
+            "unit": "Hz"
+        },
+        {
+            "index": 8,
+            "name": "Q 3",
+            "min": 0.5,
+            "max": 10,
+            "defaultVal": 1
+        },
+        {
+            "index": 9,
+            "name": "Gain 3",
+            "min": -12,
+            "max": 6,
+            "defaultVal": 0,
+            "unit": "dB"
+        },
+        {
+            "index": 10,
+            "name": "Freq 4",
+            "min": 0,
+            "max": 10000,
+            "defaultVal": 0,
+            "unit": "Hz"
+        },
+        {
+            "index": 11,
+            "name": "Q 4",
+            "min": 0.5,
+            "max": 10,
+            "defaultVal": 1
+        },
+        {
+            "index": 12,
+            "name": "Gain 4",
+            "min": -12,
+            "max": 6,
+            "defaultVal": 0,
+            "unit": "dB"
+        },
+        {
+            "index": 13,
+            "name": "LPF",
+            "min": 400,
+            "max": 22000,
+            "defaultVal": 22000,
+            "unit": "Hz"
+        },
+        {
+            "index": 14,
+            "name": "Output Gain",
+            "min": -12,
+            "max": 12,
+            "defaultVal": 0,
+            "unit": "dB"
+        }
+    ]
+},
+  {
+    "name": "JS: RBJ 4-Band Notch Filter",
+    "shortName": "RBJ 4-Band Notch Filter",
+    "category": "EQ & Filtering",
+    "description": "RBJ 4-Band Notch Filter",
+    "howItWorks": "",
+    "proTips": "",
+    "sliders": [
+        {
+            "index": 0,
+            "name": "HPF",
+            "min": 0,
+            "max": 400,
+            "defaultVal": 0
+        },
+        {
+            "index": 1,
+            "name": "Sweep",
+            "min": 0,
+            "max": 10000,
+            "defaultVal": 0
+        },
+        {
+            "index": 2,
+            "name": "Notch 1",
+            "min": 0,
+            "max": 10000,
+            "defaultVal": 0
+        },
+        {
+            "index": 3,
+            "name": "Notch 2",
+            "min": 0,
+            "max": 10000,
+            "defaultVal": 0
+        },
+        {
+            "index": 4,
+            "name": "Notch 3",
+            "min": 0,
+            "max": 10000,
+            "defaultVal": 0
+        },
+        {
+            "index": 5,
+            "name": "Notch 4",
+            "min": 0,
+            "max": 10000,
+            "defaultVal": 0
+        },
+        {
+            "index": 6,
+            "name": "LPF",
+            "min": 400,
+            "max": 22000,
+            "defaultVal": 22000
+        },
+        {
+            "index": 7,
+            "name": "Output Gain",
+            "min": -12,
+            "max": 12,
+            "defaultVal": 0
+        }
+    ]
+},
+  {
+    "name": "JS: ReaLoud LP",
+    "shortName": "ReaLoud LP [stillwell]",
+    "category": "Dynamics",
+    "description": "ReaLoud LP",
+    "howItWorks": "",
+    "proTips": "",
+    "sliders": [
+        {
+            "index": 0,
+            "name": "Mix (%)",
+            "min": 0,
+            "max": 100,
+            "defaultVal": 0
+        },
+        {
+            "index": 2,
+            "name": "LP Frequency (Hz)",
+            "min": 1,
+            "max": 22000,
+            "defaultVal": 22000
+        },
+        {
+            "index": 3,
+            "name": "LP Size (1/Q) (0=resonant, 1=dull)",
+            "min": 0,
+            "max": 1,
+            "defaultVal": 0.2
+        },
+        {
+            "index": 4,
+            "name": "Drive Circuit",
+            "min": 0,
+            "max": 1,
+            "defaultVal": 1
+        }
+    ]
+},
+  {
+    "name": "JS: ReaLoud",
+    "shortName": "ReaLoud [Stillwell]",
+    "category": "Dynamics",
+    "description": "ReaLoud",
+    "howItWorks": "",
+    "proTips": "",
+    "sliders": [
+        {
+            "index": 0,
+            "name": "Mix (%)",
+            "min": 0,
+            "max": 100,
+            "defaultVal": 0
+        }
+    ]
+},
+  {
+    "name": "JS: Resonant Lowpass Filter",
+    "shortName": "Resonant Lowpass Filter",
+    "category": "Filter",
+    "description": "Resonant Lowpass Filter",
+    "howItWorks": "",
+    "proTips": "",
+    "sliders": [
+        {
+            "index": 0,
+            "name": "Frequency (Hz)",
+            "min": 20,
+            "max": 20000,
+            "defaultVal": 1000
+        },
+        {
+            "index": 1,
+            "name": "Resonance",
+            "min": 0,
+            "max": 1,
+            "defaultVal": 0.8
+        }
+    ]
+},
+  {
+    "name": "JS: Delay w/Reverseness",
+    "shortName": "Delay w/Reverseness",
+    "category": "Delay",
+    "description": "Delay w/Reverseness",
+    "howItWorks": "",
+    "proTips": "",
+    "sliders": [
+        {
+            "index": 0,
+            "name": "Length (ms)",
+            "min": 0,
+            "max": 4000,
+            "defaultVal": 500
+        },
+        {
+            "index": 1,
+            "name": "Wet Mix (dB)",
+            "min": -120,
+            "max": 6,
+            "defaultVal": -6
+        },
+        {
+            "index": 2,
+            "name": "Dry Mix (dB)",
+            "min": -120,
+            "max": 6,
+            "defaultVal": -6
+        },
+        {
+            "index": 3,
+            "name": "Edge Overlap",
+            "min": 0,
+            "max": 1,
+            "defaultVal": 0.1
+        },
+        {
+            "index": 4,
+            "name": "Old Compatible And Clicky Mode",
+            "min": 0,
+            "max": 1,
+            "defaultVal": 0
+        }
+    ]
+},
+  {
+    "name": "JS: RBJ Stereo Image Filter",
+    "shortName": "RBJ Stereo Image Filter",
+    "category": "Filter",
+    "description": "RBJ Stereo Image Filter",
+    "howItWorks": "",
+    "proTips": "",
+    "sliders": [
+        {
+            "index": 0,
+            "name": "S - Filter Amount (%)",
+            "min": 0,
+            "max": 100,
+            "defaultVal": 100
+        },
+        {
+            "index": 1,
+            "name": "S - HP (Scale)",
+            "min": 0,
+            "max": 100,
+            "defaultVal": 0
+        },
+        {
+            "index": 2,
+            "name": "S - LP (Scale)",
+            "min": 0,
+            "max": 100,
+            "defaultVal": 100
+        },
+        {
+            "index": 3,
+            "name": "S - Drive (%)",
+            "min": 0,
+            "max": 100,
+            "defaultVal": 0
+        },
+        {
+            "index": 4,
+            "name": "Side (%)",
+            "min": 0,
+            "max": 200,
+            "defaultVal": 100
+        },
+        {
+            "index": 5,
+            "name": "Mid (%)",
+            "min": 0,
+            "max": 200,
+            "defaultVal": 100
+        },
+        {
+            "index": 6,
+            "name": "Output M+S (dB)",
+            "min": -25,
+            "max": 25,
+            "defaultVal": 0
+        },
+        {
+            "index": 7,
+            "name": "Oversample (x2)",
+            "min": 0,
+            "max": 1,
+            "defaultVal": 0
+        }
+    ]
+},
+  {
+    "name": "JS: Saturation",
+    "shortName": "Saturation [LOSER]",
+    "category": "Distortion",
+    "description": "Saturation",
+    "howItWorks": "",
+    "proTips": "",
+    "sliders": [
+        {
+            "index": 0,
+            "name": "Amount (%)",
+            "min": 0,
+            "max": 100,
+            "defaultVal": 0
+        }
+    ]
+},
+  {
+    "name": "JS: MIDI Sequencer Baby v2",
+    "shortName": "MIDI Sequencer Baby v2",
+    "category": "MIDI",
+    "description": "MIDI Sequencer Baby v2",
+    "howItWorks": "",
+    "proTips": "",
+    "sliders": [
+        {
+            "index": 0,
+            "name": "Pattern",
+            "min": 0,
+            "max": 15,
+            "defaultVal": 0
+        },
+        {
+            "index": 1,
+            "name": "Note Start",
+            "min": 0,
+            "max": 127,
+            "defaultVal": 60
+        },
+        {
+            "index": 2,
+            "name": "Sequence Length",
+            "min": 4,
+            "max": 128,
+            "defaultVal": 16
+        },
+        {
+            "index": 3,
+            "name": "Number Of Notes",
+            "min": 1,
+            "max": 32,
+            "defaultVal": 16
+        },
+        {
+            "index": 4,
+            "name": "Rate",
+            "min": 0.125,
+            "max": 4,
+            "defaultVal": 1
+        }
+    ]
+},
+  {
+    "name": "JS: MIDI Sequencer Baby",
+    "shortName": "MIDI Sequencer Baby",
+    "category": "MIDI",
+    "description": "MIDI Sequencer Baby",
+    "howItWorks": "",
+    "proTips": "",
+    "sliders": [
+        {
+            "index": 0,
+            "name": "Pattern",
+            "min": 0,
+            "max": 15,
+            "defaultVal": 0
+        },
+        {
+            "index": 1,
+            "name": "Note Start",
+            "min": 0,
+            "max": 127,
+            "defaultVal": 60
+        }
+    ]
+},
+  {
+    "name": "JS: MIDI Sequencer Megababy",
+    "shortName": "MIDI Sequencer Megababy [jnif]",
+    "category": "MIDI",
+    "description": "MIDI Sequencer Megababy",
+    "howItWorks": "",
+    "proTips": "",
+    "sliders": [
+        {
+            "index": 0,
+            "name": "Pattern",
+            "min": 0,
+            "max": 15,
+            "defaultVal": 0
+        },
+        {
+            "index": 1,
+            "name": "--Note Start",
+            "min": 0,
+            "max": 127,
+            "defaultVal": 36
+        },
+        {
+            "index": 2,
+            "name": "Sequence Length",
+            "min": 4,
+            "max": 128,
+            "defaultVal": 16
+        },
+        {
+            "index": 3,
+            "name": "--Number Of Notes",
+            "min": 1,
+            "max": 32,
+            "defaultVal": 16
+        },
+        {
+            "index": 4,
+            "name": "Rate",
+            "min": 0.125,
+            "max": 4,
+            "defaultVal": 1
+        },
+        {
+            "index": 5,
+            "name": "--Note Length",
+            "min": 1,
+            "max": 100,
+            "defaultVal": 100
+        },
+        {
+            "index": 6,
+            "name": "--Mode",
+            "min": 0,
+            "max": 1,
+            "defaultVal": 1
+        },
+        {
+            "index": 7,
+            "name": "--Swing",
+            "min": 0,
+            "max": 100,
+            "defaultVal": 0
+        },
+        {
+            "index": 8,
+            "name": "Steps Per Beat",
+            "min": 1,
+            "max": 16,
+            "defaultVal": 4
+        },
+        {
+            "index": 9,
+            "name": "MIDI Trigger",
+            "min": 0,
+            "max": 8,
+            "defaultVal": 0
+        },
+        {
+            "index": 10,
+            "name": "--Trigger Note Start",
+            "min": 0,
+            "max": 127,
+            "defaultVal": 72
+        },
+        {
+            "index": 11,
+            "name": "--Chain",
+            "min": 0,
+            "max": 15,
+            "defaultVal": 0
+        },
+        {
+            "index": 12,
+            "name": "--Lane Height Percent",
+            "min": 0,
+            "max": 1,
+            "defaultVal": 0.2
+        },
+        {
+            "index": 13,
+            "name": "--CC To Adjust (Active For Editing)",
+            "min": 0,
+            "max": 3,
+            "defaultVal": 0
+        },
+        {
+            "index": 14,
+            "name": "Drum Map Note Names",
+            "min": 0,
+            "max": 0,
+            "defaultVal": 0
+        },
+        {
+            "index": 19,
+            "name": "--Controller 1 Type",
+            "min": 0,
+            "max": 127,
+            "defaultVal": 1
+        },
+        {
+            "index": 20,
+            "name": "--Controller 2 Type",
+            "min": 0,
+            "max": 127,
+            "defaultVal": 7
+        },
+        {
+            "index": 21,
+            "name": "--Controller 3 Type",
+            "min": 0,
+            "max": 127,
+            "defaultVal": 10
+        },
+        {
+            "index": 22,
+            "name": "--Controller 4 Type",
+            "min": 0,
+            "max": 127,
+            "defaultVal": 11
+        },
+        {
+            "index": 29,
+            "name": "--Controller 1 Channel",
+            "min": 0,
+            "max": 15,
+            "defaultVal": 0
+        },
+        {
+            "index": 30,
+            "name": "--Controller 2 Channel",
+            "min": 0,
+            "max": 15,
+            "defaultVal": 0
+        },
+        {
+            "index": 31,
+            "name": "--Controller 3 Channel",
+            "min": 0,
+            "max": 15,
+            "defaultVal": 0
+        },
+        {
+            "index": 32,
+            "name": "--Controller 4 Channel",
+            "min": 0,
+            "max": 15,
+            "defaultVal": 0
+        },
+        {
+            "index": 39,
+            "name": "--Start Beat Position",
+            "min": -99,
+            "max": 9999,
+            "defaultVal": 0
+        },
+        {
+            "index": 40,
+            "name": "--Play Before Start",
+            "min": 0,
+            "max": 1,
+            "defaultVal": 1
+        },
+        {
+            "index": 41,
+            "name": "--End Beat Position",
+            "min": -99,
+            "max": 9999,
+            "defaultVal": -99
+        }
+    ]
+},
+  {
+    "name": "JS: Sine Sweep Generator",
+    "shortName": "Sine Sweep Generator",
+    "category": "Synthesis",
+    "description": "Sine Sweep Generator",
+    "howItWorks": "",
+    "proTips": "",
+    "sliders": [
+        {
+            "index": 0,
+            "name": "Approx Sweep Length",
+            "min": 1,
+            "max": 100,
+            "defaultVal": 8,
+            "unit": "sec"
+        }
+    ]
+},
+  {
+    "name": "JS: Spectral Hold",
+    "shortName": "Spectral Hold (Cockos)",
+    "category": "Processing",
+    "description": "Spectral Hold",
+    "howItWorks": "",
+    "proTips": "",
+    "sliders": [
+        {
+            "index": 0,
+            "name": "FFT Size",
+            "min": 0,
+            "max": 6,
+            "defaultVal": 6
+        },
+        {
+            "index": 1,
+            "name": "analysis overlap",
+            "min": 0.01,
+            "max": 0.99,
+            "defaultVal": 0.5
+        },
+        {
+            "index": 2,
+            "name": "output overlap",
+            "min": 0.1,
+            "max": 0.9,
+            "defaultVal": 0.75
+        },
+        {
+            "index": 3,
+            "name": "hold volume",
+            "min": -150,
+            "max": 32,
+            "defaultVal": 0,
+            "unit": "dB"
+        },
+        {
+            "index": 4,
+            "name": "dry mix during hold",
+            "min": -150,
+            "max": 32,
+            "defaultVal": -150,
+            "unit": "dB"
+        },
+        {
+            "index": 5,
+            "name": "dry mix when not holding",
+            "min": -150,
+            "max": 32,
+            "defaultVal": 0,
+            "unit": "dB"
+        },
+        {
+            "index": 6,
+            "name": "phase increase",
+            "min": 0,
+            "max": 12,
+            "defaultVal": 0
+        },
+        {
+            "index": 7,
+            "name": "hold",
+            "min": 0,
+            "max": 2,
+            "defaultVal": 0
+        },
+        {
+            "index": 8,
+            "name": "update state",
+            "min": 0,
+            "max": 1,
+            "defaultVal": 1
+        },
+        {
+            "index": 9,
+            "name": "transport start behavior",
+            "min": 0,
+            "max": 1,
+            "defaultVal": 0
+        },
+        {
+            "index": 10,
+            "name": "mix-in on update",
+            "min": 0,
+            "max": 1,
+            "defaultVal": 1
+        },
+        {
+            "index": 11,
+            "name": "auto-update every",
+            "min": 0,
+            "max": 30,
+            "defaultVal": 0,
+            "unit": "s"
+        }
+    ]
+},
+  {
+    "name": "JS: Spectropaint Filter",
+    "shortName": "Spectropaint Filter",
+    "category": "Processing",
+    "description": "Spectropaint Filter",
+    "howItWorks": "",
+    "proTips": "",
+    "sliders": [
+        {
+            "index": 0,
+            "name": "Period",
+            "min": 1,
+            "max": 100,
+            "defaultVal": 20,
+            "unit": "sec"
+        },
+        {
+            "index": 1,
+            "name": "Background Gain",
+            "min": -144,
+            "max": 0,
+            "defaultVal": -144,
+            "unit": "dB"
+        },
+        {
+            "index": 2,
+            "name": "Foreground Gain",
+            "min": -144,
+            "max": 64,
+            "defaultVal": 0,
+            "unit": "dB"
+        },
+        {
+            "index": 3,
+            "name": "FFT Size",
+            "min": 0,
+            "max": 11,
+            "defaultVal": 4
+        },
+        {
+            "index": 4,
+            "name": "Project Sync Offset (-1 to disable)",
+            "min": -1,
+            "max": 100,
+            "defaultVal": 0
+        },
+        {
+            "index": 5,
+            "name": "Mode",
+            "min": 0,
+            "max": 1,
+            "defaultVal": 1
+        }
+    ]
+},
+  {
+    "name": "JS: Spectropaint Synthesis",
+    "shortName": "Spectropaint Synthesis",
+    "category": "Synthesis",
+    "description": "Spectropaint Synthesis",
+    "howItWorks": "",
+    "proTips": "",
+    "sliders": [
+        {
+            "index": 0,
+            "name": "period",
+            "min": 1,
+            "max": 100,
+            "defaultVal": 20,
+            "unit": "sec"
+        },
+        {
+            "index": 1,
+            "name": "amplitude",
+            "min": -144,
+            "max": 0,
+            "defaultVal": -40,
+            "unit": "dB"
+        },
+        {
+            "index": 2,
+            "name": "FFT size",
+            "min": 0,
+            "max": 11,
+            "defaultVal": 4
+        },
+        {
+            "index": 3,
+            "name": "project sync offset (-1 to disable)",
+            "min": -1,
+            "max": 100,
+            "defaultVal": 0
+        },
+        {
+            "index": 4,
+            "name": "mode",
+            "min": 0,
+            "max": 1,
+            "defaultVal": 0
+        }
+    ]
+},
+  {
+    "name": "JS: Stereo Enhancer",
+    "shortName": "Stereo Enhancer",
+    "category": "Stereo & Spatial",
+    "description": "Stereo Enhancer",
+    "howItWorks": "",
+    "proTips": "",
+    "sliders": [
+        {
+            "index": 0,
+            "name": "Width Low (%)",
+            "min": 0,
+            "max": 200,
+            "defaultVal": 100
+        },
+        {
+            "index": 1,
+            "name": "Crossover (Hz)",
+            "min": 0,
+            "max": 20000,
+            "defaultVal": 500
+        },
+        {
+            "index": 2,
+            "name": "Width High (%)",
+            "min": 0,
+            "max": 200,
+            "defaultVal": 100
+        }
+    ]
+},
+  {
+    "name": "JS: Stereo Field Manipulator",
+    "shortName": "Stereo Field Manipulator [LOSER]",
+    "category": "Stereo & Spatial",
+    "description": "Stereo Field Manipulator",
+    "howItWorks": "",
+    "proTips": "",
+    "sliders": [
+        {
+            "index": 0,
+            "name": "Rotate",
+            "min": -90,
+            "max": 90,
+            "defaultVal": 0,
+            "unit": "deg"
+        },
+        {
+            "index": 1,
+            "name": "Width (%)",
+            "min": 0,
+            "max": 200,
+            "defaultVal": 100
+        },
+        {
+            "index": 2,
+            "name": "Center (%)",
+            "min": -100,
+            "max": 100,
+            "defaultVal": 0
+        },
+        {
+            "index": 3,
+            "name": "Left/Right (%)",
+            "min": -100,
+            "max": 100,
+            "defaultVal": 0
+        }
+    ]
+},
+  {
+    "name": "JS: Channel Polarity Control",
+    "shortName": "Channel Polarity Control [IXix]",
+    "category": "Analysis & Utility",
+    "description": "Channel Polarity Control",
+    "howItWorks": "",
+    "proTips": "",
+    "sliders": [
+        {
+            "index": 0,
+            "name": "Polarity Mode",
+            "min": 0,
+            "max": 3,
+            "defaultVal": 0
+        }
+    ]
+},
+  {
+    "name": "JS: Stereo Width",
+    "shortName": "Stereo Width [Stillwell]",
+    "category": "Stereo & Spatial",
+    "description": "Stereo Width",
+    "howItWorks": "",
+    "proTips": "",
+    "sliders": [
+        {
+            "index": 0,
+            "name": "Width Boost",
+            "min": -20,
+            "max": 20,
+            "defaultVal": 0,
+            "unit": "dB"
+        },
+        {
+            "index": 1,
+            "name": "Center Boost",
+            "min": -20,
+            "max": 20,
+            "defaultVal": 0,
+            "unit": "dB"
+        },
+        {
+            "index": 2,
+            "name": "Gain",
+            "min": -20,
+            "max": 20,
+            "defaultVal": 0,
+            "unit": "dB"
+        },
+        {
+            "index": 3,
+            "name": "Width Balance (%)",
+            "min": -100,
+            "max": 100,
+            "defaultVal": 0
+        },
+        {
+            "index": 4,
+            "name": "Width Rotation",
+            "min": -90,
+            "max": 90,
+            "defaultVal": 0,
+            "unit": "deg"
+        }
+    ]
+},
+  {
+    "name": "JS: Super8 MIDI-controlled synchronized looper",
+    "shortName": "Super8 MIDI-controlled synchronized looper (Cockos)",
+    "category": "MIDI",
+    "description": "Super8 MIDI-controlled synchronized looper",
+    "howItWorks": "",
+    "proTips": "",
+    "sliders": [
+        {
+            "index": 0,
+            "name": "-Sync",
+            "min": 0,
+            "max": 2,
+            "defaultVal": 0
+        },
+        {
+            "index": 3,
+            "name": "-Click count/length",
+            "min": 0,
+            "max": 64,
+            "defaultVal": 0
+        }
+    ]
+},
+  {
+    "name": "JS: Pitch Shifter 2",
+    "shortName": "Pitch Shifter 2",
+    "category": "Pitch",
+    "description": "Pitch Shifter 2",
+    "howItWorks": "",
+    "proTips": "",
+    "sliders": [
+        {
+            "index": 0,
+            "name": "Pitch Adjust (cents)",
+            "min": -100,
+            "max": 100,
+            "defaultVal": 0
+        },
+        {
+            "index": 1,
+            "name": "Pitch Adjust (st)",
+            "min": -12,
+            "max": 12,
+            "defaultVal": 0
+        },
+        {
+            "index": 2,
+            "name": "Pitch Adjust (oct)",
+            "min": -12,
+            "max": 12,
+            "defaultVal": 0
+        },
+        {
+            "index": 3,
+            "name": "Window Size",
+            "min": 0,
+            "max": 200,
+            "defaultVal": 50,
+            "unit": "ms"
+        },
+        {
+            "index": 4,
+            "name": "Overlap Size",
+            "min": 0.05,
+            "max": 50,
+            "defaultVal": 20,
+            "unit": "ms"
+        },
+        {
+            "index": 5,
+            "name": "Wet Mix",
+            "min": -120,
+            "max": 6,
+            "defaultVal": 0,
+            "unit": "dB"
+        },
+        {
+            "index": 6,
+            "name": "Dry Mix",
+            "min": -120,
+            "max": 6,
+            "defaultVal": -120,
+            "unit": "dB"
+        },
+        {
+            "index": 7,
+            "name": "Filter",
+            "min": 0,
+            "max": 1,
+            "defaultVal": 1
+        }
+    ]
+},
+  {
+    "name": "JS: Sweeping Resonant Lowpass Filter",
+    "shortName": "Sweeping Resonant Lowpass Filter",
+    "category": "Filter",
+    "description": "Sweeping Resonant Lowpass Filter",
+    "howItWorks": "",
+    "proTips": "",
+    "sliders": [
+        {
+            "index": 0,
+            "name": "Frequency 1",
+            "min": 20,
+            "max": 20000,
+            "defaultVal": 1000,
+            "unit": "Hz"
+        },
+        {
+            "index": 1,
+            "name": "Frequency 2",
+            "min": 20,
+            "max": 20000,
+            "defaultVal": 2000,
+            "unit": "Hz"
+        },
+        {
+            "index": 2,
+            "name": "Sweep Time",
+            "min": 0.1,
+            "max": 30,
+            "defaultVal": 2,
+            "unit": "sec"
+        },
+        {
+            "index": 3,
+            "name": "Resonance",
+            "min": 0,
+            "max": 1,
+            "defaultVal": 0.8
+        }
+    ]
+},
+  {
+    "name": "JS: 8-Channel Input Switcher",
+    "shortName": "8-Channel Input Switcher [IXix]",
+    "category": "Routing",
+    "description": "8-Channel Input Switcher",
+    "howItWorks": "",
+    "proTips": "",
+    "sliders": [
+        {
+            "index": 0,
+            "name": "Output Source",
+            "min": 0,
+            "max": 3,
+            "defaultVal": 0
+        },
+        {
+            "index": 1,
+            "name": "Level 1+2",
+            "min": -60,
+            "max": 30,
+            "defaultVal": 0,
+            "unit": "dB"
+        },
+        {
+            "index": 2,
+            "name": "Level 3+4",
+            "min": -60,
+            "max": 30,
+            "defaultVal": 0,
+            "unit": "dB"
+        },
+        {
+            "index": 3,
+            "name": "Level 5+6",
+            "min": -60,
+            "max": 30,
+            "defaultVal": 0,
+            "unit": "dB"
+        },
+        {
+            "index": 4,
+            "name": "Level 7+8",
+            "min": -60,
+            "max": 30,
+            "defaultVal": 0,
+            "unit": "dB"
+        }
+    ]
+},
+  {
+    "name": "JS: SwixMitch (4x Stereo In, 2 Bus X-Fader)",
+    "shortName": "SwixMitch 4x Stereo Input 2 Bus X-Fader [IXix]",
+    "category": "Mixer",
+    "description": "SwixMitch (4x Stereo In, 2 Bus X-Fader)",
+    "howItWorks": "",
+    "proTips": "",
+    "sliders": [
+        {
+            "index": 0,
+            "name": "Destination 1+2",
+            "min": 0,
+            "max": 3,
+            "defaultVal": 3
+        },
+        {
+            "index": 1,
+            "name": "Destination 3+4",
+            "min": 0,
+            "max": 3,
+            "defaultVal": 0
+        },
+        {
+            "index": 2,
+            "name": "Destination 5+6",
+            "min": 0,
+            "max": 3,
+            "defaultVal": 0
+        },
+        {
+            "index": 3,
+            "name": "Destination 7+8",
+            "min": 0,
+            "max": 3,
+            "defaultVal": 0
+        },
+        {
+            "index": 4,
+            "name": "Mix A<>B",
+            "min": 0,
+            "max": 1,
+            "defaultVal": 0.5
+        }
+    ]
+},
+  {
+    "name": "JS: Thunderkick",
+    "shortName": "Thunderkick (MDCT subsynthesis filter) [Stillwell]",
+    "category": "Synthesis",
+    "description": "Thunderkick",
+    "howItWorks": "",
+    "proTips": "",
+    "sliders": [
+        {
+            "index": 0,
+            "name": "Effect",
+            "min": -40,
+            "max": 40,
+            "defaultVal": -6,
+            "unit": "dB"
+        },
+        {
+            "index": 1,
+            "name": "Cutoff",
+            "min": 1,
+            "max": 30,
+            "defaultVal": 4
+        },
+        {
+            "index": 2,
+            "name": "Gain",
+            "min": -40,
+            "max": 40,
+            "defaultVal": 0,
+            "unit": "dB"
+        },
+        {
+            "index": 3,
+            "name": "Shift",
+            "min": 0,
+            "max": 10,
+            "defaultVal": 1
+        }
+    ]
+},
+  {
+    "name": "JS: Tilt Equalizer",
+    "shortName": "Tilt Equalizer",
+    "category": "EQ & Filtering",
+    "description": "Tilt Equalizer",
+    "howItWorks": "",
+    "proTips": "",
+    "sliders": [
+        {
+            "index": 0,
+            "name": "Processing",
+            "min": 0,
+            "max": 1,
+            "defaultVal": 0
+        },
+        {
+            "index": 1,
+            "name": "Center Frequency (Scale)",
+            "min": 0,
+            "max": 100,
+            "defaultVal": 50
+        },
+        {
+            "index": 2,
+            "name": "Tilt (Low/High)",
+            "min": -6,
+            "max": 6,
+            "defaultVal": 0,
+            "unit": "dB"
+        },
+        {
+            "index": 3,
+            "name": "Output Gain",
+            "min": -25,
+            "max": 25,
+            "defaultVal": 0,
+            "unit": "dB"
+        }
+    ]
+},
+  {
+    "name": "JS: Channel Time Delayer",
+    "shortName": "Channel Time Delayer [LOSER]",
+    "category": "Delay",
+    "description": "Channel Time Delayer",
+    "howItWorks": "",
+    "proTips": "",
+    "sliders": [
+        {
+            "index": 0,
+            "name": "Delay L",
+            "min": -100,
+            "max": 100,
+            "defaultVal": 0,
+            "unit": "ms"
+        },
+        {
+            "index": 1,
+            "name": "Delay R",
+            "min": -100,
+            "max": 100,
+            "defaultVal": 0,
+            "unit": "ms"
+        }
+    ]
+},
+  {
+    "name": "JS: Tone Gate",
+    "shortName": "Tone Gate [remaincalm.org]",
+    "category": "Dynamics",
+    "description": "Tone Gate",
+    "howItWorks": "",
+    "proTips": "",
+    "sliders": [
+        {
+            "index": 0,
+            "name": "Wet Mix",
+            "min": -120,
+            "max": 6,
+            "defaultVal": -15,
+            "unit": "dB"
+        },
+        {
+            "index": 1,
+            "name": "Dry Mix",
+            "min": -120,
+            "max": 6,
+            "defaultVal": -3,
+            "unit": "dB"
+        },
+        {
+            "index": 2,
+            "name": "Frequency",
+            "min": 20,
+            "max": 400,
+            "defaultVal": 80,
+            "unit": "Hz"
+        },
+        {
+            "index": 3,
+            "name": "Waveform",
+            "min": 0,
+            "max": 2,
+            "defaultVal": 0
+        },
+        {
+            "index": 4,
+            "name": "Lowpass",
+            "min": 50,
+            "max": 10000,
+            "defaultVal": 1000,
+            "unit": "Hz"
+        },
+        {
+            "index": 5,
+            "name": "Threshold",
+            "min": -120,
+            "max": 6,
+            "defaultVal": -20,
+            "unit": "dB"
+        },
+        {
+            "index": 6,
+            "name": "Silence Length For Fadeout",
+            "min": 1,
+            "max": 4000,
+            "defaultVal": 50,
+            "unit": "ms"
+        },
+        {
+            "index": 7,
+            "name": "Fade In Response",
+            "min": 1,
+            "max": 100,
+            "defaultVal": 10,
+            "unit": "ms"
+        },
+        {
+            "index": 8,
+            "name": "Fade Out Response",
+            "min": 1,
+            "max": 1000,
+            "defaultVal": 100,
+            "unit": "ms"
+        },
+        {
+            "index": 9,
+            "name": "Dynamic Pitch",
+            "min": 0,
+            "max": 4,
+            "defaultVal": 0
+        }
+    ]
+},
+  {
+    "name": "JS: Tone Generator",
+    "shortName": "Tone Generator",
+    "category": "Synthesis",
+    "description": "Tone Generator",
+    "howItWorks": "",
+    "proTips": "",
+    "sliders": [
+        {
+            "index": 0,
+            "name": "Wet Mix",
+            "min": -120,
+            "max": 6,
+            "defaultVal": -12,
+            "unit": "dB"
+        },
+        {
+            "index": 1,
+            "name": "Dry Mix",
+            "min": -120,
+            "max": 6,
+            "defaultVal": -6,
+            "unit": "dB"
+        },
+        {
+            "index": 2,
+            "name": "Base Frequency",
+            "min": 20,
+            "max": 24000,
+            "defaultVal": 440,
+            "unit": "Hz"
+        },
+        {
+            "index": 3,
+            "name": "Note",
+            "min": 0,
+            "max": 11,
+            "defaultVal": 0
+        },
+        {
+            "index": 4,
+            "name": "Octave",
+            "min": -4,
+            "max": 4,
+            "defaultVal": 0
+        },
+        {
+            "index": 5,
+            "name": "Fine Tune",
+            "min": -100,
+            "max": 100,
+            "defaultVal": 0,
+            "unit": "cents"
+        },
+        {
+            "index": 6,
+            "name": "Shape",
+            "min": 0,
+            "max": 2,
+            "defaultVal": 0
+        }
+    ]
+},
+  {
+    "name": "JS: Time Difference Pan",
+    "shortName": "Time Difference Pan",
+    "category": "Stereo & Spatial",
+    "description": "Time Difference Pan",
+    "howItWorks": "",
+    "proTips": "",
+    "sliders": [
+        {
+            "index": 0,
+            "name": "Pan (%)",
+            "min": -100,
+            "max": 100,
+            "defaultVal": 0
+        }
+    ]
+},
+  {
+    "name": "JS: Tonifier v2",
+    "shortName": "Tonifier v2",
+    "category": "Synthesis",
+    "description": "Tonifier v2",
+    "howItWorks": "",
+    "proTips": "",
+    "sliders": [
+        {
+            "index": 0,
+            "name": "Wet Mix",
+            "min": -100,
+            "max": 6,
+            "defaultVal": 0,
+            "unit": "dB"
+        },
+        {
+            "index": 1,
+            "name": "Dry Mix",
+            "min": -100,
+            "max": 6,
+            "defaultVal": -100,
+            "unit": "dB"
+        },
+        {
+            "index": 2,
+            "name": "Amplitude Falloff (factor)",
+            "min": 0.96,
+            "max": 1,
+            "defaultVal": 0.995
+        },
+        {
+            "index": 3,
+            "name": "Frequency Shift",
+            "min": -48,
+            "max": 48,
+            "defaultVal": 0,
+            "unit": "st"
+        },
+        {
+            "index": 4,
+            "name": "max auto shift",
+            "min": 0,
+            "max": 6,
+            "defaultVal": 4,
+            "unit": "octaves"
+        },
+        {
+            "index": 5,
+            "name": "auto shift min frequency",
+            "min": 0,
+            "max": 20000,
+            "defaultVal": 100,
+            "unit": "Hz"
+        },
+        {
+            "index": 6,
+            "name": "auto shift max frequency",
+            "min": 0,
+            "max": 20000,
+            "defaultVal": 300,
+            "unit": "Hz"
+        },
+        {
+            "index": 7,
+            "name": "Output frequency",
+            "min": 0,
+            "max": 0,
+            "defaultVal": 0,
+            "unit": "Hz"
+        }
+    ]
+},
+  {
+    "name": "JS: Transient-Driven Auto-Pan (Receiver)",
+    "shortName": "Transient-Driven Auto-Pan (Receiver)",
+    "category": "Modulation",
+    "description": "Transient-Driven Auto-Pan (Receiver)",
+    "howItWorks": "",
+    "proTips": "",
+    "sliders": [
+        {
+            "index": 0,
+            "name": "Input",
+            "min": 0,
+            "max": 2,
+            "defaultVal": 0
+        },
+        {
+            "index": 1,
+            "name": "Receive Pan Data From",
+            "min": 0,
+            "max": 9,
+            "defaultVal": 0
+        },
+        {
+            "index": 2,
+            "name": "Received Pan",
+            "min": -100,
+            "max": 100,
+            "defaultVal": 0
+        },
+        {
+            "index": 3,
+            "name": "Sloppiness",
+            "min": 0,
+            "max": 10,
+            "defaultVal": 0
+        },
+        {
+            "index": 4,
+            "name": "Invert Received Pan",
+            "min": 0,
+            "max": 1,
+            "defaultVal": 0
+        },
+        {
+            "index": 5,
+            "name": "Multiply Received Pan",
+            "min": 0.2,
+            "max": 5,
+            "defaultVal": 1
+        },
+        {
+            "index": 6,
+            "name": "Max Pan",
+            "min": 1,
+            "max": 100,
+            "defaultVal": 100
+        },
+        {
+            "index": 7,
+            "name": "Max Delay",
+            "min": 0,
+            "max": 10,
+            "defaultVal": 0,
+            "unit": "ms"
+        },
+        {
+            "index": 8,
+            "name": "Look Ahead",
+            "min": 0,
+            "max": 100,
+            "defaultVal": 0,
+            "unit": "ms"
+        },
+        {
+            "index": 9,
+            "name": "Current Pan",
+            "min": -100,
+            "max": 100,
+            "defaultVal": 0
+        }
+    ]
+},
+  {
+    "name": "JS: Transient-Driven Auto-Pan (Transmitter)",
+    "shortName": "Transient-Driven Auto-Pan (Transmitter)",
+    "category": "Modulation",
+    "description": "Transient-Driven Auto-Pan (Transmitter)",
+    "howItWorks": "",
+    "proTips": "",
+    "sliders": [
+        {
+            "index": 0,
+            "name": "Input",
+            "min": 0,
+            "max": 2,
+            "defaultVal": 0
+        },
+        {
+            "index": 1,
+            "name": "Pan Mode",
+            "min": 0,
+            "max": 3,
+            "defaultVal": 3
+        },
+        {
+            "index": 2,
+            "name": "Pan Step Size (%)",
+            "min": 0,
+            "max": 100,
+            "defaultVal": 10
+        },
+        {
+            "index": 3,
+            "name": "Random Step Size (%)",
+            "min": 0,
+            "max": 100,
+            "defaultVal": 0
+        },
+        {
+            "index": 4,
+            "name": "Max Pan",
+            "min": 1,
+            "max": 100,
+            "defaultVal": 100
+        },
+        {
+            "index": 5,
+            "name": "Fade Time",
+            "min": 0,
+            "max": 1000,
+            "defaultVal": 20,
+            "unit": "ms"
+        },
+        {
+            "index": 6,
+            "name": "Sloppiness (Transmitter Only)",
+            "min": 0,
+            "max": 10,
+            "defaultVal": 0
+        },
+        {
+            "index": 7,
+            "name": "Min Pause Between Pans",
+            "min": 20,
+            "max": 500,
+            "defaultVal": 250,
+            "unit": "ms"
+        },
+        {
+            "index": 8,
+            "name": "Max Delay",
+            "min": 0,
+            "max": 10,
+            "defaultVal": 0,
+            "unit": "ms"
+        },
+        {
+            "index": 10,
+            "name": "Director",
+            "min": 0,
+            "max": 5,
+            "defaultVal": 0
+        },
+        {
+            "index": 11,
+            "name": "Preview Director",
+            "min": 0,
+            "max": 1,
+            "defaultVal": 0
+        },
+        {
+            "index": 12,
+            "name": "Sensitivity",
+            "min": 0,
+            "max": 10,
+            "defaultVal": 5
+        },
+        {
+            "index": 13,
+            "name": "Look Ahead",
+            "min": 0,
+            "max": 100,
+            "defaultVal": 0,
+            "unit": "ms"
+        },
+        {
+            "index": 14,
+            "name": "Send Pan Data To",
+            "min": 0,
+            "max": 10,
+            "defaultVal": 0
+        },
+        {
+            "index": 15,
+            "name": "Current Pan",
+            "min": -100,
+            "max": 100,
+            "defaultVal": 0
+        }
+    ]
+},
+  {
+    "name": "JS: Transient-Driven Auto-Pan v1.1 (Receiver)",
+    "shortName": "Transient-Driven Auto-Pan v1.1 (Receiver)",
+    "category": "Modulation",
+    "description": "Transient-Driven Auto-Pan v1.1 (Receiver)",
+    "howItWorks": "",
+    "proTips": "",
+    "sliders": [
+        {
+            "index": 0,
+            "name": "Input",
+            "min": 0,
+            "max": 2,
+            "defaultVal": 0
+        },
+        {
+            "index": 1,
+            "name": "Receive Pan Data From",
+            "min": 0,
+            "max": 9,
+            "defaultVal": 0
+        },
+        {
+            "index": 2,
+            "name": "Received Pan",
+            "min": -100,
+            "max": 100,
+            "defaultVal": 0
+        },
+        {
+            "index": 3,
+            "name": "Sloppiness",
+            "min": 0,
+            "max": 10,
+            "defaultVal": 0
+        },
+        {
+            "index": 4,
+            "name": "Invert Received Pan",
+            "min": 0,
+            "max": 1,
+            "defaultVal": 0
+        },
+        {
+            "index": 5,
+            "name": "Multiply Received Pan",
+            "min": 0.2,
+            "max": 5,
+            "defaultVal": 1
+        },
+        {
+            "index": 6,
+            "name": "Max Pan",
+            "min": 1,
+            "max": 100,
+            "defaultVal": 100
+        },
+        {
+            "index": 7,
+            "name": "Max Delay",
+            "min": 0,
+            "max": 10,
+            "defaultVal": 0,
+            "unit": "ms"
+        },
+        {
+            "index": 8,
+            "name": "Look Ahead",
+            "min": 0,
+            "max": 100,
+            "defaultVal": 0,
+            "unit": "ms"
+        },
+        {
+            "index": 9,
+            "name": "Current Pan",
+            "min": -100,
+            "max": 100,
+            "defaultVal": 0
+        }
+    ]
+},
+  {
+    "name": "JS: Transient-Driven Auto-Pan v1.1 (Transmitter)",
+    "shortName": "Transient-Driven Auto-Pan v1.1 (Transmitter)",
+    "category": "Modulation",
+    "description": "Transient-Driven Auto-Pan v1.1 (Transmitter)",
+    "howItWorks": "",
+    "proTips": "",
+    "sliders": [
+        {
+            "index": 0,
+            "name": "Input",
+            "min": 0,
+            "max": 2,
+            "defaultVal": 0
+        },
+        {
+            "index": 1,
+            "name": "Pan Mode",
+            "min": 0,
+            "max": 3,
+            "defaultVal": 3
+        },
+        {
+            "index": 2,
+            "name": "Pan Step Size (%)",
+            "min": 0,
+            "max": 100,
+            "defaultVal": 10
+        },
+        {
+            "index": 3,
+            "name": "Random Step Size (%)",
+            "min": 0,
+            "max": 100,
+            "defaultVal": 0
+        },
+        {
+            "index": 4,
+            "name": "Max Pan",
+            "min": 1,
+            "max": 100,
+            "defaultVal": 100
+        },
+        {
+            "index": 5,
+            "name": "Fade Time",
+            "min": 0,
+            "max": 1000,
+            "defaultVal": 20,
+            "unit": "ms"
+        },
+        {
+            "index": 6,
+            "name": "Sloppiness (Transmitter Only)",
+            "min": 0,
+            "max": 10,
+            "defaultVal": 0
+        },
+        {
+            "index": 7,
+            "name": "Min Pause Between Pans",
+            "min": 20,
+            "max": 500,
+            "defaultVal": 250,
+            "unit": "ms"
+        },
+        {
+            "index": 8,
+            "name": "Max Delay",
+            "min": 0,
+            "max": 10,
+            "defaultVal": 0,
+            "unit": "ms"
+        },
+        {
+            "index": 10,
+            "name": "Director",
+            "min": 0,
+            "max": 5,
+            "defaultVal": 0
+        },
+        {
+            "index": 11,
+            "name": "Preview Director",
+            "min": 0,
+            "max": 1,
+            "defaultVal": 0
+        },
+        {
+            "index": 12,
+            "name": "Sensitivity",
+            "min": 0,
+            "max": 10,
+            "defaultVal": 5
+        },
+        {
+            "index": 13,
+            "name": "Look Ahead",
+            "min": 0,
+            "max": 100,
+            "defaultVal": 0,
+            "unit": "ms"
+        },
+        {
+            "index": 14,
+            "name": "Send Pan Data To",
+            "min": 0,
+            "max": 10,
+            "defaultVal": 0
+        },
+        {
+            "index": 15,
+            "name": "Current Pan",
+            "min": -100,
+            "max": 100,
+            "defaultVal": 0
+        }
+    ]
+},
+  {
+    "name": "JS: Transient Controller",
+    "shortName": "Transient Controller [LOSER]",
+    "category": "Dynamics",
+    "description": "Transient Controller",
+    "howItWorks": "",
+    "proTips": "",
+    "sliders": [
+        {
+            "index": 0,
+            "name": "Attack (%)",
+            "min": -100,
+            "max": 100,
+            "defaultVal": 0
+        },
+        {
+            "index": 1,
+            "name": "Sustain (%)",
+            "min": -100,
+            "max": 100,
+            "defaultVal": 0
+        },
+        {
+            "index": 2,
+            "name": "Output",
+            "min": -12,
+            "max": 6,
+            "defaultVal": 0,
+            "unit": "dB"
+        }
+    ]
+},
+  {
+    "name": "JS: Transient Killer",
+    "shortName": "Transient Killer (Instant Compressor) [LOSER]",
+    "category": "Dynamics",
+    "description": "Transient Killer",
+    "howItWorks": "",
+    "proTips": "",
+    "sliders": [
+        {
+            "index": 0,
+            "name": "Threshold",
+            "min": -12,
+            "max": 1,
+            "defaultVal": 0,
+            "unit": "dB"
+        },
+        {
+            "index": 1,
+            "name": "Ratio",
+            "min": 1,
+            "max": 50,
+            "defaultVal": 1
+        }
+    ]
+},
+  {
+    "name": "JS: VCA Follow",
+    "shortName": "VCA Follow",
+    "category": "Utility",
+    "description": "VCA Follow",
+    "howItWorks": "",
+    "proTips": "",
+    "sliders": [
+        {
+            "index": 0,
+            "name": "Transition Time",
+            "min": 0,
+            "max": 300,
+            "defaultVal": 50,
+            "unit": "ms"
+        }
+    ]
+},
+  {
+    "name": "JS: VCA Lead",
+    "shortName": "VCA Lead",
+    "category": "Utility",
+    "description": "VCA Lead",
+    "howItWorks": "",
+    "proTips": "",
+    "sliders": [
+        {
+            "index": 0,
+            "name": "Volume",
+            "min": -120,
+            "max": 24,
+            "defaultVal": 0,
+            "unit": "dB"
+        }
+    ]
+},
+  {
+    "name": "JS: video sample peeker",
+    "shortName": "video sample peeker",
+    "category": "Utility",
+    "description": "video sample peeker",
+    "howItWorks": "",
+    "proTips": "",
+    "sliders": [
+        {
+            "index": 0,
+            "name": "lookahead (seconds, 1.0 is normal)",
+            "min": 0,
+            "max": 1.8,
+            "defaultVal": 1
+        }
+    ]
+},
+  {
+    "name": "JS: MIDI Velocity Scaler/Compressor",
+    "shortName": "MIDI Velocity Scaler/Compressor [Stillwell]",
+    "category": "MIDI",
+    "description": "MIDI Velocity Scaler/Compressor",
+    "howItWorks": "",
+    "proTips": "",
+    "sliders": [
+        {
+            "index": 0,
+            "name": "Input Channel (0=omni)",
+            "min": 0,
+            "max": 16,
+            "defaultVal": 0
+        },
+        {
+            "index": 1,
+            "name": "Scale Factor",
+            "min": 0,
+            "max": 3,
+            "defaultVal": 1
+        },
+        {
+            "index": 2,
+            "name": "Volume Offset",
+            "min": -127,
+            "max": 127,
+            "defaultVal": 0
+        },
+        {
+            "index": 3,
+            "name": "Mix (%)",
+            "min": 0,
+            "max": 100,
+            "defaultVal": 0
+        }
+    ]
+},
+  {
+    "name": "JS: Volume Adjustment",
+    "shortName": "Volume Adjustment",
+    "category": "Utility",
+    "description": "Volume Adjustment",
+    "howItWorks": "",
+    "proTips": "",
+    "sliders": [
+        {
+            "index": 0,
+            "name": "Adjustment",
+            "min": -150,
+            "max": 150,
+            "defaultVal": 6,
+            "unit": "dB"
+        },
+        {
+            "index": 1,
+            "name": "Max Volume",
+            "min": -150,
+            "max": 150,
+            "defaultVal": 0,
+            "unit": "dB"
+        }
+    ]
+},
+  {
+    "name": "JS: VU Meter",
+    "shortName": "VU Meter",
+    "category": "Analysis & Utility",
+    "description": "VU Meter",
+    "howItWorks": "",
+    "proTips": "",
+    "sliders": [
+        {
+            "index": 0,
+            "name": "Response",
+            "min": 1,
+            "max": 300,
+            "defaultVal": 50,
+            "unit": "ms"
+        },
+        {
+            "index": 1,
+            "name": "Release (Slow/Fast)",
+            "min": 1,
+            "max": 10,
+            "defaultVal": 5
+        }
+    ]
+},
+  {
+    "name": "JS: VU Meter (Summed)",
+    "shortName": "VU Meter (Summed)",
+    "category": "Analysis & Utility",
+    "description": "VU Meter (Summed)",
+    "howItWorks": "",
+    "proTips": "",
+    "sliders": [
+        {
+            "index": 0,
+            "name": "Response",
+            "min": 1,
+            "max": 300,
+            "defaultVal": 50,
+            "unit": "ms"
+        },
+        {
+            "index": 1,
+            "name": "Release (Slow/Fast)",
+            "min": 1,
+            "max": 10,
+            "defaultVal": 5
+        }
+    ]
+},
+  {
+    "name": "JS: Multi Waveshaper",
+    "shortName": "Waveshaper Multi (Various Formulas)",
+    "category": "Distortion",
+    "description": "Multi Waveshaper",
+    "howItWorks": "",
+    "proTips": "",
+    "sliders": [
+        {
+            "index": 0,
+            "name": "Processing",
+            "min": 0,
+            "max": 1,
+            "defaultVal": 0
+        },
+        {
+            "index": 1,
+            "name": "Waveshaper",
+            "min": 0,
+            "max": 1,
+            "defaultVal": 0
+        },
+        {
+            "index": 2,
+            "name": "Drive (%)",
+            "min": 0,
+            "max": 100,
+            "defaultVal": 0
+        },
+        {
+            "index": 3,
+            "name": "Muffle (%)",
+            "min": 0,
+            "max": 100,
+            "defaultVal": 0
+        },
+        {
+            "index": 4,
+            "name": "Output",
+            "min": -25,
+            "max": 25,
+            "defaultVal": 0,
+            "unit": "dB"
+        },
+        {
+            "index": 5,
+            "name": "Limiter",
+            "min": 0,
+            "max": 1,
+            "defaultVal": 0
+        },
+        {
+            "index": 6,
+            "name": "Oversample (x2)",
+            "min": 0,
+            "max": 1,
+            "defaultVal": 0
+        }
+    ]
+},
+  {
+    "name": "JS: Waveshaping Distortion",
+    "shortName": "Waveshaping Distortion",
+    "category": "Distortion",
+    "description": "Waveshaping Distortion",
+    "howItWorks": "",
+    "proTips": "",
+    "sliders": [
+        {
+            "index": 0,
+            "name": "Distortion (%)",
+            "min": 0,
+            "max": 100,
+            "defaultVal": 0
+        }
+    ]
+},
+  {
+    "name": "JS: White Noise Generator",
+    "shortName": "White Noise Generator [LOSER]",
+    "category": "Synthesis",
+    "description": "White Noise Generator",
+    "howItWorks": "",
+    "proTips": "",
+    "sliders": [
+        {
+            "index": 0,
+            "name": "Dry Volume",
+            "min": -120,
+            "max": 0,
+            "defaultVal": -120,
+            "unit": "dB"
+        },
+        {
+            "index": 1,
+            "name": "Noise Volume",
+            "min": -120,
+            "max": 0,
+            "defaultVal": -12,
+            "unit": "dB"
+        }
+    ]
+},
+  {
+    "name": "JS: Subtractive Stereo Enhancer",
+    "shortName": "Subtractive Stereo Enhancer [Stillwell]",
+    "category": "Stereo & Spatial",
+    "description": "Subtractive Stereo Enhancer",
+    "howItWorks": "",
+    "proTips": "",
+    "sliders": [
+        {
+            "index": 0,
+            "name": "Effect (%)",
+            "min": 0,
+            "max": 100,
+            "defaultVal": 0
+        },
+        {
+            "index": 1,
+            "name": "Make-Up Gain",
+            "min": 0,
+            "max": 20,
+            "defaultVal": 0,
+            "unit": "dB"
+        }
+    ]
+},
+  {
+    "name": "JS: WigWare Multi-channel Peak VU Meter",
+    "shortName": "WigWare Multi-channel Peak VU Meter",
+    "category": "Analysis & Utility",
+    "description": "WigWare Multi-channel Peak VU Meter",
+    "howItWorks": "",
+    "proTips": "",
+    "sliders": [
+        {
+            "index": 0,
+            "name": "Number of Channels",
+            "min": 0,
+            "max": 64,
+            "defaultVal": 16
+        },
+        {
+            "index": 1,
+            "name": "Sample Time",
+            "min": 0,
+            "max": 500,
+            "defaultVal": 100,
+            "unit": "ms"
+        },
+        {
+            "index": 2,
+            "name": "min dB Value (-ve)",
+            "min": 0,
+            "max": 96,
+            "defaultVal": 60
+        },
+        {
+            "index": 3,
+            "name": "peak hold (x Sample Time)",
+            "min": 2,
+            "max": 20,
+            "defaultVal": 10
+        }
+    ]
+},
+  {
+    "name": "JS: Zoom Analyzer Demo",
+    "shortName": "Zoom Analyzer Demo",
+    "category": "Analysis & Utility",
+    "description": "Zoom Analyzer Demo",
+    "howItWorks": "",
+    "proTips": "",
+    "sliders": []
+},
   {
     "name": "JS: Tukan/LA-2A Compressor",
     "shortName": "Tukan LA-2A Vintage Opto",
@@ -16003,11 +14958,29 @@ export const JSFX_DATABASE: JSFXProfile[] = [
     "proTips": "Drive S1 (Peak Reduction) until gain reduction sweeps between -3dB and -6dB on vocal peaks, then adjust S2 (Gain) to stage perfectly.",
     "packRequired": "Tukan Studios",
     "sliders": [
-      { "index": 0, "name": "Peak Reduction", "min": 0, "max": 100, "defaultVal": 30 },
-      { "index": 1, "name": "Gain (dB)", "min": 0, "max": 40, "defaultVal": 10 },
-      { "index": 2, "name": "Limit/Compress", "min": 0, "max": 1, "defaultVal": 0 }
+        {
+            "index": 0,
+            "name": "Peak Reduction",
+            "min": 0,
+            "max": 100,
+            "defaultVal": 30
+        },
+        {
+            "index": 1,
+            "name": "Gain (dB)",
+            "min": 0,
+            "max": 40,
+            "defaultVal": 10
+        },
+        {
+            "index": 2,
+            "name": "Limit/Compress",
+            "min": 0,
+            "max": 1,
+            "defaultVal": 0
+        }
     ]
-  },
+},
   {
     "name": "JS: Tukan/1176 Compressor",
     "shortName": "Tukan 1176 FET Limiter",
@@ -16017,13 +14990,43 @@ export const JSFX_DATABASE: JSFXProfile[] = [
     "proTips": "For vocals, set Attack to 3 and Release to 7 for crisp presence. Drive the Input slider to get solid saturation.",
     "packRequired": "Tukan Studios",
     "sliders": [
-      { "index": 0, "name": "Input", "min": 0, "max": 100, "defaultVal": 30 },
-      { "index": 1, "name": "Output", "min": 0, "max": 100, "defaultVal": 50 },
-      { "index": 2, "name": "Attack (uS)", "min": 20, "max": 800, "defaultVal": 100 },
-      { "index": 3, "name": "Release (ms)", "min": 50, "max": 1100, "defaultVal": 300 },
-      { "index": 4, "name": "Ratio", "min": 4, "max": 20, "defaultVal": 4 }
+        {
+            "index": 0,
+            "name": "Input",
+            "min": 0,
+            "max": 100,
+            "defaultVal": 30
+        },
+        {
+            "index": 1,
+            "name": "Output",
+            "min": 0,
+            "max": 100,
+            "defaultVal": 50
+        },
+        {
+            "index": 2,
+            "name": "Attack (uS)",
+            "min": 20,
+            "max": 800,
+            "defaultVal": 100
+        },
+        {
+            "index": 3,
+            "name": "Release (ms)",
+            "min": 50,
+            "max": 1100,
+            "defaultVal": 300
+        },
+        {
+            "index": 4,
+            "name": "Ratio",
+            "min": 4,
+            "max": 20,
+            "defaultVal": 4
+        }
     ]
-  },
+},
   {
     "name": "JS: GeraintLuff/Humulator",
     "shortName": "Geraint Humulator",
@@ -16033,11 +15036,29 @@ export const JSFX_DATABASE: JSFXProfile[] = [
     "proTips": "Select the correct S1 Fundamental Frequency based on your local power standard: 60Hz for USA, 50Hz for EU/UK.",
     "packRequired": "Geraint Luff",
     "sliders": [
-      { "index": 0, "name": "Fundamental Frequency (Hz)", "min": 20, "max": 120, "defaultVal": 50 },
-      { "index": 1, "name": "Harmonics Count", "min": 1, "max": 10, "defaultVal": 5 },
-      { "index": 2, "name": "Attenuation (dB)", "min": 0, "max": 60, "defaultVal": 20 }
+        {
+            "index": 0,
+            "name": "Fundamental Frequency (Hz)",
+            "min": 20,
+            "max": 120,
+            "defaultVal": 50
+        },
+        {
+            "index": 1,
+            "name": "Harmonics Count",
+            "min": 1,
+            "max": 10,
+            "defaultVal": 5
+        },
+        {
+            "index": 2,
+            "name": "Attenuation (dB)",
+            "min": 0,
+            "max": 60,
+            "defaultVal": 20
+        }
     ]
-  },
+},
   {
     "name": "JS: GeraintLuff/Echo Thief",
     "shortName": "Geraint Echo Thief Convolution",
@@ -16047,11 +15068,29 @@ export const JSFX_DATABASE: JSFXProfile[] = [
     "proTips": "Keep Size (S1) at 100% for realistic spacing, and adjust Pre-Delay to separate the vocal's dry presence.",
     "packRequired": "Geraint Luff",
     "sliders": [
-      { "index": 0, "name": "Size (%)", "min": 50, "max": 200, "defaultVal": 100 },
-      { "index": 1, "name": "Pre-Delay (ms)", "min": 0, "max": 100, "defaultVal": 10 },
-      { "index": 2, "name": "Wet Mix (dB)", "min": -60, "max": 10, "defaultVal": -6 }
+        {
+            "index": 0,
+            "name": "Size (%)",
+            "min": 50,
+            "max": 200,
+            "defaultVal": 100
+        },
+        {
+            "index": 1,
+            "name": "Pre-Delay (ms)",
+            "min": 0,
+            "max": 100,
+            "defaultVal": 10
+        },
+        {
+            "index": 2,
+            "name": "Wet Mix (dB)",
+            "min": -60,
+            "max": 10,
+            "defaultVal": -6
+        }
     ]
-  },
+},
   {
     "name": "JS: Saike/Reflecto",
     "shortName": "Saike Reflecto Multi-Tap",
@@ -16061,11 +15100,29 @@ export const JSFX_DATABASE: JSFXProfile[] = [
     "proTips": "Crank Diffusion (S3) above 80% to blend the individual delay taps into a wide, ambient chorus cloud.",
     "packRequired": "Saike JSFX",
     "sliders": [
-      { "index": 0, "name": "Time Scale (%)", "min": 10, "max": 500, "defaultVal": 100 },
-      { "index": 1, "name": "Feedback (%)", "min": 0, "max": 100, "defaultVal": 40 },
-      { "index": 2, "name": "Diffusion (%)", "min": 0, "max": 100, "defaultVal": 80 }
+        {
+            "index": 0,
+            "name": "Time Scale (%)",
+            "min": 10,
+            "max": 500,
+            "defaultVal": 100
+        },
+        {
+            "index": 1,
+            "name": "Feedback (%)",
+            "min": 0,
+            "max": 100,
+            "defaultVal": 40
+        },
+        {
+            "index": 2,
+            "name": "Diffusion (%)",
+            "min": 0,
+            "max": 100,
+            "defaultVal": 80
+        }
     ]
-  },
+},
   {
     "name": "JS: Saike/YS_Saturator",
     "shortName": "Saike YS Saturator",
@@ -16075,11 +15132,29 @@ export const JSFX_DATABASE: JSFXProfile[] = [
     "proTips": "Drive S1 up to +6dB on weak vocals to instantly inject body, weight, and subtle tape compression.",
     "packRequired": "Saike JSFX",
     "sliders": [
-      { "index": 0, "name": "Drive (dB)", "min": 0, "max": 24, "defaultVal": 4 },
-      { "index": 1, "name": "Saturation Type", "min": 0, "max": 3, "defaultVal": 1 },
-      { "index": 2, "name": "Mix (%)", "min": 0, "max": 100, "defaultVal": 100 }
+        {
+            "index": 0,
+            "name": "Drive (dB)",
+            "min": 0,
+            "max": 24,
+            "defaultVal": 4
+        },
+        {
+            "index": 1,
+            "name": "Saturation Type",
+            "min": 0,
+            "max": 3,
+            "defaultVal": 1
+        },
+        {
+            "index": 2,
+            "name": "Mix (%)",
+            "min": 0,
+            "max": 100,
+            "defaultVal": 100
+        }
     ]
-  },
+},
   {
     "name": "JS: Suzuki/RCGN-Tube-Compressor",
     "shortName": "Suzuki Tube Compressor",
@@ -16089,11 +15164,29 @@ export const JSFX_DATABASE: JSFXProfile[] = [
     "proTips": "Crank Drive (S1) slightly to excite warm tube harmonics, then set Threshold to smoothly catch vocal sibilance.",
     "packRequired": "Suzuki (RCGN) JSFX",
     "sliders": [
-      { "index": 0, "name": "Drive (dB)", "min": 0, "max": 12, "defaultVal": 2 },
-      { "index": 1, "name": "Ratio", "min": 1, "max": 20, "defaultVal": 4 },
-      { "index": 2, "name": "Threshold (dB)", "min": -40, "max": 0, "defaultVal": -12 }
+        {
+            "index": 0,
+            "name": "Drive (dB)",
+            "min": 0,
+            "max": 12,
+            "defaultVal": 2
+        },
+        {
+            "index": 1,
+            "name": "Ratio",
+            "min": 1,
+            "max": 20,
+            "defaultVal": 4
+        },
+        {
+            "index": 2,
+            "name": "Threshold (dB)",
+            "min": -40,
+            "max": 0,
+            "defaultVal": -12
+        }
     ]
-  },
+},
   {
     "name": "JS: 5.1 Master Limiter (Sonic Anomaly)",
     "shortName": "5.1 Master Limiter",
@@ -18059,7 +17152,6 @@ export const JSFX_DATABASE: JSFXProfile[] = [
     ],
     "packRequired": "Sonic Anomaly"
 },
-
   {
     "name": "JS: ReaTeam/Auto-Tune-Utility",
     "shortName": "ReaTeam Auto Tune",
@@ -21353,7 +20445,6 @@ export const JSFX_DATABASE: JSFXProfile[] = [
     ],
     "packRequired": "ReaTeam JSFX"
 },
-
   {
     "name": "JS: MIP2/MIP2-Compressor",
     "shortName": "MIP2 Mastering Compressor",
@@ -21363,12 +20454,36 @@ export const JSFX_DATABASE: JSFXProfile[] = [
     "proTips": "Use low ratios (S2 around 1.5 - 2.0) with slow Attack to glue backing vocals or full mixes together seamlessly.",
     "packRequired": "MIP2 Michael-P JSFX",
     "sliders": [
-      { "index": 0, "name": "Threshold (dB)", "min": -48, "max": 0, "defaultVal": -16 },
-      { "index": 1, "name": "Ratio", "min": 1.5, "max": 10, "defaultVal": 2 },
-      { "index": 2, "name": "Attack (ms)", "min": 0.1, "max": 100, "defaultVal": 10 },
-      { "index": 3, "name": "Release (ms)", "min": 50, "max": 2000, "defaultVal": 150 }
+        {
+            "index": 0,
+            "name": "Threshold (dB)",
+            "min": -48,
+            "max": 0,
+            "defaultVal": -16
+        },
+        {
+            "index": 1,
+            "name": "Ratio",
+            "min": 1.5,
+            "max": 10,
+            "defaultVal": 2
+        },
+        {
+            "index": 2,
+            "name": "Attack (ms)",
+            "min": 0.1,
+            "max": 100,
+            "defaultVal": 10
+        },
+        {
+            "index": 3,
+            "name": "Release (ms)",
+            "min": 50,
+            "max": 2000,
+            "defaultVal": 150
+        }
     ]
-  },
+},
   {
     "name": "JS: Mudra/Spectral-Shaper",
     "shortName": "Mudra Spectral Shaper",
@@ -21378,11 +20493,29 @@ export const JSFX_DATABASE: JSFXProfile[] = [
     "proTips": "Set Frequency Focus to 5000Hz and adjust Sensitivity to tarnish harsh sibilance and digital glaze in vocal tracks.",
     "packRequired": "Mudra Lukas JSFX",
     "sliders": [
-      { "index": 0, "name": "Threshold (dB)", "min": -60, "max": 0, "defaultVal": -20 },
-      { "index": 1, "name": "Sensitivity (%)", "min": 0, "max": 100, "defaultVal": 50 },
-      { "index": 2, "name": "Frequency Focus (Hz)", "min": 1000, "max": 20000, "defaultVal": 5000 }
+        {
+            "index": 0,
+            "name": "Threshold (dB)",
+            "min": -60,
+            "max": 0,
+            "defaultVal": -20
+        },
+        {
+            "index": 1,
+            "name": "Sensitivity (%)",
+            "min": 0,
+            "max": 100,
+            "defaultVal": 50
+        },
+        {
+            "index": 2,
+            "name": "Frequency Focus (Hz)",
+            "min": 1000,
+            "max": 20000,
+            "defaultVal": 5000
+        }
     ]
-  },
+},
   {
     "name": "JS: euPhonia/Spatial-Expander",
     "shortName": "euPhonia Spatial Expander",
@@ -21392,11 +20525,29 @@ export const JSFX_DATABASE: JSFXProfile[] = [
     "proTips": "Crank S1 (Room Width) to 130% for background pads and backings to separate them from lead elements.",
     "packRequired": "euPhonia JSFX",
     "sliders": [
-      { "index": 0, "name": "Room Width (%)", "min": 0, "max": 200, "defaultVal": 120 },
-      { "index": 1, "name": "Room Size (m)", "min": 5, "max": 100, "defaultVal": 25 },
-      { "index": 2, "name": "Wet Level (dB)", "min": -40, "max": 0, "defaultVal": -12 }
+        {
+            "index": 0,
+            "name": "Room Width (%)",
+            "min": 0,
+            "max": 200,
+            "defaultVal": 120
+        },
+        {
+            "index": 1,
+            "name": "Room Size (m)",
+            "min": 5,
+            "max": 100,
+            "defaultVal": 25
+        },
+        {
+            "index": 2,
+            "name": "Wet Level (dB)",
+            "min": -40,
+            "max": 0,
+            "defaultVal": -12
+        }
     ]
-  },
+},
   {
     "name": "JS: JST/Transient-Designer",
     "shortName": "JST Transient Designer",
@@ -21406,12 +20557,29 @@ export const JSFX_DATABASE: JSFXProfile[] = [
     "proTips": "Add +20% Attack (S1) to make snare drums and vocal consonants poke through dense arrangements effortlessly.",
     "packRequired": "JST JSFX Toolkit",
     "sliders": [
-      { "index": 0, "name": "Attack (%)", "min": -100, "max": 100, "defaultVal": 0 },
-      { "index": 1, "name": "Sustain (%)", "min": -100, "max": 100, "defaultVal": 0 },
-      { "index": 2, "name": "Output Gain (dB)", "min": -24, "max": 24, "defaultVal": 0 }
+        {
+            "index": 0,
+            "name": "Attack (%)",
+            "min": -100,
+            "max": 100,
+            "defaultVal": 0
+        },
+        {
+            "index": 1,
+            "name": "Sustain (%)",
+            "min": -100,
+            "max": 100,
+            "defaultVal": 0
+        },
+        {
+            "index": 2,
+            "name": "Output Gain (dB)",
+            "min": -24,
+            "max": 24,
+            "defaultVal": 0
+        }
     ]
-  }
-,
+},
   {
     "name": "JS: JClones AC1 (Analog Channel)",
     "shortName": "JClones AC1",
@@ -22007,8 +21175,7 @@ export const JSFX_DATABASE: JSFXProfile[] = [
         }
     ],
     "packRequired": "JSFX Clones"
-}
-,
+},
   {
     "name": "JS: JClones Hyrax",
     "shortName": "JClones Hyrax",
@@ -22667,8 +21834,7 @@ export const JSFX_DATABASE: JSFXProfile[] = [
         }
     ],
     "packRequired": "JSFX Clones"
-}
-,
+},
   {
     "name": "JS: JClones TapeHead (Tape Saturation)",
     "shortName": "JClones TapeHead",
@@ -22872,8 +22038,7 @@ export const JSFX_DATABASE: JSFXProfile[] = [
         }
     ],
     "packRequired": "JSFX Clones"
-}
-,
+},
   {
     "name": "JS: Geraint/Bad Connection",
     "shortName": "Bad Connection",
@@ -23829,8 +22994,7 @@ export const JSFX_DATABASE: JSFXProfile[] = [
         }
     ],
     "packRequired": "Geraint Luff"
-}
-,
+},
   {
     "name": "JS: Tukan/Bus Comp S2",
     "shortName": "Bus Comp S2",
@@ -28235,8 +27399,7 @@ export const JSFX_DATABASE: JSFXProfile[] = [
         }
     ],
     "packRequired": "Tukan Studios"
-}
-,
+},
   {
     "name": "JS: Tukan/December Synth",
     "shortName": "December Synth",
@@ -38237,8 +37400,7 @@ export const JSFX_DATABASE: JSFXProfile[] = [
         }
     ],
     "packRequired": "Tukan Studios"
-}
-,
+},
   {
     "name": "JS: Tukan/Yellow-Black Compressor S2",
     "shortName": "Yellow-Black Compressor S2",
@@ -41030,8 +40192,7 @@ export const JSFX_DATABASE: JSFXProfile[] = [
         }
     ],
     "packRequired": "Tukan Studios"
-}
-,
+},
   {
     "name": "JS: Tukan/Vocoder S2",
     "shortName": "Vocoder S2",
@@ -43832,8 +42993,7 @@ export const JSFX_DATABASE: JSFXProfile[] = [
         }
     ],
     "packRequired": "Tukan Studios"
-}
-,
+},
   {
     "name": "JS: Tukan/VariBus Comp",
     "shortName": "VariBus Comp",
@@ -46571,8 +45731,7 @@ export const JSFX_DATABASE: JSFXProfile[] = [
         }
     ],
     "packRequired": "Tukan Studios"
-}
-,
+},
   {
     "name": "JS: Tukan/SumChannel",
     "shortName": "SumChannel",
@@ -49058,8 +48217,7 @@ export const JSFX_DATABASE: JSFXProfile[] = [
         }
     ],
     "packRequired": "Tukan Studios"
-}
-,
+},
   {
     "name": "JS: Tukan/EQ 1.1",
     "shortName": "EQ 1.1",
@@ -51824,8 +50982,7 @@ export const JSFX_DATABASE: JSFXProfile[] = [
         }
     ],
     "packRequired": "Tukan Studios"
-}
-,
+},
   {
     "name": "JS: Tukan/Deesser",
     "shortName": "Deesser",
@@ -52708,8 +51865,7 @@ export const JSFX_DATABASE: JSFXProfile[] = [
         }
     ],
     "packRequired": "Tukan Studios"
-}
-,
+},
   {
     "name": "JS: Chokehold Clipping Algorithm Comparison",
     "shortName": "Clipping Algorithm Comparison",
@@ -55815,9 +54971,6 @@ export const JSFX_DATABASE: JSFXProfile[] = [
     "howItWorks": "A clean, high-precision level adjustment fader designed to pad or boost signals for perfect gain staging across effect chains.",
     "proTips": "Crucial first insert for individual tracks. Trim your recordings to hit around -18 to -12 dBFS average to keep analog-modeled plugins operating in their sweet spots."
 },
-
-
-,
   {
     "name": "JS: Saike Abyss Reverb (Saike) [BETA]",
     "shortName": "Abyss Reverb (Saike) [BETA]",
@@ -69945,9 +69098,6 @@ export const JSFX_DATABASE: JSFXProfile[] = [
     "howItWorks": "Yutani is an incredibly fat virtual analog mono bass synthesizer built as a JSFX. It features dual self-oscillating resonant filters, a sub-octave generator, and a custom saturation overdrive stage.",
     "proTips": "The ultimate bass monster. Feed it simple MIDI notes, dial up the resonance and filter drive, and you'll get massive, room-shaking analog-style basslines instantly."
 },
-
-
-,
   {
     "name": "JS: MIDI Trigger Envelope (lewloiwc)",
     "shortName": "MIDI Trigger Envelope",
@@ -71015,13 +70165,2469 @@ export const JSFX_DATABASE: JSFXProfile[] = [
     ],
     "packRequired": "Suzuki-Scripts (lewloiwc / Suzuki)"
 },
-];
-
-export const getJSFXProfileByName = (rawName: string): JSFXProfile | undefined => {
-  const cleanName = rawName.replace(/["':]/g, "").trim().toLowerCase();
-  return JSFX_DATABASE.find(profile => {
-    const profName = profile.name.replace(/["':]/g, "").trim().toLowerCase();
-    const profShort = profile.shortName.trim().toLowerCase();
-    return cleanName === profName || cleanName.includes(profName) || cleanName.includes(profShort);
-  });
-};
+  {
+    "name": "JS: MPL/mpl_RS5k_manager_MacroControls",
+    "shortName": "mpl_RS5k_manager_MacroControls",
+    "category": "Utility",
+    "description": "Specialized utility from Michael Pilyavskiy (MPL).",
+    "howItWorks": "Professional REAPER script integration and DSP routing.",
+    "proTips": "Check the MPL forum thread on Cockos for advanced usage.",
+    "sliders": [
+        {
+            "index": 0,
+            "name": "is_slave",
+            "min": 0,
+            "max": 1,
+            "defaultVal": 0,
+            "description": "is_slave",
+            "options": null
+        },
+        {
+            "index": 1,
+            "name": "Macro 1",
+            "min": 0,
+            "max": 1,
+            "defaultVal": 0,
+            "description": "Macro 1",
+            "options": null
+        },
+        {
+            "index": 2,
+            "name": "Macro 2",
+            "min": 0,
+            "max": 1,
+            "defaultVal": 0,
+            "description": "Macro 2",
+            "options": null
+        },
+        {
+            "index": 3,
+            "name": "Macro 3",
+            "min": 0,
+            "max": 1,
+            "defaultVal": 0,
+            "description": "Macro 3",
+            "options": null
+        },
+        {
+            "index": 4,
+            "name": "Macro 4",
+            "min": 0,
+            "max": 1,
+            "defaultVal": 0,
+            "description": "Macro 4",
+            "options": null
+        },
+        {
+            "index": 5,
+            "name": "Macro 5",
+            "min": 0,
+            "max": 1,
+            "defaultVal": 0,
+            "description": "Macro 5",
+            "options": null
+        },
+        {
+            "index": 6,
+            "name": "Macro 6",
+            "min": 0,
+            "max": 1,
+            "defaultVal": 0,
+            "description": "Macro 6",
+            "options": null
+        },
+        {
+            "index": 7,
+            "name": "Macro 7",
+            "min": 0,
+            "max": 1,
+            "defaultVal": 0,
+            "description": "Macro 7",
+            "options": null
+        },
+        {
+            "index": 8,
+            "name": "Macro 8",
+            "min": 0,
+            "max": 1,
+            "defaultVal": 0,
+            "description": "Macro 8",
+            "options": null
+        },
+        {
+            "index": 9,
+            "name": "Macro 9",
+            "min": 0,
+            "max": 1,
+            "defaultVal": 0,
+            "description": "Macro 9",
+            "options": null
+        },
+        {
+            "index": 10,
+            "name": "Macro 10",
+            "min": 0,
+            "max": 1,
+            "defaultVal": 0,
+            "description": "Macro 10",
+            "options": null
+        },
+        {
+            "index": 11,
+            "name": "Macro 11",
+            "min": 0,
+            "max": 1,
+            "defaultVal": 0,
+            "description": "Macro 11",
+            "options": null
+        },
+        {
+            "index": 12,
+            "name": "Macro 12",
+            "min": 0,
+            "max": 1,
+            "defaultVal": 0,
+            "description": "Macro 12",
+            "options": null
+        },
+        {
+            "index": 13,
+            "name": "Macro 13",
+            "min": 0,
+            "max": 1,
+            "defaultVal": 0,
+            "description": "Macro 13",
+            "options": null
+        },
+        {
+            "index": 14,
+            "name": "Macro 14",
+            "min": 0,
+            "max": 1,
+            "defaultVal": 0,
+            "description": "Macro 14",
+            "options": null
+        },
+        {
+            "index": 15,
+            "name": "Macro 15",
+            "min": 0,
+            "max": 1,
+            "defaultVal": 0,
+            "description": "Macro 15",
+            "options": null
+        },
+        {
+            "index": 16,
+            "name": "Macro 16",
+            "min": 0,
+            "max": 1,
+            "defaultVal": 0,
+            "description": "Macro 16",
+            "options": null
+        },
+        {
+            "index": 17,
+            "name": "gmem sourceID for Macro 1",
+            "min": 0,
+            "max": 1024,
+            "defaultVal": 0,
+            "description": "gmem sourceID for Macro 1",
+            "options": null
+        },
+        {
+            "index": 18,
+            "name": "gmem sourceID for Macro 2",
+            "min": 0,
+            "max": 1024,
+            "defaultVal": 0,
+            "description": "gmem sourceID for Macro 2",
+            "options": null
+        },
+        {
+            "index": 19,
+            "name": "gmem sourceID for Macro 3",
+            "min": 0,
+            "max": 1024,
+            "defaultVal": 0,
+            "description": "gmem sourceID for Macro 3",
+            "options": null
+        },
+        {
+            "index": 20,
+            "name": "gmem sourceID for Macro 4",
+            "min": 0,
+            "max": 1024,
+            "defaultVal": 0,
+            "description": "gmem sourceID for Macro 4",
+            "options": null
+        },
+        {
+            "index": 21,
+            "name": "gmem sourceID for Macro 5",
+            "min": 0,
+            "max": 1024,
+            "defaultVal": 0,
+            "description": "gmem sourceID for Macro 5",
+            "options": null
+        },
+        {
+            "index": 22,
+            "name": "gmem sourceID for Macro 6",
+            "min": 0,
+            "max": 1024,
+            "defaultVal": 0,
+            "description": "gmem sourceID for Macro 6",
+            "options": null
+        },
+        {
+            "index": 23,
+            "name": "gmem sourceID for Macro 7",
+            "min": 0,
+            "max": 1024,
+            "defaultVal": 0,
+            "description": "gmem sourceID for Macro 7",
+            "options": null
+        },
+        {
+            "index": 24,
+            "name": "gmem sourceID for Macro 8",
+            "min": 0,
+            "max": 1024,
+            "defaultVal": 0,
+            "description": "gmem sourceID for Macro 8",
+            "options": null
+        },
+        {
+            "index": 25,
+            "name": "gmem sourceID for Macro 9",
+            "min": 0,
+            "max": 1024,
+            "defaultVal": 0,
+            "description": "gmem sourceID for Macro 9",
+            "options": null
+        },
+        {
+            "index": 26,
+            "name": "gmem sourceID for Macro 10",
+            "min": 0,
+            "max": 1024,
+            "defaultVal": 0,
+            "description": "gmem sourceID for Macro 10",
+            "options": null
+        },
+        {
+            "index": 27,
+            "name": "gmem sourceID for Macro 11",
+            "min": 0,
+            "max": 1024,
+            "defaultVal": 0,
+            "description": "gmem sourceID for Macro 11",
+            "options": null
+        },
+        {
+            "index": 28,
+            "name": "gmem sourceID for Macro 12",
+            "min": 0,
+            "max": 1024,
+            "defaultVal": 0,
+            "description": "gmem sourceID for Macro 12",
+            "options": null
+        },
+        {
+            "index": 29,
+            "name": "gmem sourceID for Macro 13",
+            "min": 0,
+            "max": 1024,
+            "defaultVal": 0,
+            "description": "gmem sourceID for Macro 13",
+            "options": null
+        },
+        {
+            "index": 30,
+            "name": "gmem sourceID for Macro 14",
+            "min": 0,
+            "max": 1024,
+            "defaultVal": 0,
+            "description": "gmem sourceID for Macro 14",
+            "options": null
+        },
+        {
+            "index": 31,
+            "name": "gmem sourceID for Macro 15",
+            "min": 0,
+            "max": 1024,
+            "defaultVal": 0,
+            "description": "gmem sourceID for Macro 15",
+            "options": null
+        },
+        {
+            "index": 32,
+            "name": "gmem sourceID for Macro 16",
+            "min": 0,
+            "max": 1024,
+            "defaultVal": 0,
+            "description": "gmem sourceID for Macro 16",
+            "options": null
+        },
+        {
+            "index": 33,
+            "name": "gmem destID for Macro 1",
+            "min": 0,
+            "max": 1024,
+            "defaultVal": 0,
+            "description": "gmem destID for Macro 1",
+            "options": null
+        },
+        {
+            "index": 34,
+            "name": "gmem destID for Macro 2",
+            "min": 0,
+            "max": 1024,
+            "defaultVal": 0,
+            "description": "gmem destID for Macro 2",
+            "options": null
+        },
+        {
+            "index": 35,
+            "name": "gmem destID for Macro 3",
+            "min": 0,
+            "max": 1024,
+            "defaultVal": 0,
+            "description": "gmem destID for Macro 3",
+            "options": null
+        },
+        {
+            "index": 36,
+            "name": "gmem destID for Macro 4",
+            "min": 0,
+            "max": 1024,
+            "defaultVal": 0,
+            "description": "gmem destID for Macro 4",
+            "options": null
+        },
+        {
+            "index": 37,
+            "name": "gmem destID for Macro 5",
+            "min": 0,
+            "max": 1024,
+            "defaultVal": 0,
+            "description": "gmem destID for Macro 5",
+            "options": null
+        },
+        {
+            "index": 38,
+            "name": "gmem destID for Macro 6",
+            "min": 0,
+            "max": 1024,
+            "defaultVal": 0,
+            "description": "gmem destID for Macro 6",
+            "options": null
+        },
+        {
+            "index": 39,
+            "name": "gmem destID for Macro 7",
+            "min": 0,
+            "max": 1024,
+            "defaultVal": 0,
+            "description": "gmem destID for Macro 7",
+            "options": null
+        },
+        {
+            "index": 40,
+            "name": "gmem destID for Macro 8",
+            "min": 0,
+            "max": 1024,
+            "defaultVal": 0,
+            "description": "gmem destID for Macro 8",
+            "options": null
+        },
+        {
+            "index": 41,
+            "name": "gmem destID for Macro 9",
+            "min": 0,
+            "max": 1024,
+            "defaultVal": 0,
+            "description": "gmem destID for Macro 9",
+            "options": null
+        },
+        {
+            "index": 42,
+            "name": "gmem destID for Macro 10",
+            "min": 0,
+            "max": 1024,
+            "defaultVal": 0,
+            "description": "gmem destID for Macro 10",
+            "options": null
+        },
+        {
+            "index": 43,
+            "name": "gmem destID for Macro 11",
+            "min": 0,
+            "max": 1024,
+            "defaultVal": 0,
+            "description": "gmem destID for Macro 11",
+            "options": null
+        },
+        {
+            "index": 44,
+            "name": "gmem destID for Macro 12",
+            "min": 0,
+            "max": 1024,
+            "defaultVal": 0,
+            "description": "gmem destID for Macro 12",
+            "options": null
+        },
+        {
+            "index": 45,
+            "name": "gmem destID for Macro 13",
+            "min": 0,
+            "max": 1024,
+            "defaultVal": 0,
+            "description": "gmem destID for Macro 13",
+            "options": null
+        },
+        {
+            "index": 46,
+            "name": "gmem destID for Macro 14",
+            "min": 0,
+            "max": 1024,
+            "defaultVal": 0,
+            "description": "gmem destID for Macro 14",
+            "options": null
+        },
+        {
+            "index": 47,
+            "name": "gmem destID for Macro 15",
+            "min": 0,
+            "max": 1024,
+            "defaultVal": 0,
+            "description": "gmem destID for Macro 15",
+            "options": null
+        }
+    ],
+    "packRequired": "MPL Scripts"
+},
+  {
+    "name": "JS: X-Raym/X-Raym_4 Mono channels switcher",
+    "shortName": "X-Raym_4 Mono channels switcher",
+    "category": "Utility",
+    "description": "High-quality tool from the X-Raym collection.",
+    "howItWorks": "Professional REAPER signal processing algorithm.",
+    "proTips": "An essential tool in the X-Raym library.",
+    "sliders": [
+        {
+            "index": 2,
+            "name": "Input source",
+            "min": 0,
+            "max": 3,
+            "defaultVal": 0,
+            "description": "Input source",
+            "options": null
+        },
+        {
+            "index": 9,
+            "name": "Output source",
+            "min": 0,
+            "max": 3,
+            "defaultVal": 0,
+            "description": "Output source",
+            "options": null
+        }
+    ],
+    "packRequired": "X-Raym Scripts"
+},
+  {
+    "name": "JS: X-Raym/X-Raym_4 Stereo channels switcher",
+    "shortName": "X-Raym_4 Stereo channels switcher",
+    "category": "Utility",
+    "description": "High-quality tool from the X-Raym collection.",
+    "howItWorks": "Professional REAPER signal processing algorithm.",
+    "proTips": "An essential tool in the X-Raym library.",
+    "sliders": [
+        {
+            "index": 2,
+            "name": "Input source",
+            "min": 0,
+            "max": 3,
+            "defaultVal": 0,
+            "description": "Input source",
+            "options": null
+        },
+        {
+            "index": 9,
+            "name": "Output source",
+            "min": 0,
+            "max": 3,
+            "defaultVal": 0,
+            "description": "Output source",
+            "options": null
+        }
+    ],
+    "packRequired": "X-Raym Scripts"
+},
+  {
+    "name": "JS: X-Raym/X-Raym_Mute on loop",
+    "shortName": "X-Raym_Mute on loop",
+    "category": "Utility",
+    "description": "High-quality tool from the X-Raym collection.",
+    "howItWorks": "Professional REAPER signal processing algorithm.",
+    "proTips": "An essential tool in the X-Raym library.",
+    "sliders": [
+        {
+            "index": 0,
+            "name": "State",
+            "min": 0,
+            "max": 1,
+            "defaultVal": 0,
+            "description": "State",
+            "options": null
+        }
+    ],
+    "packRequired": "X-Raym Scripts"
+},
+  {
+    "name": "JS: X-Raym/X-Raym_Send MIDI text at playstate change",
+    "shortName": "X-Raym_Send MIDI text at playstate change",
+    "category": "MIDI",
+    "description": "High-quality tool from the X-Raym collection.",
+    "howItWorks": "Professional REAPER signal processing algorithm.",
+    "proTips": "An essential tool in the X-Raym library.",
+    "sliders": [],
+    "packRequired": "X-Raym Scripts"
+},
+  {
+    "name": "JS: X-Raym/X-Raym_Silence meter",
+    "shortName": "X-Raym_Silence meter",
+    "category": "Utility",
+    "description": "High-quality tool from the X-Raym collection.",
+    "howItWorks": "Professional REAPER signal processing algorithm.",
+    "proTips": "An essential tool in the X-Raym library.",
+    "sliders": [
+        {
+            "index": 0,
+            "name": ",Volume Left [dB]",
+            "min": -325,
+            "max": 24,
+            "defaultVal": 0,
+            "description": ",Volume Left [dB]",
+            "options": null
+        },
+        {
+            "index": 1,
+            "name": ",Volume Right [dB]",
+            "min": -325,
+            "max": 24,
+            "defaultVal": 0,
+            "description": ",Volume Right [dB]",
+            "options": null
+        },
+        {
+            "index": 3,
+            "name": "Silence Threshold",
+            "min": -150,
+            "max": 1,
+            "defaultVal": -150,
+            "description": "Silence Threshold",
+            "options": null
+        },
+        {
+            "index": 4,
+            "name": "Min Silence Duration (seconds)",
+            "min": 0,
+            "max": 5,
+            "defaultVal": 0.1,
+            "description": "Min Silence Duration (seconds)",
+            "options": null
+        },
+        {
+            "index": 8,
+            "name": "Under Threshold",
+            "min": 0,
+            "max": 1,
+            "defaultVal": 0,
+            "description": "Under Threshold",
+            "options": null
+        },
+        {
+            "index": 9,
+            "name": "Under Threshold + Min Duration",
+            "min": 0,
+            "max": 1,
+            "defaultVal": 0,
+            "description": "Under Threshold + Min Duration",
+            "options": null
+        },
+        {
+            "index": 10,
+            "name": "Display Peak Meter",
+            "min": 0,
+            "max": 1,
+            "defaultVal": 0,
+            "description": "Display Peak Meter",
+            "options": null
+        }
+    ],
+    "packRequired": "X-Raym Scripts"
+},
+  {
+    "name": "JS: X-Raym/X-Raym_Stereo downmixer",
+    "shortName": "X-Raym_Stereo downmixer",
+    "category": "Utility",
+    "description": "High-quality tool from the X-Raym collection.",
+    "howItWorks": "Professional REAPER signal processing algorithm.",
+    "proTips": "An essential tool in the X-Raym library.",
+    "sliders": [],
+    "packRequired": "X-Raym Scripts"
+},
+  {
+    "name": "JS: X-Raym/X-Raym_Tap tempo",
+    "shortName": "X-Raym_Tap tempo",
+    "category": "Utility",
+    "description": "High-quality tool from the X-Raym collection.",
+    "howItWorks": "Professional REAPER signal processing algorithm.",
+    "proTips": "An essential tool in the X-Raym library.",
+    "sliders": [
+        {
+            "index": 0,
+            "name": "Input Channel",
+            "min": -1,
+            "max": 15,
+            "defaultVal": -1,
+            "description": "Input Channel",
+            "options": null
+        },
+        {
+            "index": 1,
+            "name": "Note In Monitor",
+            "min": 0,
+            "max": 127,
+            "defaultVal": 0,
+            "description": "Note In Monitor",
+            "options": null
+        },
+        {
+            "index": 3,
+            "name": "Reset Taps",
+            "min": 0,
+            "max": 1,
+            "defaultVal": 0,
+            "description": "Reset Taps",
+            "options": null
+        },
+        {
+            "index": 5,
+            "name": "Taps Count Limit",
+            "min": 4,
+            "max": 64,
+            "defaultVal": 4,
+            "description": "Taps Count Limit",
+            "options": null
+        },
+        {
+            "index": 29,
+            "name": "Average BPM",
+            "min": 0,
+            "max": 450,
+            "defaultVal": 0,
+            "description": "Average BPM",
+            "options": null
+        },
+        {
+            "index": 29,
+            "name": "-Last Stable Average BPM",
+            "min": 0,
+            "max": 450,
+            "defaultVal": 0,
+            "description": "-Last Stable Average BPM",
+            "options": null
+        },
+        {
+            "index": 30,
+            "name": "Rolling Average BPM",
+            "min": 0,
+            "max": 450,
+            "defaultVal": 0,
+            "description": "Rolling Average BPM",
+            "options": null
+        },
+        {
+            "index": 30,
+            "name": "-Last Stable Rolling Average BPM",
+            "min": 0,
+            "max": 450,
+            "defaultVal": 0,
+            "description": "-Last Stable Rolling Average BPM",
+            "options": null
+        },
+        {
+            "index": 39,
+            "name": "Show Rolling Average",
+            "min": 0,
+            "max": 1,
+            "defaultVal": 0,
+            "description": "Show Rolling Average",
+            "options": null
+        }
+    ],
+    "packRequired": "X-Raym Scripts"
+},
+  {
+    "name": "JS: X-Raym/X-Raym_Tone generator with playstate",
+    "shortName": "X-Raym_Tone generator with playstate",
+    "category": "Utility",
+    "description": "High-quality tool from the X-Raym collection.",
+    "howItWorks": "Professional REAPER signal processing algorithm.",
+    "proTips": "An essential tool in the X-Raym library.",
+    "sliders": [
+        {
+            "index": 0,
+            "name": "Wet Mix (dB)",
+            "min": -120,
+            "max": 6,
+            "defaultVal": -12,
+            "description": "Wet Mix (dB)",
+            "options": null
+        },
+        {
+            "index": 1,
+            "name": "Dry Mix (dB)",
+            "min": -120,
+            "max": 6,
+            "defaultVal": -6,
+            "description": "Dry Mix (dB)",
+            "options": null
+        },
+        {
+            "index": 2,
+            "name": "Base Frequency (Hz)",
+            "min": 20,
+            "max": 24000,
+            "defaultVal": 1000,
+            "description": "Base Frequency (Hz)",
+            "options": null
+        },
+        {
+            "index": 3,
+            "name": "Note",
+            "min": 0,
+            "max": 11,
+            "defaultVal": 0,
+            "description": "Note",
+            "options": null
+        },
+        {
+            "index": 4,
+            "name": "Octave",
+            "min": -4,
+            "max": 4,
+            "defaultVal": 0,
+            "description": "Octave",
+            "options": null
+        },
+        {
+            "index": 5,
+            "name": "Fine Tune (cents)",
+            "min": -100,
+            "max": 100,
+            "defaultVal": 0,
+            "description": "Fine Tune (cents)",
+            "options": null
+        },
+        {
+            "index": 6,
+            "name": "Shape",
+            "min": 0,
+            "max": 2,
+            "defaultVal": 0,
+            "description": "Shape",
+            "options": null
+        },
+        {
+            "index": 8,
+            "name": "Playstate",
+            "min": 0,
+            "max": 3,
+            "defaultVal": 2,
+            "description": "Playstate",
+            "options": null
+        },
+        {
+            "index": 9,
+            "name": "Duration (0 or Playstate=all = unlimited)",
+            "min": 0,
+            "max": 10,
+            "defaultVal": 0.5,
+            "description": "Duration (0 or Playstate=all = unlimited)",
+            "options": null
+        }
+    ],
+    "packRequired": "X-Raym Scripts"
+},
+  {
+    "name": "JS: X-Raym/X-Raym_16 pads MIDI Notes Map",
+    "shortName": "X-Raym_16 pads MIDI Notes Map",
+    "category": "MIDI",
+    "description": "High-quality tool from the X-Raym collection.",
+    "howItWorks": "Professional REAPER signal processing algorithm.",
+    "proTips": "An essential tool in the X-Raym library.",
+    "sliders": [
+        {
+            "index": 0,
+            "name": "Input Channel",
+            "min": 0,
+            "max": 16,
+            "defaultVal": 0,
+            "description": "Input Channel",
+            "options": null
+        },
+        {
+            "index": 1,
+            "name": "Pad 01 Input Note",
+            "min": 0,
+            "max": 127,
+            "defaultVal": 36,
+            "description": "Pad 01 Input Note",
+            "options": null
+        },
+        {
+            "index": 2,
+            "name": "Remap",
+            "min": 0,
+            "max": 1,
+            "defaultVal": 1,
+            "description": "Remap",
+            "options": null
+        },
+        {
+            "index": 4,
+            "name": "Reload Pads Images",
+            "min": 0,
+            "max": 1,
+            "defaultVal": 0,
+            "description": "Reload Pads Images",
+            "options": null
+        },
+        {
+            "index": 5,
+            "name": "Display",
+            "min": 0,
+            "max": 1,
+            "defaultVal": 0,
+            "description": "Display",
+            "options": null
+        },
+        {
+            "index": 9,
+            "name": "-Pad 01 note",
+            "min": 0,
+            "max": 127,
+            "defaultVal": 36,
+            "description": "-Pad 01 note",
+            "options": null
+        },
+        {
+            "index": 10,
+            "name": "-Pad 02 note",
+            "min": 0,
+            "max": 127,
+            "defaultVal": 37,
+            "description": "-Pad 02 note",
+            "options": null
+        },
+        {
+            "index": 11,
+            "name": "-Pad 03 note",
+            "min": 0,
+            "max": 127,
+            "defaultVal": 38,
+            "description": "-Pad 03 note",
+            "options": null
+        },
+        {
+            "index": 12,
+            "name": "-Pad 04 note",
+            "min": 0,
+            "max": 127,
+            "defaultVal": 39,
+            "description": "-Pad 04 note",
+            "options": null
+        },
+        {
+            "index": 13,
+            "name": "-Pad 05 note",
+            "min": 0,
+            "max": 127,
+            "defaultVal": 40,
+            "description": "-Pad 05 note",
+            "options": null
+        },
+        {
+            "index": 14,
+            "name": "-Pad 06 note",
+            "min": 0,
+            "max": 127,
+            "defaultVal": 41,
+            "description": "-Pad 06 note",
+            "options": null
+        },
+        {
+            "index": 15,
+            "name": "-Pad 07 note",
+            "min": 0,
+            "max": 127,
+            "defaultVal": 42,
+            "description": "-Pad 07 note",
+            "options": null
+        },
+        {
+            "index": 16,
+            "name": "-Pad 08 note",
+            "min": 0,
+            "max": 127,
+            "defaultVal": 43,
+            "description": "-Pad 08 note",
+            "options": null
+        },
+        {
+            "index": 17,
+            "name": "-Pad 09 note",
+            "min": 0,
+            "max": 127,
+            "defaultVal": 44,
+            "description": "-Pad 09 note",
+            "options": null
+        },
+        {
+            "index": 18,
+            "name": "-Pad 10 note",
+            "min": 0,
+            "max": 127,
+            "defaultVal": 45,
+            "description": "-Pad 10 note",
+            "options": null
+        },
+        {
+            "index": 19,
+            "name": "-Pad 11 note",
+            "min": 0,
+            "max": 127,
+            "defaultVal": 46,
+            "description": "-Pad 11 note",
+            "options": null
+        },
+        {
+            "index": 20,
+            "name": "-Pad 12 note",
+            "min": 0,
+            "max": 127,
+            "defaultVal": 47,
+            "description": "-Pad 12 note",
+            "options": null
+        },
+        {
+            "index": 21,
+            "name": "-Pad 13 note",
+            "min": 0,
+            "max": 127,
+            "defaultVal": 48,
+            "description": "-Pad 13 note",
+            "options": null
+        },
+        {
+            "index": 22,
+            "name": "-Pad 14 note",
+            "min": 0,
+            "max": 127,
+            "defaultVal": 49,
+            "description": "-Pad 14 note",
+            "options": null
+        },
+        {
+            "index": 23,
+            "name": "-Pad 15 note",
+            "min": 0,
+            "max": 127,
+            "defaultVal": 50,
+            "description": "-Pad 15 note",
+            "options": null
+        },
+        {
+            "index": 24,
+            "name": "-Pad 16 note",
+            "min": 0,
+            "max": 127,
+            "defaultVal": 51,
+            "description": "-Pad 16 note",
+            "options": null
+        },
+        {
+            "index": 25,
+            "name": "-Pad 01 channel",
+            "min": -1,
+            "max": 15,
+            "defaultVal": -1,
+            "description": "-Pad 01 channel",
+            "options": null
+        },
+        {
+            "index": 26,
+            "name": "-Pad 02 channel",
+            "min": -1,
+            "max": 15,
+            "defaultVal": -1,
+            "description": "-Pad 02 channel",
+            "options": null
+        },
+        {
+            "index": 27,
+            "name": "-Pad 03 channel",
+            "min": -1,
+            "max": 15,
+            "defaultVal": -1,
+            "description": "-Pad 03 channel",
+            "options": null
+        },
+        {
+            "index": 28,
+            "name": "-Pad 04 channel",
+            "min": -1,
+            "max": 15,
+            "defaultVal": -1,
+            "description": "-Pad 04 channel",
+            "options": null
+        },
+        {
+            "index": 29,
+            "name": "-Pad 01 channel",
+            "min": -1,
+            "max": 15,
+            "defaultVal": -1,
+            "description": "-Pad 01 channel",
+            "options": null
+        },
+        {
+            "index": 30,
+            "name": "-Pad 02 channel",
+            "min": -1,
+            "max": 15,
+            "defaultVal": -1,
+            "description": "-Pad 02 channel",
+            "options": null
+        },
+        {
+            "index": 31,
+            "name": "-Pad 03 channel",
+            "min": -1,
+            "max": 15,
+            "defaultVal": -1,
+            "description": "-Pad 03 channel",
+            "options": null
+        },
+        {
+            "index": 32,
+            "name": "-Pad 04 channel",
+            "min": -1,
+            "max": 15,
+            "defaultVal": -1,
+            "description": "-Pad 04 channel",
+            "options": null
+        },
+        {
+            "index": 33,
+            "name": "-Pad 01 channel",
+            "min": -1,
+            "max": 15,
+            "defaultVal": -1,
+            "description": "-Pad 01 channel",
+            "options": null
+        },
+        {
+            "index": 34,
+            "name": "-Pad 02 channel",
+            "min": -1,
+            "max": 15,
+            "defaultVal": -1,
+            "description": "-Pad 02 channel",
+            "options": null
+        },
+        {
+            "index": 35,
+            "name": "-Pad 03 channel",
+            "min": -1,
+            "max": 15,
+            "defaultVal": -1,
+            "description": "-Pad 03 channel",
+            "options": null
+        },
+        {
+            "index": 36,
+            "name": "-Pad 04 channel",
+            "min": -1,
+            "max": 15,
+            "defaultVal": -1,
+            "description": "-Pad 04 channel",
+            "options": null
+        },
+        {
+            "index": 37,
+            "name": "-Pad 01 channel",
+            "min": -1,
+            "max": 15,
+            "defaultVal": -1,
+            "description": "-Pad 01 channel",
+            "options": null
+        },
+        {
+            "index": 38,
+            "name": "-Pad 02 channel",
+            "min": -1,
+            "max": 15,
+            "defaultVal": -1,
+            "description": "-Pad 02 channel",
+            "options": null
+        },
+        {
+            "index": 39,
+            "name": "-Pad 03 channel",
+            "min": -1,
+            "max": 15,
+            "defaultVal": -1,
+            "description": "-Pad 03 channel",
+            "options": null
+        },
+        {
+            "index": 40,
+            "name": "-Pad 04 channel",
+            "min": -1,
+            "max": 15,
+            "defaultVal": -1,
+            "description": "-Pad 04 channel",
+            "options": null
+        }
+    ],
+    "packRequired": "X-Raym Scripts"
+},
+  {
+    "name": "JS: X-Raym/X-Raym_Last MIDI event monitor",
+    "shortName": "X-Raym_Last MIDI event monitor",
+    "category": "MIDI",
+    "description": "High-quality tool from the X-Raym collection.",
+    "howItWorks": "Professional REAPER signal processing algorithm.",
+    "proTips": "An essential tool in the X-Raym library.",
+    "sliders": [
+        {
+            "index": 0,
+            "name": "Channel",
+            "min": 1,
+            "max": 16,
+            "defaultVal": 1,
+            "description": "Channel",
+            "options": null
+        }
+    ],
+    "packRequired": "X-Raym Scripts"
+},
+  {
+    "name": "JS: X-Raym/X-Raym_MIDI Aftertouch eater",
+    "shortName": "X-Raym_MIDI Aftertouch eater",
+    "category": "MIDI",
+    "description": "High-quality tool from the X-Raym collection.",
+    "howItWorks": "Professional REAPER signal processing algorithm.",
+    "proTips": "An essential tool in the X-Raym library.",
+    "sliders": [],
+    "packRequired": "X-Raym Scripts"
+},
+  {
+    "name": "JS: X-Raym/X-Raym_MIDI CC Channel Router",
+    "shortName": "X-Raym_MIDI CC Channel Router",
+    "category": "MIDI",
+    "description": "High-quality tool from the X-Raym collection.",
+    "howItWorks": "Professional REAPER signal processing algorithm.",
+    "proTips": "An essential tool in the X-Raym library.",
+    "sliders": [
+        {
+            "index": 0,
+            "name": "Input Channel",
+            "min": 0,
+            "max": 16,
+            "defaultVal": 0,
+            "description": "Input Channel",
+            "options": null
+        },
+        {
+            "index": 2,
+            "name": "Output Channel 1",
+            "min": 1,
+            "max": 1,
+            "defaultVal": 0,
+            "description": "Output Channel 1",
+            "options": null
+        },
+        {
+            "index": 3,
+            "name": "Output Channel 2",
+            "min": 1,
+            "max": 1,
+            "defaultVal": 0,
+            "description": "Output Channel 2",
+            "options": null
+        },
+        {
+            "index": 4,
+            "name": "Output Channel 3",
+            "min": 1,
+            "max": 1,
+            "defaultVal": 0,
+            "description": "Output Channel 3",
+            "options": null
+        },
+        {
+            "index": 5,
+            "name": "Output Channel 4",
+            "min": 1,
+            "max": 1,
+            "defaultVal": 0,
+            "description": "Output Channel 4",
+            "options": null
+        },
+        {
+            "index": 6,
+            "name": "Output Channel 5",
+            "min": 1,
+            "max": 1,
+            "defaultVal": 0,
+            "description": "Output Channel 5",
+            "options": null
+        },
+        {
+            "index": 7,
+            "name": "Output Channel 6",
+            "min": 1,
+            "max": 1,
+            "defaultVal": 0,
+            "description": "Output Channel 6",
+            "options": null
+        },
+        {
+            "index": 8,
+            "name": "Output Channel 7",
+            "min": 1,
+            "max": 1,
+            "defaultVal": 0,
+            "description": "Output Channel 7",
+            "options": null
+        },
+        {
+            "index": 9,
+            "name": "Output Channel 8",
+            "min": 1,
+            "max": 1,
+            "defaultVal": 0,
+            "description": "Output Channel 8",
+            "options": null
+        },
+        {
+            "index": 10,
+            "name": "Output Channel 9",
+            "min": 1,
+            "max": 1,
+            "defaultVal": 0,
+            "description": "Output Channel 9",
+            "options": null
+        },
+        {
+            "index": 11,
+            "name": "Output Channel 10",
+            "min": 1,
+            "max": 1,
+            "defaultVal": 0,
+            "description": "Output Channel 10",
+            "options": null
+        },
+        {
+            "index": 12,
+            "name": "Output Channel 11",
+            "min": 1,
+            "max": 1,
+            "defaultVal": 0,
+            "description": "Output Channel 11",
+            "options": null
+        },
+        {
+            "index": 13,
+            "name": "Output Channel 12",
+            "min": 1,
+            "max": 1,
+            "defaultVal": 0,
+            "description": "Output Channel 12",
+            "options": null
+        },
+        {
+            "index": 14,
+            "name": "Output Channel 13",
+            "min": 1,
+            "max": 1,
+            "defaultVal": 0,
+            "description": "Output Channel 13",
+            "options": null
+        },
+        {
+            "index": 15,
+            "name": "Output Channel 14",
+            "min": 1,
+            "max": 1,
+            "defaultVal": 0,
+            "description": "Output Channel 14",
+            "options": null
+        },
+        {
+            "index": 16,
+            "name": "Output Channel 15",
+            "min": 1,
+            "max": 1,
+            "defaultVal": 0,
+            "description": "Output Channel 15",
+            "options": null
+        },
+        {
+            "index": 17,
+            "name": "Output Channel 16",
+            "min": 1,
+            "max": 1,
+            "defaultVal": 0,
+            "description": "Output Channel 16",
+            "options": null
+        }
+    ],
+    "packRequired": "X-Raym Scripts"
+},
+  {
+    "name": "JS: X-Raym/X-Raym_MIDI CC Mapper (-24 +24 range)",
+    "shortName": "X-Raym_MIDI CC Mapper (-24 +24 range)",
+    "category": "MIDI",
+    "description": "High-quality tool from the X-Raym collection.",
+    "howItWorks": "Professional REAPER signal processing algorithm.",
+    "proTips": "An essential tool in the X-Raym library.",
+    "sliders": [
+        {
+            "index": 0,
+            "name": "Controller Source",
+            "min": 0,
+            "max": 127,
+            "defaultVal": 1,
+            "description": "Controller Source",
+            "options": null
+        },
+        {
+            "index": 1,
+            "name": "Controller Target",
+            "min": 0,
+            "max": 127,
+            "defaultVal": 1,
+            "description": "Controller Target",
+            "options": null
+        },
+        {
+            "index": 2,
+            "name": "Min Value",
+            "min": -24,
+            "max": 24,
+            "defaultVal": 0,
+            "description": "Min Value",
+            "options": null
+        },
+        {
+            "index": 3,
+            "name": "Range",
+            "min": -24,
+            "max": 24,
+            "defaultVal": 24,
+            "description": "Range",
+            "options": null
+        },
+        {
+            "index": 4,
+            "name": "Pass Through CC Source",
+            "min": 0,
+            "max": 1,
+            "defaultVal": 0,
+            "description": "Pass Through CC Source",
+            "options": null
+        }
+    ],
+    "packRequired": "X-Raym Scripts"
+},
+  {
+    "name": "JS: X-Raym/X-Raym_MIDI CC Mapper (scale)",
+    "shortName": "X-Raym_MIDI CC Mapper (scale)",
+    "category": "MIDI",
+    "description": "High-quality tool from the X-Raym collection.",
+    "howItWorks": "Professional REAPER signal processing algorithm.",
+    "proTips": "An essential tool in the X-Raym library.",
+    "sliders": [
+        {
+            "index": 0,
+            "name": "MIDI Channel Input",
+            "min": 0,
+            "max": 16,
+            "defaultVal": 0,
+            "description": "MIDI Channel Input",
+            "options": null
+        },
+        {
+            "index": 2,
+            "name": "CC Input",
+            "min": 0,
+            "max": 1,
+            "defaultVal": 0,
+            "description": "CC Input",
+            "options": null
+        },
+        {
+            "index": 3,
+            "name": "Controller Source",
+            "min": 0,
+            "max": 127,
+            "defaultVal": 0,
+            "description": "Controller Source",
+            "options": null
+        },
+        {
+            "index": 4,
+            "name": "Controller Target",
+            "min": 0,
+            "max": 127,
+            "defaultVal": 0,
+            "description": "Controller Target",
+            "options": null
+        },
+        {
+            "index": 9,
+            "name": "Min CC Input",
+            "min": 0,
+            "max": 127,
+            "defaultVal": 0,
+            "description": "Min CC Input",
+            "options": null
+        },
+        {
+            "index": 10,
+            "name": "Max CC Input",
+            "min": 0,
+            "max": 127,
+            "defaultVal": 0,
+            "description": "Max CC Input",
+            "options": null
+        },
+        {
+            "index": 12,
+            "name": "Min CC Output",
+            "min": 0,
+            "max": 127,
+            "defaultVal": 0,
+            "description": "Min CC Output",
+            "options": null
+        },
+        {
+            "index": 13,
+            "name": "Max CC Output",
+            "min": 0,
+            "max": 127,
+            "defaultVal": 0,
+            "description": "Max CC Output",
+            "options": null
+        },
+        {
+            "index": 19,
+            "name": "Pass Through CC Source",
+            "min": 0,
+            "max": 1,
+            "defaultVal": 0,
+            "description": "Pass Through CC Source",
+            "options": null
+        }
+    ],
+    "packRequired": "X-Raym Scripts"
+},
+  {
+    "name": "JS: X-Raym/X-Raym_MIDI note generator",
+    "shortName": "X-Raym_MIDI note generator",
+    "category": "MIDI",
+    "description": "High-quality tool from the X-Raym collection.",
+    "howItWorks": "Professional REAPER signal processing algorithm.",
+    "proTips": "An essential tool in the X-Raym library.",
+    "sliders": [
+        {
+            "index": 0,
+            "name": "Rate (Hz)",
+            "min": 0,
+            "max": 100,
+            "defaultVal": 1,
+            "description": "Rate (Hz)",
+            "options": null
+        },
+        {
+            "index": 1,
+            "name": "Note Min",
+            "min": 0,
+            "max": 127,
+            "defaultVal": 0,
+            "description": "Note Min",
+            "options": null
+        },
+        {
+            "index": 2,
+            "name": "Note Max",
+            "min": 0,
+            "max": 127,
+            "defaultVal": 127,
+            "description": "Note Max",
+            "options": null
+        },
+        {
+            "index": 3,
+            "name": "Vel Min",
+            "min": 0,
+            "max": 127,
+            "defaultVal": 0,
+            "description": "Vel Min",
+            "options": null
+        },
+        {
+            "index": 4,
+            "name": "Vel Max",
+            "min": 0,
+            "max": 127,
+            "defaultVal": 127,
+            "description": "Vel Max",
+            "options": null
+        },
+        {
+            "index": 5,
+            "name": "Note Length // This would need buffer for each note value",
+            "min": 0,
+            "max": 127,
+            "defaultVal": 0,
+            "description": "Note Length // This would need buffer for each note value",
+            "options": null
+        }
+    ],
+    "packRequired": "X-Raym Scripts"
+},
+  {
+    "name": "JS: X-Raym/X-Raym_MIDI notes octave transpose shift",
+    "shortName": "X-Raym_MIDI notes octave transpose shift",
+    "category": "MIDI",
+    "description": "High-quality tool from the X-Raym collection.",
+    "howItWorks": "Professional REAPER signal processing algorithm.",
+    "proTips": "An essential tool in the X-Raym library.",
+    "sliders": [
+        {
+            "index": 0,
+            "name": "Input Channel",
+            "min": 0,
+            "max": 16,
+            "defaultVal": 0,
+            "description": "Input Channel",
+            "options": null
+        },
+        {
+            "index": 4,
+            "name": "Octave Shift",
+            "min": -12,
+            "max": 12,
+            "defaultVal": 0,
+            "description": "Octave Shift",
+            "options": null
+        }
+    ],
+    "packRequired": "X-Raym Scripts"
+},
+  {
+    "name": "JS: X-Raym/X-Raym_MIDI notes sequence from CSV file",
+    "shortName": "X-Raym_MIDI notes sequence from CSV file",
+    "category": "MIDI",
+    "description": "High-quality tool from the X-Raym collection.",
+    "howItWorks": "Professional REAPER signal processing algorithm.",
+    "proTips": "An essential tool in the X-Raym library.",
+    "sliders": [
+        {
+            "index": 0,
+            "name": "Input Channel",
+            "min": 0,
+            "max": 16,
+            "defaultVal": 0,
+            "description": "Input Channel",
+            "options": null
+        },
+        {
+            "index": 1,
+            "name": "Note In",
+            "min": 0,
+            "max": 127,
+            "defaultVal": 0,
+            "description": "Note In",
+            "options": null
+        },
+        {
+            "index": 2,
+            "name": "Forward",
+            "min": 0,
+            "max": 127,
+            "defaultVal": 0,
+            "description": "Forward",
+            "options": null
+        },
+        {
+            "index": 3,
+            "name": "Backward",
+            "min": 0,
+            "max": 127,
+            "defaultVal": 0,
+            "description": "Backward",
+            "options": null
+        },
+        {
+            "index": 5,
+            "name": "Reset",
+            "min": 0,
+            "max": 127,
+            "defaultVal": 0,
+            "description": "Reset",
+            "options": null
+        },
+        {
+            "index": 9,
+            "name": "Save Cue Point",
+            "min": 0,
+            "max": 127,
+            "defaultVal": 0,
+            "description": "Save Cue Point",
+            "options": null
+        },
+        {
+            "index": 10,
+            "name": "Go to Cue Point",
+            "min": 0,
+            "max": 127,
+            "defaultVal": 0,
+            "description": "Go to Cue Point",
+            "options": null
+        },
+        {
+            "index": 14,
+            "name": "Velocity",
+            "min": 0,
+            "max": 1,
+            "defaultVal": 0,
+            "description": "Velocity",
+            "options": null
+        }
+    ],
+    "packRequired": "X-Raym Scripts"
+},
+  {
+    "name": "JS: X-Raym/X-Raym_MIDI single note map",
+    "shortName": "X-Raym_MIDI single note map",
+    "category": "MIDI",
+    "description": "High-quality tool from the X-Raym collection.",
+    "howItWorks": "Professional REAPER signal processing algorithm.",
+    "proTips": "An essential tool in the X-Raym library.",
+    "sliders": [
+        {
+            "index": 0,
+            "name": "Input Channel",
+            "min": 0,
+            "max": 16,
+            "defaultVal": 0,
+            "description": "Input Channel",
+            "options": null
+        },
+        {
+            "index": 9,
+            "name": "Note IN",
+            "min": 0,
+            "max": 127,
+            "defaultVal": 0,
+            "description": "Note IN",
+            "options": null
+        },
+        {
+            "index": 10,
+            "name": "Note OUT",
+            "min": 0,
+            "max": 127,
+            "defaultVal": 0,
+            "description": "Note OUT",
+            "options": null
+        },
+        {
+            "index": 20,
+            "name": "Pass-through Original Note",
+            "min": 0,
+            "max": 1,
+            "defaultVal": 0,
+            "description": "Pass-through Original Note",
+            "options": null
+        }
+    ],
+    "packRequired": "X-Raym Scripts"
+},
+  {
+    "name": "JS: X-Raym/X-Raym_Note On under X velocity to Note Off",
+    "shortName": "X-Raym_Note On under X velocity to Note Off",
+    "category": "Utility",
+    "description": "High-quality tool from the X-Raym collection.",
+    "howItWorks": "Professional REAPER signal processing algorithm.",
+    "proTips": "An essential tool in the X-Raym library.",
+    "sliders": [
+        {
+            "index": 0,
+            "name": "Input Channel",
+            "min": 0,
+            "max": 16,
+            "defaultVal": 0,
+            "description": "Input Channel",
+            "options": null
+        },
+        {
+            "index": 2,
+            "name": "Velocity Threshold",
+            "min": 0,
+            "max": 127,
+            "defaultVal": 0,
+            "description": "Velocity Threshold",
+            "options": null
+        }
+    ],
+    "packRequired": "X-Raym Scripts"
+},
+  {
+    "name": "JS: X-Raym/X-Raym_Note to CC",
+    "shortName": "X-Raym_Note to CC",
+    "category": "Utility",
+    "description": "High-quality tool from the X-Raym collection.",
+    "howItWorks": "Professional REAPER signal processing algorithm.",
+    "proTips": "An essential tool in the X-Raym library.",
+    "sliders": [
+        {
+            "index": 0,
+            "name": "Input Channel",
+            "min": 0,
+            "max": 16,
+            "defaultVal": 0,
+            "description": "Input Channel",
+            "options": null
+        },
+        {
+            "index": 2,
+            "name": "Note In",
+            "min": 0,
+            "max": 128,
+            "defaultVal": 0,
+            "description": "Note In",
+            "options": null
+        },
+        {
+            "index": 4,
+            "name": "Controller",
+            "min": 0,
+            "max": 128,
+            "defaultVal": 128,
+            "description": "Controller",
+            "options": null
+        }
+    ],
+    "packRequired": "X-Raym Scripts"
+},
+  {
+    "name": "JS: ACendan/acendan_Center Control",
+    "shortName": "acendan_Center Control",
+    "category": "Utility",
+    "description": "High-quality tool from the ACendan collection.",
+    "howItWorks": "Professional REAPER signal processing algorithm.",
+    "proTips": "An essential tool in the ACendan library.",
+    "sliders": [
+        {
+            "index": 0,
+            "name": "Center Level (dB)",
+            "min": -120,
+            "max": 24,
+            "defaultVal": 0,
+            "description": "Center Level (dB)",
+            "options": null
+        },
+        {
+            "index": 1,
+            "name": "Sides Level (dB)",
+            "min": -120,
+            "max": 24,
+            "defaultVal": 0,
+            "description": "Sides Level (dB)",
+            "options": null
+        },
+        {
+            "index": 2,
+            "name": "Swap Center w Sides",
+            "min": 0,
+            "max": 1,
+            "defaultVal": 0,
+            "description": "Swap Center w Sides",
+            "options": null
+        }
+    ],
+    "packRequired": "ACendan Scripts"
+},
+  {
+    "name": "JS: ACendan/acendan_De-Click Discontinuous Waveform",
+    "shortName": "acendan_De-Click Discontinuous Waveform",
+    "category": "Utility",
+    "description": "High-quality tool from the ACendan collection.",
+    "howItWorks": "Professional REAPER signal processing algorithm.",
+    "proTips": "An essential tool in the ACendan library.",
+    "sliders": [
+        {
+            "index": 0,
+            "name": "De-Click Sensitivity",
+            "min": 0.1,
+            "max": 1,
+            "defaultVal": 0.25,
+            "description": "De-Click Sensitivity",
+            "options": null
+        }
+    ],
+    "packRequired": "ACendan Scripts"
+},
+  {
+    "name": "JS: ACendan/Parallel Joiner (Linear)",
+    "shortName": "Parallel Joiner (Linear)",
+    "category": "Utility",
+    "description": "High-quality tool from the ACendan collection.",
+    "howItWorks": "Professional REAPER signal processing algorithm.",
+    "proTips": "An essential tool in the ACendan library.",
+    "sliders": [
+        {
+            "index": 0,
+            "name": "1/2 -> 1/2 Volume",
+            "min": 0,
+            "max": 1,
+            "defaultVal": 0.75,
+            "description": "1/2 -> 1/2 Volume",
+            "options": null
+        },
+        {
+            "index": 1,
+            "name": "3/4 -> 1/2 Volume",
+            "min": 0,
+            "max": 1,
+            "defaultVal": 0.75,
+            "description": "3/4 -> 1/2 Volume",
+            "options": null
+        }
+    ],
+    "packRequired": "ACendan Scripts"
+},
+  {
+    "name": "JS: ACendan/Parallel Joiner x3",
+    "shortName": "Parallel Joiner x3",
+    "category": "Utility",
+    "description": "High-quality tool from the ACendan collection.",
+    "howItWorks": "Professional REAPER signal processing algorithm.",
+    "proTips": "An essential tool in the ACendan library.",
+    "sliders": [
+        {
+            "index": 0,
+            "name": "1/2 -> 1/2 Volume (dB)",
+            "min": -120,
+            "max": 12,
+            "defaultVal": 0,
+            "description": "1/2 -> 1/2 Volume (dB)",
+            "options": null
+        },
+        {
+            "index": 1,
+            "name": "3/4 -> 1/2 Volume (dB)",
+            "min": -120,
+            "max": 12,
+            "defaultVal": 0,
+            "description": "3/4 -> 1/2 Volume (dB)",
+            "options": null
+        },
+        {
+            "index": 2,
+            "name": "5/6 -> 1/2 Volume (dB)",
+            "min": -120,
+            "max": 12,
+            "defaultVal": 0,
+            "description": "5/6 -> 1/2 Volume (dB)",
+            "options": null
+        }
+    ],
+    "packRequired": "ACendan Scripts"
+},
+  {
+    "name": "JS: ACendan/Parallel Joiner",
+    "shortName": "Parallel Joiner",
+    "category": "Utility",
+    "description": "High-quality tool from the ACendan collection.",
+    "howItWorks": "Professional REAPER signal processing algorithm.",
+    "proTips": "An essential tool in the ACendan library.",
+    "sliders": [
+        {
+            "index": 0,
+            "name": "1/2 -> 1/2 Volume (dB)",
+            "min": -120,
+            "max": 12,
+            "defaultVal": 0,
+            "description": "1/2 -> 1/2 Volume (dB)",
+            "options": null
+        },
+        {
+            "index": 1,
+            "name": "3/4 -> 1/2 Volume (dB)",
+            "min": -120,
+            "max": 12,
+            "defaultVal": 0,
+            "description": "3/4 -> 1/2 Volume (dB)",
+            "options": null
+        }
+    ],
+    "packRequired": "ACendan Scripts"
+},
+  {
+    "name": "JS: ACendan/Parallel Splitter x3",
+    "shortName": "Parallel Splitter x3",
+    "category": "Utility",
+    "description": "High-quality tool from the ACendan collection.",
+    "howItWorks": "Professional REAPER signal processing algorithm.",
+    "proTips": "An essential tool in the ACendan library.",
+    "sliders": [
+        {
+            "index": 0,
+            "name": "1/2 -> 1/2 Volume (dB)",
+            "min": -120,
+            "max": 12,
+            "defaultVal": 0,
+            "description": "1/2 -> 1/2 Volume (dB)",
+            "options": null
+        },
+        {
+            "index": 1,
+            "name": "1/2 -> 3/4 Volume (dB)",
+            "min": -120,
+            "max": 12,
+            "defaultVal": 0,
+            "description": "1/2 -> 3/4 Volume (dB)",
+            "options": null
+        },
+        {
+            "index": 2,
+            "name": "1/2 -> 5/6 Volume (dB)",
+            "min": -120,
+            "max": 12,
+            "defaultVal": 0,
+            "description": "1/2 -> 5/6 Volume (dB)",
+            "options": null
+        }
+    ],
+    "packRequired": "ACendan Scripts"
+},
+  {
+    "name": "JS: ACendan/Parallel Splitter",
+    "shortName": "Parallel Splitter",
+    "category": "Utility",
+    "description": "High-quality tool from the ACendan collection.",
+    "howItWorks": "Professional REAPER signal processing algorithm.",
+    "proTips": "An essential tool in the ACendan library.",
+    "sliders": [
+        {
+            "index": 0,
+            "name": "1/2 -> 1/2 Volume (dB)",
+            "min": -120,
+            "max": 12,
+            "defaultVal": 0,
+            "description": "1/2 -> 1/2 Volume (dB)",
+            "options": null
+        },
+        {
+            "index": 1,
+            "name": "1/2 -> 3/4 Volume (dB)",
+            "min": -120,
+            "max": 12,
+            "defaultVal": 0,
+            "description": "1/2 -> 3/4 Volume (dB)",
+            "options": null
+        }
+    ],
+    "packRequired": "ACendan Scripts"
+},
+  {
+    "name": "JS: Beaunus/beaunus_Gravity",
+    "shortName": "beaunus_Gravity",
+    "category": "Utility",
+    "description": "High-quality tool from the Beaunus collection.",
+    "howItWorks": "Professional REAPER signal processing algorithm.",
+    "proTips": "An essential tool in the Beaunus library.",
+    "sliders": [
+        {
+            "index": 0,
+            "name": "initial gain (dB)",
+            "min": -96,
+            "max": 96,
+            "defaultVal": 0,
+            "description": "initial gain (dB)",
+            "options": null
+        },
+        {
+            "index": 1,
+            "name": "samples",
+            "min": 1,
+            "max": 10000,
+            "defaultVal": 1,
+            "description": "samples",
+            "options": null
+        },
+        {
+            "index": 63,
+            "name": "final gain (dB)",
+            "min": -96,
+            "max": 96,
+            "defaultVal": 0,
+            "description": "final gain (dB)",
+            "options": null
+        }
+    ],
+    "packRequired": "Beaunus Scripts"
+},
+  {
+    "name": "JS: Beaunus/beaunus_Offset",
+    "shortName": "beaunus_Offset",
+    "category": "Utility",
+    "description": "High-quality tool from the Beaunus collection.",
+    "howItWorks": "Professional REAPER signal processing algorithm.",
+    "proTips": "An essential tool in the Beaunus library.",
+    "sliders": [
+        {
+            "index": 0,
+            "name": "input gain (dB)",
+            "min": -96,
+            "max": 24,
+            "defaultVal": 0,
+            "description": "input gain (dB)",
+            "options": null
+        },
+        {
+            "index": 2,
+            "name": "normalize",
+            "min": 0,
+            "max": 1,
+            "defaultVal": 0,
+            "description": "normalize",
+            "options": null
+        },
+        {
+            "index": 3,
+            "name": "offset",
+            "min": -0.5,
+            "max": 0.5,
+            "defaultVal": 0,
+            "description": "offset",
+            "options": null
+        },
+        {
+            "index": 14,
+            "name": "output gain (dB)",
+            "min": -96,
+            "max": 24,
+            "defaultVal": 0,
+            "description": "output gain (dB)",
+            "options": null
+        }
+    ],
+    "packRequired": "Beaunus Scripts"
+},
+  {
+    "name": "JS: Beaunus/beaunus_Rectify",
+    "shortName": "beaunus_Rectify",
+    "category": "Utility",
+    "description": "High-quality tool from the Beaunus collection.",
+    "howItWorks": "Professional REAPER signal processing algorithm.",
+    "proTips": "An essential tool in the Beaunus library.",
+    "sliders": [
+        {
+            "index": 0,
+            "name": "limit",
+            "min": 0,
+            "max": 1,
+            "defaultVal": 1,
+            "description": "limit",
+            "options": null
+        },
+        {
+            "index": 1,
+            "name": "top only -> both sides",
+            "min": 0,
+            "max": 1,
+            "defaultVal": 1,
+            "description": "top only -> both sides",
+            "options": null
+        },
+        {
+            "index": 2,
+            "name": "limit -> rectify",
+            "min": 0,
+            "max": 1,
+            "defaultVal": 0,
+            "description": "limit -> rectify",
+            "options": null
+        },
+        {
+            "index": 14,
+            "name": "final gain (dB)",
+            "min": -96,
+            "max": 24,
+            "defaultVal": 0,
+            "description": "final gain (dB)",
+            "options": null
+        }
+    ],
+    "packRequired": "Beaunus Scripts"
+},
+  {
+    "name": "JS: Beaunus/beaunus_Wave Shaper",
+    "shortName": "beaunus_Wave Shaper",
+    "category": "Utility",
+    "description": "High-quality tool from the Beaunus collection.",
+    "howItWorks": "Professional REAPER signal processing algorithm.",
+    "proTips": "An essential tool in the Beaunus library.",
+    "sliders": [
+        {
+            "index": 0,
+            "name": "initial gain(dB)",
+            "min": -96,
+            "max": 96,
+            "defaultVal": 0,
+            "description": "initial gain(dB)",
+            "options": null
+        },
+        {
+            "index": 2,
+            "name": "transistor - > tube(style)",
+            "min": 0,
+            "max": 1,
+            "defaultVal": 0,
+            "description": "transistor - > tube(style)",
+            "options": null
+        },
+        {
+            "index": 3,
+            "name": "hold meters",
+            "min": 0,
+            "max": 1,
+            "defaultVal": 0,
+            "description": "hold meters",
+            "options": null
+        },
+        {
+            "index": 4,
+            "name": "sine - > circle(saturation)",
+            "min": 0,
+            "max": 1,
+            "defaultVal": 0,
+            "description": "sine - > circle(saturation)",
+            "options": null
+        },
+        {
+            "index": 5,
+            "name": "sine - > triangle(expansion)",
+            "min": 0,
+            "max": 2,
+            "defaultVal": 0,
+            "description": "sine - > triangle(expansion)",
+            "options": null
+        },
+        {
+            "index": 6,
+            "name": "triangle - > sine(saturation)",
+            "min": 0,
+            "max": 1,
+            "defaultVal": 0,
+            "description": "triangle - > sine(saturation)",
+            "options": null
+        },
+        {
+            "index": 7,
+            "name": "logistic intensity(saturation)",
+            "min": 0,
+            "max": 10,
+            "defaultVal": 1,
+            "description": "logistic intensity(saturation)",
+            "options": null
+        },
+        {
+            "index": 8,
+            "name": "logistic amount(saturation)",
+            "min": 0,
+            "max": 1,
+            "defaultVal": 0,
+            "description": "logistic amount(saturation)",
+            "options": null
+        },
+        {
+            "index": 9,
+            "name": "exponential(expansion)",
+            "min": 0,
+            "max": 1,
+            "defaultVal": 0,
+            "description": "exponential(expansion)",
+            "options": null
+        },
+        {
+            "index": 10,
+            "name": "exponential(saturation)",
+            "min": 0,
+            "max": 1,
+            "defaultVal": 0,
+            "description": "exponential(saturation)",
+            "options": null
+        },
+        {
+            "index": 47,
+            "name": "effect of circle(dB)",
+            "min": 0,
+            "max": 3,
+            "defaultVal": 0,
+            "description": "effect of circle(dB)",
+            "options": null
+        },
+        {
+            "index": 48,
+            "name": "effect of triangle(dB)",
+            "min": 0,
+            "max": 3,
+            "defaultVal": 0,
+            "description": "effect of triangle(dB)",
+            "options": null
+        },
+        {
+            "index": 49,
+            "name": "effect of sine(dB)",
+            "min": 0,
+            "max": 3,
+            "defaultVal": 0,
+            "description": "effect of sine(dB)",
+            "options": null
+        },
+        {
+            "index": 50,
+            "name": "effect of logistic(dB)",
+            "min": 0,
+            "max": 3,
+            "defaultVal": 0,
+            "description": "effect of logistic(dB)",
+            "options": null
+        },
+        {
+            "index": 51,
+            "name": "effect of exponential(dB)",
+            "min": 0,
+            "max": 3,
+            "defaultVal": 0,
+            "description": "effect of exponential(dB)",
+            "options": null
+        },
+        {
+            "index": 52,
+            "name": "effect of clipping(dB)",
+            "min": 0,
+            "max": 3,
+            "defaultVal": 0,
+            "description": "effect of clipping(dB)",
+            "options": null
+        },
+        {
+            "index": 58,
+            "name": "manual - > automatic",
+            "min": 0,
+            "max": 1,
+            "defaultVal": 0,
+            "description": "manual - > automatic",
+            "options": null
+        },
+        {
+            "index": 59,
+            "name": "output offset",
+            "min": -3,
+            "max": 3,
+            "defaultVal": 0,
+            "description": "output offset",
+            "options": null
+        },
+        {
+            "index": 60,
+            "name": "reset average",
+            "min": 0,
+            "max": 1,
+            "defaultVal": 0,
+            "description": "reset average",
+            "options": null
+        },
+        {
+            "index": 61,
+            "name": "average value",
+            "min": -3,
+            "max": 3,
+            "defaultVal": 0,
+            "description": "average value",
+            "options": null
+        },
+        {
+            "index": 63,
+            "name": "final gain(dB)",
+            "min": -96,
+            "max": 24,
+            "defaultVal": 0,
+            "description": "final gain(dB)",
+            "options": null
+        }
+    ],
+    "packRequired": "Beaunus Scripts"
+},
+  {
+    "name": "JS: BinbinHfr/bbh_midi_compressor",
+    "shortName": "bbh_midi_compressor",
+    "category": "MIDI",
+    "description": "High-quality tool from the BinbinHfr collection.",
+    "howItWorks": "Professional REAPER signal processing algorithm.",
+    "proTips": "An essential tool in the BinbinHfr library.",
+    "sliders": [
+        {
+            "index": 0,
+            "name": "Threshold",
+            "min": 0,
+            "max": 127,
+            "defaultVal": 64,
+            "description": "Threshold",
+            "options": null
+        },
+        {
+            "index": 1,
+            "name": "Ratio",
+            "min": 0.1,
+            "max": 10,
+            "defaultVal": 1,
+            "description": "Ratio",
+            "options": null
+        }
+    ],
+    "packRequired": "BinbinHfr Scripts"
+},
+  {
+    "name": "JS: BinbinHfr/bbh_midi_keyboard_sensitivity",
+    "shortName": "bbh_midi_keyboard_sensitivity",
+    "category": "MIDI",
+    "description": "High-quality tool from the BinbinHfr collection.",
+    "howItWorks": "Professional REAPER signal processing algorithm.",
+    "proTips": "An essential tool in the BinbinHfr library.",
+    "sliders": [
+        {
+            "index": 0,
+            "name": "Sensivity (0-4:light, 5:norm, 6-9:heavy, 10:cst)",
+            "min": 0,
+            "max": 10,
+            "defaultVal": 5,
+            "description": "Sensivity (0-4:light, 5:norm, 6-9:heavy, 10:cst)",
+            "options": null
+        }
+    ],
+    "packRequired": "BinbinHfr Scripts"
+},
+  {
+    "name": "JS: BinbinHfr/bbh_midi_transpose_project",
+    "shortName": "bbh_midi_transpose_project",
+    "category": "MIDI",
+    "description": "High-quality tool from the BinbinHfr collection.",
+    "howItWorks": "Professional REAPER signal processing algorithm.",
+    "proTips": "An essential tool in the BinbinHfr library.",
+    "sliders": [
+        {
+            "index": 0,
+            "name": "Project transpose (semitones)",
+            "min": -48,
+            "max": 48,
+            "defaultVal": -48,
+            "description": "Project transpose (semitones)",
+            "options": null
+        },
+        {
+            "index": 1,
+            "name": "Project transpose (octave)",
+            "min": -10,
+            "max": 10,
+            "defaultVal": -10,
+            "description": "Project transpose (octave)",
+            "options": null
+        },
+        {
+            "index": 2,
+            "name": "Enable/disable project transpose",
+            "min": 0,
+            "max": 1,
+            "defaultVal": 0,
+            "description": "Enable/disable project transpose",
+            "options": null
+        }
+    ],
+    "packRequired": "BinbinHfr Scripts"
+},
+  {
+    "name": "JS: BinbinHfr/bbh_midi_transpose_track",
+    "shortName": "bbh_midi_transpose_track",
+    "category": "MIDI",
+    "description": "High-quality tool from the BinbinHfr collection.",
+    "howItWorks": "Professional REAPER signal processing algorithm.",
+    "proTips": "An essential tool in the BinbinHfr library.",
+    "sliders": [
+        {
+            "index": 0,
+            "name": "Track transpose (semitones)",
+            "min": -48,
+            "max": 48,
+            "defaultVal": -48,
+            "description": "Track transpose (semitones)",
+            "options": null
+        },
+        {
+            "index": 1,
+            "name": "Track transpose (octaves)",
+            "min": -10,
+            "max": 10,
+            "defaultVal": -10,
+            "description": "Track transpose (octaves)",
+            "options": null
+        },
+        {
+            "index": 2,
+            "name": "Use project transpose on current track",
+            "min": 0,
+            "max": 1,
+            "defaultVal": 0,
+            "description": "Use project transpose on current track",
+            "options": null
+        },
+        {
+            "index": 3,
+            "name": "Project transpose (read-only)",
+            "min": -48,
+            "max": 48,
+            "defaultVal": -48,
+            "description": "Project transpose (read-only)",
+            "options": null
+        },
+        {
+            "index": 4,
+            "name": "Total transpose (read-only)",
+            "min": -48,
+            "max": 48,
+            "defaultVal"

@@ -1970,8 +1970,8 @@ The AI was unable to verify these parameters. Please investigate.`;
     {
       name: "Tukan Studios",
       desc: "Incredible analog-modeled compressors, EQs, limiters, tape emulations, and vocal dynamic processors.",
-      source: "https://github.com/TukanStudios/Tukan_JSFX",
-      reapack: "https://raw.githubusercontent.com/TukanStudios/Tukan_JSFX/main/index.xml"
+      source: "https://github.com/TukanStudios/TUKAN_STUDIOS_PLUGINS",
+      reapack: "https://raw.githubusercontent.com/TukanStudios/TUKAN_STUDIOS_PLUGINS/main/index.xml"
     },
     {
       name: "Geraint Luff",
@@ -1988,20 +1988,20 @@ The AI was unable to verify these parameters. Please investigate.`;
     {
       name: "Chokehold JSFX",
       desc: "Fast, efficient mixing tools including the famous ClipMax clippers, Black-Face compressors, and analog-style saturators.",
-      source: "https://github.com/chokehold/jsfx",
-      reapack: "https://raw.githubusercontent.com/chokehold/jsfx/master/index.xml"
-    },
-    {
-      name: "Suzuki (RCGN) JSFX",
-      desc: "Warm tube compressor emulation, vintage tape warmth generators, and professional mastering expanders.",
-      source: "https://github.com/rcorne/rcgn-jsfx",
-      reapack: "https://raw.githubusercontent.com/rcorne/rcgn-jsfx/master/index.xml"
+      source: "https://github.com/chkhld/jsfx",
+      reapack: "https://raw.githubusercontent.com/chkhld/jsfx/master/index.xml"
     },
     {
       name: "Suzuki-Scripts (lewloiwc / Suzuki)",
       desc: "Sound Design Suite (Sample Warp, Open Delay) & Splitter Suite (Transient/Gate/Envelope follow and Linkwitz-Riley crossovers).",
       source: "https://github.com/Suzuki-Re/Suzuki-Scripts",
       reapack: "https://raw.githubusercontent.com/Suzuki-Re/Suzuki-Scripts/master/index.xml"
+    },
+    {
+      name: "JSFX Clones",
+      desc: "Excellent emulations of legendary analog and digital gear, including Oxford Inflator, L2, CL 1B, CA-2A, and Vintage Tape.",
+      source: "https://github.com/JClones/JSFXClones",
+      reapack: "https://raw.githubusercontent.com/JClones/JSFXClones/master/index.xml"
     },
     {
       name: "Sonic Anomaly",

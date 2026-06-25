@@ -1,0 +1,381 @@
+[
+  {
+    "name": "JS: zaibuyidao/MIDI Bank MSB-LSB Mapping",
+    "shortName": "MIDI Bank MSB-LSB Mapping",
+    "category": "MIDI",
+    "description": "High-quality tool from the zaibuyidao collection.",
+    "howItWorks": "Professional REAPER signal processing algorithm.",
+    "proTips": "An essential tool in the zaibuyidao library.",
+    "sliders": [],
+    "packRequired": "zaibuyidao Scripts"
+  },
+  {
+    "name": "JS: zaibuyidao/MIDI Bank Program on Specific Note (File-Based)",
+    "shortName": "MIDI Bank Program on Specific Note (File-Based)",
+    "category": "MIDI",
+    "description": "High-quality tool from the zaibuyidao collection.",
+    "howItWorks": "Professional REAPER signal processing algorithm.",
+    "proTips": "An essential tool in the zaibuyidao library.",
+    "sliders": [
+      {
+        "index": 0,
+        "name": "Input Channel:",
+        "min": 0,
+        "max": 15,
+        "defaultVal": 0,
+        "description": "Input Channel:",
+        "options": null
+      },
+      {
+        "index": 1,
+        "name": "Trigger Note:",
+        "min": 0,
+        "max": 127,
+        "defaultVal": 12,
+        "description": "Trigger Note:",
+        "options": null
+      },
+      {
+        "index": 2,
+        "name": "Bank MSB:",
+        "min": 0,
+        "max": 127,
+        "defaultVal": 0,
+        "description": "Bank MSB:",
+        "options": null
+      },
+      {
+        "index": 3,
+        "name": "Bank LSB:",
+        "min": 0,
+        "max": 127,
+        "defaultVal": 0,
+        "description": "Bank LSB:",
+        "options": null
+      },
+      {
+        "index": 4,
+        "name": "Program:",
+        "min": 0,
+        "max": 127,
+        "defaultVal": 0,
+        "description": "Program:",
+        "options": null
+      },
+      {
+        "index": 6,
+        "name": "Trigger Sound:",
+        "min": 0,
+        "max": 1,
+        "defaultVal": 1,
+        "description": "Trigger Sound:",
+        "options": null
+      }
+    ],
+    "packRequired": "zaibuyidao Scripts"
+  },
+  {
+    "name": "JS: zaibuyidao/MIDI Bank Program on Specific Note",
+    "shortName": "MIDI Bank Program on Specific Note",
+    "category": "MIDI",
+    "description": "High-quality tool from the zaibuyidao collection.",
+    "howItWorks": "Professional REAPER signal processing algorithm.",
+    "proTips": "An essential tool in the zaibuyidao library.",
+    "sliders": [
+      {
+        "index": 0,
+        "name": "Input Channel:",
+        "min": 0,
+        "max": 15,
+        "defaultVal": 0,
+        "description": "Input Channel:",
+        "options": null
+      },
+      {
+        "index": 1,
+        "name": "Trigger Note:",
+        "min": 0,
+        "max": 127,
+        "defaultVal": 12,
+        "description": "Trigger Note:",
+        "options": null
+      },
+      {
+        "index": 2,
+        "name": "Bank MSB:",
+        "min": 0,
+        "max": 127,
+        "defaultVal": 0,
+        "description": "Bank MSB:",
+        "options": null
+      },
+      {
+        "index": 3,
+        "name": "Bank LSB:",
+        "min": 0,
+        "max": 127,
+        "defaultVal": 0,
+        "description": "Bank LSB:",
+        "options": null
+      },
+      {
+        "index": 4,
+        "name": "Program:",
+        "min": 0,
+        "max": 127,
+        "defaultVal": 0,
+        "description": "Program:",
+        "options": null
+      },
+      {
+        "index": 5,
+        "name": "Trigger Sound:",
+        "min": 0,
+        "max": 1,
+        "defaultVal": 1,
+        "description": "Trigger Sound:",
+        "options": null
+      }
+    ],
+    "packRequired": "zaibuyidao Scripts"
+  },
+  {
+    "name": "JS: zaibuyidao/MIDI CC Events First",
+    "shortName": "MIDI CC Events First",
+    "category": "MIDI",
+    "description": "High-quality tool from the zaibuyidao collection.",
+    "howItWorks": "Professional REAPER signal processing algorithm.",
+    "proTips": "An essential tool in the zaibuyidao library.",
+    "sliders": [
+      {
+        "index": 0,
+        "name": "CC number:",
+        "min": 0,
+        "max": 127,
+        "defaultVal": 119,
+        "description": "CC number:",
+        "options": null
+      },
+      {
+        "index": 1,
+        "name": "Advance time (ms):",
+        "min": 0,
+        "max": 10,
+        "defaultVal": 1,
+        "description": "Advance time (ms):",
+        "options": null
+      }
+    ],
+    "packRequired": "zaibuyidao Scripts"
+  },
+  {
+    "name": "JS: zaibuyidao/MIDI Off Velocity Limiter",
+    "shortName": "MIDI Off Velocity Limiter",
+    "category": "MIDI",
+    "description": "High-quality tool from the zaibuyidao collection.",
+    "howItWorks": "Professional REAPER signal processing algorithm.",
+    "proTips": "An essential tool in the zaibuyidao library.",
+    "sliders": [
+      {
+        "index": 0,
+        "name": "Threshold",
+        "min": 0,
+        "max": 127,
+        "defaultVal": 127,
+        "description": "Threshold",
+        "options": null
+      },
+      {
+        "index": 1,
+        "name": "Limit",
+        "min": 0,
+        "max": 127,
+        "defaultVal": 0,
+        "description": "Limit",
+        "options": null
+      }
+    ],
+    "packRequired": "zaibuyidao Scripts"
+  },
+  {
+    "name": "JS: zaibuyidao/MIDI Route CC To Channel",
+    "shortName": "MIDI Route CC To Channel",
+    "category": "MIDI",
+    "description": "High-quality tool from the zaibuyidao collection.",
+    "howItWorks": "Professional REAPER signal processing algorithm.",
+    "proTips": "An essential tool in the zaibuyidao library.",
+    "sliders": [
+      {
+        "index": 0,
+        "name": "Controller Number (CC)",
+        "min": 1,
+        "max": 127,
+        "defaultVal": 118,
+        "description": "Controller Number (CC)",
+        "options": null
+      },
+      {
+        "index": 1,
+        "name": "Value",
+        "min": 0,
+        "max": 127,
+        "defaultVal": 1,
+        "description": "Value",
+        "options": null
+      },
+      {
+        "index": 2,
+        "name": "Channel",
+        "min": 1,
+        "max": 16,
+        "defaultVal": 1,
+        "description": "Channel",
+        "options": null
+      }
+    ],
+    "packRequired": "zaibuyidao Scripts"
+  },
+  {
+    "name": "JS: zaibuyidao/MIDI Route PC To Channel",
+    "shortName": "MIDI Route PC To Channel",
+    "category": "MIDI",
+    "description": "High-quality tool from the zaibuyidao collection.",
+    "howItWorks": "Professional REAPER signal processing algorithm.",
+    "proTips": "An essential tool in the zaibuyidao library.",
+    "sliders": [
+      {
+        "index": 0,
+        "name": "Program Change",
+        "min": 0,
+        "max": 127,
+        "defaultVal": 0,
+        "description": "Program Change",
+        "options": null
+      },
+      {
+        "index": 1,
+        "name": "Channel",
+        "min": 1,
+        "max": 16,
+        "defaultVal": 1,
+        "description": "Channel",
+        "options": null
+      }
+    ],
+    "packRequired": "zaibuyidao Scripts"
+  },
+  {
+    "name": "JS: zaibuyidao/MIDI Transform CC",
+    "shortName": "MIDI Transform CC",
+    "category": "MIDI",
+    "description": "High-quality tool from the zaibuyidao collection.",
+    "howItWorks": "Professional REAPER signal processing algorithm.",
+    "proTips": "An essential tool in the zaibuyidao library.",
+    "sliders": [
+      {
+        "index": 0,
+        "name": "Convert CC#",
+        "min": 1,
+        "max": 127,
+        "defaultVal": 117,
+        "description": "Convert CC#",
+        "options": null
+      },
+      {
+        "index": 1,
+        "name": "To CC#",
+        "min": 1,
+        "max": 127,
+        "defaultVal": 120,
+        "description": "To CC#",
+        "options": null
+      }
+    ],
+    "packRequired": "zaibuyidao Scripts"
+  },
+  {
+    "name": "JS: zaibuyidao/articulation_map",
+    "shortName": "articulation_map",
+    "category": "Utility",
+    "description": "High-quality tool from the zaibuyidao collection.",
+    "howItWorks": "Professional REAPER signal processing algorithm.",
+    "proTips": "An essential tool in the zaibuyidao library.",
+    "sliders": [
+      {
+        "index": 0,
+        "name": "keyswitches (read-only)",
+        "min": 0,
+        "max": 127,
+        "defaultVal": 12,
+        "description": "keyswitches (read-only)",
+        "options": null
+      },
+      {
+        "index": 1,
+        "name": "Velocity (read-only)",
+        "min": 0,
+        "max": 127,
+        "defaultVal": 96,
+        "description": "Velocity (read-only)",
+        "options": null
+      },
+      {
+        "index": 2,
+        "name": "Short-Mode Duration (ms)",
+        "min": 0,
+        "max": 1000,
+        "defaultVal": 300,
+        "description": "Short-Mode Duration (ms)",
+        "options": null
+      },
+      {
+        "index": 3,
+        "name": "Long-Mode Controller",
+        "min": 0,
+        "max": 127,
+        "defaultVal": 119,
+        "description": "Long-Mode Controller",
+        "options": null
+      },
+      {
+        "index": 4,
+        "name": "Mode",
+        "min": 0,
+        "max": 4,
+        "defaultVal": 2,
+        "description": "Mode",
+        "options": null
+      },
+      {
+        "index": 5,
+        "name": "Routing Channel Controller",
+        "min": 0,
+        "max": 127,
+        "defaultVal": 118,
+        "description": "Routing Channel Controller",
+        "options": null
+      }
+    ],
+    "packRequired": "zaibuyidao Scripts"
+  },
+  {
+    "name": "JS: zaibuyidao/pre_trigger_events",
+    "shortName": "pre_trigger_events",
+    "category": "Utility",
+    "description": "High-quality tool from the zaibuyidao collection.",
+    "howItWorks": "Professional REAPER signal processing algorithm.",
+    "proTips": "An essential tool in the zaibuyidao library.",
+    "sliders": [
+      {
+        "index": 0,
+        "name": "Advance CC number:",
+        "min": 0,
+        "max": 127,
+        "defaultVal": 119,
+        "description": "Advance CC number:",
+        "options": null
+      }
+    ],
+    "packRequired": "zaibuyidao Scripts"
+  }
+]
