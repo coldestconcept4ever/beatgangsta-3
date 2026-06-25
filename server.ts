@@ -233,6 +233,15 @@ async function initDb() {
         )
       `);
       
+      await client.execute(`
+        CREATE TABLE IF NOT EXISTS reaper_status (
+          email TEXT PRIMARY KEY,
+          pin TEXT NOT NULL,
+          detected_packs TEXT,
+          last_seen DATETIME DEFAULT CURRENT_TIMESTAMP
+        )
+      `);
+      
       // Migration: Add gmail column if it doesn't exist
       try {
         await client.execute(`ALTER TABLE beta_applications ADD COLUMN gmail TEXT NOT NULL DEFAULT ''`);
@@ -4631,6 +4640,39 @@ app.post("/api/debug/dawproject", (req, res) => {
 import { turso } from "./src/db/turso.js";
 import { v4 as uuidv4 } from "uuid";
 
+// Local double-safe fault-tolerant caching for BeatGangsta Connect
+const localReaperSyncsCache = new Map<string, { id: string; email: string; pin: string; payload: string; created_at: string }>();
+const localReaperStatusCache = new Map<string, { email: string; pin: string; detected_packs: string; last_seen: string }>();
+
+function saveLocalCachesToDisk() {
+  try {
+    fs.writeFileSync(path.join(process.cwd(), "reaper_syncs_cache.json"), JSON.stringify(Array.from(localReaperSyncsCache.entries())));
+    fs.writeFileSync(path.join(process.cwd(), "reaper_status_cache.json"), JSON.stringify(Array.from(localReaperStatusCache.entries())));
+  } catch (e) {
+    console.error("Failed to save local caches to disk:", e);
+  }
+}
+
+function loadLocalCachesFromDisk() {
+  try {
+    const syncsPath = path.join(process.cwd(), "reaper_syncs_cache.json");
+    if (fs.existsSync(syncsPath)) {
+      const entries = JSON.parse(fs.readFileSync(syncsPath, "utf8"));
+      entries.forEach(([k, v]: any) => localReaperSyncsCache.set(k, v));
+    }
+    const statusPath = path.join(process.cwd(), "reaper_status_cache.json");
+    if (fs.existsSync(statusPath)) {
+      const entries = JSON.parse(fs.readFileSync(statusPath, "utf8"));
+      entries.forEach(([k, v]: any) => localReaperStatusCache.set(k, v));
+    }
+  } catch (e) {
+    console.error("Failed to load local caches from disk:", e);
+  }
+}
+
+// Initial load
+loadLocalCachesFromDisk();
+
 // Deep payload analyzer for BeatGangsta Connect
 function analyzeReaperPayload(payload: string) {
   const lines = typeof payload === "string" ? payload.split(/\r?\n/) : [];
@@ -4725,7 +4767,7 @@ function analyzeReaperPayload(payload: string) {
   };
 }
 
-app.post("/api/reaper-sync/push", express.json({limit: '5mb'}), async (req, res) => {
+app.post("/api/reaper-sync/push", async (req, res) => {
   const requestTime = new Date().toISOString();
   try {
     const { email, pin, payload } = req.body;
@@ -4755,19 +4797,33 @@ app.post("/api/reaper-sync/push", express.json({limit: '5mb'}), async (req, res)
     };
     fs.appendFileSync(path.join(process.cwd(), "beatgangsta_connect.log"), JSON.stringify(logEntry) + "\n---\n");
 
-    const client = getDb();
-
-    // Delete existing sync for this email/pin if any, to keep it clean (or just keep one per email)
-    await client.execute({
-      sql: 'DELETE FROM reaper_syncs WHERE email = ?',
-      args: [cleanEmail]
+    const id = uuidv4();
+    
+    // Save to local cache first (guaranteed success)
+    localReaperSyncsCache.set(cleanEmail, {
+      id,
+      email: cleanEmail,
+      pin: cleanPin,
+      payload,
+      created_at: new Date().toISOString()
     });
+    saveLocalCachesToDisk();
 
-    const id = crypto.randomUUID();
-    await client.execute({
-      sql: 'INSERT INTO reaper_syncs (id, email, pin, payload) VALUES (?, ?, ?, ?)',
-      args: [id, cleanEmail, cleanPin, payload]
-    });
+    try {
+      const client = getDb();
+      // Delete existing sync for this email/pin if any, to keep it clean (or just keep one per email)
+      await client.execute({
+        sql: 'DELETE FROM reaper_syncs WHERE email = ?',
+        args: [cleanEmail]
+      });
+
+      await client.execute({
+        sql: 'INSERT INTO reaper_syncs (id, email, pin, payload) VALUES (?, ?, ?, ?)',
+        args: [id, cleanEmail, cleanPin, payload]
+      });
+    } catch (dbErr: any) {
+      console.warn("[BG-CONNECT-DB-FAIL] DB push failed, using local cache fallback:", dbErr);
+    }
 
     res.json({ success: true, analysis });
   } catch (e: any) {
@@ -4802,13 +4858,33 @@ app.get("/api/reaper-sync/pull", async (req, res) => {
     const cleanEmail = String(email).toLowerCase().trim();
     const cleanPin = String(pin).trim();
 
-    const client = getDb();
-    const result = await client.execute({
-      sql: 'SELECT payload FROM reaper_syncs WHERE email = ? AND pin = ? ORDER BY created_at DESC LIMIT 1',
-      args: [cleanEmail, cleanPin]
-    });
+    let payload = "";
 
-    if (result.rows.length === 0) {
+    // 1. Try pulling from DB
+    try {
+      const client = getDb();
+      const result = await client.execute({
+        sql: 'SELECT payload FROM reaper_syncs WHERE email = ? AND pin = ? ORDER BY created_at DESC LIMIT 1',
+        args: [cleanEmail, cleanPin]
+      });
+
+      if (result.rows.length > 0) {
+        payload = String(result.rows[0].payload || "");
+      }
+    } catch (dbErr: any) {
+      console.warn("[BG-CONNECT-DB-FAIL] DB pull failed, checking local cache:", dbErr);
+    }
+
+    // 2. Fallback to local cache if DB was down or returned nothing
+    if (!payload) {
+      const cached = localReaperSyncsCache.get(cleanEmail);
+      if (cached && cached.pin === cleanPin) {
+        payload = cached.payload;
+        console.log("[BG-CONNECT] Recovered payload from local cache fallback successfully!");
+      }
+    }
+
+    if (!payload) {
       const notFoundLog = {
         timestamp: requestTime,
         event: "PULL_NOT_FOUND",
@@ -4821,7 +4897,6 @@ app.get("/api/reaper-sync/pull", async (req, res) => {
       return res.status(404).json({ error: "No sync found for this email and PIN", errorCode: "ERR_REAPER_PULL_NOT_FOUND" });
     }
 
-    const payload = String(result.rows[0].payload || "");
     const analysis = analyzeReaperPayload(payload);
 
     const logEntry = {
@@ -4846,6 +4921,93 @@ app.get("/api/reaper-sync/pull", async (req, res) => {
     fs.appendFileSync(path.join(process.cwd(), "beatgangsta_connect.log"), JSON.stringify(errorLog) + "\n---\n");
     console.error("Failed to pull reaper sync:", e);
     res.status(500).json({ error: "Failed to pull sync from cloud", errorCode: "ERR_REAPER_PULL_DB_FAIL" });
+  }
+});
+
+app.post("/api/reaper-sync/status", async (req, res) => {
+  try {
+    const { email, pin, detectedPacks } = req.body;
+    if (!email || !pin) {
+      return res.status(400).json({ error: "Missing email or pin" });
+    }
+    const cleanEmail = String(email).toLowerCase().trim();
+    const cleanPin = String(pin).trim();
+    const packsStr = Array.isArray(detectedPacks) ? JSON.stringify(detectedPacks) : "[]";
+
+    // Update local cache first
+    localReaperStatusCache.set(cleanEmail, {
+      email: cleanEmail,
+      pin: cleanPin,
+      detected_packs: packsStr,
+      last_seen: new Date().toISOString()
+    });
+    saveLocalCachesToDisk();
+
+    try {
+      const client = getDb();
+      await client.execute({
+        sql: 'INSERT OR REPLACE INTO reaper_status (email, pin, detected_packs, last_seen) VALUES (?, ?, ?, CURRENT_TIMESTAMP)',
+        args: [cleanEmail, cleanPin, packsStr]
+      });
+    } catch (dbErr: any) {
+      console.warn("[BG-CONNECT-DB-FAIL] DB status update failed, using local cache fallback:", dbErr);
+    }
+
+    res.json({ success: true });
+  } catch (e: any) {
+    console.error("Failed to update reaper status:", e);
+    res.status(500).json({ error: "Failed to update status on cloud" });
+  }
+});
+
+app.get("/api/reaper-sync/status", async (req, res) => {
+  try {
+    const { email, pin } = req.query;
+    if (!email || !pin) {
+      return res.status(400).json({ error: "Missing email or pin" });
+    }
+    const cleanEmail = String(email).toLowerCase().trim();
+    const cleanPin = String(pin).trim();
+
+    let detectedPacks: string[] = [];
+    let online = false;
+
+    // 1. Try DB pull
+    try {
+      const client = getDb();
+      const result = await client.execute({
+        sql: 'SELECT detected_packs, last_seen FROM reaper_status WHERE email = ? AND pin = ? LIMIT 1',
+        args: [cleanEmail, cleanPin]
+      });
+
+      if (result.rows.length > 0) {
+        const row = result.rows[0];
+        detectedPacks = JSON.parse(String(row.detected_packs || "[]"));
+        const lastSeenStr = String(row.last_seen || "");
+        
+        // Check if seen within the last 30 seconds
+        const lastSeenDate = new Date(lastSeenStr + " UTC");
+        const diffMs = Date.now() - lastSeenDate.getTime();
+        online = diffMs < 30000; // 30 seconds
+      }
+    } catch (dbErr: any) {
+      console.warn("[BG-CONNECT-DB-FAIL] DB status fetch failed, using local cache fallback:", dbErr);
+    }
+
+    // 2. Fallback to cache
+    if (!online || detectedPacks.length === 0) {
+      const cached = localReaperStatusCache.get(cleanEmail);
+      if (cached && cached.pin === cleanPin) {
+        detectedPacks = JSON.parse(cached.detected_packs || "[]");
+        const diffMs = Date.now() - new Date(cached.last_seen).getTime();
+        online = diffMs < 30000;
+      }
+    }
+
+    res.json({ online, detectedPacks });
+  } catch (e: any) {
+    console.error("Failed to get reaper status:", e);
+    res.status(500).json({ error: "Failed to get status from cloud" });
   }
 });
 

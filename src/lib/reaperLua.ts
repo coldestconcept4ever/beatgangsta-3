@@ -710,6 +710,22 @@ function draw_ui()
 
   state.last_mouse_cap = gfx.mouse_cap
 
+  -- Periodically post status/scanned JSFX packs to server (every 180 frames, ~3-4 seconds)
+  if not state.status_counter then state.status_counter = 0 end
+  state.status_counter = state.status_counter + 1
+  if state.status_counter >= 180 then
+    state.status_counter = 0
+    pcall(post_reaper_status)
+  end
+
+  -- Periodically poll for new recipes on server (every 360 frames, ~6-8 seconds)
+  if not state.recipe_poll_counter then state.recipe_poll_counter = 0 end
+  state.recipe_poll_counter = state.recipe_poll_counter + 1
+  if state.recipe_poll_counter >= 360 then
+    state.recipe_poll_counter = 0
+    pcall(poll_for_new_recipes)
+  end
+
   gfx.update()
   if gfx.getchar() >= 0 then reaper.defer(draw_ui) end
 end
@@ -885,7 +901,18 @@ function draw_dashboard(start_y, click_pressed)
   gfx.x, gfx.y = 50, line1_y
   gfx.drawstr("LINKED AS: " .. state.email)
   gfx.x, gfx.y = 50, line2_y
-  gfx.drawstr("STATUS: MONITORING CLOUD NODE")
+  if state.has_new_recipes then
+    -- Flashing red/white
+    local flash = (math.floor(os.clock() * 2) % 2 == 0)
+    if flash then
+      gfx.set(1, 0.2, 0.2, 1)
+    else
+      gfx.set(1, 1, 1, 0.9)
+    end
+    gfx.drawstr("STATUS: ⚡ NEW RECIPES! SYNC NOW!")
+  else
+    gfx.drawstr("STATUS: MONITORING CLOUD NODE")
+  end
   
   draw_button(50, btn_y, gfx.w - 100, btn_h, state.is_loading and "PULLING..." or "FORCE PULL SYNC")
   draw_button(50, btn2_y, gfx.w - 100, btn_h, "RESYNC (ENTER NEW PIN)")
@@ -1166,6 +1193,143 @@ local function url_encode(str)
   return str
 end
 
+local function post_reaper_status()
+  if state.email == "" or #state.pin < 4 then return end
+  
+  -- Scan for JSFX packs
+  local sep = (string.find(reaper.GetOS(), "Win") ~= nil) and "\\" or "/"
+  local effects_path = reaper.GetResourcePath() .. sep .. "Effects" .. sep
+  
+  local packs = {}
+  
+  -- Scan Tukan Studios
+  local f = io.open(effects_path .. "Tukan" .. sep .. "la2a", "r") or io.open(effects_path .. "Tukan" .. sep .. "compressor_la2a", "r") or io.open(effects_path .. "Tukan_JSFX-main" .. sep .. "la2a", "r") or io.open(effects_path .. "Tukan" .. sep .. "la-2a", "r") or io.open(effects_path .. "Tukan" .. sep .. "1176", "r") or io.open(effects_path .. "Tukan" .. sep .. "S900", "r") or io.open(effects_path .. "Tukan" .. sep .. "Limiter", "r")
+  if f then f:close(); table.insert(packs, "Tukan Studios") end
+  
+  -- Scan Geraint Luff
+  f = io.open(effects_path .. "GeraintLuff" .. sep .. "Humulator", "r") or io.open(effects_path .. "GeraintLuff" .. sep .. "humulator", "r") or io.open(effects_path .. "geraintluff" .. sep .. "humulator", "r") or io.open(effects_path .. "GeraintLuff" .. sep .. "echo-thief", "r") or io.open(effects_path .. "geraintluff" .. sep .. "echo-thief", "r")
+  if f then f:close(); table.insert(packs, "Geraint Luff") end
+  
+  -- Scan Saike
+  f = io.open(effects_path .. "Saike" .. sep .. "reflecto", "r") or io.open(effects_path .. "saike" .. sep .. "reflecto", "r") or io.open(effects_path .. "Saike" .. sep .. "ys_saturator", "r") or io.open(effects_path .. "saike" .. sep .. "lavender", "r")
+  if f then f:close(); table.insert(packs, "Saike JSFX") end
+  
+  -- Scan Suzuki
+  f = io.open(effects_path .. "Suzuki" .. sep .. "rcgn-tube-compressor", "r") or io.open(effects_path .. "rcgn" .. sep .. "rcgn-tube-compressor", "r") or io.open(effects_path .. "suzuki" .. sep .. "rcgn-tube-compressor", "r") or io.open(effects_path .. "Suzuki" .. sep .. "rcgn-compressor", "r")
+  if f then f:close(); table.insert(packs, "Suzuki (RCGN) JSFX") end
+  
+  -- Scan Sonic Anomaly
+  f = io.open(effects_path .. "SonicAnomaly" .. sep .. "bass-professor", "r") or io.open(effects_path .. "SonicAnomaly" .. sep .. "Bass Professor Mark II", "r") or io.open(effects_path .. "sonicanomaly" .. sep .. "bass-professor", "r") or io.open(effects_path .. "sonicanomaly" .. sep .. "securitron", "r")
+  if f then f:close(); table.insert(packs, "Sonic Anomaly") end
+  
+  -- Scan ReaTeam
+  f = io.open(effects_path .. "ReaTeam" .. sep .. "Auto-Tune-Utility", "r") or io.open(effects_path .. "reateam" .. sep .. "auto-tune-utility", "r") or io.open(effects_path .. "ReaTeam" .. sep .. "Utility", "r")
+  if f then f:close(); table.insert(packs, "ReaTeam JSFX") end
+  
+  -- Scan Michael-P
+  f = io.open(effects_path .. "MIP2" .. sep .. "mip2-compressor", "r") or io.open(effects_path .. "mip2" .. sep .. "compressor", "r") or io.open(effects_path .. "Michael-P" .. sep .. "mip2-compressor", "r")
+  if f then f:close(); table.insert(packs, "MIP2 Michael-P JSFX") end
+  
+  -- Scan Mudra
+  f = io.open(effects_path .. "Mudra" .. sep .. "spectral-shaper", "r") or io.open(effects_path .. "mudra" .. sep .. "spectral-shaper", "r")
+  if f then f:close(); table.insert(packs, "Mudra Lukas JSFX") end
+  
+  -- Scan euPhonia
+  f = io.open(effects_path .. "euPhonia" .. sep .. "spatial-expander", "r") or io.open(effects_path .. "euphonia" .. sep .. "spatial-expander", "r")
+  if f then f:close(); table.insert(packs, "euPhonia JSFX") end
+  
+  -- Scan JST
+  f = io.open(effects_path .. "JST" .. sep .. "transient-designer", "r") or io.open(effects_path .. "jst" .. sep .. "transient-designer", "r")
+  if f then f:close(); table.insert(packs, "JST JSFX Toolkit") end
+
+  -- Scan JSFX Clones (JClones)
+  f = io.open(effects_path .. "JClones" .. sep .. "JClones_L2", "r") or io.open(effects_path .. "JClones" .. sep .. "JClones_OInflator", "r") or io.open(effects_path .. "JClones" .. sep .. "JClones_CA2A", "r") or io.open(effects_path .. "JClones" .. sep .. "JClones_CL1B", "r") or io.open(effects_path .. "JClones" .. sep .. "JClones_SatBuss", "r")
+  if f then f:close(); table.insert(packs, "JSFX Clones") end
+  
+  -- Build packs JSON array string
+  local packs_json = "["
+  for i, p in ipairs(packs) do
+    packs_json = packs_json .. '\"' .. p .. '\"'
+    if i < #packs then packs_json = packs_json .. "," end
+  end
+  packs_json = packs_json .. "]"
+  
+  local clean_email = trim_str(state.email):lower()
+  local clean_pin = trim_str(state.pin)
+  
+  local json_payload = '{\"email\":\"' .. clean_email .. '\",\"pin\":\"' .. clean_pin .. '\",\"detectedPacks\":' .. packs_json .. '}'
+  
+  local json_tmp = os.tmpname()
+  if json_tmp:byte(1) == 92 then json_tmp = os.getenv("TMP") .. json_tmp end
+  local jf = io.open(json_tmp, "w")
+  if jf then
+    jf:write(json_payload)
+    jf:close()
+  end
+  
+  local status_url = "${origin}/api/reaper-sync/status"
+  local is_win = (string.find(reaper.GetOS(), "Win") ~= nil)
+  
+  -- Non-blocking background curl execution!
+  local cmd
+  if is_win then
+    cmd = 'start /B curl.exe -sL -X POST -H \"Content-Type: application/json\" -d @' .. json_tmp .. ' \"' .. status_url .. '\" >nul 2>&1'
+  else
+    cmd = 'curl -sL -X POST -H \"Content-Type: application/json\" -d @' .. json_tmp .. ' \"' .. status_url .. '\" >/dev/null 2>&1 &'
+  end
+  
+  os.execute(cmd)
+  
+  -- Remove file after brief pause
+  reaper.defer(function()
+    pcall(function() os.remove(json_tmp) end)
+  end)
+end
+
+local function poll_for_new_recipes()
+  if state.email == "" or #state.pin < 4 or state.is_loading then return end
+  
+  local clean_email = trim_str(state.email):lower()
+  local clean_pin = trim_str(state.pin)
+  local url = "${origin}/api/reaper-sync/pull?email=" .. url_encode(clean_email) .. "&pin=" .. url_encode(clean_pin)
+  
+  local tmp = os.tmpname()
+  if tmp:byte(1) == 92 then tmp = os.getenv("TMP") .. tmp end
+  
+  local is_win = (string.find(reaper.GetOS(), "Win") ~= nil)
+  local cmd
+  if is_win then
+    cmd = 'start /B curl.exe -sL \"' .. url .. '\" -o \"' .. tmp .. '\"'
+  else
+    cmd = 'curl -sL \"' .. url .. '\" -o \"' .. tmp .. '\" &'
+  end
+  
+  os.execute(cmd)
+  
+  -- Read the tmp file after a brief delay
+  reaper.defer(function()
+    local start_time = os.time()
+    local function wait_and_read()
+      local f = io.open(tmp, "r")
+      if f then
+        local content = f:read("*all")
+        f:close()
+        os.remove(tmp)
+        
+        if content ~= "" and not content:match("error") then
+          if state.last_payload and state.last_payload ~= content then
+            state.has_new_recipes = true
+            state.status_msg = "BEATGANGSTA DETECTED NEW RECIPES! SYNC NOW!"
+          end
+        end
+      elseif os.time() - start_time < 3 then
+        reaper.defer(wait_and_read)
+      end
+    end
+    reaper.defer(wait_and_read)
+  end)
+end
+
 function perform_sync()
   if state.email == "" or #state.pin < 4 then return end
   save_settings()
@@ -1304,6 +1468,8 @@ local function add_fx_fuzzy(track, fx_name)
 end
 
 function apply_sync(payload)
+  state.last_payload = payload
+  state.has_new_recipes = false
   reaper.Undo_BeginBlock()
   local current_track = nil
   local current_tname = "unknown"

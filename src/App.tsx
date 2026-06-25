@@ -1963,9 +1963,143 @@ The AI was unable to verify these parameters. Please investigate.`;
   const [showBuyCreditsModal, setShowBuyCreditsModal] = useState(false);
   const [showPromoPopup, setShowPromoPopup] = useState(false);
   const [showJsfxHelpModal, setShowJsfxHelpModal] = useState(false);
+  const [jsfxHelpTab, setJsfxHelpTab] = useState<'setup' | 'packs'>('setup');
+  const [copiedPackReapack, setCopiedPackReapack] = useState<string | null>(null);
+
+  const COMMUNITY_JSFX_PACKS = [
+    {
+      name: "Tukan Studios",
+      desc: "Incredible analog-modeled compressors, EQs, limiters, tape emulations, and vocal dynamic processors.",
+      source: "https://github.com/TukanStudios/Tukan_JSFX",
+      reapack: "https://raw.githubusercontent.com/TukanStudios/Tukan_JSFX/main/index.xml"
+    },
+    {
+      name: "Geraint Luff",
+      desc: "Outstanding creative DSP effects including Humulator, spectral compressors, delays, and echo thieves.",
+      source: "https://geraintluff.github.io/jsfx/",
+      reapack: "https://geraintluff.github.io/jsfx/index.xml"
+    },
+    {
+      name: "Saike JSFX",
+      desc: "Top-tier creative sound design utilities, saturators, multi-band shapers, and lush reverbs (Reflecto).",
+      source: "https://github.com/JoepVanHeerbeek/SaikeJSFX",
+      reapack: "https://raw.githubusercontent.com/JoepVanHeerbeek/SaikeJSFX/master/index.xml"
+    },
+    {
+      name: "Suzuki (RCGN) JSFX",
+      desc: "Warm tube compressor emulation, vintage tape warmth generators, and professional mastering expanders.",
+      source: "https://github.com/rcorne/rcgn-jsfx",
+      reapack: "https://raw.githubusercontent.com/rcorne/rcgn-jsfx/master/index.xml"
+    },
+    {
+      name: "Suzuki-Scripts (lewloiwc / Suzuki)",
+      desc: "Sound Design Suite (Sample Warp, Open Delay) & Splitter Suite (Transient/Gate/Envelope follow and Linkwitz-Riley crossovers).",
+      source: "https://github.com/Suzuki-Re/Suzuki-Scripts",
+      reapack: "https://raw.githubusercontent.com/Suzuki-Re/Suzuki-Scripts/master/index.xml"
+    },
+    {
+      name: "Sonic Anomaly",
+      desc: "Industry-favorite tools including Bass Professor Mark II, Quadra-Comp, and vintage mastering limiters.",
+      source: "https://github.com/SonicAnomaly/Sonic-Anomaly-JSFX",
+      reapack: "https://raw.githubusercontent.com/SonicAnomaly/Sonic-Anomaly-JSFX/master/index.xml"
+    },
+    {
+      name: "ReaTeam JSFX",
+      desc: "The premier collaborative repository with essential utilities, pitch correction tools, and repair processors.",
+      source: "https://github.com/ReaTeam/JSFX",
+      reapack: "https://raw.githubusercontent.com/ReaTeam/JSFX/master/index.xml"
+    },
+    {
+      name: "MIP2 Michael-P JSFX",
+      desc: "Clean studio-grade mixing compressors, dynamic control utilities, and highly transparent master limiters.",
+      source: "https://github.com/Michael-P/MIP2",
+      reapack: "https://raw.githubusercontent.com/Michael-P/MIP2/master/index.xml"
+    },
+    {
+      name: "Mudra Lukas JSFX",
+      desc: "Unique spectral dynamic shapers, high-speed transient designers, and linear-phase rotators.",
+      source: "https://github.com/LukasK/MudraJSFX",
+      reapack: "https://raw.githubusercontent.com/LukasK/MudraJSFX/master/index.xml"
+    },
+    {
+      name: "euPhonia JSFX",
+      desc: "Premium stereo imagers, spatial width expanders, and analog-style high frequency sweetening tools.",
+      source: "https://github.com/euPhoniaDSP/euPhoniaJSFX",
+      reapack: "https://raw.githubusercontent.com/euPhoniaDSP/euPhoniaJSFX/master/index.xml"
+    },
+    {
+      name: "JST JSFX Toolkit",
+      desc: "A powerful audio toolkit containing dynamic clippers, aggressive transient shapers, and creative filters.",
+      source: "https://github.com/JSTdsp/JST_JSFX_Toolkit",
+      reapack: "https://raw.githubusercontent.com/JSTdsp/JST_JSFX_Toolkit/master/index.xml"
+    },
+    {
+      name: "JSFX Clones",
+      desc: "Excellent emulations of legendary analog and digital gear, including Oxford Inflator, L2, CL 1B, CA-2A, and Vintage Tape.",
+      source: "https://github.com/JClones/JSFXClones",
+      reapack: "https://raw.githubusercontent.com/JClones/JSFXClones/master/index.xml"
+    }
+  ];
+
+  const [installedJsfxPacks, setInstalledJsfxPacks] = useState<string[]>(() => {
+    try {
+      const stored = localStorage.getItem('beatgangsta_installed_jsfx_packs');
+      return stored ? JSON.parse(stored) : [];
+    } catch (_) {
+      return [];
+    }
+  });
+  const [newJsfxNotification, setNewJsfxNotification] = useState<string | null>(null);
+  const [reaperOnline, setReaperOnline] = useState(false);
   const [reaperSyncPin, setReaperSyncPin] = useState<string | null>(null);
   const [isPushingReaperSync, setIsPushingReaperSync] = useState(false);
   const [showSyncSuccess, setShowSyncSuccess] = useState(false);
+
+  useEffect(() => {
+    localStorage.setItem('beatgangsta_installed_jsfx_packs', JSON.stringify(installedJsfxPacks));
+  }, [installedJsfxPacks]);
+
+  useEffect(() => {
+    if ((dawType !== 'REAPER' && dawType !== 'Reaper') || !reaperSyncPin) {
+      setReaperOnline(false);
+      return;
+    }
+
+    const checkStatus = async () => {
+      try {
+        const email = user?.email || localStorage.getItem('beatgangsta_sync_email') || '';
+        if (!email) return;
+
+        const res = await fetch(`/api/reaper-sync/status?email=${encodeURIComponent(email)}&pin=${encodeURIComponent(reaperSyncPin)}`);
+        if (res.ok) {
+          const data = await res.json();
+          setReaperOnline(data.online || false);
+          
+          if (Array.isArray(data.detectedPacks)) {
+            const detected = data.detectedPacks;
+            
+            // Check if there are any packs in 'detected' that are NOT in 'installedJsfxPacks'
+            const newPacks = detected.filter((p: string) => !installedJsfxPacks.includes(p));
+            if (newPacks.length > 0) {
+              // Add new packs to installedJsfxPacks
+              const updated = Array.from(new Set([...installedJsfxPacks, ...detected]));
+              setInstalledJsfxPacks(updated);
+              
+              // Show notification popup!
+              setNewJsfxNotification(`New JSFX detected! BeatGangsta Connect found ${newPacks.join(', ')} in your REAPER setup. Your gear rack has been updated!`);
+            }
+          }
+        }
+      } catch (err) {
+        console.error("Failed to fetch REAPER sync status:", err);
+      }
+    };
+
+    // Poll every 5 seconds
+    checkStatus();
+    const timer = setInterval(checkStatus, 5000);
+    return () => clearInterval(timer);
+  }, [dawType, reaperSyncPin, installedJsfxPacks, user?.email]);
 
   useEffect(() => {
     if (user && user.justReceivedPromo) {
@@ -4782,7 +4916,7 @@ The AI was unable to verify these parameters. Please investigate.`;
 
     try {
       if (!requireAuth()) return;
-      const response = await getBeatRecommendations(plugins, analogInstruments, analogHardware, drumKits, excludeAnalog, dawType, starredPlugins, isGangstaVox, i18n.language, isMultiBandMode, generationBPM, generationContext, isJsfxMode);
+      const response = await getBeatRecommendations(plugins, analogInstruments, analogHardware, drumKits, excludeAnalog, dawType, starredPlugins, isGangstaVox, i18n.language, isMultiBandMode, generationBPM, generationContext, isJsfxMode, installedJsfxPacks);
       clearInterval(progressInterval);
       setGenerationProgress(100);
       clearTimeout(timeoutId);
@@ -4833,7 +4967,7 @@ The AI was unable to verify these parameters. Please investigate.`;
 
     try {
       if (!requireAuth()) return;
-      const response = await getCustomBeatRecommendations(plugins, typeBeatSearch.trim(), analogInstruments, analogHardware, drumKits, excludeAnalog, dawType, starredPlugins, isGangstaVox, i18n.language, isMultiBandMode, generationBPM, generationContext, isJsfxMode);
+      const response = await getCustomBeatRecommendations(plugins, typeBeatSearch.trim(), analogInstruments, analogHardware, drumKits, excludeAnalog, dawType, starredPlugins, isGangstaVox, i18n.language, isMultiBandMode, generationBPM, generationContext, isJsfxMode, installedJsfxPacks);
       clearInterval(progressInterval);
       setGenerationProgress(100);
       clearTimeout(timeoutId);
@@ -4885,7 +5019,7 @@ The AI was unable to verify these parameters. Please investigate.`;
 
     try {
       if (!requireAuth()) return;
-      const response = await getSongBeatRecommendations(plugins, songSearch.trim(), analogInstruments, analogHardware, drumKits, excludeAnalog, dawType, starredPlugins, isGangstaVox, i18n.language, isMultiBandMode, generationBPM, generationContext, isJsfxMode);
+      const response = await getSongBeatRecommendations(plugins, songSearch.trim(), analogInstruments, analogHardware, drumKits, excludeAnalog, dawType, starredPlugins, isGangstaVox, i18n.language, isMultiBandMode, generationBPM, generationContext, isJsfxMode, installedJsfxPacks);
       clearInterval(progressInterval);
       setGenerationProgress(100);
       clearTimeout(timeoutId);
@@ -5037,7 +5171,7 @@ Provide the exact JSFX plugin name and required sliders/parameters.`;
       
       const activePlugins = plugins.filter(p => p.type !== 'Studio One Function');
 
-      const critique = await getMixCritique(activePlugins, null, null, 'audio/mpeg', isGangstaVox, true, fullContext, null, finalReferenceTrack, referenceAudioBase64, null, referenceGeminiFileUri, i18n.language, uploadedStems, analogInstruments, analogHardware, isBusMode, isMultiBandMode, isMasterMode, isJsfxMode);
+      const critique = await getMixCritique(activePlugins, null, null, 'audio/mpeg', isGangstaVox, true, fullContext, null, finalReferenceTrack, referenceAudioBase64, null, referenceGeminiFileUri, i18n.language, uploadedStems, analogInstruments, analogHardware, isBusMode, isMultiBandMode, isMasterMode, isJsfxMode, installedJsfxPacks);
       critique.id = Math.random().toString(36).substr(2, 9);
       critique.isMasterMode = isMasterMode;
       critique.isJsfxMode = isJsfxMode;
@@ -5327,7 +5461,7 @@ Only use valid, default REAPER JSFX (JS:). Here is a comprehensive list of actua
 Provide the exact JSFX plugin name and required sliders/parameters.`;
         }
 
-        const critique = await getMixCritique(activePlugins, audioBase64, audioUrl, mimeType, isGangstaVox, hasStems, fullContext, null, finalReferenceTrack, referenceAudioBase64, geminiFileUri, referenceGeminiFileUri, i18n.language, undefined, analogInstruments, analogHardware, isBusMode, isMultiBandMode, isMasterMode, isJsfxMode);
+        const critique = await getMixCritique(activePlugins, audioBase64, audioUrl, mimeType, isGangstaVox, hasStems, fullContext, null, finalReferenceTrack, referenceAudioBase64, geminiFileUri, referenceGeminiFileUri, i18n.language, undefined, analogInstruments, analogHardware, isBusMode, isMultiBandMode, isMasterMode, isJsfxMode, installedJsfxPacks);
         critique.id = Math.random().toString(36).substr(2, 9);
         critique.isMasterMode = isMasterMode;
         critique.isJsfxMode = isJsfxMode;
@@ -9609,7 +9743,7 @@ Provide the exact JSFX plugin name and required sliders/parameters.`;
                     <h2 className={`text-2xl font-black uppercase tracking-tighter ${
                       theme === 'coldest' ? 'text-slate-900' : 'text-white'
                     }`}>
-                      How to use BeatGangsta Connect
+                      BeatGangsta Connect
                     </h2>
                     <p className={`text-sm mt-1 uppercase tracking-widest font-bold ${
                       theme === 'coldest' ? 'text-[#10b981]' : 'text-[#10b981]'
@@ -9627,79 +9761,194 @@ Provide the exact JSFX plugin name and required sliders/parameters.`;
                   </button>
                 </div>
 
-                <div className={`space-y-6 ${theme === 'coldest' ? 'text-slate-700' : 'text-zinc-300'}`}>
-                  {/* Step 1 */}
-                  <div className={`p-4 rounded-xl border ${theme === 'coldest' ? 'bg-slate-50 border-slate-100' : 'bg-black/40 border-zinc-800'}`}>
-                    <div className="flex items-center gap-3 mb-2">
-                      <div className="w-6 h-6 rounded-full bg-[#10b981] flex items-center justify-center text-white font-black text-xs">1</div>
-                      <h3 className="font-bold">Download the ZIP bundle</h3>
-                    </div>
-                    <p className="text-sm pl-9 opacity-80">Click the "BeatGangsta Connect (.zip)" button to download the integration bundle. This contains the REAPER Lua script and required image assets.</p>
-                  </div>
+                {/* Tabs */}
+                <div className={`flex gap-6 border-b pb-2 mb-6 ${theme === 'coldest' ? 'border-slate-100' : 'border-zinc-800/60'}`}>
+                  <button
+                    onClick={() => setJsfxHelpTab('setup')}
+                    className={`pb-2 px-1 font-black text-xs uppercase tracking-wider border-b-2 transition-all ${
+                      jsfxHelpTab === 'setup'
+                        ? 'border-[#10b981] text-[#10b981]'
+                        : `border-transparent ${theme === 'coldest' ? 'text-slate-400 hover:text-slate-600' : 'text-zinc-500 hover:text-zinc-300'}`
+                    }`}
+                  >
+                    Setup Guide
+                  </button>
+                  <button
+                    onClick={() => setJsfxHelpTab('packs')}
+                    className={`pb-2 px-1 font-black text-xs uppercase tracking-wider border-b-2 transition-all ${
+                      jsfxHelpTab === 'packs'
+                        ? 'border-[#10b981] text-[#10b981]'
+                        : `border-transparent ${theme === 'coldest' ? 'text-slate-400 hover:text-slate-600' : 'text-zinc-500 hover:text-zinc-300'}`
+                    }`}
+                  >
+                    Community Packs ({COMMUNITY_JSFX_PACKS.length})
+                  </button>
+                </div>
 
-                  {/* Step 2 */}
-                  <div className={`p-4 rounded-xl border ${theme === 'coldest' ? 'bg-slate-50 border-slate-100' : 'bg-black/40 border-zinc-800'}`}>
-                    <div className="flex items-center gap-3 mb-2">
-                      <div className="w-6 h-6 rounded-full bg-[#10b981] flex items-center justify-center text-white font-black text-xs">2</div>
-                      <h3 className="font-bold">Install in REAPER</h3>
-                    </div>
-                    <div className="pl-9 space-y-4">
-                      <p className="text-sm opacity-80">Copy the correct path for your system, paste it into Explorer (Win) or Finder (Mac - Cmd+Shift+G), and move the files there:</p>
-                      
-                      <div className="space-y-3">
-                        <div className="space-y-1.5">
-                          <p className="text-[10px] font-black uppercase tracking-wider opacity-60">Windows Path</p>
-                          <div className={`flex items-center gap-2 p-2 rounded-xl border ${theme === 'coldest' ? 'bg-white border-slate-200' : 'bg-black/20 border-zinc-700'}`}>
-                            <code className="text-[10px] font-mono break-all opacity-80 flex-1">%AppData%\REAPER\Scripts</code>
-                            <button 
-                              onClick={() => {
-                                navigator.clipboard.writeText("%AppData%\\REAPER\\Scripts");
-                                // No state for success here for simplicity in App.tsx
-                              }}
-                              className={`p-1.5 rounded-lg hover:bg-black/5 transition-colors ${theme === 'coldest' ? 'text-slate-400' : 'text-zinc-500'}`}
-                            >
-                              <Copy size={14} />
-                            </button>
-                          </div>
-                        </div>
-
-                        <div className="space-y-1.5">
-                          <p className="text-[10px] font-black uppercase tracking-wider opacity-60">macOS Path</p>
-                          <div className={`flex items-center gap-2 p-2 rounded-xl border ${theme === 'coldest' ? 'bg-white border-slate-200' : 'bg-black/20 border-zinc-700'}`}>
-                            <code className="text-[10px] font-mono break-all opacity-80 flex-1">~/Library/Application Support/REAPER/Scripts</code>
-                            <button 
-                              onClick={() => {
-                                navigator.clipboard.writeText("~/Library/Application Support/REAPER/Scripts");
-                              }}
-                              className={`p-1.5 rounded-lg hover:bg-black/5 transition-colors ${theme === 'coldest' ? 'text-slate-400' : 'text-zinc-500'}`}
-                            >
-                              <Copy size={14} />
-                            </button>
-                          </div>
-                        </div>
+                {jsfxHelpTab === 'setup' ? (
+                  <div className={`space-y-6 ${theme === 'coldest' ? 'text-slate-700' : 'text-zinc-300'}`}>
+                    {/* Step 1 */}
+                    <div className={`p-4 rounded-xl border ${theme === 'coldest' ? 'bg-slate-50 border-slate-100' : 'bg-black/40 border-zinc-800'}`}>
+                      <div className="flex items-center gap-3 mb-2">
+                        <div className="w-6 h-6 rounded-full bg-[#10b981] flex items-center justify-center text-white font-black text-xs">1</div>
+                        <h3 className="font-bold">Download the ZIP bundle</h3>
                       </div>
+                      <p className="text-sm pl-9 opacity-80">Click the "BeatGangsta Connect (.zip)" button to download the integration bundle. This contains the REAPER Lua script and required image assets.</p>
+                    </div>
 
-                      <ul className="text-sm opacity-80 list-disc ml-4 space-y-1">
-                        <li>Extract the ZIP and move the <code>BeatGangsta_Connect.lua</code> and <code>beatgangsta_logo.png</code> files into this folder</li>
-                        <li>In REAPER, open the <strong>Actions List</strong> (Shortcut: '?') and click <strong>New action...</strong> &gt; <strong>Load ReaScript...</strong></li>
-                        <li>Select <code>BeatGangsta_Connect.lua</code> to add it to your actions.</li>
+                    {/* Step 2 */}
+                    <div className={`p-4 rounded-xl border ${theme === 'coldest' ? 'bg-slate-50 border-slate-100' : 'bg-black/40 border-zinc-800'}`}>
+                      <div className="flex items-center gap-3 mb-2">
+                        <div className="w-6 h-6 rounded-full bg-[#10b981] flex items-center justify-center text-white font-black text-xs">2</div>
+                        <h3 className="font-bold">Install in REAPER</h3>
+                      </div>
+                      <div className="pl-9 space-y-4">
+                        <p className="text-sm opacity-80">Copy the correct path for your system, paste it into Explorer (Win) or Finder (Mac - Cmd+Shift+G), and move the files there:</p>
+                        
+                        <div className="space-y-3">
+                          <div className="space-y-1.5">
+                            <p className="text-[10px] font-black uppercase tracking-wider opacity-60">Windows Path</p>
+                            <div className={`flex items-center gap-2 p-2 rounded-xl border ${theme === 'coldest' ? 'bg-white border-slate-200' : 'bg-black/20 border-zinc-700'}`}>
+                              <code className="text-[10px] font-mono break-all opacity-80 flex-1">%AppData%\REAPER\Scripts</code>
+                              <button 
+                                onClick={() => {
+                                  navigator.clipboard.writeText("%AppData%\\REAPER\\Scripts");
+                                }}
+                                className={`p-1.5 rounded-lg hover:bg-black/5 transition-colors ${theme === 'coldest' ? 'text-slate-400' : 'text-zinc-500'}`}
+                              >
+                                <Copy size={14} />
+                              </button>
+                            </div>
+                          </div>
+
+                          <div className="space-y-1.5">
+                            <p className="text-[10px] font-black uppercase tracking-wider opacity-60">macOS Path</p>
+                            <div className={`flex items-center gap-2 p-2 rounded-xl border ${theme === 'coldest' ? 'bg-white border-slate-200' : 'bg-black/20 border-zinc-700'}`}>
+                              <code className="text-[10px] font-mono break-all opacity-80 flex-1">~/Library/Application Support/REAPER/Scripts</code>
+                              <button 
+                                onClick={() => {
+                                  navigator.clipboard.writeText("~/Library/Application Support/REAPER/Scripts");
+                                }}
+                                className={`p-1.5 rounded-lg hover:bg-black/5 transition-colors ${theme === 'coldest' ? 'text-slate-400' : 'text-zinc-500'}`}
+                              >
+                                <Copy size={14} />
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+
+                        <ul className="text-sm opacity-80 list-disc ml-4 space-y-1">
+                          <li>Extract the ZIP and move the <code>BeatGangsta_Connect.lua</code> and <code>beatgangsta_logo.png</code> files into this folder</li>
+                          <li>In REAPER, open the <strong>Actions List</strong> (Shortcut: '?') and click <strong>New action...</strong> &gt; <strong>Load ReaScript...</strong></li>
+                          <li>Select <code>BeatGangsta_Connect.lua</code> to add it to your actions.</li>
+                        </ul>
+                      </div>
+                    </div>
+
+                    {/* Step 3 */}
+                    <div className={`p-4 rounded-xl border ${theme === 'coldest' ? 'bg-slate-50 border-slate-100' : 'bg-black/40 border-zinc-800'}`}>
+                      <div className="flex items-center gap-3 mb-2">
+                        <div className="w-6 h-6 rounded-full bg-[#10b981] flex items-center justify-center text-white font-black text-xs">3</div>
+                        <h3 className="font-bold">Connect and Sync</h3>
+                      </div>
+                      <ul className="text-sm pl-9 opacity-80 list-disc ml-4 space-y-1">
+                        <li>Run the <strong>BeatGangsta Connect</strong> script from your Actions list</li>
+                        <li>Enter your Email and the 4-digit PIN generated when you click <strong>Push REAPER Sync</strong> in the web app</li>
+                        <li>The script will poll the cloud and automatically instantiate the recommended JSFX plugins with the exact parameters tailored to your mix!</li>
                       </ul>
                     </div>
                   </div>
-
-                  {/* Step 3 */}
-                  <div className={`p-4 rounded-xl border ${theme === 'coldest' ? 'bg-slate-50 border-slate-100' : 'bg-black/40 border-zinc-800'}`}>
-                    <div className="flex items-center gap-3 mb-2">
-                      <div className="w-6 h-6 rounded-full bg-[#10b981] flex items-center justify-center text-white font-black text-xs">3</div>
-                      <h3 className="font-bold">Connect and Sync</h3>
+                ) : (
+                  <div className="space-y-6">
+                    <div className={`p-4 rounded-2xl border text-sm leading-relaxed ${theme === 'coldest' ? 'bg-slate-50 border-slate-100 text-slate-600' : 'bg-black/40 border-zinc-800/80 text-zinc-400'}`}>
+                      <p className="font-semibold mb-2 text-emerald-400">⚡ Automated JSFX Library Expansion</p>
+                      BeatGangsta supports 10 free professional JSFX community plugin packs. 
+                      You can download them manually or manage them effortlessly via <strong>ReaPack</strong> (highly recommended for auto-updates). 
+                      <span className="block mt-2 font-medium text-white">To use these packs in your recipes, check them below or let BeatGangsta Connect auto-detect them in real-time!</span>
                     </div>
-                    <ul className="text-sm pl-9 opacity-80 list-disc ml-4 space-y-1">
-                      <li>Run the <strong>BeatGangsta Connect</strong> script from your Actions list</li>
-                      <li>Enter your Email and the 4-digit PIN generated when you click <strong>Push REAPER Sync</strong> in the web app</li>
-                      <li>The script will poll the cloud and automatically instantiate the recommended JSFX plugins with the exact parameters tailored to your mix!</li>
-                    </ul>
+
+                    <div className="max-h-[380px] overflow-y-auto pr-1 space-y-4">
+                      {COMMUNITY_JSFX_PACKS.map(pack => {
+                        const isInstalled = installedJsfxPacks.includes(pack.name);
+                        return (
+                          <div 
+                            key={pack.name} 
+                            className={`p-4 rounded-2xl border transition-all ${
+                              isInstalled 
+                                ? 'border-emerald-500/40 bg-emerald-500/[0.02]' 
+                                : (theme === 'coldest' ? 'border-slate-100 bg-slate-50/50' : 'border-zinc-800 bg-zinc-900/30')
+                            }`}
+                          >
+                            <div className="flex items-start gap-3 justify-between">
+                              <div className="flex items-start gap-2.5">
+                                <button
+                                  onClick={() => {
+                                    if (isInstalled) {
+                                      setInstalledJsfxPacks(prev => prev.filter(p => p !== pack.name));
+                                    } else {
+                                      setInstalledJsfxPacks(prev => [...prev, pack.name]);
+                                    }
+                                  }}
+                                  className={`mt-0.5 w-5 h-5 rounded-md border flex items-center justify-center transition-all ${
+                                    isInstalled 
+                                      ? 'bg-emerald-500 border-emerald-500 text-white' 
+                                      : (theme === 'coldest' ? 'border-slate-300 bg-white hover:border-slate-400' : 'border-zinc-700 bg-black/40 hover:border-zinc-500')
+                                  }`}
+                                >
+                                  {isInstalled && <Check size={12} strokeWidth={3} />}
+                                </button>
+                                <div>
+                                  <h4 className={`font-bold text-sm ${theme === 'coldest' ? 'text-slate-800' : 'text-white'}`}>{pack.name}</h4>
+                                  <p className={`text-xs mt-0.5 leading-relaxed ${theme === 'coldest' ? 'text-slate-500' : 'text-zinc-400'}`}>{pack.desc}</p>
+                                </div>
+                              </div>
+                            </div>
+
+                            <div className="mt-3 pt-3 border-t border-zinc-800/30 flex flex-wrap items-center gap-3 text-xs">
+                              {/* Source Link */}
+                              <a 
+                                href={pack.source} 
+                                target="_blank" 
+                                rel="noopener noreferrer"
+                                className="inline-flex items-center gap-1 font-bold text-emerald-400 hover:text-emerald-300 transition-colors"
+                              >
+                                <span>Source Forum / Git</span>
+                                <ExternalLink size={12} />
+                              </a>
+
+                              {/* ReaPack copy link */}
+                              <div className="flex-1 flex items-center gap-2 max-w-full">
+                                <div className={`flex items-center gap-1.5 px-2 py-1 rounded-lg border w-full overflow-hidden ${theme === 'coldest' ? 'bg-white border-slate-200' : 'bg-black/30 border-zinc-800'}`}>
+                                  <span className="text-[9px] font-mono truncate text-zinc-500 flex-1">{pack.reapack}</span>
+                                  <button 
+                                    onClick={() => {
+                                      navigator.clipboard.writeText(pack.reapack);
+                                      setCopiedPackReapack(pack.name);
+                                      setTimeout(() => setCopiedPackReapack(null), 2000);
+                                    }}
+                                    className="text-[10px] font-bold text-[#10b981] hover:text-emerald-300 shrink-0 uppercase tracking-widest pl-1"
+                                  >
+                                    {copiedPackReapack === pack.name ? "Copied" : "Copy ReaPack Link"}
+                                  </button>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+
+                    {/* ReaPack Quick Guide */}
+                    <div className={`p-4 rounded-2xl border text-xs leading-relaxed space-y-1.5 ${theme === 'coldest' ? 'bg-slate-50 border-slate-100 text-slate-600' : 'bg-black/40 border-zinc-800/80 text-zinc-400'}`}>
+                      <p className="font-bold text-white uppercase tracking-wider text-[10px]">How to import via ReaPack in REAPER:</p>
+                      <ol className="list-decimal list-inside space-y-1 pl-1">
+                        <li>In REAPER, click <strong>Extensions &gt; ReaPack &gt; Import repositories...</strong></li>
+                        <li>Paste the copied ReaPack link and click <strong>OK</strong></li>
+                        <li>Click <strong>Extensions &gt; ReaPack &gt; Synchronize packages</strong> to download and install!</li>
+                      </ol>
+                    </div>
                   </div>
-                </div>
+                )}
 
                 <button
                   onClick={() => setShowJsfxHelpModal(false)}
@@ -9712,6 +9961,32 @@ Provide the exact JSFX plugin name and required sliders/parameters.`;
               </motion.div>
             </div>
           </div>
+        )}
+      </AnimatePresence>
+
+      {/* Real-time JSFX Auto-Detection Notification Banner */}
+      <AnimatePresence>
+        {newJsfxNotification && (
+          <motion.div
+            initial={{ opacity: 0, y: 50, scale: 0.9 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 20, scale: 0.9 }}
+            className="fixed bottom-6 right-6 z-[200] max-w-sm w-full p-4 rounded-2xl border shadow-2xl flex items-start gap-3 bg-zinc-900 border-emerald-500 text-white shadow-emerald-950/20"
+          >
+            <div className="p-2 bg-emerald-500/10 text-emerald-400 rounded-xl shrink-0">
+              <Zap className="w-5 h-5 animate-pulse" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-xs font-black uppercase tracking-wider text-emerald-400">Connection Synced</p>
+              <p className="text-sm font-medium mt-1 leading-relaxed">{newJsfxNotification}</p>
+            </div>
+            <button
+              onClick={() => setNewJsfxNotification(null)}
+              className="p-1 rounded-lg hover:bg-white/10 transition-colors text-zinc-400 hover:text-white shrink-0"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          </motion.div>
         )}
       </AnimatePresence>
 
