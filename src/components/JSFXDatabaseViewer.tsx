@@ -1,16 +1,52 @@
-import React, { useState } from 'react';
-import { ArrowLeft, Search, Layers, Sliders, Info, Zap } from 'lucide-react';
+import React, { useState, useMemo } from 'react';
+import { ArrowLeft, Search, Layers, Sliders, Info, Zap, Filter } from 'lucide-react';
 import { JSFX_DATABASE, JSFXProfile } from '../data/jsfxResearch';
+
+const getUiType = (plugin: JSFXProfile): 'gui' | 'slider' => {
+  const guiPacks = [
+    'Tukan Studios', 
+    'Geraint Luff', 
+    'Saike JSFX', 
+    'Saike Tools (Joep Vanlier)', 
+    'Sonic Anomaly', 
+    'Suzuki (RCGN) JSFX',
+    'Suzuki-Scripts (lewloiwc / Suzuki)',
+    'ReJJ',
+    'chmaha Scripts' // Optionally some others
+  ];
+  if (plugin.packRequired && guiPacks.includes(plugin.packRequired)) return 'gui';
+  
+  const nameL = plugin.name.toLowerCase();
+  if (nameL.includes('tukan') || nameL.includes('saike') || nameL.includes('geraint') || nameL.includes('sonic anomaly') || nameL.includes('reeq')) return 'gui';
+
+  return 'slider';
+};
 
 export const JSFXDatabaseViewer = ({ onBack, theme }: { onBack: () => void, theme: string }) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedPlugin, setSelectedPlugin] = useState<JSFXProfile | null>(null);
+  const [selectedCategory, setSelectedCategory] = useState<string>('All');
+  const [selectedUiType, setSelectedUiType] = useState<'all' | 'gui' | 'slider'>('all');
 
-  const filteredPlugins = JSFX_DATABASE.filter(plugin => 
-    plugin.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    plugin.shortName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    plugin.category.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const categories = useMemo(() => {
+    const cats = new Set(JSFX_DATABASE.map(p => p.category));
+    return ['All', ...Array.from(cats).sort()];
+  }, []);
+
+  const filteredPlugins = useMemo(() => {
+    return JSFX_DATABASE.filter(plugin => {
+      const matchesSearch = 
+        plugin.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        plugin.shortName.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        plugin.category.toLowerCase().includes(searchQuery.toLowerCase());
+      
+      const matchesCategory = selectedCategory === 'All' || plugin.category === selectedCategory;
+      const pluginUiType = getUiType(plugin);
+      const matchesUiType = selectedUiType === 'all' || pluginUiType === selectedUiType;
+
+      return matchesSearch && matchesCategory && matchesUiType;
+    });
+  }, [searchQuery, selectedCategory, selectedUiType]);
 
   return (
     <div className={`min-h-[100dvh] w-full flex flex-col ${theme === 'coldest' ? 'bg-slate-50 text-slate-900' : 'bg-zinc-950 text-white'}`}>
@@ -24,7 +60,7 @@ export const JSFXDatabaseViewer = ({ onBack, theme }: { onBack: () => void, them
         <div className="flex-1">
           <h1 className="text-lg font-black uppercase tracking-widest flex items-center gap-2">
             <Layers size={18} className="opacity-50" />
-            JSFX Database <span className="opacity-50 font-medium">({JSFX_DATABASE.length} Plugins)</span>
+            JSFX Database <span className="opacity-50 font-medium">({filteredPlugins.length} / {JSFX_DATABASE.length})</span>
           </h1>
         </div>
       </div>
@@ -32,19 +68,59 @@ export const JSFXDatabaseViewer = ({ onBack, theme }: { onBack: () => void, them
       <div className="max-w-7xl mx-auto w-full flex-1 p-6 flex flex-col md:flex-row gap-6">
         {/* Sidebar / List */}
         <div className="w-full md:w-1/3 flex flex-col gap-4">
-          <div className="relative">
-            <Search size={16} className={`absolute left-3.5 top-1/2 -translate-y-1/2 ${theme === 'coldest' ? 'text-slate-400' : 'text-slate-500'}`} />
-            <input
-              type="text"
-              placeholder="Search plugins..."
-              value={searchQuery}
-              onChange={e => setSearchQuery(e.target.value)}
-              className={`w-full pl-10 pr-4 py-3 rounded-xl border text-sm transition-colors outline-none focus:ring-2 focus:ring-opacity-20 ${
-                theme === 'coldest' 
-                  ? 'bg-white border-slate-200 focus:border-blue-500 focus:ring-blue-500' 
-                  : 'bg-zinc-900 border-white/10 focus:border-blue-400 focus:ring-blue-400'
-              }`}
-            />
+          <div className="flex flex-col gap-3">
+            <div className="relative">
+              <Search size={16} className={`absolute left-3.5 top-1/2 -translate-y-1/2 ${theme === 'coldest' ? 'text-slate-400' : 'text-slate-500'}`} />
+              <input
+                type="text"
+                placeholder="Search plugins..."
+                value={searchQuery}
+                onChange={e => setSearchQuery(e.target.value)}
+                className={`w-full pl-10 pr-4 py-3 rounded-xl border text-sm transition-colors outline-none focus:ring-2 focus:ring-opacity-20 ${
+                  theme === 'coldest' 
+                    ? 'bg-white border-slate-200 focus:border-blue-500 focus:ring-blue-500' 
+                    : 'bg-zinc-900 border-white/10 focus:border-blue-400 focus:ring-blue-400'
+                }`}
+              />
+            </div>
+            
+            <div className="flex gap-2 items-center">
+              <div className="flex-1 relative">
+                <Filter size={14} className={`absolute left-3 top-1/2 -translate-y-1/2 ${theme === 'coldest' ? 'text-slate-400' : 'text-slate-500'}`} />
+                <select 
+                  value={selectedCategory}
+                  onChange={e => setSelectedCategory(e.target.value)}
+                  className={`w-full pl-8 pr-8 py-2 rounded-lg border text-xs font-bold uppercase tracking-wider appearance-none outline-none ${
+                    theme === 'coldest'
+                      ? 'bg-white border-slate-200 focus:border-blue-500'
+                      : 'bg-zinc-900 border-white/10 focus:border-blue-400'
+                  }`}
+                >
+                  {categories.map(c => <option key={c} value={c}>{c}</option>)}
+                </select>
+              </div>
+
+              <div className="flex bg-transparent rounded-lg border overflow-hidden" style={{ borderColor: theme === 'coldest' ? '#e2e8f0' : 'rgba(255,255,255,0.1)' }}>
+                <button 
+                  onClick={() => setSelectedUiType('all')}
+                  className={`px-3 py-2 text-[10px] font-black uppercase tracking-wider ${selectedUiType === 'all' ? (theme === 'coldest' ? 'bg-slate-200' : 'bg-white/20') : (theme === 'coldest' ? 'bg-white' : 'bg-zinc-900')}`}
+                >
+                  All
+                </button>
+                <button 
+                  onClick={() => setSelectedUiType('gui')}
+                  className={`px-3 py-2 text-[10px] font-black uppercase tracking-wider border-l ${selectedUiType === 'gui' ? (theme === 'coldest' ? 'bg-blue-100 text-blue-700' : 'bg-blue-900/40 text-blue-400') : (theme === 'coldest' ? 'bg-white border-slate-200' : 'bg-zinc-900 border-white/10')}`}
+                >
+                  GUI
+                </button>
+                <button 
+                  onClick={() => setSelectedUiType('slider')}
+                  className={`px-3 py-2 text-[10px] font-black uppercase tracking-wider border-l ${selectedUiType === 'slider' ? (theme === 'coldest' ? 'bg-slate-200' : 'bg-white/20') : (theme === 'coldest' ? 'bg-white border-slate-200' : 'bg-zinc-900 border-white/10')}`}
+                >
+                  Slider
+                </button>
+              </div>
+            </div>
           </div>
 
           <div className={`flex-1 overflow-y-auto min-h-[400px] border rounded-xl rounded-b-xl overflow-hidden ${theme === 'coldest' ? 'border-slate-200 bg-white' : 'border-white/10 bg-zinc-900'}`}>
@@ -56,7 +132,12 @@ export const JSFXDatabaseViewer = ({ onBack, theme }: { onBack: () => void, them
                   theme === 'coldest' ? 'border-slate-100 hover:bg-slate-50' : 'border-white/5 hover:bg-white/5'
                 } ${selectedPlugin?.name === plugin.name ? (theme === 'coldest' ? '!bg-blue-50 !border-blue-100' : '!bg-blue-900/20 !border-blue-900/30') : ''}`}
               >
-                <div className="font-bold text-sm truncate">{plugin.shortName}</div>
+                <div className="flex justify-between items-start gap-2">
+                  <div className="font-bold text-sm truncate">{plugin.shortName}</div>
+                  <div className={`text-[9px] px-1.5 py-0.5 rounded font-black uppercase tracking-widest ${getUiType(plugin) === 'gui' ? (theme === 'coldest' ? 'bg-blue-100 text-blue-700' : 'bg-blue-900/40 text-blue-400') : (theme === 'coldest' ? 'bg-slate-200 text-slate-500' : 'bg-white/10 text-white/40')}`}>
+                    {getUiType(plugin)}
+                  </div>
+                </div>
                 <div className="flex justify-between items-center text-xs opacity-60">
                   <span className="truncate">{plugin.category}</span>
                   <span>{plugin.sliders.length} sliders</span>
