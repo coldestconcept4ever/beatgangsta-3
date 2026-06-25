@@ -1986,6 +1986,12 @@ The AI was unable to verify these parameters. Please investigate.`;
       reapack: "https://raw.githubusercontent.com/JoepVanHeerbeek/SaikeJSFX/master/index.xml"
     },
     {
+      name: "Chokehold JSFX",
+      desc: "Fast, efficient mixing tools including the famous ClipMax clippers, Black-Face compressors, and analog-style saturators.",
+      source: "https://github.com/chokehold/jsfx",
+      reapack: "https://raw.githubusercontent.com/chokehold/jsfx/master/index.xml"
+    },
+    {
       name: "Suzuki (RCGN) JSFX",
       desc: "Warm tube compressor emulation, vintage tape warmth generators, and professional mastering expanders.",
       source: "https://github.com/rcorne/rcgn-jsfx",
@@ -2000,44 +2006,14 @@ The AI was unable to verify these parameters. Please investigate.`;
     {
       name: "Sonic Anomaly",
       desc: "Industry-favorite tools including Bass Professor Mark II, Quadra-Comp, and vintage mastering limiters.",
-      source: "https://github.com/SonicAnomaly/Sonic-Anomaly-JSFX",
-      reapack: "https://raw.githubusercontent.com/SonicAnomaly/Sonic-Anomaly-JSFX/master/index.xml"
+      source: "https://github.com/Sonic-Anomaly/Sonic-Anomaly-JSFX",
+      reapack: "https://raw.githubusercontent.com/Sonic-Anomaly/Sonic-Anomaly-JSFX/master/index.xml"
     },
     {
       name: "ReaTeam JSFX",
       desc: "The premier collaborative repository with essential utilities, pitch correction tools, and repair processors.",
       source: "https://github.com/ReaTeam/JSFX",
       reapack: "https://raw.githubusercontent.com/ReaTeam/JSFX/master/index.xml"
-    },
-    {
-      name: "MIP2 Michael-P JSFX",
-      desc: "Clean studio-grade mixing compressors, dynamic control utilities, and highly transparent master limiters.",
-      source: "https://github.com/Michael-P/MIP2",
-      reapack: "https://raw.githubusercontent.com/Michael-P/MIP2/master/index.xml"
-    },
-    {
-      name: "Mudra Lukas JSFX",
-      desc: "Unique spectral dynamic shapers, high-speed transient designers, and linear-phase rotators.",
-      source: "https://github.com/LukasK/MudraJSFX",
-      reapack: "https://raw.githubusercontent.com/LukasK/MudraJSFX/master/index.xml"
-    },
-    {
-      name: "euPhonia JSFX",
-      desc: "Premium stereo imagers, spatial width expanders, and analog-style high frequency sweetening tools.",
-      source: "https://github.com/euPhoniaDSP/euPhoniaJSFX",
-      reapack: "https://raw.githubusercontent.com/euPhoniaDSP/euPhoniaJSFX/master/index.xml"
-    },
-    {
-      name: "JST JSFX Toolkit",
-      desc: "A powerful audio toolkit containing dynamic clippers, aggressive transient shapers, and creative filters.",
-      source: "https://github.com/JSTdsp/JST_JSFX_Toolkit",
-      reapack: "https://raw.githubusercontent.com/JSTdsp/JST_JSFX_Toolkit/master/index.xml"
-    },
-    {
-      name: "JSFX Clones",
-      desc: "Excellent emulations of legendary analog and digital gear, including Oxford Inflator, L2, CL 1B, CA-2A, and Vintage Tape.",
-      source: "https://github.com/JClones/JSFXClones",
-      reapack: "https://raw.githubusercontent.com/JClones/JSFXClones/master/index.xml"
     }
   ];
 
