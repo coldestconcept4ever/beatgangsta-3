@@ -7882,7 +7882,7 @@ Provide the exact JSFX plugin name and required sliders/parameters.`;
                   <button onClick={handleGenerate} disabled={loading || mainTab === null} className={`py-4 px-12 rounded-full font-black text-xs select-none shadow-lg hover:scale-105 active:scale-95 transition-all disabled:scale-100 ${theme === 'coldest' || theme === 'chef-mode' ? 'bg-sky-500 text-white' : 'bg-white text-black'} ${mainTab === null ? 'blur-[8px] opacity-40' : ''}`}>{loading ? t('architecting') : t('get_random_recipes')}</button>
                   
                   {(dawType === 'REAPER' || dawType === 'Reaper') && (
-                    <div className="flex justify-center mt-6">
+                    <div className="flex justify-center mt-6 gap-3">
                       <div className={`inline-flex items-center gap-3 rounded-full px-4 py-2 ${theme === 'coldest' ? 'bg-white/40' : 'bg-black/40'}`}>
                         <span className={`text-[10px] font-black uppercase tracking-widest transition-colors ${!isJsfxMode ? (theme === 'coldest' ? 'text-slate-900' : 'text-white') : (theme === 'coldest' ? 'text-slate-500' : 'text-white/50')}`}>REAPER JSFX ONLY</span>
                         <button 
@@ -7892,6 +7892,15 @@ Provide the exact JSFX plugin name and required sliders/parameters.`;
                           <div className={`absolute top-0.5 left-0.5 w-4 h-4 rounded-full bg-white transition-transform ${isJsfxMode ? 'translate-x-5' : 'translate-x-0'}`} />
                         </button>
                       </div>
+                      <button
+                        onClick={() => setShowReapackReposModal(true)}
+                        className={`inline-flex items-center gap-2 rounded-full px-4 py-2 ${theme === 'coldest' ? 'bg-white/40 hover:bg-white/60' : 'bg-black/40 hover:bg-black/60'} transition-colors`}
+                      >
+                        <Database className="w-3.5 h-3.5 text-[#10b981]" />
+                        <span className={`text-[10px] font-black uppercase tracking-widest ${theme === 'coldest' ? 'text-slate-900' : 'text-white'}`}>
+                          ReaPack JSFX Repositories
+                        </span>
+                      </button>
                     </div>
                   )}
                 </div>
@@ -7970,7 +7979,7 @@ Provide the exact JSFX plugin name and required sliders/parameters.`;
                 </div>
                 
                 {(dawType === 'REAPER' || dawType === 'Reaper') && (
-                  <div className="flex justify-center mt-6">
+                  <div className="flex justify-center mt-6 gap-3">
                     <div className={`inline-flex items-center gap-3 rounded-full px-4 py-2 ${theme === 'coldest' ? 'bg-white/40' : 'bg-black/40'}`}>
                       <span className={`text-[10px] font-black uppercase tracking-widest transition-colors ${!isJsfxMode ? (theme === 'coldest' ? 'text-slate-900' : 'text-white') : (theme === 'coldest' ? 'text-slate-500' : 'text-white/50')}`}>REAPER JSFX ONLY</span>
                       <button 
@@ -7980,6 +7989,15 @@ Provide the exact JSFX plugin name and required sliders/parameters.`;
                         <div className={`absolute top-0.5 left-0.5 w-4 h-4 rounded-full bg-white transition-transform ${isJsfxMode ? 'translate-x-5' : 'translate-x-0'}`} />
                       </button>
                     </div>
+                    <button
+                      onClick={() => setShowReapackReposModal(true)}
+                      className={`inline-flex items-center gap-2 rounded-full px-4 py-2 ${theme === 'coldest' ? 'bg-white/40 hover:bg-white/60' : 'bg-black/40 hover:bg-black/60'} transition-colors`}
+                    >
+                      <Database className="w-3.5 h-3.5 text-[#10b981]" />
+                      <span className={`text-[10px] font-black uppercase tracking-widest ${theme === 'coldest' ? 'text-slate-900' : 'text-white'}`}>
+                        ReaPack JSFX Repositories
+                      </span>
+                    </button>
                   </div>
                 )}
               </div>
@@ -8318,6 +8336,15 @@ Provide the exact JSFX plugin name and required sliders/parameters.`;
                               <div className={`absolute top-0.5 left-0.5 w-4 h-4 rounded-full bg-white transition-transform ${isJsfxMode ? 'translate-x-5' : 'translate-x-0'}`} />
                             </button>
                           </div>
+                          <button
+                            onClick={() => setShowReapackReposModal(true)}
+                            className={`inline-flex items-center gap-2 rounded-full px-4 py-2 ${theme === 'coldest' ? 'bg-white/40 hover:bg-white/60' : 'bg-black/40 hover:bg-black/60'} transition-colors`}
+                          >
+                            <Database className="w-3.5 h-3.5 text-[#10b981]" />
+                            <span className={`text-[10px] font-black uppercase tracking-widest ${theme === 'coldest' ? 'text-slate-900' : 'text-white'}`}>
+                              ReaPack JSFX Repositories
+                            </span>
+                          </button>
                         </div>
                       </div>
                       )}
