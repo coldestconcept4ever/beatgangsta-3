@@ -10203,139 +10203,145 @@ Provide the exact JSFX plugin name and required sliders/parameters.`;
       {/* ReaPack Repos Modal */}
       <AnimatePresence>
         {showReapackReposModal && (
-          <div className="fixed inset-0 z-[150] overflow-y-auto bg-black/80 backdrop-blur-sm">
-            <div className="min-h-[100dvh] flex items-center justify-center p-4">
-              <motion.div 
-                initial={{ opacity: 0, scale: 0.9, y: 20 }}
-                animate={{ opacity: 1, scale: 1, y: 0 }}
-                exit={{ opacity: 0, scale: 0.9, y: -20 }}
-                className={`max-w-3xl w-full rounded-3xl p-8 border ${
-                  theme === 'coldest'
-                    ? 'bg-white border-slate-200'
-                    : 'bg-zinc-950 border-zinc-800'
-                }`}
-              >
-                <div className="flex justify-between items-start mb-6">
-                  <div>
-                    <h2 className={`text-2xl font-black uppercase tracking-tighter ${
-                      theme === 'coldest' ? 'text-slate-900' : 'text-white'
-                    }`}>
-                      ReaPack JSFX Repositories
-                    </h2>
-                    <p className={`text-sm mt-1 uppercase tracking-widest font-bold ${
-                      theme === 'coldest' ? 'text-[#10b981]' : 'text-[#10b981]'
-                    }`}>
-                      Community JSFX Packs
-                    </p>
-                  </div>
-                  <button 
-                    onClick={() => setShowReapackReposModal(false)}
-                    className={`p-2 rounded-full transition-colors ${
-                      theme === 'coldest' ? 'hover:bg-slate-100 text-slate-400' : 'hover:bg-zinc-800 text-zinc-500'
-                    }`}
-                  >
-                    <X className="w-5 h-5" />
-                  </button>
+          <div className="fixed inset-0 z-[150] overflow-y-auto bg-black/60 backdrop-blur-xl flex items-center justify-center p-4 sm:p-6">
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.95, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: -20 }}
+              transition={{ duration: 0.3, ease: [0.23, 1, 0.32, 1] }}
+              className={`max-w-5xl w-full rounded-[2rem] sm:rounded-[3rem] p-6 sm:p-10 border shadow-2xl backdrop-blur-2xl flex flex-col max-h-[90vh] ${
+                theme === 'coldest'
+                  ? 'bg-sky-50/80 border-sky-200 shadow-sky-500/10'
+                  : 'bg-zinc-950/80 border-zinc-800 shadow-black/50'
+              }`}
+            >
+              <div className="flex justify-between items-start mb-6 shrink-0">
+                <div>
+                  <h2 className={`text-2xl sm:text-3xl font-black uppercase tracking-tighter ${
+                    theme === 'coldest' ? 'text-slate-900' : 'text-white'
+                  }`}>
+                    ReaPack JSFX Repositories
+                  </h2>
+                  <p className={`text-sm mt-1 uppercase tracking-widest font-bold ${
+                    theme === 'coldest' ? 'text-sky-500' : 'text-[#10b981]'
+                  }`}>
+                    Community JSFX Packs
+                  </p>
                 </div>
-                
-                <div className="space-y-6">
-                  <div className={`p-4 rounded-2xl border text-sm leading-relaxed ${theme === 'coldest' ? 'bg-slate-50 border-slate-100 text-slate-600' : 'bg-black/40 border-zinc-800/80 text-zinc-400'}`}>
-                    <p className="font-semibold mb-2 text-emerald-400">⚡ Automated JSFX Library Expansion</p>
-                    BeatGangsta supports {COMMUNITY_JSFX_PACKS.length} free professional JSFX community plugin packs. 
-                    You can download them manually or manage them effortlessly via <strong>ReaPack</strong> (highly recommended for auto-updates). 
-                    <span className="block mt-2 font-medium text-white">To use these packs in your recipes, check them below or let BeatGangsta Connect auto-detect them in real-time!</span>
-                  </div>
+                <button 
+                  onClick={() => setShowReapackReposModal(false)}
+                  className={`p-3 rounded-full transition-colors ${
+                    theme === 'coldest' ? 'hover:bg-white/60 bg-white/40 text-slate-500' : 'hover:bg-zinc-800 bg-zinc-900/50 text-zinc-400'
+                  }`}
+                >
+                  <X className="w-6 h-6" />
+                </button>
+              </div>
+              
+              <div className="space-y-6 flex-1 overflow-hidden flex flex-col">
+                <div className={`p-5 rounded-2xl border text-sm leading-relaxed shrink-0 ${theme === 'coldest' ? 'bg-white/60 border-sky-100 text-slate-700' : 'bg-black/40 border-zinc-800/80 text-zinc-400'}`}>
+                  <p className={`font-semibold mb-2 ${theme === 'coldest' ? 'text-sky-600' : 'text-emerald-400'}`}>⚡ Automated JSFX Library Expansion</p>
+                  BeatGangsta supports {COMMUNITY_JSFX_PACKS.length} free professional JSFX community plugin packs. 
+                  You can download them manually or manage them effortlessly via <strong>ReaPack</strong> (highly recommended for auto-updates). 
+                  <span className={`block mt-2 font-medium ${theme === 'coldest' ? 'text-slate-900' : 'text-white'}`}>To use these packs in your recipes, check them below or let BeatGangsta Connect auto-detect them in real-time!</span>
+                </div>
 
-                  <div className="max-h-[380px] overflow-y-auto pr-1 space-y-4">
-                    {COMMUNITY_JSFX_PACKS.map(pack => {
-                      const isInstalled = installedJsfxPacks.includes(pack.name);
-                      return (
-                        <div 
-                          key={pack.name} 
-                          className={`p-4 rounded-2xl border transition-all ${
-                            isInstalled 
-                              ? 'border-emerald-500/40 bg-emerald-500/[0.02]' 
-                              : (theme === 'coldest' ? 'border-slate-100 bg-slate-50/50' : 'border-zinc-800 bg-zinc-900/30')
-                          }`}
-                        >
-                          <div className="flex items-start gap-3 justify-between">
-                            <div className="flex-1">
-                              <label className="flex items-center gap-3 cursor-pointer group">
-                                <input 
-                                  type="checkbox" 
-                                  className="w-5 h-5 rounded bg-black/40 border-zinc-700 text-[#10b981] focus:ring-[#10b981] focus:ring-offset-zinc-900"
-                                  checked={isInstalled}
-                                  onChange={(e) => {
-                                    const newInstalled = e.target.checked 
-                                      ? [...installedJsfxPacks, pack.name]
-                                      : installedJsfxPacks.filter(p => p !== pack.name);
-                                    setInstalledJsfxPacks(newInstalled);
-                                    localStorage.setItem('beatgangsta_installed_jsfx_packs', JSON.stringify(newInstalled));
-                                  }}
-                                />
-                                <div>
-                                  <h4 className="font-bold transition-colors group-hover:text-[#10b981]">{pack.name}</h4>
-                                  <p className="text-xs opacity-70 mt-0.5 leading-relaxed">{pack.desc}</p>
-                                </div>
-                              </label>
-                            </div>
-                          </div>
-                          
-                          <div className="mt-4 flex flex-col gap-2 pl-8">
-                            <div className="flex items-center justify-between gap-4">
-                              <span className="text-[10px] font-black uppercase tracking-widest opacity-50">Source Forum / Git <ExternalLink className="w-3 h-3 inline ml-1" /></span>
-                              <a href={pack.source} target="_blank" rel="noreferrer" className="text-xs text-blue-400 hover:text-blue-300 truncate max-w-[200px]">
-                                {pack.source.replace('https://', '').replace('github.com/', '')}
-                              </a>
-                            </div>
-                            
-                            <div className={`flex items-center gap-2 p-2 rounded-lg border ${theme === 'coldest' ? 'bg-white border-slate-200' : 'bg-black/40 border-zinc-800'}`}>
-                              <code className="text-[10px] font-mono break-all opacity-80 flex-1 line-clamp-1">{pack.reapack}</code>
-                              <button 
-                                onClick={() => {
-                                  navigator.clipboard.writeText(pack.reapack);
-                                  setCopiedPackReapack(pack.reapack);
-                                  setTimeout(() => setCopiedPackReapack(null), 2000);
-                                }}
-                                className={`shrink-0 px-2 py-1 rounded text-[10px] font-black uppercase tracking-wider transition-colors ${
-                                  copiedPackReapack === pack.reapack
-                                    ? 'bg-[#10b981] text-white'
-                                    : (theme === 'coldest' ? 'bg-slate-100 hover:bg-slate-200 text-slate-700' : 'bg-zinc-800 hover:bg-zinc-700 text-zinc-300')
+                <div className="flex-1 overflow-y-auto pr-2 space-y-4 [&::-webkit-scrollbar]:w-2.5 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-sky-500 [&::-webkit-scrollbar-thumb]:rounded-full hover:[&::-webkit-scrollbar-thumb]:bg-sky-400 min-h-[300px]">
+                  {COMMUNITY_JSFX_PACKS.map((pack, index) => {
+                    const isInstalled = installedJsfxPacks.includes(pack.name);
+                    return (
+                      <div 
+                        key={pack.name} 
+                        className={`p-5 rounded-2xl border transition-all ${
+                          isInstalled 
+                            ? (theme === 'coldest' ? 'border-sky-400/50 bg-sky-100/50' : 'border-emerald-500/40 bg-emerald-500/[0.02]')
+                            : (theme === 'coldest' ? 'border-white/60 bg-white/40 hover:bg-white/60' : 'border-zinc-800 bg-zinc-900/30 hover:bg-zinc-800/50')
+                        }`}
+                      >
+                        <div className="flex items-start gap-3 justify-between">
+                          <div className="flex-1">
+                            <label className="flex items-center gap-4 cursor-pointer group">
+                              <input 
+                                type="checkbox" 
+                                className={`w-6 h-6 rounded border-2 transition-colors cursor-pointer ${
+                                  theme === 'coldest' 
+                                    ? 'bg-white border-sky-200 text-sky-500 focus:ring-sky-500' 
+                                    : 'bg-black/40 border-zinc-700 text-[#10b981] focus:ring-[#10b981] focus:ring-offset-zinc-900'
                                 }`}
-                              >
-                                {copiedPackReapack === pack.reapack ? 'Copied!' : 'Copy ReaPack Link'}
-                              </button>
-                            </div>
+                                checked={isInstalled}
+                                onChange={(e) => {
+                                  const newInstalled = e.target.checked 
+                                    ? [...installedJsfxPacks, pack.name]
+                                    : installedJsfxPacks.filter(p => p !== pack.name);
+                                  setInstalledJsfxPacks(newInstalled);
+                                  localStorage.setItem('beatgangsta_installed_jsfx_packs', JSON.stringify(newInstalled));
+                                }}
+                              />
+                              <div>
+                                <h4 className={`font-bold text-lg transition-colors ${theme === 'coldest' ? 'text-slate-800 group-hover:text-sky-600' : 'text-zinc-100 group-hover:text-[#10b981]'}`}>
+                                  <span className={`opacity-40 mr-2 text-sm font-black ${theme === 'coldest' ? 'text-sky-600' : 'text-[#10b981]'}`}>{index + 1}.</span>
+                                  {pack.name}
+                                </h4>
+                                <p className={`text-sm mt-1 leading-relaxed ${theme === 'coldest' ? 'text-slate-600' : 'text-zinc-400 opacity-70'}`}>{pack.desc}</p>
+                              </div>
+                            </label>
                           </div>
                         </div>
-                      );
-                    })}
-                  </div>
-
-                  <div className={`p-4 rounded-xl border ${theme === 'coldest' ? 'bg-slate-50 border-slate-200' : 'bg-zinc-900 border-zinc-800'}`}>
-                    <h4 className="font-black text-xs uppercase tracking-widest mb-3">How to import via ReaPack in REAPER:</h4>
-                    <ol className="text-xs space-y-2 opacity-80 list-decimal pl-4">
-                      <li>In REAPER, click <strong>Extensions &gt; ReaPack &gt; Import repositories...</strong></li>
-                      <li>Paste the copied ReaPack link and click <strong>OK</strong></li>
-                      <li>Click <strong>Extensions &gt; ReaPack &gt; Synchronize packages</strong> to download and install!</li>
-                    </ol>
-                  </div>
+                        
+                        <div className="mt-5 flex flex-col gap-3 pl-10">
+                          <div className="flex items-center justify-between gap-4">
+                            <span className="text-[10px] font-black uppercase tracking-widest opacity-50">Source Forum / Git <ExternalLink className="w-3 h-3 inline ml-1" /></span>
+                            <a href={pack.source} target="_blank" rel="noreferrer" className="text-xs font-medium text-sky-500 hover:text-sky-400 truncate max-w-[250px] sm:max-w-none">
+                              {pack.source.replace('https://', '').replace('github.com/', '')}
+                            </a>
+                          </div>
+                          
+                          <div className={`flex items-center gap-3 p-3 rounded-xl border ${theme === 'coldest' ? 'bg-white/80 border-sky-100 shadow-inner' : 'bg-black/40 border-zinc-800'}`}>
+                            <code className="text-xs font-mono break-all opacity-80 flex-1 line-clamp-1">{pack.reapack}</code>
+                            <button 
+                              onClick={() => {
+                                navigator.clipboard.writeText(pack.reapack);
+                                setCopiedPackReapack(pack.reapack);
+                                setTimeout(() => setCopiedPackReapack(null), 2000);
+                              }}
+                              className={`shrink-0 px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-wider transition-colors ${
+                                copiedPackReapack === pack.reapack
+                                  ? (theme === 'coldest' ? 'bg-sky-500 text-white' : 'bg-[#10b981] text-white')
+                                  : (theme === 'coldest' ? 'bg-sky-100 hover:bg-sky-200 text-sky-700' : 'bg-zinc-800 hover:bg-zinc-700 text-zinc-300')
+                              }`}
+                            >
+                              {copiedPackReapack === pack.reapack ? 'Copied!' : 'Copy ReaPack Link'}
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
                 </div>
 
-                <div className="mt-8 flex justify-end">
-                  <button
-                    onClick={() => setShowReapackReposModal(false)}
-                    className={`px-8 py-3 rounded-xl font-black uppercase tracking-wider text-sm transition-colors ${
-                      theme === 'coldest'
-                        ? 'bg-slate-900 text-white hover:bg-slate-800'
-                        : 'bg-white text-black hover:bg-zinc-200'
-                    }`}
-                  >
-                    Got It
-                  </button>
+                <div className={`p-5 rounded-2xl border shrink-0 ${theme === 'coldest' ? 'bg-white/60 border-sky-200' : 'bg-zinc-900 border-zinc-800'}`}>
+                  <h4 className="font-black text-xs uppercase tracking-widest mb-3">How to import via ReaPack in REAPER:</h4>
+                  <ol className="text-sm space-y-2 opacity-80 list-decimal pl-5 font-medium">
+                    <li>In REAPER, click <strong>Extensions &gt; ReaPack &gt; Import repositories...</strong></li>
+                    <li>Paste the copied ReaPack link and click <strong>OK</strong></li>
+                    <li>Click <strong>Extensions &gt; ReaPack &gt; Synchronize packages</strong> to download and install!</li>
+                  </ol>
                 </div>
-              </motion.div>
-            </div>
+              </div>
+
+              <div className="mt-8 flex justify-end shrink-0">
+                <button
+                  onClick={() => setShowReapackReposModal(false)}
+                  className={`px-10 py-4 rounded-full font-black uppercase tracking-widest text-sm transition-all hover:scale-105 active:scale-95 ${
+                    theme === 'coldest'
+                      ? 'bg-sky-500 text-white hover:bg-sky-600 shadow-lg shadow-sky-500/20'
+                      : 'bg-white text-black hover:bg-zinc-200'
+                  }`}
+                >
+                  Got It
+                </button>
+              </div>
+            </motion.div>
           </div>
         )}
       </AnimatePresence>
