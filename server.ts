@@ -19,6 +19,19 @@ import { getGoogle } from "./src/lib/google.js";
 import axios from "axios";
 console.log("server.ts loading: imports finished.");
 
+function generateUUID(): string {
+  if (typeof crypto !== "undefined" && crypto.randomUUID) {
+    try {
+      return crypto.randomUUID();
+    } catch (e) {}
+  }
+  return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, function(c) {
+    const r = (Math.random() * 16) | 0;
+    const v = c === "x" ? r : (r & 0x3) | 0x8;
+    return v.toString(16);
+  });
+}
+
 let dbInstance: any = null;
 function getDb() {
   if (!dbInstance) {
@@ -1053,7 +1066,7 @@ app.post("/api/upload/init-r2", async (req, res) => {
     }
 
     // Generate a unique key
-    const fileId = crypto.randomUUID ? crypto.randomUUID() : Math.random().toString(36).substring(2, 15);
+    const fileId = generateUUID();
     const cleanFileName = fileName.replace(/[^a-zA-Z0-9.-]/g, "_");
     const key = `uploads/${fileId}-${cleanFileName}`;
 
@@ -1102,7 +1115,7 @@ app.post("/api/upload/register-r2-for-gemini", async (req, res) => {
       const db = getDb();
       await db.execute({
         sql: `INSERT INTO r2_uploads (id, file_name, mime_type, size_bytes) VALUES (?, ?, ?, ?)`,
-        args: [fileId || crypto.randomUUID(), fileName, mimeType || "application/octet-stream", size || 0]
+        args: [fileId || generateUUID(), fileName, mimeType || "application/octet-stream", size || 0]
       });
       console.log(`[R2_UPLOAD_DB] Registered upload of ${fileName} (${size || 0} bytes)`);
     } catch (dbErr) {
@@ -4629,7 +4642,7 @@ app.post("/api/debug/dawproject", (req, res) => {
       xml
     };
     // Append to dawproject_debug.log in current directory
-    fs.appendFileSync(path.join(process.cwd(), "dawproject_debug.log"), JSON.stringify(logEntry) + "\n---\n");
+    safeAppendFileSync(path.join(process.cwd(), "dawproject_debug.log"), JSON.stringify(logEntry) + "\n---\n");
     res.json({ success: true });
   } catch (e: any) {
     console.error("Debug log failed:", e);
@@ -4637,8 +4650,14 @@ app.post("/api/debug/dawproject", (req, res) => {
   }
 });
 
-import { turso } from "./src/db/turso.js";
-import { v4 as uuidv4 } from "uuid";
+// Safe wrapper for appending logs to prevent read-only filesystem crash
+function safeAppendFileSync(filePath: string, content: string) {
+  try {
+    fs.appendFileSync(filePath, content);
+  } catch (err: any) {
+    console.warn(`[SAFE-FS] Failed to append to file at ${filePath}:`, err.message || err);
+  }
+}
 
 // Local double-safe fault-tolerant caching for BeatGangsta Connect
 const localReaperSyncsCache = new Map<string, { id: string; email: string; pin: string; payload: string; created_at: string }>();
@@ -4778,7 +4797,7 @@ app.post("/api/reaper-sync/push", async (req, res) => {
         errorCode: "ERR_REAPER_PUSH_MISSING_FIELDS",
         error: "Missing email, pin or payload"
       };
-      fs.appendFileSync(path.join(process.cwd(), "beatgangsta_connect.log"), JSON.stringify(failLog) + "\n---\n");
+      safeAppendFileSync(path.join(process.cwd(), "beatgangsta_connect.log"), JSON.stringify(failLog) + "\n---\n");
       return res.status(400).json({ error: "Missing email, pin or payload", errorCode: "ERR_REAPER_PUSH_MISSING_FIELDS" });
     }
 
@@ -4795,9 +4814,9 @@ app.post("/api/reaper-sync/push", async (req, res) => {
       payloadSize: payload.length,
       analysis: analysis
     };
-    fs.appendFileSync(path.join(process.cwd(), "beatgangsta_connect.log"), JSON.stringify(logEntry) + "\n---\n");
+    safeAppendFileSync(path.join(process.cwd(), "beatgangsta_connect.log"), JSON.stringify(logEntry) + "\n---\n");
 
-    const id = uuidv4();
+    const id = generateUUID();
     
     // Save to local cache first (guaranteed success)
     localReaperSyncsCache.set(cleanEmail, {
@@ -4834,7 +4853,7 @@ app.post("/api/reaper-sync/push", async (req, res) => {
       errorCode: "ERR_REAPER_PUSH_DB_FAIL",
       error: e.message || String(e)
     };
-    fs.appendFileSync(path.join(process.cwd(), "beatgangsta_connect.log"), JSON.stringify(errorLog) + "\n---\n");
+    safeAppendFileSync(path.join(process.cwd(), "beatgangsta_connect.log"), JSON.stringify(errorLog) + "\n---\n");
     console.error("Failed to push reaper sync:", e);
     res.status(500).json({ error: "Failed to push sync to cloud", errorCode: "ERR_REAPER_PUSH_DB_FAIL" });
   }
@@ -4851,7 +4870,7 @@ app.get("/api/reaper-sync/pull", async (req, res) => {
         errorCode: "ERR_REAPER_PULL_MISSING_FIELDS",
         error: "Missing email or pin"
       };
-      fs.appendFileSync(path.join(process.cwd(), "beatgangsta_connect.log"), JSON.stringify(failLog) + "\n---\n");
+      safeAppendFileSync(path.join(process.cwd(), "beatgangsta_connect.log"), JSON.stringify(failLog) + "\n---\n");
       return res.status(400).json({ error: "Missing email or pin", errorCode: "ERR_REAPER_PULL_MISSING_FIELDS" });
     }
 
@@ -4893,7 +4912,7 @@ app.get("/api/reaper-sync/pull", async (req, res) => {
         pin: cleanPin,
         error: "No sync found for this email and PIN"
       };
-      fs.appendFileSync(path.join(process.cwd(), "beatgangsta_connect.log"), JSON.stringify(notFoundLog) + "\n---\n");
+      safeAppendFileSync(path.join(process.cwd(), "beatgangsta_connect.log"), JSON.stringify(notFoundLog) + "\n---\n");
       return res.status(404).json({ error: "No sync found for this email and PIN", errorCode: "ERR_REAPER_PULL_NOT_FOUND" });
     }
 
@@ -4907,7 +4926,7 @@ app.get("/api/reaper-sync/pull", async (req, res) => {
       payloadSize: payload.length,
       analysis: analysis
     };
-    fs.appendFileSync(path.join(process.cwd(), "beatgangsta_connect.log"), JSON.stringify(logEntry) + "\n---\n");
+    safeAppendFileSync(path.join(process.cwd(), "beatgangsta_connect.log"), JSON.stringify(logEntry) + "\n---\n");
 
     res.send(payload); // Send as text
   } catch (e: any) {
@@ -4918,7 +4937,7 @@ app.get("/api/reaper-sync/pull", async (req, res) => {
       errorCode: "ERR_REAPER_PULL_DB_FAIL",
       error: e.message || String(e)
     };
-    fs.appendFileSync(path.join(process.cwd(), "beatgangsta_connect.log"), JSON.stringify(errorLog) + "\n---\n");
+    safeAppendFileSync(path.join(process.cwd(), "beatgangsta_connect.log"), JSON.stringify(errorLog) + "\n---\n");
     console.error("Failed to pull reaper sync:", e);
     res.status(500).json({ error: "Failed to pull sync from cloud", errorCode: "ERR_REAPER_PULL_DB_FAIL" });
   }

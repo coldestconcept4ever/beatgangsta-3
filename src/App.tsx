@@ -6529,7 +6529,7 @@ Provide the exact JSFX plugin name and required sliders/parameters.`;
                       </>
                     )}
 
-                    {(user?.email === 'recognizemiracles@gmail.com' || user?.email === 'coldestconcept@gmail.com') && (
+                    {(user?.email === 'recognizemiracles@gmail.com' || user?.email === 'coldestconcept@gmail.com' || user?.email === 'ruhedramarkprod@gmail.com') && (
                       <button 
                         onClick={() => {
                           setShowJsfxDatabase(true);
@@ -6547,7 +6547,7 @@ Provide the exact JSFX plugin name and required sliders/parameters.`;
                       </button>
                     )}
 
-                    {user && (
+                    {(user?.email === 'recognizemiracles@gmail.com' || user?.email === 'coldestconcept@gmail.com' || user?.email === 'ruhedramarkprod@gmail.com') && (
                       <button 
                         onClick={() => {
                           setShowJsfxAutomationChains(true);
@@ -8134,7 +8134,7 @@ Provide the exact JSFX plugin name and required sliders/parameters.`;
                             </div>
                           )}
 
-                          {critiques.length > 0 && (user?.email === 'recognizemiracles@gmail.com' || user?.email === 'coldestconcept@gmail.com') && (
+                          {critiques.length > 0 && (user?.email === 'recognizemiracles@gmail.com' || user?.email === 'coldestconcept@gmail.com' || user?.email === 'ruhedramarkprod@gmail.com') && (
                             <div className="flex flex-col gap-2">
                               <button
                                 onClick={handlePushExhaustiveJSFXSync}
