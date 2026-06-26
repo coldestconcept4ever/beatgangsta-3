@@ -6547,7 +6547,7 @@ Provide the exact JSFX plugin name and required sliders/parameters.`;
                       </button>
                     )}
 
-                    {(user?.email === 'recognizemiracles@gmail.com' || user?.email === 'coldestconcept@gmail.com') && (
+                    {user && (
                       <button 
                         onClick={() => {
                           setShowJsfxAutomationChains(true);

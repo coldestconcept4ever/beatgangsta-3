@@ -1678,5 +1678,85 @@ export const JSFX_AUTOMATION_CHAINS: AutomationChain[] = [
     producer: 'Lauryn Hill',
     description: 'Recreate lush, velvet-warm neo-soul vocal stacks. Apply a subtle boost at 400Hz and a gentle scoop at 2kHz via \'JS: ReJJ/ReEQ\', drive into a smooth opto-compressor (\'JClones CA2A\') for natural leveling, and send into a plate \'Tukan Lexikan 2\' for classic organic space.',
     plugins: ['JS: ReJJ/ReEQ', 'JClones CA2A', 'Tukan Lexikan 2']
+  },
+  {
+    id: 'outkast_aquemini_spaced',
+    name: 'Outkast "Aquemini" Interstellar Space Harmonies',
+    category: 'backing_vocal',
+    producer: 'Outkast / Organized Noize',
+    description: 'Create wide, phased, cosmic harmonies characteristic of Southern hip-hop. Send the background vocals into \'JS: Phaser\' with a slow rate, add \'JS: Saturated Chorus\' to widen, and diffuse with a large \'Tukan Lexikan 2\' hall reverb.',
+    plugins: ['JS: Phaser', 'JS: Saturated Chorus', 'Tukan Lexikan 2']
+  },
+  {
+    id: 'tupac_thug_angel_double',
+    name: '2Pac "California Love" Massive West Coast Doubles',
+    category: 'backing_vocal',
+    producer: '2Pac / Dr. Dre',
+    description: 'Emulate Dr. Dre\'s precise, wide California vocal double layering. Apply a tight high-pass and high-shelf boost at 10kHz with \'JS: ReJJ/ReEQ\', compress aggressively via \'Tukan NC76\', and space out with a subtle \'JS: Delay\' (15ms and 30ms) for high-impact stereo presence.',
+    plugins: ['JS: ReJJ/ReEQ', 'Tukan NC76', 'JS: Delay']
+  },
+  {
+    id: 'snoop_dogg_gin_juice_laidback',
+    name: 'Snoop Dogg "Gin & Juice" Silky G-Funk Backing',
+    category: 'backing_vocal',
+    producer: 'Dr. Dre / Snoop Dogg',
+    description: 'Silky, laid-back G-Funk background vocals. Apply \'JS: Saturated Chorus\' for liquid modulation, pull down high harshness with a low-pass filter at 8kHz, and compress smoothly with \'JClones CA2A\' to lay them perfectly behind the lead.',
+    plugins: ['JS: Saturated Chorus', 'JClones CA2A']
+  },
+  {
+    id: 'notorious_big_juicy_hypeman',
+    name: 'Notorious B.I.G. "Juicy" Warm Brooklyn Dubs',
+    category: 'backing_vocal',
+    producer: 'P. Diddy / Chucky Thompson',
+    description: 'Warm, fat Brooklyn hip-hop backup hype vocals. Boost mid-range warmth at 300Hz with \'JS: ReJJ/ReEQ\', limit peaks heavily with \'Tukan NC76\', and apply a tape saturation model \'JClones AC2\' to capture that dusty 90s MPC sampler aesthetic.',
+    plugins: ['JS: ReJJ/ReEQ', 'Tukan NC76', 'JClones AC2']
+  },
+  {
+    id: 'mac_miller_swimming_cloud',
+    name: 'Mac Miller "Swimming" Ethereal Floating Backgrounds',
+    category: 'backing_vocal',
+    producer: 'Mac Miller / Jon Brion',
+    description: 'Create peaceful, floating background vocals in Mac\'s signature late-career sound. Send the backing tracks into a warm tape delay (\'JS: Delay\' set to 400ms) with high feedback, coupled with \'Tukan Lexikan 2\' set to maximum room size and wetness to dissolve into the backing beat.',
+    plugins: ['JS: Delay', 'Tukan Lexikan 2']
+  },
+  {
+    id: 'nicki_minaj_roman_theatre',
+    name: 'Nicki Minaj "Roman Holiday" Theatrical Alter-Ego Choir',
+    category: 'backing_vocal',
+    producer: 'Nicki Minaj / J.R. Rotem',
+    description: 'Dynamic, frantic backing voices. Run harmonies through \'JS: Pitch Shifter 2\' (+12 semitones), apply severe distortion using \'JS: Distortion (Fuzz)\', and use \'JS: Stereo Field Manipulator\' to whip the panning wide to mimic Nicki\'s rapid multi-character shifts.',
+    plugins: ['JS: Pitch Shifter 2', 'JS: Distortion (Fuzz)', 'JS: Stereo Field Manipulator']
+  },
+  {
+    id: 'jayz_hard_knock_children',
+    name: 'Jay-Z "Hard Knock Life" Vintage High-Pitch Pitch-Stack',
+    category: 'backing_vocal',
+    producer: 'Jay-Z / The 45 King',
+    description: 'Recreate the high-pitched chipmunk soul choir backdrop. Use \'JS: Pitch Shifter 2\' tuned up +7 or +12 semitones, cut extreme low-end below 350Hz using \'JS: RBJ Highpass/Lowpass Filters\' to thin them out, and use \'Tukan NC76\' to smash the peaks flat like an old vinyl sample.',
+    plugins: ['JS: Pitch Shifter 2', 'JS: RBJ Highpass/Lowpass Filters', 'Tukan NC76']
+  },
+  {
+    id: 'future_ds2_codeine_harmony',
+    name: 'Future "DS2" Hazy Auto-Tuned Cloud Harmonies',
+    category: 'backing_vocal',
+    producer: 'Future / Metro Boomin',
+    description: 'Hazy, dark trap background atmospheres. Apply aggressive pitch-quantizing via \'JS: Pitch Shifter 2\', run through dual high/low-pass filtering to leave only the middle frequencies, and overlay a dark, dripping stereo delay (\'JS: Delay\').',
+    plugins: ['JS: Pitch Shifter 2', 'JS: Delay']
+  },
+  {
+    id: 'chance_acid_rap_brass_choir',
+    name: 'Chance the Rapper "Acid Rap" Bright Brass Choir',
+    category: 'backing_vocal',
+    producer: 'Chance the Rapper / Stefan Ponce',
+    description: 'Joyous, bright, brass-like gospel-rap backing stacks. Use \'JS: ReJJ/ReEQ\' to boost 5kHz and 12kHz for crisp airy brightness, squash with an instant-attack \'JS: 1175 Compressor\', and send into a bright room reverb for a live church performance feel.',
+    plugins: ['JS: ReJJ/ReEQ', 'JS: 1175 Compressor']
+  },
+  {
+    id: 'mf_doom_villain_cartoon_dubs',
+    name: 'MF DOOM "Madvillainy" Gritty Comic-Book Doubles',
+    category: 'backing_vocal',
+    producer: 'Madlib / MF DOOM',
+    description: 'Dusty, offset backing doubles that sound like sampled cartoon clips. Use tape emulation \'JClones AC2\' to add heavy dust, grit, and flutter, run through \'JS: RBJ Highpass/Lowpass Filters\' with narrow telephone-like bandpass filtering, and pan slightly off-center.',
+    plugins: ['JClones AC2', 'JS: RBJ Highpass/Lowpass Filters']
   }
 ];
