@@ -48,6 +48,7 @@ const RecipeViewerModal = React.lazy(() => import('./components/RecipeViewerModa
 import { TutorialOverlay } from './components/TutorialOverlay';
 import { StatusPage } from './components/StatusPage';
 import { JSFXDatabaseViewer } from './components/JSFXDatabaseViewer';
+import { JSFXAutomationChains } from './components/JSFXAutomationChains';
 import { AdminDashboard } from './components/AdminDashboard';
 import { BetaApplicationModal } from './components/BetaApplicationModal';
 import { AnimatePresence, motion } from 'motion/react';
@@ -439,6 +440,7 @@ const App: React.FC = () => {
     return false;
   });
   const [showJsfxDatabase, setShowJsfxDatabase] = useState(false);
+  const [showJsfxAutomationChains, setShowJsfxAutomationChains] = useState(false);
   const [showAdminDashboard, setShowAdminDashboard] = useState(false);
   const [showBetaApplyModal, setShowBetaApplyModal] = useState(false);
   const [showInternationalizationModal, setShowInternationalizationModal] = useState(false);
@@ -6119,6 +6121,10 @@ Provide the exact JSFX plugin name and required sliders/parameters.`;
     return <JSFXDatabaseViewer onBack={() => setShowJsfxDatabase(false)} theme={theme} />;
   }
 
+  if (showJsfxAutomationChains) {
+    return <JSFXAutomationChains onBack={() => setShowJsfxAutomationChains(false)} theme={theme} />;
+  }
+
   if (showAdminDashboard) {
     return <AdminDashboard onBack={() => setShowAdminDashboard(false)} theme={theme} />;
   }
@@ -6537,6 +6543,24 @@ Provide the exact JSFX plugin name and required sliders/parameters.`;
                         <div>
                           <div className="text-xs font-bold uppercase tracking-wider">JSFX DB</div>
                           <div className="text-[9px] opacity-50 mt-0.5">View full plugin reference</div>
+                        </div>
+                      </button>
+                    )}
+
+                    {(user?.email === 'recognizemiracles@gmail.com' || user?.email === 'coldestconcept@gmail.com') && (
+                      <button 
+                        onClick={() => {
+                          setShowJsfxAutomationChains(true);
+                          setIsUserMenuOpen(false);
+                        }}
+                        className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-left transition-colors group ${getDropdownTheme(theme).itemHover}`}
+                      >
+                        <div className={`w-7 h-7 rounded-full flex items-center justify-center transition-colors ${theme === 'coldest' ? 'bg-fuchsia-500 text-white' : 'bg-fuchsia-500/20 text-fuchsia-400'}`}>
+                          <Zap size={14} />
+                        </div>
+                        <div>
+                          <div className="text-xs font-bold uppercase tracking-wider">JSFX Automation Chains</div>
+                          <div className="text-[9px] opacity-50 mt-0.5">Explore producer automation tricks</div>
                         </div>
                       </button>
                     )}

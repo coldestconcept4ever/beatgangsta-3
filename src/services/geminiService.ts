@@ -399,6 +399,86 @@ const ELITE_PRODUCER_SECRETS_PROMPT = `
          - Automate 'JClones AC2 (Tape Emulator)' 'Saturation' and 'Wow & Flutter' on the sample bus, increasing the vintage artifacts as the beat plays out.
          - Automate 'JS: RBJ 1073 EQ [Stillwell]' 'Mid Freq' and 'Mid Gain' to boost the crackle and vinyl noise during the intro and outro of the track.
 
+      86. **Sylvia Massy - Exploding Parallel Tube Saturation**:
+         - Automate 'JS: Distortion (Fuzz)' or 'JS: Bad Buss Mojo Waveshaper' 'Mojo' and wet/dry mix on drum or vocal parallel tracks, driving it into absolute meltdown on specific accents or intense vocal peaks.
+         - Simultaneously, modulate the 'Drive' level dynamically based on the input signal envelope so it only screams when hit hard.
+
+      87. **Koz / Stephen Koszler - Lush Synthwave Sidechain Ducking**:
+         - Automate the sidechain-linked 'JS: Transient-Driven Auto-Pan (Receiver)' or 'Tukan NC76' to aggressively duck synthwave pad tracks and basslines whenever the kick hits, creating a massive breathing rhythm.
+         - Configure a rapid attack and medium-fast release curve to make the ducking swell right back into the mix.
+
+      88. **Disclosure - UK Garage Swing Gating**:
+         - Automate 'JS: Noise Gate' 'Attack' and 'Hold' on synthesizer pad chords or high hats, syncing them to a sidechain input triggered by the rimshot/snare for rapid, rhythmic chord stabs.
+         - Pair with automating 'Tukan Compressor 2' 'Knee' to smooth out or sharpen the transitions dynamically between sections.
+
+      89. **Jack Antonoff - The Retro Spring Reverb Splat**:
+         - Automate 'Tukan Lexikan 2' 'Wet/Dry Mix' and high-frequency damping on acoustic instruments or snare drums, boosting the wet decay suddenly on specific beats to create an explosive, retro reverb splat.
+         - Automate the pre-delay parameter to create a dynamic pre-delay bounce right before vocal entries.
+
+      90. **KAYTRANADA - The Off-Kilter Woozy Sidechain Wobble**:
+         - Automate 'JS: Floaty (Modulated Delay) [remaincalm.org]' and 'JS: Stereo Field Manipulator [LOSER]' on the main instrument bus, modulating width and pitch drift in sync with a sidechain control signal from the kick, creating a sluggish, woozy groove.
+         - Use low-frequency filter parameter modulation to warp the high frequencies of the melody line simultaneously.
+
+      91. **Jimmy Page / Andy Johns - Glyn Johns Huge Drum Room Compression**:
+         - Automate 'Tukan NC76' on room mic buses with "All-Button/British Mode" and 'Threshold', dynamically crushing the room mics during high-energy bridges or drum solos to emphasize the organic decay.
+         - Automate the 'Release' time to be ultra-fast to maximize room pump, or slow it down to glue the kit together.
+
+      92. **Boi-1da - Aggressive Modern Trap Kick Punch**:
+         - Automate 'JS: Transient Controller [LOSER]' 'Attack' and 'Sustain' on kick drum channels, boosting the attack transient by +8dB on the downbeats while dampening the tail, to give the kick a jaw-breaking transient punch.
+         - Automate 'JS: Digital Drum Compressor (DDC) [LOSER]' to clip the tail dynamically to prevent clipping elsewhere in the track.
+
+      93. **Alan Moulder - Massive Industrial Wall of Guitars & Synths**:
+         - Automate 'JS: Stereo Width [Stillwell]' 'Width' and 'JS: Bad Buss Mojo Waveshaper [Stillwell]' 'Drive' on secondary layered guitars or synths, expanding the width from 100% to 180% during chorus transitions to blow the stereo field wide open.
+         - Automate filter cutoff on 'JS: Moog 4-Pole Filter [Liteon]' to narrow or open the frequency spectrum dynamically as the track transitions.
+
+      94. **Tchad Blake - Gritty Binaural Distortions & Dynamic Shakers**:
+         - Automate 'JS: Distortion (Fuzz)' 'Wet' mix and 'JS: Stereo Field Manipulator [LOSER]' on acoustic guitars, vocals, or percussion to inject gritty, lo-fi grit and sudden, unexpected panning sweeps.
+         - Use random LFO modulation on the auto-pan rate to keep percussion dancing around the listeners' heads unpredictably.
+
+      95. **George Martin - The Cinematic Reverse Tape Reel Sweep**:
+         - Automate 'JS: Delay (Lo-Fi)' 'Feedback' and 'JS: Pitch Shifter 2' pitch shift to rise steadily over a 2-bar or 4-bar transition, mimicking a tape speedup/reverse sweep, before cutting cleanly as the next section drops.
+         - Automate 'JS: RBJ Highpass/Lowpass Filters' lowpass filter to simultaneously close or sweep open during the tape wind-up.
+
+      96. **Rick Rubin - Ultra-Dry, Raw & In-Your-Face Vocals**:
+         - Automate 'Tukan NC76' and volume envelopes to achieve high-ratio, pristine compression without any reverb or delay.
+         - Program precise parameter modulation on vocal volume and breathing transients to make the performer feel intensely close, dry, and raw, centered directly inside the listener's head.
+
+      97. **Kanye West / Mike Dean - Epic, Distorted Synth Solos**:
+         - Automate high-gain saturation drive on 'JS: Bad Buss Mojo Waveshaper', resonant Moog lowpass filters, and tape delay feedback on custom sawtooth synthesizers.
+         - Create towering, soaring, guitar-like synth solos that warp, swell, and scream dynamically as the track transitions into epic codas.
+
+      98. **Pharrell Williams / Chad Hugo (The Neptunes) - Dry, Knocking Claps & Percussion**:
+         - Automate 'JS: Transient Controller' attack and gate times on dry claps, woodblocks, and electronic percussion.
+         - Pair with subtle, random pitch-drift modulation to give the signature minimal, hollow, acoustic-electronic hybrid pocket that knocks with absolute dry precision.
+
+      99. **Max Martin - Surgical, High-Gloss Pop Harmony Stacks**:
+         - Automate 'JS: Stereo Field Manipulator' width (collapsing to mono on verses, exploding to 180% on choruses) and ultra-tight pitch-shifter correction speeds on backing vocal groups.
+         - This creates an explosive, massive wall of perfectly tuned and separated vocal harmonies that wrap around the lead.
+
+      100. **Brian Eno - Ambient Generative Tape Loops**:
+         - Automate extremely long feedback delays on 'Tukan Lexikan 2' and subtle pitch-drift 'Wow & Flutter' on tape emulators on piano or synth pads.
+         - Allows the sound to self-oscillate, degrade, and evolve infinitely over time into a gorgeous, generative ambient cloud.
+
+      101. **Manny Marroquin - Dynamic EQ Vocal Presence & Resonance Taming**:
+         - Automate mid-range presence boosts (around 2-3 kHz) and high-frequency harshness cuts (around 5-7 kHz) using high-precision dynamic 'JS: ReJJ/ReEQ' band gain modulation.
+         - Trigger extra clarity during soft, whispered verses and instantly suppress sibilance and peak harshness during belted choruses.
+
+      102. **WondaGurl - Dark, Melancholy Pitched-Down Trap Vibes**:
+         - Automate tape stop/start simulation speed and heavy lowpass filter cutoff sweeps on melodic samples.
+         - Suddenly choke out all high-frequency material above 500Hz when the heavy 808s and kick drums hit to create a massive, deep, dark underwater pocket.
+
+      103. **Mick Guzauski - Ultra-Clean, Glassy Disco/Funk Guitars**:
+         - Automate highpass filter cutoff and optical compressor release speeds on funk muted-guitar strums.
+         - Keeps the rhythm perfectly locked in the pocket with absolute transient clarity and zero low-end mud.
+
+      104. **Chris Lord-Alge (CLA) - In-Your-Face Parallel Compression & Wide Vocal Spreads**:
+         - Automate the blend level of an ultra-compressed parallel vocal bus and modulate micro-pitch shifter detune levels (+/- 12 cents) on the sides.
+         - This makes the lead vocals explode with absolute power and width in the chorus.
+
+      105. **Sounwave - Atmospheric, Cinematic Narrative Textures**:
+         - Automate grain-size stretchers, slow tape-wow, and filtered hall reverbs on orchestral or spoken-word intros.
+         - Creates an unsettling, cinematic transition that collapses instantly into the main beat's dry transient grooves.
+
 
 
 
@@ -653,6 +733,200 @@ const ATR102_SPEC_PROMPT = `
     - Avoid Muting: Do NOT set "Reproduce" or "Record" (Repro / Record path settings) or any Power settings in a way that mutes the track/bypasses the audio.
     - O'Clock Settings: There are many unlabeled knobs. For knobs that do not explicitly show numbers (e.g., Record, Reproduce, Input, Output), you MUST use "o'clock" values (e.g. "10 o'clock", "2 o'clock"). DO NOT use raw numbers.
     - NO FAKE PARAMETERS: The parameters "LF Driver" or "HF Driver" or "Fatness" DO NOT EXIST on the UAD tapes. You MUST use real parameters like "Record Level", "Repro Level", "Tape Speed" (IPS), "Tape Formula", "Cal Level", "HF Record", "LF Record", "HF Repro", "LF Repro", "Bias", "Path" or "Sync". Never invent parameters.
+`;
+const LYRIC_AWARE_DELAY_AUTOMATION_PROMPT = `
+    CRITICAL - LYRIC-AWARE VOCAL DELAY & REVERB TAIL AUTOMATION:
+    When analyzing vocal stems in combination with instrumentals/beats, you MUST intelligently identify the lyrics/words in separate vocal tracks.
+    1. INTENTIONAL WORD SELECTION:
+       - Identify key words or phrases (e.g. at the end of vocal phrases, or key accented moments) to apply delay throws and reverb tails.
+       - RHYTHMIC TIMING BALANCE: Note that sometimes, the "last two words" of a phrase and "one larger multi-syllable word" take up the exact same amount of time in the bar/groove. Use the BPM and bar/beat measurements to calculate the best choice that yields the most rhythmically impactful and cohesive flow.
+    2. BPM & BAR TIME CALCULATIONS:
+       - You MUST provide precise mathematical calculations based on the track's BPM.
+       - Formulate exactly how the delay time (e.g., 1/4 note, 1/8 note, dotted 1/8, or 1/4 triplets) relates to the BPM. E.g., at 120 BPM, a 1/4 note is 500ms; a 1/2 note is 1000ms.
+       - Map out specific beat coordinates (on the REAPER timeline) where the automation spikes up on the word's entry and drops back down immediately after the phrase ends to capture just the tail without muddying the rest of the vocal.
+    3. EXQUISITE ENGINEER & PRODUCER STYLES:
+       Draw from these legendary engineer and producer dynamic vocal throwing styles when configuring the automationAdvice and automation points:
+       - **Andy Wallace Throw**: A sudden 1/4 or 1/2 note delay on the very last word of a verse, automated via auxiliary send or wet mix. Feeds a dark, warm analog style delay with high feedback.
+       - **Mick Guzauski Stereo Width**: Dual-delay throw (e.g. 1/8 note Left, 1/8 dotted Right) precisely on key sustained lyrical vowel sounds. The stereo width expands right as the vocal finishes the phrase.
+       - **Tom Elmhirst Plate Sweep**: An automated reverb send that spikes to 30% wet exactly on the last word of an emotional ballad section, decaying slowly over 4-6 seconds to transition into the next section.
+       - **Chris Lord-Alge Slapback**: A high-feedback stereo slapback tape echo (120-140ms) automated to trigger ONLY on accented verbs or punchy adjectives to highlight the rhythm of the performance.
+       - **Serban Ghenea Shimmer Delay**: Send a specific syllable to a highly compressed, high-passed delay (cutoff below 500Hz) with high-frequency saturation, creating a crisp, metallic halo sitting above a dense pop chorus.
+       - **Sylvia Massy Saturator Spill**: Throw the last word of a tense vocal phrase into a parallel highly-distorted, filtering tube saturator with a long reverb tail, letting the vocal feedback self-oscillate as the beat drops out.
+       - **Tchad Blake Binaural Spring Echo**: Extreme, fast automated panning of a dark spring reverb/delay throw across the stereo field on a specific whispered or spoken word for an eerie, 3D effect.
+       - **Metro Boomin Detuned Trap Bounce**: A detuned, filtered delay throw on the final word of backing vocals/ad-libs, using a pitch-shifter inside the delay feedback loop to drop the pitch by 12 semitones.
+       - **Jimmy Douglass Syncopated Triplet**: A 1/4-triplet or 1/8-triplet delay throw on the last two words of a fast rap line, perfectly locked into the syncopated off-beats of the pocket.
+       - **Noah '40' Shebib Underwater Wash**: A lowpassed hall reverb/delay throw (cutoff above 800Hz) on vocal breaks, creating a nostalgic, submerged ambient pocket.
+       - **Butch Vig Distorted Megaphone Accent**: Automate 'JS: Bad Buss Mojo Waveshaper' 'Mojo' and 'JS: RBJ Highpass/Lowpass Filters' (setting HP to 500Hz, LP to 3kHz) on key ending verbs or angry adjectives, creating a sudden, gritty, telephone/megaphone megaphone vocal pop that cuts right through the dense rock chorus.
+       - **Prince Stereo Micro-Pitch Doubler**: Dynamically throw specific sustained nouns into 'JS: Saturated Chorus' or dual micro-pitch shifted lanes (+/- 9 cents) using 'JS: Pitch Shifter 2' panned hard left and right. This instantly widens the vocal tail and makes it bloom in the stereo field as the phrase ends.
+       - **Les Paul Trippy Tape Flanger Sweep**: Trigger a sudden psychedelic comb-filtering effect on the last syllable of a transition line by automating the wet mix of 'JS: Flanger' or 'JS: Saturated Chorus' from 0% to 50% along with a rising feedback rate, creating a vintage reel-to-reel tape flanging effect.
+       - **Finneas ASMR Whisper Gate/Compressor**: Automate 'JS: Noise Gate' 'Threshold' and 'JClones CA2A' 'Peak Reduction' on intimate whispered ad-libs or vocal tails to bring out ultra-quiet mouth noises and breathing transients to a high level, then snap-gate them shut instantly to keep the background dead quiet.
+       - **Daft Punk Talkbox Vocoder Morph**: Throw specific key ending words into a resonant formant filter ('JS: Moog 4-Pole Filter' or bandpass filters) with automated LFO rate and resonance sweeps, turning the natural throat tone into a synthetic, metallic talkbox vocal right before the beat drops.
+       - **Jimi Hendrix / Eddie Kramer Swirling Phaser Orbit**: Dynamically route a vocal ad-lib or screaming phrase-end into 'JS: Phaser' with high resonance and speed, automating the width to sweep from mono to 200%, making the vocal swirl around the listener’s head in a vintage, psychedelic orbit.
+       - **Jack Joseph Puig Tube Saturation Peak**: Automate 'JClones AC1 (Analog Channel)' 'Saturation' or 'JS: Distortion (Fuzz)' wet mix to drive hard on accented vocal peak phrases. This gives the words an upfront, aggressive vintage tube warm drive that sits right in the listener's forehead.
+       - **Billie Eilish Intimate Treble Shimmer**: Send key whispered lyrics into a parallel high-frequency boost using 'JS: ReJJ/ReEQ' (boosting 10kHz+ by +12dB with a shelf) and automate a fast compressor like 'Tukan NC76' to clamp down hard, creating a glassy, breathy sibilance halo.
+       - **Brian Eno Generative Octave Swell**: Send key vocal phrase endings or single-note ad-libs into an octave-up pitch-shifter ('JS: Pitch Shifter 2' set to +12 semitones) inside a feedback loop of 'Tukan Lexikan 2' hall reverb, generating an evolving, atmospheric, angelic shimmer cloud that decays slowly over 8 seconds.
+       - **George Martin Dynamic Reverse Sweep**: Throw a key transition phrase into 'JS: Delay' with automated negative time offset or reverse delay simulation, coupled with a highpass filter sweep, to create an unsettling, rising reverse vocal sweep that pulls the listener directly into the next chorus downbeat.
+       - **Lee "Scratch" Perry Dub Feedback Spill**: Sudden automation of feedback and wet mix on a tape-style delay ('JS: Delay (Lo-Fi)' or 'JS: Delay w/Chorus'), letting the echo run wild into self-oscillation on a drum rimshot or vocal ending, then instantly muting the feedback parameter to clean it up before the next bar begins.
+       - **Katy Perry / Dr. Luke Pop Stutter Pitch-Ramp**: Take a key lyric vowel, route it into an automated gate or 'JS: Saturated Chorus', and automate a pitch shifter ('JS: Pitch Shifter 2') to rise from 0 to +12 semitones dynamically over a 1-bar transition, accelerating the speed of a tremolo or gating plugin to create a rapid-fire synthetic riser.
+       - **Bob Clearmountain Dual-Mono Panning Bounce**: Send key ending syllables to separate Left and Right delay lines with different rhythmic settings (e.g. 1/4 note Left, 1/4 triplet Right) and automate 'JS: Auto-Pan' or volume sliders to sweep the Left/Right channels in opposing directions, creating an expansive, wide stereo motion that floats across the speaker field.
+       - **Rick Rubin Heavy Metal Parallel Hard-Clipper**: Send dynamic vocal peaks or aggressive drum accents into a parallel channel featuring 'JS: Bad Buss Mojo Waveshaper' set to maximum overdrive and a hard-clipper, blending the dirty signal with the main dry vocal only on emphasized words for a gritty, bone-crushing modern metal grit.
+       - **Mark Ronson Warm Motown Tape-Saturation Sweep**: Trigger a sudden warmth enhancement on transitional vocal ad-libs by automating 'JClones AC2 (Tape Emulator)' 'Drive' from 30% to 80% combined with a slow, automated lowpass filter cutoff sweep, mimicking a dusty 60s reel-to-reel machine being pushed into red tape compression.
+       - **Al Schmitt Invisible Golden-Era Plate Blend**: Send high-register sustained notes of lead vocals into 'Tukan Lexikan 2' configured as a classic EMT 140 plate reverb, automating the send level to swell beautifully to 20% on the sustained note, letting the natural vocal tail bloom into a wide, glassy high-end sheen with zero low-end mud.
+       - **Pharrell Williams "Spaced-Out" Ring Modulation Throw**: Send specific ad-libs or background vocals into 'JS: Ring Modulator' with automated carrier frequency sweeping from 100Hz to 1.5kHz, creating a strange, metallic, robotic sci-fi texture that instantly cuts out when the lead vocal resumes.
+       - **Stephen Street Jangle-Pop Chorus Width**: Trigger a sudden wide, lofi/high-gloss chorus effect on acoustic guitars or vocal harmony tracks at the start of the chorus by automating the wet mix of 'JS: Saturated Chorus' or 'JS: Flanger' from 0% to 45%, letting the tracks shimmer and wrap around the listeners' heads.
+       - **Trent Reznor Industrial Gated Distorted Dust**: Automate an envelope filter and extreme distortion using 'JS: Bad Buss Mojo Waveshaper' and 'JS: Moog 4-Pole Filter' on backing vocals, sidechain-linked to the main industrial snare, so the distorted, dirty vocal dust is gate-chopped in sync with the snare strikes.
+       - **Michael Brauer Multi-Bus Saturation Bloom**: Automate the send levels of a lead vocal into four distinct parallel buses (compressor, saturator, micro-pitch shifter, and space-delay), swelling the saturation and micro-pitch buses dynamically on specific key descriptive adjectives to make the words jump out of the speakers with three-dimensional gravity.
+       - **Bruce Swedien Wide-Spread Double-Track**: Throw key ending lyrics into an automated micro-delay (10-25ms) on a parallel bus using 'JS: Stereo Field Manipulator' set to absolute maximum Haas-effect panning. This dynamically widens the phrase-ends into a massive, wide double-track with zero frequency cancellation.
+       - **Mutt Lange Pop Wall-Of-Sound Vocal Expand**: Automate a dynamic swell of parallel choral widening ('JS: Saturated Chorus' set to high voices, 0.40 depth) and bright shelving EQ on backing vocal ad-libs to make the backing vocals explode into a giant, high-gloss pop wall of sound on key descriptive words.
+       - **Sylvia Robinson Old-School Hip-Hop Tape Slap Echo**: Trigger a tight, warm 15 IPS slapback tape echo (80-110ms) on key rap punchlines and nouns using 'JClones AC2 (Tape Emulator)' driven hard into tape saturation, adding instant 1970s analog weight and vintage vibe.
+       - **Aphex Twin Glitchy Granular Stutter**: Automate a tiny, ultra-short loop buffer or extreme rate tremolo/gate using 'JS: Noise Gate' with sidechain trigger, combined with high-speed pitch LFO sweeps, to turn a single spoken ending syllable into a digital granular glitch that resets on the next beat.
+       - **William Orbit Ambient "Ray of Light" Filter Sweep**: Throw a key transition lyric or vocal tail into a high-feedback modulated delay ('JS: Floaty (Modulated Delay)'), and automate 'JS: Moog 4-Pole Filter' lowpass cutoff to sweep from 200Hz up to 15kHz, letting the echo bloom into glorious digital brightness.
+       - **Geoff Emerick Vintage Abbey Road Automatic Double Tracking (ADT)**: Emulate the legendary Abbey Road tape-doubling effect on key vocal phrase entries. Automate the wet mix of a tiny pitch-drift delay (15-30ms delay with 1-2Hz slow LFO) using 'JClones AC2 (Tape Emulator)' to create organic, shifting chorus doubles that mimic a real tape speed variation.
+       - **Finneas "Bad Guy" Low-Octave Monster Vocal**: Parallel-pitch shift a whispering key vocal noun down 12 semitones using 'JS: Pitch Shifter 2' panned center, heavily compressing it with 'Tukan NC76', creating a menacing, low-frequency monster double that sits directly under the dry lead vocal on the beat.
+       - **Eddie Kramer Rotary Speaker Orbit**: Route high-register vocal ad-libs or long falsetto tails into a vintage Leslie rotary speaker emulator ('JS: Phaser' or 'JS: Saturated Chorus' with fast frequency rate and depth) to make the vocal swirl in a warm, pulsing mechanical circle.
+       - **Kanye West "808s & Heartbreak" Robotic Glitch Throw**: Send particular emotional sustained vocal syllables into 'JS: Saturated Chorus' with a fast rate and heavy pitch-quantized auto-pitch simulator, mixed with high-gain 'JS: Distortion (Fuzz)', to create a heartbreaking, robotic vocal glitch.
+       - **Bob Ezrin Epic Opera Reverb Explosion**: Automate the wet mix of 'Tukan Lexikan 2' hall reverb from 5% to 60% with a 6-second decay on the final dramatic note of a rock ballad, instantly expanding the dry, intimate vocal into an enormous, cavernous stadium-rock arena space.
+
+`;
+const VOCAL_MATCHING_AND_COHESION_PROMPT = `
+    CRITICAL - MANDATORY VOCAL MATCHING & TIMBRE/LOUDNESS COHESION:
+    When multiple vocal stems are present (e.g., a lead vocal on track A taking up one part of the song and another lead/main vocal on track B taking up another part of the song, or any vocal tracks identified as main vocals), you MUST ALWAYS treat them with extreme cohesive care.
+    It is an absolute, mandatory requirement to match these vocals together in EQ tone, dynamic range, compression feel, and especially in volume/loudness level, preventing sudden jumps in volume or jarring tone changes.
+    
+    0. INTELLIGENT VOCAL ROLE IDENTIFICATION (Lead vs. Backing vs. Ad-lib):
+       - You MUST automatically and intelligently determine the exact role of each vocal stem by analyzing its audio characteristics, signal density, average volume/RMS energy, and any file naming conventions:
+         - **Lead Vocal Identifiers**: The track with the highest average RMS level, most continuous waveform activity across major song sections, or file labels containing "Lead", "Main", "Vox_L", "Hook", or "Verse".
+         - **Backing Vocal / Ad-lib Identifiers**: Tracks that are audibly quieter (often 6dB to 12dB lower in average signal power), sparse/intermittent in waveform density, consisting primarily of phrase endings, harmonized layers, background chops, or file labels containing "Back", "Dubs", "Harm", "Adlib", or "BGV".
+       - **Matching Leveling Protocol**: 
+         - If multiple Lead Vocal tracks are identified (e.g., a handoff where artist A sings the first verse on Track 1 and artist B sings the second verse on Track 2), you MUST apply the "Unified Lead matching" protocol to bring them to identical target loudness and identical core mid-range presence.
+         - If a track is identified as a Backing Vocal or Ad-lib, you MUST NOT level-match it to the Lead. Instead, prescribe a strict relative hierarchy: mix the backing vocal or ad-lib 6dB to 12dB lower, high-pass it more aggressively (e.g., at 120Hz-150Hz), compress it with a faster release to "glue" it into the background, and pan it wider to create stereo separation and leave space for the Lead Vocal panned dead center.
+
+    1. AUTOMATIC VOLUME/LOUDNESS EQUALIZATION:
+       - You MUST analyze the relative RMS/LUFS levels of all identified main/lead vocals.
+       - You MUST prescribe specific gain-staging values (using 'JS: Volume/Pan Smoother', or equivalent volume faders/gain utility plugins) at the very end of their respective recommended chains to bring them to identical target loudness (e.g. aligning them both to sit exactly at -18 LUFS, or matching their peak and average output faders).
+       - Ensure any compression peak reduction is offset by matching makeup gain so that neither track sounds quieter, ensuring an absolutely seamless handoff when the vocal switches.
+    
+    2. HARMONIC & EQ TIMBRE MATCHING:
+       - Match high-pass filters (e.g., matching the cut at exactly 80Hz - 100Hz to remove low-end rumble equally across all main lead vocals).
+       - Identify and resolve tonal differences: if track A is slightly darker and track B is brighter, prescribe exact EQ curves (e.g. boosting 12kHz shelf on track A by +1.5dB or cutting harsh 3.5kHz frequencies on track B) to make them sound like they were recorded with the same microphone, in the same room, with the exact same proximity effect.
+       
+    3. DYNAMIC COMPRESSION ALIGNMENT:
+       - Apply consistent compression styles across all main vocal tracks. If you recommend an analogue FET compressor (like 'JS: 1175') or leveling amplifier (like 'JClones CA2A') on one vocal, you MUST recommend equivalent dynamic leveling on the other with matching target threshold and gain reduction values (e.g., targeting exactly 3-4dB of gain reduction on peaks for both).
+       
+    4. ABSOLUTE COHESION INTEGRITY:
+       - In the overall feedback and individual action steps for vocal tracks, explicitly detail the "Vocal Cohesion Alignment Plan". Explain what adjustments were made to ensure absolute sonic continuity across the tracks.
+`;
+const ADLIB_PROCESSING_PROTOCOL_PROMPT = `
+    CRITICAL - AD-LIB ARCHITECTURE PROTOCOL:
+    When you identify stems as Ad-libs, you MUST apply this specific spatial and dynamic protocol to ensure they sit perfectly behind and around the Lead Vocal, never competing with it.
+
+    1. SPATIAL WIDENING & PANNING:
+       - Ad-libs MUST NOT be panned dead center if the lead vocal is present. 
+       - Prescribe hard panning (e.g., 100% L and 100% R for doubles) or extreme stereo widening (using 'JS: Stereo Field Manipulator' or 'JS: Saturated Chorus') to push them to the absolute edges of the stereo field.
+       
+    2. FREQUENCY CARVING (The "Telephone" / "Radio" Effect):
+       - Ad-libs need to occupy a different frequency pocket than the lead.
+       - Aggressively high-pass (e.g., 200Hz - 300Hz) to remove all low-end chest resonance.
+       - Apply a low-pass filter (e.g., 7kHz - 10kHz) or aggressive mid-range bandpass (telephone EQ) to keep them from clashing with the crispness and air of the main vocal.
+
+    3. INDIVIDUAL AD-LIB LOUDNESS & VOLUME MATCHING (CRITICAL):
+       - Even if multiple ad-libs are printed onto a single ad-lib track, you MUST prescribe specific volume automation or clip-gain strategies to individually loudness match and volume match every single ad-lib phrase.
+       - You must recommend dynamic EQ or precise volume automation ('JS: Volume/Pan Smoother') so that every individual ad-lib hits the exact same target RMS/LUFS level. Do not let one ad-lib be loud and the next one be quiet on the same track.
+
+    4. DYNAMIC SQUASHING & TRANSIENT TAMING:
+       - Ad-libs should not have punchy transients that distract from the main vocal.
+       - Prescribe fast-attack, fast-release compression (e.g., 'Tukan NC76' or 'JS: 1175' at high ratios) to squash them completely flat, keeping their volume strictly controlled.
+       - Ensure their overall leveled volume is consistently mixed at least -6dB to -12dB below the lead vocal.
+
+    5. EXAGGERATED EFFECTS & TEXTURES:
+       - Recommend exaggerated time-based effects: heavy distortion, flangers, phasers, massive plate reverbs ('Tukan Lexikan 2'), or 1/4 note ping-pong delays.
+       - Ad-libs are the ideal place to utilize the "Legendary Producer Automation Chains" (like Finneas' Whisper Gate, Travis Scott's Auto-Tune Detune, or Tchad Blake's Binaural panning).
+
+    6. LEGENDARY AD-LIB AUTOMATION TRICKS:
+       When processing Ad-libs, you MUST draw from these 40 legendary signature styles and specify exact JSFX automation coordinates:
+       - **Travis Scott / Mike Dean "Demonic Pitch-Drop"**: Automate a pitch shifter ('JS: Pitch Shifter 2') down 12 semitones instantly on an ad-lib entering, paired with high-feedback ping-pong delay ('JS: Delay (Ping Pong)'), dropping the ad-lib into a deep, cavernous abyss.
+       - **Playboi Carti "Baby Voice" Helium Lift**: Automate formant/pitch shifting ('JS: Pitch Shifter 2') up by +12 semitones on high-energy ad-libs ("What!", "Yeah!"), saturated aggressively with 'JS: Distortion (Fuzz)' to make the tiny vocals pierce the sub-heavy beat.
+       - **Migos / Quavo "Triplet Machine Gun" Stutter**: Trigger an extreme tempo-synced gate ('JS: Noise Gate') or tremolo locked to 1/8 triplets on sustained ad-lib vowels, chopping them rhythmically in time with the trap hi-hats.
+       - **A$AP Rocky "Chopped & Screwed" Reverse Warp**: Throw an ad-lib through a reverse delay simulation or negative time-offset ('JS: Delay'), automating 'JClones AC2' tape slowdown (wow and flutter) to warp and melt the vocal tail into the beat drop.
+       - **Juice WRLD / Nick Mira "Emo Wash" Flanger Swell**: Automate the wet mix of a thick flanger ('JS: Flanger') and a long 4-second hall reverb ('Tukan Lexikan 2') to swell from 10% to 100% on emotional ad-libs, pushing the vocal backwards into a huge cinematic wash.
+       - **Young Thug "Slime" Auto-Pan Laser**: Hard-pan short, staccato ad-libs using a rapid LFO ('JS: Auto-Pan') syncing to 1/16 notes. As the ad-lib finishes, automate the width parameter to collapse back to mono, sounding like a stereo laser beam retracting.
+       - **Missy Elliott / Timbaland "Reverse Backmasking"**: Automate a combination of 'JS: Pitch Shifter 2' (formant shifted) and 'JS: Delay' set to high feedback and reversed logic, turning standard ad-lib interjections into alien, reversed percussive backmasking.
+       - **Pop Smoke / 808Melo "Brooklyn Drill" Distorted Bark**: Route ad-libs (grunts, barks) into a parallel distortion channel ('JS: Bad Buss Mojo Waveshaper') set to extreme drive, gating out the tails instantly ('JS: Noise Gate') so the ad-lib punches like a distorted 808 kick.
+       - **Kendrick Lamar "Multiple Personality" Micro-Pitch**: Automatically toggle left and right micro-pitch lanes (+5 cents and -5 cents via 'JS: Pitch Shifter 2') on and off for alternating ad-lib phrases, giving the illusion of multiple different voices answering the lead vocal.
+       - **The Weeknd / Illangelo "Cinematic High-Pass Filter Sweep"**: Send a long, melodic ad-lib to an infinite delay loop, then automate the high-pass filter ('JS: RBJ Highpass/Lowpass Filters') from 200Hz up to 5kHz smoothly across two bars, letting the ad-lib dissolve into pure high-end air.
+       - **JID / Christo "Rapid-Fire Formant Shifting"**: Automate the formant parameter of 'JS: Pitch Shifter 2' rhythmically across fast ad-lib syllables, bouncing between high chipmunk tones and low demonic pitches on every other beat.
+       - **Kid Cudi "Lunar Hum" Space Echo**: Send melodic humming ad-libs into 'JS: Delay (Lo-Fi)' combined with 'Tukan Lexikan 2' hall reverb, automating the delay feedback to near self-oscillation while keeping the dry signal muted, creating an endless space hum.
+       - **Snoop Dogg / Dr. Dre "G-Funk Telephone" Double**: Aggressively band-pass filter ('JS: RBJ Highpass/Lowpass Filters' 400Hz-3kHz) an ad-lib and layer it with 'JS: Distortion (Fuzz)' to create a gritty, compressed vintage telephone vocal answering the lead.
+       - **Eminem / Dr. Dre "Schizophrenic Whisper" Panning**: Hard pan whispered ad-libs alternating 100% Left and 100% Right on consecutive words, squashed completely flat by 'Tukan NC76', making the voices sound like they are whispering directly into the listener's ears.
+       - **Tyler, The Creator "Gritty Lo-Fi Tape Saturation"**: Process ad-libs through 'JClones AC2' pushed to maximum input drive with high wow and flutter, automating a low-pass filter to slowly roll off the highs, simulating a degrading cassette tape.
+       - **Frank Ocean "Prism" Multi-Octave Choir**: Duplicate the ad-lib into three parallel channels using 'JS: Pitch Shifter 2': one +12 semitones, one -12 semitones, and one dry. Automate the volume of the octaves to swell in and out, creating an artificial glowing choir.
+       - **J. Cole / Omen "Soulful Reverse Reverb Swell"**: Take the first syllable of a vocal ad-lib, reverse it, apply a heavy 3-second 'Tukan Lexikan 2' plate reverb, and reverse it back, automating the volume to swell right before the actual ad-lib hits.
+       - **Drake / 40 "Underwater Muffled Echo"**: Apply a steep 800Hz low-pass filter ('JS: RBJ Highpass/Lowpass Filters') to an ad-lib and send it to 'JS: Delay (Ping Pong)', creating a dark, murky, underwater echo that doesn't clash with the bright lead.
+       - **Lil Uzi Vert "Anime Sparkle" High-Shelf Boost**: Aggressively boost a high-shelf EQ ('JS: ReJJ/ReEQ') at 12kHz by +10dB on energetic ad-libs, sending them through 'JS: Saturated Chorus' to create a hyper-bright, sparkling synthetic texture.
+       - **Busta Rhymes "Monster Growl" Sub-Harmonic Generation**: Send aggressive ad-libs into a pitch shifter ('JS: Pitch Shifter 2') tuned down -12 semitones, heavily compressed and low-passed at 500Hz, blending it subtly underneath the dry ad-lib for added chest-rattling weight.
+       - **Rosalía / El Guincho "Flamenco Handclap" Vocal Staccato**: Automate an ultra-fast noise gate ('JS: Noise Gate') combined with 'JS: Distortion (Fuzz)' on short rhythmic vocal ad-libs to make them snap and hit as hard as organic handclaps or castanets in the stereo field.
+       - **Kanye West "Yeezus" Brutalist Bitcrush**: Route screaming ad-libs into 'JS: Bit Reduction/Dither' (reducing to 4-8 bits) and 'JS: Bad Buss Mojo Waveshaper', creating a harsh, digital, tearing distortion that violently cuts through heavy synths.
+       - **Anderson .Paak "Vintage Soul" Slapback Plate**: Throw raspy ad-libs into a fast 80ms delay ('JS: Delay') feeding directly into a short, bright plate reverb ('Tukan Lexikan 2'), keeping it extremely dry but with a sharp 1970s analog reflection.
+       - **Childish Gambino "Redbone" Helium Chorus**: Automate formant shifting up (+5 to +7) without changing the pitch ('JS: Pitch Shifter 2'), and run it through a wide, slow 'JS: Saturated Chorus' to create an alien, funk-psychedelic backing vocal texture.
+       - **Mac Miller "Swimming" Jazzy Vinyl Pitch-Drift**: Process melodic hums or background vocals through 'JClones AC2' with extreme tape wow/flutter and a subtle 'JS: Auto-Pan' sweeping slowly across the stereo spectrum, giving them a woozy, aquatic jazz feel.
+       - **Future "Codeine" Slurred Pitch Dive**: Take the tail end of an ad-lib and automate 'JS: Pitch Shifter 2' to slowly slide down -5 to -12 semitones over 2 beats, slurring the vocal down into a dark, syrupy slow-motion drawl.
+       - **SZA / Carter Lang "Lo-Fi Bedroom" Cassette Muffle**: EQ the ad-libs drastically with 'JS: RBJ Highpass/Lowpass Filters' (HP at 400Hz, LP at 4kHz) and add a high noise floor / vinyl crackle to make the vocal sound like an intimate, dusty cassette tape recording layered behind the pristine lead.
+       - **Don Toliver "Psychedelic Trap" Shimmering Phased Echo**: Send the ad-lib into a 1/4 note 'JS: Delay (Ping Pong)', and route the delay tails into a slow, wide 'JS: Phaser', making the echoes swirl and shimmer psychedelically around the listener.
+       - **Rihanna / Kuk Harrell "Pop-Gloss" Razor-Sharp Widening**: Squash ad-libs with aggressive 'Tukan NC76' compression, boost the 10kHz+ air band by +8dB, and use 'JS: Stereo Field Manipulator' to push them 150% wide, creating a hyper-polished, razor-sharp pop backing vocal halo.
+       - **Tame Impala / Kevin Parker "Laser Beam" Flanger Drop**: On transition ad-libs or heavy sighs, automate the resonance and feedback of 'JS: Flanger' to maximum while sweeping the delay time, creating a jet-engine laser beam sound that rockets across the mix.
+       - **Denzel Curry "Moshpit" Overdriven Megaphone**: Route high-energy hype ad-libs into extreme clipping via 'JS: Distortion (Fuzz)', drastically rolling off the bass (HPF at 500Hz) and treble (LPF at 4kHz) with 'JS: RBJ Highpass/Lowpass Filters' to sound like an overdriven megaphone cutting through a dense metal-trap mix.
+       - **Aaliyah / Timbaland "Stutter-Step" Rapid Tremolo**: On smooth R&B vocal tail ad-libs, apply 'JS: Tremolo' synced tightly to 1/16th or 1/32nd notes, automating the depth to ramp up fully at the phrase end for a classic futuristic stutter fade-out.
+       - **Ski Mask The Slump God "Cartoon Fast-Forward"**: Pitch shift an ad-lib up by an extreme +24 semitones and speed it up dynamically using 'JS: Pitch Shifter 2' and 'JS: Delay', creating a ridiculous, cartoonish fast-forward squeak to add playful bounce to the beat.
+       - **James Blake "Digital Choir" Granular Freeze**: Capture a single sung ad-lib vowel, run it through an infinite feedback loop on 'JS: Delay (Lo-Fi)' with 'JS: Saturated Chorus', creating a frozen, haunting digital choir pad that sustains underneath the entire section.
+       - **Vince Staples / SOPHIE "Metallic Synth" Ring Modulator**: Process spoken ad-libs through 'JS: Ring Modulator' with a high-frequency carrier, making the vocal tone sound like a cold, metallic synth stab or a scraping piece of sheet metal.
+       - **Gunna "Drip" Liquid Chorus Sweeps**: Soften melodic ad-libs by routing them into 'JS: Saturated Chorus' with a deep, slow LFO sweep, combined with an automated 'JS: RBJ Highpass/Lowpass Filters' sweeping down from 10kHz to 2kHz, making the vocal sound like it's dissolving into water.
+       - **JPEGMafia "Internet Glitch" Random Bit-Crushing**: Automate 'JS: Bit Reduction/Dither' bit depth parameters randomly between 2-bit and 16-bit on loud ad-lib screams, causing digital chaos and unpredictable, broken-audio aesthetic spikes.
+       - **Earl Sweatshirt "Depressive" Mono-Fi Tape Degradation**: Compress the ad-lib heavily, sum it to strict mono, and run it through 'JClones AC2' with severe high-frequency roll-off and prominent tape hiss to create a stark, claustrophobic, lo-fi depression effect.
+       - **Burna Boy "Afrobeats" Wide Shimmer Delay**: Use a pitch-shifted delay throw (delaying +1 octave, using 'JS: Pitch Shifter 2' inside the delay feedback loop) on the end of a chanted ad-lib, spreading it to 200% stereo width to create a shimmering, celebratory afro-fusion halo.
+       - **Skepta "Grime" Sub-Bass Vocal Drop**: Take a deep, low-register ad-lib or grunt, pitch it down -12 semitones, squash it with 'JS: 1175', and boost the 60Hz-80Hz sub frequencies heavily, using the vocal ad-lib itself as an impact bass drop for the track.
+`;
+const BACKING_VOCAL_PROCESSING_PROTOCOL_PROMPT = `
+    CRITICAL - BACKING VOCAL ARCHITECTURE PROTOCOL:
+    When you identify stems as Backing Vocals, Harmonies, or Dubs, you MUST apply this specific spatial and dynamic protocol to ensure they provide a rich supportive bed behind the Lead Vocal.
+
+    1. SPATIAL WIDENING & PANNING:
+       - Backing vocals should be pushed out wide to make room for the lead vocal in the center.
+
+    2. LEGENDARY BACKING VOCAL AUTOMATION TRICKS:
+       When processing Backing Vocals, Harmonies, or Dubs, you MUST draw from these 10 legendary signature styles and specify exact JSFX automation coordinates:
+       - **Queen / Roy Thomas Baker "Bohemian Wall"**: Overdub multiple backing vocal takes, hard pan them 100% Left and Right, and squash them aggressively with 'Tukan NC76'. Automate a slow, rich 'JS: Saturated Chorus' across the bus to merge the voices into a single, massive choral wall.
+       - **Michael Jackson / Bruce Swedien "Percussive Breath" Stacks**: Aggressively high-pass backing vocal rhythmic layers at 300Hz and use a fast-attack gate ('JS: Noise Gate') to emphasize the percussive consonants and breaths, making the backing vocals function as part of the drum groove.
+       - **Destiny's Child / Darkchild "R&B Silk" Micro-Tuning**: Apply subtle 'JS: Pitch Shifter 2' (+4 cents Left, -4 cents Right) on R&B harmonies, rolling off the highs above 8kHz smoothly. This thickens the chord structures into a smooth, silky R&B bed without clashing with the lead.
+       - **Def Leppard / Mutt Lange "Hysteria" Gated Reverb Choir**: Send a massive stack of backing vocals into 'Tukan Lexikan 2' hall reverb and immediately gate the reverb tail ('JS: Noise Gate') to cut off perfectly on the snare beat, creating a huge, synthetic arena-rock vocal explosion.
+       - **The Beach Boys / Brian Wilson "Phil Spector Echo"**: Run tight vocal harmonies through an entirely mono bus, heavily saturate them with 'JS: Distortion (Fuzz)', and send them into a long, dark 'JS: Delay' feeding a mono 'Tukan Lexikan 2' plate, recreating the 1960s "Wall of Sound".
+       - **Steely Dan "Smooth Jazz" Pinpoint EQ Separation**: Create extreme tonal contrast between lead and backing vocals by scooping the mid-range (1kHz-3kHz) out of the backing vocals using 'JS: ReJJ/ReEQ', allowing the lead vocal to sit perfectly in the center pocket.
+       - **Enya "Celtic Ethereal" Infinite Reverb Wash**: Send backing vocals to an ultra-long (8+ seconds) dark 'Tukan Lexikan 2' reverb. Automate the backing vocal track volume to swell in slowly beneath the lead, completely blurring the consonants into an evolving ambient pad.
+       - **Outkast "SpottieOttie" P-Funk Phased Harmonies**: Run a bus of soulful backing vocals through a thick, slow 'JS: Phaser' and 'JS: Auto-Pan', making the choir swirl heavily from speaker to speaker like a vintage 1970s funk record.
+       - **Fleetwood Mac / Ken Caillat "Acoustic Warmth" Tape Saturation**: Send gentle acoustic backing vocals into 'JClones AC2' (Tape Emulator) at 15 IPS, driving the input just enough to smooth out the transient peaks, resulting in a buttery, warm 1970s California soft-rock harmony.
+       - **Bon Iver "Messina" Prism Vocoder**: Duplicate a backing vocal into 4 separate channels. Run each through 'JS: Pitch Shifter 2' tuned to different intervals of a chord (e.g., +3, +7, -5, -12 semitones). Squash them with 'JClones CA2A' to create a synthetic, robotic indie-folk choir.
+`;
+
+const BEAT_INSTRUMENTAL_PROCESSING_PROTOCOL_PROMPT = `
+    CRITICAL - BEAT & INSTRUMENTAL AUTOMATION PROTOCOL:
+    When you identify stems as Beats or Instrumentals, you MUST provide creative automation to keep the track dynamic.
+    
+    1. ARRANGER TRICKS & DYNAMICS:
+       - Automate volume dips on the instrumental just before the chorus drops to increase impact.
+       - Automate high-pass or low-pass filter sweeps ('JS: RBJ Highpass/Lowpass Filters') during transitions to create tension and release.
+       - Recommend tape stops or rhythmic gating ('JS: Noise Gate') at key moments.
+
+    2. LEGENDARY BEAT/INSTRUMENTAL AUTOMATION TRICKS:
+       You MUST draw from these 10 legendary instrumental automation styles and specify exact JSFX automation coordinates:
+       - **J Dilla "Drunk Swing" Micro-Shifting**: For rigid instrumentals, automate 'JS: Time Adjustment' randomly between -10ms and +15ms on snares and hi-hats to pull them off the grid, giving the beat a woozy, humanized Detroit hip-hop swing.
+       - **Daft Punk "French Touch" Pumping Compression**: Set up a sidechain compressor ('JS: 1175' or similar) on the entire instrumental bus keyed to the kick drum. Automate the threshold and ratio to create an exaggerated, breathing, rhythmic pumping effect synonymous with French house music.
+       - **Timbaland "Beatbox" Stereo Panning**: On percussion or drum stems, use 'JS: Auto-Pan' or automate manual panning rapidly across the stereo field on 16th or 32nd note subdivisions during fills, making the drums scramble frantically around the listener's head.
+       - **Kanye West "MPC" Sample Stutter**: Use 'JS: Tremolo' or 'JS: Noise Gate' set to a rigid square wave at 1/16th or 1/8th note sync, automating it to turn on strictly at the end of every 4th bar to create a classic MPC-style sample stutter/chop effect.
+       - **Noah "40" Shebib "Underwater" Filter Automation**: Automate a steep low-pass filter ('JS: RBJ Highpass/Lowpass Filters') down to 300Hz-800Hz on the entire instrumental track during verses or intros, cutting all treble and making the beat sound entirely submerged underwater, then snapping back to full frequency on the drop.
+       - **Flume "Granular Glitch" Freeze**: Send synth or instrumental stems into a fast 'JS: Delay (Lo-Fi)', automating the feedback to 100% and delay time to sub-10ms increments on transition points, creating a metallic, buzzing granular freeze that abruptly cuts off into silence.
+       - **Rick Rubin "Def Jam" Extreme Saturation Drop**: Automate 'JS: Distortion (Fuzz)' or tape saturation ('JClones AC2') on the drum bus to violently overdrive the drums for one specific measure before a chorus, creating explosive analog energy right before the lead vocal re-enters.
+       - **The Neptunes / Pharrell "Dry-as-a-Bone" Subtractive EQ**: aggressively carve out the lower-mid frequencies (200Hz - 400Hz) using 'JS: ReJJ/ReEQ' and strip all reverb/delay off the instrumental bus, leaving a skeletal, ultra-dry, perfectly separated arrangement where the bass and snare hit like hammers.
+       - **Metro Boomin "Dark Trap" Half-Time Slowdown**: Automate a pitch drop (-12 semitones via 'JS: Pitch Shifter 2') combined with a low-pass filter ('JS: RBJ Highpass/Lowpass Filters') to slow down the entire instrumental loop at the end of the song or during a bridge, creating a syrupy, menacing half-time trap transition.
+       - **Aphex Twin "IDM" Random Filter Sweeps**: Assign a fast, chaotic LFO to the cutoff frequency of a bandpass filter ('JS: RBJ Highpass/Lowpass Filters') applied to hi-hats or synths, automating the LFO depth to twitch and squelch aggressively, creating unpredictable, glitchy IDM textures.
 `;
 const FUNCTION_AUTOMATION_PROMPT = `
     CRITICAL - STUDIO ONE PROFESSIONAL FUNCTIONS & AUTOMATION:
@@ -3081,6 +3355,11 @@ ${previousCritiqueStr}
     ${RC20_SPEC_PROMPT}
     ${ATR102_SPEC_PROMPT}
     ${GLOBAL_PARAMETER_STRICTNESS_PROMPT}
+    ${LYRIC_AWARE_DELAY_AUTOMATION_PROMPT}
+    ${VOCAL_MATCHING_AND_COHESION_PROMPT}
+    ${ADLIB_PROCESSING_PROTOCOL_PROMPT}
+    ${BACKING_VOCAL_PROCESSING_PROTOCOL_PROMPT}
+    ${BEAT_INSTRUMENTAL_PROCESSING_PROTOCOL_PROMPT}
     CRITICAL: If the user is asking about guitars, acoustic or electric, or if a stem appears to be a guitar, strongly consider recommending the use of a capo (e.g. on the 2nd to 5th fret) to achieve a brighter, more distinctive playing texture without breaking strings. Reference Johnny Marr, Jingle-Jangle styles, and The Smiths if it fits the genre.
     Analyze the audio and provide a detailed mix critique. Since this is a full song, consider the dynamic changes, song structure (intro, verse, chorus, etc.), and how the mix evolves.
     CRITICAL: You MUST ONLY recommend plugins that are present in this user-owned plugin list. You are STRICTLY FORBIDDEN from suggesting any plugin brand or model that the user does not own. If the list below is non-empty, use only EXACT names or clean substring matches found in the list. Do not recommend generic compressors or EQs (e.g. do not use "CLA-76", "1176", or "Pro-C 2" unless they appear below; instead, look through the list and recommend an actual compressor or EQ the user owns):

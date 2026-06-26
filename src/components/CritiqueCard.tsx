@@ -1907,6 +1907,8 @@ export const CritiqueCard: React.FC<CritiqueCardProps> = ({ critique, stems = []
                   )}
                   <h5 className="font-black text-lg mb-2">{action.issue}</h5>
                   <p className="text-sm font-bold opacity-80 mb-6">{action.solution}</p>
+
+
                   
                   {action.multiBandDetails?.isEnabled && (
                     <div className="mb-6 p-4 rounded-xl relative overflow-hidden group">
