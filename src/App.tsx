@@ -1970,54 +1970,192 @@ The AI was unable to verify these parameters. Please investigate.`;
 
   const COMMUNITY_JSFX_PACKS = [
     {
-      name: "Tukan Studios",
-      desc: "Incredible analog-modeled compressors, EQs, limiters, tape emulations, and vocal dynamic processors.",
-      source: "https://github.com/TukanStudios/TUKAN_STUDIOS_PLUGINS",
-      reapack: "https://raw.githubusercontent.com/TukanStudios/TUKAN_STUDIOS_PLUGINS/main/index.xml"
+        "name": "Tukan Studios",
+        "desc": "29 effects",
+        "source": "https://github.com/TukanStudios/TUKAN_STUDIOS_PLUGINS",
+        "reapack": "https://github.com/TukanStudios/TUKAN_STUDIOS_PLUGINS/raw/main/index2.xml"
     },
     {
-      name: "Geraint Luff",
-      desc: "Outstanding creative DSP effects including Humulator, spectral compressors, delays, and echo thieves.",
-      source: "https://geraintluff.github.io/jsfx/",
-      reapack: "https://geraintluff.github.io/jsfx/index.xml"
+        "name": "Geraint Luff",
+        "desc": "Outstanding creative DSP effects including Humulator, spectral compressors, delays, and echo thieves.",
+        "source": "https://geraintluff.github.io/jsfx/",
+        "reapack": "https://geraintluff.github.io/jsfx/index.xml"
     },
     {
-      name: "Saike JSFX",
-      desc: "Top-tier creative sound design utilities, saturators, multi-band shapers, and lush reverbs (Reflecto).",
-      source: "https://github.com/JoepVanHeerbeek/SaikeJSFX",
-      reapack: "https://raw.githubusercontent.com/JoepVanHeerbeek/SaikeJSFX/master/index.xml"
+        "name": "Saike JSFX",
+        "desc": "47 effects, 1 script",
+        "source": "https://github.com/JoepVanlier/JSFX/",
+        "reapack": "https://github.com/JoepVanlier/JSFX/raw/master/index.xml"
     },
     {
-      name: "Chokehold JSFX",
-      desc: "Fast, efficient mixing tools including the famous ClipMax clippers, Black-Face compressors, and analog-style saturators.",
-      source: "https://github.com/chkhld/jsfx",
-      reapack: "https://raw.githubusercontent.com/chkhld/jsfx/master/index.xml"
+        "name": "Suzuki (RCGN) JSFX",
+        "desc": "42 scripts, 2 effects",
+        "source": "https://github.com/Suzuki-Re/Suzuki-Scripts",
+        "reapack": "https://github.com/Suzuki-Re/Suzuki-Scripts/raw/master/index.xml"
     },
     {
-      name: "Suzuki-Scripts (lewloiwc / Suzuki)",
-      desc: "Sound Design Suite (Sample Warp, Open Delay) & Splitter Suite (Transient/Gate/Envelope follow and Linkwitz-Riley crossovers).",
-      source: "https://github.com/Suzuki-Re/Suzuki-Scripts",
-      reapack: "https://raw.githubusercontent.com/Suzuki-Re/Suzuki-Scripts/master/index.xml"
+        "name": "Sonic Anomaly",
+        "desc": "15 effects",
+        "source": "http://sonic.supermaailma.net/plugins",
+        "reapack": "https://github.com/Sonic-Anomaly/Sonic-Anomaly-JSFX/raw/master/index.xml"
     },
     {
-      name: "JSFX Clones",
-      desc: "Excellent emulations of legendary analog and digital gear, including Oxford Inflator, L2, CL 1B, CA-2A, and Vintage Tape.",
-      source: "https://github.com/JClones/JSFXClones",
-      reapack: "https://raw.githubusercontent.com/JClones/JSFXClones/master/index.xml"
+        "name": "ReaTeam JSFX",
+        "desc": "143 effects",
+        "source": "https://github.com/ReaTeam/JSFX",
+        "reapack": "https://github.com/ReaTeam/JSFX/raw/master/index.xml"
     },
     {
-      name: "Sonic Anomaly",
-      desc: "Industry-favorite tools including Bass Professor Mark II, Quadra-Comp, and vintage mastering limiters.",
-      source: "https://github.com/Sonic-Anomaly/Sonic-Anomaly-JSFX",
-      reapack: "https://raw.githubusercontent.com/Sonic-Anomaly/Sonic-Anomaly-JSFX/master/index.xml"
+        "name": "MIP2 Michael-P JSFX",
+        "desc": "MIP2 JSFX plugins",
+        "source": "https://github.com/Michael-P/MIP2_JSFX",
+        "reapack": "https://raw.githubusercontent.com/Michael-P/MIP2_JSFX/master/index.xml"
     },
     {
-      name: "ReaTeam JSFX",
-      desc: "The premier collaborative repository with essential utilities, pitch correction tools, and repair processors.",
-      source: "https://github.com/ReaTeam/JSFX",
-      reapack: "https://raw.githubusercontent.com/ReaTeam/JSFX/master/index.xml"
+        "name": "Mudra Lukas JSFX",
+        "desc": "Mudra Lukas JSFX",
+        "source": "https://github.com/MudraLukas/jsfx",
+        "reapack": "https://raw.githubusercontent.com/MudraLukas/jsfx/master/index.xml"
+    },
+    {
+        "name": "euPhonia JSFX",
+        "desc": "euPhonia JSFX",
+        "source": "https://github.com/euPhonia/euPhonia_jsfx",
+        "reapack": "https://raw.githubusercontent.com/euPhonia/euPhonia_jsfx/master/index.xml"
+    },
+    {
+        "name": "JST JSFX Toolkit",
+        "desc": "JST JSFX Toolkit",
+        "source": "https://github.com/JoepVanHeerbeek/SaikeJSFX",
+        "reapack": "https://raw.githubusercontent.com/JoepVanHeerbeek/SaikeJSFX/master/index.xml"
+    },
+    {
+        "name": "JSFX Clones",
+        "desc": "JSFX Clones",
+        "source": "https://github.com/JClones/JSFXClones",
+        "reapack": "https://raw.githubusercontent.com/JClones/JSFXClones/master/index.xml"
+    },
+    {
+        "name": "Chokehold JSFX",
+        "desc": "39 effects",
+        "source": "https://github.com/chkhld/jsfx/",
+        "reapack": "https://github.com/chkhld/jsfx/raw/main/index.xml"
+    },
+    {
+        "name": "MPL Scripts",
+        "desc": "406 scripts, 2 effects",
+        "source": "https://github.com/MichaelPilyavskiy/ReaScripts",
+        "reapack": "https://github.com/MichaelPilyavskiy/ReaScripts/raw/master/index.xml"
+    },
+    {
+        "name": "X-Raym Scripts",
+        "desc": "624 scripts, 20 effects, 3 misc packages, 2 web interfaces",
+        "source": "https://github.com/X-Raym/REAPER-ReaScripts",
+        "reapack": "https://github.com/X-Raym/REAPER-ReaScripts/raw/master/index.xml"
+    },
+    {
+        "name": "ACendan Scripts",
+        "desc": "136 scripts, 7 effects, 1 web interface",
+        "source": "https://github.com/acendan/reascripts",
+        "reapack": "https://acendan.github.io/reascripts/index.xml"
+    },
+    {
+        "name": "Beaunus Scripts",
+        "desc": "4 effects, 1 script",
+        "source": "https://github.com/beaunus/REAPER-ReaScripts/",
+        "reapack": "https://github.com/beaunus/REAPER-ReaScripts/raw/master/index.xml"
+    },
+    {
+        "name": "BinbinHfr Scripts",
+        "desc": "13 scripts, 8 effects",
+        "source": "https://github.com/DaveInDev/Binbinhfr-Scripts/",
+        "reapack": "https://github.com/DaveInDev/Binbinhfr-Scripts/raw/master/index.xml"
+    },
+    {
+        "name": "chmaha airwindows JSFX Ports",
+        "desc": "114 effects",
+        "source": "https://github.com/chmaha/airwindows-JSFX-ports",
+        "reapack": "https://github.com/chmaha/airwindows-JSFX-ports/raw/main/index.xml"
+    },
+    {
+        "name": "Claudiohbsantos Scripts",
+        "desc": "65 scripts, 6 effects",
+        "source": "https://github.com/Claudiohbsantos/Claudiohbsantos-Scripts",
+        "reapack": "https://github.com/Claudiohbsantos/Claudiohbsantos-Scripts/raw/master/index.xml"
+    },
+    {
+        "name": "Erriez",
+        "desc": "2 effects",
+        "source": "https://github.com/Erriez/erriez-reaper-jsfx/",
+        "reapack": "https://github.com/Erriez/erriez-reaper-jsfx/raw/master/index.xml"
+    },
+    {
+        "name": "kawa Scripts",
+        "desc": "420 scripts, 7 effects",
+        "source": "http://kawa.works/reascripts",
+        "reapack": "https://bitbucket.org/kawaCat/reascript-m2bpack/raw/master/index.xml"
+    },
+    {
+        "name": "mrlimbic scripts",
+        "desc": "8 effects, 8 scripts",
+        "source": "https://github.com/mrlimbic/reascripts",
+        "reapack": "https://github.com/mrlimbic/reascripts/raw/master/index.xml"
+    },
+    {
+        "name": "ply Scripts",
+        "desc": "13 scripts, 3 effects",
+        "source": "https://ply.github.io/ReaScripts/",
+        "reapack": "https://ply.github.io/ReaScripts/index.xml"
+    },
+    {
+        "name": "chmaha Scripts",
+        "desc": "2 effects, 2 scripts",
+        "source": "https://github.com/chmaha/ReaClassical",
+        "reapack": "https://github.com/chmaha/ReaClassical/raw/main/index.xml"
+    },
+    {
+        "name": "RCJacH Scripts",
+        "desc": "16 effects, 13 scripts",
+        "source": "https://github.com/RCJacH/ReaScripts/",
+        "reapack": "https://github.com/RCJacH/ReaScripts/raw/master/index.xml"
+    },
+    {
+        "name": "ReJJ",
+        "desc": "2 effects",
+        "source": "https://github.com/Justin-Johnson/ReJJ/",
+        "reapack": "https://github.com/Justin-Johnson/ReJJ/raw/master/index.xml"
+    },
+    {
+        "name": "Souk21 ReaPack",
+        "desc": "4 scripts, 2 effects",
+        "source": "https://github.com/Souk21/REAPER-scripts-and-effects",
+        "reapack": "https://github.com/Souk21/REAPER-scripts-and-effects/raw/master/index.xml"
+    },
+    {
+        "name": "Tormy Van Cool ReaPack Scripts",
+        "desc": "14 scripts, 5 effects",
+        "source": "https://github.com/tormyvancool/TormyVanCool_ReaPack_Scripts",
+        "reapack": "https://github.com/tormyvancool/TormyVanCool_ReaPack_Scripts/raw/master/index.xml"
+    },
+    {
+        "name": "X-Raym MIDI Makey Makey",
+        "desc": "4 effects",
+        "source": "https://github.com/X-Raym/MIDI-Makey-Makey",
+        "reapack": "https://github.com/X-Raym/MIDI-Makey-Makey/raw/master/index.xml"
+    },
+    {
+        "name": "zaibuyidao Scripts",
+        "desc": "398 scripts, 8 effects, 2 language packs",
+        "source": "https://github.com/zaibuyidao/ReaScripts",
+        "reapack": "https://github.com/zaibuyidao/ReaScripts/raw/master/index.xml"
+    },
+    {
+        "name": "Juan_R's Reaperism",
+        "desc": "7 effects, 4 scripts",
+        "source": "https://github.com/juanriccio/Reaperism",
+        "reapack": "https://raw.githubusercontent.com/juanriccio/Reaperism/master/index.xml"
     }
-  ];
+];
 
   const [installedJsfxPacks, setInstalledJsfxPacks] = useState<string[]>(() => {
     try {
@@ -10057,7 +10195,7 @@ Provide the exact JSFX plugin name and required sliders/parameters.`;
                   <div className="space-y-6">
                     <div className={`p-4 rounded-2xl border text-sm leading-relaxed ${theme === 'coldest' ? 'bg-slate-50 border-slate-100 text-slate-600' : 'bg-black/40 border-zinc-800/80 text-zinc-400'}`}>
                       <p className="font-semibold mb-2 text-emerald-400">⚡ Automated JSFX Library Expansion</p>
-                      BeatGangsta supports 10 free professional JSFX community plugin packs. 
+                      BeatGangsta supports 31 free professional JSFX community plugin packs. 
                       You can download them manually or manage them effortlessly via <strong>ReaPack</strong> (highly recommended for auto-updates). 
                       <span className="block mt-2 font-medium text-white">To use these packs in your recipes, check them below or let BeatGangsta Connect auto-detect them in real-time!</span>
                     </div>

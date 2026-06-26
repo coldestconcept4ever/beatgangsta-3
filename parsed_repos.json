@@ -1,0 +1,452 @@
+[
+  {
+    "name": "ReaTeam Scripts",
+    "desc": "877 scripts, 1 web interface",
+    "source": "https://github.com/ReaTeam/ReaScripts",
+    "reapack": "https://github.com/ReaTeam/ReaScripts/raw/master/index.xml"
+  },
+  {
+    "name": "ReaTeam JSFX",
+    "desc": "143 effects",
+    "source": "https://github.com/ReaTeam/JSFX",
+    "reapack": "https://github.com/ReaTeam/JSFX/raw/master/index.xml"
+  },
+  {
+    "name": "ReaTeam Themes",
+    "desc": "5 themes",
+    "source": "https://github.com/ReaTeam/Themes",
+    "reapack": "https://github.com/ReaTeam/Themes/raw/master/index.xml"
+  },
+  {
+    "name": "ReaTeam LangPacks",
+    "desc": "6 language packs",
+    "source": "https://github.com/ReaTeam/LangPacks",
+    "reapack": "https://github.com/ReaTeam/LangPacks/raw/master/index.xml"
+  },
+  {
+    "name": "ReaTeam Extensions",
+    "desc": "12 extensions",
+    "source": "https://github.com/ReaTeam/Extensions",
+    "reapack": "https://github.com/ReaTeam/Extensions/raw/master/index.xml"
+  },
+  {
+    "name": "MPL Scripts",
+    "desc": "406 scripts, 2 effects",
+    "source": "https://github.com/MichaelPilyavskiy/ReaScripts",
+    "reapack": "https://github.com/MichaelPilyavskiy/ReaScripts/raw/master/index.xml"
+  },
+  {
+    "name": "X-Raym Scripts",
+    "desc": "624 scripts, 20 effects, 3 misc packages, 2 web interfaces",
+    "source": "https://github.com/X-Raym/REAPER-ReaScripts",
+    "reapack": "https://github.com/X-Raym/REAPER-ReaScripts/raw/master/index.xml"
+  },
+  {
+    "name": "ACendan Scripts",
+    "desc": "136 scripts, 7 effects, 1 web interface",
+    "source": "https://github.com/acendan/reascripts",
+    "reapack": "https://acendan.github.io/reascripts/index.xml"
+  },
+  {
+    "name": "AlbertoV5-ReaperTools",
+    "desc": "3 misc packages, 1 script",
+    "source": "https://github.com/AlbertoV5/ReaperTools",
+    "reapack": "https://github.com/AlbertoV5/ReaperTools/raw/master/index.xml"
+  },
+  {
+    "name": "AmelianceSkyMusic script",
+    "desc": "46 scripts",
+    "source": "https://github.com/AmelianceSkyMusic/ASM_Reaper_scripts",
+    "reapack": "https://github.com/AmelianceSkyMusic/ASM_Reaper_scripts/raw/master/index.xml"
+  },
+  {
+    "name": "Archie-ReaScripts",
+    "desc": "591 scripts",
+    "source": "https://github.com/ArchieScript/Archie_ReaScripts",
+    "reapack": "https://github.com/ArchieScript/Archie_ReaScripts/raw/master/index.xml"
+  },
+  {
+    "name": "Audiokinetic",
+    "desc": "3 scripts, 1 extension",
+    "source": "https://github.com/Audiokinetic/Reaper-Tools",
+    "reapack": "https://github.com/Audiokinetic/Reaper-Tools/raw/main/index.xml"
+  },
+  {
+    "name": "Beaunus Scripts",
+    "desc": "4 effects, 1 script",
+    "source": "https://github.com/beaunus/REAPER-ReaScripts/",
+    "reapack": "https://github.com/beaunus/REAPER-ReaScripts/raw/master/index.xml"
+  },
+  {
+    "name": "bfut_ReaScripts",
+    "desc": "57 scripts",
+    "source": "https://github.com/bfut/ReaScripts",
+    "reapack": "https://github.com/bfut/ReaScripts/raw/main/index.xml"
+  },
+  {
+    "name": "BinbinHfr Scripts",
+    "desc": "13 scripts, 8 effects",
+    "source": "https://github.com/DaveInDev/Binbinhfr-Scripts/",
+    "reapack": "https://github.com/DaveInDev/Binbinhfr-Scripts/raw/master/index.xml"
+  },
+  {
+    "name": "BirdBird JSFX",
+    "desc": "4 effects",
+    "source": "https://github.com/Bird-Bird/JSFX",
+    "reapack": "https://github.com/Bird-Bird/JSFX/raw/main/index.xml"
+  },
+  {
+    "name": "BirdBird ReaScript Testi",
+    "desc": "12 scripts, 1 effect",
+    "source": "https://github.com/Bird-Bird/ReaScript_Testing",
+    "reapack": "https://github.com/Bird-Bird/ReaScript_Testing/raw/main/index.xml"
+  },
+  {
+    "name": "BirdBird Scripts",
+    "desc": "42 scripts, 2 effects",
+    "source": "https://github.com/Bird-Bird/ReaScript",
+    "reapack": "https://github.com/Bird-Bird/ReaScript/raw/master/index.xml"
+  },
+  {
+    "name": "BSmith96 Scripts",
+    "desc": "13 scripts",
+    "source": "https://github.com/bsmith96/Reaper-Scripts",
+    "reapack": "https://github.com/bsmith96/Reaper-Scripts/raw/master/index.xml"
+  },
+  {
+    "name": "chmaha airwindows JSFX P",
+    "desc": "114 effects",
+    "source": "https://github.com/chmaha/airwindows-JSFX-ports",
+    "reapack": "https://github.com/chmaha/airwindows-JSFX-ports/raw/main/index.xml"
+  },
+  {
+    "name": "chmaha Scripts",
+    "desc": "2 effects, 2 scripts",
+    "source": "https://github.com/chmaha/ReaClassical",
+    "reapack": "https://github.com/chmaha/ReaClassical/raw/main/index.xml"
+  },
+  {
+    "name": "chokehold JSFX",
+    "desc": "39 effects",
+    "source": "https://github.com/chkhld/jsfx/",
+    "reapack": "https://github.com/chkhld/jsfx/raw/main/index.xml"
+  },
+  {
+    "name": "chtammik_Reaper_Scripts",
+    "desc": "25 scripts",
+    "source": "https://github.com/chtammik/chtammik_Reaper_Scripts",
+    "reapack": "https://github.com/chtammik/chtammik_Reaper_Scripts/raw/master/index.xml"
+  },
+  {
+    "name": "Claudiohbsantos Scripts",
+    "desc": "65 scripts, 6 effects",
+    "source": "https://github.com/Claudiohbsantos/Claudiohbsantos-Scripts",
+    "reapack": "https://github.com/Claudiohbsantos/Claudiohbsantos-Scripts/raw/master/index.xml"
+  },
+  {
+    "name": "Daniel Lumertz Scripts",
+    "desc": "36 scripts",
+    "source": "https://github.com/daniellumertz/DanielLumertz-Scripts",
+    "reapack": "https://github.com/daniellumertz/DanielLumertz-Scripts/raw/master/index.xml"
+  },
+  {
+    "name": "Dfk REAPER Scripts",
+    "desc": "10 scripts",
+    "source": "https://github.com/Dafarkias/REAPER-Lua-Scripts-/",
+    "reapack": "https://github.com/Dafarkias/REAPER-Lua-Scripts-/raw/master/index.xml"
+  },
+  {
+    "name": "Erriez",
+    "desc": "2 effects",
+    "source": "https://github.com/Erriez/erriez-reaper-jsfx/",
+    "reapack": "https://github.com/Erriez/erriez-reaper-jsfx/raw/master/index.xml"
+  },
+  {
+    "name": "EUGENE27771-ReaScripts",
+    "desc": "39 scripts",
+    "source": "https://github.com/EUGEN27771/ReaScripts",
+    "reapack": "https://github.com/EUGEN27771/ReaScripts/raw/master/index.xml"
+  },
+  {
+    "name": "Fernsehmüll Scripts",
+    "desc": "21 scripts",
+    "source": "https://github.com/fernsehmuell/reaper_scripts",
+    "reapack": "https://github.com/fernsehmuell/reaper_scripts/raw/master/index.xml"
+  },
+  {
+    "name": "FTC Tools",
+    "desc": "57 scripts, 1 effect",
+    "source": "https://github.com/iliaspoulakis/Reaper-Tools/",
+    "reapack": "https://github.com/iliaspoulakis/Reaper-Tools/raw/master/index.xml"
+  },
+  {
+    "name": "FX Device",
+    "desc": "2 scripts",
+    "source": "https://github.com/BryanChi/BryanChi-FX-Devices",
+    "reapack": "https://github.com/BryanChi/BryanChi-FX-Devices/raw/main/index.xml"
+  },
+  {
+    "name": "Geraint&#39;s JSFX",
+    "desc": "26 effects",
+    "source": "https://geraintluff.github.io/jsfx/",
+    "reapack": "https://geraintluff.github.io/jsfx/index.xml"
+  },
+  {
+    "name": "Helgoboss Projects",
+    "desc": "16 misc packages, 2 extensions",
+    "source": "https://github.com/helgoboss/reaper-packages/",
+    "reapack": "https://github.com/helgoboss/reaper-packages/raw/master/index.xml"
+  },
+  {
+    "name": "IX",
+    "desc": "31 effects, 3 misc packages",
+    "source": "https://github.com/IXix/JSFX",
+    "reapack": "https://github.com/IXix/JSFX/raw/master/index.xml"
+  },
+  {
+    "name": "Joabe Lopes Multitrack_S",
+    "desc": "3 scripts",
+    "source": "https://github.com/joabeslopes/Reaper-scripts-multitrack-show",
+    "reapack": "https://github.com/joabeslopes/Reaper-scripts-multitrack-show/raw/main/index.xml"
+  },
+  {
+    "name": "JRENG!",
+    "desc": "2 scripts",
+    "source": "https://github.com/jrengmusic/ReaScript",
+    "reapack": "https://github.com/jrengmusic/ReaScript/raw/master/index.xml"
+  },
+  {
+    "name": "Juan_R&#39;s Reaperism",
+    "desc": "7 effects, 4 scripts",
+    "source": "https://github.com/juanriccio/Reaperism",
+    "reapack": "https://raw.githubusercontent.com/juanriccio/Reaperism/master/index.xml"
+  },
+  {
+    "name": "kawa Script2",
+    "desc": "1 extension",
+    "source": "http://kawa.works/reascripts",
+    "reapack": "https://bitbucket.org/kawaCat/kawascript2/raw/master/index.xml"
+  },
+  {
+    "name": "kawa Scripts",
+    "desc": "420 scripts, 7 effects",
+    "source": "http://kawa.works/reascripts",
+    "reapack": "https://bitbucket.org/kawaCat/reascript-m2bpack/raw/master/index.xml"
+  },
+  {
+    "name": "Leandro Facchinetti",
+    "desc": "27 effects, 18 scripts, 1 web interface",
+    "source": "https://github.com/leafac/reaper/",
+    "reapack": "https://github.com/leafac/reaper/raw/main/index.xml"
+  },
+  {
+    "name": "LKC Tools",
+    "desc": "25 scripts, 1 extension",
+    "source": "https://github.com/nikolalkc/LKC-Tools/",
+    "reapack": "https://github.com/nikolalkc/LKC-Tools/raw/master/index.xml"
+  },
+  {
+    "name": "me2beats Scripts",
+    "desc": "429 scripts",
+    "source": "https://github.com/me2beats/reapack",
+    "reapack": "https://github.com/me2beats/reapack/raw/master/index.xml"
+  },
+  {
+    "name": "Mespotine-Scripts And Ex",
+    "desc": "1 script",
+    "source": "https://github.com/mespotine/Mespotine-Scripts",
+    "reapack": "https://github.com/mespotine/Mespotine-Scripts/raw/main/Mespotine_Scripts.xml"
+  },
+  {
+    "name": "mrlimbic scripts",
+    "desc": "8 effects, 8 scripts",
+    "source": "https://github.com/mrlimbic/reascripts",
+    "reapack": "https://github.com/mrlimbic/reascripts/raw/master/index.xml"
+  },
+  {
+    "name": "n0ne scripts",
+    "desc": "1 script",
+    "source": "https://github.com/n0ner/Reaper/",
+    "reapack": "https://github.com/n0ner/Reaper/raw/master/index.xml"
+  },
+  {
+    "name": "Neutronic Scripts",
+    "desc": "10 scripts",
+    "source": "https://github.com/Neutronic/ReaScripts",
+    "reapack": "https://github.com/Neutronic/ReaScripts/raw/master/index.xml"
+  },
+  {
+    "name": "nofish ReaScripts",
+    "desc": "39 scripts",
+    "source": "https://github.com/nofishonfriday/ReaScripts",
+    "reapack": "https://github.com/nofishonfriday/ReaScripts/raw/master/index.xml"
+  },
+  {
+    "name": "Outboarder Scripts",
+    "desc": "53 scripts",
+    "source": "https://github.com/Outboarder/ReaScripts",
+    "reapack": "https://github.com/Outboarder/ReaScripts/raw/master/index.xml"
+  },
+  {
+    "name": "PeloReaper",
+    "desc": "1 extension, 1 misc package",
+    "source": "https://github.com/pelori/PeloReaper/",
+    "reapack": "https://github.com/pelori/PeloReaper/raw/master/index.xml"
+  },
+  {
+    "name": "ply Scripts",
+    "desc": "13 scripts, 3 effects",
+    "source": "https://ply.github.io/ReaScripts/",
+    "reapack": "https://ply.github.io/ReaScripts/index.xml"
+  },
+  {
+    "name": "Przemoc&#39;s ReaScripts",
+    "desc": "22 scripts",
+    "source": "https://github.com/przemoc/REAPER-ReaScripts",
+    "reapack": "https://github.com/przemoc/REAPER-ReaScripts/raw/master/index.xml"
+  },
+  {
+    "name": "Radio Toolkit",
+    "desc": "19 scripts",
+    "source": "https://github.com/tomtjes/Radio-Toolkit",
+    "reapack": "https://github.com/tomtjes/Radio-Toolkit/raw/master/index.xml"
+  },
+  {
+    "name": "RCJacH Scripts",
+    "desc": "16 effects, 13 scripts",
+    "source": "https://github.com/RCJacH/ReaScripts/",
+    "reapack": "https://github.com/RCJacH/ReaScripts/raw/master/index.xml"
+  },
+  {
+    "name": "ReaperWRB",
+    "desc": "1 web interface",
+    "source": "https://gitlab.com/michaelklier/reaperwrb-2019/",
+    "reapack": "https://bobobo-git.github.io/reaperwrb_2/index.xml"
+  },
+  {
+    "name": "Reaticulate",
+    "desc": "1 script",
+    "source": "https://reaticulate.com/",
+    "reapack": "https://reaticulate.com/release.xml"
+  },
+  {
+    "name": "ReJJ",
+    "desc": "2 effects",
+    "source": "https://github.com/Justin-Johnson/ReJJ/",
+    "reapack": "https://github.com/Justin-Johnson/ReJJ/raw/master/index.xml"
+  },
+  {
+    "name": "RobU Scripts",
+    "desc": "1 script",
+    "source": "https://github.com/RobU23/ReaScripts/",
+    "reapack": "https://github.com/RobU23/ReaScripts/raw/master/index.xml"
+  },
+  {
+    "name": "Saike Tools",
+    "desc": "47 effects, 1 script",
+    "source": "https://github.com/JoepVanlier/JSFX/",
+    "reapack": "https://github.com/JoepVanlier/JSFX/raw/master/index.xml"
+  },
+  {
+    "name": "Scripts by Lemerchand",
+    "desc": "10 scripts",
+    "source": "https://github.com/lemerchand/lemerchand/",
+    "reapack": "https://github.com/lemerchand/lemerchand/raw/master/index.xml"
+  },
+  {
+    "name": "Sexan_Scripts",
+    "desc": "26 scripts",
+    "source": "https://github.com/GoranKovac/ReaScripts",
+    "reapack": "https://github.com/GoranKovac/ReaScripts/raw/master/index.xml"
+  },
+  {
+    "name": "sockmonkey72 Scripts",
+    "desc": "28 scripts, 3 extensions, 1 theme",
+    "source": "https://github.com/jeremybernstein/ReaScripts",
+    "reapack": "https://github.com/jeremybernstein/ReaScripts/raw/main/index.xml"
+  },
+  {
+    "name": "SonicAnomaly JSFX",
+    "desc": "15 effects",
+    "source": "http://sonic.supermaailma.net/plugins",
+    "reapack": "https://github.com/Sonic-Anomaly/Sonic-Anomaly-JSFX/raw/master/index.xml"
+  },
+  {
+    "name": "Souk21 ReaPack",
+    "desc": "4 scripts, 2 effects",
+    "source": "https://github.com/Souk21/REAPER-scripts-and-effects",
+    "reapack": "https://github.com/Souk21/REAPER-scripts-and-effects/raw/master/index.xml"
+  },
+  {
+    "name": "Stevie Scripts",
+    "desc": "108 scripts",
+    "source": "https://github.com/StephanRoemer/ReaScripts/",
+    "reapack": "https://github.com/StephanRoemer/ReaScripts/raw/master/index.xml"
+  },
+  {
+    "name": "StevieKeys JSFX",
+    "desc": "36 effects",
+    "source": "https://github.com/Steviekeys/StevieKeys_JSFX2",
+    "reapack": "https://github.com/Steviekeys/StevieKeys_JSFX2/raw/master/index.xml"
+  },
+  {
+    "name": "Suzuki Scripts",
+    "desc": "42 scripts, 2 effects",
+    "source": "https://github.com/Suzuki-Re/Suzuki-Scripts",
+    "reapack": "https://github.com/Suzuki-Re/Suzuki-Scripts/raw/master/index.xml"
+  },
+  {
+    "name": "Tack Scripts",
+    "desc": "4 scripts",
+    "source": "https://github.com/jtackaberry/reascripts",
+    "reapack": "https://github.com/jtackaberry/reascripts/raw/master/index.xml"
+  },
+  {
+    "name": "Tilr",
+    "desc": "28 effects",
+    "source": "https://github.com/tiagolr/tilr_jsfx",
+    "reapack": "https://github.com/tiagolr/tilr_jsfx/raw/master/index.xml"
+  },
+  {
+    "name": "TJF Scripts",
+    "desc": "106 scripts",
+    "source": "https://github.com/sonictim/TJF-Scripts/",
+    "reapack": "https://github.com/sonictim/TJF-Scripts/raw/master/index.xml"
+  },
+  {
+    "name": "Tormy Van Cool ReaPack S",
+    "desc": "14 scripts, 5 effects",
+    "source": "https://github.com/tormyvancool/TormyVanCool_ReaPack_Scripts",
+    "reapack": "https://github.com/tormyvancool/TormyVanCool_ReaPack_Scripts/raw/master/index.xml"
+  },
+  {
+    "name": "Tracker tools",
+    "desc": "1 script",
+    "source": "https://github.com/JoepVanlier/Hackey-Trackey/",
+    "reapack": "https://github.com/JoepVanlier/Hackey-Trackey/raw/master/index.xml"
+  },
+  {
+    "name": "Tukan",
+    "desc": "29 effects",
+    "source": "https://github.com/TukanStudios/TUKAN_STUDIOS_PLUGINS",
+    "reapack": "https://github.com/TukanStudios/TUKAN_STUDIOS_PLUGINS/raw/main/index2.xml"
+  },
+  {
+    "name": "X-Raym MIDI Makey Makey",
+    "desc": "4 effects",
+    "source": "https://github.com/X-Raym/MIDI-Makey-Makey",
+    "reapack": "https://github.com/X-Raym/MIDI-Makey-Makey/raw/master/index.xml"
+  },
+  {
+    "name": "Yannick-ReaScripts",
+    "desc": "102 scripts",
+    "source": "https://github.com/Yaunick/Yannick-ReaScripts",
+    "reapack": "https://github.com/Yaunick/Yannick-ReaScripts/raw/master/index.xml"
+  },
+  {
+    "name": "zaibuyidao Scripts",
+    "desc": "398 scripts, 8 effects, 2 language packs",
+    "source": "https://github.com/zaibuyidao/ReaScripts",
+    "reapack": "https://github.com/zaibuyidao/ReaScripts/raw/master/index.xml"
+  }
+]
