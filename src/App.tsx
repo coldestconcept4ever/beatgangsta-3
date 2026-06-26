@@ -10239,11 +10239,37 @@ Provide the exact JSFX plugin name and required sliders/parameters.`;
               </div>
               
               <div className="space-y-6 flex-1 overflow-hidden flex flex-col">
-                <div className={`p-5 rounded-2xl border text-sm leading-relaxed shrink-0 ${theme === 'coldest' ? 'bg-white/60 border-sky-100 text-slate-700' : 'bg-black/40 border-zinc-800/80 text-zinc-400'}`}>
-                  <p className={`font-semibold mb-2 ${theme === 'coldest' ? 'text-sky-600' : 'text-emerald-400'}`}>⚡ Automated JSFX Library Expansion</p>
-                  BeatGangsta supports {COMMUNITY_JSFX_PACKS.length} free professional JSFX community plugin packs. 
-                  You can download them manually or manage them effortlessly via <strong>ReaPack</strong> (highly recommended for auto-updates). 
-                  <span className={`block mt-2 font-medium ${theme === 'coldest' ? 'text-slate-900' : 'text-white'}`}>To use these packs in your recipes, check them below or let BeatGangsta Connect auto-detect them in real-time!</span>
+                <div className="flex flex-col gap-4 shrink-0">
+                  <div className={`p-5 rounded-2xl border text-sm leading-relaxed ${theme === 'coldest' ? 'bg-white/60 border-sky-100 text-slate-700' : 'bg-black/40 border-zinc-800/80 text-zinc-400'}`}>
+                    <p className={`font-semibold mb-2 ${theme === 'coldest' ? 'text-sky-600' : 'text-emerald-400'}`}>⚡ Automated JSFX Library Expansion</p>
+                    BeatGangsta supports {COMMUNITY_JSFX_PACKS.length} free professional JSFX community plugin packs. 
+                    You can download them manually or manage them effortlessly via <strong>ReaPack</strong> (highly recommended for auto-updates). 
+                    <span className={`block mt-2 font-medium ${theme === 'coldest' ? 'text-slate-900' : 'text-white'}`}>To use these packs in your recipes, check them below or let BeatGangsta Connect auto-detect them in real-time!</span>
+                  </div>
+
+                  <div className={`p-5 rounded-2xl border flex flex-col sm:flex-row items-start sm:items-center gap-4 ${theme === 'coldest' ? 'bg-sky-50 border-sky-200' : 'bg-zinc-900/80 border-zinc-700/50'}`}>
+                    <div className={`w-12 h-12 rounded-full flex items-center justify-center shrink-0 hidden sm:flex ${theme === 'coldest' ? 'bg-sky-100 text-sky-600' : 'bg-zinc-800 text-emerald-400'}`}>
+                      <Download className="w-5 h-5" />
+                    </div>
+                    <div className="flex-1">
+                      <h4 className={`font-black text-sm uppercase tracking-widest mb-1 ${theme === 'coldest' ? 'text-slate-900' : 'text-white'}`}>Install ReaPack First</h4>
+                      <p className={`text-xs leading-relaxed opacity-80 ${theme === 'coldest' ? 'text-slate-700' : 'text-zinc-400'}`}>
+                        ReaPack is required to manage and install these community JSFX packs. Download the extension and place it in your REAPER <strong>UserPlugins</strong> folder to enable the Extensions menu.
+                      </p>
+                    </div>
+                    <a 
+                      href="https://reapack.com/" 
+                      target="_blank" 
+                      rel="noreferrer"
+                      className={`shrink-0 w-full sm:w-auto text-center justify-center px-6 py-3 rounded-xl font-black uppercase tracking-wider text-xs transition-colors flex items-center gap-2 ${
+                        theme === 'coldest' 
+                          ? 'bg-sky-500 hover:bg-sky-600 text-white shadow-md shadow-sky-500/20' 
+                          : 'bg-zinc-800 hover:bg-zinc-700 text-white border border-zinc-700/50'
+                      }`}
+                    >
+                      Get ReaPack <ExternalLink className="w-3.5 h-3.5" />
+                    </a>
+                  </div>
                 </div>
 
                 <div className="flex-1 overflow-y-auto pr-2 space-y-4 [&::-webkit-scrollbar]:w-2.5 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-sky-500 [&::-webkit-scrollbar-thumb]:rounded-full hover:[&::-webkit-scrollbar-thumb]:bg-sky-400 min-h-[300px]">
