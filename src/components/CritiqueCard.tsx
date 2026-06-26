@@ -5,7 +5,7 @@ import { getSpecificMixHelp, getMixCritique, regeneratePlugin, getLyricAnalysis 
 import { uploadFileChunked, deleteFileFromDrive } from '../services/uploadService';
 import { generateDawProjectFromMixCritique } from '../utils/dawprojectUtils';
 import { motion, AnimatePresence } from 'motion/react';
-import { Loader2, Search, CheckCircle2, AlertCircle, Download, RefreshCw, Layers, BarChart2, Mic, Minus, Sparkles, Play, Square, Volume2, VolumeX, Eye, Info, RefreshCcw, Settings, Sliders, Check, Headphones, FileText } from 'lucide-react';
+import { Loader2, Search, CheckCircle2, AlertCircle, Download, RefreshCw, Layers, BarChart2, Mic, Minus, Sparkles, Play, Square, Volume2, Eye, Info, RefreshCcw, Settings, Sliders, Check, Headphones, FileText } from 'lucide-react';
 import { PluginBubble } from './PluginBubble';
 import { CritiqueHTMLTemplate } from './CritiqueHTMLTemplate';
 
@@ -532,6 +532,22 @@ export const CritiqueCard: React.FC<CritiqueCardProps> = ({ critique, stems = []
                 // Keep name-based matching: PARAM|ParameterName|Value
                 txtContent += `PARAM|${dive.parameter}|${numVal}\n`;
                 txtContent += getParamModulationLine(req.name, dive);
+              }
+            });
+          }
+          if (plan.lyricAutomation?.reaperAutomationPoints) {
+            plan.lyricAutomation.reaperAutomationPoints.forEach(ptGroup => {
+              if (ptGroup.pluginName.toLowerCase() === req.name.toLowerCase()) {
+                const pointsStr = ptGroup.points.map(pt => `${pt.beat},${pt.value}`).join(';');
+                txtContent += `AUTO|${ptGroup.parameterName}|${pointsStr}\n`;
+              }
+            });
+          }
+          if (plan.breathAndNoiseMuting?.reaperAutomationPoints) {
+            plan.breathAndNoiseMuting.reaperAutomationPoints.forEach(ptGroup => {
+              if (ptGroup.pluginName.toLowerCase() === req.name.toLowerCase()) {
+                const pointsStr = ptGroup.points.map(pt => `${pt.beat},${pt.value}`).join(';');
+                txtContent += `AUTO|${ptGroup.parameterName}|${pointsStr}\n`;
               }
             });
           }

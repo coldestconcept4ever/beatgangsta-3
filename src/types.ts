@@ -396,6 +396,25 @@ export interface MixCritique {
     targetStem?: string;
     issue: string;
     solution: string;
+    lyricAutomation?: {
+      lyricPhrases: string[];
+      bpmCalculation: string;
+      automationAdvice: string;
+      reaperAutomationPoints?: {
+        pluginName: string;
+        parameterName: string;
+        points: { beat: number; value: number }[];
+      }[];
+    };
+    breathAndNoiseMuting?: {
+      identifiedNoises: string[];
+      mutingAdvice: string;
+      reaperAutomationPoints?: {
+        pluginName: string;
+        parameterName: string;
+        points: { beat: number; value: number }[];
+      }[];
+    };
     recommendedChain: DeepDivePlugin[];
     multiBandDetails?: {
       isEnabled: boolean;

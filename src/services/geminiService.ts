@@ -48,67 +48,361 @@ For each stem, track, or bus that requires an effect:
 };
 
 const ELITE_PRODUCER_SECRETS_PROMPT = `
+
       ==================================================
       🏆 ELITE PRODUCER SECRETS & DYNAMIC JSFX AUTOMATION 🏆
       When designing recipes, channel the advanced techniques of top-tier producers.
 
       1. **Daft Punk / French House Pumping (Sidechain Compression)**:
-         - **MANDATORY FOR SIDECHAIN**: If the recipe involves "pumping" pads, synths, or samples (French House style), you MUST use \`JS: Transient-Driven Auto-Pan (Transmitter)\` on the kick track to send control signals (e.g. to reg00), and \`JS: Transient-Driven Auto-Pan (Receiver)\` on the synth/pad track receiving that signal to aggressively duck the volume. 
-         - Alternatively, use \`JS: Auto Expander [Stillwell]\` or \`JS: Major Tom Compressor [Stillwell]\` with the "Detector Input" slider set to "Sidechain" (value 1.0) for aggressive 4-on-the-floor ducking. Make sure to describe the routing in the explanation.
+         - **MANDATORY FOR SIDECHAIN**: If the recipe involves "pumping" pads, synths, or samples (French House style), you MUST use 'JS: Transient-Driven Auto-Pan (Transmitter)' on the kick track to send control signals (e.g. to reg00), and 'JS: Transient-Driven Auto-Pan (Receiver)' on the synth/pad track receiving that signal to aggressively duck the volume. 
+         - Alternatively, use 'JS: Auto Expander [Stillwell]' or 'JS: Major Tom Compressor [Stillwell]' with the "Detector Input" slider set to "Sidechain" (value 1.0) for aggressive 4-on-the-floor ducking. Make sure to describe the routing in the explanation.
 
       2. **Mike Dean Synth/Bass Mastery (Analog Moog & Distortion)**:
-         - Use \`JS: Moog 4-Pole Filter [Liteon]\` with heavy "Drive (%)" (e.g., 20-50%) and aggressive "Resonance" for thick, analog synth sweeps.
-         - For sub-basses and 808s, use \`JS: Huge Booty Bass Enhancer [Stillwell]\` or \`JS: Bass Manager/Booster [Liteon]\` to add rich lower harmonics and drive.
-         - Widen lead synths massively using \`JS: Ozzifier Chorus [Stillwell]\` or \`JS: Pseudo-Stereo [Liteon]\`.
+         - Use 'JS: Moog 4-Pole Filter [Liteon]' with heavy "Drive (%)" (e.g., 20-50%) and aggressive "Resonance" for thick, analog synth sweeps.
+         - For sub-basses and 808s, use 'JS: Huge Booty Bass Enhancer [Stillwell]' or 'JS: Bass Manager/Booster [Liteon]' to add rich lower harmonics and drive.
+         - Widen lead synths massively using 'JS: Ozzifier Chorus [Stillwell]' or 'JS: Pseudo-Stereo [Liteon]'.
 
       3. **Kanye-style Lo-Fi & Vocal/Sample Mangling**:
-         - For aggressive sample chopping, bitcrushing, and "broken" artifacts, use \`JS: Paranoia Mangler [remaincalm.org]\` (set "Bitcrusher", "Thermonuclear War", and "Attitude" to aggressive values) or \`JS: Avocado Ducking Glitch Generator [remaincalm.org]\` for stuttering/glitching samples.
-         - For tape-echo delay that pitches and wavers, use \`JS: Floaty (Modulated Delay) [remaincalm.org]\` with high "Warp Amount".
-         - Use \`JS: Bad Buss Mojo Waveshaper [Stillwell]\` or \`JS: Non-Linear Processor [Liteon]\` for raw, analog clipping on drum buses or aggressive vocals.
+         - For aggressive sample chopping, bitcrushing, and "broken" artifacts, use 'JS: Paranoia Mangler [remaincalm.org]' (set "Bitcrusher", "Thermonuclear War", and "Attitude" to aggressive values) or 'JS: Avocado Ducking Glitch Generator [remaincalm.org]' for stuttering/glitching samples.
+         - For tape-echo delay that pitches and wavers, use 'JS: Floaty (Modulated Delay) [remaincalm.org]' with high "Warp Amount".
+         - Use 'JS: Bad Buss Mojo Waveshaper [Stillwell]' or 'JS: Non-Linear Processor [Liteon]' for raw, analog clipping on drum buses or aggressive vocals.
 
       4. **Chris Lord-Alge (CLA) - Punchy In-Your-Face Rock/Pop Drums & Vocals**:
-         - Use heavy 1176-style compression on vocals and drums (e.g. \`JS: 1175 Compressor\` or \`Tukan NC76\`). Use fast attack and fast release for explosive transients.
-         - Aggressive high-shelf EQ boosts using SSL-style EQs like \`JS: RBJ 1073 EQ [Stillwell]\` or \`Tukan SumChannel\`.
+         - Use heavy 1176-style compression on vocals and drums (e.g. 'JS: 1175 Compressor' or 'Tukan NC76'). Use fast attack and fast release for explosive transients.
+         - Aggressive high-shelf EQ boosts using SSL-style EQs like 'JS: RBJ 1073 EQ [Stillwell]' or 'Tukan SumChannel'.
 
       5. **Serban Ghenea - Clean, Wide, and Modern Pop/Hip-Hop**:
-         - Surgical subtractive EQing using \`JS: ReJJ/ReEQ\` to carve out muddiness (200-400Hz) while leaving highs pristine and airy.
-         - Keep the low-end perfectly phase-aligned and punchy by avoiding excessive spatial effects on the kick/bass. Use \`JS: Stereo Field Manipulator [LOSER]\` to strictly center the low frequencies.
+         - Surgical subtractive EQing using 'JS: ReJJ/ReEQ' to carve out muddiness (200-400Hz) while leaving highs pristine and airy.
+         - Keep the low-end perfectly phase-aligned and punchy by avoiding excessive spatial effects on the kick/bass. Use 'JS: Stereo Field Manipulator [LOSER]' to strictly center the low frequencies.
 
       6. **Jaycen Joshua - Saturated & Warm R&B/Hip-Hop**:
-         - Saturation and harmonic excitement on vocal and instrument buses to help them cut through dense mixes. Use \`JS: Saturation [LOSER]\` or \`JS: Louderizer [Stillwell]\` on auxiliary buses.
-         - Thick, parallel compression techniques using \`JS: Digital Drum Compressor (DDC) [LOSER]\` or \`Tukan Dis-Treasure\` blended with the dry signal.
+         - Saturation and harmonic excitement on vocal and instrument buses to help them cut through dense mixes. Use 'JS: Saturation [LOSER]' or 'JS: Louderizer [Stillwell]' on auxiliary buses.
+         - Thick, parallel compression techniques using 'JS: Digital Drum Compressor (DDC) [LOSER]' or 'Tukan Dis-Treasure' blended with the dry signal.
 
       7. **Manny Marroquin - Depth and Dimensionality**:
-         - Multiple cascading delays and reverbs. Use \`JS: Delay w/Chorus\` or \`Tukan Lexikan\` followed by \`JS: MGA JS Limiter\` to control the tail dynamics.
-         - Harmonize delays using \`JS: Pitch Down-Shifter\` or \`JS: Ozzifier Chorus [Stillwell]\` on the delay returns.
+         - Multiple cascading delays and reverbs. Use 'JS: Delay w/Chorus' or 'Tukan Lexikan' followed by 'JS: MGA JS Limiter' to control the tail dynamics.
+         - Harmonize delays using 'JS: Pitch Down-Shifter' or 'JS: Ozzifier Chorus [Stillwell]' on the delay returns.
 
       8. **Dave Pensado - Color and Character EQ**:
-         - Combine multiple EQs for color. Boost lows with a Pultec emulation (\`Tukan EQT-1A\`) and use \`JS: RBJ 4-Band Semi-Parametric EQ [Stillwell]\` for midrange character.
-         - Aggressive de-essing using \`JS: De-esser [Liteon]\` before hitting compressors so high frequencies don't trigger unnatural pumping.
+         - Combine multiple EQs for color. Boost lows with a Pultec emulation ('Tukan EQT-1A') and use 'JS: RBJ 4-Band Semi-Parametric EQ [Stillwell]' for midrange character.
+         - Aggressive de-essing using 'JS: De-esser [Liteon]' before hitting compressors so high frequencies don't trigger unnatural pumping.
 
       9. **Skrillex / Thomas Bangalter - Max Loudness & Brightness (Electro House)**:
-         - Extreme clipping and limiting using \`JS: Event Horizon Clipper [Stillwell]\` and \`JS: MGA JS Limiter\` for that crushed, in-your-face loudness on the master or drum buses.
-         - Bright, airy top end using \`JS: Exciter (Treble Enhancer) [Stillwell]\` or \`JS: Exciter [LOSER]\` to sizzle the highs.
+         - Extreme clipping and limiting using 'JS: Event Horizon Clipper [Stillwell]' and 'JS: MGA JS Limiter' for that crushed, in-your-face loudness on the master or drum buses.
+         - Bright, airy top end using 'JS: Exciter (Treble Enhancer) [Stillwell]' or 'JS: Exciter [LOSER]' to sizzle the highs.
 
       10. **Rick Rubin - Spatial Depth and Distinct Delays**:
-         - Pinpoint slap delays using \`JS: Delay (Lo-Fi)\` and \`JS: Delay w/Stereo Bounce\` to create tight spatial environments for vocals without washing them out in reverb.
-         - Thickening guitars by routing to hard-panned pitch shifters like \`JS: Pitch Shifter 2\` with slight offset (e.g., +/- 9 cents).
+         - Pinpoint slap delays using 'JS: Delay (Lo-Fi)' and 'JS: Delay w/Stereo Bounce' to create tight spatial environments for vocals without washing them out in reverb.
+         - Thickening guitars by routing to hard-panned pitch shifters like 'JS: Pitch Shifter 2' with slight offset (e.g., +/- 9 cents).
 
       11. **Noah "40" Shebib - Submerged Underwater Drake-style Pads/Vocals**:
-         - Low-pass filters combined with bit reduction. Use \`JS: Apple 12-Pole Filter\` with an aggressive LP cutoff (e.g., 800-2000Hz) paired with \`JS: Bit Reduction/Dither w/Noise Shaping\` (set to 8-12 bit).
-         - Analog warmth and smear using \`JS: Chorus with Improved Shaping [Stillwell]\`.
+         - Low-pass filters combined with bit reduction. Use 'JS: Apple 12-Pole Filter' with an aggressive LP cutoff (e.g., 800-2000Hz) paired with 'JS: Bit Reduction/Dither w/Noise Shaping' (set to 8-12 bit).
+         - Analog warmth and smear using 'JS: Chorus with Improved Shaping [Stillwell]'.
 
       12. **Illangelo - Spacy and Ethereal Weeknd-Style R&B**:
-         - Heavily modulated vocal reverbs and delays. Send vocals to \`Tukan Lexikan\` followed by \`JS: Flange Baby [Stillwell]\` or \`JS: 4-Tap Phaser\` to make the tails swirl.
-         - Deep subs using \`JS: Thunderkick\` to synthesize low end below existing kicks or basses.
+         - Heavily modulated vocal reverbs and delays. Send vocals to 'Tukan Lexikan' followed by 'JS: Flange Baby [Stillwell]' or 'JS: 4-Tap Phaser' to make the tails swirl.
+         - Deep subs using 'JS: Thunderkick' to synthesize low end below existing kicks or basses.
          
       13. **Mick Guzauski - Intense Radio-Ready Rock Vocals**:
-         - Parallel distortion using \`JS: Distortion (Fuzz)\` or \`JS: Waveshaping Distortion [LOSER]\` mixed in very subtly underneath the clean vocal to add grit and presence.
-         - Super aggressive peak limiting using \`JS: NP1136 Peak Limiter [Liteon]\` catching just the loudest words.
+         - Parallel distortion using 'JS: Distortion (Fuzz)' or 'JS: Waveshaping Distortion [LOSER]' mixed in very subtly underneath the clean vocal to add grit and presence.
+         - Super aggressive peak limiting using 'JS: NP1136 Peak Limiter [Liteon]' catching just the loudest words.
 
       14. **Deadmau5 - Snappy, Transient-Heavy Bass Music**:
-         - Punchy transients using \`JS: Transient Controller [LOSER]\` or \`JS: Transient Killer [LOSER]\` to heavily emphasize the attack on synths and drums.
-         - Stereo manipulation of mid-basses using \`JS: Stereo Width [Stillwell]\` to keep sub frequencies mono but aggressively widen the harmonics.
+         - Punchy transients using 'JS: Transient Controller [LOSER]' or 'JS: Transient Killer [LOSER]' to heavily emphasize the attack on synths and drums.
+         - Stereo manipulation of mid-basses using 'JS: Stereo Width [Stillwell]' to keep sub frequencies mono but aggressively widen the harmonics.
+
+
+      15. **Indie Guitar Rap Beats (Mac Miller / Dominic Fike style)**:
+         - Warped, Lo-Fi Guitars: Use 'JClones AC2 (Tape Emulator)' combined with 'JS: Floaty (Modulated Delay) [remaincalm.org]' to add heavy wow and flutter, making the guitar feel sampled from an old vinyl or cassette.
+         - Creamy, Vintage Dynamics: Smooth out the transients using optical compression like 'JClones CA2A (Optical Compressor)' or slow attack tube compression like 'JClones RS124 (Vintage Tube Compressor)'.
+         - Warm, Analog EQ: Use 'JS: RBJ 1073 EQ [Stillwell]' to aggressively roll off harsh digital high frequencies above 10kHz and boost warm lower-mids (300-500Hz) for that nostalgic, thick indie tone.
+
+
+      16. **Travis Scott / Mike Dean - Psychedelic Vocal Delays & Distortions**:
+         - Automate delay feedback using 'JS: Delay (Lo-Fi)' on certain phrases, pushing it into self-oscillation for transitions.
+         - Heavily overdrive vocal ad-libs using 'JS: Distortion (Fuzz)' or 'JClones Molot (Vintage Compressor)' with alpha mode and high drive for that gritty, distorted aesthetic.
+
+      17. **Kendrick Lamar - Close, Aggressive & Intimate Vocals (Ali style)**:
+         - Hyper-compressed, in-your-face vocals using fast attack and fast release 1176 style compression ('Tukan NC76 / NC76B').
+         - Dynamic EQ using parameter modulation to duck lower-mids (around 200-400Hz) on the vocal bus only when the vocal gets too loud or boxy, keeping it thick but not muddy.
+
+      18. **Drake / 40 - Underwater, Filtered Vocal Sweeps**:
+         - Automate the cutoff frequency of a low-pass filter like 'JS: Moog 4-Pole Filter [Liteon]' on the vocal bus during intros or bridges to create the signature "underwater" muffled vocal effect, opening it up right when the beat drops.
+         - Wide, detuned vocal doubling using 'JS: Pitch Shifter 2' with slight micro-shifting (-5 cents left, +5 cents right).
+
+      19. **Playboi Carti / Ken Carson - Rage/Opium Hyperpop Vocals**:
+         - Extreme high-end boost for "airy" and piercing vocals using 'Tukan EQT-1A' (Pultec EQ) boosting heavily at 10kHz-12kHz.
+         - Aggressive, synthetic autotune (implied, but supported by super tight, fast-acting de-essing using 'Tukan Deesser' so the high boost doesn't rip the listener's ears off).
+
+      20. **J. Cole / Juro "Mez" Davis - Dynamic, Natural & Warm Rap Vocals**:
+         - Serial compression: Use a fast compressor ('Tukan NC76') to catch the peaks (just 2-3dB of reduction), followed by a slower, optical compressor ('JClones CA2A') for gentle leveling (another 2-3dB).
+         - Smooth tape saturation using 'JClones AC2 (Tape Emulator)' (15 IPS) to round out the harsh digital transients and add analog warmth.
+
+      21. **Future / Seth Firkins - Modulated & Washy Trap Vocals**:
+         - Intense flanging and chorus on background vocals using 'JS: Flange Baby [Stillwell]' to give them a robotic, pill-induced wobble.
+         - Drench the ad-libs in a long, modulated reverb like 'Tukan Lexikan 2' (Hall algorithm, 3s+ decay).
+
+      22. **Eminem / Dr. Dre - Crisp, Percussive, Staccato Vocals**:
+         - Hyper-precise gating on the vocal to remove all breaths and room noise between rapid-fire syllables, using 'JS: Downward Expander' or 'JS: Noise Gate'.
+         - Sharp high-mid boost (2-4kHz) using 'JS: RBJ 4-Band Semi-Parametric EQ [Stillwell]' to emphasize consonants and enunciation.
+
+      23. **Pop Smoke / 50 Cent - Thick, Dominating New York Drill Vocals**:
+         - Massive parallel compression using the "All-Button" mode on 'Tukan NC76' mixed underneath the lead vocal to make the voice sound impossibly thick and aggressive.
+         - Low-end vocal enhancement using 'JS: RBJ 1073 EQ [Stillwell]' to boost 100-200Hz to add chest resonance to the rapper's voice.
+
+      24. **Tyler, The Creator - Pitch-Shifted & Demonic Alter-Ego Vocals**:
+         - Automate 'JS: Pitch Down-Shifter' to instantly drop the vocal by exactly 12 semitones (1 octave) for specific phrases or verses to create a "demonic" or alter-ego character.
+         - Pair the pitched-down vocal with 'JS: Bad Buss Mojo Waveshaper [Stillwell]' to add gross, gritty distortion to the low-pitched voice.
+
+      25. **Metro Boomin / 21 Savage - Dark, Eerie & Spacious Ad-libs**:
+         - Use a "throw delay" technique. Automate the send level to a 'JS: Delay (Tempo Ping-Pong)' to instantly blast only the last word of a bar into a wide, echoing void.
+         - Put a high-pass filter ('JS: RBJ Highpass/Lowpass Filters') AFTER the delay on the return track to make the echoes sound distant and "telephone-like."
+
+      26. **Timbaland - Syncopated, Stuttering Rhythmic Delays**:
+         - Use 'JS: Delay (Tempo Sync)' with odd divisions (like 3/16 or dotted 1/8) on ad-libs or percs to create complex, bouncing rhythms.
+         - Pair with 'JS: Auto Expander [Stillwell]' to aggressively gate the echoes so they don't muddy the mix, making the rhythm stop on a dime.
+
+      27. **Pharrell / The Neptunes - Dry, Funky, and Upfront Vocals**:
+         - Keep vocals extremely dry with zero reverb. Use a micro-shift or tiny slapback delay like 'JS: Delay (Chorus)' with very low feedback.
+         - Boost 3-5kHz using 'Tukan EQT-1A' for that signature "in your face" upfront snap and intelligibility.
+
+      28. **Lil Uzi Vert / DJ Drama - Bright, Cassette-Driven Mixtape Vocals**:
+         - Replicate the DatPiff era mixtape sound using 'JClones AC2 (Tape Emulator)' with 7.5 IPS setting and heavy saturation.
+         - Use 'JS: 3-Band EQ' to push the highs hard while the tape emulator smooths out the harshness.
+
+      29. **Mac Miller (Swimming Era) - Warm, Jazz-Inflected Vocal Presence**:
+         - Soft-knee, low-ratio compression using 'JClones Molot (Vintage Compressor)' in "Alpha" mode to gently squeeze the vocal like a warm hug.
+         - Use 'JS: RBJ 1073 EQ [Stillwell]' to roll off the extreme highs, emphasizing the smooth, natural mid-range tone.
+
+      30. **Rick Ross / J.U.S.T.I.C.E. League - Luxurious, Expensive, Orchestral Presence**:
+         - Wide, Lexicon-style hall reverbs. Send the vocal heavily to 'Tukan Lexikan' or 'Tukan Lexikan 2' with a 2.5s decay time and a long pre-delay (60ms) to separate the vocal from the tail.
+         - Saturation on the master bus using 'JClones OInflator (Oxford Inflator)' to make everything sound huge and expensive without clipping.
+
+      31. **Juice WRLD / Nick Mira - Emo Rap Heartbreak Vocals**:
+         - Auto-tune style (assumed) mixed with heavy, washing reverb ('Tukan Lexikan') and an immediate 'JS: Delay w/Chorus' to make the vocal sound lonely and wide.
+         - De-ess aggressively using 'Tukan Deesser' before the reverb, so the 'S' sounds don't splash into a harsh, bright tail.
+
+      32. **A$AP Rocky / Hector Delgado - Chopped and Screwed / Houston Influences**:
+         - Formant-shifted and down-pitched vocal layers using 'JS: Pitch Down-Shifter' blended beneath the main vocal for a demonic or sluggish, syrupy texture.
+         - Heavy low-end filtering on these pitched-down vocals using 'JS: RBJ Highpass/Lowpass Filters' to keep them from clashing with the 808.
+
+      33. **Young Thug / Alex Tumay - Chaotic, Multi-Layered Ad-Lib Ecosystem**:
+         - Separate effects chains for every ad-lib track. One with a telephone filter ('JS: Apple 12-Pole Filter' bandpass), one with heavy 'JS: Distortion (Fuzz)', and one drowning in 'Tukan Lexikan 2'.
+         - Rapid volume automation (which you can simulate by parameter modulating a 'JS: Volume/Pan Smoother') to duck ad-libs under the lead vocal instantly.
+
+      34. **J Dilla - Unquantized, Dusty Boom-Bap Groove Textures**:
+         - Use 'JS: Paranoia Mangler [remaincalm.org]' on drum loops or drum buses to add 12-bit crunch and sampler aliasing.
+         - Aggressive compression on the drum bus using 'JS: Digital Drum Compressor (DDC) [LOSER]' to make the kick and snare glue together and pump the whole groove.
+
+      35. **XXXTentacion / Ronny J - Distorted, Blown-Out Soundcloud Bass**:
+         - Purposeful digital clipping. Drive the 808s and even the vocals into 'JS: Event Horizon Clipper [Stillwell]' until they square off and distort.
+         - Use 'JS: Waveshaping Distortion [LOSER]' on the master or vocal bus to add a layer of frying, chaotic high-end distortion.
+
+      36. **Kanye West (Yeezus Era) - Industrial, Aggressive Saturation**:
+         - Use 'JS: Bad Buss Mojo Waveshaper [Stillwell]' on the vocal bus with aggressive settings to emulate the raw, screaming distortion found on tracks like "Black Skinhead".
+         - Parallel compression using 'Tukan NC76' smashed, blending it back in to give the vocal a gritty, forward edge without losing all dynamics.
+
+      37. **T-Pain - The Original Hard-Tune Telephone Effect**:
+         - Create a narrow bandpass filter using 'JS: RBJ Highpass/Lowpass Filters' (cutting below 400Hz and above 4kHz) to emulate the "telephone" eq curve.
+         - Run the hard-tuned vocal through 'JClones Molot (Vintage Compressor)' in "Sigma" mode to violently compress the mid-range.
+
+      38. **Snoop Dogg / Dr. Dre (The Chronic) - Smooth G-Funk Double Tracking**:
+         - Extremely tight vocal doubling panned hard left and right (L100, R100), lightly compressed using 'JClones CA2A (Optical Compressor)'.
+         - Subtle slapback delay 'JS: Delay (Chorus)' set to roughly 60-80ms with 0% feedback to widen the presence of the mono lead vocal.
+
+      39. **Trippie Redd - Screamo/Rock Rap Hybrid Vocals**:
+         - Automate 'JS: Distortion (Fuzz)' to only activate when the vocal delivery transitions from melodic singing to screaming.
+         - Use a wide, detuned flanger 'JS: Flange Baby [Stillwell]' subtly mixed in to give the screams a phasing, chaotic metallic ring.
+
+      40. **Busta Rhymes - Lightning Fast, Transient-Snapped Delivery**:
+         - Emphasize vocal transients using 'JS: Transient Controller [LOSER]', boosting the attack significantly so every rapid-fire syllable cuts through the mix.
+         - Use 'JS: 1175 Compressor' with a very fast attack and release to keep the dynamic range pinned so words aren't lost.
+
+      41. **Don Toliver - Airy, Modulated R&B Trap Vocals**:
+         - Generous use of 'Tukan Lexikan 2' reverb with a bright damping setting to make the vocal tail shimmer in the high frequencies.
+         - Micro-pitch shifting using 'JS: Pitch Shifter 2' with slight modulation to give the vocal a synth-like, floating quality.
+
+      42. **Gunna - Sleek, "Slime" Slippery Ad-libs**:
+         - Very fast tempo-synced delays using 'JS: Delay (Tempo Ping-Pong)' set to 1/8T (triplets), with a low-pass filter on the delay return.
+         - "Ducking" delay effect: use Parameter Modulation so the delay feedback/volume is ducked by the lead vocal, so the echoes only swell in the gaps.
+
+      43. **Isaiah Rashad - Lo-Fi, Muffled Southern Rap Intimacy**:
+         - Roll off the extreme highs and extreme lows using 'JS: 3-Band EQ' to give the vocal a confined, "recorded in a bedroom" lo-fi vibe.
+         - Apply 'JClones AC2 (Tape Emulator)' with high wow and flutter to slightly detune the vocal randomly, enhancing the lazy, laid-back delivery.
+
+      44. **Kid Cudi - Sweeping, Cosmic Hum and Chorus**:
+         - Envelop the humming and melodic ad-libs in 'JS: Ozzifier Chorus [Stillwell]' to create a wide, multi-layered chorus effect.
+         - Add a long 'Tukan Lexikan' reverb tail and use 'JS: RBJ 1073 EQ [Stillwell]' to aggressively boost 5-8kHz on the reverb return, making it sparkle.
+
+      45. **Frank Ocean (Blonde Era) - Formant-Mangled Pitch Shifting**:
+         - Use 'JS: Pitch Down-Shifter' but automate the pitch and formant so the voice seamlessly transitions from a chipmunk high-pitch to a deep, masculine baritone.
+         - Pair with 'JS: Floaty (Modulated Delay) [remaincalm.org]' to make the pitch-shifted voice wobble in pitch slightly, imitating a broken VHS tape.
+
+      46. **Earl Sweatshirt / Alchemist - Grimy, Monotone Spoken-Word Vocals**:
+         - Heavy reliance on 'JClones RS124 (Vintage Tube Compressor)' for thick, sludgy compression that brings out the mouth noises and breath.
+         - Roll off highs with 'JS: 3-Band EQ' and add vinyl crackle/noise using 'JS: Paranoia Mangler [remaincalm.org]' to sink the vocal into the beat.
+
+      47. **Outkast / Mr. DJ - Vintage Tape Flanging & Phaser Effects**:
+         - Frequent use of 'JS: 4-Tap Phaser' on hooks and bridges to give the vocals a psychedelic, Southern-fried funk swirl.
+         - Widen the hooks by duplicating the vocal and delaying one side by 15-20ms using 'JS: Delay (Chorus)' (Haas effect).
+
+      48. **2Pac / Dr. Dre - The Makaveli Double/Triple Stack**:
+         - Three vocal layers (Lead centered, Overdub 1 panned L40, Overdub 2 panned R40) all routed to a single bus.
+         - Glue them together using 'Tukan NC76' and add a very short room reverb ('Tukan Lexikan 2') to make them sound like a mob shouting in a tight room.
+
+      49. **Lil Peep / Smokeasac - Blown out, Over-compressed Emo Rap Vocals**:
+         - Extreme compression using 'JS: 1175 Compressor' with the input driven hard until the vocal starts to clip and pump.
+         - Wash the vocal in 'JS: Delay (Ping Pong)' feeding into a huge 'Tukan Lexikan' hall reverb, rolling off the lows on the reverb return.
+
+      50. **Bone Thugs-n-Harmony - Rapid-Fire Melodic Harmonies**:
+         - 4 to 6 part harmonies, heavily de-essed using 'Tukan Deesser' so the rapid "S" and "T" sounds don't overlap into a harsh hiss.
+         - Pan the harmonies widely and use 'JS: Ozzifier Chorus [Stillwell]' to blend the voices into a single, choir-like synth texture.
+
+      51. **MF DOOM - Villainous, Muddy, Masked Vocals**:
+         - Low-mid heavy EQ. Boost 250Hz using 'JS: RBJ 1073 EQ [Stillwell]' to emphasize the chest voice and "muddiness" of the delivery.
+         - Apply 'JClones AC2 (Tape Emulator)' with a low IPS setting (7.5) to roll off the high-end clarity and add tape hiss.
+
+      52. **Yeat - Alien / Bell-Heavy Hyper Trap Ad-libs**:
+         - Extreme autotune (implied) layered with 'JS: Pitch Shifter 2' pitching the ad-libs up a full octave (+12 semitones) mixed with the lead.
+         - Heavy saturation using 'JClones OInflator (Oxford Inflator)' to make the ad-libs cut through the massive 808s and bells.
+
+      53. **JID - Dynamic, Panning Stutter Flows**:
+         - Automate 'JS: Auto-Pan [LOSER]' to rhythmically throw the ends of rapid-fire phrases left and right, emphasizing the dizzying flow.
+         - Use a very fast compressor 'JClones Molot (Vintage Compressor)' in Sigma mode to clamp down on the lightning-fast transient spikes.
+
+      54. **Nas / Illmatic Era - Classic NY Boom Bap Grit**:
+         - Use 'JS: Digital Drum Compressor (DDC) [LOSER]' heavily on the drum bus to make the sampled drums pump, and 'JClones CA2A (Optical Compressor)' on the vocal to let the transients breathe.
+         - High-pass the vocal at 80Hz and leave the high-end relatively flat, letting the raw mic signal stand out against the dusty samples.
+
+      55. **DaBaby - In-Your-Face, Zero Reverb Dry Punch**:
+         - Absolute zero reverb or delay. The vocal must be bone dry.
+         - Boost the presence frequencies (2-4kHz) using 'Tukan EQT-1A' and use 'JS: Event Horizon Clipper [Stillwell]' to shave off the absolute highest peaks, maximizing the vocal loudness.
+
+      56. **Kendrick Lamar (To Pimp a Butterfly) - Jazz-Inflected Vocal Filtering**:
+         - Automate the 'Cutoff' parameter of 'JS: Moog 4-Pole Filter [Liteon]' (using an LFO via Parameter Modulation) to create a subtle, evolving wah-wah effect on backing vocals.
+         - Automate 'Gain' in 'JS: 3-Band EQ' to sweep the mid-range during beat switches, giving a radio-dial changing effect.
+
+      57. **JPEGMAFIA - Glitched and Gated Rhythmic Drops**:
+         - Automate the 'Threshold' on 'JS: Noise Gate' to aggressively choke the vocal tail perfectly in time with sudden beat stops.
+         - Use Parameter Modulation (Audio Control Signal) from the kick drum to violently duck the 'Volume' slider on a 'JS: Distortion (Fuzz)' plugin applied to the vocal, creating distorted pumping.
+
+      58. **Tyler, The Creator (IGOR Era) - Sweeping Chorus and Pitch Wobble**:
+         - Automate the 'Depth' and 'Rate' of 'JS: Ozzifier Chorus [Stillwell]' via a slow LFO to make the vocal pitch waver like a melted VHS tape during the chorus.
+         - Automate 'JS: Pitch Down-Shifter' 'Shift' parameter to slide down exactly -12 semitones at the end of specific phrases.
+
+      59. **Brockhampton - Group Swarm Vocal Widening**:
+         - Use 'JS: Stereo Width [Stillwell]' and automate the 'Width' parameter, starting at 100% during the verse and slamming to 200% when the entire group yells the chorus.
+         - Automate the 'Pan' slider on 'JS: Volume/Pan Smoother' using a random LFO so ad-libs rapidly bounce around the stereo field unpredictably.
+
+      60. **Death Grips - Ear-Bleeding Industrial Vocal Chaos**:
+         - Use 'JS: Waveshaping Distortion [LOSER]' and automate the 'Distortion' parameter linked to the vocal track's own volume (Audio Control Signal), so the louder the scream, the more exponentially distorted it becomes.
+         - Automate the 'Feedback' on 'JS: Delay (Lo-Fi)' to 100% just before a beat drop to create a feedback loop of screeching noise, then automate it back to 0.
+
+      61. **Mac Demarco / Indie Rap crossovers - Seasick Vibrato Guitars/Vocals**:
+         - Automate the 'Modulation' depth on 'JS: Floaty (Modulated Delay) [remaincalm.org]' via an LFO to create a constant, nauseating (but musical) pitch vibrato.
+         - Use 'JS: Auto-Pan [LOSER]' and automate the 'Rate' parameter to ramp up in speed as a verse builds tension.
+
+      62. **Vince Staples / SOPHIE - Metallic, Synthesized Vocal Plucks**:
+         - Send the vocal to a 'JS: 4-Tap Phaser' and automate the 'Feedback' and 'Frequency' parameters using a fast square-wave LFO to create a robotic, ringing metallic resonance.
+         - Automate 'JS: Transient Controller [LOSER]' 'Attack' parameter, boosting it only on hard consonant sounds to make the vocal click like percussion.
+
+      63. **Lil Yachty / Michigan Boat Boy Era - Warbling, Saturated Sub-Bass Vocals**:
+         - Automate the 'Drive' parameter on 'JS: Bad Buss Mojo Waveshaper [Stillwell]' to increase saturation as the vocal gets quieter, bringing up the noise floor aggressively.
+         - Link the 'Wet' parameter of 'Tukan Lexikan 2' to a sidechain signal from the lead vocal, so the reverb is completely ducked when rapping, and swells up massively when he stops (reverb pumping).
+
+      64. **Slowthai / UK Grime - Hyper-Compressed, Breathy Whispers**:
+         - Automate the 'Release' parameter on 'JClones Molot (Vintage Compressor)' via an LFO to create an unnatural breathing/pumping effect on the vocal bus.
+         - Automate a 'JS: RBJ Highpass/Lowpass Filters' 'Lowpass' frequency to sharply sweep down and muffle the vocal at the end of 8-bar phrases.
+
+      65. **Rico Nasty - "Sugar Trap" Distorted Screams**:
+         - Chain two 'JS: Distortion (Fuzz)' plugins. Automate the 'Bypass' parameter of the second one to snap ON only during aggressive scream punch-ins.
+         - Automate the 'Time' parameter on a 'JS: Delay (Tempo Ping-Pong)' to change divisions (from 1/4 to 1/16) mid-phrase, causing the delay pitches to glitch and warp rhythmically.
+
+
+      66. **J Dilla - Unquantized, Swung Hip-Hop Grooves**:
+         - Automate the 'Delay' parameter in 'JS: Time Adjustment Delay' by a few milliseconds positively and negatively via a slow, random LFO (Parameter Modulation) to create a humanized, pushing-and-pulling feel on hi-hats.
+         - Automate 'JS: RBJ Highpass/Lowpass Filters' 'Lowpass' cutoff on the master bus during the intro to simulate a dusty record un-muffling into full fidelity.
+
+      67. **Charlie Puth - Pop Perfect, Surgical Vocal Stacks**:
+         - Automate the 'Threshold' of 'Tukan Deesser' independently for the lead and the backing harmonies, ensuring the lead 'S' sounds cut through while the harmonies are aggressively ducked.
+         - Use 'JS: Volume/Pan Smoother' and automate the 'Pan' parameter using a Sine LFO (linked to project tempo) on synthesizer pads to create wide, sweeping motion behind the vocals.
+
+      68. **Skrillex - Aggressive EDM Vocal Chops (Bangarang Era)**:
+         - Automate the 'Pitch' and 'Formant' parameters in 'JS: Pitch Down-Shifter' step-by-step to jump between wildly different pitches for every single syllable of a vocal chop.
+         - Automate the 'Wet' parameter on 'Tukan Lexikan 2' to spike to 100% exactly on the last note of a vocal chop sequence, sending the tail into a massive cavern.
+
+      69. **Tame Impala - Psychedelic Tape Flanging & Phasing**:
+         - Send the entire drum bus through 'JS: 4-Tap Phaser'. Automate the 'Frequency' and 'Feedback' via an LFO to create the iconic sweeping 'swoosh' over the entire drum kit.
+         - Automate the 'Drive' on 'JClones OInflator (Oxford Inflator)' on the bass guitar to push into heavy distortion only during the chorus for a massive wall of sound.
+
+      70. **Rosalía - Flamenco/Reggaeton Hybrid Sub Basses**:
+         - Automate 'JS: Sub-Bass Synthesizer' 'Mix' parameter to swell up right before the kick hits, creating a sucking/vacuum effect before the transient punch.
+         - Automate the 'Stereo Width' slider on 'JS: Stereo Width [Stillwell]' to narrow to 0% (mono) during the verses, and instantly widen to 150% when the chorus hits.
+
+      71. **A Rocky - Houston Chopped & Screwed Bridges**:
+         - Automate 'JS: Pitch Shifter 2' 'Shift' slider down to -5 or -7 semitones to simulate the turntable being drastically slowed down.
+         - Concurrently, automate the 'Rate' of a 'JS: Tremolo' to chop the slowed-down vocal in a rhythmic triplet pattern.
+
+      72. **Flume - Granular, Metallic Synth Warps**:
+         - Automate 'JS: Ring Modulator' 'Frequency' parameter using a random LFO to create bubbling, metallic, and unpredictable ringing on synth chords.
+         - Automate 'JS: Noise Gate' 'Threshold' linked to a rapid 1/16th note hi-hat sidechain to aggressively stutter the synth chords.
+
+      73. **Billie Eilish - Intimate, ASMR-style Whispers**:
+         - Automate the 'Volume' slider on 'JS: Volume/Pan Smoother' to ride the vocal levels perfectly, boosting syllables that trail off so every breath is audible.
+         - Automate 'Tukan EQT-1A' 'High Boost' at 10kHz+ to dynamically increase the 'air' frequencies during quiet whisper passages, and lower it when she sings louder to avoid harshness.
+
+      74. **Playboi Carti - Distorted, Abrasive Rage Beats**:
+         - Automate the 'Distortion' parameter of 'JS: Waveshaping Distortion [LOSER]' on the 808 bass, pushing the distortion even harder at the end of every 4-bar loop.
+         - Automate 'JS: Delay (Chorus)' 'Delay' time randomly to create micro-glitches and chaotic stereo widening on the lead synth.
+
+      75. **The Weeknd (Dawn FM) - Cinematic, 80s Synthwave Transitions**:
+         - Automate 'JS: Moog 4-Pole Filter [Liteon]' 'Cutoff' and 'Resonance' to perform dramatic, 8-bar long frequency sweeps leading up to a massive chorus.
+         - Automate 'Tukan Lexikan' 'Decay Time' from a short 1 second slap to a massive 10 second hall precisely on the last snare hit of the song.
+
+      76. **Metro Boomin - The Creepy Detuned Music Box**:
+         - Automate 'JS: Floaty (Modulated Delay) [remaincalm.org]' 'Warp Amount' parameter via an LFO to constantly modulate the pitch of a piano or bell, making it sound out-of-tune and eerie.
+         - Automate 'JS: 3-Band EQ' 'High' gain to slowly fade out during the verse, pushing the melody into the background.
+
+      77. **SZA / Carter Lang - Lush, Dreamy R&B Guitars**:
+         - Use 'JS: Ozzifier Chorus [Stillwell]' on the guitar track and automate the 'Voices' parameter, switching from a subtle 2 voices in the verse to a thick 4 voices in the chorus.
+         - Automate the 'Delay' parameter of a 'JS: Delay (Chorus)' on the vocal bus, sending a wash of delay only on the last words of emotional phrases.
+
+      78. **Timbaland - Beatboxing & Mouth Percussion Transients**:
+         - Automate 'JS: Transient Controller [LOSER]' 'Attack' to extreme levels (+10dB or more) on beatboxed kicks and snares to make them hit like real drum samples.
+         - Automate 'JS: Auto-Pan [LOSER]' 'Rate' to create rapid panning on mouth-shaker sounds, making them flutter in the stereo field.
+
+      79. **Dr. Dre - The Infamous G-Funk Synth Glide**:
+         - Automate 'JS: Moog 4-Pole Filter [Liteon]' 'Resonance' and 'Cutoff' on a high-pitched sine wave lead to make the synth scream during specific bends.
+         - Automate 'JS: Volume/Pan Smoother' 'Volume' parameter with a slow fade-in on the synth lead so it creeps into the mix before hitting full volume.
+
+      80. **Noah '40' Shebib - The Muffled Drake Piano**:
+         - Automate 'JS: RBJ Highpass/Lowpass Filters' 'Lowpass' cutoff down to 400Hz to completely submerge the piano in a muddy, underwater texture.
+         - Automate 'JS: Bit Reduction/Dither' 'Bit Depth' down to 10 or 12 bits on the drum bus to add a layer of lo-fi crunch beneath the pristine vocals.
+
+      81. **Kendrick Lamar (DAMN. Era) - Reversing & Backmasking**:
+         - Automate 'JS: Delay (Tempo Ping-Pong)' 'Feedback' to self-oscillate right before a beat drop, while simultaneously using a reverse vocal effect (pre-rendered) to lead into it.
+         - Automate 'JS: Distortion (Fuzz)' 'Amount' on the master bus during aggressive transitions, creating a jarring, momentary wall of noise.
+
+      82. **Pharrell Williams - The Four-Count Intro Chops**:
+         - Automate 'JS: Noise Gate' 'Threshold' to aggressively chop the first four beats of a song, creating the signature Neptunes stutter effect.
+         - Automate 'Tukan EQT-1A' 'High Boost' on the lead vocal to add extra snap and air during the catchy hook, then dial it back during the verses.
+
+      83. **Eminem / Luis Resto - Cinematic, Ominous String Sections**:
+         - Automate 'JS: Stereo Width [Stillwell]' 'Width' parameter on the string bus, slowly widening from 50% to 150% as the song builds tension.
+         - Automate 'Tukan Lexikan 2' 'Decay Time' to create a massive, 5-second reverb tail that rings out when the beat suddenly drops out for a punchline.
+
+      84. **Post Malone / Louis Bell - The Vibrato Autotune Tail**:
+         - Automate 'JS: Floaty (Modulated Delay) [remaincalm.org]' 'Modulation' depth to increase only on long, sustained vocal notes, adding a highly synthetic vibrato effect.
+         - Automate 'JClones Molot (Vintage Compressor)' 'Threshold' to squeeze the vocal harder during the loud, belted choruses to keep it glued to the beat.
+
+      85. **J. Cole - The Warm Vintage Soul Sample Flip**:
+         - Automate 'JClones AC2 (Tape Emulator)' 'Saturation' and 'Wow & Flutter' on the sample bus, increasing the vintage artifacts as the beat plays out.
+         - Automate 'JS: RBJ 1073 EQ [Stillwell]' 'Mid Freq' and 'Mid Gain' to boost the crackle and vinyl noise during the intro and outro of the track.
+
+
+
+
+
 
       ==================================================
       ⚙️ BEATGANGSTA CONNECT: GUI PLUGIN AUTOMATION ⚙️
@@ -1913,29 +2207,6 @@ export const getBeatRecommendations = async (plugins: VSTPlugin[], analogInstrum
       You MUST ONLY recommend JSFX plugins from the provided 'JSFX Database' list below.
       When providing 'deepDive' settings, you MUST include 'parameter' names that EXACTLY match the slider names from the JSFX Database, and you MUST ensure the values are within the allowed min/max range.
 
-      ==================================================
-      🏆 ELITE PRODUCER SECRETS & DYNAMIC JSFX AUTOMATION 🏆
-      When designing recipes, channel the advanced techniques of top-tier producers (Mike Dean, Daft Punk, Kanye West).
-      
-      1. **Daft Punk / French House Pumping (Sidechain Compression)**:
-         - **MANDATORY FOR SIDECHAIN**: If the recipe involves "pumping" pads, synths, or samples (French House style), you MUST use \`JS: Transient-Driven Auto-Pan (Transmitter)\` on the kick track to send control signals (e.g. to reg00), and \`JS: Transient-Driven Auto-Pan (Receiver)\` on the synth/pad track receiving that signal to aggressively duck the volume. 
-         - Alternatively, use \`JS: Auto Expander [Stillwell]\` or \`JS: Major Tom Compressor [Stillwell]\` with the "Detector Input" slider set to "Sidechain" (value 1.0) for aggressive 4-on-the-floor ducking. Make sure to describe the routing in the explanation.
-
-      2. **Mike Dean Synth/Bass Mastery (Analog Moog & Distortion)**:
-         - Use \`JS: Moog 4-Pole Filter [Liteon]\` with heavy "Drive (%)" (e.g., 20-50%) and aggressive "Resonance" for thick, analog synth sweeps.
-         - For sub-basses and 808s, use \`JS: Huge Booty Bass Enhancer [Stillwell]\` or \`JS: Bass Manager/Booster [Liteon]\` to add rich lower harmonics and drive.
-         - Widen lead synths massively using \`JS: Ozzifier Chorus [Stillwell]\` or \`JS: Pseudo-Stereo [Liteon]\`.
-
-      3. **Kanye-style Lo-Fi & Vocal/Sample Mangling**:
-         - For aggressive sample chopping, bitcrushing, and "broken" artifacts, use \`JS: Paranoia Mangler [remaincalm.org]\` (set "Bitcrusher", "Thermonuclear War", and "Attitude" to aggressive values) or \`JS: Avocado Ducking Glitch Generator [remaincalm.org]\` for stuttering/glitching samples.
-         - For tape-echo delay that pitches and wavers, use \`JS: Floaty (Modulated Delay) [remaincalm.org]\` with high "Warp Amount".
-         - Use \`JS: Bad Buss Mojo Waveshaper [Stillwell]\` or \`JS: Non-Linear Processor [Liteon]\` for raw, analog clipping on drum buses or aggressive vocals.
-
-      ==================================================
-      ⚙️ BEATGANGSTA CONNECT: GUI PLUGIN AUTOMATION ⚙️
-      Many advanced JSFX plugins (like ReEQ, Saike Filther, Tukan plugins, Sonic Anomaly, and all the graphical plugins above) have hidden or mapped sliders that control their beautiful GUIs.
-      - DETAILED PARAMETER MODULATION INSTRUCTIONS (MANDATORY): In the 'explanation' of ANY dynamic/modulated parameter for ANY GUI-enabled JSFX plugin (such as ReEQ, Saike Filther, Tukan, etc.), you MUST provide detailed, step-by-step instructions guiding the user through REAPER's Parameter Modulation/MIDI link window. Detail clicking the 'Param' button -> 'Parameter modulation/MIDI link' -> choosing the specific parameter (e.g. Gain or Frequency) -> checking 'Audio control signal' (sidechain) -> setting Track audio channels to 1+2 (self) or 3+4 (sidechain for ducking) -> setting Direction to Negative (for ducking/cuts) or Positive (for boosting) -> configuring strength, attack (speed of reaction), and release. 
-      - ALWAYS explicitly start this with a bold statement confirming: "**BeatGangsta Connect AUTOMATION**: This Parameter Modulation has been automatically configured and activated for you in REAPER! The following instructions are provided for your reference, inspection, or manual tweaking." This ensures the user is guided in detail, but knows that BeatGangsta Connect did all the work itself!
       ${ELITE_PRODUCER_SECRETS_PROMPT}
 
       JSFX DATABASE (ONLY use these plugins):
@@ -2864,6 +3135,71 @@ ${previousCritiqueStr}
             targetStem: { type: "STRING", description: "The exact name of the stem this step applies to (if stems were uploaded)." },
             issue: { type: "STRING" },
             solution: { type: "STRING" },
+            lyricAutomation: {
+              type: "OBJECT",
+              description: "ONLY INCLUDE THIS IF ANALYZING VOCALS. Intelligently identify the lyrics, and identify the best parts of lyrics/words to throw delays and tail effects on. Calculate based on BPM and bar measurements.",
+              properties: {
+                lyricPhrases: { type: "ARRAY", items: { type: "STRING" }, description: "Specific words or phrases from the lyrics (e.g. the last two words or one big word)." },
+                bpmCalculation: { type: "STRING", description: "BPM and bar measurement calculations explaining the timing." },
+                automationAdvice: { type: "STRING", description: "Detailed advice on how to use automation in Reaper for these words (e.g., delay throws, reverb tails)." },
+                reaperAutomationPoints: {
+                  type: "ARRAY",
+                  description: "Machine-readable automation points to send to BeatGangsta Connect (REAPER). Use this to automate 'Wet', 'Amount' or 'Send' parameters of the delay/reverb plugins to spike up during the specific words and drop back down immediately after.",
+                  items: {
+                    type: "OBJECT",
+                    properties: {
+                      pluginName: { type: "STRING", description: "The exact plugin name from the recommended chain (e.g. 'JS: Delay (Tempo Ping-Pong)')" },
+                      parameterName: { type: "STRING", description: "The parameter to automate (e.g. 'Wet', 'Amount')" },
+                      points: {
+                        type: "ARRAY",
+                        items: {
+                          type: "OBJECT",
+                          properties: {
+                            beat: { type: "NUMBER", description: "The exact beat in the project timeline where the point occurs" },
+                            value: { type: "NUMBER", description: "The parameter value at this beat" }
+                          },
+                          required: ["beat", "value"]
+                        }
+                      }
+                    },
+                    required: ["pluginName", "parameterName", "points"]
+                  }
+                }
+              },
+              required: ["lyricPhrases", "bpmCalculation", "automationAdvice"]
+            },
+            breathAndNoiseMuting: {
+              type: "OBJECT",
+              description: "ONLY INCLUDE THIS IF ANALYZING VOCALS. Intelligently find annoying noise in between words and breaths, very carefully to not take out actual parts of the words like s's or printed fx, and automate muting them using BeatGangsta Connect.",
+              properties: {
+                identifiedNoises: { type: "ARRAY", items: { type: "STRING" }, description: "Specific breaths or noises identified and their timestamps/locations." },
+                mutingAdvice: { type: "STRING", description: "Detailed advice on safely muting these breaths without cutting off transients, sibilance, or fx tails." },
+                reaperAutomationPoints: {
+                  type: "ARRAY",
+                  description: "Machine-readable automation points to send to BeatGangsta Connect (REAPER). Use this to automate the 'Volume' parameter of a gain plugin (like 'JS: Volume/Pan Smoother') down to -inf (or -144) during breaths/noise and back to 0dB for vocals.",
+                  items: {
+                    type: "OBJECT",
+                    properties: {
+                      pluginName: { type: "STRING", description: "The exact plugin name from the recommended chain (e.g. 'JS: Volume/Pan Smoother')" },
+                      parameterName: { type: "STRING", description: "The parameter to automate (e.g. 'Volume')" },
+                      points: {
+                        type: "ARRAY",
+                        items: {
+                          type: "OBJECT",
+                          properties: {
+                            beat: { type: "NUMBER", description: "The exact beat in the project timeline where the point occurs" },
+                            value: { type: "NUMBER", description: "The parameter value at this beat (e.g. 0 for normal, -144 for muted)" }
+                          },
+                          required: ["beat", "value"]
+                        }
+                      }
+                    },
+                    required: ["pluginName", "parameterName", "points"]
+                  }
+                }
+              },
+              required: ["identifiedNoises", "mutingAdvice"]
+            },
             recommendedChain: {
               type: "ARRAY",
               description: hasStems && uploadedStems && uploadedStems.length > 0 ? (isMultiBandMode ? "CRITICAL: You MUST provide an adequate number of plugins to handle the multi-band split across all bands. Do NOT limit to 6 plugins." : "CRITICAL: You MUST provide EXACTLY 6 plugins for this stem to provide detailed JSFX guidance, with the 6th dedicated to level normalization and output gain matching.") : "Chain of plugins (at least 6 plugins).",

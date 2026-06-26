@@ -72630,4 +72630,4 @@ export const JSFX_DATABASE: JSFXProfile[] = [
             "name": "Total transpose (read-only)",
             "min": -48,
             "max": 48,
-            "defaultVal"
+            "defaultVal": -4
