@@ -14,7 +14,6 @@ interface JSFXCardProps {
 
 export const JSFXCard: React.FC<JSFXCardProps> = ({ id, jsfx, isFavorite, onToggleFavorite, theme = 'coldest' }) => {
   const { t } = useTranslation();
-  const [showSliders, setShowSliders] = useState(false);
 
   const vendorName = jsfx.packRequired || "Cockos (Built-in)";
 
@@ -85,58 +84,7 @@ export const JSFXCard: React.FC<JSFXCardProps> = ({ id, jsfx, isFavorite, onTogg
             </p>
           </div>
         )}
-
-        {jsfx.proTips && (
-          <div className="p-3 rounded-2xl bg-emerald-500/5 border border-emerald-500/10">
-            <h5 className="text-[9px] font-black uppercase tracking-wider mb-1 text-emerald-400 flex items-center gap-1">
-              <Zap size={10} /> Pro Tip
-            </h5>
-            <p className="text-[10px] opacity-70 leading-relaxed font-medium text-emerald-100/90">
-              {jsfx.proTips}
-            </p>
-          </div>
-        )}
-
-        {jsfx.volumeStagingWarning && (
-          <div className="p-3 rounded-2xl bg-red-500/10 border border-red-500/20">
-            <h5 className="text-[9px] font-black uppercase tracking-wider mb-1 text-red-400 flex items-center gap-1">
-              ⚠ Gain Staging
-            </h5>
-            <p className="text-[10px] opacity-80 leading-relaxed font-semibold text-red-200">
-              {jsfx.volumeStagingWarning}
-            </p>
-          </div>
-        )}
       </div>
-
-      {/* Sliders toggle */}
-      {jsfx.sliders && jsfx.sliders.length > 0 && (
-        <div className="mb-4">
-          <button 
-            onClick={() => setShowSliders(!showSliders)}
-            className="w-full flex items-center justify-between px-3 py-1.5 rounded-xl bg-white/5 hover:bg-white/10 text-[9px] font-black uppercase tracking-widest transition-all"
-          >
-            <span>Sliders / Parameters ({jsfx.sliders.length})</span>
-            <span>{showSliders ? 'Hide' : 'Show'}</span>
-          </button>
-          {showSliders && (
-            <div className="mt-2 p-3 rounded-2xl bg-black/40 border border-white/5 max-h-40 overflow-y-auto space-y-1.5 scrollbar-hide">
-              {jsfx.sliders.map((slider) => (
-                <div key={slider.index} className="flex justify-between items-start text-[9px] font-mono opacity-60 border-b border-white/5 pb-1">
-                  <div className="max-w-[70%]">
-                    <span className="text-sky-400 mr-1">S{slider.index}:</span>
-                    <span className="font-bold">{slider.name}</span>
-                  </div>
-                  <div className="text-right whitespace-nowrap">
-                    <span>{slider.min} to {slider.max}</span>
-                    {slider.unit && <span className="text-emerald-400 ml-0.5">{slider.unit}</span>}
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-      )}
 
       {/* Footer Info */}
       <div className="mt-auto pt-4 border-t border-white/10 flex items-center justify-between text-[10px] font-black uppercase tracking-[0.15em] opacity-40">

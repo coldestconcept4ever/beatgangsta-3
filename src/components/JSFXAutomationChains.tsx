@@ -8,6 +8,65 @@ export const JSFXAutomationChains = ({ onBack, theme }: { onBack: () => void; th
   const [selectedCategory, setSelectedCategory] = useState<string>('All');
   const [copiedId, setCopiedId] = useState<string | null>(null);
 
+  const [syncEmail, setSyncEmail] = useState(localStorage.getItem('beatgangsta_sync_email') || '');
+  const [syncPin, setSyncPin] = useState<string | null>(null);
+  const [isSyncing, setIsSyncing] = useState(false);
+  const [syncError, setSyncError] = useState<string | null>(null);
+
+  const handlePushSync = async (chain: AutomationChain) => {
+    if (!syncEmail.trim()) {
+      setSyncError("Please enter your email address.");
+      return;
+    }
+    
+    setIsSyncing(true);
+    setSyncError(null);
+    setSyncPin(null);
+    
+    try {
+      localStorage.setItem('beatgangsta_sync_email', syncEmail.trim());
+      
+      let trackName = "Lead Vocal";
+      if (chain.category === 'beats') trackName = "Beat & Instrumental";
+      else if (chain.category === 'backing_vocal') trackName = "Backing Vocal";
+      else if (chain.category === 'ad_lib') trackName = "Ad-Lib & SFX";
+      
+      let txtContent = `TRACK|${trackName}\n`;
+      chain.plugins.forEach(plugin => {
+        txtContent += `FX|${plugin}\n`;
+      });
+      
+      const hasSmooth = chain.plugins.some(p => p.toLowerCase().includes('smooth'));
+      if (!hasSmooth) {
+        txtContent += `FX|JS: Saike Saike Smooth\n`;
+      }
+      
+      const generatedPin = Math.floor(1000 + Math.random() * 9000).toString();
+      
+      const res = await fetch('/api/reaper-sync/push', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          email: syncEmail.trim().toLowerCase(),
+          pin: generatedPin,
+          payload: txtContent
+        })
+      });
+      
+      if (!res.ok) {
+        throw new Error("Failed to send to REAPER Connect.");
+      }
+      
+      setSyncPin(generatedPin);
+    } catch (err: any) {
+      setSyncError(err.message || "Sync failed.");
+    } finally {
+      setIsSyncing(false);
+    }
+  };
+
   const categories = [
     { value: 'All', label: 'All Categories' },
     { value: 'beats', label: 'Beats & Instrumentals' },
@@ -245,6 +304,69 @@ export const JSFXAutomationChains = ({ onBack, theme }: { onBack: () => void; th
                     <strong className="block uppercase tracking-wide mb-0.5">Daw Automation Instructions</strong>
                     Instantiate the required plugins sequentially on your track or group bus. When creating your dynamic transition throws or special sections, draw an envelope on the specified wet mix, bypassed state, threshold, or pitch parameters. Trigger changes exactly on the syllables, measures, or section boundaries mentioned.
                   </div>
+                </div>
+
+                {/* BeatGangsta Connect Integration */}
+                <div className={`p-4 rounded-2xl border ${
+                  theme === 'coldest' ? 'bg-fuchsia-50 border-fuchsia-100 text-slate-800' : 'bg-fuchsia-950/10 border-fuchsia-500/25 text-white'
+                }`}>
+                  <h4 className="text-xs font-black uppercase tracking-wider text-fuchsia-400 mb-2 flex items-center gap-1.5 justify-between">
+                    <span className="flex items-center gap-1.5">
+                      <Activity size={14} />
+                      BeatGangsta Connect Sync
+                    </span>
+                    <span className="text-[9px] bg-fuchsia-500 text-white px-1.5 py-0.5 rounded uppercase font-black tracking-widest">Reaper Live</span>
+                  </h4>
+                  <p className="text-xs opacity-75 mb-3 leading-relaxed">
+                    Instantly load this automation preset and its plugins on a custom track in REAPER. All backing vocals & harmonies, ad-libs & sfx, main & lead vocals, and beats & instrumentals presets perfectly get sent through BeatGangsta Connect.
+                  </p>
+
+                  <div className="flex flex-col sm:flex-row gap-2">
+                    <input
+                      type="email"
+                      placeholder="Enter REAPER Sync Email"
+                      value={syncEmail}
+                      onChange={(e) => {
+                        setSyncEmail(e.target.value);
+                        setSyncPin(null);
+                        setSyncError(null);
+                      }}
+                      className={`flex-1 px-3 py-2 rounded-xl text-xs outline-none border transition-colors ${
+                        theme === 'coldest'
+                          ? 'bg-white border-slate-200 text-slate-800 focus:border-fuchsia-500'
+                          : 'bg-zinc-950 border-white/5 text-white focus:border-fuchsia-400'
+                      }`}
+                    />
+                    <button
+                      disabled={isSyncing}
+                      onClick={() => handlePushSync(selectedChain)}
+                      className={`px-4 py-2 rounded-xl text-xs font-bold transition-all shrink-0 flex items-center justify-center gap-1.5 ${
+                        isSyncing
+                          ? 'bg-zinc-800 text-zinc-500 cursor-not-allowed'
+                          : 'bg-fuchsia-600 hover:bg-fuchsia-500 text-white shadow-md'
+                      }`}
+                    >
+                      {isSyncing ? 'Syncing...' : 'Send to REAPER'}
+                    </button>
+                  </div>
+
+                  {syncError && (
+                    <p className="text-[11px] text-red-500 mt-2 font-bold flex items-center gap-1">
+                      ⚠️ {syncError}
+                    </p>
+                  )}
+
+                  {syncPin && (
+                    <div className="mt-3 p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-between gap-3">
+                      <div>
+                        <div className="text-[10px] text-emerald-400 font-bold uppercase tracking-wider">Sync Connection Ready!</div>
+                        <div className="text-xs opacity-85 mt-0.5">Use PIN in your REAPER Connect script.</div>
+                      </div>
+                      <div className="bg-emerald-500 text-white px-3 py-1.5 rounded-lg font-black text-sm tracking-wider shadow">
+                        {syncPin}
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>

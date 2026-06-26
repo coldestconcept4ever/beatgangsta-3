@@ -10262,8 +10262,8 @@ Provide the exact JSFX plugin name and required sliders/parameters.`;
                 </button>
               </div>
               
-              <div className="space-y-6 flex-1 overflow-hidden flex flex-col">
-                <div className="flex flex-col gap-4 shrink-0">
+              <div className="space-y-6 flex-1 overflow-y-auto pr-2 flex flex-col [&::-webkit-scrollbar]:w-2.5 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-sky-500 [&::-webkit-scrollbar-thumb]:rounded-full hover:[&::-webkit-scrollbar-thumb]:bg-sky-400">
+                <div className="flex flex-col gap-4">
                   <div className={`p-5 rounded-2xl border text-sm leading-relaxed ${theme === 'coldest' ? 'bg-white/60 border-sky-100 text-slate-700' : 'bg-black/40 border-zinc-800/80 text-zinc-400'}`}>
                     <p className={`font-semibold mb-2 ${theme === 'coldest' ? 'text-sky-600' : 'text-emerald-400'}`}>⚡ Automated JSFX Library Expansion</p>
                     BeatGangsta supports {COMMUNITY_JSFX_PACKS.length} free professional JSFX community plugin packs. 
@@ -10296,7 +10296,7 @@ Provide the exact JSFX plugin name and required sliders/parameters.`;
                   </div>
                 </div>
 
-                <div className="flex-1 overflow-y-auto pr-2 space-y-4 [&::-webkit-scrollbar]:w-2.5 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-sky-500 [&::-webkit-scrollbar-thumb]:rounded-full hover:[&::-webkit-scrollbar-thumb]:bg-sky-400 min-h-[300px]">
+                <div className="space-y-4">
                   {COMMUNITY_JSFX_PACKS.map((pack, index) => {
                     const isInstalled = installedJsfxPacks.includes(pack.name);
                     return (
@@ -10369,7 +10369,7 @@ Provide the exact JSFX plugin name and required sliders/parameters.`;
                   })}
                 </div>
 
-                <div className={`p-5 rounded-2xl border shrink-0 ${theme === 'coldest' ? 'bg-white/60 border-sky-200' : 'bg-zinc-900 border-zinc-800'}`}>
+                <div className={`p-5 rounded-2xl border ${theme === 'coldest' ? 'bg-white/60 border-sky-200' : 'bg-zinc-900 border-zinc-800'}`}>
                   <h4 className="font-black text-xs uppercase tracking-widest mb-3">How to import via ReaPack in REAPER:</h4>
                   <ol className="text-sm space-y-2 opacity-80 list-decimal pl-5 font-medium">
                     <li>In REAPER, click <strong>Extensions &gt; ReaPack &gt; Import repositories...</strong></li>

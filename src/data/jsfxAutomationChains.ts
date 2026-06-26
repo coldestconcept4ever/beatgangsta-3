@@ -395,6 +395,734 @@ export const JSFX_AUTOMATION_CHAINS: AutomationChain[] = [
     description: 'Automate the wet mix of \'Tukan Lexikan 2\' hall reverb from 5% to 60% with a 6-second decay on the final dramatic note of a rock ballad, instantly expanding the dry, intimate vocal into an enormous, cavernous stadium-rock arena space.',
     plugins: ['Tukan Lexikan 2']
   },
+  {
+    id: 'max_martin_double_stage',
+    name: 'Max Martin "Double-Stage" Pop Leveler',
+    category: 'lead_vocal',
+    producer: 'Max Martin',
+    description: 'Run an aggressive 1176-style peak limiter (\'Tukan NC76\') with fast attack/release into an opto leveler (\'JClones CA2A\'). Automate the dual compression thresholds dynamically during transitions to maintain a perfectly uniform, locked-in vocal volume in explosive pop hooks.',
+    plugins: ['Tukan NC76', 'JClones CA2A']
+  },
+  {
+    id: 'tony_maserati_glossy_presence',
+    name: 'Tony Maserati "Glossy Presence" Saturation',
+    category: 'lead_vocal',
+    producer: 'Tony Maserati',
+    description: 'Dynamically boost a high-shelf at 12kHz by +6dB with \'JS: ReJJ/ReEQ\' on key choruses, driving it directly into analog console saturation with \'JClones AC1\'. This adds a high-end vintage gloss and gorgeous presence to the lead vocal without causing harsh digital sibilance.',
+    plugins: ['JS: ReJJ/ReEQ', 'JClones AC1']
+  },
+  {
+    id: 'manny_marroquin_dynamic_space',
+    name: 'Manny Marroquin "Dynamic Space" Pitch-Spread Reverb',
+    category: 'lead_vocal',
+    producer: 'Manny Marroquin',
+    description: 'Feed a parallel vocal send into micro-pitch shifting (+/- 7 cents via \'JS: Pitch Shifter 2\') and route it into a massive hall reverb (\'Tukan Lexikan 2\'). Automate the send level to swell during vocal rests to let the wider space blossom, then instantly duck it when the lead returns.',
+    plugins: ['JS: Pitch Shifter 2', 'Tukan Lexikan 2']
+  },
+  {
+    id: 'flood_moulder_dark_width',
+    name: 'Flood & Alan Moulder "Depeche Mode" Dark Chorus Width',
+    category: 'lead_vocal',
+    producer: 'Flood & Alan Moulder',
+    description: 'Set up an automated flanger/chorus layer in parallel. During verse-to-chorus build-ups, automate the LFO rate and wet mix of \'JS: Flanger\' and \'JS: Saturated Chorus\' to rise on sustained vowels, instantly expanding the vocal image to the extreme edges of the stereo field.',
+    plugins: ['JS: Flanger', 'JS: Saturated Chorus']
+  },
+  {
+    id: 'kanye_dean_runaway_vocoder',
+    name: 'Kanye West & Mike Dean "Runaway" Vocoder Distortion',
+    category: 'lead_vocal',
+    producer: 'Kanye West & Mike Dean',
+    description: 'Run parallel backing vocal or lead vocals through a pitch shifter set to a perfect fifth (+7 semitones via \'JS: Pitch Shifter 2\'), drive it aggressively into extreme fuzzy overdrive (\'JS: Distortion (Fuzz)\'), and sweep an automated \'JS: Moog 4-Pole Filter\' to recreate the legendary singing synth-guitar tone.',
+    plugins: ['JS: Pitch Shifter 2', 'JS: Distortion (Fuzz)', 'JS: Moog 4-Pole Filter']
+  },
+  {
+    id: 'daniel_lanois_solitary_spring',
+    name: 'Daniel Lanois "Solitary" Vintage Spring Echo',
+    category: 'lead_vocal',
+    producer: 'Daniel Lanois',
+    description: 'Feed the lead vocal into a dark analog style delay (\'JS: Delay\') with high feedback, routing it into a tape emulator (\'JClones AC2\') with heavy wow/flutter. Automate the delay wet mix to swell on single solitary words, letting the warm tape flutter fade away organically.',
+    plugins: ['JS: Delay', 'JClones AC2']
+  },
+  {
+    id: 'dave_pensado_hiphop_edge',
+    name: 'Dave Pensado "Hip-Hop Edge" Exaggerated Exciter',
+    category: 'lead_vocal',
+    producer: 'Dave Pensado',
+    description: 'Throw key hip-hop punchlines or fast rap syllables into a parallel high-pass filter (cutting below 5kHz via \'JS: ReJJ/ReEQ\') and saturate it to the maximum using \'JS: Bad Buss Mojo Waveshaper\'. Blend the gritty, ultra-crisp signal back in with the dry lead for extreme clarity and edge.',
+    plugins: ['JS: ReJJ/ReEQ', 'JS: Bad Buss Mojo Waveshaper']
+  },
+  {
+    id: 'spike_stent_parallel_pump',
+    name: 'Spike Stent "Parallel Pump" Indie Vocal Drive',
+    category: 'lead_vocal',
+    producer: 'Spike Stent',
+    description: 'Route the lead vocal to an auxiliary channel. Apply aggressive 1176 style limiting (\'Tukan NC76\') set to "all-buttons-in" mode and blend with subtle fuzz distortion (\'JS: Distortion (Fuzz)\'). Automate the parallel blend level to climb during the main chorus sections, lending an industrial, indie rock energy.',
+    plugins: ['Tukan NC76', 'JS: Distortion (Fuzz)']
+  },
+  {
+    id: 'jimmy_iovine_upfront_fet',
+    name: 'Jimmy Iovine "Classic Rock" Up-Front In-Your-Face FET',
+    category: 'lead_vocal',
+    producer: 'Jimmy Iovine',
+    description: 'Slam the lead vocal with a fast, solid-state FET compressor (\'JS: 1175 Compressor\') with a 4:1 ratio. Automate the release parameter to run fast during fast vocal passages to pull out breathing details, then slow it down during sustained high notes to keep the compression smooth and extremely punchy.',
+    plugins: ['JS: 1175 Compressor']
+  },
+  {
+    id: 'rich_costey_muse_wah',
+    name: 'Rich Costey "Futuristic Muse" High-Resonant Wah',
+    category: 'lead_vocal',
+    producer: 'Rich Costey',
+    description: 'Pass the lead vocal through a low-pass/band-pass filter with high resonance (\'JS: Moog 4-Pole Filter\'). Automate the cutoff frequency to sweep in sync with the song\'s tempo on dramatic pre-choruses, followed by a wide \'JS: Saturated Chorus\' to create a dynamic, synth-like talkbox vocal performance.',
+    plugins: ['JS: Moog 4-Pole Filter', 'JS: Saturated Chorus']
+  },
+  {
+    id: 'phil_spector_mono_spill',
+    name: 'Phil Spector "Wall of Sound" Mono Reverb Spill',
+    category: 'lead_vocal',
+    producer: 'Phil Spector',
+    description: 'Compress the lead vocal aggressively, sum it to absolute mono, and run it through a dark plate reverb (\'Tukan Lexikan 2\'). Automate the saturation drive (\'JClones AC1\') to push the reverb tail into warm analog tape compression, creating a cohesive, vintage, and incredibly dense mono wall of sound.',
+    plugins: ['Tukan Lexikan 2', 'JClones AC1']
+  },
+  {
+    id: 'tony_visconti_gated_room',
+    name: 'Tony Visconti "Bowie Heroes" Gated Room',
+    category: 'lead_vocal',
+    producer: 'Tony Visconti',
+    description: 'Recreate the legendary Hansa Studios room setup. Place a deep room reverb (\'Tukan Lexikan 2\') on a parallel track, followed immediately by a fast noise gate (\'JS: Noise Gate\') sidechain-linked to the lead vocal channel. Set the gate threshold high so the room reflections burst open only during Bowie-style explosive vocal peaks.',
+    plugins: ['Tukan Lexikan 2', 'JS: Noise Gate']
+  },
+  {
+    id: 'dr_dre_surgical_air',
+    name: 'Dr. Dre "Surgical Air" West Coast Sheen',
+    category: 'lead_vocal',
+    producer: 'Dr. Dre',
+    description: 'Aggressively boost the high-shelf EQ at 12kHz by +8dB using \'JS: ReJJ/ReEQ\', then send it into a fast, transparent limiter (\'Tukan NC76\') with a high ratio. Automate the threshold during choruses to keep the vocal locked at the absolute front of the mix with crystalline, upfront, razor-sharp presence.',
+    plugins: ['JS: ReJJ/ReEQ', 'Tukan NC76']
+  },
+  {
+    id: 'jack_endino_grunge_grit',
+    name: 'Jack Endino "Grunge Grit" Parallel Saturation',
+    category: 'lead_vocal',
+    producer: 'Jack Endino',
+    description: 'Bandpass the vocal double from 400Hz to 4kHz using \'JS: RBJ Highpass/Lowpass Filters\', drive it hard with a heavy fuzz clipper (\'JS: Distortion (Fuzz)\'), and blend it at 15% wet underneath the clean lead. Automate the parallel fader to rise during intense grunge choruses for raw, bone-crushing grit and sustain.',
+    plugins: ['JS: RBJ Highpass/Lowpass Filters', 'JS: Distortion (Fuzz)']
+  },
+  {
+    id: 'alan_parsons_ducked_delay',
+    name: 'Alan Parsons "Progressive Echo" Ducked Gated Delay',
+    category: 'lead_vocal',
+    producer: 'Alan Parsons',
+    description: 'Set up an automated auxiliary delay send (\'JS: Delay\') followed by a sidechain gate (\'JS: Noise Gate\'). The gate stays closed while the lead vocal is singing, then opens instantly during rests. Automate the feedback and wet parameters on key phrase endings to create a pristine, trailing progressive rock echo.',
+    plugins: ['JS: Delay', 'JS: Noise Gate']
+  },
+  {
+    id: 'rick_rubin_dry_proximity',
+    name: 'Rick Rubin "Def Jam Dry" Intimate Proximity',
+    category: 'lead_vocal',
+    producer: 'Rick Rubin',
+    description: 'Completely strip away all reverb and delay sends. Use console tape emulation (\'JClones AC1\') to add a thick low-mid saturation warmth around 200Hz, and level the signal with an opto compressor (\'Tukan NC76\'). Automate the makeup gain to pull up mouth breathing details, placing the dry performance directly in the listener’s ears.',
+    plugins: ['JClones AC1', 'Tukan NC76']
+  },
+  {
+    id: 'john_congleton_ring_mod',
+    name: 'John Congleton "Art-Rock" Ring Mod Swell',
+    category: 'lead_vocal',
+    producer: 'John Congleton',
+    description: 'Introduce a highly unconventional, dissonant edge. Automate the wet mix of a subtle ring modulator (\'JS: Ring Modulator\') with a high-frequency carrier from 0% to 25% on key emotional screech, scream, or high-register vocal points, adding a cold, mechanical, and abrasive metallic art-rock texture.',
+    plugins: ['JS: Ring Modulator']
+  },
+  {
+    id: 'pharrell_clavinet_formant',
+    name: 'Pharrell Williams "Clavinet Formant" Percussive Accent',
+    category: 'lead_vocal',
+    producer: 'Pharrell Williams',
+    description: 'Set up a high-resonance bandpass filter (\'JS: Moog 4-Pole Filter\') on a secondary vocal track. Automate a 1/16th-note tremolo (\'JS: Tremolo\') to sync up only on key rhythmic consonants and vowel hits in the hook, giving the vocal layer a percussive, clavinet-like synthesized formant quality.',
+    plugins: ['JS: Moog 4-Pole Filter', 'JS: Tremolo']
+  },
+  {
+    id: 'chris_coady_shoegaze_shimmer',
+    name: 'Chris Coady "Shoegaze Shimmer" Pitch-Shift Delay',
+    category: 'lead_vocal',
+    producer: 'Chris Coady',
+    description: 'Send the lead vocal to a parallel path containing a micro-pitch shifter (\'JS: Pitch Shifter 2\' set to +12 cents) and a slow, lush stereo chorus (\'JS: Saturated Chorus\'), feeding into a long modulated delay. Automate the parallel fader to swell during dense shoegaze guitar choruses, creating a dreamy, swirling vocal halo.',
+    plugins: ['JS: Pitch Shifter 2', 'JS: Saturated Chorus', 'JS: Delay']
+  },
+  {
+    id: 'roy_thomas_baker_tape_flange',
+    name: 'Roy Thomas Baker "Tape Flange" Sweep',
+    category: 'lead_vocal',
+    producer: 'Roy Thomas Baker',
+    description: 'Emulate authentic manual tape flanging by routing the vocal through a speed modulator. During transitional fill measures, automate the flanger LFO rate and wet mix (\'JS: Flanger\') to swell, creating a dramatic, whooshing comb-filtering effect that swoops across the stereo image and pulls the listener into the next section.',
+    plugins: ['JS: Flanger']
+  },
+  {
+    id: 'butch_vig_garbage_sub_octave',
+    name: 'Butch Vig "Garbage" Sub-Octave Blend',
+    category: 'lead_vocal',
+    producer: 'Butch Vig',
+    description: 'Send the lead vocal to a parallel sub-octave shifter (\'JS: Pitch Shifter 2\' set to -12 semitones) and drive it hard using a wave-shaping saturation plugin (\'JS: Bad Buss Mojo Waveshaper\'). Automate the fader to blend it at 10% during heavy rock choruses, adding a menacing, industrial low-end reinforcement underneath the main performance.',
+    plugins: ['JS: Pitch Shifter 2', 'JS: Bad Buss Mojo Waveshaper']
+  },
+  {
+    id: 'nigel_godrich_radiohead_space',
+    name: 'Nigel Godrich "Radiohead Space" Tape Drift',
+    category: 'lead_vocal',
+    producer: 'Nigel Godrich',
+    description: 'Process the lead vocal through a modulated delay (\'JS: Delay (Floaty)\') and a tape emulator (\'JClones AC2\') set to high wow and flutter. Automate the wet mix to rise on long sustained vowels, creating a ghostly, beautifully unstable, and drifting analog tape echo that floats gracefully in the background.',
+    plugins: ['JS: Delay (Floaty)', 'JClones AC2']
+  },
+  {
+    id: 'michael_brauer_motion_pan',
+    name: 'Michael Brauer "Motion Panning" Multi-Bus Throw',
+    category: 'lead_vocal',
+    producer: 'Michael Brauer',
+    description: 'Route dynamic vocal sends to a dedicated parallel panning channel using \'JS: Auto-Pan\' and \'JS: Stereo Field Manipulator\'. Automate the send level to trigger only on accented adjectives, flinging wide, rhythmic stereo reflections around the main centered lead track.',
+    plugins: ['JS: Auto-Pan', 'JS: Stereo Field Manipulator']
+  },
+  {
+    id: 'jjp_overdrive_presence',
+    name: 'Jack Joseph Puig "Overdrive Presence" Console Saturation',
+    category: 'lead_vocal',
+    producer: 'Jack Joseph Puig',
+    description: 'Drive the vocal aggressively into console channel modeling (\'JClones AC1\') and blend in a subtle parallel fuzz distortion (\'JS: Distortion (Fuzz)\'). Automate the overdrive parameters to spike during explosive chorus transitions, providing a gritty, upfront analog warmth that keeps the vocal on top of heavy synth/guitar walls.',
+    plugins: ['JClones AC1', 'JS: Distortion (Fuzz)']
+  },
+  {
+    id: 'serban_ghenea_pop_air',
+    name: 'Serban Ghenea "Pop Vocal Air" Dynamic Sheen',
+    category: 'lead_vocal',
+    producer: 'Serban Ghenea',
+    description: 'Create a hyper-modern pop sheen. Use \'JS: ReJJ/ReEQ\' to apply a massive high-shelf boost (+10dB at 10kHz) and feed it directly into an 1176-style peak compressor (\'Tukan NC76\') set to a ultra-fast release. Automate the makeup gain to pull out intimate breath details without adding harshness.',
+    plugins: ['JS: ReJJ/ReEQ', 'Tukan NC76']
+  },
+  {
+    id: 'mutt_lange_stacked_doubler',
+    name: 'Mutt Lange "Ultra-Stacked" Parallel Doubler',
+    category: 'lead_vocal',
+    producer: 'Mutt Lange',
+    description: 'Recreate massive arena rock choruses. Run a parallel track through a micro-pitch shifter (\'JS: Pitch Shifter 2\' panned wide +/- 8 cents) and a thick chorus (\'JS: Saturated Chorus\'). Automate this wide, shimmering double to swell by +6dB exactly on the first beat of the chorus to make the vocal instantly double in size.',
+    plugins: ['JS: Pitch Shifter 2', 'JS: Saturated Chorus']
+  },
+  {
+    id: 'stephen_street_jangle_slap',
+    name: 'Stephen Street "Jangle Stereo Slap" Delay',
+    category: 'lead_vocal',
+    producer: 'Stephen Street',
+    description: 'Apply different rhythmic delay times on Left and Right channels (e.g., 120ms Left, 140ms Right via \'JS: Delay\') combined with a Haas-effect width expander (\'JS: Stereo Field Manipulator\'). Automate the fader to bounce in on transitional drum-fills for a wide, vintage 80s indie-pop spatial reflection.',
+    plugins: ['JS: Delay', 'JS: Stereo Field Manipulator']
+  },
+  {
+    id: 'tom_elmhirst_ballad_reverb',
+    name: 'Tom Elmhirst "Cavernous Ballad" Plate Swell',
+    category: 'lead_vocal',
+    producer: 'Tom Elmhirst',
+    description: 'Configure \'Tukan Lexikan 2\' as a massive plate reverb with a 5-second decay. Automate the auxiliary send fader to climb from 5% to 45% exclusively on the final emotional vowel of a ballad verse, letting the vocal trail wash out beautifully into an expansive, reflective acoustic space.',
+    plugins: ['Tukan Lexikan 2']
+  },
+  {
+    id: 'jimmy_douglass_triplet_echo',
+    name: 'Jimmy Douglass "Triplet Syncopation" Delay Throw',
+    category: 'lead_vocal',
+    producer: 'Jimmy Douglass',
+    description: 'Set up a highly synced 1/4-triplet tape delay (\'JS: Delay\'). Draw a fast automation envelope on the delay send wet mix to capture and repeat only the final word of key rap phrases, keeping the triplets locked perfectly into the pocket of a syncopated groove.',
+    plugins: ['JS: Delay']
+  },
+  {
+    id: 'sylvia_massy_megaphone_throw',
+    name: 'Sylvia Massy "Megaphone Fuzz" Filter Break',
+    category: 'lead_vocal',
+    producer: 'Sylvia Massy',
+    description: 'Throw the vocal into a gritty, mid-focused telephone/megaphone filter by rolling off low and high frequencies (500Hz - 3.5kHz via \'JS: RBJ Highpass/Lowpass Filters\') and driving it heavily with \'JS: Distortion (Fuzz)\'. Automate this effect to engage solely on dramatic pre-chorus breaks for an aggressive, radio-style vocal accent.',
+    plugins: ['JS: RBJ Highpass/Lowpass Filters', 'JS: Distortion (Fuzz)']
+  },
+  {
+    id: 'andy_wallace_stereo_spread',
+    name: 'Andy Wallace "Vintage Stereo Spread" Parallel Delay',
+    category: 'lead_vocal',
+    producer: 'Andy Wallace',
+    description: 'Recreate the legendary rock mixing signature. Run the lead vocal through a very short delay (e.g., 15-30ms) panned hard opposite to the dry vocal, combined with a 1176-style peak limiter (\'Tukan NC76\') to squash dynamic peaks. Automate the wet mix to rise on key phrases, creating a massive, ultra-wide stereo spread that punches directly through dense walls of rock guitars.',
+    plugins: ['JS: Delay', 'JS: Stereo Field Manipulator', 'Tukan NC76']
+  },
+  {
+    id: 'cla_blue_stripe_push',
+    name: 'Chris Lord-Alge "In-Your-Face" Blue-Stripe Push',
+    category: 'lead_vocal',
+    producer: 'Chris Lord-Alge',
+    description: 'Slam the lead vocal with a modeled blue-stripe FET compressor (\'JS: 1175 Compressor\') at an 8:1 ratio, and push a massive +8dB shelf boost at 8kHz and a +4dB boost at 3kHz using \'JS: ReJJ/ReEQ\'. Automate the compressor input level dynamically during choruses to pin the vocal at the absolute front of the mix with relentless, hyper-compressed energy.',
+    plugins: ['JS: 1175 Compressor', 'JS: ReJJ/ReEQ']
+  },
+  {
+    id: 'bob_clearmountain_dual_echo',
+    name: 'Bob Clearmountain "Dual-Echo" Chamber Wash',
+    category: 'lead_vocal',
+    producer: 'Bob Clearmountain',
+    description: 'Feed the lead vocal into a dual-mono delay network set to non-harmonious times (e.g., 180ms Left, 240ms Right) and route the delay output directly into a lush plate reverb (\'Tukan Lexikan 2\'). Automate the echo sends on final words of verses to create a pristine, cascading stereo tail that melts seamlessly into the background.',
+    plugins: ['JS: Delay', 'Tukan Lexikan 2']
+  },
+  {
+    id: 'steve_albini_room_explosion',
+    name: 'Steve Albini "In Utero" Room Explosion',
+    category: 'lead_vocal',
+    producer: 'Steve Albini',
+    description: 'Mimic organic room microphone response. Route the vocal into a dense stereo room reverb (\'Tukan Lexikan 2\') driven hard by console channel saturation (\'JClones AC1\'). Set a rapid noise gate (\'JS: Noise Gate\') to burst open on loud, peak-level screams and snap shut immediately on silence, capturing raw, explosive acoustic energy.',
+    plugins: ['Tukan Lexikan 2', 'JS: Noise Gate', 'JClones AC1']
+  },
+  {
+    id: 'brian_eno_oblique_drift',
+    name: 'Brian Eno "Oblique Stratagem" Pitch Drift',
+    category: 'lead_vocal',
+    producer: 'Brian Eno',
+    description: 'Run a parallel vocal channel through a micro-pitch shifter set to +/- 15 cents, modulated by a slow, sweeping phaser (\'JS: Phaser\') and a floating delay (\'JS: Delay (Floaty)\'). Automate the feedback and phaser rate to float freely, creating a haunting, beautiful, and ever-changing ambient vocal cloud.',
+    plugins: ['JS: Pitch Shifter 2', 'JS: Phaser', 'JS: Delay (Floaty)']
+  },
+  {
+    id: 'george_martin_abbey_road_adt',
+    name: 'George Martin "Abbey Road" Artificial Double Tracking (ADT)',
+    category: 'lead_vocal',
+    producer: 'George Martin',
+    description: 'Recreate the historic ADT effect. Send the vocal to a parallel tape delay path (\'JS: Delay\' set to 20-40ms) and use tape emulation (\'JClones AC2\') to introduce subtle, random speed variations (wow & flutter). Automate the delay time by +/- 5ms to simulate manual tape machine speed manipulation, producing a rich, organic double-tracked chorus.',
+    plugins: ['JS: Delay', 'JClones AC2']
+  },
+  {
+    id: 'lee_scratch_perry_black_ark',
+    name: 'Lee "Scratch" Perry "Black Ark" Dub Sweep',
+    category: 'lead_vocal',
+    producer: 'Lee "Scratch" Perry',
+    description: 'Route the vocal send to a tape delay (\'JS: Delay\') with feedback set to the edge of self-oscillation. Insert a gritty phaser (\'JS: Phaser\') and mild saturation (\'JS: Distortion (Fuzz)\') in the feedback loop. Sweep the delay time and phaser rate manually during instrumental breaks to generate dub-style psychedelic feedback vortexes.',
+    plugins: ['JS: Delay', 'JS: Phaser', 'JS: Distortion (Fuzz)']
+  },
+  {
+    id: 'trent_reznor_bit_smasher',
+    name: 'Trent Reznor "Industrial Bit-Smasher" Saturation',
+    category: 'lead_vocal',
+    producer: 'Trent Reznor',
+    description: 'Destroy the vocal signal to fit in an industrial mix. Run the lead through a bitcrusher (\'JS: Bit Reduction/Dither\') reducing to 6-bit depth, and drive it into fuzzy distortion (\'JS: Distortion (Fuzz)\'). Automate the cutoff frequency of a highly resonant low-pass filter (\'JS: Moog 4-Pole Filter\') to sweep during heavy rhythm sections for a tearing, synthetic, machine-like vocal snarl.',
+    plugins: ['JS: Bit Reduction/Dither', 'JS: Moog 4-Pole Filter', 'JS: Distortion (Fuzz)']
+  },
+  {
+    id: 'dave_fridmann_tube_blowout',
+    name: 'Dave Fridmann "Psychedelic Tube Blowout" Compression',
+    category: 'lead_vocal',
+    producer: 'Dave Fridmann',
+    description: 'Emulate highly pushed, colorful analog console preamp channels. Drive the vocal hard into console emulation (\'JClones AC1\') and apply extreme 1176-style compression (\'JS: 1175 Compressor\') to pull up tiny whispering details. During dramatic chorus climaxes, automate the dry-wet of a slow, deep chorus (\'JS: Saturated Chorus\') to swell, creating a massive, blown-out psychedelic vocal wall.',
+    plugins: ['JClones AC1', 'JS: 1175 Compressor', 'JS: Saturated Chorus']
+  },
+  {
+    id: 'bruce_swedien_acusonic_double',
+    name: 'Bruce Swedien "Acusonic Double" Wide-Field Dimension',
+    category: 'lead_vocal',
+    producer: 'Bruce Swedien',
+    description: 'Utilize Swedien\'s Acusonic co-production technique. Double track the lead vocal, panning the takes wide and treating them with an opto compressor (\'JClones CA2A\') for smooth levelling. Expand the stereo image further with \'JS: Stereo Field Manipulator\' (set to 140% width) and a subtle, high-quality chorus (\'JS: Saturated Chorus\') to deliver a pristine, ultra-wide, and three-dimensional pop vocal space.',
+    plugins: ['JS: Stereo Field Manipulator', 'JClones CA2A', 'JS: Saturated Chorus']
+  },
+  {
+    id: 'quincy_jones_dynamic_dimension',
+    name: 'Quincy Jones "Thriller Pristine" Dynamic Dimension',
+    category: 'lead_vocal',
+    producer: 'Quincy Jones',
+    description: 'Set up a pristine dual-compressor chain using a smooth opto leveler (\'JClones CA2A\') into a clean peak limiter (\'Tukan NC76\'). Automate \'JS: Stereo Channel Volume/Pan/Polarity Control\' on wide-panned backing vocals to dynamically wrap around the lead vocal, keeping the main performance focused, dynamic, and incredibly spacious.',
+    plugins: ['JClones CA2A', 'Tukan NC76', 'JS: Stereo Channel Control']
+  },
+  {
+    id: 'steve_lillywhite_stadium_swirl',
+    name: 'Steve Lillywhite "Stadium Rock" Swirling Delay',
+    category: 'lead_vocal',
+    producer: 'Steve Lillywhite',
+    description: 'Pass the vocal into a modulated chorus-delay (\'JS: Delay (Floaty)\') and a sweeping phaser (\'JS: Phaser\'). Automate the wet mix to rise on chorus lead-ins, mimicking Lillywhite\'s iconic, swirling stadium-scale vocal sound that lifts the chorus above a wall of roaring guitars.',
+    plugins: ['JS: Delay (Floaty)', 'JS: Phaser']
+  },
+  {
+    id: 'nile_rodgers_dance_gloss',
+    name: 'Nile Rodgers "Let\'s Dance" Upfront Gloss',
+    category: 'lead_vocal',
+    producer: 'Nile Rodgers',
+    description: 'Achieve a high-energy, upfront disco-pop tone. Slam the vocal with an 1176-style compressor (\'JS: 1175 Compressor\') set to a fast attack/release, then boost high-end air at 12kHz using \'JS: Shelving Filter\'. Automate the input gain dynamically to keep the performance pinned at the absolute front of a dense, funky dance rhythm section.',
+    plugins: ['JS: 1175 Compressor', 'JS: Shelving Filter']
+  },
+  {
+    id: 'sophie_hyperpop_formant_glitch',
+    name: 'SOPHIE "PC Music" Formant-Shifted Glitch',
+    category: 'lead_vocal',
+    producer: 'SOPHIE',
+    description: 'Inject a futuristic, hyper-pop aesthetic. Run the vocal through a pitch-shifter (\'JS: Pitch Shifter 2\' set to +12 semitones in parallel) into an aggressive bitcrusher (\'JS: Bit Reduction/Dither\') and a resonant bandpass filter (\'JS: Moog 4-Pole Filter\'). Automate the filter cutoff and pitch mix rapidly to create high-register, synthesized bubblegum-vocal textures.',
+    plugins: ['JS: Pitch Shifter 2', 'JS: Bit Reduction/Dither', 'JS: Moog 4-Pole Filter']
+  },
+  {
+    id: 'jack_antonoff_cassette_wobble',
+    name: 'Jack Antonoff "Bleachers" Vintage Cassette Wobble',
+    category: 'lead_vocal',
+    producer: 'Jack Antonoff',
+    description: 'Send the vocal to a parallel path with tape emulation (\'JClones AC2\') set to extreme wow and flutter, followed by a tight 1/8-note delay (\'JS: Delay\'). Automate the parallel fader to swell during intimate verses, giving the lead a warm, slightly unstable cassette-tape nostalgia.',
+    plugins: ['JClones AC2', 'JS: Delay']
+  },
+  {
+    id: 'danger_mouse_dusty_slap',
+    name: 'Danger Mouse "Gnarls" Dusty Tape Slap',
+    category: 'lead_vocal',
+    producer: 'Danger Mouse',
+    description: 'Apply a bandpass filter (cutting below 300Hz and above 4kHz via \'JS: RBJ Highpass/Lowpass Filters\') to create a warm, vintage telephone feel. Drive it into analog tape saturation (\'JClones AC1\') and feed it into a tight, dark slapback delay (\'JS: Delay\' set to 90ms). Automate the saturation and delay level on key phrase endings for an iconic retro-soul vocal aesthetic.',
+    plugins: ['JS: RBJ Highpass/Lowpass Filters', 'JClones AC1', 'JS: Delay']
+  },
+  {
+    id: 'tchad_blake_gritty_width',
+    name: 'Tchad Blake "Binaural Grit" Dynamic Width',
+    category: 'lead_vocal',
+    producer: 'Tchad Blake',
+    description: 'Route the vocal to a parallel channel containing a waveshaper (\'JS: Bad Buss Mojo Waveshaper\') and a stereo width expander (\'JS: Stereo Field Manipulator\'). Automate the waveshaper drive and stereo width dynamically in response to vocal intensity, creating a gritty, expansive, and highly unconventional stereo image.',
+    plugins: ['JS: Bad Buss Mojo Waveshaper', 'JS: Stereo Field Manipulator']
+  },
+  {
+    id: 'bill_laswell_dub_vortex',
+    name: 'Bill Laswell "Ambient Dub" Space Vortex',
+    category: 'lead_vocal',
+    producer: 'Bill Laswell',
+    description: 'Route the lead vocal into a warm analog delay (\'JS: Delay\') feeding a massive, dark hall reverb (\'Tukan Lexikan 2\'). Automate the delay feedback and the reverb wet mix to climb to 80% on long, sustained vocal notes, washing the vocal out into a deep, meditative, and swirling ambient dub vortex.',
+    plugins: ['JS: Delay', 'Tukan Lexikan 2']
+  },
+  {
+    id: 'dangelo_smoky_intimacy',
+    name: 'D\'Angelo "Voodoo" Smoky Tape Intimacy',
+    category: 'lead_vocal',
+    producer: 'D\'Angelo & Questlove',
+    description: 'Set up a warm, intimate vocal tone. Use tape emulation (\'JClones AC1\' or \'JClones AC2\') to saturate the low-mids (around 200Hz), and compress gently with an opto compressor (\'JClones CA2A\'). Automate a microscopic slapback delay (\'JS: Time Adjustment Delay\' set to 15ms) to shift the double slightly behind the beat, giving the vocal a smoky, laid-back groove.',
+    plugins: ['JClones AC1', 'JClones CA2A', 'JS: Time Adjustment Delay']
+  },
+  {
+    id: 'timbaland_vocal_syncopation',
+    name: 'Timbaland "Shock Value" Syncopated Delay Throw',
+    category: 'lead_vocal',
+    producer: 'Timbaland',
+    description: 'Take dynamic vocal ad-libs or percussive lead vowels, and send them to a synced 3/16-note delay (\'JS: Delay\') combined with a fast auto-panner (\'JS: Auto-Pan\'). Automate the send level to trigger only on rhythmic pick-ups, making the repeats bounce syncopatedly across the stereo field in the gaps of the beat.',
+    plugins: ['JS: Delay', 'JS: Auto-Pan']
+  },
+  {
+    id: 'mike_e_clark_carnival_calliope',
+    name: 'Mike E. Clark "Carnival Calliope" Swirl',
+    category: 'lead_vocal',
+    producer: 'Mike E. Clark',
+    description: 'Recreate Clark\'s signature creepy carnival vibe. Route the vocal through a pitch-shifter (\'JS: Pitch Shifter 2\' set to +4 or +7 semitones) and feed it into a fast, deep flanger (\'JS: Flanger\'). Automate the wet mix to swell dramatically during transitions, creating a swirling, dizzying calliope-like vocal accent.',
+    plugins: ['JS: Pitch Shifter 2', 'JS: Flanger']
+  },
+  {
+    id: 'mike_e_clark_acid_rap_grit',
+    name: 'Mike E. Clark "Acid Rap" Overdrive',
+    category: 'lead_vocal',
+    producer: 'Mike E. Clark',
+    description: 'Drive the vocal aggressively using a vintage waveshaper (\'JS: Bad Buss Mojo Waveshaper\') and blend in parallel fuzz distortion (\'JS: Distortion (Fuzz)\'). Automate the overdrive depth dynamically on intense vocal delivery spikes to capture that gritty, raw Esham Detroit Acid Rap edge.',
+    plugins: ['JS: Bad Buss Mojo Waveshaper', 'JS: Distortion (Fuzz)']
+  },
+  {
+    id: 'mike_e_clark_funhouse_double',
+    name: 'Mike E. Clark "Funhouse" Stereo Doubler',
+    category: 'lead_vocal',
+    producer: 'Mike E. Clark',
+    description: 'Create a massive, wider-than-life horrorcore double. Set up a Haas-effect delay network (\'JS: Stereo Field Manipulator\' at 150% width) with asymmetrical delays (15ms Left, 35ms Right via \'JS: Delay\'). Automate this wide double to swell during choruses, making the lead vocal instantly expand and surround the listener.',
+    plugins: ['JS: Stereo Field Manipulator', 'JS: Delay']
+  },
+  {
+    id: 'mike_e_clark_psychopathic_thrash',
+    name: 'Mike E. Clark "Psychopathic" Metallic Swell',
+    category: 'lead_vocal',
+    producer: 'Mike E. Clark',
+    description: 'Throw the vocal into a cold, abrasive metallic space. Automate the wet mix of a high-frequency ring modulator (\'JS: Ring Modulator\') from 0% to 30% exclusively on screaming punchlines, followed by a resonant low-pass filter (\'JS: Moog 4-Pole Filter\') to sweep dynamically for an eerie, industrial-rap texture.',
+    plugins: ['JS: Ring Modulator', 'JS: Moog 4-Pole Filter']
+  },
+  {
+    id: 'mike_e_clark_detroit_metal_scream',
+    name: 'Mike E. Clark "Detroit Metal" Scream Crusher',
+    category: 'lead_vocal',
+    producer: 'Mike E. Clark',
+    description: 'Designed for rap-metal crossovers. Slam the vocal with an 1176 style limiter (\'JS: 1175 Compressor\') at 20:1, run it into a harsh high-pass filter (\'JS: RBJ Highpass/Lowpass Filters\' cutting below 400Hz), and feed it into console saturation (\'JClones AC1\') to make aggressive screams slice perfectly through screaming guitars.',
+    plugins: ['JS: 1175 Compressor', 'JS: RBJ Highpass/Lowpass Filters', 'JClones AC1']
+  },
+  {
+    id: 'mike_e_clark_ringmaster_gate',
+    name: 'Mike E. Clark "Ringmaster" Gated Megaphone',
+    category: 'lead_vocal',
+    producer: 'Mike E. Clark',
+    description: 'Apply a steep bandpass telephone/megaphone filter (cutting below 500Hz and above 3kHz via \'JS: RBJ Highpass/Lowpass Filters\') driven by a tight, fast gate (\'JS: Noise Gate\'). Automate the gate release to snap shut instantly between syllables, keeping the distorted megaphone vocal extremely punchy and percussive.',
+    plugins: ['JS: RBJ Highpass/Lowpass Filters', 'JS: Noise Gate']
+  },
+  {
+    id: 'mike_e_clark_sub_basement_growl',
+    name: 'Mike E. Clark "Sub-Basement" Octave Growl',
+    category: 'lead_vocal',
+    producer: 'Mike E. Clark',
+    description: 'Add a menacing, subterranean shadow. Send a parallel vocal to a pitch shifter (\'JS: Pitch Shifter 2\' set to -12 semitones) and compress it heavily with a fast FET compressor (\'JS: 1175 Compressor\'). Automate the fader to sneak the sub-octave growl in at 15% mix during dark verse segments for a spooky, demonic weight.',
+    plugins: ['JS: Pitch Shifter 2', 'JS: 1175 Compressor']
+  },
+  {
+    id: 'mike_e_clark_carousel_panner',
+    name: 'Mike E. Clark "Carousel" Auto-Pan Sweep',
+    category: 'lead_vocal',
+    producer: 'Mike E. Clark',
+    description: 'Route wide backing ad-libs into a sweeping phaser (\'JS: Phaser\') followed by a fast tempo-synced auto-panner (\'JS: Auto-Pan\'). Automate the panning depth and rate to spin rapidly around the stereo field during gaps, simulating a spinning carnival carousel.',
+    plugins: ['JS: Phaser', 'JS: Auto-Pan']
+  },
+  {
+    id: 'mike_e_clark_wicked_delay',
+    name: 'Mike E. Clark "Wicked" Feedback vortex',
+    category: 'lead_vocal',
+    producer: 'Mike E. Clark',
+    description: 'Set up an auxiliary tape-delay (\'JS: Delay\' or \'JS: Delay (Floaty)\') with high feedback, driving into a cavernous plate reverb (\'Tukan Lexikan 2\'). Automate the delay send and feedback to spike on the final word of key punchlines or sinister laughs, letting the sound self-oscillate and dissolve into a creepy, washing abyss.',
+    plugins: ['JS: Delay', 'Tukan Lexikan 2']
+  },
+  {
+    id: 'mike_e_clark_gothic_choir',
+    name: 'Mike E. Clark "Gothic Choir" ADT Double',
+    category: 'lead_vocal',
+    producer: 'Mike E. Clark',
+    description: 'Simulate an army of wicked voices. Double track the main vocal, apply micro-pitch detuning (\'JS: Pitch Shifter 2\' panned wide +/- 12 cents), and route into a lush, slow chorus (\'JS: Saturated Chorus\'). Automate this wide backing layer to swell during thematic horrorcore hooks, creating a massive, gothic choir density.',
+    plugins: ['JS: Pitch Shifter 2', 'JS: Saturated Chorus']
+  },
+  {
+    id: 'three6_memphis_pitch_drop',
+    name: 'DJ Paul & Juicy J "Memphis Pitch-Drop" Horrorcore',
+    category: 'lead_vocal',
+    producer: 'DJ Paul & Juicy J',
+    description: 'Set a pitch shifter (\'JS: Pitch Shifter 2\') in parallel to -12 semitones and drive it hard into \'JS: Distortion (Fuzz)\'. Automate the pitch fader to slide downwards on dark, repetitive vocal chants, bringing out that eerie, classic 90s Memphis horrorcore atmosphere.',
+    plugins: ['JS: Pitch Shifter 2', 'JS: Distortion (Fuzz)']
+  },
+  {
+    id: 'three6_chopped_stutter',
+    name: 'DJ Paul & Juicy J "Chopped & Stutter" Gate',
+    category: 'lead_vocal',
+    producer: 'DJ Paul & Juicy J',
+    description: 'Automate a square-wave tremolo or gate (\'JS: Tremolo\') to sync at 1/16th or 1/8th note values on repeating triplets or hook vocals. Automate the wet mix from 0% to 100% on key transitions to create a perfectly sliced, percussive stutter effect.',
+    plugins: ['JS: Tremolo']
+  },
+  {
+    id: 'three6_tape_hiss_telephone',
+    name: 'DJ Paul & Juicy J "Smoked-Out" Tape Telephone',
+    category: 'lead_vocal',
+    producer: 'DJ Paul & Juicy J',
+    description: 'Filter out the high and low end (bandpass 400Hz - 3.5kHz via \'JS: RBJ Highpass/Lowpass Filters\') and run it through a heavy tape emulator (\'JClones AC2\') with saturated drive. Automate the mix to engage during pre-verse hype sections, simulating a dusty, smoked-out cassette tape telephone vocal.',
+    plugins: ['JS: RBJ Highpass/Lowpass Filters', 'JClones AC2']
+  },
+  {
+    id: 'three6_tear_the_club_fet',
+    name: 'DJ Paul & Juicy J "Tear the Club" Screaming FET',
+    category: 'lead_vocal',
+    producer: 'DJ Paul & Juicy J',
+    description: 'Drive a dynamic vocal group track aggressively through a fast FET compressor (\'JS: 1175 Compressor\') set to All-Buttons-In mode. Automate the compressor drive and high-shelf EQ boost (\'JS: ReJJ/ReEQ\') to spike during aggressive crowd chants or vocal hooks, keeping the energy rowdy and up-front.',
+    plugins: ['JS: 1175 Compressor', 'JS: ReJJ/ReEQ']
+  },
+  {
+    id: 'three6_sippin_on_some_syrup',
+    name: 'DJ Paul & Juicy J "Sippin\' on Syrup" Sluggish Delay',
+    category: 'lead_vocal',
+    producer: 'DJ Paul & Juicy J',
+    description: 'Create a sluggish, druggy vocal space. Feed the vocal into \'JS: Delay\' set to a slow 120ms slapback, routing the feedback directly into a lush, modulated chorus (\'JS: Saturated Chorus\') with deep pitch-modulation. Automate the delay feed to rise during hooks to melt the vocal into a dreamy, heavy-lidded state.',
+    plugins: ['JS: Delay', 'JS: Saturated Chorus']
+  },
+  {
+    id: 'three6_dark_hall_echo',
+    name: 'DJ Paul & Juicy J "Mystic Stylez" Dark Hall Echo',
+    category: 'lead_vocal',
+    producer: 'DJ Paul & Juicy J',
+    description: 'Feed the lead vocal send into \'Tukan Lexikan 2\' configured as a huge, dark cavernous space. Automate the send level to swell exactly on key phrase endings, then pass the reverb tail through an automated low-pass filter (\'JS: Moog 4-Pole Filter\') to sweep the high end away, letting the echo sink organically into a pitch-black abyss.',
+    plugins: ['Tukan Lexikan 2', 'JS: Moog 4-Pole Filter']
+  },
+  {
+    id: 'three6_mafia_wide_double',
+    name: 'DJ Paul & Juicy J "Mafia Posse" Wide Doubler',
+    category: 'lead_vocal',
+    producer: 'DJ Paul & Juicy J',
+    description: 'Recreate a dense gang-vocal posse cut. Pan two parallel pitch shifters (\'JS: Pitch Shifter 2\' set to -5 and +5 cents) hard left and right, and feed them into a stereo field expander (\'JS: Stereo Field Manipulator\' set to 150%). Automate this widening effect to expand dynamically on call-and-response backing vocals to surround the lead.',
+    plugins: ['JS: Pitch Shifter 2', 'JS: Stereo Field Manipulator']
+  },
+  {
+    id: 'three6_crunchy_preamp',
+    name: 'DJ Paul & Juicy J "SP-1200 Crunchy" Preamp',
+    category: 'lead_vocal',
+    producer: 'DJ Paul & Juicy J',
+    description: 'Run the vocal through a bit reduction plugin (\'JS: Bit Reduction/Dither\') set to 12-bit, followed by vintage console preamp drive (\'JClones AC1\'). Automate the drive parameters to crunch on aggressive rap verses, adding that classic gritty 12-bit sampler crunch and mid-range bite.',
+    plugins: ['JS: Bit Reduction/Dither', 'JClones AC1']
+  },
+  {
+    id: 'three6_creepy_phaser_pan',
+    name: 'DJ Paul & Juicy J "Hypnotize" Creepy Phaser Pan',
+    category: 'lead_vocal',
+    producer: 'DJ Paul & Juicy J',
+    description: 'Route atmospheric background vocal chants into a slow, deep phaser (\'JS: Phaser\') followed by a tempo-synced auto-panner (\'JS: Auto-Pan\'). Automate the phaser depth and panning rate to rise and sweep during hooks to create an eerie, hypnotic, and circular disorienting motion.',
+    plugins: ['JS: Phaser', 'JS: Auto-Pan']
+  },
+  {
+    id: 'three6_sub_octave_shadow',
+    name: 'DJ Paul & Juicy J "Sub-Octave Shadow" Growl',
+    category: 'lead_vocal',
+    producer: 'DJ Paul & Juicy J',
+    description: 'Send parallel backing vocals to a pitch shifter (\'JS: Pitch Shifter 2\') set to -12 semitones, driving it into a high-resonance low-pass filter (\'JS: Moog 4-Pole Filter\') to isolate the sub-bass frequencies. Automate this low-end growl to slide under the main lead vocal during ominous verses, lending a terrifying, demonic weight.',
+    plugins: ['JS: Pitch Shifter 2', 'JS: Moog 4-Pole Filter']
+  },
+
+  // MICHAEL SEYER - "SEVEN SUMMERS" DREAMY BEDROOM POP
+  {
+    id: 'michael_seyer_summer_breeze_chorus',
+    name: 'Michael Seyer "Summer Breeze" Modulated Chorus',
+    category: 'lead_vocal',
+    producer: 'Michael Seyer',
+    description: 'Establish a warm, nostalgic indie vocal with a dreamy modulated chorus (\'JS: Saturated Chorus\') and smooth opto compression (\'JClones CA2A\'). Automate the chorus rate and depth to swell during bridge sections, making the vocal drift into an immersive, sun-drenched breeze.',
+    plugins: ['JS: Saturated Chorus', 'JClones CA2A']
+  },
+  {
+    id: 'michael_seyer_lazy_afternoon_tape_flutter',
+    name: 'Michael Seyer "Lazy Afternoon" Warm Tape Wobble',
+    category: 'lead_vocal',
+    producer: 'Michael Seyer',
+    description: 'Saturate the vocal using tape emulation (\'JClones AC2\') pushed to a soft compression threshold with active wow and flutter, feeding a short, warm slap delay (\'JS: Delay\'). Automate the wow/flutter depth on key sustained syllables to give the vocal a gorgeous, slightly out-of-tune, nostalgic vinyl warmth.',
+    plugins: ['JClones AC2', 'JS: Delay']
+  },
+  {
+    id: 'michael_seyer_bedroom_intimate_lofi',
+    name: 'Michael Seyer "Bedroom Intimacy" Low-Pass Air',
+    category: 'lead_vocal',
+    producer: 'Michael Seyer',
+    description: 'Filter out extreme low-end rumble and excessive high-end crispness using \'JS: RBJ Highpass/Lowpass Filters\' to focus the vocal in the warm mid-range, then gently level with \'JClones CA2A\' and a small pinch of \'JS: Bit Reduction/Dither\' (16-bit dithered). Automate the high-cut filter to open up on key emotive lines, revealing a close, raw, personal whisper.',
+    plugins: ['JS: RBJ Highpass/Lowpass Filters', 'JClones CA2A', 'JS: Bit Reduction/Dither']
+  },
+  {
+    id: 'michael_seyer_jazzy_spring_space',
+    name: 'Michael Seyer "Jazzy Spring" Resonant Plate',
+    category: 'lead_vocal',
+    producer: 'Michael Seyer',
+    description: 'Run the vocal through a short tape slapback delay (\'JS: Delay\' set to 85ms) into a bright, nostalgic plate reverb (\'Tukan Lexikan 2\'). Automate the reverb decay and send level to swell during instrumental breaths, washing the lead in a spacious, retro 1970s jazz lounge echo.',
+    plugins: ['JS: Delay', 'Tukan Lexikan 2']
+  },
+  {
+    id: 'michael_seyer_hazy_double_detune',
+    name: 'Michael Seyer "Hazy Double" Stereo Detune',
+    category: 'lead_vocal',
+    producer: 'Michael Seyer',
+    description: 'Create Seyer\'s iconic cozy wide vocal space. Feed a double-tracked vocal to two pitch shifters (\'JS: Pitch Shifter 2\' set to -8 cents and +8 cents) panned wide, combined with \'JS: Stereo Field Manipulator\' at 130% width. Automate the stereo width from 100% to 130% on chorus entries to smoothly wrap the cozy chorus around the listener\'s head.',
+    plugins: ['JS: Pitch Shifter 2', 'JS: Stereo Field Manipulator']
+  },
+
+  // STIR CRAZY - DETROIT HORRORCORE INDUSTRIAL GRIT
+  {
+    id: 'stir_crazy_grave_digger_preamp',
+    name: 'Stir Crazy "Grave Digger" Overdriven Channel',
+    category: 'lead_vocal',
+    producer: 'Stir Crazy',
+    description: 'Drive the vocal aggressively through a vintage waveshaper (\'JS: Bad Buss Mojo Waveshaper\') and a gritty preamp simulator (\'JClones AC1\'). Automate the drive parameters and waveshaping saturation to spike on aggressive punchlines, adding that heavy, gravelly, overdriven Detroit crunch.',
+    plugins: ['JS: Bad Buss Mojo Waveshaper', 'JClones AC1']
+  },
+  {
+    id: 'stir_crazy_psych_ward_flanger',
+    name: 'Stir Crazy "Psych Ward" Gated Flanger',
+    category: 'lead_vocal',
+    producer: 'Stir Crazy',
+    description: 'Create a claustrophobic, anxious vocal texture. Pass the lead through a deep, sweeping jet flanger (\'JS: Flanger\') coupled with a lightning-fast noise gate (\'JS: Noise Gate\'). Automate the gate range and decay to slice off vocal tails instantly, creating an ultra-sharp, metallic, and modern horrorcore vocal stutter.',
+    plugins: ['JS: Flanger', 'JS: Noise Gate']
+  },
+  {
+    id: 'stir_crazy_carnival_trap_ringmod',
+    name: 'Stir Crazy "Carnival Trap" Metallic Ring Mod',
+    category: 'lead_vocal',
+    producer: 'Stir Crazy',
+    description: 'Recreate a twisted, nightmarish carnival atmosphere. Route the vocal into \'JS: Ring Modulator\' and \'JS: Auto-Pan\'). Automate the ring modulator frequency and mix to rise from 0% to 40% exclusively during creepy vocal call-outs or transition fills, sending a metallic, robotic shiver across the stereo field.',
+    plugins: ['JS: Ring Modulator', 'JS: Auto-Pan']
+  },
+  {
+    id: 'stir_crazy_insane_asylum_echo',
+    name: 'Stir Crazy "Insane Asylum" Cavernous Feedback',
+    category: 'lead_vocal',
+    producer: 'Stir Crazy',
+    description: 'Send the vocal into a long tape delay (\'JS: Delay\') feeding a heavy, dark room reverb (\'Tukan Lexikan 2\'). Automate the delay feedback and high-cut filter cutoffs to increase on the final syllables of bars, letting the vocal trail out into an unsettling, feedback-heavy, and cavernous abyss.',
+    plugins: ['JS: Delay', 'Tukan Lexikan 2']
+  },
+  {
+    id: 'stir_crazy_shadow_creature_octave',
+    name: 'Stir Crazy "Shadow Creature" Demonic Sub-Octave',
+    category: 'lead_vocal',
+    producer: 'Stir Crazy',
+    description: 'Blend a terrifying shadow vocal underneath. Run a parallel vocal through a pitch shifter (\'JS: Pitch Shifter 2\' set to -12 semitones) and compress it heavily using \'JS: 1175 Compressor\'. Automate the parallel track volume fader to rise and fall, creating a sinister, low-register demonic growl that mirrors the main vocal during intense sections.',
+    plugins: ['JS: Pitch Shifter 2', 'JS: 1175 Compressor']
+  },
+
+  // NAV - PRISTINE XO TRAP GLOSS
+  {
+    id: 'nav_brown_boy_air',
+    name: 'NAV "Brown Boy" Crisp Air Equalizer',
+    category: 'lead_vocal',
+    producer: 'NAV',
+    description: 'Achieve a modern, expensive-sounding trap vocal. Drive a fast FET compressor (\'JS: 1175 Compressor\') to lock the vocal upfront, then boost a high-shelf EQ band at 12kHz (\'JS: ReJJ/ReEQ\') to inject pristine, silky high-end air. Automate the high-shelf boost to increase on hook entries, giving the vocal a brilliant, diamond-cut shimmer.',
+    plugins: ['JS: 1175 Compressor', 'JS: ReJJ/ReEQ']
+  },
+  {
+    id: 'nav_perfect_timing_doubler',
+    name: 'NAV "Perfect Timing" Stereo Doubler',
+    category: 'lead_vocal',
+    producer: 'NAV',
+    description: 'Create a massive, wide backing image for melodic choruses. Route the vocal into two parallel pitch shifters (\'JS: Pitch Shifter 2\' set to -7 and +7 cents) panned hard left and right, and route them through \'JS: Stereo Field Manipulator\' at 140% width. Automate the stereo width parameter to expand wide on choruses, beautifully wrapping around the listener.',
+    plugins: ['JS: Pitch Shifter 2', 'JS: Stereo Field Manipulator']
+  },
+  {
+    id: 'nav_tap_slapback_gloss',
+    name: 'NAV "Tap" Melodic Slapback Echo',
+    category: 'lead_vocal',
+    producer: 'NAV',
+    description: 'Feed the vocal into a snappy delay (\'JS: Delay\' set to 95ms) with subtle feedback, running into a lush modulated chorus (\'JS: Saturated Chorus\'). Automate the dry/wet mix of the delay on sustained notes to add a luxurious, glossy, and space-filling tail to melodic hooks.',
+    plugins: ['JS: Delay', 'JS: Saturated Chorus']
+  },
+  {
+    id: 'nav_reckless_cloud_reverb',
+    name: 'NAV "Reckless" Cloud Space Plate',
+    category: 'lead_vocal',
+    producer: 'NAV',
+    description: 'Engulf the lead vocal in an expansive, high-end trap space. Send the signal into a bright plate reverb (\'Tukan Lexikan 2\') and set an ultra-fast opto leveler (\'JClones CA2A\') on the reverb send. Automate the reverb send levels to swell on vocal phrase endings, letting the vocal melt into a dreamy, cloud-like atmosphere.',
+    plugins: ['Tukan Lexikan 2', 'JClones CA2A']
+  },
+  {
+    id: 'nav_phone_filter_sweep',
+    name: 'NAV "Price on My Head" Filter Sweeper',
+    category: 'lead_vocal',
+    producer: 'NAV',
+    description: 'Apply bandpass filtering (cut below 400Hz and above 3.5kHz with \'JS: RBJ Highpass/Lowpass Filters\') to create a tight telephone effect. Automate the low-pass and high-pass cutoffs to sweep wide open at the start of verse transitions, smoothly returning the vocal to its full, crisp, and high-fidelity presence.',
+    plugins: ['JS: RBJ Highpass/Lowpass Filters']
+  },
+
+  // RZA - SHAOLIN GRIT & DIRTY ANALOG CHROMATIC
+  {
+    id: 'rza_shaolin_12bit_preamp',
+    name: 'RZA "Shaolin 36 Chambers" 12-Bit Preamp',
+    category: 'lead_vocal',
+    producer: 'RZA',
+    description: 'Emulate the legendary, gritty character of an SP-1200 sampler. Run the vocal through bit-reduction (\'JS: Bit Reduction/Dither\' set to 12-bit) followed by a driving console preamp emulator (\'JClones AC1\'). Automate the preamp input drive to crunch on aggressive delivery, adding raw harmonic grit and mid-range bite.',
+    plugins: ['JS: Bit Reduction/Dither', 'JClones AC1']
+  },
+  {
+    id: 'rza_enter_the_wu_tape_wobble',
+    name: 'RZA "Enter the Wu" Saturated Tape Hiss',
+    category: 'lead_vocal',
+    producer: 'RZA',
+    description: 'Filter out the extreme low and high end using \'JS: RBJ Highpass/Lowpass Filters\' (250Hz - 5kHz) and feed it into tape emulation (\'JClones AC2\') driven hard to the point of tape compression. Automate the tape speed and wow/flutter to inject subtle, pitch-unstable tape wobble during dark spoken-word intros.',
+    plugins: ['JS: RBJ Highpass/Lowpass Filters', 'JClones AC2']
+  },
+  {
+    id: 'rza_liquid_swords_chamber',
+    name: 'RZA "Liquid Swords" Dark Echo Chamber',
+    category: 'lead_vocal',
+    producer: 'RZA',
+    description: 'Route the vocal send into a dark, gritty stone chamber reverb (\'Tukan Lexikan 2\') and pass the wet output through a resonant low-pass filter (\'JS: Moog 4-Pole Filter\'). Automate the filter cutoff to sweep open on key bars, letting the echo emerge from a dark, menacing dungeon before receding back into the shadows.',
+    plugins: ['Tukan Lexikan 2', 'JS: Moog 4-Pole Filter']
+  },
+  {
+    id: 'rza_grim_reaper_growl',
+    name: 'RZA "Grim Reaper" Sub-Octave Shadow',
+    category: 'lead_vocal',
+    producer: 'RZA',
+    description: 'Generate an ominous, demonic backing voice. Send parallel backing vocals to a pitch shifter (\'JS: Pitch Shifter 2\' set to -12 semitones) and feed it directly into fuzz distortion (\'JS: Distortion (Fuzz)\'). Automate this gritty, low-frequency growl to blend in and out behind the lead vocal, adding terrifying weight to ominous lyrics.',
+    plugins: ['JS: Pitch Shifter 2', 'JS: Distortion (Fuzz)']
+  },
+  {
+    id: 'rza_cream_slap_vinyl',
+    name: 'RZA "C.R.E.A.M." Slapback & Tape Dust',
+    category: 'lead_vocal',
+    producer: 'RZA',
+    description: 'Recreate a dusty, vintage vinyl aesthetic. Run the vocal into a tape slapback delay (\'JS: Delay\' set to 110ms) driven heavily by console channel saturation (\'JClones AC1\'). Automate the delay feedback to swell on key phrase endings, dissolving the vocal into a retro, gritty echo washed in warm tape saturation.',
+    plugins: ['JS: Delay', 'JClones AC1']
+  },
 
   // AD-LIBS
   {
@@ -798,5 +1526,157 @@ export const JSFX_AUTOMATION_CHAINS: AutomationChain[] = [
     producer: 'Bon Iver',
     description: 'Duplicate a backing vocal into 4 separate channels. Run each through \'JS: Pitch Shifter 2\' tuned to different intervals of a chord (e.g., +3, +7, -5, -12 semitones). Squash them with \'JClones CA2A\' to create a synthetic, robotic indie-folk choir.',
     plugins: ['JS: Pitch Shifter 2', 'JClones CA2A']
+  },
+  {
+    id: 'beatles_abbey_adt',
+    name: 'The Beatles "Abbey Road" Artificial Double Tracking',
+    category: 'backing_vocal',
+    producer: 'The Beatles',
+    description: 'Emulate classic 1960s automatic double-tracking. Route the backing vocal into a tape-style delay (\'JS: Delay\' set to 28ms) and use LFO pitch modulation via \'JS: Saturated Chorus\' on the delayed path to create a wide, organic double.',
+    plugins: ['JS: Delay', 'JS: Saturated Chorus']
+  },
+  {
+    id: 'imogen_heap_harmony_prism',
+    name: 'Imogen Heap "Hide and Seek" Digital Harmonizer',
+    category: 'backing_vocal',
+    producer: 'Imogen Heap',
+    description: 'Build a lush, crystalline vocal-harmonizer engine. Set up four instances of \'JS: Pitch Shifter 2\' panned wide left and right, and route them through a high-pass filter (\'JS: RBJ Highpass/Lowpass Filters\') at 400Hz. Automate the pitch offsets to shift on chord changes.',
+    plugins: ['JS: Pitch Shifter 2', 'JS: RBJ Highpass/Lowpass Filters']
+  },
+  {
+    id: 'celine_dion_gatica_depth',
+    name: 'Celine Dion "Power Ballad" Gatica Sidechain Space',
+    category: 'backing_vocal',
+    producer: 'Celine Dion / Humberto Gatica',
+    description: 'Tuck a massive backing vocal choir behind the main singer. Run the harmonies through a deep hall reverb (\'Tukan Lexikan 2\'), then place a compressor (\'JClones CA2A\') on the reverb return, sidechained to the lead vocal to clear space.',
+    plugins: ['Tukan Lexikan 2', 'JClones CA2A']
+  },
+  {
+    id: 'dolly_parton_nashville_spread',
+    name: 'Dolly Parton "Nashville Sound" Smooth Acoustic Wider',
+    category: 'backing_vocal',
+    producer: 'Dolly Parton',
+    description: 'Create a smooth, warm country-harmony cushion. Route acoustic harmonies into a stereo width enhancer (\'JS: Stereo Field Manipulator\' set to 130% width) and squash with a clean leveler (\'JClones CA2A\') to keep them perfectly balanced.',
+    plugins: ['JS: Stereo Field Manipulator', 'JClones CA2A']
+  },
+  {
+    id: 'ewf_horn_stabs_punch',
+    name: 'Earth, Wind & Fire "Brass Stack" Horn-Style Punch',
+    category: 'backing_vocal',
+    producer: 'Earth, Wind & Fire',
+    description: 'Recreate punchy, brassy R&B backing stacks. Apply a sharp mid-range boost at 2.5kHz and a tight high-pass filter at 180Hz (\'JS: ReJJ/ReEQ\'), then drive into an ultra-fast FET compressor (\'JS: 1175 Compressor\') for rapid, drum-like stabs.',
+    plugins: ['JS: ReJJ/ReEQ', 'JS: 1175 Compressor']
+  },
+  {
+    id: 'sinatra_riddle_orchestral_room',
+    name: 'Frank Sinatra "Nelson Riddle" Deep Stage Space',
+    category: 'backing_vocal',
+    producer: 'Frank Sinatra',
+    description: 'Place backing vocalists deep in the back of an orchestral-style stage. Apply a pre-delay of 45ms and feed into a warm, natural plate reverb (\'Tukan Lexikan 2\'), using \'JS: ReJJ/ReEQ\' to cut the highs above 5kHz so they sit beautifully in the rear.',
+    plugins: ['Tukan Lexikan 2', 'JS: ReJJ/ReEQ']
+  },
+  {
+    id: 'radiohead_godrich_kid_a',
+    name: 'Radiohead "Kid A" Displaced Ghostly Harmonies',
+    category: 'backing_vocal',
+    producer: 'Radiohead / Nigel Godrich',
+    description: 'Generate an alienated, haunting background wash. Route backing harmonies into dual tape delays (\'JS: Delay\' set to 420ms and 540ms) panned hard left and right, and feed them into a lush phaser (\'JS: Phaser\') to dissolve the words into a dreamy haze.',
+    plugins: ['JS: Delay', 'JS: Phaser']
+  },
+  {
+    id: 'kanye_gospel_beam_stack',
+    name: 'Kanye West "Ultralight Beam" Gospel Choir Wall',
+    category: 'backing_vocal',
+    producer: 'Kanye West',
+    description: 'Emulate a giant, room-shaking church choir. Run the backing vocals through heavy parallel saturators (\'JClones AC1\') to add thick harmonic weight, then send them into an expansive, bright church hall reverb (\'Tukan Lexikan 2\') with a long tail.',
+    plugins: ['JClones AC1', 'Tukan Lexikan 2']
+  },
+  {
+    id: 'travis_dean_astroworld_tuned',
+    name: 'Travis Scott "Astroworld" Saturated Psychedelic Stacks',
+    category: 'backing_vocal',
+    producer: 'Travis Scott / Mike Dean',
+    description: 'Form a dark, trippy vocal canvas. Apply aggressive pitch shifting (\'JS: Pitch Shifter 2\' set to -12 semitones), run through heavy console overdrive (\'JClones AC1\'), and automate a low-pass filter (\'JS: RBJ Highpass/Lowpass Filters\') to sweep open and closed.',
+    plugins: ['JS: Pitch Shifter 2', 'JClones AC1', 'JS: RBJ Highpass/Lowpass Filters']
+  },
+  {
+    id: 'kendrick_mortal_man_subconscious',
+    name: 'Kendrick Lamar "Mortal Man" Pitch-Shifted Alter-Ego',
+    category: 'backing_vocal',
+    producer: 'Kendrick Lamar / Sounwave',
+    description: 'Blend pitch-shifted high and low backing takes behind the main voice. Apply \'JS: Pitch Shifter 2\' (+12 semitones on Left, -12 semitones on Right) and squeeze with \'Tukan NC76\' to create Kendricks signature inner-monologue harmony stacks.',
+    plugins: ['JS: Pitch Shifter 2', 'Tukan NC76']
+  },
+  {
+    id: 'drake_marvins_room_underwater',
+    name: 'Drake "Marvins Room" Low-Pass R&B Harmony',
+    category: 'backing_vocal',
+    producer: 'Drake / Noah "40" Shebib',
+    description: 'Tuck smooth backing vocals underneath the mix using 40s signature low-pass aesthetic. Run harmonies through \'JS: RBJ Highpass/Lowpass Filters\' with a 1.2kHz cutoff, followed by a wide, slow \'JS: Saturated Chorus\' and massive \'Tukan Lexikan 2\' hall space.',
+    plugins: ['JS: RBJ Highpass/Lowpass Filters', 'JS: Saturated Chorus', 'Tukan Lexikan 2']
+  },
+  {
+    id: 'cudi_hum_gargantuan_choir',
+    name: 'Kid Cudi "Day n Nite" Gargantuan Humming Stack',
+    category: 'backing_vocal',
+    producer: 'Kid Cudi / Dot da Genius',
+    description: 'Build Cudis iconic, rumbling hum harmonies. Group multiple hum takes, boost 200Hz warm frequencies with \'JS: ReJJ/ReEQ\', compress tightly using \'JClones CA2A\', and feed into a rich tape echo (\'JS: Delay\' set to 300ms) for a spacious, haunting atmosphere.',
+    plugins: ['JS: ReJJ/ReEQ', 'JClones CA2A', 'JS: Delay']
+  },
+  {
+    id: 'rocky_lvs_screwed_harmonies',
+    name: 'A$AP Rocky "L.S.D." Screwed-and-Chopped Choir',
+    category: 'backing_vocal',
+    producer: 'A$AP Rocky / Hector Delgado',
+    description: 'Create a trippy, slowed down harmony background. Take background vocal stacks, drop them by exactly -7 semitones via \'JS: Pitch Shifter 2\', apply heavy tape saturation using \'JClones AC2\', and space out with a ping-pong \'JS: Delay\' set to dotted quarter notes.',
+    plugins: ['JS: Pitch Shifter 2', 'JClones AC2', 'JS: Delay']
+  },
+  {
+    id: 'bone_thugs_crossroads_harmony',
+    name: 'Bone Thugs-n-Harmony "Crossroads" Rap-Singing Stack',
+    category: 'backing_vocal',
+    producer: 'DJ U-Neek / Bone Thugs-n-Harmony',
+    description: 'Emulate the fast, rapid-fire gospel-rap harmonies of the mid-90s. High-pass backing tracks at 250Hz, use \'JS: Stereo Field Manipulator\' to spread them wide (140%), and use a fast-attack FET compressor (\'JS: 1175 Compressor\') to keep the rapid syllables perfectly lock-step.',
+    plugins: ['JS: Stereo Field Manipulator', 'JS: 1175 Compressor']
+  },
+  {
+    id: 'eminem_lose_yourself_double',
+    name: 'Eminem "Lose Yourself" Angry Double-Track Stacks',
+    category: 'backing_vocal',
+    producer: 'Eminem / Dr. Dre',
+    description: 'Replicate aggressive hip-hop double tracks. Run hard-panned backing takes through \'JS: ReJJ/ReEQ\' with a strong presence boost at 3kHz, then apply extreme limiting using \'Tukan NC76\' so the raw vocal anger cuts through any heavy rock-rap beat.',
+    plugins: ['JS: ReJJ/ReEQ', 'Tukan NC76']
+  },
+  {
+    id: 'wayne_lollipop_vocoded_layers',
+    name: 'Lil Wayne "Lollipop" Auto-Tuned Harmony Bus',
+    category: 'backing_vocal',
+    producer: 'Lil Wayne / Deezle',
+    description: 'Achieve the classic late-2000s robotic backing textures. Run the harmonies through \'JS: Pitch Shifter 2\' set to instant correction speed, add extreme overdrive via \'JS: Distortion (Fuzz)\' to add digital hair, and float them using a wide stereo delay.',
+    plugins: ['JS: Pitch Shifter 2', 'JS: Distortion (Fuzz)']
+  },
+  {
+    id: 'tyler_igor_pitch_chaos',
+    name: 'Tyler, The Creator "IGOR" Lo-Fi Pitch Choir',
+    category: 'backing_vocal',
+    producer: 'Tyler, The Creator',
+    description: 'Recreate Tylers distorted, pitch-warped backing choral stacks. Feed the backing vocals into \'JS: Distortion (Fuzz)\' set to a light crunch, pitch them up +5 semitones using \'JS: Pitch Shifter 2\', and add severe high/low-pass filtering to craft a vintage, damaged tape feel.',
+    plugins: ['JS: Distortion (Fuzz)', 'JS: Pitch Shifter 2']
+  },
+  {
+    id: 'wutang_rza_gritty_basement',
+    name: 'Wu-Tang Clan / RZA "36 Chambers" Gritty Basement Backing',
+    category: 'backing_vocal',
+    producer: 'RZA / Wu-Tang Clan',
+    description: 'Emulate raw, gritty 90s East Coast underground backing. Route the backup voices through a lo-fi tape saturation (\'JClones AC2\' tape simulator at 7.5 IPS), high-pass tightly, and keep them centered to maintain a raw mono basement energy.',
+    plugins: ['JClones AC2']
+  },
+  {
+    id: 'lauryn_miseducation_neo_soul',
+    name: 'Lauryn Hill "Miseducation" Warm Neo-Soul Harmonies',
+    category: 'backing_vocal',
+    producer: 'Lauryn Hill',
+    description: 'Recreate lush, velvet-warm neo-soul vocal stacks. Apply a subtle boost at 400Hz and a gentle scoop at 2kHz via \'JS: ReJJ/ReEQ\', drive into a smooth opto-compressor (\'JClones CA2A\') for natural leveling, and send into a plate \'Tukan Lexikan 2\' for classic organic space.',
+    plugins: ['JS: ReJJ/ReEQ', 'JClones CA2A', 'Tukan Lexikan 2']
   }
 ];

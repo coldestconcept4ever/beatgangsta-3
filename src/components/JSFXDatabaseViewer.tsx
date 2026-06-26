@@ -244,6 +244,13 @@ export const JSFXDatabaseViewer = ({ onBack, theme }: { onBack: () => void, them
                  </div>
               </div>
 
+              {selectedPlugin.volumeStagingWarning && (
+                <div className={`p-4 rounded-xl flex flex-col gap-2 ${theme === 'coldest' ? 'bg-red-50 border border-red-200 text-slate-800' : 'bg-red-950/20 border border-red-900/30 text-red-200'}`}>
+                  <div className="text-xs font-bold uppercase flex items-center gap-1.5 text-red-500">⚠ Gain Staging</div>
+                  <div className="text-sm leading-relaxed font-semibold">{selectedPlugin.volumeStagingWarning}</div>
+                </div>
+              )}
+
               <div className="flex flex-col gap-4 mt-2">
                 <h3 className="text-sm font-bold uppercase tracking-widest flex items-center gap-2 border-b pb-2">
                   <Sliders size={16} className="opacity-50" />
