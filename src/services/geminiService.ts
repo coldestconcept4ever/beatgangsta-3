@@ -30,6 +30,7 @@ import { fetchWithDetailedError } from "../lib/api";
 import { keepAlive } from "../lib/keepAlive";
 import { getVendorSpecificParameters, normalizeParameterName } from "../utils/pluginUtils";
 import { sanitizeJSON } from "../utils/jsonUtils";
+import { applySafeParameterMappingToCritique, applySafeParameterMappingToChain } from "../utils/safeParameterMapper";
 const getMultiBandInstruction = (isMultiBandMode: boolean) => {
   return isMultiBandMode ? `
 MULTI-BAND/GAFFEL MODE ON:
@@ -994,6 +995,7 @@ const GLOBAL_PARAMETER_STRICTNESS_PROMPT = `
        - Vocals must sit upfront and never be quiet. When using FET style compressor "1175", any clamp on the threshold (S1) MUST be offset by Gain (S3) by at least +12dB to +18dB depending on the gain reduction to prevent vocals from getting lost or sounding awful.
        - A premium 6-plugin chain MUST be modeled all the time for vocal or stem processing to ensure a grammy-level sound.
     5. GAIN MATCHING & MAINTAINING LOUDNESS: Anytime you use a plugin that reduces volume (like EQ cuts, compression, tape saturation, limiters, etc.), you MUST explicitly include the parameter to compensate for it (e.g., Output/Makeup Gain, Trim, Level). The resulting sound MUST always maintain or improve loudness. Never output settings that significantly reduce the overall volume.
+    6. STRICT DISTORTION & CLIPPING PREVENTION (ZERO DISTORTION TOLERANCE): Under no circumstances should any recommended mastering/leveling chain push the overall loudness of an instrumental or full mix to extreme levels that cause digital clipping, harmonic degradation, or audible distortion. Keep target integrated loudness within safe, professional streaming levels (typically -14.0 LUFS to -10.0 LUFS for competitive music, never pushing past -8.0 LUFS unless explicitly requested, and absolutely never pushing towards -4.0 LUFS which ruins dynamic range and causes major distortion). Always set the limiter's output ceiling/margin to a secure buffer (minimum -1.0 dB or -1.0 dBTP true peak, never higher than -0.5 dB) to prevent inter-sample clipping on downstream D/A converters. Always preserve at least 1.0 to 2.0 dB of clean dynamic headroom before the final limiting/clipping stage. Unless the user explicitly asks for "lo-fi distortion" or "bitcrushing" as a creative artistic effect, you must strictly avoid suggesting aggressive waveshapers, hard clippers, or overdriven compressors/saturators on full mixes or master buses.
     CRITICAL WARNING: NEVER RETURN AN EMPTY RECIPES ARRAY. You MUST ALWAYS generate at least one complete recipe that fulfills the user's request, regardless of strictness constraints.
 `;
 function postProcessResult(result: any) {
@@ -1266,7 +1268,15 @@ export const regeneratePlugin = async (
     }
   });
   try {
-    return JSON.parse(sanitizeJSON(response.text || '{}'));
+    const regenerated = JSON.parse(sanitizeJSON(response.text || '{}'));
+    if (regenerated && regenerated.name) {
+       try {
+           return applySafeParameterMappingToChain([regenerated], undefined, false)[0];
+       } catch (err) {
+           console.warn("[HEADROOM_ALLOCATION] Safe Parameter Mapping post-process failed for regenerate:", err);
+       }
+    }
+    return regenerated;
   } catch (e) {
     console.error("Failed to parse AI response as JSON in regeneratePlugin", e);
     return null;
@@ -2973,12 +2983,28 @@ export const generateVoiceover = async (text: string, bpm?: number | null): Prom
   }
   return { base64: base64Audio, mimeType };
 };
-export const analyzeInstrumental = async (audioBase64: string, mimeType: string): Promise<{ bpm: number, loopStart: number }> => {
+export const analyzeInstrumental = async (audioBase64: string | null, mimeType: string, geminiFileUri?: string | null): Promise<{ bpm: number, loopStart: number }> => {
   const ai = getAI();
   const prompt = "Analyze this instrumental track. Identify its exact BPM (Tempo) and the exact start time (in seconds) of the clearest, most loopable 4-bar or 8-bar section. Output a JSON object with two fields: 'bpm' (a number, the tempo) and 'loopStart' (a number, the start time in seconds). Do not include any other text.";
+  
+  let audioPart: any;
+  if (geminiFileUri && geminiFileUri.trim() !== '') {
+    let uri = geminiFileUri;
+    if (uri.startsWith('files/')) {
+       uri = 'https://generativelanguage.googleapis.com/v1beta/' + uri;
+    } else if (!uri.startsWith('https://')) {
+       uri = 'https://generativelanguage.googleapis.com/v1beta/' + (uri.startsWith('files/') ? uri : 'files/' + uri);
+    }
+    audioPart = { fileData: { fileUri: uri, mimeType } };
+  } else if (audioBase64) {
+    audioPart = { inlineData: { data: audioBase64, mimeType } };
+  } else {
+    throw new Error("No audio data or file URI provided for analysis.");
+  }
+
   const data = await ai.models.generateContent({
     model: "gemini-3-flash-preview",
-    contents: [{ parts: [{ text: prompt }, { inlineData: { data: audioBase64, mimeType } }] }],
+    contents: [{ parts: [{ text: prompt }, audioPart] }],
     config: {
       customAction: 'analyze_instrumental' }
   });
@@ -3254,7 +3280,10 @@ export const getMixCritique = async (
   isMasterMode: boolean = false,
   isJsfxMode: boolean = false,
   installedJsfxPacks: string[] = [],
-  starredPlugins: string[] = []
+  starredPlugins: string[] = [],
+  physicalMetrics?: { integratedLufs: number, truePeak: number, crestFactor: number, duration?: number },
+  referencePhysicalMetrics?: { integratedLufs: number, truePeak: number, crestFactor: number, duration?: number },
+  stemsPhysicalMetrics?: Record<string, { integratedLufs: number, truePeak: number, crestFactor: number, duration?: number }>
 ): Promise<any> => {
   const ai = getAI();
   const pluginListStr = plugins.map(p => {
@@ -3286,7 +3315,7 @@ export const getMixCritique = async (
     if (hasStems && uploadedStems && uploadedStems.length > 0) {
       focusInstruction = `Focus specifically on the VOCALS in this mix. DO NOT focus on the beat or instruments. The user HAS UPLOADED STEMS. You MUST analyze how these stems sound mixed together, rather than just in isolation. Your primary goal is to ensure all the vocals sound completely cohesive, beautifully crispy, upfront, and loud. Suggest plugins that not only improve tone, but strictly level the vocals correctly so they sit proudly on top of the beat. CRITICAL: NEVER recommend compressor/limiter settings that squash or bury the vocals. ALWAYS recommend corresponding makeup gain or output gain (e.g. +6dB to +12dB or matching fader volumes) so they are perfectly audibly clear. ${isBusMode ? "BUS MODE IS ON: Provide advice on how to group these stems into logical busses (e.g., Lead Bus, Backing Bus, Ad-lib Bus) and how to process those busses collectively, in addition to individual track processing." : "Make sure to listen to the ENTIRE length of the audio files, including any intros, bridges, and outros. Provide advice on how to process each individual stem and how they fit together to improve the overall vocal mix."}`;
     } else {
-      focusInstruction = "Focus specifically on the VOCALS in this mix. DO NOT focus on the beat or instruments. Make sure to listen to the ENTIRE length of the song, including any intros, bridges, and outros. Analyze vocal consistency, presence, and processing across the entire song. Ensure the vocal is loud, crisp, and beautifully upfront in the soundstage.";
+      focusInstruction = "Focus specifically on the VOCALS in this mix. DO NOT focus on the beat or instruments. Make sure to listen to the ENTIRE length of the song, including any intros, bridges, and outros. Analyze vocal consistency, presence, and processing across the entire song. Ensure the vocal is loud, crispy, and beautifully upfront in the soundstage.";
     }
   } else {
     if (hasStems && uploadedStems && uploadedStems.length > 0) {
@@ -3301,6 +3330,70 @@ export const getMixCritique = async (
   const previousCritiqueStr = previousCritique ? `\nPREVIOUS CRITIQUE CONTEXT: The user is uploading a new version of the track based on a previous critique. Here are the details of the previous critique:\nTitle: ${previousCritique.title}\nFeedback: ${previousCritique.overallFeedback}\nStrengths: ${JSON.stringify(previousCritique.strengths)}\nWeaknesses: ${JSON.stringify(previousCritique.weaknesses)}\nAction Plan: ${JSON.stringify(previousCritique.actionPlan)}\n\nPlease analyze the new audio, compare it with the previous critique, and provide further guidance to help the user achieve their desired sound. Focus on what has improved, what still needs work, and suggest further parameter adjustments or new plugins if necessary.\n` : "";
   const referenceTrackStr = referenceTrack ? `\nREFERENCE TRACK: The user wants their mix to sound like this reference track: "${referenceTrack}". Please provide a guide for the critiqued MP3 to sound as accurately as possible like this reference track. If the reference track is a known song, use your knowledge to compare the sonic characteristics. If it's a URL, try to understand the context.\n` : "";
   const languageInstruction = getLanguageInstruction(language);
+
+  let physicalAnalysisDiktat = "";
+  if (physicalMetrics) {
+    physicalAnalysisDiktat += `
+      ==================================================
+      📊 PHYSICAL PRE-ANALYSIS METRICS (${hasStems ? "COMBINED MIX SUM" : "MAIN AUDIO"}):
+      - Measured Integrated LUFS (Loudness): ${physicalMetrics.integratedLufs} LUFS
+      - Measured True Peak (dBTP): ${physicalMetrics.truePeak} dBTP
+      - Measured Crest Factor (Dynamics): ${physicalMetrics.crestFactor} dB
+      ${physicalMetrics.duration ? `- Track Duration: ${physicalMetrics.duration} seconds` : ''}
+      ==================================================
+    `;
+  }
+  if (referencePhysicalMetrics) {
+    physicalAnalysisDiktat += `
+      ==================================================
+      📊 PHYSICAL PRE-ANALYSIS METRICS (REFERENCE TRACK):
+      - Measured Integrated LUFS (Loudness): ${referencePhysicalMetrics.integratedLufs} LUFS
+      - Measured True Peak (dBTP): ${referencePhysicalMetrics.truePeak} dBTP
+      - Measured Crest Factor (Dynamics): ${referencePhysicalMetrics.crestFactor} dB
+      ${referencePhysicalMetrics.duration ? `- Track Duration: ${referencePhysicalMetrics.duration} seconds` : ''}
+      ==================================================
+    `;
+  }
+  if (stemsPhysicalMetrics && Object.keys(stemsPhysicalMetrics).length > 0) {
+    physicalAnalysisDiktat += `
+      ==================================================
+      📊 STEMS PHYSICAL PRE-ANALYSIS METRICS:
+    `;
+    for (const [stemName, metrics] of Object.entries(stemsPhysicalMetrics)) {
+      physicalAnalysisDiktat += `
+      Stem Name: "${stemName}"
+      - Measured Integrated LUFS: ${metrics.integratedLufs} LUFS
+      - Measured True Peak: ${metrics.truePeak} dBTP
+      - Measured Crest Factor: ${metrics.crestFactor} dB
+      `;
+    }
+    physicalAnalysisDiktat += `
+      ==================================================
+    `;
+  }
+
+  if (physicalAnalysisDiktat) {
+    physicalAnalysisDiktat += `
+      🚨🚨 CREST FACTOR SIZING & DYNAMICS ENGINEERING DIRECTIVES 🚨🚨
+      You MUST formulate your mix action plan and recommended parameter settings utilizing the physical metrics above. Apply the following strict professional audio principles:
+      
+      1. CREST FACTOR & COMPRESSION STRATEGY:
+         - If Crest Factor is HIGH (greater than 9.0 dB), this indicates a highly dynamic, spikey track (e.g., dynamic instrumental, punchy live drums). You MUST recommend a gentle MULTI-STAGE compression flow to level the signal smoothly without destroying transients or causing severe distortion. For example, specify:
+           * Slow-leveling "glue" compression first (e.g. 2-4dB gain reduction with slow attack ~30ms and automatic release)
+           * Followed by fast transient clamping (e.g. limiting or clipper with fast release to catch rogue peak transients).
+           * Do NOT force a highly dynamic track directly into a heavy limiter as it would smash the transients and cause heavy harmonic distortion.
+         - If Crest Factor is LOW (less than 6.0 dB), this indicates a highly compressed or dense signal. Recommend surgical subtractive EQ to carve muddy areas first and very light, musical parallel compression to bring out micro-details rather than heavy serial compression.
+         
+      2. INTEGRATED LUFS & GAIN STAGING:
+         - Compare the Integrated LUFS of the main track to the reference track (if provided). Calculate the exact target headroom delta.
+         - If the main track is quiet (e.g. under -16 LUFS), specify precise output/makeup gain settings (+2dB to +8dB) on your compression/limiting steps to raise the level professionally to competitive industry standards (-14 to -9 LUFS depending on genre) while maintaining absolute headroom.
+         
+      3. TRUE PEAK (dBTP) SAFE HEADROOM:
+         - Ensure the final step (the brickwall limiter/clipper) has its output ceiling (Margin / Out) strictly set to prevent digital clipping:
+           * Recommend -1.0 dBTP ceiling for streaming services to prevent inter-sample distortion when converted to MP3/AAC.
+           * Recommend -0.1 dBTP or -0.5 dBTP for maximum volume only if crest factor is low and transient control is perfect.
+    `;
+  }
 
   let jsfxDiktat = "";
   if (isJsfxMode) {
@@ -3341,12 +3434,13 @@ export const getMixCritique = async (
     You are an expert audio engineer and producer.
     ${jsfxDiktat}
     CRITICAL RULE FOR IMPROVEMENT: The end result MUST ALWAYS be a concrete improvement to the audio. You must apply proper gain staging and makeup gain on every step that involves compression, saturation, or equalization that reduces peak levels. NEVER reduce the overall volume unintentionally.
-I am uploading an MP3 of a full song project that needs work.
+    I am uploading an MP3 of a full song project that needs work.
     ${focusInstruction}
     ${contextStr}
-${previousCritiqueStr}
+    ${previousCritiqueStr}
     ${referenceTrackStr}
     ${languageInstruction}
+    ${physicalAnalysisDiktat}
     ${PRO_Q_3_LAYOUT_PROMPT}
     ${JSFX_PRIORITY_SPEC_PROMPT}
     ${GULLFOSS_SPEC_PROMPT}
@@ -3696,6 +3790,14 @@ ${previousCritiqueStr}
   result.isGangstaVox = isGangstaVox;
   result.audioBase64 = audioBase64;
   result.mimeType = mimeType;
+
+  // Apply Auto-Adaptive Headroom Allocation & Safe Parameter Mapping
+  try {
+    result = applySafeParameterMappingToCritique(result, physicalMetrics, referencePhysicalMetrics, stemsPhysicalMetrics);
+  } catch (err) {
+    console.warn("[HEADROOM_ALLOCATION] Safe Parameter Mapping post-process failed:", err);
+  }
+
   return result;
 };
 export const getSpecificMixHelp = async (plugins: VSTPlugin[], audioBase64: string | undefined, mimeType: string | undefined, query: string, isGangstaVox: boolean = false, recipeContext?: string, chatHistory: {role: 'user' | 'model', content: string}[] = [], audioUrl?: string, geminiFileUri?: string, language: string = 'en', analogHardware: Hardware[] = [], isMultiBandMode: boolean = false): Promise<{query: string, advice: string, recommendedChain: any[]}> => {
@@ -3785,7 +3887,15 @@ ${getLanguageInstruction(language)}
     throw new Error(`Gemini API Error (Specific Mix Help): ${error instanceof Error ? error.message : String(error)}. Debug Info: contents=${JSON.stringify(contents)}`);
   }
   try {
-    return JSON.parse(sanitizeJSON(response.text || '{"query": "", "advice": "I\'m sorry, I couldn\'t generate a response.", "recommendedChain": []}'));
+    const parsed = JSON.parse(sanitizeJSON(response.text || '{"query": "", "advice": "I\'m sorry, I couldn\'t generate a response.", "recommendedChain": []}'));
+    if (parsed.recommendedChain && Array.isArray(parsed.recommendedChain)) {
+       try {
+           parsed.recommendedChain = applySafeParameterMappingToChain(parsed.recommendedChain, undefined, false);
+       } catch (err) {
+           console.warn("[HEADROOM_ALLOCATION] Safe Parameter Mapping post-process failed for specific help:", err);
+       }
+    }
+    return parsed;
   } catch (e: any) {
     console.error("Detailed Error in getSpecificMixHelp:", e);
     console.error("Safety/Blocked:", JSON.stringify(response?.candidates?.[0] || {}));

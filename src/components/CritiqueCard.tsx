@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { MixCritique, AppTheme, VSTPlugin, Hardware } from '../types';
 import { getSpecificMixHelp, getMixCritique, regeneratePlugin, getLyricAnalysis } from '../services/geminiService';
 import { uploadFileChunked, deleteFileFromDrive } from '../services/uploadService';
+import { analyzePhysicalCharacteristics } from '../utils/audioAnalyzer';
 import { generateDawProjectFromMixCritique } from '../utils/dawprojectUtils';
 import { motion, AnimatePresence } from 'motion/react';
 import { Loader2, Search, CheckCircle2, AlertCircle, Download, RefreshCw, Layers, BarChart2, Mic, Minus, Sparkles, Play, Square, Volume2, Eye, Info, RefreshCcw, Settings, Sliders, Check, Headphones, FileText } from 'lucide-react';
@@ -535,9 +536,15 @@ export const CritiqueCard: React.FC<CritiqueCardProps> = ({ critique, stems = []
               }
             });
           }
+          const isFuzzyPluginMatch = (p1: string, p2: string) => {
+            const n1 = p1.toLowerCase().replace(/^(js:|vst:|au:|vst3:)\s*/i, '').trim();
+            const n2 = p2.toLowerCase().replace(/^(js:|vst:|au:|vst3:)\s*/i, '').trim();
+            return n1 === n2 || n1.includes(n2) || n2.includes(n1);
+          };
+
           if (plan.lyricAutomation?.reaperAutomationPoints) {
             plan.lyricAutomation.reaperAutomationPoints.forEach(ptGroup => {
-              if (ptGroup.pluginName.toLowerCase() === req.name.toLowerCase()) {
+              if (isFuzzyPluginMatch(ptGroup.pluginName, req.name)) {
                 const pointsStr = ptGroup.points.map(pt => `${pt.beat},${pt.value}`).join(';');
                 txtContent += `AUTO|${ptGroup.parameterName}|${pointsStr}\n`;
               }
@@ -545,7 +552,7 @@ export const CritiqueCard: React.FC<CritiqueCardProps> = ({ critique, stems = []
           }
           if (plan.breathAndNoiseMuting?.reaperAutomationPoints) {
             plan.breathAndNoiseMuting.reaperAutomationPoints.forEach(ptGroup => {
-              if (ptGroup.pluginName.toLowerCase() === req.name.toLowerCase()) {
+              if (isFuzzyPluginMatch(ptGroup.pluginName, req.name)) {
                 const pointsStr = ptGroup.points.map(pt => `${pt.beat},${pt.value}`).join(';');
                 txtContent += `AUTO|${ptGroup.parameterName}|${pointsStr}\n`;
               }
@@ -640,6 +647,9 @@ export const CritiqueCard: React.FC<CritiqueCardProps> = ({ critique, stems = []
       };
 
       const base64 = await fileToBase64(file);
+      // Run physical pre-analysis for multi-pass audio evaluation
+      const physicalMetrics = await analyzePhysicalCharacteristics(file);
+      
       const uploadData = await uploadFileChunked(file);
       const audioUrl = uploadData?.url || null;
       if (uploadData?.fileId) {
@@ -666,7 +676,10 @@ export const CritiqueCard: React.FC<CritiqueCardProps> = ({ critique, stems = []
         false, // 17 (isBusMode)
         isMultiBandMode || false, // 18 (isMultiBandMode)
         critique.isMasterMode || false, // 19 (isMasterMode)
-        critique.isJsfxMode || false // 20 (isJsfxMode)
+        critique.isJsfxMode || false, // 20 (isJsfxMode)
+        [], // 21 (installedJsfxPacks)
+        [], // 22 (starredPlugins)
+        physicalMetrics // 23 (physicalMetrics)
       );
       const isWav = file.type.includes('audio/wav');
       if (onLogReceipt) onLogReceipt('Re-Critique Mix', isWav ? 25 : 10);

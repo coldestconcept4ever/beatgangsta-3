@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect, useMemo } from 'react';
 import { motion } from 'motion/react';
 import { X, Video, Play, Pause, Download, Loader2, Plus, Trash2, Scissors, Type, Mic, Wand2, MousePointer2, ChevronLeft, ChevronRight, Undo2, SkipBack, SkipForward, Music } from 'lucide-react';
 import { generateVoiceover, analyzeInstrumental } from '../services/geminiService';
+import { uploadFileChunked } from '../services/uploadService';
 import { AppTheme } from '../types';
 import { Logo } from './Logo';
 import { renderToStaticMarkup } from 'react-dom/server';
@@ -866,21 +867,40 @@ export const ShowcaseEditorModal: React.FC<ShowcaseEditorModalProps> = ({ videoB
           
           try {
              setIsProcessing(true);
-             const chunk = file.slice(0, Math.min(file.size, 1024 * 1024));
-             const buffer = await chunk.arrayBuffer();
-             const uint8Array = new Uint8Array(buffer);
-             
-             let binary = '';
-             for(let i=0; i<uint8Array.length; i+=10000) {
-                 binary += String.fromCharCode.apply(null, Array.from(uint8Array.slice(i, i+10000)));
-             }
-             const base64 = btoa(binary);
              let bpm = 90;
              let loopStart = 0;
+             let geminiFileUri: string | null = null;
+             
              try {
-                const result = await analyzeInstrumental(base64, file.type);
-                bpm = result.bpm || 90;
-                loopStart = result.loopStart || 0;
+                // Upload full instrumental file to R2/Drive and register with the Gemini File API for high-quality audio analysis
+                const uploadResult = await uploadFileChunked(file);
+                if (uploadResult && uploadResult.geminiFileUri) {
+                   geminiFileUri = uploadResult.geminiFileUri;
+                   console.log("Instrumental uploaded successfully for full high-fidelity analysis:", geminiFileUri);
+                }
+             } catch (uploadErr) {
+                console.warn("Could not upload full instrumental track, falling back to local 1MB slice base64 analysis.", uploadErr);
+             }
+             
+             try {
+                if (geminiFileUri) {
+                   const result = await analyzeInstrumental(null, file.type, geminiFileUri);
+                   bpm = result.bpm || 90;
+                   loopStart = result.loopStart || 0;
+                } else {
+                   const chunk = file.slice(0, Math.min(file.size, 1024 * 1024));
+                   const buffer = await chunk.arrayBuffer();
+                   const uint8Array = new Uint8Array(buffer);
+                   
+                   let binary = '';
+                   for(let i=0; i<uint8Array.length; i+=10000) {
+                       binary += String.fromCharCode.apply(null, Array.from(uint8Array.slice(i, i+10000)));
+                   }
+                   const base64 = btoa(binary);
+                   const result = await analyzeInstrumental(base64, file.type);
+                   bpm = result.bpm || 90;
+                   loopStart = result.loopStart || 0;
+                }
                 setInstrumentalBpm(bpm);
                 console.log("Instrumental Analysis:", { bpm, loopStart });
              } catch(err) {

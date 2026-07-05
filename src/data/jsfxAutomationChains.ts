@@ -1445,6 +1445,166 @@ export const JSFX_AUTOMATION_CHAINS: AutomationChain[] = [
     description: 'Take a deep, low-register ad-lib or grunt, pitch it down -12 semitones, squash it with \'JS: 1175\', and boost the 60Hz-80Hz sub frequencies heavily, using the vocal ad-lib itself as an impact bass drop for the track.',
     plugins: ['JS: Pitch Shifter 2', 'JS: 1175 Compressor']
   },
+  {
+    id: 'thug_harajuku_squeal',
+    name: 'Young Thug "Harajuku Squeal" High-Octave Pitch-Bounce',
+    category: 'ad_lib',
+    producer: 'Young Thug',
+    description: 'Feed high-pitched, shrieking vocal ad-libs into an octave-shifting delay. Set \'JS: Pitch Shifter 2\' to +12 semitones, paired with \'JS: Saturated Chorus\' and a wide stereo ping-pong delay to make the high squeals bounce playfully around the stereo field.',
+    plugins: ['JS: Pitch Shifter 2', 'JS: Saturated Chorus', 'JS: Delay']
+  },
+  {
+    id: 'drake_nocta_deep_dive',
+    name: 'Drake / 40 "Ambient Deep-Dive" Lo-Fi Echo',
+    category: 'ad_lib',
+    producer: 'Drake / Noah "40" Shebib',
+    description: 'Send back-and-forth background talking or short vocal responses into a steep low-pass filter (\'JS: RBJ Highpass/Lowpass Filters\' down to 400Hz). Run it through \'JS: Saturated Chorus\' and \'Tukan Lexikan 2\' plate reverb set to 100% wet, creating a dark, distant, underwater vibe.',
+    plugins: ['JS: RBJ Highpass/Lowpass Filters', 'JS: Saturated Chorus', 'Tukan Lexikan 2']
+  },
+  {
+    id: 'yachty_poland_vibrato',
+    name: 'Lil Yachty "Poland" Vocal Tremolo-Vibrato Flutter',
+    category: 'ad_lib',
+    producer: 'Lil Yachty',
+    description: 'Emulate Lil Yachty\'s rapid, warbly vibrato by routing ad-libs through \'JS: Tremolo\' set to a high speed (8Hz to 12Hz) with moderate depth. Blend it with a light pitch modulation from \'JS: Saturated Chorus\' to create that signature high-frequency warble.',
+    plugins: ['JS: Tremolo', 'JS: Saturated Chorus']
+  },
+  {
+    id: 'keef_glo_gang_metallic',
+    name: 'Chief Keef "Glo Gang" Metallic Slapback & Room',
+    category: 'ad_lib',
+    producer: 'Chief Keef',
+    description: 'Create a raw, metallic street aesthetic for ad-libs ("Bang Bang!"). Feed them into an ultra-short slapback delay (\'JS: Delay\' set to 45ms with high feedback), driven by tape saturation (\'JClones AC2\') to create a resonant, raw comb-filter room environment.',
+    plugins: ['JS: Delay', 'JClones AC2']
+  },
+  {
+    id: 'icespice_munch_whisper',
+    name: 'Ice Spice "Munch" Whispered Presence Enhancer',
+    category: 'ad_lib',
+    producer: 'RiotUSA',
+    description: 'Make whispers and breathy ad-libs ("Grah", "Like") hit with extreme upfront clarity. Apply a surgical high-shelf EQ boost with \'JS: ReJJ/ReEQ\', crush them with ultra-fast FET compression (\'JS: 1175 Compressor\' set to 20:1 ratio), and use \'JS: Saturated Chorus\' to widen them slightly without muddying the center.',
+    plugins: ['JS: ReJJ/ReEQ', 'JS: 1175 Compressor', 'JS: Saturated Chorus']
+  },
+  {
+    id: 'travis_rodeo_antidote_flange',
+    name: 'Travis Scott "Rodeo Antidote" Wide Flanged Delay Swell',
+    category: 'ad_lib',
+    producer: 'Travis Scott / Mike Dean',
+    description: 'Squeeze wide, spacious ad-libs into a heavy stereo flanger (\'JS: Flanger\') before feeding into a dotted-eighth note delay. Automate the wet mix to rise on key vowel screams, wrapping the vocal in a trippy, swirling psychedelic texture.',
+    plugins: ['JS: Flanger', 'JS: Delay']
+  },
+  {
+    id: 'kencarson_rage_overdrive',
+    name: 'Ken Carson "Rage Wave" Saturated Overdrive Filter',
+    category: 'ad_lib',
+    producer: 'F1lthy / Star Boy',
+    description: 'For high-energy Opium-style rage ad-libs ("Yeah!", "Go!"). Route them into heavy analog tape saturation (\'JClones AC2\' set to USA-A aggressive tape) and a warm bandpass filter (\'JS: RBJ Highpass/Lowpass Filters\' bandpassing between 600Hz and 3.5kHz) for a gritty, overdriven radio bark.',
+    plugins: ['JClones AC2', 'JS: RBJ Highpass/Lowpass Filters']
+  },
+  {
+    id: 'uzi_eternal_atake_phaser',
+    name: 'Lil Uzi Vert "Eternal Atake" Cosmic Phaser Swirl',
+    category: 'ad_lib',
+    producer: 'Brandon Finessin / Working on Dying',
+    description: 'Send ad-libs shooting into outer space. Feed them into a high-feedback phaser (\'JS: Phaser\') set to a slow sweep rate, layered with \'JS: Auto-Pan\' to make the vocal swirl cosmic-style from ear to ear.',
+    plugins: ['JS: Phaser', 'JS: Auto-Pan']
+  },
+  {
+    id: 'yeat_lyfe_dual_demon',
+    name: 'Yeat "Lyfe" Dual Pitch Octave Demon',
+    category: 'ad_lib',
+    producer: 'BNYX',
+    description: 'Generate Yeat\'s signature demonic layer behind ad-libs. Duplicate the ad-lib send and pitch-shift it down exactly -12 semitones using \'JS: Pitch Shifter 2\'. Blend it with a fast-clamping compressor (\'JS: 1175 Compressor\') and dynamic slapback delay for a thick, multi-octave presence.',
+    plugins: ['JS: Pitch Shifter 2', 'JS: 1175 Compressor', 'JS: Delay']
+  },
+  {
+    id: 'central_cee_uk_drill_multitap',
+    name: 'Central Cee "UK Drill" Spatial Multi-Tap Echo',
+    category: 'ad_lib',
+    producer: 'Young Chencs',
+    description: 'On sharp, rhythmic drill ad-libs ("Oi", "Ha"), use \'JS: Delay\' set to syncopated multi-tap triplets (1/4T and 1/8T) with 100% stereo width. Automate the send strictly on specific words to make the echo bounce outwards across the stereo boundaries.',
+    plugins: ['JS: Delay']
+  },
+  {
+    id: 'carti_die_lit_scream_swell',
+    name: 'Playboi Carti "Die Lit" Screaming Delay Swell',
+    category: 'ad_lib',
+    producer: 'Pi\'erre Bourne',
+    description: 'Perfect for high-pitched squeals and screams ("Bee!", "Homicide!"). Run the ad-lib into \'JS: RBJ Highpass/Lowpass Filters\' to cut all bass below 400Hz. Feed into \'JS: Saturated Chorus\' with deep width and send it to \'JS: Delay\' with 60% feedback, using an automated wet fader that swells up right as the word ends to fill the space.',
+    plugins: ['JS: RBJ Highpass/Lowpass Filters', 'JS: Saturated Chorus', 'JS: Delay']
+  },
+  {
+    id: 'kanye_runaway_distortion_burst',
+    name: 'Kanye West "Runaway" Distorted Vocoder Burst',
+    category: 'ad_lib',
+    producer: 'Kanye West / Mike Dean',
+    description: 'Emulate that screaming, robotic vocal-synth outro effect on vocal bursts. Route the ad-lib through \'JS: Pitch Shifter 2\' set to formants-only shift, drive it aggressively into \'JClones OInflator\' with Clip mode enabled, and wash it in \'Tukan Lexikan 2\' set to a massive hall size with 45% wet mix.',
+    plugins: ['JS: Pitch Shifter 2', 'JClones OInflator', 'Tukan Lexikan 2']
+  },
+  {
+    id: 'travis_astro_stereo_widener',
+    name: 'Travis Scott "Astroworld" Stereo Multi-Delay Widener',
+    category: 'ad_lib',
+    producer: 'Travis Scott / Mike Dean',
+    description: 'A wide, trippy space-widener for signature melodic ad-libs ("Yeah!", "It\'s Lit!"). Pitch-shift a parallel duplicate up +5 semitones, apply \'JS: Saturated Chorus\' with max speed, and run it through \'JS: Auto-Pan\' at a slow 1/4-note speed to send the psychedelic delay bouncing around the ears.',
+    plugins: ['JS: Pitch Shifter 2', 'JS: Saturated Chorus', 'JS: Auto-Pan']
+  },
+  {
+    id: 'wayne_lighter_flick_sparkle',
+    name: 'Lil Wayne "Lighter Flick" Sparkle Gate',
+    category: 'ad_lib',
+    producer: 'Lil Wayne / Manny Fresh',
+    description: 'Designed for sharp, breathy intake sounds, lighter clicks, and short chuckles. Boost the high air band (12kHz+) by +8dB using \'JS: ReJJ/ReEQ\', use an ultra-fast \'JS: Noise Gate\' to cut any low rumble or mic hiss instantly, and add a touch of \'JS: Delay\' (dotted-16th note) for a metallic, crystal-clear high-frequency echo.',
+    plugins: ['JS: ReJJ/ReEQ', 'JS: Noise Gate', 'JS: Delay']
+  },
+  {
+    id: 'thug_slime_season_birdcall',
+    name: 'Young Thug "Slime Season" High Bird-Call Echo',
+    category: 'ad_lib',
+    producer: 'London on da Track',
+    description: 'For Young Thug\'s eccentric, bird-like high-pitched screech ad-libs. Shift the pitch up +12 semitones via \'JS: Pitch Shifter 2\', squash it heavily using \'JS: 1175 Compressor\', and run it into a ping-pong \'JS: Delay\' set to a 1/8-dotted note delay with high feedback to create a fluttering animalistic call.',
+    plugins: ['JS: Pitch Shifter 2', 'JS: 1175 Compressor', 'JS: Delay']
+  },
+  {
+    id: 'savage_slaughter_whisper',
+    name: '21 Savage "Slaughter Gang" Whispered Double',
+    category: 'ad_lib',
+    producer: 'Metro Boomin',
+    description: 'Designed to make dark, whispered ad-libs ("21", "On God") sound menacing and wide. High-pass filter above 500Hz with \'JS: RBJ Highpass/Lowpass Filters\', compress to absolute dust with \'JS: 1175 Compressor\' to bring out the subtle mouth noises, and use \'JS: Saturated Chorus\' to spread the whisper to the far-left and far-right channels.',
+    plugins: ['JS: RBJ Highpass/Lowpass Filters', 'JS: 1175 Compressor', 'JS: Saturated Chorus']
+  },
+  {
+    id: 'popsmoke_woo_sub_reverb',
+    name: 'Pop Smoke "The Woo" Deep Sub-Harmonic Room',
+    category: 'ad_lib',
+    producer: '808Melo',
+    description: 'For deep-chested ad-libs and low-frequency growls ("Woo!", "Baow!"). Boost 150Hz with \'JS: ReJJ/ReEQ\', squash with \'JS: 1175 Compressor\', and feed into \'Tukan Lexikan 2\' set to a dark, cavernous space with a high pre-delay to make the low impact hit hard before the reverb blooms.',
+    plugins: ['JS: ReJJ/ReEQ', 'JS: 1175 Compressor', 'Tukan Lexikan 2']
+  },
+  {
+    id: 'sexyyred_suki_telephone',
+    name: 'Sexyy Red "Suki" In-Your-Face Telephone Saturation',
+    category: 'ad_lib',
+    producer: 'Tay Keith',
+    description: 'For loud, sassy, high-attitude ad-libs ("My Cougar!", "Suki!"). Bandpass the vocal between 500Hz and 3.5kHz with \'JS: RBJ Highpass/Lowpass Filters\', drive it hard into tape emulation saturation using \'JClones AC2\' (USA-A aggressive mode), and compress with \'JS: 1175 Compressor\' for an upfront, gritty radio-megaphone punch.',
+    plugins: ['JS: RBJ Highpass/Lowpass Filters', 'JClones AC2', 'JS: 1175 Compressor']
+  },
+  {
+    id: 'lilbaby_4pf_doubletime',
+    name: 'Lil Baby "4PF" High-Compression Fast-Double',
+    category: 'ad_lib',
+    producer: 'Section 8 / Quay Global',
+    description: 'For rapid, overlapping background word-doubles. Level the volume perfectly using \'JS: Volume/Pan Smoother v5\', clamp peaks with a fast-acting \'JS: 1175 Compressor\', and use \'JS: Saturated Chorus\' set to a tight delay to make the overlapping doubles sit perfectly in the center pocket without masking the lead vocal.',
+    plugins: ['JS: Volume/Pan Smoother v5', 'JS: 1175 Compressor', 'JS: Saturated Chorus']
+  },
+  {
+    id: 'glorilla_fnf_throat_grit',
+    name: 'GloRilla "F.N.F." Aggressive Throat-Grit Resonator',
+    category: 'ad_lib',
+    producer: 'GloRilla / Macaroni Toni',
+    description: 'For raw, deep, high-energy female rap vocal ad-libs ("Let\'s Go!", "Glo!"). Boost the mid-range presence (2.5kHz) using \'JS: ReJJ/ReEQ\', run through \'JClones OInflator\' with high curve setting to accentuate throat grit and chest resonance, and tame peak spikes with \'JS: 1175 Compressor\'.',
+    plugins: ['JS: ReJJ/ReEQ', 'JClones OInflator', 'JS: 1175 Compressor']
+  },
 
   // BACKING VOCALS
   {

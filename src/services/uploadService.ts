@@ -6,14 +6,14 @@ export const uploadFileChunked = async (
 ): Promise<{ url: string, fileId: string, geminiFileUri?: string, geminiError?: string } | null> => {
   let fileToUpload = uploadFile;
 
-  const isWav = uploadFile.name.toLowerCase().endsWith('.wav') || uploadFile.type.includes('wav');
-  const isHeavyAudio = uploadFile.type.startsWith('audio/') && uploadFile.size > 10 * 1024 * 1024; // > 10MB
+  const isWav = fileToUpload.name.toLowerCase().endsWith('.wav') || fileToUpload.type.includes('wav');
+  const isHeavyAudio = fileToUpload.type.startsWith('audio/') && fileToUpload.size > 10 * 1024 * 1024; // > 10MB
 
   if (isWav || isHeavyAudio) {
-    console.log(`[MANDATORY_CONVERSION] Mandatorily converting ${uploadFile.name} to 192kbps MP3 to keep within Cloudflare 10GB free budget context...`);
+    console.log(`[MANDATORY_CONVERSION] Mandatorily converting ${fileToUpload.name} to 192kbps MP3 to keep within Cloudflare 10GB free budget context...`);
     if (onProgress) onProgress('converting', 0);
     try {
-      fileToUpload = await convertWavToMp3(uploadFile, (p) => {
+      fileToUpload = await convertWavToMp3(fileToUpload, (p) => {
         if (onProgress) onProgress('converting', Math.round(p * 100));
       });
       console.log(`[MANDATORY_CONVERSION] Success! Original: ${(uploadFile.size / (1024 * 1024)).toFixed(2)}MB -> Converted: ${(fileToUpload.size / (1024 * 1024)).toFixed(2)}MB`);

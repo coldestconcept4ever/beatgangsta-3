@@ -8,6 +8,7 @@ import { getBeatRecommendations, getCustomBeatRecommendations, getSongBeatRecomm
 import { processAudioForAnalysis } from './utils/audioUtils';
 import { uploadFileChunked, deleteFileFromDrive } from './services/uploadService';
 import { convertWavToMp3 } from './lib/audioConverter';
+import { analyzePhysicalCharacteristics, analyzeCombinedStems } from './utils/audioAnalyzer';
 import { enrichHardware } from './services/enrichmentService';
 import { initAudio } from './utils/midiPlayer';
 import { fetchWithDetailedError } from './lib/api';
@@ -4974,6 +4975,30 @@ The AI was unable to verify these parameters. Please investigate.`;
                 }
               });
             }
+
+            const isFuzzyPluginMatch = (p1: string, p2: string) => {
+              const n1 = p1.toLowerCase().replace(/^(js:|vst:|au:|vst3:)\s*/i, '').trim();
+              const n2 = p2.toLowerCase().replace(/^(js:|vst:|au:|vst3:)\s*/i, '').trim();
+              return n1 === n2 || n1.includes(n2) || n2.includes(n1);
+            };
+
+            if (plan.lyricAutomation?.reaperAutomationPoints) {
+              plan.lyricAutomation.reaperAutomationPoints.forEach((ptGroup: any) => {
+                if (isFuzzyPluginMatch(ptGroup.pluginName, req.name)) {
+                  const pointsStr = ptGroup.points.map((pt: any) => `${pt.beat},${pt.value}`).join(';');
+                  txtContent += `AUTO|${ptGroup.parameterName}|${pointsStr}\n`;
+                }
+              });
+            }
+
+            if (plan.breathAndNoiseMuting?.reaperAutomationPoints) {
+              plan.breathAndNoiseMuting.reaperAutomationPoints.forEach((ptGroup: any) => {
+                if (isFuzzyPluginMatch(ptGroup.pluginName, req.name)) {
+                  const pointsStr = ptGroup.points.map((pt: any) => `${pt.beat},${pt.value}`).join(';');
+                  txtContent += `AUTO|${ptGroup.parameterName}|${pointsStr}\n`;
+                }
+              });
+            }
           });
           // Saike Smooth as last plugin on every track
           const hasSmoothApp = plan.recommendedChain ? plan.recommendedChain.some((p: any) => p.name.toLowerCase().includes('smooth')) : false;
@@ -5354,6 +5379,9 @@ The AI was unable to verify these parameters. Please investigate.`;
           setStems(prev => prev.map(s => s.id === stem.id ? { ...s, status: 'converting' as any } : s));
           try {
             fileToUpload = await convertWavToMp3(fileToUpload);
+            // Assign back to the activeStems list so that browser-side pre-analysis analyzes the lightweight MP3
+            stem.file = fileToUpload;
+            setStems(prev => prev.map(s => s.id === stem.id ? { ...s, file: fileToUpload } : s));
           } catch (e) {
             console.error(`Failed to convert ${fileToUpload.name} to MP3, falling back to original file:`, e);
           }
@@ -5379,9 +5407,20 @@ The AI was unable to verify these parameters. Please investigate.`;
       let finalReferenceTrack = referenceTrack;
       let referenceAudioBase64: string | null = null;
       let referenceGeminiFileUri: string | null = null;
+      let activeReferenceFile: File | null = referenceTrackFile;
       
-      if (referenceTrackFile) {
-        const refUploadData = await uploadFileChunked(referenceTrackFile);
+      if (activeReferenceFile) {
+        let refFileToUpload = activeReferenceFile;
+        // Convert WAV reference track to MP3 if necessary
+        if (refFileToUpload.type.includes('wav') || refFileToUpload.name.toLowerCase().endsWith('.wav')) {
+          try {
+            refFileToUpload = await convertWavToMp3(refFileToUpload);
+            activeReferenceFile = refFileToUpload; // Update local variable for downstream analysis
+          } catch (e) {
+            console.error(`Failed to convert reference track ${refFileToUpload.name} to MP3:`, e);
+          }
+        }
+        const refUploadData = await uploadFileChunked(refFileToUpload);
         if (refUploadData) {
           finalReferenceTrack = refUploadData.url;
           if (refUploadData.fileId) filesToDelete.push(refUploadData.fileId);
@@ -5406,7 +5445,67 @@ Provide the exact JSFX plugin name and required sliders/parameters.`;
       
       const activePlugins = plugins.filter(p => p.type !== 'Studio One Function');
 
-      const critique = await getMixCritique(activePlugins, null, null, 'audio/mpeg', isGangstaVox, true, fullContext, null, finalReferenceTrack, referenceAudioBase64, null, referenceGeminiFileUri, i18n.language, uploadedStems, analogInstruments, analogHardware, isBusMode, isMultiBandMode, isMasterMode, isJsfxMode, installedJsfxPacks, starredPlugins);
+      // Perform physical pre-analysis on each stem and reference track in the browser
+      const stemsPhysicalMetrics: Record<string, any> = {};
+      await Promise.all(
+        activeStems.map(async (stem) => {
+          if (stem.file) {
+            try {
+              const metrics = await analyzePhysicalCharacteristics(stem.file);
+              stemsPhysicalMetrics[stem.file.name] = metrics;
+            } catch (err) {
+              console.warn(`Failed to pre-analyze stem: ${stem.file.name}`, err);
+            }
+          }
+        })
+      );
+
+      let referencePhysicalMetrics: any = undefined;
+      if (activeReferenceFile) {
+        try {
+          referencePhysicalMetrics = await analyzePhysicalCharacteristics(activeReferenceFile);
+        } catch (err) {
+          console.warn("Failed to pre-analyze reference track file:", err);
+        }
+      }
+
+      // Perform a combined physical audio analysis of multiple stems playing concurrently
+      // to build a 100% accurate virtual composite master bus and understand their joint behavior.
+      const stemsFiles = activeStems.map(s => s.file).filter((f): f is File => f !== null);
+      let combinedPhysicalMetrics: any = undefined;
+      try {
+        combinedPhysicalMetrics = await analyzeCombinedStems(stemsFiles, stemsPhysicalMetrics);
+      } catch (err) {
+        console.warn("Failed to compute combined stems physical metrics:", err);
+      }
+
+      const critique = await getMixCritique(
+        activePlugins, 
+        null, 
+        null, 
+        'audio/mpeg', 
+        isGangstaVox, 
+        true, 
+        fullContext, 
+        null, 
+        finalReferenceTrack, 
+        referenceAudioBase64, 
+        null, 
+        referenceGeminiFileUri, 
+        i18n.language, 
+        uploadedStems, 
+        analogInstruments, 
+        analogHardware, 
+        isBusMode, 
+        isMultiBandMode, 
+        isMasterMode, 
+        isJsfxMode, 
+        installedJsfxPacks, 
+        starredPlugins,
+        combinedPhysicalMetrics, // physicalMetrics representing the cumulative mix sum!
+        referencePhysicalMetrics,
+        stemsPhysicalMetrics
+      );
       critique.id = Math.random().toString(36).substr(2, 9);
       critique.isMasterMode = isMasterMode;
       critique.isJsfxMode = isJsfxMode;
@@ -5426,9 +5525,12 @@ Provide the exact JSFX plugin name and required sliders/parameters.`;
       // Wait to clear stems so that DAWProject export can retain the locally uploaded files.
       // setStems(prev => prev.map(s => ({ ...s, file: null, status: 'empty' as const, mimeType: '' })));
       
+      // Do not auto-backup critiques when freshly analyzed, only when saved to vault
+      /*
       if (user && autoBackupPrefs.critiques) {
         handleExecuteCloudSync('backup', { gear: false, settings: false, recipes: false, critiques: true }, true);
       }
+      */
     } catch (err: any) {
       console.error("Failed to analyze stems:", err);
       if (err?.message?.includes("INSUFFICIENT_CREDITS") || err?.message?.includes("402")) {
@@ -5580,6 +5682,7 @@ Provide the exact JSFX plugin name and required sliders/parameters.`;
         if (fileToUpload.type.includes('wav') || fileToUpload.name.toLowerCase().endsWith('.wav')) {
           try {
             fileToUpload = await convertWavToMp3(fileToUpload);
+            processFile = fileToUpload; // Use the lightweight MP3 version for browser-side pre-analysis
           } catch (e) {
             console.error(`Failed to convert ${fileToUpload.name} to MP3, falling back to original file:`, e);
           }
@@ -5659,6 +5762,7 @@ Provide the exact JSFX plugin name and required sliders/parameters.`;
           if (refFileToUpload.type.includes('wav') || refFileToUpload.name.toLowerCase().endsWith('.wav')) {
             try {
               refFileToUpload = await convertWavToMp3(refFileToUpload);
+              processRefFile = refFileToUpload; // Use the lightweight MP3 version for browser-side pre-analysis
             } catch (e) {
               console.error(`Failed to convert ${refFileToUpload.name} to MP3, falling back to original file:`, e);
             }
@@ -5681,6 +5785,25 @@ Provide the exact JSFX plugin name and required sliders/parameters.`;
           }
         }
         
+        // Perform browser-side physical pre-analysis for multi-pass evaluation
+        let physicalMetrics: any = undefined;
+        if (processFile) {
+          try {
+            physicalMetrics = await analyzePhysicalCharacteristics(processFile);
+          } catch (err) {
+            console.warn("Failed to pre-analyze uploaded audio track:", err);
+          }
+        }
+
+        let referencePhysicalMetrics: any = undefined;
+        if (processRefFile) {
+          try {
+            referencePhysicalMetrics = await analyzePhysicalCharacteristics(processRefFile);
+          } catch (err) {
+            console.warn("Failed to pre-analyze reference track file:", err);
+          }
+        }
+
         const activePlugins = plugins.filter(p => p.type !== 'Studio One Function');
 
         let fullContext = critiqueContext;
@@ -5696,7 +5819,32 @@ Only use valid, default REAPER JSFX (JS:). Here is a comprehensive list of actua
 Provide the exact JSFX plugin name and required sliders/parameters.`;
         }
 
-        const critique = await getMixCritique(activePlugins, audioBase64, audioUrl, mimeType, isGangstaVox, hasStems, fullContext, null, finalReferenceTrack, referenceAudioBase64, geminiFileUri, referenceGeminiFileUri, i18n.language, undefined, analogInstruments, analogHardware, isBusMode, isMultiBandMode, isMasterMode, isJsfxMode, installedJsfxPacks, starredPlugins);
+        const critique = await getMixCritique(
+          activePlugins, 
+          audioBase64, 
+          audioUrl, 
+          mimeType, 
+          isGangstaVox, 
+          hasStems, 
+          fullContext, 
+          null, 
+          finalReferenceTrack, 
+          referenceAudioBase64, 
+          geminiFileUri, 
+          referenceGeminiFileUri, 
+          i18n.language, 
+          undefined, 
+          analogInstruments, 
+          analogHardware, 
+          isBusMode, 
+          isMultiBandMode, 
+          isMasterMode, 
+          isJsfxMode, 
+          installedJsfxPacks, 
+          starredPlugins,
+          physicalMetrics,
+          referencePhysicalMetrics
+        );
         critique.id = Math.random().toString(36).substr(2, 9);
         critique.isMasterMode = isMasterMode;
         critique.isJsfxMode = isJsfxMode;
