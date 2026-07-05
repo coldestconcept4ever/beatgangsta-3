@@ -89,6 +89,206 @@ export const JSFX_AUTOMATION_CHAINS: AutomationChain[] = [
     description: 'Assign a fast, chaotic LFO to the cutoff frequency of a bandpass filter (\'JS: RBJ Highpass/Lowpass Filters\') applied to hi-hats or synths, automating the LFO depth to twitch and squelch aggressively, creating unpredictable, glitchy IDM textures.',
     plugins: ['JS: RBJ Highpass/Lowpass Filters']
   },
+  {
+    id: 'questlove_roots_live_groove',
+    name: 'Questlove "The Roots" Organic Live Drum Glue',
+    category: 'beats',
+    producer: 'Questlove',
+    description: 'For live, non-sampled recorded drums, use \'JS: 1175 Compressor\' coupled with tape simulation. Automate the attack/release dynamic envelope on the drum group during choruses to lock the live bass and kick drum into a seamless, breathing organic pocket.',
+    plugins: ['JS: 1175 Compressor']
+  },
+  {
+    id: 'dr_dre_2001_crisp_bass',
+    name: 'Dr. Dre "2001" Crisp Live Bass & Keys',
+    category: 'beats',
+    producer: 'Dr. Dre',
+    description: 'Re-create Dre\'s ultra-crisp, high-definition West Coast sound for live-played basslines and electric pianos. Automate \'JS: 3-Band EQ\' to boost the 50Hz sub and 3kHz snap of the live bass while rolling off sub-lows from the keyboard, ensuring perfect separation.',
+    plugins: ['JS: 3-Band EQ']
+  },
+  {
+    id: 'thundercat_tpab_envelope_bass',
+    name: 'Thundercat "To Pimp a Butterfly" Jazzy Envelope Bass',
+    category: 'beats',
+    producer: 'Terrace Martin / Sounwave',
+    description: 'Add bubble and dynamic movement to a live bass guitar. Apply \'JS: Liteon/statevariable\' or an auto-wah envelope filter, automating the filter cutoff and resonance to open up dynamically on heavy notes, mimicking Thundercat\'s signature liquid tone.',
+    plugins: ['JS: Liteon/statevariable']
+  },
+  {
+    id: 'organized_noize_outkast_brass',
+    name: 'Organized Noize "SpottieOttie" Warm Live Horns',
+    category: 'beats',
+    producer: 'Organized Noize',
+    description: 'For real, live-recorded brass instruments and horns, automate \'JS: Reverb\' wet mix and \'JS: Chorus\' rate dynamically during transition bars to expand the stereo image and give the horn section a majestic, wide, and warm analog space.',
+    plugins: ['JS: Reverb', 'JS: Chorus']
+  },
+  {
+    id: 'mac_miller_jon_brion_rhodes',
+    name: 'Mac Miller / Jon Brion "Swimming" Lush Live Rhodes',
+    category: 'beats',
+    producer: 'Jon Brion',
+    description: 'Apply a subtle, warbly tape flutter to live electric pianos and rhodes. Use \'JS: Phaser\' or a modulated delay, automating the modulation depth and lfo rate slightly over time to simulate a vintage tape machine that gently drifts in pitch.',
+    plugins: ['JS: Phaser', 'JS: Delay']
+  },
+  {
+    id: 'dangelo_voodoo_drum_pocket',
+    name: 'D\'Angelo "Voodoo" Lazy Neo-Soul Drum Pocket',
+    category: 'beats',
+    producer: 'Raphael Saadiq',
+    description: 'For live recorded drums, use \'JS: Auto Expander\' to control tail bleeds, and \'JS: Saturation/Soft Clipper\' to add warm tape compression. Automate the expander\'s range and dry/wet levels dynamically to give live hi-hats and snares a loose, analog backbeat feel.',
+    plugins: ['JS: Auto Expander', 'JS: Saturation/Soft Clipper']
+  },
+  {
+    id: 'anderson_paak_brass_sparkle',
+    name: 'Anderson .Paak "Malibu" Live Horn & Funk Guitar Sparkle',
+    category: 'beats',
+    producer: 'Kelsey Gonzalez',
+    description: 'Enhance live brass sections and funky, rhythmic electric guitars. Apply \'JS: RBJ 4-Band Semi-Parametric EQ\' to emphasize mid-range warmth and clear out mud, coupled with \'JS: LOSER/stereo_enhancer\' to dynamically widen the horns during horn line stabs.',
+    plugins: ['JS: RBJ 4-Band Semi-Parametric EQ', 'JS: LOSER/stereo_enhancer']
+  },
+  {
+    id: 'gambino_redbone_funk_clavinet',
+    name: 'Childish Gambino "Redbone" Classic Funk Clavinet',
+    category: 'beats',
+    producer: 'Ludwig Göransson',
+    description: 'To capture a funky, dynamic vintage clavinet or keyboard performance, use \'JS: Phaser\' and \'JS: Chorus (Stereo)\'. Automate the phaser rate and chorus mix over chorus sections to give live keys a swirling, classic 70s funk character.',
+    plugins: ['JS: Phaser', 'JS: Chorus (Stereo)']
+  },
+  {
+    id: 'outkast_aquemini_acoustic_guitar',
+    name: 'Outkast "Aquemini" Acoustic Guitar Ambient Width',
+    category: 'beats',
+    producer: 'Organized Noize',
+    description: 'Give live recorded acoustic guitars an immersive, spacious stereo image. Route them into \'JS: Delay w/ Chorus\' and \'JS: Stereo Field\'. Automate the delay chorus mix and stereo width over intro and bridge transitions to draw the listener into a lush soundscape.',
+    plugins: ['JS: Delay w/ Chorus', 'JS: Stereo Field']
+  },
+  {
+    id: 'kanye_mbdtf_orchestral_strings',
+    name: 'Kanye West "MBDTF" Huge Live Orchestral Strings',
+    category: 'beats',
+    producer: 'Mike Dean',
+    description: 'For live acoustic string arrangements and massive horn sections. Run them through \'JS: Fairly Childish Compressor/Limiter\' and \'JS: Reverb\'. Automate the compressor\'s threshold and the reverb\'s wet mix on key transient crescendos to explode with cinematic depth.',
+    plugins: ['JS: Fairly Childish Compressor/Limiter', 'JS: Reverb']
+  },
+  {
+    id: 'rza_36chambers_gritty_stabs',
+    name: 'RZA "36 Chambers" Gritty Vintage Live Stabs',
+    category: 'beats',
+    producer: 'RZA',
+    description: 'Make newly recorded live piano and brass instruments sound like they were sampled from old, dusty vinyl. Automate \'JS: LOSER/compciter\' to add gritty harmonic excitation and \'JS: Saturation/Soft Clipper\' to smash peaks, reproducing warm tape grit.',
+    plugins: ['JS: LOSER/compciter', 'JS: Saturation/Soft Clipper']
+  },
+  {
+    id: 'jcole_live_double_bass',
+    name: 'J. Cole "4 Your Eyez Only" Warm Acoustic Double Bass',
+    category: 'beats',
+    producer: 'Elite',
+    description: 'For organic double-bass and acoustic bass guitars. Run through \'JS: 1175 Compressor\' for peak limiting and \'JS: 4-Band EQ\'. Automate the low band EQ frequency and compressor release to preserve wood resonance while controlling boomy peaks.',
+    plugins: ['JS: 1175 Compressor', 'JS: 4-Band EQ']
+  },
+  {
+    id: 'tyler_flower_boy_jazz_flute',
+    name: 'Tyler, The Creator "Flower Boy" Lush Jazz Flutes',
+    category: 'beats',
+    producer: 'Tyler, The Creator',
+    description: 'Perfect for live jazz woodwinds and organic synths. Apply \'JS: Delay w/ Tempo Ping-Pong\' and \'JS: Auto-peaker\'. Automate the ping-pong delay feedback and EQ boost to make flutes float ethereally across the stereo spectrum.',
+    plugins: ['JS: Delay w/ Tempo Ping-Pong', 'JS: Auto-peaker']
+  },
+  {
+    id: 'the_internet_hive_mind_bass',
+    name: 'The Internet "Hive Mind" Tight R&B Bass Guitar',
+    category: 'beats',
+    producer: 'Steve Lacy',
+    description: 'Keep direct-recorded (DI) live electric bass extremely tight, punchy, and funky. Use \'JS: LOSER/gate\' to eliminate hum and \'JS: 3-Band EQ\'. Automate the mid-band frequency (around 200Hz to 500Hz) dynamically to lock with the kick\'s fundamental.',
+    plugins: ['JS: LOSER/gate', 'JS: 3-Band EQ']
+  },
+  {
+    id: 'atcq_love_movement_vibes',
+    name: 'A Tribe Called Quest "Love Movement" Live Vibraphone',
+    category: 'beats',
+    producer: 'The Ummah',
+    description: 'For live vibraphones, bells, and xylophones. Run through \'JS: Chorus (Stereo)\' and \'JS: Reverb\'. Automate the chorus rate and reverb room size over verse sections to impart a warm, dreamlike, classic jazz-hop quality.',
+    plugins: ['JS: Chorus (Stereo)', 'JS: Reverb']
+  },
+  {
+    id: 'dilla_organic_shaker_groove',
+    name: 'J Dilla "Detroit River" Micro-Time Live Percussion',
+    category: 'beats',
+    producer: 'J Dilla',
+    description: 'For real, live-shaken maracas, tambourines, or shakers. Run through \'JS: Auto Expander\' and \'JS: Chorus\'. Automate the expander\'s attack/release to tightly shape the dynamic transient decay, and modulate chorus rate on fill bars for a fluid, humanized back-and-forth micro-swing.',
+    plugins: ['JS: Auto Expander', 'JS: Chorus']
+  },
+  {
+    id: 'masego_tadow_sax_delay',
+    name: 'Masego "Tadow" Dynamic Multi-Delay Saxophone',
+    category: 'beats',
+    producer: 'Masego',
+    description: 'For live saxophone solos and melodic brass lines. Use \'JS: Delay w/ Tempo Ping-Pong\' and \'JS: Reverb\'. Automate the delay feedback and wet mix on sustained sax notes to create lush, cascading soundscapes that swell and decay in time with the song\'s tempo.',
+    plugins: ['JS: Delay w/ Tempo Ping-Pong', 'JS: Reverb']
+  },
+  {
+    id: 'kanye_ghost_town_vintage_organ',
+    name: 'Kanye West "Ghost Town" Warm Overdriven Live B3 Organ',
+    category: 'beats',
+    producer: 'Mike Dean / Kanye West',
+    description: 'For organic hammond organs or live rotary synths. Run through \'JS: Saturation/Soft Clipper\' and \'JS: Flanger (Stereo)\'. Automate the soft clipper drive and flanger rate dynamically to build heat and spinning tension right before choruses hit.',
+    plugins: ['JS: Saturation/Soft Clipper', 'JS: Flanger (Stereo)']
+  },
+  {
+    id: 'kendrick_untitled_unmastered_live_horns',
+    name: 'Kendrick Lamar "Untitled 05" Raw Jazzy Horn Resonator',
+    category: 'beats',
+    producer: 'Terrace Martin',
+    description: 'Enhance real jazz trumpets and saxophones. Apply \'JS: RBJ 4-Band Semi-Parametric EQ\' and \'JS: Auto-peaker\'. Automate the auto-peaker\'s frequency filter on specific notes to mimic a dynamic wah-wah or plunger mute, delivering a highly expressive, vocal-like horn timbre.',
+    plugins: ['JS: RBJ 4-Band Semi-Parametric EQ', 'JS: Auto-peaker']
+  },
+  {
+    id: 'badu_mama_gun_live_harp',
+    name: 'Erykah Badu "Mama\'s Gun" Shimmering Live Harp & Glockenspiel',
+    category: 'beats',
+    producer: 'J Dilla / James Poyser',
+    description: 'For acoustic harps, bells, and music boxes. Run into \'JS: Delay w/ Chorus\' and \'JS: Reverb\'. Automate the chorus rate and reverb room size during slow transitional movements to disperse high-frequency notes into a wide, ambient, dreamlike haze.',
+    plugins: ['JS: Delay w/ Chorus', 'JS: Reverb']
+  },
+  {
+    id: 'neptunes_frontin_live_rhythm_guitar',
+    name: 'The Neptunes "Frontin\'" Crisp Dynamic Rhythm Guitar',
+    category: 'beats',
+    producer: 'Pharrell Williams / Chad Hugo',
+    description: 'Shape a funky, clean-DI rhythm electric guitar. Run through \'JS: LOSER/gate\' and \'JS: 3-Band EQ\'. Automate the high-mid EQ boost (around 1.5kHz) during verse sections to slice through the mix, while the gate dynamically clips long string squeaks.',
+    plugins: ['JS: LOSER/gate', 'JS: 3-Band EQ']
+  },
+  {
+    id: 'mac_miller_grand_finale_emotional_guitars',
+    name: 'Mac Miller "Grand Finale" Screaming Warm Electric Guitar',
+    category: 'beats',
+    producer: 'Mac Miller (Larry Fisherman)',
+    description: 'For soaring, live electric guitar solos. Use \'JS: Tube Harmonics\' and \'JS: Delay\'. Automate the tube saturation drive and delay wet mix on the climax of the solo to drench the guitar in beautiful, harmonic analog saturation and space.',
+    plugins: ['JS: Tube Harmonics', 'JS: Delay']
+  },
+  {
+    id: 'chance_coloring_book_choir_brass',
+    name: 'Chance The Rapper "Coloring Book" Gospel Brass & Choir Space',
+    category: 'beats',
+    producer: 'Donnie Trumpet / Peter Cottontale',
+    description: 'For majestic, live-recorded gospel horns and choral backing tracks. Apply \'JS: LOSER/stereo_enhancer\' and \'JS: Reverb\'. Automate the stereo width from narrow/mono in the verses to ultra-wide in the chorus, simultaneously opening up the reverb decay.',
+    plugins: ['JS: LOSER/stereo_enhancer', 'JS: Reverb']
+  },
+  {
+    id: 'noname_telefone_live_upright_piano',
+    name: 'Noname "Telefone" Cozy Vintage Upright Piano',
+    category: 'beats',
+    producer: 'Cam O\'bi / Phoelix',
+    description: 'Give a pristine live acoustic piano recording a warm, dusty, nostalgic character. Run through \'JS: 3-Band EQ\' and \'JS: Saturation/Soft Clipper\'. Automate the EQ high-shelf cut to warm up the sound, and increase soft clipper threshold during intimate verses to simulate tape compression.',
+    plugins: ['JS: 3-Band EQ', 'JS: Saturation/Soft Clipper']
+  },
+  {
+    id: 'silk_sonic_leave_the_door_open_live_congas',
+    name: 'Silk Sonic "Leave The Door Open" Warm Retro Congas & Shakers',
+    category: 'beats',
+    producer: 'Bruno Mars / D\'Mile',
+    description: 'For real, live-played congas, bongos, and hand percussion. Run through \'JS: 1175 Compressor\' and \'JS: Delay w/ Chorus\'. Automate the compressor threshold to squash peaks, and automate delay mix on transient percussion rolls to widen the groove into the stereo field.',
+    plugins: ['JS: 1175 Compressor', 'JS: Delay w/ Chorus']
+  },
 
   // MAIN / LEAD VOCALS
   {
