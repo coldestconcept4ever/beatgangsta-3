@@ -36,11 +36,14 @@ interface RecipeCardProps {
   onContactSupport?: (pluginInfo: any) => void;
   onMinimize?: () => void;
   isMultiBandMode?: boolean;
+  reaperSyncPin?: string | null;
+  reaperSyncEmail?: string | null;
+  isJsfxMode?: boolean;
 }
 
 import { PluginBubble } from './PluginBubble';
 // ...
-export const RecipeCard: React.FC<RecipeCardProps> = ({ recipe: initialRecipe, isSaved, onSave, theme = 'coldest', dawType, plugins = [], analogHardware = [], drumKits = [], onCloudBackupRecipe, geminiFileUri, onLogReceipt, onCorrectPlugin, onContactSupport, onMinimize, isMultiBandMode = false }) => {
+export const RecipeCard: React.FC<RecipeCardProps> = ({ recipe: initialRecipe, isSaved, onSave, theme = 'coldest', dawType, plugins = [], analogHardware = [], drumKits = [], onCloudBackupRecipe, geminiFileUri, onLogReceipt, onCorrectPlugin, onContactSupport, onMinimize, isMultiBandMode = false, reaperSyncPin, reaperSyncEmail, isJsfxMode = false }) => {
   const { t, i18n } = useTranslation();
   const [recipe, setRecipe] = useState(initialRecipe);
   const [regeneratingPluginId, setRegeneratingPluginId] = useState<string | null>(null);
@@ -210,9 +213,15 @@ export const RecipeCard: React.FC<RecipeCardProps> = ({ recipe: initialRecipe, i
 
   const [isPushingSync, setIsPushingSync] = useState(false);
   const [syncPin, setSyncPin] = useState<string | null>(null);
-  const [syncEmail, setSyncEmail] = useState<string>(() => localStorage.getItem('beatgangsta_sync_email') || '');
+  const [syncEmail, setSyncEmail] = useState<string>(() => reaperSyncEmail || localStorage.getItem('beatgangsta_sync_email') || '');
   const [showEmailInput, setShowEmailInput] = useState(false);
   const [showSyncSuccess, setShowSyncSuccess] = useState(false);
+
+  useEffect(() => {
+    if (reaperSyncEmail) {
+      setSyncEmail(reaperSyncEmail);
+    }
+  }, [reaperSyncEmail]);
 
   const getParamSyncValue = (pluginName: string, paramName: string, rawValue: any): number | null => {
     const valStr = String(rawValue).trim();
@@ -269,7 +278,7 @@ export const RecipeCard: React.FC<RecipeCardProps> = ({ recipe: initialRecipe, i
     }
 
     try {
-      let txtContent = "";
+      let txtContent = "# TYPE: RECIPE\n";
       if (recipe.bpm) {
         txtContent += `TEMPO|${recipe.bpm}\n`;
       }
@@ -443,7 +452,7 @@ export const RecipeCard: React.FC<RecipeCardProps> = ({ recipe: initialRecipe, i
       localStorage.setItem('beatgangsta_sync_email', syncEmail.trim());
 
       setIsPushingSync(true);
-      const generatedPin = Math.floor(1000 + Math.random() * 9000).toString(); // 4 digit pin
+      const generatedPin = reaperSyncPin || Math.floor(1000 + Math.random() * 9000).toString(); // 4 digit pin
       
       const res = await fetch('/api/reaper-sync/push', {
         method: 'POST',
@@ -484,6 +493,16 @@ export const RecipeCard: React.FC<RecipeCardProps> = ({ recipe: initialRecipe, i
       setIsPushingSync(false);
     }
   };
+
+  const lastAutoPushedRecipeTitle = useRef<string | null>(null);
+
+  useEffect(() => {
+    const currentEmail = syncEmail || reaperSyncEmail || localStorage.getItem('beatgangsta_sync_email') || '';
+    if (isJsfxMode && reaperSyncPin && currentEmail && lastAutoPushedRecipeTitle.current !== recipe.title) {
+      lastAutoPushedRecipeTitle.current = recipe.title;
+      handlePushReaperSync();
+    }
+  }, [recipe, isJsfxMode, reaperSyncPin, reaperSyncEmail, syncEmail]);
 
   const [showGangstaVox, setShowGangstaVox] = useState(false);
   const [errorModal, setErrorModal] = useState<{ isOpen: boolean; title: string; message: string; stack?: string }>({

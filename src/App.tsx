@@ -2170,16 +2170,36 @@ The AI was unable to verify these parameters. Please investigate.`;
   });
   const [newJsfxNotification, setNewJsfxNotification] = useState<string | null>(null);
   const [reaperOnline, setReaperOnline] = useState(false);
-  const [reaperSyncPin, setReaperSyncPin] = useState<string | null>(null);
+  const [reaperSyncPin, setReaperSyncPin] = useState<string | null>(() => localStorage.getItem('beatgangsta_reaper_sync_pin'));
   const [isPushingReaperSync, setIsPushingReaperSync] = useState(false);
   const [showSyncSuccess, setShowSyncSuccess] = useState(false);
+
+  const handleToggleJsfxMode = (active: boolean) => {
+    setIsJsfxMode(active);
+    if (active) {
+      setDawType('Reaper');
+      setAudioMode('critique');
+      setHasStems(true);
+      setInputMode('upload');
+      setMainTab('beat');
+      
+      // Ensure we have a PIN
+      let currentPin = reaperSyncPin || localStorage.getItem('beatgangsta_reaper_sync_pin');
+      if (!currentPin) {
+        currentPin = Math.floor(1000 + Math.random() * 9000).toString();
+        setReaperSyncPin(currentPin);
+        localStorage.setItem('beatgangsta_reaper_sync_pin', currentPin);
+      }
+    }
+  };
 
   useEffect(() => {
     localStorage.setItem('beatgangsta_installed_jsfx_packs', JSON.stringify(installedJsfxPacks));
   }, [installedJsfxPacks]);
 
   useEffect(() => {
-    if ((dawType !== 'REAPER' && dawType !== 'Reaper') || !reaperSyncPin) {
+    const isReaperSyncActive = isJsfxMode || dawType === 'REAPER' || dawType === 'Reaper';
+    if (!isReaperSyncActive || !reaperSyncPin) {
       setReaperOnline(false);
       return;
     }
@@ -2218,7 +2238,7 @@ The AI was unable to verify these parameters. Please investigate.`;
     checkStatus();
     const timer = setInterval(checkStatus, 5000);
     return () => clearInterval(timer);
-  }, [dawType, reaperSyncPin, installedJsfxPacks, user?.email]);
+  }, [isJsfxMode, dawType, reaperSyncPin, installedJsfxPacks, user?.email]);
 
   useEffect(() => {
     if (user && user.justReceivedPromo) {
@@ -7810,17 +7830,7 @@ Provide the exact JSFX plugin name and required sliders/parameters.`;
                       type="checkbox" 
                       className="sr-only peer" 
                       checked={isJsfxMode}
-                      onChange={(e) => {
-                        const isChecked = e.target.checked;
-                        setIsJsfxMode(isChecked);
-                        if (isChecked) {
-                          setDawType('Reaper');
-                          setAudioMode('critique');
-                          setHasStems(true);
-                          setInputMode('upload');
-                          setMainTab('beat');
-                        }
-                      }}
+                      onChange={(e) => handleToggleJsfxMode(e.target.checked)}
                     />
                     <div className="w-11 h-6 bg-white/10 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#10b981]"></div>
                     <span className={`ml-3 text-[10px] font-bold uppercase tracking-widest leading-tight ${theme === 'coldest' || theme === 'chef-mode' ? 'text-slate-600' : 'text-white/70'}`}>
@@ -8058,7 +8068,7 @@ Provide the exact JSFX plugin name and required sliders/parameters.`;
                       <div className={`inline-flex items-center gap-3 rounded-full px-4 py-2 ${theme === 'coldest' ? 'bg-white/40' : 'bg-black/40'}`}>
                         <span className={`text-[10px] font-black uppercase tracking-widest transition-colors ${!isJsfxMode ? (theme === 'coldest' ? 'text-slate-900' : 'text-white') : (theme === 'coldest' ? 'text-slate-500' : 'text-white/50')}`}>REAPER JSFX ONLY</span>
                         <button 
-                          onClick={() => setIsJsfxMode(!isJsfxMode)}
+                          onClick={() => handleToggleJsfxMode(!isJsfxMode)}
                           className={`relative w-10 h-5 rounded-full transition-colors ${isJsfxMode ? 'bg-[#10b981]' : 'bg-slate-400/50'}`}
                         >
                           <div className={`absolute top-0.5 left-0.5 w-4 h-4 rounded-full bg-white transition-transform ${isJsfxMode ? 'translate-x-5' : 'translate-x-0'}`} />
@@ -8263,7 +8273,9 @@ Provide the exact JSFX plugin name and required sliders/parameters.`;
                         </button>
                       </div>
 
-                      {(dawType === 'REAPER' || dawType === 'Reaper') && (
+
+
+                    {(dawType === 'REAPER' || dawType === 'Reaper') && (
                         <div className="flex flex-col gap-3">
                           {critiques.length > 0 && (
                             <div className="flex flex-col gap-2">
@@ -9260,6 +9272,9 @@ Provide the exact JSFX plugin name and required sliders/parameters.`;
                           onContactSupport={handleContactSupport}
                           onMinimize={() => handleMinimizeRecipe(recipe)}
                           isMultiBandMode={isMultiBandMode}
+                          reaperSyncPin={reaperSyncPin}
+                          reaperSyncEmail={user?.email || localStorage.getItem('beatgangsta_sync_email')}
+                          isJsfxMode={isJsfxMode}
                         />
                       </ErrorBoundary>
                     </motion.div>
@@ -9310,7 +9325,10 @@ Provide the exact JSFX plugin name and required sliders/parameters.`;
                           onContactSupport={handleContactSupport}
                           onMinimize={() => handleMinimizeCritique(critique, idx)}
                           isMultiBandMode={isMultiBandMode}
-                           dawType={dawType}
+                          dawType={dawType}
+                          reaperSyncPin={reaperSyncPin}
+                          reaperSyncEmail={user?.email || localStorage.getItem('beatgangsta_sync_email')}
+                          isJsfxMode={isJsfxMode}
                         />
                       </ErrorBoundary>
                     </motion.div>

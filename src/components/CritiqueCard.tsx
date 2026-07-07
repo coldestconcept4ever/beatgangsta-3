@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { MixCritique, AppTheme, VSTPlugin, Hardware } from '../types';
 import { getSpecificMixHelp, getMixCritique, regeneratePlugin, getLyricAnalysis } from '../services/geminiService';
@@ -40,6 +40,9 @@ interface CritiqueCardProps {
   onMinimize?: () => void;
   isMultiBandMode?: boolean;
   dawType?: string | null;
+  reaperSyncPin?: string | null;
+  reaperSyncEmail?: string | null;
+  isJsfxMode?: boolean;
 }
 
 const getDawSpecificGuide = (daw: string | null) => {
@@ -145,7 +148,7 @@ const getDawSpecificGuide = (daw: string | null) => {
   };
 };
 
-export const CritiqueCard: React.FC<CritiqueCardProps> = ({ critique, stems = [], theme, plugins, analogInstruments = [], analogHardware = [], audioBase64, audioUrl, geminiFileUri, mimeType, isSaved, onSave, onUpdateCritique, onReCritique, currentAudioInfo, onLogReceipt, onCorrectPlugin, onContactSupport, onMinimize, isMultiBandMode = false, dawType = null }) => {
+export const CritiqueCard: React.FC<CritiqueCardProps> = ({ critique, stems = [], theme, plugins, analogInstruments = [], analogHardware = [], audioBase64, audioUrl, geminiFileUri, mimeType, isSaved, onSave, onUpdateCritique, onReCritique, currentAudioInfo, onLogReceipt, onCorrectPlugin, onContactSupport, onMinimize, isMultiBandMode = false, dawType = null, reaperSyncPin, reaperSyncEmail, isJsfxMode = false }) => {
   const { t, i18n } = useTranslation();
   const [specificHelpQuery, setSpecificHelpQuery] = useState('');
   const [isLoadingSpecificHelp, setIsLoadingSpecificHelp] = useState(false);
@@ -458,9 +461,15 @@ export const CritiqueCard: React.FC<CritiqueCardProps> = ({ critique, stems = []
 
   const [isPushingSync, setIsPushingSync] = useState(false);
   const [syncPin, setSyncPin] = useState<string | null>(null);
-  const [syncEmail, setSyncEmail] = useState<string>(() => localStorage.getItem('beatgangsta_sync_email') || '');
+  const [syncEmail, setSyncEmail] = useState<string>(() => reaperSyncEmail || localStorage.getItem('beatgangsta_sync_email') || '');
   const [showEmailInput, setShowEmailInput] = useState(false);
   const [syncError, setSyncError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (reaperSyncEmail) {
+      setSyncEmail(reaperSyncEmail);
+    }
+  }, [reaperSyncEmail]);
 
   const getParamSyncValue = (pluginName: string, paramName: string, rawValue: any): number | null => {
     const valStr = String(rawValue).trim();
@@ -519,7 +528,7 @@ export const CritiqueCard: React.FC<CritiqueCardProps> = ({ critique, stems = []
     setSyncError(null);
 
     try {
-      let txtContent = "";
+      let txtContent = "# TYPE: CRITIQUE\n";
       
       critique.actionPlan.forEach(plan => {
         if (!plan.targetStem) return;
@@ -569,7 +578,7 @@ export const CritiqueCard: React.FC<CritiqueCardProps> = ({ critique, stems = []
       localStorage.setItem('beatgangsta_sync_email', syncEmail.trim());
 
       setIsPushingSync(true);
-      const generatedPin = Math.floor(1000 + Math.random() * 9000).toString(); // 4 digit pin
+      const generatedPin = reaperSyncPin || Math.floor(1000 + Math.random() * 9000).toString(); // 4 digit pin
       
       const res = await fetch('/api/reaper-sync/push', {
         method: 'POST',
@@ -602,6 +611,16 @@ export const CritiqueCard: React.FC<CritiqueCardProps> = ({ critique, stems = []
       setIsPushingSync(false);
     }
   };
+
+  const lastAutoPushedCritiqueId = useRef<string | null>(null);
+
+  useEffect(() => {
+    const currentEmail = syncEmail || reaperSyncEmail || localStorage.getItem('beatgangsta_sync_email') || '';
+    if (isJsfxMode && reaperSyncPin && currentEmail && lastAutoPushedCritiqueId.current !== critique.id) {
+      lastAutoPushedCritiqueId.current = critique.id;
+      handlePushReaperSync();
+    }
+  }, [critique, isJsfxMode, reaperSyncPin, reaperSyncEmail, syncEmail]);
 
   const handleSpecificHelpSearch = async () => {
     if (!specificHelpQuery.trim()) return;

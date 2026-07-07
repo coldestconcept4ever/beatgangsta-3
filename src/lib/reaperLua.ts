@@ -909,7 +909,7 @@ function draw_dashboard(start_y, click_pressed)
     else
       gfx.set(1, 1, 1, 0.9)
     end
-    gfx.drawstr("STATUS: ⚡ NEW RECIPES! SYNC NOW!")
+    gfx.drawstr("STATUS: " .. state.status_msg)
   else
     gfx.drawstr("STATUS: MONITORING CLOUD NODE")
   end
@@ -1319,7 +1319,13 @@ local function poll_for_new_recipes()
         if content ~= "" and not content:match("error") then
           if state.last_payload and state.last_payload ~= content then
             state.has_new_recipes = true
-            state.status_msg = "BEATGANGSTA DETECTED NEW RECIPES! SYNC NOW!"
+            if content:sub(1, 14) == "# TYPE: RECIPE" then
+              state.status_msg = "NEW RECIPE DETECTED! SYNC NOW?"
+            elseif content:sub(1, 16) == "# TYPE: CRITIQUE" then
+              state.status_msg = "NEW CRITIQUE DETECTED! SYNC NOW?"
+            else
+              state.status_msg = "NEW RESULTS DETECTED! SYNC NOW?"
+            end
           end
         end
       elseif os.time() - start_time < 3 then
