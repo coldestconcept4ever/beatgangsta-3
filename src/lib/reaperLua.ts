@@ -1227,16 +1227,8 @@ local function post_reaper_status()
   if f then f:close(); table.insert(packs, "ReaTeam JSFX") end
   
   -- Scan Michael-P
-  f = io.open(effects_path .. "MIP2" .. sep .. "mip2-compressor", "r") or io.open(effects_path .. "mip2" .. sep .. "compressor", "r") or io.open(effects_path .. "Michael-P" .. sep .. "mip2-compressor", "r")
-  if f then f:close(); table.insert(packs, "MIP2 Michael-P JSFX") end
   
-  -- Scan Mudra
-  f = io.open(effects_path .. "Mudra" .. sep .. "spectral-shaper", "r") or io.open(effects_path .. "mudra" .. sep .. "spectral-shaper", "r")
-  if f then f:close(); table.insert(packs, "Mudra Lukas JSFX") end
   
-  -- Scan euPhonia
-  f = io.open(effects_path .. "euPhonia" .. sep .. "spatial-expander", "r") or io.open(effects_path .. "euphonia" .. sep .. "spatial-expander", "r")
-  if f then f:close(); table.insert(packs, "euPhonia JSFX") end
   
   -- Scan JST
   f = io.open(effects_path .. "JST" .. sep .. "transient-designer", "r") or io.open(effects_path .. "jst" .. sep .. "transient-designer", "r")
@@ -1511,7 +1503,7 @@ local function add_fx_fuzzy(track, fx_name)
   local fallbacks = {}
   
   if fx_lower:find("eq") or fx_lower:find("filter") or fx_lower:find("1073") or fx_lower:find("tilt") then
-    fallbacks = { "JS: ReJJ/ReEQ", "JS: Saike Saike Smooth", "JS: Mudra/Spectral-Shaper", "JS: LOSER/3BandEQ", "JS: 3-Band EQ", "JS: Liteon/rbj1073", "VST: ReaEQ (Cockos)", "VST: ReaEQ" }
+    fallbacks = { "JS: ReJJ/ReEQ", "JS: Saike Saike Smooth", "JS: LOSER/3BandEQ", "JS: 3-Band EQ", "JS: Liteon/rbj1073", "VST: ReaEQ (Cockos)", "VST: ReaEQ" }
   elseif fx_lower:find("comp") or fx_lower:find("limiter") or fx_lower:find("limit") or fx_lower:find("1175") or fx_lower:find("eventhorizon") or fx_lower:find("dyno") or fx_lower:find("gate") or fx_lower:find("clipper") or fx_lower:find("compressor") then
     fallbacks = { "JS: 1175 Compressor", "JS: LOSER/1175", "JS: Event Horizon Clipper/Limiter", "VST: ReaComp (Cockos)", "VST: ReaComp" }
   elseif fx_lower:find("delay") or fx_lower:find("echo") then

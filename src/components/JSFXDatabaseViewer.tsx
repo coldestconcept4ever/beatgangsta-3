@@ -6,15 +6,13 @@ const getUiType = (plugin: JSFXProfile): 'gui' | 'slider' => {
   const guiPacks = [
     'Tukan Studios', 
     'Geraint Luff', 
-    'Saike JSFX', 
     'Saike Tools (Joep Vanlier)', 
     'Sonic Anomaly', 
     'Suzuki (RCGN) JSFX',
     'Suzuki-Scripts (lewloiwc / Suzuki)',
     'ReJJ',
     'Souk21 ReaPack',
-    'Erriez',
-    'MIP2 Michael-P JSFX'
+    'Erriez'
   ];
   if (plugin.packRequired && guiPacks.includes(plugin.packRequired)) return 'gui';
   

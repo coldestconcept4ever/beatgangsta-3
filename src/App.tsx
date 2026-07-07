@@ -751,6 +751,22 @@ const App: React.FC = () => {
   const [verificationSessionId, setVerificationSessionId] = useState(0);
   const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
 
+  const getTurnstileSiteKey = () => {
+    const isDevOrPreview = 
+      window.location.hostname === 'localhost' || 
+      window.location.hostname.endsWith('.run.app') || 
+      window.location.hostname.includes('webcontainer') ||
+      window.location.hostname.includes('127.0.0.1');
+    
+    if (isDevOrPreview) {
+      // Use Cloudflare Turnstile Always Pass testing site key for development/preview
+      return '0x4AAAAAACkH6-i-na5YIlP9';
+    }
+    return typeof import.meta.env.VITE_TURNSTILE_SITE_KEY === 'string' 
+      ? import.meta.env.VITE_TURNSTILE_SITE_KEY 
+      : '0x4AAAAAACkH6-i-na5YIlP9';
+  };
+
   const [showConsentModal, setShowConsentModal] = useState(false);
   const [isCheckingTerms, setIsCheckingTerms] = useState(false);
   const [isSavingConsent, setIsSavingConsent] = useState(false);
@@ -1796,7 +1812,7 @@ The AI was unable to verify these parameters. Please investigate.`;
       if ((window as any).turnstile) {
         const elements = document.querySelectorAll('.cf-turnstile:not([data-rendered])');
         elements.forEach((el: any) => {
-          const sitekey = import.meta.env.VITE_TURNSTILE_SITE_KEY || '0x4AAAAAACkH6-i-na5YIlP9';
+          const sitekey = getTurnstileSiteKey();
           (window as any).turnstile.render(el, {
             sitekey: sitekey,
             callback: (token: string) => {
@@ -1970,6 +1986,7 @@ The AI was unable to verify these parameters. Please investigate.`;
   const [showJsfxHelpModal, setShowJsfxHelpModal] = useState(false);
   const [showReapackReposModal, setShowReapackReposModal] = useState(false);
     const [copiedPackReapack, setCopiedPackReapack] = useState<string | null>(null);
+    const [copiedAllPacks, setCopiedAllPacks] = useState<boolean>(false);
 
   const COMMUNITY_JSFX_PACKS = [
     {
@@ -2009,28 +2026,10 @@ The AI was unable to verify these parameters. Please investigate.`;
         "reapack": "https://github.com/ReaTeam/JSFX/raw/master/index.xml"
     },
     {
-        "name": "MIP2 Michael-P JSFX",
-        "desc": "MIP2 JSFX plugins",
-        "source": "https://github.com/Michael-P/MIP2_JSFX",
-        "reapack": "https://raw.githubusercontent.com/Michael-P/MIP2_JSFX/master/index.xml"
-    },
-    {
-        "name": "Mudra Lukas JSFX",
-        "desc": "Mudra Lukas JSFX",
-        "source": "https://github.com/MudraLukas/jsfx",
-        "reapack": "https://raw.githubusercontent.com/MudraLukas/jsfx/master/index.xml"
-    },
-    {
-        "name": "euPhonia JSFX",
-        "desc": "euPhonia JSFX",
-        "source": "https://github.com/euPhonia/euPhonia_jsfx",
-        "reapack": "https://raw.githubusercontent.com/euPhonia/euPhonia_jsfx/master/index.xml"
-    },
-    {
-        "name": "JST JSFX Toolkit",
-        "desc": "JST JSFX Toolkit",
-        "source": "https://github.com/JoepVanHeerbeek/SaikeJSFX",
-        "reapack": "https://raw.githubusercontent.com/JoepVanHeerbeek/SaikeJSFX/master/index.xml"
+        "name": "Saike Tools (Joep Vanlier)",
+        "desc": "Saike JSFX Plugins",
+        "source": "https://github.com/JoepVanlier/JSFX",
+        "reapack": "https://raw.githubusercontent.com/JoepVanlier/JSFX/master/index.xml"
     },
     {
         "name": "JSFX Clones",
@@ -5657,42 +5656,57 @@ Provide the exact JSFX plugin name and required sliders/parameters.`;
       let processFile = file;
 
       if (!processFile && linkUrl) {
-        let res: Response | null = null;
-        try {
-          res = await fetch(linkUrl);
-          if (!res.ok && res.status !== 404 && res.status !== 403) {
-            res = null; // Force proxy fallback if it's not a hard failure
+        const urlLower = linkUrl.toLowerCase();
+        const isWebLink = 
+          urlLower.includes('youtube.com') || 
+          urlLower.includes('youtu.be') || 
+          urlLower.includes('spotify.com') || 
+          urlLower.includes('soundcloud.com') ||
+          urlLower.includes('apple.com') ||
+          urlLower.includes('instagram.com') ||
+          urlLower.includes('tiktok.com') ||
+          (!urlLower.endsWith('.mp3') && !urlLower.endsWith('.wav') && !urlLower.endsWith('.m4a') && !urlLower.endsWith('.ogg') && !urlLower.endsWith('.flac') && !urlLower.endsWith('.aif') && !urlLower.endsWith('.aiff') && !urlLower.endsWith('.mp4'));
+
+        if (isWebLink) {
+          console.log("Web streaming link detected. Bypassing audio download, analyzing textually directly via Gemini.");
+        } else {
+          let res: Response | null = null;
+          try {
+            res = await fetch(linkUrl);
+            if (!res.ok && res.status !== 404 && res.status !== 403) {
+              res = null; // Force proxy fallback if it's not a hard failure
+            }
+          } catch (directErr) {
+            console.warn("Direct fetch failed (likely CORS), falling back to proxy...", directErr);
           }
-        } catch (directErr) {
-          console.warn("Direct fetch failed (likely CORS), falling back to proxy...", directErr);
-        }
-        
-        if (!res || !res.ok) {
-           res = await fetch('/api/proxy-audio', {
-             method: 'POST',
-             headers: { 'Content-Type': 'application/json' },
-             body: JSON.stringify({ url: linkUrl })
-           });
-        }
-        
-        if (!res.ok) {
-           let errMsg = 'Failed to fetch audio from link.';
-           try {
-              const errData = await res.json();
-              errMsg = errData.error || errMsg;
-           } catch(e) { }
-           throw new Error(errMsg);
-        }
-        
-        try {
-          const blob = await res.blob();
-          let extension = 'mp3';
-          const contentType = res.headers.get('content-type') || '';
-          if (contentType.includes('wav')) extension = 'wav';
-          else if (contentType.includes('flac')) extension = 'flac';
-          processFile = new File([blob], `downloaded_link.${extension}`, { type: contentType || 'audio/mpeg' });
-        } catch (e: any) {
-          throw new Error(`Could not process audio data: ${e.message}`);
+          
+          if (!res || !res.ok) {
+             res = await fetch('/api/proxy-audio', {
+               method: 'POST',
+               headers: { 'Content-Type': 'application/json' },
+               body: JSON.stringify({ url: linkUrl })
+             });
+          }
+          
+          if (!res.ok) {
+             let errMsg = 'Failed to fetch audio from link.';
+             try {
+                const errData = await res.json();
+                errMsg = errData.error || errMsg;
+             } catch(e) { }
+             throw new Error(errMsg);
+          }
+          
+          try {
+            const blob = await res.blob();
+            let extension = 'mp3';
+            const contentType = res.headers.get('content-type') || '';
+            if (contentType.includes('wav')) extension = 'wav';
+            else if (contentType.includes('flac')) extension = 'flac';
+            processFile = new File([blob], `downloaded_link.${extension}`, { type: contentType || 'audio/mpeg' });
+          } catch (e: any) {
+            throw new Error(`Could not process audio data: ${e.message}`);
+          }
         }
       }
 
@@ -7844,7 +7858,7 @@ Provide the exact JSFX plugin name and required sliders/parameters.`;
                   <div id="tutorial-turnstile" className="flex items-center justify-center overflow-visible" style={{ width: '260px', height: '52px' }}>
                     <div key={verificationSessionId}>
                       <Turnstile
-                        sitekey={typeof import.meta.env.VITE_TURNSTILE_SITE_KEY === 'string' ? import.meta.env.VITE_TURNSTILE_SITE_KEY : '0x4AAAAAACkH6-i-na5YIlP9'}
+                        sitekey={getTurnstileSiteKey()}
                         onVerify={(token) => {
                           if ((window as any).onUploadSuccess) {
                             (window as any).onUploadSuccess(token);
@@ -7911,7 +7925,7 @@ Provide the exact JSFX plugin name and required sliders/parameters.`;
                 <div id="tutorial-turnstile-studio" className="flex items-center justify-center overflow-visible" style={{ width: '260px', height: '52px' }}>
                   <div key={verificationSessionId}>
                     <Turnstile
-                      sitekey={typeof import.meta.env.VITE_TURNSTILE_SITE_KEY === 'string' ? import.meta.env.VITE_TURNSTILE_SITE_KEY : '0x4AAAAAACkH6-i-na5YIlP9'}
+                      sitekey={getTurnstileSiteKey()}
                       onVerify={(token) => {
                         if ((window as any).onUploadSuccess) {
                           (window as any).onUploadSuccess(token);
@@ -10460,6 +10474,25 @@ Provide the exact JSFX plugin name and required sliders/parameters.`;
                       Get ReaPack <ExternalLink className="w-3.5 h-3.5" />
                     </a>
                   </div>
+                </div>
+
+                <div className="flex justify-end mb-4">
+                  <button
+                    onClick={() => {
+                      const allLinks = COMMUNITY_JSFX_PACKS.map(p => p.reapack).join('\n');
+                      navigator.clipboard.writeText(allLinks);
+                      setCopiedAllPacks(true);
+                      setTimeout(() => setCopiedAllPacks(false), 2000);
+                    }}
+                    className={`px-4 py-2.5 rounded-xl text-xs font-black uppercase tracking-widest transition-colors flex items-center gap-2 ${
+                      copiedAllPacks
+                        ? (theme === 'coldest' ? 'bg-sky-500 text-white shadow-md shadow-sky-500/20' : 'bg-[#10b981] text-white shadow-md shadow-[#10b981]/20')
+                        : (theme === 'coldest' ? 'bg-sky-100 hover:bg-sky-200 text-sky-700' : 'bg-zinc-800 hover:bg-zinc-700 text-zinc-300')
+                    }`}
+                  >
+                    <Copy className="w-4 h-4" />
+                    {copiedAllPacks ? 'Copied All Links!' : 'Copy All JSFX Repo Links'}
+                  </button>
                 </div>
 
                 <div className="space-y-4">

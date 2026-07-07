@@ -662,8 +662,6 @@ const JSFX_PRIORITY_SPEC_PROMPT = `
     3. **JS: Saike Saike Smooth**:
        - Use this for dynamic resonance suppression and spectral de-harshing.
        - EVERY single track's FX chain (and buses) MUST end with "JS: Saike Saike Smooth" as the final plugin to suppress harshness and clean up the high-frequency spectrum.
-    4. **JS: Mudra/Spectral-Shaper**:
-       - Use this as the intelligent spectral dynamics and high-frequency resonance controller. Recommend placing it on vocals, harsh instruments, or groups to smooth out problematic frequencies dynamically.
 `;
 const GULLFOSS_SPEC_PROMPT = `
     CRITICAL - GULLFOSS / GULLFOSS LIVE / GULLFOSS MASTER:
@@ -3220,8 +3218,10 @@ export const getAudioBeatRecommendations = async (plugins: VSTPlugin[], audioBas
   } else if (audioBase64) {
     let finalMimeType = mimeType;
     parts.push({ inlineData: { data: audioBase64, mimeType: finalMimeType } });
+  } else if (audioUrl) {
+    console.log("Analyzing web link textually:", audioUrl);
   } else {
-    throw new Error("No audio file provided for analysis (Beat).");
+    throw new Error("No audio file or link provided for analysis (Beat).");
   }
   const multiBandInstruction = getMultiBandInstruction(isMultiBandMode);
   parts.push({ text: prompt + multiBandInstruction });
