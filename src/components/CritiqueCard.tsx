@@ -1,12 +1,12 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { MixCritique, AppTheme, VSTPlugin, Hardware } from '../types';
-import { getSpecificMixHelp, getMixCritique, regeneratePlugin, getLyricAnalysis } from '../services/geminiService';
+import { getSpecificMixHelp, getMixCritique, regeneratePlugin, getLyricAnalysis, compareMixDelta } from '../services/geminiService';
 import { uploadFileChunked, deleteFileFromDrive } from '../services/uploadService';
 import { analyzePhysicalCharacteristics } from '../utils/audioAnalyzer';
 import { generateDawProjectFromMixCritique } from '../utils/dawprojectUtils';
 import { motion, AnimatePresence } from 'motion/react';
-import { Loader2, Search, CheckCircle2, AlertCircle, Download, RefreshCw, Layers, BarChart2, Mic, Minus, Sparkles, Play, Square, Volume2, Eye, Info, RefreshCcw, Settings, Sliders, Check, Headphones, FileText } from 'lucide-react';
+import { Loader2, Search, CheckCircle2, AlertCircle, Download, RefreshCw, Layers, BarChart2, Mic, Minus, Sparkles, Play, Square, Volume2, Eye, Info, RefreshCcw, Settings, Sliders, Check, Headphones, FileText, Upload, Music } from 'lucide-react';
 import { PluginBubble } from './PluginBubble';
 import { CritiqueHTMLTemplate } from './CritiqueHTMLTemplate';
 
@@ -465,6 +465,14 @@ export const CritiqueCard: React.FC<CritiqueCardProps> = ({ critique, stems = []
   const [showEmailInput, setShowEmailInput] = useState(false);
   const [syncError, setSyncError] = useState<string | null>(null);
 
+  // Delta Analysis States
+  const [processedAudioBase64, setProcessedAudioBase64] = useState<string | null>(null);
+  const [processedMimeType, setProcessedMimeType] = useState<string | null>(null);
+  const [isAnalyzingDelta, setIsAnalyzingDelta] = useState(false);
+  const [deltaResult, setDeltaResult] = useState<{analysis: string, correctiveActions: any[]} | null>(null);
+  const [deltaAnalysisError, setDeltaAnalysisError] = useState<string | null>(null);
+  const processedAudioInputRef = useRef<HTMLInputElement>(null);
+
   useEffect(() => {
     if (reaperSyncEmail) {
       setSyncEmail(reaperSyncEmail);
@@ -517,6 +525,65 @@ export const CritiqueCard: React.FC<CritiqueCardProps> = ({ critique, stems = []
       return `PARAM_MOD|${dive.parameter}|active=1;chan=${chan};dir=${dir};strength=0.5;attack=10;release=100\n`;
     }
     return '';
+  };
+
+  const handleProcessedAudioFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setDeltaAnalysisError(null);
+    setDeltaResult(null);
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const base64String = (event.target?.result as string).split(',')[1];
+      setProcessedAudioBase64(base64String);
+      setProcessedMimeType(file.type);
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleAnalyzeDelta = async () => {
+    if (!processedAudioBase64 || !processedMimeType) {
+      setDeltaAnalysisError("Please upload the processed audio first.");
+      return;
+    }
+
+    setIsAnalyzingDelta(true);
+    setDeltaAnalysisError(null);
+
+    try {
+      // Build a recipe context string from the critique
+      let recipeContext = "";
+      critique.actionPlan.forEach(plan => {
+        if (!plan.targetStem) return;
+        recipeContext += `\\nStem: ${plan.targetStem}\\n`;
+        plan.recommendedChain?.forEach(plugin => {
+          recipeContext += `  Plugin: ${plugin.name}\\n`;
+          plugin.deepDive?.forEach(dive => {
+            recipeContext += `    - ${dive.parameter}: ${dive.value} (${dive.explanation || ''})\\n`;
+          });
+        });
+      });
+
+      const result = await compareMixDelta(
+        plugins,
+        audioBase64,
+        mimeType,
+        processedAudioBase64,
+        processedMimeType,
+        recipeContext,
+        isJsfxMode,
+        [] // installedJsfxPacks not easily available here, but empty is fine for this analysis
+      );
+
+      setDeltaResult(result);
+    } catch (err: any) {
+      console.error("Error analyzing delta:", err);
+      setDeltaAnalysisError(err.message || "An error occurred during analysis.");
+    } finally {
+      setIsAnalyzingDelta(false);
+    }
   };
 
   const handlePushReaperSync = async () => {
@@ -924,6 +991,95 @@ export const CritiqueCard: React.FC<CritiqueCardProps> = ({ critique, stems = []
               )}
             </AnimatePresence>
           </div>
+
+          {isJsfxMode && (
+            <div className={`mt-4 w-full max-w-4xl rounded-2xl p-4 border flex flex-col items-center justify-center ${theme === 'coldest' ? 'bg-slate-100 border-slate-200' : 'bg-black/20 border-white/10'}`}>
+              <h4 className="text-xs font-black uppercase tracking-widest opacity-80 mb-2 flex items-center gap-2">
+                <Music className="w-4 h-4" /> 
+                A/B Mix Delta Analysis (JSFX)
+              </h4>
+              <p className="text-[10px] opacity-70 mb-3 text-center">
+                Upload your bounced REAPER master mix. Gemini will listen to the synced JSFX processing and correct any distortion, clipping, or over-compression.
+              </p>
+              
+              <input 
+                type="file" 
+                accept="audio/*" 
+                className="hidden" 
+                ref={processedAudioInputRef} 
+                onChange={handleProcessedAudioFileChange} 
+              />
+              
+              <div className="flex gap-2">
+                <button 
+                  onClick={() => processedAudioInputRef.current?.click()}
+                  className={`px-4 py-2 rounded-full font-black text-[10px] uppercase tracking-widest transition-all shadow-md hover:scale-105 active:scale-95 flex items-center gap-2 ${
+                    theme === 'coldest'
+                      ? 'bg-purple-600 text-white hover:bg-purple-700'
+                      : 'bg-purple-500/20 text-purple-300 hover:bg-purple-500/30'
+                  }`}
+                >
+                  <Upload className="w-3 h-3" />
+                  {processedAudioBase64 ? 'Replace Audio' : 'Upload Bounced Mix'}
+                </button>
+
+                {processedAudioBase64 && (
+                  <button 
+                    onClick={handleAnalyzeDelta}
+                    disabled={isAnalyzingDelta}
+                    className={`px-4 py-2 rounded-full font-black text-[10px] uppercase tracking-widest transition-all shadow-md hover:scale-105 active:scale-95 flex items-center gap-2 ${
+                      theme === 'coldest'
+                        ? 'bg-emerald-600 text-white hover:bg-emerald-700'
+                        : 'bg-emerald-500/20 text-emerald-300 hover:bg-emerald-500/30'
+                    }`}
+                  >
+                    {isAnalyzingDelta ? <Loader2 className="w-3 h-3 animate-spin" /> : <Play className="w-3 h-3" />}
+                    {isAnalyzingDelta ? 'Analyzing...' : 'Analyze Delta'}
+                  </button>
+                )}
+              </div>
+
+              {deltaAnalysisError && (
+                <div className="mt-3 text-[10px] text-red-500 font-bold bg-red-500/10 px-3 py-2 rounded-lg text-center w-full max-w-md break-words">
+                  {deltaAnalysisError}
+                </div>
+              )}
+
+              {deltaResult && (
+                <div className={`mt-4 w-full p-4 rounded-xl text-left border ${theme === 'coldest' ? 'bg-white border-slate-200' : 'bg-black/40 border-white/10'}`}>
+                  <h5 className="text-[11px] font-black uppercase tracking-widest mb-2 text-emerald-500 flex items-center gap-2">
+                    <CheckCircle2 className="w-4 h-4" /> Delta Analysis Complete
+                  </h5>
+                  <p className="text-sm opacity-90 mb-4 whitespace-pre-wrap">{deltaResult.analysis}</p>
+                  
+                  {deltaResult.correctiveActions?.length > 0 && (
+                    <div>
+                      <h6 className="text-[10px] font-black uppercase tracking-widest opacity-70 mb-2">Recommended Corrections:</h6>
+                      <ul className="flex flex-col gap-2">
+                        {deltaResult.correctiveActions.map((action: any, i: number) => (
+                          <li key={i} className={`p-3 rounded-lg text-xs ${theme === 'coldest' ? 'bg-slate-50' : 'bg-white/5'}`}>
+                            <div className="font-bold mb-1 opacity-90">{action.targetStem} • {action.pluginName}</div>
+                            <div className="flex flex-col gap-1">
+                              {action.paramChanges?.map((change: any, j: number) => (
+                                <div key={j} className="flex flex-col">
+                                  <div className="flex items-center gap-2">
+                                    <span className="opacity-60">{change.paramName}:</span>
+                                    <span className="font-mono text-emerald-500">{change.newValue}</span>
+                                  </div>
+                                  <span className="text-[10px] opacity-60 italic">{change.reason}</span>
+                                </div>
+                              ))}
+                            </div>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+          )}
+
           {isExporting && (
             <div className="hidden">
               <motion.div 

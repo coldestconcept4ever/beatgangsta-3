@@ -48,7 +48,7 @@ For each stem, track, or bus that requires an effect:
 ` : '';
 };
 
-const ELITE_PRODUCER_SECRETS_PROMPT = `
+const getEliteProducerSecretsPrompt = (installedJsfxPacks: string[]) => `
 
       ==================================================
       🏆 ELITE PRODUCER SECRETS & DYNAMIC JSFX AUTOMATION 🏆
@@ -492,17 +492,20 @@ const ELITE_PRODUCER_SECRETS_PROMPT = `
       - ALWAYS explicitly start this with a bold statement confirming: "**BeatGangsta Connect AUTOMATION**: This Parameter Modulation has been automatically configured and activated for you in REAPER! The following instructions are provided for your reference, inspection, or manual tweaking." This ensures the user is guided in detail, but knows that BeatGangsta Connect did all the work itself!
 
       ==================================================
+      ${(installedJsfxPacks.includes('JClones') || installedJsfxPacks.includes('Tukan Studios')) ? `
       💡 RELEARNED JSFX & EEL2 AUTOMATION DIRECTIVES (TUKAN & JSFX CLONES) 💡
       Many JSFX have dropdowns, toggles, or buttons rendered on their custom graphical GUIs.
       In REAPER, these custom GUI interactions map directly to standard, automatable REAPER sliders. 
       You MUST utilize these slider mappings to automate complex internal parameters, modes, and configurations:
+      ${installedJsfxPacks.includes('JClones') ? `
       - **JClones AC1 (Analog Channel)**: Mode (Slider 8) selects console saturation curves (0 = Classic warm analog, 1 = Modern aggressive). Auto Gain (Slider 2) automatically compensates loudness as drive increases (0 = Off, 1 = On).
       - **JClones AC2 (Tape Emulator)**: Model (Slider 5) sets tape formulation physics (0=Swiss Studer high-fidelity, 1=Japan-O Otari warm, 2=USA-M MCI classic, 3=USA-A Ampex aggressive, 4=Japan-S Sony pristine, 5=Japan-T Tascam vintage). Speed (Slider 8) sets IPS (0=7.5 IPS tape saturation with head bump, 1=15 IPS standard tape, 2=30 IPS high-fidelity mastering speed). EQ Type (Slider 9) selects equalization curves (0=IEC-1 warm/vintage, 1=IEC-2@crisp mid-high emphasis). Tape (Slider 10) chooses tape types (0=Modern hi-fi, 1=Vintage saturated).
       - **JClones CA2A (Optical Compressor)**: Mode (Slider 2) toggles compression knee (0=Compress soft-knee, 1=Limit hard limiting). Opto Cell (Slider 4) selects release kinetics behavior (0=Classic slow analog multi-stage release, 1=Fast rapid digital-style release). R37 (Slider 3) adjusts high-frequency emphasis for the sidechain (0=Flat detection, 1=Heavy HF attenuation for de-essing).
       - **JClones CL1B (Tube Compressor)**: Attack/Release Select (Slider 4) selects speed models (0=Manual fully adjustable, 1=Preset fixed times, 2=Combined program-dependent dynamic recovery).
       - **JClones OInflator (Oxford Inflator)**: Clip (Slider 3) enables 0dB ceiling clipping for tube-style warm distortion (0=Off, 1=On). BandSplit (Slider 4) splits processing (0=Single-band full range, 1=Three-band split).
       - **JClones Molot (Vintage Compressor)**: Mode (Slider 5) selects tube topology modes (0=Sigma fast, 1=Alpha warm character). Filter (Slider 8) configures sidechain highpass filter.
-      - **JClones RS124 (Vintage Tube Compressor)**: Speed (Slider 3) selects release recovery profiles (0=Slow, 1=Medium, 2=Fast).
+      - **JClones RS124 (Vintage Tube Compressor)**: Speed (Slider 3) selects release recovery profiles (0=Slow, 1=Medium, 2=Fast).` : ''}
+      ${installedJsfxPacks.includes('Tukan Studios') ? `
       - **Tukan SumChannel (Channel Strip)**: Console (Slider 5) emulates console desks (0=A-type punchy American, 1=N-type fat British warm, 2=SSL precise & transparent console). Noise (Slider 4) adds console noise floor (0=Off, 1=On).
       - **Tukan SumThing (Summing Mixer)**: Console (Slider 4) selects the summing console model. Crosstalk (Slider 2) sets summing desk stereo channel leakage.
       - **Tukan Dis-Treasure (Distressor)**: Ratio (Slider 1) selects ratios (0=1:1, 1=2:1, 2=3:1, 3=4:1, 4=6:1, 5=10:1, 6=20:1, 7=Nuke brickwall). Detector Mode (Slider 5) configures sidechain (0=HP filter, 1=Bandpass filter, 2=Link). Audio Mode (Slider 6) sets distortion modes (0=Clean, 1=Dist2 tube-like second harmonics, 2=Dist3 tape-like third harmonics).
@@ -510,8 +513,9 @@ const ELITE_PRODUCER_SECRETS_PROMPT = `
       - **Tukan Lexikan / Lexikan 2 (Lush Reverb)**: Mode/Algorithm (Slider 0) sets reverb styles (0=Plate, 1=Room, 2=Hall, 3=Cathedral). Pre-Delay (Slider 2) is fully automatable.
       - **Tukan EQT-1A (Pultec EQ)**: Simultaneous Low Boost (Slider 1) and Low Cut (Slider 2) at the same Low Freq (Slider 0) produces the famous Pultec Low-End Trick for deep yet clean bass.
       - **Tukan Deesser**: Mode (Slider 0) selects detection method (0=Wideband, 1=Split-band).
-      - **Tukan Compressor 2**: Knee (Slider 3) sets soft-knee curve width in dB. Sidechain (Slider 7) configures detector routing.
+      - **Tukan Compressor 2**: Knee (Slider 3) sets soft-knee curve width in dB. Sidechain (Slider 7) configures detector routing.` : ''}
       ==================================================
+      ` : ''}
 `;
 
 const getSimplifiedJSFXDatabase = (installedJsfxPacks: string[], starredPlugins: string[] = []) => {
@@ -521,19 +525,21 @@ const getSimplifiedJSFXDatabase = (installedJsfxPacks: string[], starredPlugins:
   });
 
   // Filter strictly to starred JSFX plugins
-  activeJSFX = activeJSFX.filter(p => {
-    const name = p.name;
-    const shortName = p.shortName;
-    const cleanName = name.startsWith('JS: ') ? name.substring(4) : name;
-    return starredPlugins.some(sp => {
-      const cleanSp = sp.startsWith('JS: ') ? sp.substring(4) : sp;
-      return sp === name || 
-             sp === shortName || 
-             cleanSp === cleanName || 
-             cleanSp === shortName || 
-             sp === cleanName;
+  if (starredPlugins && starredPlugins.length > 0) {
+    activeJSFX = activeJSFX.filter(p => {
+      const name = p.name;
+      const shortName = p.shortName;
+      const cleanName = name.startsWith('JS: ') ? name.substring(4) : name;
+      return starredPlugins.some(sp => {
+        const cleanSp = sp.startsWith('JS: ') ? sp.substring(4) : sp;
+        return sp === name || 
+               sp === shortName || 
+               cleanSp === cleanName || 
+               cleanSp === shortName || 
+               sp === cleanName;
+      });
     });
-  });
+  }
 
   return activeJSFX.map(p => ({
     name: p.name.startsWith('JS: ') ? p.name : 'JS: ' + p.name,
@@ -2491,7 +2497,7 @@ export const getBeatRecommendations = async (plugins: VSTPlugin[], analogInstrum
       You MUST ONLY recommend JSFX plugins from the provided 'JSFX Database' list below.
       When providing 'deepDive' settings, you MUST include 'parameter' names that EXACTLY match the slider names from the JSFX Database, and you MUST ensure the values are within the allowed min/max range.
 
-      ${ELITE_PRODUCER_SECRETS_PROMPT}
+      ${getEliteProducerSecretsPrompt(installedJsfxPacks)}
 
       JSFX DATABASE (ONLY use these plugins):
       ${JSON.stringify(simplifiedDB)}
@@ -2669,7 +2675,7 @@ export const getCustomBeatRecommendations = async (plugins: VSTPlugin[], query: 
       You are FORBIDDEN from recommending any third-party VSTs, VST3s, or AUs.
       You MUST ONLY recommend JSFX plugins from the provided 'JSFX Database' list below.
       When providing 'deepDive' settings, you MUST include 'parameter' names that EXACTLY match the slider names from the JSFX Database, and you MUST ensure the values are within the allowed min/max range.
-      ${ELITE_PRODUCER_SECRETS_PROMPT}
+      ${getEliteProducerSecretsPrompt(installedJsfxPacks)}
 
       JSFX DATABASE (ONLY use these plugins):
       ${JSON.stringify(simplifiedDB)}
@@ -2829,7 +2835,7 @@ export const getSongBeatRecommendations = async (plugins: VSTPlugin[], songQuery
       You are FORBIDDEN from recommending any third-party VSTs, VST3s, or AUs.
       You MUST ONLY recommend JSFX plugins from the provided 'JSFX Database' list below.
       When providing 'deepDive' settings, you MUST include 'parameter' names that EXACTLY match the slider names from the JSFX Database, and you MUST ensure the values are within the allowed min/max range.
-      ${ELITE_PRODUCER_SECRETS_PROMPT}
+      ${getEliteProducerSecretsPrompt(installedJsfxPacks)}
 
       JSFX DATABASE (ONLY use these plugins):
       ${JSON.stringify(simplifiedDB)}
@@ -3064,7 +3070,7 @@ export const getAudioBeatRecommendations = async (plugins: VSTPlugin[], audioBas
       You are FORBIDDEN from recommending any third-party VSTs, VST3s, or AUs.
       You MUST ONLY recommend JSFX plugins from the provided 'JSFX Database' list below.
       When providing 'deepDive' settings, you MUST include 'parameter' names that EXACTLY match the slider names from the JSFX Database, and you MUST ensure the values are within the allowed min/max range.
-      ${ELITE_PRODUCER_SECRETS_PROMPT}
+      ${getEliteProducerSecretsPrompt(installedJsfxPacks)}
 
       JSFX DATABASE (ONLY use these plugins):
       ${JSON.stringify(simplifiedDB)}
@@ -3412,7 +3418,7 @@ export const getMixCritique = async (
       DO NOT suggest any third-party plugins like FabFilter, Waves, Soundtoys, iZotope, Universal Audio, RC-20, Sonible, Gullfoss, etc.
       
       Furthermore, YOU MUST ONLY use the sliders and parameters defined in the database for each plugin. Do not invent parameter names. Refer to parameter indices or exact names from this database:
-      ${ELITE_PRODUCER_SECRETS_PROMPT}
+      ${getEliteProducerSecretsPrompt(installedJsfxPacks)}
 
       JSFX DATABASE:
       ${dbContextString}
@@ -3813,6 +3819,34 @@ export const getMixCritique = async (
 
   return result;
 };
+export const compareMixDelta = async (plugins: VSTPlugin[], originalAudioBase64: string | undefined, originalMimeType: string | undefined, processedAudioBase64: string, processedMimeType: string, recipeContext: string, isJsfxMode: boolean, installedJsfxPacks: string[]): Promise<{analysis: string, correctiveActions: any[]}> => {
+  const ai = getAI();
+  const { GoogleGenAI } = await import("@google/genai");
+  const model = "gemini-2.5-pro";
+  const systemInstruction = `You are a world-class mastering engineer performing an A/B Mix Delta Analysis.\n\nYou will receive TWO audio files (if the platform supports it) or at least the processed audio, along with the recipe context that produced it.\n\nYour job is to:\n1. Listen to the PROCESSED audio and identify any artifacts, distortion, over-compression, pumping, or phase issues.\n2. Compare it to the original audio (if provided) to hear the delta.\n3. Identify exactly which plugins/parameters in the recipe caused the issue (e.g. "The second compressor on the bass has the threshold too low and ratio too high, causing distortion").\n4. Provide a detailed analysis and a corrective action plan.\n\nCRITICAL: You MUST return EXACTLY valid JSON matching this schema:\n${JSON.stringify({ type: "OBJECT", properties: { analysis: { type: "STRING" }, correctiveActions: { type: "ARRAY", items: { type: "OBJECT", properties: { targetStem: { type: "STRING" }, pluginName: { type: "STRING" }, paramChanges: { type: "ARRAY", items: { type: "OBJECT", properties: { paramName: { type: "STRING" }, newValue: { type: "NUMBER" }, reason: { type: "STRING" } } } } } } } }, required: ["analysis", "correctiveActions"] })}`; 
+  const contents = [];
+  if (originalAudioBase64 && originalMimeType) {
+    contents.push({ role: "user", parts: [{ text: "Here is the ORIGINAL unprocessed audio:" }] });
+    contents.push({ role: "user", parts: [{ inlineData: { data: originalAudioBase64, mimeType: originalMimeType } }] });
+  }
+  contents.push({ role: "user", parts: [{ text: "Here is the PROCESSED audio (rendered from REAPER) that has distortion/issues:" }] });
+  contents.push({ role: "user", parts: [{ inlineData: { data: processedAudioBase64, mimeType: processedMimeType } }] });
+  contents.push({ role: "user", parts: [{ text: `Here is the RECIPE CONTEXT that produced this processed audio:\n\n${recipeContext}\n\nPlease analyze the difference and tell me what went wrong, and give me the corrective JSFX parameter changes.` }] });
+
+  const response = await ai.models.generateContent({
+    model,
+    contents,
+    config: {
+      systemInstruction,
+      responseMimeType: "application/json",
+      temperature: 0.2
+    }
+  });
+  const text = response.text;
+  if (!text) throw new Error("No text returned from Gemini");
+  return JSON.parse(text);
+};
+
 export const getSpecificMixHelp = async (plugins: VSTPlugin[], audioBase64: string | undefined, mimeType: string | undefined, query: string, isGangstaVox: boolean = false, recipeContext?: string, chatHistory: {role: 'user' | 'model', content: string}[] = [], audioUrl?: string, geminiFileUri?: string, language: string = 'en', analogHardware: Hardware[] = [], isMultiBandMode: boolean = false): Promise<{query: string, advice: string, recommendedChain: any[]}> => {
   const ai = getAI();
   const pluginListStr = plugins.map(p => `- ${p.name} (by ${p.vendor || 'Unknown'}, type ${p.type || 'VST'})`).join('\n');
