@@ -560,12 +560,7 @@ const getSimplifiedJSFXDatabase = (installedJsfxPacks: string[], starredPlugins:
   }));
 };
 
-const EXTRACT_RECIPE_MIDI_PROMPT = `
-    CRITICAL - EXTRACT RECIPE & FULL ARRANGEMENT MIDI:
-    - **CRITICAL COMPUTE DIRECTIVE**: You MUST dedicate maximum compute time to transcribe the FULL song precisely. This is a massive operation. DO NOT rush. Do not give short 4 or 8 bar loops.
-    - **ALL INSTRUMENTS**: You MUST detect and include EVERY SINGLE instrument playing in the song (Lead Synth, Pads, Bass, Plucks, Strings, Guitars, Arps, etc.) inside the "instruments" array. Do not skip any element of the arrangement.
-    - **LONG SECTIONS**: You MUST output 16-bar or 32-bar MIDI arrangements for Intro, Verse, Hook, Bridge, Outro for each instrument. (e.g. up to 256 or 512 steps!).
-` + ADVANCED_MIDI_PROMPT;
+
 const ADVANCED_MIDI_PROMPT = `
     CRITICAL - ADVANCED MIDI & DRUM PATTERN GENERATION:
     Always include decent, best-in-class, highly engaging, and beautiful patterns instead of sometimes leaving them simple or repetitive, so users are excited to load them into their DAW.
@@ -749,6 +744,13 @@ const SONIBLE_SPEC_PROMPT = `
          - Controls: Reverb (0-100), Mix (0-100), Size (0-100).
     AI GUIDELINE: Always detect which series the user owns from their plugin list and apply the EXACT parameter names and styles defined above for that specific series.
 `;
+const EXTRACT_RECIPE_MIDI_PROMPT = `
+    CRITICAL - EXTRACT RECIPE & FULL ARRANGEMENT MIDI:
+    - **CRITICAL COMPUTE DIRECTIVE**: You MUST dedicate maximum compute time to transcribe the FULL song precisely. This is a massive operation. DO NOT rush. Do not give short 4 or 8 bar loops.
+    - **ALL INSTRUMENTS**: You MUST detect and include EVERY SINGLE instrument playing in the song (Lead Synth, Pads, Bass, Plucks, Strings, Guitars, Arps, etc.) inside the "instruments" array. Do not skip any element of the arrangement.
+    - **LONG SECTIONS**: You MUST output 16-bar or 32-bar MIDI arrangements for Intro, Verse, Hook, Bridge, Outro for each instrument. (e.g. up to 256 or 512 steps!).
+` + ADVANCED_MIDI_PROMPT;
+
 const RC20_SPEC_PROMPT = `
     CRITICAL - XLN AUDIO RC-20 RETRO COLOR SPECIFICATIONS:
     - Wow/Flutter Parameter: This is a 0-100 slider controlling the balance between Wow and Flutter.
