@@ -612,7 +612,8 @@ const ADVANCED_MIDI_PROMPT = `
     - Melodies & Lead Arps: Provide at least 15-40 notes with rich variety in pitch, syncopation, and phrase movement over the 4/8 bar structure. Let the melody rise, fall, and transition beautifully.
     - Chord Progressions: Provide at least 8-20 rich, lush chords (incorporating suspended, minor/major 9ths, add9, 11th, and inverted voicings) to create emotional depth instead of flat triads.
     - Basslines & 808s: Provide at least 15-30 notes featuring glides, slides, syncopated rhythms, octave jumps, and dynamic turnarounds that interact flawlessly with the kick.
-    - If the user requested a specific song or provided a reference URL, the MIDI notes MUST meticulously recreate the EXACT iconic melodies, rhythms, chords, and basslines of that song note-for-note and perfectly match the BPM.
+    - If the user requested a specific song or provided a reference URL, the MIDI notes MUST meticulously recreate the EXACT iconic melodies, rhythms, chords, and basslines of that song note-for-note and perfectly match the movement.
+    - **TRANSPOSITION & ADAPTATION**: If the user asks to recreate a specific song/melody but with a DIFFERENT key or DIFFERENT BPM, you MUST STILL recreate the exact relative intervals, rhythms, and melody of the reference track, simply transposed to the new key and scaled to the new BPM. Do not generate a generic pattern; it MUST be the exact requested melody adapted to the new constraints.
     
     CRITICAL - NO VOCALS AS INSTRUMENTS:
     Ensure you ALWAYS use VST instruments (synths, keys, bass, guitars, etc.) instead of a vocal or acapella as an instrument in the beat recipe. Users feel cheated by a bad recipe guide if it just says "use a vocal". Only use actual VST instruments or hardware for the beat's instrumentation.
@@ -2781,9 +2782,12 @@ export const getBeatRecommendations = async (plugins: VSTPlugin[], analogInstrum
     ${ADVANCED_MIDI_PROMPT}
   `;
   const response = await ai.models.generateContent({
-    model: 'gemini-3-flash-preview',
+    model: 'gemini-3.1-pro-preview',
     contents: { parts: [{ text: prompt + getSchemaInstruction() }] },
     config: {
+      thinkingConfig: {
+        thinkingBudgetSecs: 180
+      },
       customAction: 'recipe',
       responseMimeType: "application/json"
     }
@@ -2951,9 +2955,12 @@ export const getCustomBeatRecommendations = async (plugins: VSTPlugin[], query: 
   `;
   const multiBandInstruction = getMultiBandInstruction(isMultiBandMode);
   const response = await ai.models.generateContent({
-    model: 'gemini-3-flash-preview',
+    model: 'gemini-3.1-pro-preview',
     contents: { parts: [{ text: prompt + multiBandInstruction + getSchemaInstruction() }] },
     config: {
+      thinkingConfig: {
+        thinkingBudgetSecs: 180
+      },
       customAction: 'type_beat_search',
       responseMimeType: "application/json"
     }
@@ -3121,9 +3128,12 @@ export const getSongBeatRecommendations = async (plugins: VSTPlugin[], songQuery
   `;
   const multiBandInstruction = getMultiBandInstruction(isMultiBandMode);
   const response = await ai.models.generateContent({
-    model: 'gemini-3-flash-preview',
+    model: 'gemini-3.1-pro-preview',
     contents: { parts: [{ text: prompt + multiBandInstruction + getSchemaInstruction() }] },
     config: {
+      thinkingConfig: {
+        thinkingBudgetSecs: 180
+      },
       customAction: 'song_search',
       responseMimeType: "application/json"
     }
@@ -3406,11 +3416,14 @@ export const getAudioBeatRecommendations = async (plugins: VSTPlugin[], audioBas
   let response;
   try {
     response = await ai.models.generateContent({
-      model: "gemini-3-flash-preview", // Use Pro for complex audio analysis
+      model: "gemini-3.1-pro-preview",
       contents: {
         parts: parts
       },
       config: {
+        thinkingConfig: {
+          thinkingBudgetSecs: 180
+        },
         ...(geminiFileUri || audioBase64 ? { customAction: 'audio_analysis_recipe' } : {}),
         responseMimeType: "application/json",
         safetySettings: [
