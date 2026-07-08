@@ -45,7 +45,7 @@ export const generateDrumMidiBaseData = (
   };
 
   const getStepsPerBar = (isDoubleTime?: boolean) => isDoubleTime ? 32 : 16;
-  let finalBars = bars;
+  let finalBars: number = bars;
   
   const checkMaxBars = (part: any) => {
     if (!part || !Array.isArray(part.steps)) return;

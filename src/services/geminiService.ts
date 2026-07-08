@@ -3222,7 +3222,7 @@ export const generateContentViaBackend = async (model: string, prompt: string, c
     config
   });
 };
-export const getAudioBeatRecommendations = async (plugins: VSTPlugin[], audioBase64: string | null, audioUrl: string | null, mimeType: string, analogInstruments: Hardware[] = [], analogHardware: Hardware[] = [], drumKits: Hardware[] = [], excludeAnalog: boolean = false, dawType: string | null = null, starredPlugins: string[] = [], isGangstaVox: boolean = false, userContext: string = "", geminiFileUri: string | null = null, language: string = 'en', isMultiBandMode: boolean = false, isJsfxMode: boolean = false, installedJsfxPacks: string[] = []): Promise<RecommendationResponse> => {
+export const getAudioBeatRecommendations = async (plugins: VSTPlugin[], audioBase64: string | null, audioUrl: string | null, mimeType: string, analogInstruments: Hardware[] = [], analogHardware: Hardware[] = [], drumKits: Hardware[] = [], excludeAnalog: boolean = false, dawType: string | null = null, starredPlugins: string[] = [], isGangstaVox: boolean = false, userContext: string = "", geminiFileUri: string | null = null, language: string = 'en', isMultiBandMode: boolean = false, isJsfxMode: boolean = false, installedJsfxPacks: string[] = [], recreateBase64: string | null = null, recreateFileUri: string | null = null, recreateMimeType: string | null = null): Promise<RecommendationResponse> => {
   const ai = getAI();
   // Limit plugin list to 50 most relevant to avoid context/complexity limits
   const limitedPlugins = plugins.slice(0, 50);
@@ -3245,6 +3245,22 @@ export const getAudioBeatRecommendations = async (plugins: VSTPlugin[], audioBas
   const apolloModel = analogHardware.find(h => h.name.toLowerCase().includes('apollo'))?.name || 'Apollo';
   const hasTownsend = analogHardware.some(h => h.name.toLowerCase().includes('townsend') || h.name.toLowerCase().includes('sphere'));
   const hasOceanWayMic = plugins?.some(p => p.name.toLowerCase().includes('ocean way mic')) || false;
+  
+  const hasRecreate = !!(recreateFileUri || recreateBase64);
+  const doubleAudioDiktat = hasRecreate ? `
+      ==================================================
+      🚨🚨 DOUBLE-AUDIO RECREATION & ALIGNMENT DIRECTIVE 🚨🚨
+      The user has provided TWO audio files:
+      - **File 1 (The Source/Vibe Audio File)**: This is the first attachment. This is the reference song to analyze and extract from (e.g. "Promises Promises"). We want to extract its vibe, instrumentation, specific melodic/drum hooks, and sound design.
+      - **File 2 (The Target/Recreate-For Audio File)**: This is the second attachment. This is the user's base track or target song (which may be in a different key, BPM, or style) that they want the first song's elements recreated FOR.
+
+      Your absolute priority:
+      1. Meticulously analyze BOTH audio files to detect their respective BPMs and Keys.
+      2. Adapt the extracted instrumentation, chords, basslines, and MIDI patterns of File 1 (Source) so that they fit PERFECTLY with the Key and BPM of File 2 (Target/Recreate-For).
+      3. If the user specifies a specific sound to recreate in their context (e.g., "recreate the xylophone sound"), focus heavily on extracting that exact sound/pattern from File 1, and map its MIDI notes and rhythm to the BPM and Key of File 2, selecting the best matching VST from the user's gear rack, and populating every single parameter in 'deepDive' for both the VST instrument and its FX plugins exhaustively.
+      4. The generated MIDI patterns (instruments and drums) MUST represent a full-length cohesive recreation of File 1's parts adapted into File 2's structure/tempo/key.
+      ==================================================
+  ` : "";
   
   const nonJsfxDiktat = (dawType === 'REAPER' || dawType === 'Reaper') ? '' : `
       ==================================================
@@ -3282,6 +3298,7 @@ export const getAudioBeatRecommendations = async (plugins: VSTPlugin[], audioBas
     ${starredStr}
     ${sphereMicStr}
     ${contextStr}
+    ${doubleAudioDiktat}
     ${getLanguageInstruction(language)}
     ${GULLFOSS_SPEC_PROMPT}
     ${OZONE_SPEC_PROMPT}
@@ -3290,6 +3307,7 @@ export const getAudioBeatRecommendations = async (plugins: VSTPlugin[], audioBas
     ${ATR102_SPEC_PROMPT}
     ${GLOBAL_PARAMETER_STRICTNESS_PROMPT}
     ${audioUrl ? `The main audio file is available at this URL: ${audioUrl}. Please fetch and analyze it.` : "The main audio file is provided as inline data."}
+    ${recreateFileUri || recreateBase64 ? "\nThere is a second audio file attached. This is the target 'Recreate For' track. Analyze both and adapt the first song's elements to match the second track's BPM and Key." : ""}
     Ensure the recipe captures the signature vocal sound of the audio.
     Identify 2-3 mainstream or commonly known artists who would typically use this specific vocal chain.
     Include a recommended BPM, 'recommendedScale', and 'chordProgression' that fits the vibe.
@@ -3335,6 +3353,8 @@ export const getAudioBeatRecommendations = async (plugins: VSTPlugin[], audioBas
     ${dawStr}
     ${starredStr}
     ${sphereMicStr}
+    ${contextStr}
+    ${doubleAudioDiktat}
     ${getLanguageInstruction(language)}
     ${GULLFOSS_SPEC_PROMPT}
     ${OZONE_SPEC_PROMPT}
@@ -3343,6 +3363,7 @@ export const getAudioBeatRecommendations = async (plugins: VSTPlugin[], audioBas
     ${ATR102_SPEC_PROMPT}
     ${GLOBAL_PARAMETER_STRICTNESS_PROMPT}
     ${audioUrl ? `The main audio file is available at this URL: ${audioUrl}. Please fetch and analyze it.` : "The main audio file is provided as inline data."}
+    ${recreateFileUri || recreateBase64 ? "\nThere is a second audio file attached. This is the target 'Recreate For' track. Analyze both and adapt the first song's elements (such as chords, leads, sub-bass, 808s, arpeggios, and drums) to match the second track's BPM and Key perfectly." : ""}
     Ensure the recipe captures the signature sound, instrumentation, and mixing techniques heard in the audio.
     Identify 2-3 mainstream or commonly known artists who would typically use this specific beat type.
     Include a recommended BPM, 'recommendedScale', and 'chordProgression' that fits the vibe.
@@ -3417,6 +3438,20 @@ export const getAudioBeatRecommendations = async (plugins: VSTPlugin[], audioBas
     console.log("Analyzing web link textually:", audioUrl);
   } else {
     throw new Error("No audio file or link provided for analysis (Beat).");
+  }
+
+  // Push second recreation file if present
+  if (recreateFileUri) {
+    let recUri = recreateFileUri;
+    if (recUri.includes('/files/')) {
+       const recUriParts = recUri.split('/files/');
+       recUri = 'https://generativelanguage.googleapis.com/v1beta/files/' + recUriParts[1];
+    } else if (!recUri.startsWith('https://')) {
+       recUri = 'https://generativelanguage.googleapis.com/v1beta/' + (recUri.startsWith('files/') ? recUri : 'files/' + recUri);
+    }
+    parts.push({ fileData: { fileUri: recUri, mimeType: recreateMimeType || 'audio/mpeg' } });
+  } else if (recreateBase64) {
+    parts.push({ inlineData: { data: recreateBase64, mimeType: recreateMimeType || 'audio/mpeg' } });
   }
   const multiBandInstruction = getMultiBandInstruction(isMultiBandMode);
   parts.push({ text: prompt + multiBandInstruction });

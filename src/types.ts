@@ -265,6 +265,15 @@ export interface DrumPattern {
     isDoubleTime: boolean;
     steps: (number | DrumStep)[];
   };
+  openHat?: {
+    steps: (number | DrumStep)[];
+  };
+  perc?: {
+    steps: (number | DrumStep)[];
+  };
+  cymbal?: {
+    steps: (number | DrumStep)[];
+  };
   velocityHumanized: boolean;
   swing: {
     kick: number;

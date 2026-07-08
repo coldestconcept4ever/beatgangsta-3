@@ -702,6 +702,10 @@ const App: React.FC = () => {
   const [critiqueContext, setCritiqueContext] = useState<string>('');
   const [referenceTrack, setReferenceTrack] = useState<string>('');
   const [referenceTrackFile, setReferenceTrackFile] = useState<File | null>(null);
+  const [vibeFile, setVibeFile] = useState<File | null>(null);
+  const [recreateForFile, setRecreateForFile] = useState<File | null>(null);
+  const vibeFileInputRef = useRef<HTMLInputElement>(null);
+  const recreateFileInputRef = useRef<HTMLInputElement>(null);
   const referenceTrackInputRef = useRef<HTMLInputElement>(null);
   const [hasStems, setHasStems] = useState<boolean>(false);
   const [isBusMode, setIsBusMode] = useState<boolean>(false);
@@ -1788,6 +1792,8 @@ The AI was unable to verify these parameters. Please investigate.`;
   const searchInputRef = useRef<HTMLInputElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [isDraggingAudio, setIsDraggingAudio] = useState(false);
+  const [isDraggingVibe, setIsDraggingVibe] = useState(false);
+  const [isDraggingRecreate, setIsDraggingRecreate] = useState(false);
   const audioInputRef = useRef<HTMLInputElement>(null);
   
   useEffect(() => {
@@ -5351,6 +5357,50 @@ The AI was unable to verify these parameters. Please investigate.`;
     }
   };
 
+  const handleVibeDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDraggingVibe(true);
+  };
+
+  const handleVibeDragLeave = () => {
+    setIsDraggingVibe(false);
+  };
+
+  const handleVibeDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDraggingVibe(false);
+    const file = e.dataTransfer.files?.[0];
+    if (file) {
+      if (file.type.includes('mpeg') || file.type.includes('mp3') || file.name.toLowerCase().endsWith('.mp3') || file.type.includes('wav') || file.name.toLowerCase().endsWith('.wav')) {
+        setVibeFile(file);
+      } else {
+        setError("Only MP3 and WAV files are supported.");
+      }
+    }
+  };
+
+  const handleRecreateDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDraggingRecreate(true);
+  };
+
+  const handleRecreateDragLeave = () => {
+    setIsDraggingRecreate(false);
+  };
+
+  const handleRecreateDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDraggingRecreate(false);
+    const file = e.dataTransfer.files?.[0];
+    if (file) {
+      if (file.type.includes('mpeg') || file.type.includes('mp3') || file.name.toLowerCase().endsWith('.mp3') || file.type.includes('wav') || file.name.toLowerCase().endsWith('.wav')) {
+        setRecreateForFile(file);
+      } else {
+        setError("Only MP3 and WAV files are supported.");
+      }
+    }
+  };
+
   const handleStemsSearch = async () => {
     if (!requireAuth()) return;
     if (plugins.length === 0 && !isJsfxMode) return;
@@ -5605,18 +5655,47 @@ Provide the exact JSFX plugin name and required sliders/parameters.`;
       return;
     }
 
-    if (file) {
-      if (!file.type.includes('mpeg') && !file.type.includes('mp3') && !file.name.toLowerCase().endsWith('.mp3') && !file.type.includes('wav') && !file.name.toLowerCase().endsWith('.wav')) {
+    let processFile: File | null = null;
+    let processRecreateFile: File | null = null;
+
+    if (audioMode === 'recipe') {
+      processFile = vibeFile;
+      processRecreateFile = recreateForFile;
+      if (!processFile) {
+        setError("Please upload at least the Vibe Audio file to analyze.");
+        return;
+      }
+    } else {
+      processFile = file;
+    }
+
+    if (processFile) {
+      if (!processFile.type.includes('mpeg') && !processFile.type.includes('mp3') && !processFile.name.toLowerCase().endsWith('.mp3') && !processFile.type.includes('wav') && !processFile.name.toLowerCase().endsWith('.wav')) {
         setError("Only MP3 and WAV files are supported for analysis at this time.");
         return;
       }
       
       const MAX_FILE_SIZE = 50 * 1024 * 1024; // 50MB
-      if (file.size > MAX_FILE_SIZE) {
-        setError("File is too large. Please upload an audio file smaller than 50MB.");
+      if (processFile.size > MAX_FILE_SIZE) {
+        setError("Vibe audio file is too large. Please upload an audio file smaller than 50MB.");
         return;
       }
-    } else if (!linkUrl) {
+    }
+
+    if (processRecreateFile) {
+      if (!processRecreateFile.type.includes('mpeg') && !processRecreateFile.type.includes('mp3') && !processRecreateFile.name.toLowerCase().endsWith('.mp3') && !processRecreateFile.type.includes('wav') && !processRecreateFile.name.toLowerCase().endsWith('.wav')) {
+        setError("Only MP3 and WAV files are supported for target recreation.");
+        return;
+      }
+      
+      const MAX_FILE_SIZE = 50 * 1024 * 1024; // 50MB
+      if (processRecreateFile.size > MAX_FILE_SIZE) {
+        setError("Recreate target audio file is too large. Please upload an audio file smaller than 50MB.");
+        return;
+      }
+    }
+
+    if (!processFile && !linkUrl && audioMode !== 'recipe') {
       setError("Please provide an audio file or a link.");
       return;
     }
@@ -5627,10 +5706,11 @@ Provide the exact JSFX plugin name and required sliders/parameters.`;
 
     // Warn user but do not stop loading if it crosses 15 minutes.
     const timeoutId = setTimeout(() => {
-      setError("Audio analysis is taking longer than expected. The file might be very complex, but we're still trying...");
+      setError("Audio analysis is taking longer than expected. The files might be very complex, but we're still trying...");
     }, 900000); 
 
-    const progressInterval = simulateGenerationProgress(getEstimatedSeconds('audio-search', file ? [file] : undefined));
+    const activeFilesForETA = [processFile, processRecreateFile].filter((f): f is File => f !== null);
+    const progressInterval = simulateGenerationProgress(getEstimatedSeconds('audio-search', activeFilesForETA.length > 0 ? activeFilesForETA : undefined));
     const filesToDelete: string[] = [];
 
     try {
@@ -5747,6 +5827,40 @@ Provide the exact JSFX plugin name and required sliders/parameters.`;
 
         if (audioUploadData?.fileId) {
           filesToDelete.push(audioUploadData.fileId);
+        }
+      }
+
+      let recreateBase64: string | null = null;
+      let recreateFileUri: string | null = null;
+      let recreateMimeType: string | null = null;
+
+      if (processRecreateFile) {
+        let recFileToUpload = processRecreateFile;
+
+        if (recFileToUpload.type.includes('wav') || recFileToUpload.name.toLowerCase().endsWith('.wav')) {
+          try {
+            recFileToUpload = await convertWavToMp3(recFileToUpload);
+            processRecreateFile = recFileToUpload;
+          } catch (e) {
+            console.error(`Failed to convert recreate file ${recFileToUpload.name} to MP3, falling back to original file:`, e);
+          }
+        }
+
+        const recUploadData = await uploadFileChunked(recFileToUpload);
+        recreateFileUri = recUploadData?.geminiFileUri || null;
+        recreateMimeType = (recFileToUpload.type === 'audio/mp3' || !recFileToUpload.type) ? 'audio/mpeg' : recFileToUpload.type;
+
+        if (!recreateFileUri) {
+          console.warn(`Gemini File API upload failed for recreate file. Debug Info:`, recUploadData);
+          if (recFileToUpload.size > 3 * 1024 * 1024) {
+            throw new Error(`Recreate target file is too large (${(recFileToUpload.size / 1024 / 1024).toFixed(2)}MB) for inline analysis and Gemini File Upload failed: ${recUploadData?.geminiError || 'Unknown error'}`);
+          }
+          console.warn(`Falling back to inline base64 for small recreate file.`);
+          recreateBase64 = await fileToBase64(recFileToUpload);
+        }
+
+        if (recUploadData?.fileId) {
+          filesToDelete.push(recUploadData.fileId);
         }
       }
 
@@ -5940,7 +6054,10 @@ Provide the exact JSFX plugin name and required sliders/parameters.`;
             i18n.language,
             isMultiBandMode,
             isJsfxMode,
-            installedJsfxPacks
+            installedJsfxPacks,
+            recreateBase64,
+            recreateFileUri,
+            recreateMimeType
           );
         } catch (apiErr: any) {
           console.warn("Initial audio analysis failed, retrying with minimal plugin list...", apiErr);
@@ -5970,7 +6087,10 @@ Provide the exact JSFX plugin name and required sliders/parameters.`;
               i18n.language,
               false,
               isJsfxMode,
-              installedJsfxPacks
+              installedJsfxPacks,
+              recreateBase64,
+              recreateFileUri,
+              recreateMimeType
             );
           } catch (retryErr: any) {
             console.error("Retry audio analysis failed:", retryErr);
@@ -9086,108 +9206,227 @@ Provide the exact JSFX plugin name and required sliders/parameters.`;
                   </div>
                 ) : (
                   <div className="flex flex-col w-full gap-4">
-                    <div className="flex flex-col sm:flex-row gap-4">
-                      <div 
-                        id="dropzone-audio"
-                      onClick={() => audioInputRef.current?.click()}
-                      onDragOver={handleAudioDragOver}
-                      onDragLeave={handleAudioDragLeave}
-                      onDrop={handleAudioDrop}
-                      className={`relative flex-1 group overflow-hidden rounded-3xl cursor-pointer py-8 px-8 border-2 border-dashed transition-all flex flex-col items-center justify-center gap-4 ${
-                        isDraggingAudio
-                          ? 'bg-purple-500/20 border-purple-500 scale-[0.98]'
-                          : audioMode === 'critique' 
-                            ? (theme === 'coldest' ? 'bg-purple-50/80 border-purple-200 hover:border-purple-400 text-purple-900' : 'bg-purple-900/20 border-purple-500/30 hover:border-purple-500/60 text-purple-100')
-                            : (theme === 'coldest' ? 'bg-white/40 border-sky-100 hover:border-sky-400 text-slate-900' : theme === 'chef-mode' ? 'bg-white/60 border-orange-100 hover:border-orange-400 text-slate-900' : 'bg-black/60 border-white/10 hover:border-white/30 text-white')
-                      }`}
-                    >
-                      <div className="flex flex-col items-center gap-2 text-center">
-                        <div className={`w-16 h-16 rounded-full flex items-center justify-center mb-2 ${audioMode === 'critique' ? 'bg-purple-500/20' : 'bg-sky-500/20'}`}>
-                          <span className="text-3xl">{audioMode === 'critique' ? '🎧' : '🎵'}</span>
+                    {audioMode === 'recipe' ? (
+                      <div className="flex flex-col w-full gap-4">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          {/* Slot 1: Vibe File */}
+                          <div 
+                            id="dropzone-vibe"
+                            onClick={() => vibeFileInputRef.current?.click()}
+                            onDragOver={handleVibeDragOver}
+                            onDragLeave={handleVibeDragLeave}
+                            onDrop={handleVibeDrop}
+                            className={`relative group overflow-hidden rounded-3xl cursor-pointer py-8 px-6 border-2 border-dashed transition-all flex flex-col items-center justify-center gap-4 ${
+                              isDraggingVibe
+                                ? 'bg-sky-500/20 border-sky-500 scale-[0.98]'
+                                : theme === 'coldest' 
+                                  ? 'bg-white/40 border-sky-100 hover:border-sky-400 text-slate-900' 
+                                  : theme === 'chef-mode' 
+                                    ? 'bg-white/60 border-orange-100 hover:border-orange-400 text-slate-900' 
+                                    : 'bg-black/60 border-white/10 hover:border-white/30 text-white'
+                            }`}
+                          >
+                            <div className="flex flex-col items-center gap-2 text-center">
+                              <div className="w-14 h-14 rounded-full flex items-center justify-center mb-2 bg-sky-500/20">
+                                <span className="text-2xl">🎵</span>
+                              </div>
+                              <span className="text-base font-black tracking-tight">
+                                {vibeFile ? 'Vibe File Selected ✓' : 'Drop Audio to Analyze Vibe'}
+                              </span>
+                              {vibeFile ? (
+                                <span className="text-xs font-bold text-emerald-400 break-all px-4 max-w-full bg-emerald-500/10 py-1.5 rounded-full">
+                                  {vibeFile.name} ({(vibeFile.size / 1024 / 1024).toFixed(1)}MB)
+                                </span>
+                              ) : (
+                                <span className="text-xs font-medium opacity-60 max-w-[240px]">
+                                  Analyze your beat's sonic signature to find the perfect plugins. MP3 or WAV (Max 50MB)
+                                </span>
+                              )}
+                            </div>
+                            
+                            <div className="flex items-center gap-2">
+                              {vibeFile && (
+                                <button 
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    setVibeFile(null);
+                                  }}
+                                  className="text-[10px] font-black uppercase tracking-widest bg-red-500/15 text-red-400 hover:bg-red-500/25 px-3 py-1.5 rounded-full transition-all"
+                                >
+                                  Remove File
+                                </button>
+                              )}
+                              <span className="text-[10px] font-black uppercase tracking-widest opacity-60 px-3 py-1.5 rounded-full bg-black/10">
+                                Vibe Analysis
+                              </span>
+                            </div>
+
+                            <input 
+                              type="file" 
+                              ref={vibeFileInputRef} 
+                              className="hidden" 
+                              accept="audio/mpeg,audio/mp3,audio/wav,audio/x-wav" 
+                              onChange={(e) => {
+                                const file = e.target.files?.[0];
+                                if (file) {
+                                  if (file.size > 50 * 1024 * 1024) {
+                                    setError("Vibe audio file is too large. Max 50MB.");
+                                    return;
+                                  }
+                                  setVibeFile(file);
+                                }
+                                if (vibeFileInputRef.current) vibeFileInputRef.current.value = '';
+                              }} 
+                            />
+                          </div>
+
+                          {/* Slot 2: Recreate For File */}
+                          <div 
+                            id="dropzone-recreate"
+                            onClick={() => recreateFileInputRef.current?.click()}
+                            onDragOver={handleRecreateDragOver}
+                            onDragLeave={handleRecreateDragLeave}
+                            onDrop={handleRecreateDrop}
+                            className={`relative group overflow-hidden rounded-3xl cursor-pointer py-8 px-6 border-2 border-dashed transition-all flex flex-col items-center justify-center gap-4 ${
+                              isDraggingRecreate
+                                ? 'bg-purple-500/20 border-purple-500 scale-[0.98]'
+                                : theme === 'coldest' 
+                                  ? 'bg-white/40 border-purple-100 hover:border-purple-400 text-slate-900' 
+                                  : theme === 'chef-mode' 
+                                    ? 'bg-white/60 border-orange-100 hover:border-orange-400 text-slate-900' 
+                                    : 'bg-black/60 border-white/10 hover:border-white/30 text-white'
+                            }`}
+                          >
+                            <div className="flex flex-col items-center gap-2 text-center">
+                              <div className="w-14 h-14 rounded-full flex items-center justify-center mb-2 bg-purple-500/20">
+                                <span className="text-2xl">⚡</span>
+                              </div>
+                              <span className="text-base font-black tracking-tight">
+                                {recreateForFile ? 'Recreate For Track Selected ✓' : 'Recreate for'}
+                              </span>
+                              {recreateForFile ? (
+                                <span className="text-xs font-bold text-emerald-400 break-all px-4 max-w-full bg-emerald-500/10 py-1.5 rounded-full">
+                                  {recreateForFile.name} ({(recreateForFile.size / 1024 / 1024).toFixed(1)}MB)
+                                </span>
+                              ) : (
+                                <span className="text-xs font-medium opacity-60 max-w-[240px]">
+                                  Drop your own track here to recreate the first song's vibe matching your target key & BPM
+                                </span>
+                              )}
+                            </div>
+                            
+                            <div className="flex items-center gap-2">
+                              {recreateForFile && (
+                                <button 
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    setRecreateForFile(null);
+                                  }}
+                                  className="text-[10px] font-black uppercase tracking-widest bg-red-500/15 text-red-400 hover:bg-red-500/25 px-3 py-1.5 rounded-full transition-all"
+                                >
+                                  Remove File
+                                </button>
+                              )}
+                              <span className="text-[10px] font-black uppercase tracking-widest opacity-60 px-3 py-1.5 rounded-full bg-black/10">
+                                Target / Recreate-For
+                              </span>
+                            </div>
+
+                            <input 
+                              type="file" 
+                              ref={recreateFileInputRef} 
+                              className="hidden" 
+                              accept="audio/mpeg,audio/mp3,audio/wav,audio/x-wav" 
+                              onChange={(e) => {
+                                const file = e.target.files?.[0];
+                                if (file) {
+                                  if (file.size > 50 * 1024 * 1024) {
+                                    setError("Recreate audio file is too large. Max 50MB.");
+                                    return;
+                                  }
+                                  setRecreateForFile(file);
+                                }
+                                if (recreateFileInputRef.current) recreateFileInputRef.current.value = '';
+                              }} 
+                            />
+                          </div>
                         </div>
-                        <span className="text-lg font-black tracking-tight">
-                          {audioMode === 'critique' ? t('drop_audio_for_critique') : t('drop_audio_to_analyze_vibe')}
-                        </span>
-                        <span className="text-xs font-medium opacity-60 max-w-[200px]">
-                          {audioMode === 'critique' 
-                            ? t('deep_mix_analysis_instruction')
-                            : t('sonic_signature_instruction')}
-                        </span>
-                      </div>
-                      
-                      <div className="mt-4 flex items-center gap-2 px-4 py-2 rounded-full bg-black/10 text-[10px] font-black uppercase tracking-widest opacity-60">
-                        <span>{audioMode === 'critique' ? t('deep_analysis_mode') : t('vibe_detection')}</span>
-                      </div>
 
-                      <input 
-                        type="file" 
-                        ref={audioInputRef} 
-                        className="hidden" 
-                        accept="audio/mpeg,audio/mp3,audio/wav,audio/x-wav" 
-                        onChange={(e) => {
-                          const file = e.target.files?.[0];
-                          if (file) handleAudioSearch(file);
-                          if (audioInputRef.current) audioInputRef.current.value = '';
-                        }} 
-                      />
-                    </div>
-                    
-                    <div className="flex flex-col gap-3 sm:w-48">
-                      <button 
-                        onClick={() => audioInputRef.current?.click()}
-                        disabled={loading} 
-                        className={`flex-1 py-5 px-6 rounded-3xl font-black text-xs select-none shadow-xl hover:scale-105 active:scale-95 transition-all disabled:opacity-50 disabled:scale-100 flex flex-col items-center justify-center gap-2 ${
-                          audioMode === 'critique'
-                            ? 'bg-purple-600 text-white'
-                            : (theme === 'coldest' || theme === 'chef-mode' ? 'bg-emerald-600 text-white' : 'bg-white/10 text-white')
-                        }`}
-                      >
-                        <span className="text-xl">📤</span>
-                        {audioAnalysisLoading ? t('analyzing') : t('select_file')}
-                      </button>
-                    </div>
+                        {/* Analysis Trigger Button */}
+                        <div className="flex justify-center mt-2 w-full">
+                          <button
+                            onClick={() => handleAudioSearch(null)}
+                            disabled={loading || !vibeFile}
+                            className={`w-full max-w-md py-5 px-6 rounded-3xl font-black text-xs select-none shadow-xl hover:scale-105 active:scale-95 transition-all disabled:opacity-50 disabled:scale-100 flex flex-col items-center justify-center gap-2 ${
+                              theme === 'coldest' || theme === 'chef-mode' ? 'bg-emerald-600 text-white hover:bg-emerald-500' : 'bg-purple-600 text-white hover:bg-purple-500'
+                            }`}
+                          >
+                            <span className="text-xl">🎛️</span>
+                            {audioAnalysisLoading ? t('analyzing') : 'Extract & Recreate Recipe'}
+                          </button>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="flex flex-col w-full gap-4">
+                        <div className="flex flex-col sm:flex-row gap-4 w-full">
+                          <div 
+                            id="dropzone-audio"
+                            onClick={() => audioInputRef.current?.click()}
+                            onDragOver={handleAudioDragOver}
+                            onDragLeave={handleAudioDragLeave}
+                            onDrop={handleAudioDrop}
+                            className={`relative flex-1 group overflow-hidden rounded-3xl cursor-pointer py-8 px-8 border-2 border-dashed transition-all flex flex-col items-center justify-center gap-4 ${
+                              isDraggingAudio
+                                ? 'bg-purple-500/20 border-purple-500 scale-[0.98]'
+                                : theme === 'coldest' 
+                                  ? 'bg-purple-50/80 border-purple-200 hover:border-purple-400 text-purple-900' 
+                                  : 'bg-purple-900/20 border-purple-500/30 hover:border-purple-500/60 text-purple-100'
+                            }`}
+                          >
+                            <div className="flex flex-col items-center gap-2 text-center">
+                              <div className="w-16 h-16 rounded-full flex items-center justify-center mb-2 bg-purple-500/20">
+                                <span className="text-3xl">🎧</span>
+                              </div>
+                              <span className="text-lg font-black tracking-tight">
+                                {t('drop_audio_for_critique')}
+                              </span>
+                              <span className="text-xs font-medium opacity-60 max-w-[200px]">
+                                {t('deep_mix_analysis_instruction')}
+                              </span>
+                            </div>
+                            
+                            <div className="mt-4 flex items-center gap-2 px-4 py-2 rounded-full bg-black/10 text-[10px] font-black uppercase tracking-widest opacity-60">
+                              <span>{t('deep_analysis_mode')}</span>
+                            </div>
+
+                            <input 
+                              type="file" 
+                              ref={audioInputRef} 
+                              className="hidden" 
+                              accept="audio/mpeg,audio/mp3,audio/wav,audio/x-wav" 
+                              onChange={(e) => {
+                                const file = e.target.files?.[0];
+                                if (file) handleAudioSearch(file);
+                                if (audioInputRef.current) audioInputRef.current.value = '';
+                              }} 
+                            />
+                          </div>
+                          
+                          <div className="flex flex-col gap-3 sm:w-48">
+                            <button 
+                              onClick={() => audioInputRef.current?.click()}
+                              disabled={loading} 
+                              className="flex-1 py-5 px-6 rounded-3xl font-black text-xs select-none shadow-xl hover:scale-105 active:scale-95 transition-all disabled:opacity-50 disabled:scale-100 flex flex-col items-center justify-center gap-2 bg-purple-600 text-white"
+                            >
+                              <span className="text-xl">📤</span>
+                              {audioAnalysisLoading ? t('analyzing') : t('select_file')}
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    )}
                   </div>
 
-                  {!isVerified && (
-                    <div className="flex justify-center mt-4 mb-2">
-                      <div className="flex items-center justify-center overflow-visible" style={{ width: '260px', height: '52px' }}>
-                        <div className="cf-turnstile origin-center scale-[0.8]"></div>
-                      </div>
-                    </div>
-                  )}
-
-                  {audioMode !== 'critique' && (
-                    <div className="w-full mt-4 flex flex-col items-center">
-                      <div className={`text-[10px] font-black uppercase tracking-widest opacity-60 mb-2 ${theme === 'coldest' ? 'text-slate-900' : 'text-white'}`}>
-                        OR PASTE A LINK TO A SONG (YOUTUBE, SPOTIFY, SOUNDCLOUD, ETC.)
-                      </div>
-                      <div className="flex flex-col sm:flex-row gap-2 w-full max-w-xl">
-                        <input
-                          type="text"
-                          value={recipeLinkUrl}
-                          onChange={(e) => setRecipeLinkUrl(e.target.value)}
-                          placeholder="Paste song link here to get an exact recipe..."
-                          className={`flex-1 p-4 text-xs font-medium rounded-2xl w-full sm:w-auto transition-all outline-none border-2 ${
-                            theme === 'coldest' ? 'bg-white/60 border-emerald-100 focus:border-emerald-400 text-slate-900 placeholder:text-slate-400' : 'bg-black/40 border-emerald-500/20 focus:border-emerald-500/60 text-white placeholder:text-white/20'
-                          }`}
-                          onKeyDown={(e) => {
-                            if (e.key === 'Enter' && recipeLinkUrl.trim() && !loading) {
-                              handleAudioSearch(null, recipeLinkUrl.trim());
-                            }
-                          }}
-                        />
-                        <button
-                          onClick={() => handleAudioSearch(null, recipeLinkUrl.trim())}
-                          disabled={!recipeLinkUrl.trim() || loading}
-                          className="px-6 py-4 rounded-2xl font-black text-[10px] uppercase tracking-widest shadow-lg hover:scale-105 active:scale-95 transition-all disabled:opacity-50 disabled:scale-100 bg-emerald-500 text-white"
-                        >
-                          {audioAnalysisLoading ? 'Analyzing...' : 'Analyze Link'}
-                        </button>
-                      </div>
-                    </div>
-                  )}
-
-                  </div>
                 )}
               </div>
               </div>
