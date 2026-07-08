@@ -1433,22 +1433,51 @@ export const RecipeCard: React.FC<RecipeCardProps> = ({ recipe: initialRecipe, i
               )}
 
               {/* Virtual Instrument */}
-              {recipe.drumKitAdvice.kickVirtualInstrument && (
-                <div className="pt-2 border-t border-orange-500/10">
-                  <span className="text-[10px] uppercase font-black tracking-wider text-orange-400/70">Virtual Instrument / Synth</span>
-                  <p className="text-xs font-black text-white mt-1">{recipe.drumKitAdvice.kickVirtualInstrument}</p>
+              {(recipe.drumKitAdvice.kickVirtualInstrumentObj || recipe.drumKitAdvice.kickVirtualInstrument) && (
+                <div className="pt-2 border-t border-orange-500/10 space-y-1">
+                  <span className="text-[10px] uppercase font-black tracking-wider text-orange-400/70 block">Virtual Instrument / Synth</span>
+                  {recipe.drumKitAdvice.kickVirtualInstrumentObj ? (
+                    <div className="space-y-1.5">
+                      <p className="text-xs font-black text-white">{recipe.drumKitAdvice.kickVirtualInstrumentObj.name}</p>
+                      <div className="grid grid-cols-2 gap-1 p-2 bg-black/40 rounded-xl border border-white/5">
+                        {recipe.drumKitAdvice.kickVirtualInstrumentObj.deepDive?.map((s: any, idx: number) => (
+                          <div key={idx} className="text-[9px] font-bold">
+                            <span className="opacity-60 block text-[7px] uppercase tracking-wider">{s.parameter}</span>
+                            <span className="text-orange-300 font-mono">{s.value}</span>
+                            {s.explanation && <span className="opacity-40 font-normal block text-[7px] leading-tight mt-0.5">{s.explanation}</span>}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  ) : (
+                    <p className="text-xs font-black text-white">{recipe.drumKitAdvice.kickVirtualInstrument}</p>
+                  )}
                 </div>
               )}
 
               {/* FX Chain */}
               {recipe.drumKitAdvice.kickFXPlugins && recipe.drumKitAdvice.kickFXPlugins.length > 0 && (
-                <div className="pt-2 border-t border-orange-500/10 space-y-1">
-                  <span className="text-[10px] uppercase font-black tracking-wider text-orange-400/70">Enhancement FX Chain</span>
+                <div className="pt-2 border-t border-orange-500/10 space-y-1.5">
+                  <span className="text-[10px] uppercase font-black tracking-wider text-orange-400/70 block">Enhancement FX Chain</span>
                   {recipe.drumKitAdvice.kickFXPlugins.map((fx, i) => (
-                    <div key={i} className="bg-black/40 p-2 rounded-xl text-left border border-white/5">
-                      <div className="text-xs font-black text-orange-200">{fx.name}</div>
-                      <div className="text-[10px] opacity-60 mt-0.5">{fx.purpose}</div>
-                      <div className="text-[10px] font-mono text-orange-300/80 mt-1 bg-black/20 p-1 rounded font-bold">{fx.settings}</div>
+                    <div key={i} className="bg-black/40 p-2.5 rounded-2xl text-left border border-white/5 space-y-1">
+                      <div className="flex justify-between items-start gap-2">
+                        <div className="text-xs font-black text-orange-200">{fx.name}</div>
+                        <div className="text-[7px] opacity-60 font-bold uppercase tracking-wider text-right">{fx.purpose}</div>
+                      </div>
+                      {fx.deepDive && fx.deepDive.length > 0 ? (
+                        <div className="grid grid-cols-2 gap-1 pt-1.5 border-t border-white/5">
+                          {fx.deepDive.map((s: any, idx: number) => (
+                            <div key={idx} className="text-[9px] font-bold">
+                              <span className="opacity-60 block text-[7px] uppercase tracking-wider">{s.parameter}</span>
+                              <span className="text-orange-300 font-mono">{s.value}</span>
+                              {s.explanation && <span className="opacity-40 font-normal block text-[7px] leading-tight mt-0.5">{s.explanation}</span>}
+                            </div>
+                          ))}
+                        </div>
+                      ) : (
+                        fx.settings && <div className="text-[10px] font-mono text-orange-300/80 bg-black/20 p-1 rounded font-bold">{fx.settings}</div>
+                      )}
                     </div>
                   ))}
                 </div>
@@ -1468,22 +1497,51 @@ export const RecipeCard: React.FC<RecipeCardProps> = ({ recipe: initialRecipe, i
               )}
 
               {/* Virtual Instrument */}
-              {recipe.drumKitAdvice.snareVirtualInstrument && (
-                <div className="pt-2 border-t border-orange-500/10">
-                  <span className="text-[10px] uppercase font-black tracking-wider text-orange-400/70">Virtual Instrument / Synth</span>
-                  <p className="text-xs font-black text-white mt-1">{recipe.drumKitAdvice.snareVirtualInstrument}</p>
+              {(recipe.drumKitAdvice.snareVirtualInstrumentObj || recipe.drumKitAdvice.snareVirtualInstrument) && (
+                <div className="pt-2 border-t border-orange-500/10 space-y-1">
+                  <span className="text-[10px] uppercase font-black tracking-wider text-orange-400/70 block">Virtual Instrument / Synth</span>
+                  {recipe.drumKitAdvice.snareVirtualInstrumentObj ? (
+                    <div className="space-y-1.5">
+                      <p className="text-xs font-black text-white">{recipe.drumKitAdvice.snareVirtualInstrumentObj.name}</p>
+                      <div className="grid grid-cols-2 gap-1 p-2 bg-black/40 rounded-xl border border-white/5">
+                        {recipe.drumKitAdvice.snareVirtualInstrumentObj.deepDive?.map((s: any, idx: number) => (
+                          <div key={idx} className="text-[9px] font-bold">
+                            <span className="opacity-60 block text-[7px] uppercase tracking-wider">{s.parameter}</span>
+                            <span className="text-orange-300 font-mono">{s.value}</span>
+                            {s.explanation && <span className="opacity-40 font-normal block text-[7px] leading-tight mt-0.5">{s.explanation}</span>}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  ) : (
+                    <p className="text-xs font-black text-white">{recipe.drumKitAdvice.snareVirtualInstrument}</p>
+                  )}
                 </div>
               )}
 
               {/* FX Chain */}
               {recipe.drumKitAdvice.snareFXPlugins && recipe.drumKitAdvice.snareFXPlugins.length > 0 && (
-                <div className="pt-2 border-t border-orange-500/10 space-y-1">
-                  <span className="text-[10px] uppercase font-black tracking-wider text-orange-400/70">Enhancement FX Chain</span>
+                <div className="pt-2 border-t border-orange-500/10 space-y-1.5">
+                  <span className="text-[10px] uppercase font-black tracking-wider text-orange-400/70 block">Enhancement FX Chain</span>
                   {recipe.drumKitAdvice.snareFXPlugins.map((fx, i) => (
-                    <div key={i} className="bg-black/40 p-2 rounded-xl text-left border border-white/5">
-                      <div className="text-xs font-black text-orange-200">{fx.name}</div>
-                      <div className="text-[10px] opacity-60 mt-0.5">{fx.purpose}</div>
-                      <div className="text-[10px] font-mono text-orange-300/80 mt-1 bg-black/20 p-1 rounded font-bold">{fx.settings}</div>
+                    <div key={i} className="bg-black/40 p-2.5 rounded-2xl text-left border border-white/5 space-y-1">
+                      <div className="flex justify-between items-start gap-2">
+                        <div className="text-xs font-black text-orange-200">{fx.name}</div>
+                        <div className="text-[7px] opacity-60 font-bold uppercase tracking-wider text-right">{fx.purpose}</div>
+                      </div>
+                      {fx.deepDive && fx.deepDive.length > 0 ? (
+                        <div className="grid grid-cols-2 gap-1 pt-1.5 border-t border-white/5">
+                          {fx.deepDive.map((s: any, idx: number) => (
+                            <div key={idx} className="text-[9px] font-bold">
+                              <span className="opacity-60 block text-[7px] uppercase tracking-wider">{s.parameter}</span>
+                              <span className="text-orange-300 font-mono">{s.value}</span>
+                              {s.explanation && <span className="opacity-40 font-normal block text-[7px] leading-tight mt-0.5">{s.explanation}</span>}
+                            </div>
+                          ))}
+                        </div>
+                      ) : (
+                        fx.settings && <div className="text-[10px] font-mono text-orange-300/80 bg-black/20 p-1 rounded font-bold">{fx.settings}</div>
+                      )}
                     </div>
                   ))}
                 </div>
@@ -1503,22 +1561,51 @@ export const RecipeCard: React.FC<RecipeCardProps> = ({ recipe: initialRecipe, i
               )}
 
               {/* Virtual Instrument */}
-              {recipe.drumKitAdvice.hiHatVirtualInstrument && (
-                <div className="pt-2 border-t border-orange-500/10">
-                  <span className="text-[10px] uppercase font-black tracking-wider text-orange-400/70">Virtual Instrument / Synth</span>
-                  <p className="text-xs font-black text-white mt-1">{recipe.drumKitAdvice.hiHatVirtualInstrument}</p>
+              {(recipe.drumKitAdvice.hiHatVirtualInstrumentObj || recipe.drumKitAdvice.hiHatVirtualInstrument) && (
+                <div className="pt-2 border-t border-orange-500/10 space-y-1">
+                  <span className="text-[10px] uppercase font-black tracking-wider text-orange-400/70 block">Virtual Instrument / Synth</span>
+                  {recipe.drumKitAdvice.hiHatVirtualInstrumentObj ? (
+                    <div className="space-y-1.5">
+                      <p className="text-xs font-black text-white">{recipe.drumKitAdvice.hiHatVirtualInstrumentObj.name}</p>
+                      <div className="grid grid-cols-2 gap-1 p-2 bg-black/40 rounded-xl border border-white/5">
+                        {recipe.drumKitAdvice.hiHatVirtualInstrumentObj.deepDive?.map((s: any, idx: number) => (
+                          <div key={idx} className="text-[9px] font-bold">
+                            <span className="opacity-60 block text-[7px] uppercase tracking-wider">{s.parameter}</span>
+                            <span className="text-orange-300 font-mono">{s.value}</span>
+                            {s.explanation && <span className="opacity-40 font-normal block text-[7px] leading-tight mt-0.5">{s.explanation}</span>}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  ) : (
+                    <p className="text-xs font-black text-white">{recipe.drumKitAdvice.hiHatVirtualInstrument}</p>
+                  )}
                 </div>
               )}
 
               {/* FX Chain */}
               {recipe.drumKitAdvice.hiHatFXPlugins && recipe.drumKitAdvice.hiHatFXPlugins.length > 0 && (
-                <div className="pt-2 border-t border-orange-500/10 space-y-1">
-                  <span className="text-[10px] uppercase font-black tracking-wider text-orange-400/70">Enhancement FX Chain</span>
+                <div className="pt-2 border-t border-orange-500/10 space-y-1.5">
+                  <span className="text-[10px] uppercase font-black tracking-wider text-orange-400/70 block">Enhancement FX Chain</span>
                   {recipe.drumKitAdvice.hiHatFXPlugins.map((fx, i) => (
-                    <div key={i} className="bg-black/40 p-2 rounded-xl text-left border border-white/5">
-                      <div className="text-xs font-black text-orange-200">{fx.name}</div>
-                      <div className="text-[10px] opacity-60 mt-0.5">{fx.purpose}</div>
-                      <div className="text-[10px] font-mono text-orange-300/80 mt-1 bg-black/20 p-1 rounded font-bold">{fx.settings}</div>
+                    <div key={i} className="bg-black/40 p-2.5 rounded-2xl text-left border border-white/5 space-y-1">
+                      <div className="flex justify-between items-start gap-2">
+                        <div className="text-xs font-black text-orange-200">{fx.name}</div>
+                        <div className="text-[7px] opacity-60 font-bold uppercase tracking-wider text-right">{fx.purpose}</div>
+                      </div>
+                      {fx.deepDive && fx.deepDive.length > 0 ? (
+                        <div className="grid grid-cols-2 gap-1 pt-1.5 border-t border-white/5">
+                          {fx.deepDive.map((s: any, idx: number) => (
+                            <div key={idx} className="text-[9px] font-bold">
+                              <span className="opacity-60 block text-[7px] uppercase tracking-wider">{s.parameter}</span>
+                              <span className="text-orange-300 font-mono">{s.value}</span>
+                              {s.explanation && <span className="opacity-40 font-normal block text-[7px] leading-tight mt-0.5">{s.explanation}</span>}
+                            </div>
+                          ))}
+                        </div>
+                      ) : (
+                        fx.settings && <div className="text-[10px] font-mono text-orange-300/80 bg-black/20 p-1 rounded font-bold">{fx.settings}</div>
+                      )}
                     </div>
                   ))}
                 </div>
@@ -1534,7 +1621,7 @@ export const RecipeCard: React.FC<RecipeCardProps> = ({ recipe: initialRecipe, i
             </div>
 
             {/* CLAPS & PERCUSSION */}
-            {(recipe.drumKitAdvice.clap || recipe.drumKitAdvice.clapVirtualInstrument || (recipe.drumKitAdvice.clapFXPlugins && recipe.drumKitAdvice.clapFXPlugins.length > 0)) && (
+            {(recipe.drumKitAdvice.clap || recipe.drumKitAdvice.clapVirtualInstrument || recipe.drumKitAdvice.clapVirtualInstrumentObj || (recipe.drumKitAdvice.clapFXPlugins && recipe.drumKitAdvice.clapFXPlugins.length > 0)) && (
               <div className="space-y-3 p-4 rounded-3xl bg-black/30 border border-orange-500/10">
                 <h5 className={`font-black text-lg ${theme === 'coldest' ? 'text-orange-300' : 'text-orange-600 dark:text-orange-400'}`}>{t('clap', 'Claps & Percussion')}</h5>
                 
@@ -1547,22 +1634,51 @@ export const RecipeCard: React.FC<RecipeCardProps> = ({ recipe: initialRecipe, i
                 )}
 
                 {/* Virtual Instrument */}
-                {recipe.drumKitAdvice.clapVirtualInstrument && (
-                  <div className="pt-2 border-t border-orange-500/10">
-                    <span className="text-[10px] uppercase font-black tracking-wider text-orange-400/70">Virtual Instrument / Synth</span>
-                    <p className="text-xs font-black text-white mt-1">{recipe.drumKitAdvice.clapVirtualInstrument}</p>
+                {(recipe.drumKitAdvice.clapVirtualInstrumentObj || recipe.drumKitAdvice.clapVirtualInstrument) && (
+                  <div className="pt-2 border-t border-orange-500/10 space-y-1">
+                    <span className="text-[10px] uppercase font-black tracking-wider text-orange-400/70 block">Virtual Instrument / Synth</span>
+                    {recipe.drumKitAdvice.clapVirtualInstrumentObj ? (
+                      <div className="space-y-1.5">
+                        <p className="text-xs font-black text-white">{recipe.drumKitAdvice.clapVirtualInstrumentObj.name}</p>
+                        <div className="grid grid-cols-2 gap-1 p-2 bg-black/40 rounded-xl border border-white/5">
+                          {recipe.drumKitAdvice.clapVirtualInstrumentObj.deepDive?.map((s: any, idx: number) => (
+                            <div key={idx} className="text-[9px] font-bold">
+                              <span className="opacity-60 block text-[7px] uppercase tracking-wider">{s.parameter}</span>
+                              <span className="text-orange-300 font-mono">{s.value}</span>
+                              {s.explanation && <span className="opacity-40 font-normal block text-[7px] leading-tight mt-0.5">{s.explanation}</span>}
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    ) : (
+                      <p className="text-xs font-black text-white">{recipe.drumKitAdvice.clapVirtualInstrument}</p>
+                    )}
                   </div>
                 )}
 
                 {/* FX Chain */}
                 {recipe.drumKitAdvice.clapFXPlugins && recipe.drumKitAdvice.clapFXPlugins.length > 0 && (
-                  <div className="pt-2 border-t border-orange-500/10 space-y-1">
-                    <span className="text-[10px] uppercase font-black tracking-wider text-orange-400/70">Enhancement FX Chain</span>
+                  <div className="pt-2 border-t border-orange-500/10 space-y-1.5">
+                    <span className="text-[10px] uppercase font-black tracking-wider text-orange-400/70 block">Enhancement FX Chain</span>
                     {recipe.drumKitAdvice.clapFXPlugins.map((fx, i) => (
-                      <div key={i} className="bg-black/40 p-2 rounded-xl text-left border border-white/5">
-                        <div className="text-xs font-black text-orange-200">{fx.name}</div>
-                        <div className="text-[10px] opacity-60 mt-0.5">{fx.purpose}</div>
-                        <div className="text-[10px] font-mono text-orange-300/80 mt-1 bg-black/20 p-1 rounded font-bold">{fx.settings}</div>
+                      <div key={i} className="bg-black/40 p-2.5 rounded-2xl text-left border border-white/5 space-y-1">
+                        <div className="flex justify-between items-start gap-2">
+                          <div className="text-xs font-black text-orange-200">{fx.name}</div>
+                          <div className="text-[7px] opacity-60 font-bold uppercase tracking-wider text-right">{fx.purpose}</div>
+                        </div>
+                        {fx.deepDive && fx.deepDive.length > 0 ? (
+                          <div className="grid grid-cols-2 gap-1 pt-1.5 border-t border-white/5">
+                            {fx.deepDive.map((s: any, idx: number) => (
+                              <div key={idx} className="text-[9px] font-bold">
+                                <span className="opacity-60 block text-[7px] uppercase tracking-wider">{s.parameter}</span>
+                                <span className="text-orange-300 font-mono">{s.value}</span>
+                                {s.explanation && <span className="opacity-40 font-normal block text-[7px] leading-tight mt-0.5">{s.explanation}</span>}
+                              </div>
+                            ))}
+                          </div>
+                        ) : (
+                          fx.settings && <div className="text-[10px] font-mono text-orange-300/80 bg-black/20 p-1 rounded font-bold">{fx.settings}</div>
+                        )}
                       </div>
                     ))}
                   </div>
@@ -1571,7 +1687,7 @@ export const RecipeCard: React.FC<RecipeCardProps> = ({ recipe: initialRecipe, i
             )}
 
             {/* BASS / 808 */}
-            {(recipe.drumKitAdvice.bass || recipe.drumKitAdvice.bassVirtualInstrument || (recipe.drumKitAdvice.bassFXPlugins && recipe.drumKitAdvice.bassFXPlugins.length > 0)) && (
+            {(recipe.drumKitAdvice.bass || recipe.drumKitAdvice.bassVirtualInstrument || recipe.drumKitAdvice.bassVirtualInstrumentObj || (recipe.drumKitAdvice.bassFXPlugins && recipe.drumKitAdvice.bassFXPlugins.length > 0)) && (
               <div className="space-y-3 p-4 rounded-3xl bg-black/30 border border-orange-500/10">
                 <h5 className={`font-black text-lg ${theme === 'coldest' ? 'text-orange-300' : 'text-orange-600 dark:text-orange-400'}`}>{t('bass', 'Bass & Sub/808')}</h5>
                 
@@ -1584,22 +1700,51 @@ export const RecipeCard: React.FC<RecipeCardProps> = ({ recipe: initialRecipe, i
                 )}
 
                 {/* Virtual Instrument */}
-                {recipe.drumKitAdvice.bassVirtualInstrument && (
-                  <div className="pt-2 border-t border-orange-500/10">
-                    <span className="text-[10px] uppercase font-black tracking-wider text-orange-400/70">Virtual Instrument / Synth</span>
-                    <p className="text-xs font-black text-white mt-1">{recipe.drumKitAdvice.bassVirtualInstrument}</p>
+                {(recipe.drumKitAdvice.bassVirtualInstrumentObj || recipe.drumKitAdvice.bassVirtualInstrument) && (
+                  <div className="pt-2 border-t border-orange-500/10 space-y-1">
+                    <span className="text-[10px] uppercase font-black tracking-wider text-orange-400/70 block">Virtual Instrument / Synth</span>
+                    {recipe.drumKitAdvice.bassVirtualInstrumentObj ? (
+                      <div className="space-y-1.5">
+                        <p className="text-xs font-black text-white">{recipe.drumKitAdvice.bassVirtualInstrumentObj.name}</p>
+                        <div className="grid grid-cols-2 gap-1 p-2 bg-black/40 rounded-xl border border-white/5">
+                          {recipe.drumKitAdvice.bassVirtualInstrumentObj.deepDive?.map((s: any, idx: number) => (
+                            <div key={idx} className="text-[9px] font-bold">
+                              <span className="opacity-60 block text-[7px] uppercase tracking-wider">{s.parameter}</span>
+                              <span className="text-orange-300 font-mono">{s.value}</span>
+                              {s.explanation && <span className="opacity-40 font-normal block text-[7px] leading-tight mt-0.5">{s.explanation}</span>}
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    ) : (
+                      <p className="text-xs font-black text-white">{recipe.drumKitAdvice.bassVirtualInstrument}</p>
+                    )}
                   </div>
                 )}
 
                 {/* FX Chain */}
                 {recipe.drumKitAdvice.bassFXPlugins && recipe.drumKitAdvice.bassFXPlugins.length > 0 && (
-                  <div className="pt-2 border-t border-orange-500/10 space-y-1">
-                    <span className="text-[10px] uppercase font-black tracking-wider text-orange-400/70">Enhancement FX Chain</span>
+                  <div className="pt-2 border-t border-orange-500/10 space-y-1.5">
+                    <span className="text-[10px] uppercase font-black tracking-wider text-orange-400/70 block">Enhancement FX Chain</span>
                     {recipe.drumKitAdvice.bassFXPlugins.map((fx, i) => (
-                      <div key={i} className="bg-black/40 p-2 rounded-xl text-left border border-white/5">
-                        <div className="text-xs font-black text-orange-200">{fx.name}</div>
-                        <div className="text-[10px] opacity-60 mt-0.5">{fx.purpose}</div>
-                        <div className="text-[10px] font-mono text-orange-300/80 mt-1 bg-black/20 p-1 rounded font-bold">{fx.settings}</div>
+                      <div key={i} className="bg-black/40 p-2.5 rounded-2xl text-left border border-white/5 space-y-1">
+                        <div className="flex justify-between items-start gap-2">
+                          <div className="text-xs font-black text-orange-200">{fx.name}</div>
+                          <div className="text-[7px] opacity-60 font-bold uppercase tracking-wider text-right">{fx.purpose}</div>
+                        </div>
+                        {fx.deepDive && fx.deepDive.length > 0 ? (
+                          <div className="grid grid-cols-2 gap-1 pt-1.5 border-t border-white/5">
+                            {fx.deepDive.map((s: any, idx: number) => (
+                              <div key={idx} className="text-[9px] font-bold">
+                                <span className="opacity-60 block text-[7px] uppercase tracking-wider">{s.parameter}</span>
+                                <span className="text-orange-300 font-mono">{s.value}</span>
+                                {s.explanation && <span className="opacity-40 font-normal block text-[7px] leading-tight mt-0.5">{s.explanation}</span>}
+                              </div>
+                            ))}
+                          </div>
+                        ) : (
+                          fx.settings && <div className="text-[10px] font-mono text-orange-300/80 bg-black/20 p-1 rounded font-bold">{fx.settings}</div>
+                        )}
                       </div>
                     ))}
                   </div>

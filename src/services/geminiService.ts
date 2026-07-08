@@ -562,14 +562,22 @@ const getSimplifiedJSFXDatabase = (installedJsfxPacks: string[], starredPlugins:
 
 const ADVANCED_MIDI_PROMPT = `
     CRITICAL - ADVANCED MIDI & DRUM PATTERN GENERATION:
-    Always include decent, best-in-class patterns instead of sometimes leaving it simple, so users don't feel cheated.
+    Always include decent, best-in-class, highly engaging, and beautiful patterns instead of sometimes leaving them simple or repetitive, so users are excited to load them into their DAW.
+    
+    CRITICAL - ZERO BLANK PARAMETERS IN VSTS & PLUGINS (ABSOLUTE DIRECTIVE):
+    - EVERY SINGLE virtual instrument (VST) and FX plugin recommended in the recipe MUST have its "deepDive" array fully populated.
+    - Under NO circumstances are you allowed to output empty or truncated deepDive arrays (e.g., leaving a [] or skipping the field).
+    - Spend however long and as much reasoning capacity as necessary to ensure every single parameter (cutoff, envelope times, resonance, dry/wet, decay, ratios, drive) has realistic, detailed values and explicit, informative explanations that match the unique sonic characteristics of the analyzed track or URL link.
+    - If you are extracting a recipe from a URL/link, you MUST meticulously populate all VST parameters to capture that specific reference sound exactly.
     
     CRITICAL - CHORD POLYPHONY RULE:
     - For Chords: You MUST write chord notes in a single object inside the 'midiNotes' array with a comma-separated pitch string (e.g., "A3,C4,E4") instead of separate note objects. This is absolutely crucial for polyphony and ensures correct midi playback and prevents truncation!
     
     CRITICAL - EXHAUSTIVE DRUM KIT INSTRUMENT PARAMETERS:
-    - For EACH virtual instrument field (e.g., 'kickVirtualInstrument', 'snareVirtualInstrument', 'hiHatVirtualInstrument', 'clapVirtualInstrument', 'bassVirtualInstrument'), you MUST include a complete and exhaustive list of parameter settings and values (at least 6-10 specific parameters, like Cutoff, Decay, Resonance, Envelope settings, Drive, Tuning, etc., with their precise values and a short explanation) right inside the text string. Do NOT just name the plugin.
-    - For EACH FX plugin inside any FX arrays (e.g., 'kickFXPlugins', 'snareFXPlugins', 'hiHatFXPlugins', 'clapFXPlugins', 'bassFXPlugins', and the instrument 'fxPlugins' arrays), you MUST include EXHAUSTIVE parameter values in the settings/deepDive fields. Do NOT be brief. Specify at least 4-8 specific, real-world parameters per FX plugin.
+    - For EACH drum part under 'drumKitAdvice', you MUST provide both the legacy text fields ('kickVirtualInstrument', etc.) and the NEW structured object fields:
+      - 'kickVirtualInstrumentObj', 'snareVirtualInstrumentObj', 'hiHatVirtualInstrumentObj', 'clapVirtualInstrumentObj', and 'bassVirtualInstrumentObj'.
+      - Inside EACH virtual instrument object, you MUST provide 'name' (the synth/sampler name) and 'deepDive' which is an array of at least 6-10 specific, detailed parameters (e.g. Cutoff, Envelope Decay, Resonance, Drive, Tuning, Sample Start, Hold, Velocity Curve, etc.) with their values and precise explanations.
+      - Inside EACH FX plugin array (e.g. 'kickFXPlugins', 'snareFXPlugins', 'hiHatFXPlugins', 'clapFXPlugins', 'bassFXPlugins'), EACH plugin object MUST contain a 'deepDive' array containing at least 6-8 specific, real-world technical parameters (e.g. Threshold, Ratio, Attack, Release, Knee, Frequency, Gain, Wet/Dry, Saturation Drive, etc.) with precise values and explanations. DO NOT use empty arrays or leave deepDives out. This is a strict requirement to satisfy user demands for exhaustive parameters.
 
     CRITICAL - DRUM INSTRUMENTS AND FX ADVICE in 'drumKitAdvice':
     You MUST provide detailed and valid recommendations in the 'drumKitAdvice' object:
@@ -577,28 +585,35 @@ const ADVANCED_MIDI_PROMPT = `
     - 'clap': Specific acoustic, layered, or performance-style advice for claps/rimshots/percussions (e.g., room acoustics, handclapping count, or synthetic layering).
     - 'bass': Specific acoustic bass guitar tuning or synth bass/808 sub layering style advice (e.g., sidechain interaction with kick, glide settings, sub bass EQ cuts).
     - 'kickVirtualInstrument': Recommend EXACTLY which virtual instrument / synth plugin to load for the Kick sound, accompanied by an exhaustive list of 6-10 parameter settings (e.g., Tune: 50Hz, Decay: 65%, Saturation: 20%, Drive: 15%, Cutoff: 120Hz).
-      - If JSFX MODE IS ACTIVE, you MUST recommend a native JSFX instrument like "JS: Thunderkick" or "JS: 50 Hz Kicker" with exact slider/index settings (e.g. Freq: 55Hz, Decay: 70%, Click: 30%).
-      - If JSFX MODE IS INACTIVE, recommend a top VST virtual instrument like "SubLab", "Serum" (with a sub sine sweep patch), "EZdrummer 3", or "Sitala", with detailed preset/sound-shaping parameters.
-    - 'kickFXPlugins': An array of FX plugins to add onto the Kick track to make it sound industry-grade.
+    - 'kickVirtualInstrumentObj': Object representing the kick instrument. Name: e.g. "SubLab" or "Serum". deepDive: at least 6-10 parameters with names, values, and explanations.
+    - 'kickFXPlugins': An array of FX plugins to add onto the Kick track to make it sound industry-grade. Ensure EACH plugin has a detailed 'deepDive' parameter array.
       - If JSFX MODE IS ACTIVE, use JSFX from the database like "JS: Digital Drum Compressor", "JS: Saturation", "JS: Bad Buss Mojo Waveshaper", or "JS: Transient Controller" with exact settings.
       - If JSFX MODE IS INACTIVE, use VSTs like "FabFilter Pro-C 2", "Decapitator", "rc-20 retro color", or "Devil-Loc" with exact settings.
     - 'snareVirtualInstrument': Recommend which virtual instrument / sample-trigger to load for the Snare (e.g., "JS: Gaussian Noise Generator" or Cockos drum samplers in JSFX mode, or "Sitala", "Addictive Drums 2", or "Battery 4" in VST mode) with detailed parameters/envelope settings.
-    - 'snareFXPlugins': An array of FX plugins to enhance the Snare (e.g., "JS: Dirt Squeeze Compressor" or "JS: Delay" in JSFX mode, or "Pro-Q 3", "Decapitator", or "Valhalla VintageVerb" in VST mode) with exact settings.
+    - 'snareVirtualInstrumentObj': Object representing the snare instrument.
+    - 'snareFXPlugins': An array of FX plugins to enhance the Snare (e.g., "JS: Dirt Squeeze Compressor" or "JS: Delay" in JSFX mode, or "Pro-Q 3", "Decapitator", or "Valhalla VintageVerb" in VST mode) with exact settings. Ensure EACH plugin has a detailed 'deepDive' parameter array.
     - 'hiHatVirtualInstrument': Recommend which virtual instrument to use for the Hi-Hat (e.g. "JS: Gaussian Noise Generator" high-passed in JSFX mode, or "Sitala" / "Battery 4" in VST mode) with detailed parameters.
-    - 'hiHatFXPlugins': An array of FX plugins to enhance the Hi-Hat (e.g. "JS: Transient Controller" or "JS: Chorus" in JSFX mode, or "rc-20 retro color" wow/flutter & noise or "MicroShift" in VST mode) with exact settings.
+    - 'hiHatVirtualInstrumentObj': Object representing the hi-hat instrument.
+    - 'hiHatFXPlugins': An array of FX plugins to enhance the Hi-Hat (e.g. "JS: Transient Controller" or "JS: Chorus" in JSFX mode, or "rc-20 retro color" wow/flutter & noise or "MicroShift" in VST mode) with exact settings. Ensure EACH plugin has a detailed 'deepDive' parameter array.
     - 'clapVirtualInstrument': Recommend which virtual instrument / sample-trigger to load for the Clap (e.g., "JS: White Noise Generator" or native JSFX samplers in JSFX mode, or "Sitala", "Battery 4", or custom clap samples in VST mode) with detailed parameters.
-    - 'clapFXPlugins': An array of FX plugins to enhance the Clap (e.g., "JS: Ozzifier Chorus", "JS: Delay" or "JS: Tremolo" in JSFX mode, or "Valhalla VintageVerb", "Soundtoys Decapitator", or "MicroShift" in VST mode) with exact settings.
+    - 'clapVirtualInstrumentObj': Object representing the clap instrument.
+    - 'clapFXPlugins': An array of FX plugins to enhance the Clap (e.g., "JS: Ozzifier Chorus", "JS: Delay" or "JS: Tremolo" in JSFX mode, or "Valhalla VintageVerb", "Soundtoys Decapitator", or "MicroShift" in VST mode) with exact settings. Ensure EACH plugin has a detailed 'deepDive' parameter array.
     - 'bassVirtualInstrument': Recommend EXACTLY which virtual instrument / synth plugin to load for the Bass / 808 sound with detailed parameters (e.g., Glide, Distortion, Sub level, Filter envelope).
       - If JSFX MODE IS ACTIVE, you MUST recommend a native JSFX instrument or synth like "JS: Tone Generator" (configured as a sub sine/triangle wave), or a native Cockos synth plugin with precise settings.
       - If JSFX MODE IS INACTIVE, recommend top VSTs like "SubLab", "Spectrasonics Trilian", "Serum" (for 808 glides/sub bass), "Arturia Mini V", or "Trilogy" with exact preset details.
-    - 'bassFXPlugins': An array of FX plugins to shape, saturate, compress, or sidechain the Bass/808.
+    - 'bassVirtualInstrumentObj': Object representing the bass instrument.
+    - 'bassFXPlugins': An array of FX plugins to shape, saturate, compress, or sidechain the Bass/808. Ensure EACH plugin has a detailed 'deepDive' parameter array.
       - If JSFX MODE IS ACTIVE, use JSFX from the database like "JS: Saturation", "JS: Compciter", "JS: Bass Manager/Booster", or "JS: Non-Linear Processor" with exact settings.
       - If JSFX MODE IS INACTIVE, use VSTs like "FabFilter Pro-MB", "Decapitator", "Pultec EQP-1A", or "CamelCrusher" with exact settings.
 
-    CRITICAL - MIDI NOTE COMPLEXITY & REALISM (ANTI 2-NOTE GENERATION):
-    - You MUST generate incredibly realistic, multi-note MIDI patterns. Aim for at least 15-40 notes per sequence for melodies and arps, at least 8-20 notes for chord progressions, and at least 15-30 notes for basslines/808s over 4/8 bars.
-    - NEVER generate simple 2-note or 4-note patterns unless it is literally a static drone. Users complain when the system generates "shitty and unrealistic 2 note" patterns. It MUST be a proper 4 or 8 bar pattern.
-    - If the user requested a specific song, the MIDI notes MUST meticulously recreate the EXACT iconic melodies, rhythms, chords, and basslines of that song note-for-note and perfectly match the BPM.
+    CRITICAL - HIGHLY CREATIVE & ENJOYABLE MIDI PATTERNS (ANTI-PLAIN SLOP):
+    - You are strictly FORBIDDEN from generating simple, repetitive, or boring 2-note/4-note placeholders. 
+    - You MUST generate fully articulated, expressive, and enjoyable patterns with beautiful melody, bounce, syncopation, and chord movement that matches top-tier human musicianship.
+    - Melodies & Lead Arps: Provide at least 15-40 notes with rich variety in pitch, syncopation, and phrase movement over the 4/8 bar structure. Let the melody rise, fall, and transition beautifully.
+    - Chord Progressions: Provide at least 8-20 rich, lush chords (incorporating suspended, minor/major 9ths, add9, 11th, and inverted voicings) to create emotional depth instead of flat triads.
+    - Basslines & 808s: Provide at least 15-30 notes featuring glides, slides, syncopated rhythms, octave jumps, and dynamic turnarounds that interact flawlessly with the kick.
+    - If the user requested a specific song or provided a reference URL, the MIDI notes MUST meticulously recreate the EXACT iconic melodies, rhythms, chords, and basslines of that song note-for-note and perfectly match the BPM.
+    
     CRITICAL - NO VOCALS AS INSTRUMENTS:
     Ensure you ALWAYS use VST instruments (synths, keys, bass, guitars, etc.) instead of a vocal or acapella as an instrument in the beat recipe. Users feel cheated by a bad recipe guide if it just says "use a vocal". Only use actual VST instruments or hardware for the beat's instrumentation.
     CRITICAL - GUITAR CAPO RECOMMENDATIONS:
@@ -1443,6 +1458,25 @@ export const getUnifiedRecipeSchema = () => {
           toms: { type: Type.STRING },
           hiHat: { type: Type.STRING },
           kickVirtualInstrument: { type: Type.STRING },
+          kickVirtualInstrumentObj: {
+            type: Type.OBJECT,
+            properties: {
+              name: { type: Type.STRING },
+              deepDive: {
+                type: Type.ARRAY,
+                items: {
+                  type: Type.OBJECT,
+                  properties: {
+                    parameter: { type: Type.STRING },
+                    value: { type: Type.STRING },
+                    explanation: { type: Type.STRING }
+                  },
+                  required: ["parameter", "value"]
+                }
+              }
+            },
+            required: ["name", "deepDive"]
+          },
           kickFXPlugins: {
             type: Type.ARRAY,
             items: {
@@ -1450,12 +1484,43 @@ export const getUnifiedRecipeSchema = () => {
               properties: {
                 name: { type: Type.STRING },
                 purpose: { type: Type.STRING },
-                settings: { type: Type.STRING }
+                settings: { type: Type.STRING },
+                deepDive: {
+                  type: Type.ARRAY,
+                  items: {
+                    type: Type.OBJECT,
+                    properties: {
+                      parameter: { type: Type.STRING },
+                      value: { type: Type.STRING },
+                      explanation: { type: Type.STRING }
+                    },
+                    required: ["parameter", "value"]
+                  }
+                }
               },
-              required: ["name", "purpose", "settings"]
+              required: ["name", "purpose"]
             }
           },
           snareVirtualInstrument: { type: Type.STRING },
+          snareVirtualInstrumentObj: {
+            type: Type.OBJECT,
+            properties: {
+              name: { type: Type.STRING },
+              deepDive: {
+                type: Type.ARRAY,
+                items: {
+                  type: Type.OBJECT,
+                  properties: {
+                    parameter: { type: Type.STRING },
+                    value: { type: Type.STRING },
+                    explanation: { type: Type.STRING }
+                  },
+                  required: ["parameter", "value"]
+                }
+              }
+            },
+            required: ["name", "deepDive"]
+          },
           snareFXPlugins: {
             type: Type.ARRAY,
             items: {
@@ -1463,12 +1528,43 @@ export const getUnifiedRecipeSchema = () => {
               properties: {
                 name: { type: Type.STRING },
                 purpose: { type: Type.STRING },
-                settings: { type: Type.STRING }
+                settings: { type: Type.STRING },
+                deepDive: {
+                  type: Type.ARRAY,
+                  items: {
+                    type: Type.OBJECT,
+                    properties: {
+                      parameter: { type: Type.STRING },
+                      value: { type: Type.STRING },
+                      explanation: { type: Type.STRING }
+                    },
+                    required: ["parameter", "value"]
+                  }
+                }
               },
-              required: ["name", "purpose", "settings"]
+              required: ["name", "purpose"]
             }
           },
           hiHatVirtualInstrument: { type: Type.STRING },
+          hiHatVirtualInstrumentObj: {
+            type: Type.OBJECT,
+            properties: {
+              name: { type: Type.STRING },
+              deepDive: {
+                type: Type.ARRAY,
+                items: {
+                  type: Type.OBJECT,
+                  properties: {
+                    parameter: { type: Type.STRING },
+                    value: { type: Type.STRING },
+                    explanation: { type: Type.STRING }
+                  },
+                  required: ["parameter", "value"]
+                }
+              }
+            },
+            required: ["name", "deepDive"]
+          },
           hiHatFXPlugins: {
             type: Type.ARRAY,
             items: {
@@ -1476,13 +1572,44 @@ export const getUnifiedRecipeSchema = () => {
               properties: {
                 name: { type: Type.STRING },
                 purpose: { type: Type.STRING },
-                settings: { type: Type.STRING }
+                settings: { type: Type.STRING },
+                deepDive: {
+                  type: Type.ARRAY,
+                  items: {
+                    type: Type.OBJECT,
+                    properties: {
+                      parameter: { type: Type.STRING },
+                      value: { type: Type.STRING },
+                      explanation: { type: Type.STRING }
+                    },
+                    required: ["parameter", "value"]
+                  }
+                }
               },
-              required: ["name", "purpose", "settings"]
+              required: ["name", "purpose"]
             }
           },
           clap: { type: Type.STRING },
           clapVirtualInstrument: { type: Type.STRING },
+          clapVirtualInstrumentObj: {
+            type: Type.OBJECT,
+            properties: {
+              name: { type: Type.STRING },
+              deepDive: {
+                type: Type.ARRAY,
+                items: {
+                  type: Type.OBJECT,
+                  properties: {
+                    parameter: { type: Type.STRING },
+                    value: { type: Type.STRING },
+                    explanation: { type: Type.STRING }
+                  },
+                  required: ["parameter", "value"]
+                }
+              }
+            },
+            required: ["name", "deepDive"]
+          },
           clapFXPlugins: {
             type: Type.ARRAY,
             items: {
@@ -1490,13 +1617,44 @@ export const getUnifiedRecipeSchema = () => {
               properties: {
                 name: { type: Type.STRING },
                 purpose: { type: Type.STRING },
-                settings: { type: Type.STRING }
+                settings: { type: Type.STRING },
+                deepDive: {
+                  type: Type.ARRAY,
+                  items: {
+                    type: Type.OBJECT,
+                    properties: {
+                      parameter: { type: Type.STRING },
+                      value: { type: Type.STRING },
+                      explanation: { type: Type.STRING }
+                    },
+                    required: ["parameter", "value"]
+                  }
+                }
               },
-              required: ["name", "purpose", "settings"]
+              required: ["name", "purpose"]
             }
           },
           bass: { type: Type.STRING },
           bassVirtualInstrument: { type: Type.STRING },
+          bassVirtualInstrumentObj: {
+            type: Type.OBJECT,
+            properties: {
+              name: { type: Type.STRING },
+              deepDive: {
+                type: Type.ARRAY,
+                items: {
+                  type: Type.OBJECT,
+                  properties: {
+                    parameter: { type: Type.STRING },
+                    value: { type: Type.STRING },
+                    explanation: { type: Type.STRING }
+                  },
+                  required: ["parameter", "value"]
+                }
+              }
+            },
+            required: ["name", "deepDive"]
+          },
           bassFXPlugins: {
             type: Type.ARRAY,
             items: {
@@ -1504,9 +1662,21 @@ export const getUnifiedRecipeSchema = () => {
               properties: {
                 name: { type: Type.STRING },
                 purpose: { type: Type.STRING },
-                settings: { type: Type.STRING }
+                settings: { type: Type.STRING },
+                deepDive: {
+                  type: Type.ARRAY,
+                  items: {
+                    type: Type.OBJECT,
+                    properties: {
+                      parameter: { type: Type.STRING },
+                      value: { type: Type.STRING },
+                      explanation: { type: Type.STRING }
+                    },
+                    required: ["parameter", "value"]
+                  }
+                }
               },
-              required: ["name", "purpose", "settings"]
+              required: ["name", "purpose"]
             }
           }
         },

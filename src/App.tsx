@@ -5911,7 +5911,7 @@ Provide the exact JSFX plugin name and required sliders/parameters.`;
 
           let finalContext = critiqueContext;
           if (audioUrl || audioBase64 || geminiFileUri) {
-            finalContext = finalContext + (finalContext ? "\n\n" : "") + "CRITICAL SYSTEM INSTRUCTION: The user wants an EXACT REPLICA of this beat. Provide a precise, step-by-step recipe to completely recreate this specific song's beat exactly how it sounds in the provided link/audio. It MUST be an exact replica, do not just make something 'in the style of', make it an EXACT reproduction of the instruments, chords, drum patterns, and sound design of the source audio.";
+            finalContext = finalContext + (finalContext ? "\n\n" : "") + "CRITICAL SYSTEM INSTRUCTION: The user wants an EXACT REPLICA of this beat. Provide a precise, step-by-step recipe to completely recreate this specific song's beat exactly how it sounds in the provided link/audio. It MUST be an exact replica, do not just make something 'in the style of', make it an EXACT reproduction of the instruments, chords, drum patterns, and sound design of the source audio. YOU MUST NOT LEAVE ANY BLANK OR EMPTY PARAMETERS ON ANY VST OR FX PLUGIN. EVERY SINGLE DEEPDIVE PARAMETER ARRAY MUST BE EXHAUSTIVELY POPULATED TO ACHIEVE THIS LEVEL OF REALISM. IN ADDITION, ALL MIDI PATTERNS MUST BE HIGLY CREATIVE, SYNCATED, DYNAMIC, ENJOYABLE, AND EXACTLY MATCH THE MOVEMENT OF THE SOURCE AUDIO - STRICTLY FORBIDDEN FROM GENERATING PLAIN REPETITIVE NOTE SLOP.";
           }
 
           response = await getAudioBeatRecommendations(
@@ -5941,7 +5941,7 @@ Provide the exact JSFX plugin name and required sliders/parameters.`;
             
             let finalContext = critiqueContext;
             if (audioUrl || audioBase64 || geminiFileUri) {
-              finalContext = finalContext + (finalContext ? "\n\n" : "") + "CRITICAL SYSTEM INSTRUCTION: The user wants an EXACT REPLICA of this beat. Provide a precise, step-by-step recipe to completely recreate this specific song's beat exactly how it sounds in the provided link/audio. It MUST be an exact replica, do not just make something 'in the style of', make it an EXACT reproduction of the instruments, chords, drum patterns, and sound design of the source audio.";
+              finalContext = finalContext + (finalContext ? "\n\n" : "") + "CRITICAL SYSTEM INSTRUCTION: The user wants an EXACT REPLICA of this beat. Provide a precise, step-by-step recipe to completely recreate this specific song's beat exactly how it sounds in the provided link/audio. It MUST be an exact replica, do not just make something 'in the style of', make it an EXACT reproduction of the instruments, chords, drum patterns, and sound design of the source audio. YOU MUST NOT LEAVE ANY BLANK OR EMPTY PARAMETERS ON ANY VST OR FX PLUGIN. EVERY SINGLE DEEPDIVE PARAMETER ARRAY MUST BE EXHAUSTIVELY POPULATED TO ACHIEVE THIS LEVEL OF REALISM. IN ADDITION, ALL MIDI PATTERNS MUST BE HIGLY CREATIVE, SYNCATED, DYNAMIC, ENJOYABLE, AND EXACTLY MATCH THE MOVEMENT OF THE SOURCE AUDIO - STRICTLY FORBIDDEN FROM GENERATING PLAIN REPETITIVE NOTE SLOP.";
             }
 
             response = await getAudioBeatRecommendations(
