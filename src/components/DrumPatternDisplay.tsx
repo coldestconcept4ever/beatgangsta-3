@@ -179,6 +179,24 @@ export const DrumPatternDisplay: React.FC<DrumPatternDisplayProps> = ({ patterns
     swingView: false
   };
 
+  const getStepsPerBar = (isDoubleTime?: boolean) => isDoubleTime ? 32 : 16;
+  let finalBars = 1;
+  const checkMaxBars = (part: any) => {
+    if (!part || !Array.isArray(part.steps)) return;
+    const stepsPerBar = getStepsPerBar(part.isDoubleTime);
+    part.steps.forEach((s: any) => {
+      const stepNum = typeof s === 'number' ? s : s.step;
+      const b = Math.ceil(stepNum / stepsPerBar);
+      if (b > finalBars) finalBars = b;
+    });
+  };
+  checkMaxBars(currentPattern?.kick);
+  checkMaxBars(currentPattern?.snare);
+  checkMaxBars(currentPattern?.hiHat);
+  checkMaxBars(currentPattern?.openHat);
+  checkMaxBars(currentPattern?.perc);
+  checkMaxBars(currentPattern?.cymbal);
+
   const handleToggleVelocity = () => {
     setLocalToggles(prev => ({
       ...prev,
@@ -315,7 +333,7 @@ export const DrumPatternDisplay: React.FC<DrumPatternDisplayProps> = ({ patterns
             <div className="flex-1 space-y-10 overflow-hidden">
               <StepGrid 
                 steps={currentPattern.hiHat?.steps || []} 
-                totalSteps={currentPattern.hiHat?.isDoubleTime ? 32 : 16} 
+                totalSteps={getStepsPerBar(currentPattern.hiHat?.isDoubleTime) * finalBars} 
                 label={t('hi_hats')}
                 color={activeColor}
                 textColor={activeText}
@@ -326,7 +344,7 @@ export const DrumPatternDisplay: React.FC<DrumPatternDisplayProps> = ({ patterns
               
               <StepGrid 
                 steps={currentPattern.snare?.steps || []} 
-                totalSteps={currentPattern.snare?.isDoubleTime ? 32 : 16} 
+                totalSteps={getStepsPerBar(currentPattern.snare?.isDoubleTime) * finalBars} 
                 label={currentPattern.snare?.isClap ? t('clap') : t('snare')}
                 color={activeColor}
                 textColor={activeText}
@@ -337,7 +355,7 @@ export const DrumPatternDisplay: React.FC<DrumPatternDisplayProps> = ({ patterns
  
               <StepGrid 
                 steps={currentPattern.kick?.steps || []} 
-                totalSteps={currentPattern.kick?.isDoubleTime ? 32 : 16} 
+                totalSteps={getStepsPerBar(currentPattern.kick?.isDoubleTime) * finalBars} 
                 label={t('kick')}
                 color={activeColor}
                 textColor={activeText}

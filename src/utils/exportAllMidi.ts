@@ -1,5 +1,5 @@
 import MidiWriter from 'midi-writer-js';
-import { generateMidiTrack, generateAudioLoop, generateDrumMidiBaseData, isMidiCapable, PatternLength, PatternVariation } from './midiGenerator';
+import { generateMidiTrack, generateAudioLoop, generateDrumMidiBaseData, isMidiCapable, getBeats, PatternLength, PatternVariation } from './midiGenerator';
 import { BeatRecipe, MidiNote } from '../types';
 
 // Dynamic import for JSZip
@@ -24,17 +24,27 @@ export const generateIndividualMidiFiles = async (recipe: BeatRecipe): Promise<{
   const tracks = recipe.instruments || [];
   for (const ing of tracks) {
     if (isMidiCapable(ing.name, ing.loopGuide)) {
-      const lengths: PatternLength[] = [4, 8];
-      const variations: PatternVariation[] = ['A', 'B'];
       
-      for (const bars of lengths) {
-        for (const variation of variations) {
           let sectionMidiNotes: MidiNote[] | undefined;
           if (Array.isArray(ing.midiNotes)) {
             sectionMidiNotes = ing.midiNotes;
           } else if (ing.midiNotes) {
             sectionMidiNotes = ing.midiNotes.hook || ing.midiNotes.verse || [];
           }
+          
+          let originalTotalBeats = 0;
+          if (sectionMidiNotes) {
+             for (const note of sectionMidiNotes) {
+               originalTotalBeats += getBeats(note.wait) + getBeats(note.duration);
+             }
+          }
+          const naturalBars = Math.max(4, Math.round(originalTotalBeats / 4)) as PatternLength;
+          const lengths: PatternLength[] = naturalBars > 8 ? [naturalBars] : [4, 8];
+          const variations: PatternVariation[] = ['A', 'B'];
+
+          for (const bars of lengths) {
+            for (const variation of variations) {
+
           const track = generateMidiTrack(ing.name, ing.loopGuide || '', bpm, bars, variation, recipe.title, sectionMidiNotes);
           const write = new MidiWriter.Writer([track]);
           const midiBytes = write.buildFile();
@@ -67,8 +77,27 @@ export const generateIndividualMidiFiles = async (recipe: BeatRecipe): Promise<{
     for (const section of sections) {
       const pattern = recipe.drumPatterns[section];
       if (pattern) {
+        
+        let maxStep = 0;
+        const getStepsPerBar = (isDT?: boolean) => isDT ? 32 : 16;
+        let naturalBars = 4;
+        const checkMaxBars = (part: any) => {
+          if (!part || !Array.isArray(part.steps)) return;
+          const stepsPerBar = getStepsPerBar(part.isDoubleTime);
+          part.steps.forEach((s: any) => {
+            const stepNum = typeof s === 'number' ? s : s.step;
+            const b = Math.ceil(stepNum / stepsPerBar);
+            if (b > naturalBars) naturalBars = b;
+          });
+        };
+        checkMaxBars(pattern.kick);
+        checkMaxBars(pattern.snare);
+        checkMaxBars(pattern.hiHat);
+        const lengths: PatternLength[] = naturalBars > 8 ? [naturalBars] : [4, 8];
+
         for (const humanized of [true, false]) {
-          for (const bars of [4, 8] as PatternLength[]) {
+          for (const bars of lengths) {
+
             const midiBytes = generateDrumMidiBaseData(pattern, recipe.title, section, bpm, humanized, bars);
             if (midiBytes && midiBytes.length > 0) {
               const humanizedSuffix = humanized ? '_Humanized' : '';
@@ -111,17 +140,27 @@ export const generateAllMidiZip = async (recipe: BeatRecipe, dawType?: string | 
     const tracks = recipe.instruments || [];
     for (const ing of tracks) {
       if (isMidiCapable(ing.name, ing.loopGuide)) {
-        const lengths: PatternLength[] = [4, 8];
-        const variations: PatternVariation[] = ['A', 'B'];
         
-        for (const bars of lengths) {
-          for (const variation of variations) {
-            let sectionMidiNotes: MidiNote[] | undefined;
-            if (Array.isArray(ing.midiNotes)) {
-              sectionMidiNotes = ing.midiNotes;
-            } else if (ing.midiNotes) {
-              sectionMidiNotes = ing.midiNotes.hook || ing.midiNotes.verse || [];
-            }
+          let sectionMidiNotes: MidiNote[] | undefined;
+          if (Array.isArray(ing.midiNotes)) {
+            sectionMidiNotes = ing.midiNotes;
+          } else if (ing.midiNotes) {
+            sectionMidiNotes = ing.midiNotes.hook || ing.midiNotes.verse || [];
+          }
+          
+          let originalTotalBeats = 0;
+          if (sectionMidiNotes) {
+             for (const note of sectionMidiNotes) {
+               originalTotalBeats += getBeats(note.wait) + getBeats(note.duration);
+             }
+          }
+          const naturalBars = Math.max(4, Math.round(originalTotalBeats / 4)) as PatternLength;
+          const lengths: PatternLength[] = naturalBars > 8 ? [naturalBars] : [4, 8];
+          const variations: PatternVariation[] = ['A', 'B'];
+
+          for (const bars of lengths) {
+            for (const variation of variations) {
+
             const track = generateMidiTrack(ing.name, ing.loopGuide || '', bpm, bars, variation, recipe.title, sectionMidiNotes);
             const write = new MidiWriter.Writer([track]);
             const midiBytes = write.buildFile();
@@ -150,8 +189,27 @@ export const generateAllMidiZip = async (recipe: BeatRecipe, dawType?: string | 
         const subFolder = drumsFolder.folder(sectionName);
         
         // Generate both humanized and non-humanized versions
+        
+        let maxStep = 0;
+        const getStepsPerBar = (isDT?: boolean) => isDT ? 32 : 16;
+        let naturalBars = 4;
+        const checkMaxBars = (part: any) => {
+          if (!part || !Array.isArray(part.steps)) return;
+          const stepsPerBar = getStepsPerBar(part.isDoubleTime);
+          part.steps.forEach((s: any) => {
+            const stepNum = typeof s === 'number' ? s : s.step;
+            const b = Math.ceil(stepNum / stepsPerBar);
+            if (b > naturalBars) naturalBars = b;
+          });
+        };
+        checkMaxBars(pattern.kick);
+        checkMaxBars(pattern.snare);
+        checkMaxBars(pattern.hiHat);
+        const lengths: PatternLength[] = naturalBars > 8 ? [naturalBars] : [4, 8];
+
         for (const humanized of [true, false]) {
-          for (const bars of [4, 8] as PatternLength[]) {
+          for (const bars of lengths) {
+
             const midiBytes = generateDrumMidiBaseData(pattern, recipe.title, section, bpm, humanized, bars);
             if (midiBytes && midiBytes.length > 0) {
               const humanizedSuffix = humanized ? '_Humanized' : '';

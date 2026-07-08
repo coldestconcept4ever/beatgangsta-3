@@ -4883,7 +4883,7 @@ The AI was unable to verify these parameters. Please investigate.`;
       case 'generate': baseTime = 60; break;
       case 'type-beat': baseTime = 75; break;
       case 'song-search': baseTime = 80; break;
-      case 'audio-search': baseTime = 120; break;
+      case 'audio-search': baseTime = 180; break;
     }
 
     if (files && files.length > 0) {
@@ -5669,6 +5669,15 @@ Provide the exact JSFX plugin name and required sliders/parameters.`;
 
         if (isWebLink) {
           console.log("Web streaming link detected. Bypassing audio download, analyzing textually directly via Gemini.");
+          const proceed = window.confirm("WARNING: YouTube/Spotify links are currently analyzed TEXTUALLY by AI (it guesses the beat based on the title, it cannot actually listen to the URL).\n\nTo get an EXACT replica where the AI actually listens to the sound, please click Cancel, download the MP3/WAV yourself, and upload the file directly.\n\nDo you still want to proceed with textual guessing (uses credits)?");
+          if (!proceed) {
+            setLoading(false);
+            setAudioAnalysisLoading(false);
+            clearInterval(progressInterval);
+            clearTimeout(timeoutId);
+            setGenerationProgress(0);
+            return;
+          }
         } else {
           let res: Response | null = null;
           try {

@@ -4,7 +4,7 @@ import { DrumPattern, MidiNote } from '../types';
 // Dynamic import for JSZip
 const getJSZip = () => import('jszip').then(m => m.default);
 
-export type PatternLength = 4 | 8;
+export type PatternLength = 4 | 8 | 16 | 32 | 64;
 export type PatternVariation = 'A' | 'B';
 
 export const generateDrumMidiBaseData = (
@@ -44,6 +44,26 @@ export const generateDrumMidiBaseData = (
     return val;
   };
 
+  const getStepsPerBar = (isDoubleTime?: boolean) => isDoubleTime ? 32 : 16;
+  let finalBars = bars;
+  
+  const checkMaxBars = (part: any) => {
+    if (!part || !Array.isArray(part.steps)) return;
+    const stepsPerBar = getStepsPerBar(part.isDoubleTime);
+    part.steps.forEach((s: any) => {
+      const stepNum = typeof s === 'number' ? s : s.step;
+      const b = Math.ceil(stepNum / stepsPerBar);
+      if (b > finalBars) finalBars = b;
+    });
+  };
+  
+  checkMaxBars(currentPattern.kick);
+  checkMaxBars(currentPattern.snare);
+  checkMaxBars(currentPattern.hiHat);
+  checkMaxBars(currentPattern.openHat);
+  checkMaxBars(currentPattern.perc);
+  checkMaxBars(currentPattern.cymbal);
+
   const addDrumEvents = (
     track: MidiWriter.Track,
     steps: (number | { step: number, velocity: number })[],
@@ -53,7 +73,7 @@ export const generateDrumMidiBaseData = (
   ) => {
     const safeSteps = Array.isArray(steps) ? steps : [];
     const totalStepsPerBar = isDoubleTime ? 32 : 16;
-    const totalSteps = totalStepsPerBar * bars;
+    const totalSteps = totalStepsPerBar * finalBars;
     const stepDuration = isDoubleTime ? '32' : '16';
     const ticksPerStep = isDoubleTime ? 16 : 32;
     const targetTicks = totalSteps * ticksPerStep;

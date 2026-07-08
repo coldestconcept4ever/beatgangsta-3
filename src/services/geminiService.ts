@@ -560,10 +560,16 @@ const getSimplifiedJSFXDatabase = (installedJsfxPacks: string[], starredPlugins:
   }));
 };
 
+const EXTRACT_RECIPE_MIDI_PROMPT = `
+    CRITICAL - EXTRACT RECIPE & FULL ARRANGEMENT MIDI:
+    - **CRITICAL COMPUTE DIRECTIVE**: You MUST dedicate maximum compute time to transcribe the FULL song precisely. This is a massive operation. DO NOT rush. Do not give short 4 or 8 bar loops.
+    - **ALL INSTRUMENTS**: You MUST detect and include EVERY SINGLE instrument playing in the song (Lead Synth, Pads, Bass, Plucks, Strings, Guitars, Arps, etc.) inside the "instruments" array. Do not skip any element of the arrangement.
+    - **LONG SECTIONS**: You MUST output 16-bar or 32-bar MIDI arrangements for Intro, Verse, Hook, Bridge, Outro for each instrument. (e.g. up to 256 or 512 steps!).
+` + ADVANCED_MIDI_PROMPT;
 const ADVANCED_MIDI_PROMPT = `
     CRITICAL - ADVANCED MIDI & DRUM PATTERN GENERATION:
     Always include decent, best-in-class, highly engaging, and beautiful patterns instead of sometimes leaving them simple or repetitive, so users are excited to load them into their DAW.
-    - **CRITICAL COMPUTE DIRECTIVE**: You MUST spend maximum compute and reasoning capacity on the MIDI generation. Do not rush. Dedicate extensive internal processing (at least 180 seconds of compute equivalent) to meticulously recreate the exact iconic melodies, rhythms, chords, and basslines of the reference track, note-for-note. Every single MIDI pattern MUST be perfectly transcribed from the source.
+    - **CRITICAL COMPUTE DIRECTIVE**: You MUST spend maximum compute and reasoning capacity on the MIDI generation. Do not rush. Meticulously recreate the exact iconic melodies, rhythms, chords, and basslines of the reference track, note-for-note. Every single MIDI pattern MUST be perfectly transcribed from the source.
     
     CRITICAL - ZERO BLANK PARAMETERS IN VSTS & PLUGINS (ABSOLUTE DIRECTIVE):
     - EVERY SINGLE virtual instrument (VST) and FX plugin recommended in the recipe MUST have its "deepDive" array fully populated.
@@ -1440,8 +1446,8 @@ const generateAnalogStr = (analogInstruments: Hardware[], analogHardware: Hardwa
   }
   return gearStr + drumKitStr;
 };
-export const getUnifiedRecipeSchema = () => {
-  return {
+export const getUnifiedRecipeSchema = (isGangstaVoxMode: boolean = false) => {
+  const schema: any = {
     type: Type.OBJECT,
     properties: {
       title: { type: Type.STRING },
@@ -2152,6 +2158,13 @@ export const getUnifiedRecipeSchema = () => {
     },
     required: ["title", "style", "bpm", "description", "artistTypes", "instruments", "busses", "drumPatterns", "arrangement", "mixingAdvice", "masterPlugins"]
   };
+  
+  if (!isGangstaVoxMode) {
+    delete schema.properties.isGangstaVox;
+    delete schema.properties.gangstaVox;
+  }
+  
+  return schema;
 };
 // COMMON_PLUGIN_MAPPING is now dynamically imported in enrichPluginLibrary
 export const enrichPluginLibrary = async (
@@ -2601,7 +2614,7 @@ export const researchPluginParameters = async (plugin: VSTPlugin, language: stri
     return plugin;
   }
 };
-export const getSchemaInstruction = () => `\n\nCRITICAL: YOU MUST RETURN EXACTLY VALID JSON MATCHING THIS SCHEMA:\n${JSON.stringify({ type: "OBJECT", properties: { recipes: { type: "ARRAY", items: getUnifiedRecipeSchema(), minItems: 1 } }, required: ["recipes"] }, null, 2)}`;
+export const getSchemaInstruction = (isGangstaVoxMode: boolean = false) => `\n\nCRITICAL: YOU MUST RETURN EXACTLY VALID JSON MATCHING THIS SCHEMA:\n${JSON.stringify({ type: "OBJECT", properties: { recipes: { type: "ARRAY", items: getUnifiedRecipeSchema(isGangstaVoxMode), minItems: 1 } }, required: ["recipes"] }, null, 2)}`;
 
 export const generateStructuralBlueprint = async (searchQuery: string, language: string = 'en'): Promise<StructuralBlueprint> => {
   const ai = getAI();
@@ -2718,7 +2731,7 @@ export const getBeatRecommendations = async (plugins: VSTPlugin[], analogInstrum
     You MUST provide the 'masterPlugins' array with deep dives for the master chain ().
     You MUST provide 'drumPatterns' and 'arrangement' as context for the beat.
     CRITICAL DRUM PATTERN RULES:
-    - You MUST provide a FULL drum pattern for Kick, Snare, and Hi-Hat that is EXACTLY 4 or 8 bars long.
+    - Since this is an extract recipe for a full song, you MUST provide 16-bar or 32-bar long MIDI patterns! Provide ALL instruments playing in the song!
     - 16 steps = 1 bar (4 beats). 32 steps = 1 bar (if double time).
     - For 4 bars: Provide steps ranging from 1 to 64 (or 1-128 if double time).
     - For 8 bars: Provide steps ranging from 1 to 128 (or 1-256 if double time).
@@ -2774,7 +2787,7 @@ export const getBeatRecommendations = async (plugins: VSTPlugin[], analogInstrum
     You MUST provide the 'masterPlugins' array with deep dives for the master chain (EVERY available parameter per plugin, .
     You MUST provide 'drumPatterns' and 'arrangement'.
     CRITICAL DRUM PATTERN RULES:
-    - You MUST provide a FULL drum pattern for Kick, Snare, and Hi-Hat that is EXACTLY 4 or 8 bars long.
+    - Since this is an extract recipe for a full song, you MUST provide 16-bar or 32-bar long MIDI patterns! Provide ALL instruments playing in the song!
     - 16 steps = 1 bar (4 beats). 32 steps = 1 bar (if double time).
     - For 4 bars: Provide steps ranging from 1 to 64 (or 1-128 if double time).
     - For 8 bars: Provide steps ranging from 1 to 128 (or 1-256 if double time).
@@ -2784,7 +2797,7 @@ export const getBeatRecommendations = async (plugins: VSTPlugin[], analogInstrum
   `;
   const response = await ai.models.generateContent({
     model: 'gemini-3.1-pro-preview',
-    contents: { parts: [{ text: prompt + getSchemaInstruction() }] },
+    contents: { parts: [{ text: prompt + getSchemaInstruction(isGangstaVox) }] },
     config: {
       customAction: 'recipe',
       responseMimeType: "application/json"
@@ -2896,7 +2909,7 @@ export const getCustomBeatRecommendations = async (plugins: VSTPlugin[], query: 
     You MUST provide the 'masterPlugins' array with deep dives for the master chain ().
     You MUST provide 'drumPatterns' and 'arrangement' as context for the beat.
     CRITICAL DRUM PATTERN RULES:
-    - You MUST provide a FULL drum pattern for Kick, Snare, and Hi-Hat that is EXACTLY 4 or 8 bars long.
+    - Since this is an extract recipe for a full song, you MUST provide 16-bar or 32-bar long MIDI patterns! Provide ALL instruments playing in the song!
     - 16 steps = 1 bar (4 beats). 32 steps = 1 bar (if double time).
     - For 4 bars: Provide steps ranging from 1 to 64 (or 1-128 if double time).
     - For 8 bars: Provide steps ranging from 1 to 128 (or 1-256 if double time).
@@ -2943,7 +2956,7 @@ export const getCustomBeatRecommendations = async (plugins: VSTPlugin[], query: 
     You MUST provide the 'masterPlugins' array with deep dives for the master chain.
     You MUST provide 'drumPatterns' and 'arrangement'.
     CRITICAL DRUM PATTERN RULES:
-    - You MUST provide a FULL drum pattern for Kick, Snare, and Hi-Hat that is EXACTLY 4 or 8 bars long.
+    - Since this is an extract recipe for a full song, you MUST provide 16-bar or 32-bar long MIDI patterns! Provide ALL instruments playing in the song!
     - 16 steps = 1 bar (4 beats). 32 steps = 1 bar (if double time).
     - For 4 bars: Provide steps ranging from 1 to 64 (or 1-128 if double time).
     - For 8 bars: Provide steps ranging from 1 to 128 (or 1-256 if double time).
@@ -2954,7 +2967,7 @@ export const getCustomBeatRecommendations = async (plugins: VSTPlugin[], query: 
   const multiBandInstruction = getMultiBandInstruction(isMultiBandMode);
   const response = await ai.models.generateContent({
     model: 'gemini-3.1-pro-preview',
-    contents: { parts: [{ text: prompt + multiBandInstruction + getSchemaInstruction() }] },
+    contents: { parts: [{ text: prompt + multiBandInstruction + getSchemaInstruction(isGangstaVox) }] },
     config: {
       customAction: 'type_beat_search',
       responseMimeType: "application/json"
@@ -3055,7 +3068,7 @@ export const getSongBeatRecommendations = async (plugins: VSTPlugin[], songQuery
     You MUST provide the 'masterPlugins' array with deep dives for the master chain (typically 25-50 settings).
     You MUST provide 'drumPatterns' and 'arrangement' as context for the beat.
     CRITICAL DRUM PATTERN RULES:
-    - You MUST provide a FULL drum pattern for Kick, Snare, and Hi-Hat that is EXACTLY 4 or 8 bars long.
+    - Since this is an extract recipe for a full song, you MUST provide 16-bar or 32-bar long MIDI patterns! Provide ALL instruments playing in the song!
     - 16 steps = 1 bar (4 beats). 32 steps = 1 bar (if double time).
     - For 4 bars: Provide steps ranging from 1 to 64 (or 1-128 if double time).
     - For 8 bars: Provide steps ranging from 1 to 128 (or 1-256 if double time).
@@ -3113,7 +3126,7 @@ export const getSongBeatRecommendations = async (plugins: VSTPlugin[], songQuery
     You MUST provide the 'masterPlugins' array with deep dives for the master chain (EVERY available parameter per plugin, .
     You MUST provide 'drumPatterns' and 'arrangement'.
     CRITICAL DRUM PATTERN RULES:
-    - You MUST provide a FULL drum pattern for Kick, Snare, and Hi-Hat that is EXACTLY 4 or 8 bars long.
+    - Since this is an extract recipe for a full song, you MUST provide 16-bar or 32-bar long MIDI patterns! Provide ALL instruments playing in the song!
     - 16 steps = 1 bar (4 beats). 32 steps = 1 bar (if double time).
     - For 4 bars: Provide steps ranging from 1 to 64 (or 1-128 if double time).
     - For 8 bars: Provide steps ranging from 1 to 128 (or 1-256 if double time).
@@ -3124,7 +3137,7 @@ export const getSongBeatRecommendations = async (plugins: VSTPlugin[], songQuery
   const multiBandInstruction = getMultiBandInstruction(isMultiBandMode);
   const response = await ai.models.generateContent({
     model: 'gemini-3.1-pro-preview',
-    contents: { parts: [{ text: prompt + multiBandInstruction + getSchemaInstruction() }] },
+    contents: { parts: [{ text: prompt + multiBandInstruction + getSchemaInstruction(isGangstaVox) }] },
     config: {
       customAction: 'song_search',
       responseMimeType: "application/json"
@@ -3300,15 +3313,15 @@ export const getAudioBeatRecommendations = async (plugins: VSTPlugin[], audioBas
     You MUST provide the 'masterPlugins' array with deep dives for the master chain (typically 25-50 settings).
     You MUST provide 'drumPatterns' and 'arrangement' as context for the beat.
     CRITICAL DRUM PATTERN RULES:
-    - You MUST provide a FULL drum pattern for Kick, Snare, and Hi-Hat that is EXACTLY 4 or 8 bars long.
+    - Since this is an extract recipe for a full song, you MUST provide 16-bar or 32-bar long MIDI patterns! Provide ALL instruments playing in the song!
     - 16 steps = 1 bar (4 beats). 32 steps = 1 bar (if double time).
-    - For 4 bars: Provide steps ranging from 1 to 64 (or 1-128 if double time).
-    - For 8 bars: Provide steps ranging from 1 to 128 (or 1-256 if double time).
-    - Ensure the 'steps' array reflects a professional, genre-appropriate "bounce" across the ENTIRE 4 or 8 bars.
+    - For 16 bars: Provide steps ranging from 1 to 256 (or 1-512 if double time).
+    - For 32 bars: Provide steps ranging from 1 to 512 (or 1-1024 if double time).
+    - Ensure the 'steps' array reflects a professional, genre-appropriate "bounce" across the ENTIRE 16 or 32 bars.
     - Use 'swing' values (0-100) to add groove.
     - CRITICAL: Incorporate probabilistic velocity, micro-timing, articulation, and dynamic phrase lengths to move beyond robotic, quantized output toward a more "human" performance.
     - CRITICAL: Ensure rhythmic locking by synchronizing kick and bass patterns.
-    ${ADVANCED_MIDI_PROMPT}
+    ${EXTRACT_RECIPE_MIDI_PROMPT}
   ` : `
     Analyze the attached audio file and suggest 1 high-level, extremely detailed "Beat Recipe"
  that recreate the production style, bounce, and sonic atmosphere of the provided audio.
@@ -3362,22 +3375,22 @@ export const getAudioBeatRecommendations = async (plugins: VSTPlugin[], audioBas
     You MUST provide the 'masterPlugins' array with deep dives for the master chain (EVERY available parameter per plugin, .
     You MUST provide 'drumPatterns' and 'arrangement'.
     CRITICAL DRUM PATTERN RULES:
-    - You MUST provide a FULL drum pattern for Kick, Snare, and Hi-Hat that is EXACTLY 4 or 8 bars long.
+    - Since this is an extract recipe for a full song, you MUST provide 16-bar or 32-bar long MIDI patterns! Provide ALL instruments playing in the song!
     - 16 steps = 1 bar (4 beats). 32 steps = 1 bar (if double time).
-    - For 4 bars: Provide steps ranging from 1 to 64 (or 1-128 if double time).
-    - For 8 bars: Provide steps ranging from 1 to 128 (or 1-256 if double time).
-    - Ensure the 'steps' array reflects a professional, genre-appropriate "bounce" across the ENTIRE 4 or 8 bars.
+    - For 16 bars: Provide steps ranging from 1 to 256 (or 1-512 if double time).
+    - For 32 bars: Provide steps ranging from 1 to 512 (or 1-1024 if double time).
+    - Ensure the 'steps' array reflects a professional, genre-appropriate "bounce" across the ENTIRE 16 or 32 bars.
     - Use 'swing' values (0-100) to add groove.
     - CRITICAL: Incorporate probabilistic velocity, micro-timing, articulation, and dynamic phrase lengths to move beyond robotic, quantized output toward a more "human" performance.
     - CRITICAL: Ensure rhythmic locking by synchronizing kick and bass patterns.
-    ${ADVANCED_MIDI_PROMPT}
+    ${EXTRACT_RECIPE_MIDI_PROMPT}
   `;
   const schemaObject = {
     type: Type.OBJECT,
     properties: {
       recipes: {
         type: Type.ARRAY,
-        items: getUnifiedRecipeSchema(),
+        items: getUnifiedRecipeSchema(isGangstaVox),
         minItems: 1
       }
     },
@@ -4445,7 +4458,7 @@ export const replicateRecipeWithUserGear = async (recipe: SavedRecipe, myPlugins
   try {
     const response = await ai.models.generateContent({
       model: "gemini-3-flash-preview",
-      contents: { parts: [{ text: prompt + "\\n\\nCRITICAL: You MUST return EXACTLY valid JSON matching this schema:\\n" + JSON.stringify(getUnifiedRecipeSchema(), null, 2) }] },
+      contents: { parts: [{ text: prompt + "\\n\\nCRITICAL: You MUST return EXACTLY valid JSON matching this schema:\\n" + JSON.stringify(getUnifiedRecipeSchema(recipe.isGangstaVox), null, 2) }] },
       config: {
         customAction: 'analog_save',
         responseMimeType: "application/json"
