@@ -563,6 +563,7 @@ const getSimplifiedJSFXDatabase = (installedJsfxPacks: string[], starredPlugins:
 const ADVANCED_MIDI_PROMPT = `
     CRITICAL - ADVANCED MIDI & DRUM PATTERN GENERATION:
     Always include decent, best-in-class, highly engaging, and beautiful patterns instead of sometimes leaving them simple or repetitive, so users are excited to load them into their DAW.
+    - **CRITICAL COMPUTE DIRECTIVE**: You MUST spend maximum compute and reasoning capacity on the MIDI generation. Do not rush. Dedicate extensive internal processing (at least 180 seconds of compute equivalent) to meticulously recreate the exact iconic melodies, rhythms, chords, and basslines of the reference track, note-for-note. Every single MIDI pattern MUST be perfectly transcribed from the source.
     
     CRITICAL - ZERO BLANK PARAMETERS IN VSTS & PLUGINS (ABSOLUTE DIRECTIVE):
     - EVERY SINGLE virtual instrument (VST) and FX plugin recommended in the recipe MUST have its "deepDive" array fully populated.
@@ -2785,9 +2786,6 @@ export const getBeatRecommendations = async (plugins: VSTPlugin[], analogInstrum
     model: 'gemini-3.1-pro-preview',
     contents: { parts: [{ text: prompt + getSchemaInstruction() }] },
     config: {
-      thinkingConfig: {
-        thinkingBudgetSecs: 180
-      },
       customAction: 'recipe',
       responseMimeType: "application/json"
     }
@@ -2958,9 +2956,6 @@ export const getCustomBeatRecommendations = async (plugins: VSTPlugin[], query: 
     model: 'gemini-3.1-pro-preview',
     contents: { parts: [{ text: prompt + multiBandInstruction + getSchemaInstruction() }] },
     config: {
-      thinkingConfig: {
-        thinkingBudgetSecs: 180
-      },
       customAction: 'type_beat_search',
       responseMimeType: "application/json"
     }
@@ -3131,9 +3126,6 @@ export const getSongBeatRecommendations = async (plugins: VSTPlugin[], songQuery
     model: 'gemini-3.1-pro-preview',
     contents: { parts: [{ text: prompt + multiBandInstruction + getSchemaInstruction() }] },
     config: {
-      thinkingConfig: {
-        thinkingBudgetSecs: 180
-      },
       customAction: 'song_search',
       responseMimeType: "application/json"
     }
@@ -3421,9 +3413,6 @@ export const getAudioBeatRecommendations = async (plugins: VSTPlugin[], audioBas
         parts: parts
       },
       config: {
-        thinkingConfig: {
-          thinkingBudgetSecs: 180
-        },
         ...(geminiFileUri || audioBase64 ? { customAction: 'audio_analysis_recipe' } : {}),
         responseMimeType: "application/json",
         safetySettings: [
