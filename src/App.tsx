@@ -5733,7 +5733,7 @@ Provide the exact JSFX plugin name and required sliders/parameters.`;
       let geminiFileUri: string | null = null;
       let mimeType = 'audio/mpeg';
       
-      let processFile = file;
+      // Use outer processFile which correctly points to vibeFile when audioMode === 'recipe'
 
       if (!processFile && linkUrl) {
         const urlLower = linkUrl.toLowerCase();
