@@ -384,120 +384,58 @@ export const generateMidiTrack = (
     // Determine if this is a drum track (drums shouldn't be transposed)
     const text = (instrument + ' ' + loopGuide).toLowerCase();
     const isDrums = text.includes('drum') || text.includes('perc') || text.includes('kick') || text.includes('snare') || text.includes('hat') || text.includes('clap');
-    const isChords = text.includes('chord') || text.includes('pad') || text.includes('keys') || text.includes('piano');
 
-    // Helper to generate a block of notes with transformations
-    const generateBlock = (notes: MidiNote[], transpose: number, rhythmMod: 'none' | 'chop' | 'syncopate' | 'chop+syncopate', velocityMod: number) => {
-      const blockEvents: MidiWriter.NoteEvent[] = [];
-      notes.forEach(note => {
-        let pitches = Array.isArray(note.pitch) ? note.pitch : note.pitch.split(',').map(p => p.trim());
-        let transposedPitches = pitches.map(p => isDrums ? p : transposePitch(p, transpose));
-        
-        let duration = sanitizeDuration(note.duration, '8');
-        let wait = sanitizeDuration(note.wait, '0');
-        let velocity = Math.min(127, Math.max(1, (note.velocity || 100) + velocityMod));
-        
-        if (rhythmMod.includes('syncopate')) {
-          if (wait === '0' || !wait) {
-            wait = '16';
-            if (duration === '4') duration = '8';
-            else if (duration === '8') duration = '16';
-          }
-        }
-
-        if (rhythmMod.includes('chop')) {
-          if (duration === '2') {
-            blockEvents.push(new MidiWriter.NoteEvent({ pitch: transposedPitches, duration: '4', wait: wait, velocity }));
-            blockEvents.push(new MidiWriter.NoteEvent({ pitch: transposedPitches, duration: '4', wait: '0', velocity: Math.max(1, velocity - 15) }));
-            return;
-          } else if (duration === '4') {
-            blockEvents.push(new MidiWriter.NoteEvent({ pitch: transposedPitches, duration: '8', wait: wait, velocity }));
-            blockEvents.push(new MidiWriter.NoteEvent({ pitch: transposedPitches, duration: '8', wait: '0', velocity: Math.max(1, velocity - 15) }));
-            return;
-          } else if (duration === '8') {
-            blockEvents.push(new MidiWriter.NoteEvent({ pitch: transposedPitches, duration: '16', wait: wait, velocity }));
-            blockEvents.push(new MidiWriter.NoteEvent({ pitch: transposedPitches, duration: '16', wait: '0', velocity: Math.max(1, velocity - 15) }));
-            return;
-          }
-        }
-        
-        blockEvents.push(new MidiWriter.NoteEvent({
-          pitch: transposedPitches,
-          duration: duration,
-          wait: wait,
-          velocity: velocity
-        }));
-      });
-      return blockEvents;
-    };
-
-    let totalBeats = 0;
-    const targetBeats = bars * 4;
-    const truncatedNotes: MidiNote[] = [];
-    
+    let originalTotalBeats = 0;
     for (const note of midiNotes) {
-      const waitBeats = getBeats(note.wait);
-      const durationBeats = getBeats(note.duration);
-      
-      if (totalBeats + waitBeats >= targetBeats) {
-        break;
-      }
-      
-      if (totalBeats + waitBeats + durationBeats > targetBeats) {
-        truncatedNotes.push(note);
-        totalBeats += waitBeats + durationBeats;
-        break;
-      }
-      
-      truncatedNotes.push(note);
-      totalBeats += waitBeats + durationBeats;
+      originalTotalBeats += getBeats(note.wait) + getBeats(note.duration);
     }
-    
-    // Calculate how many bars the AI generated (assuming 4 beats per bar)
-    const generatedBars = Math.max(1, Math.round(totalBeats / 4));
-    
-    // Play the generated notes once and pad with silence if needed
-    const numBlocks = 1;
-    
-    let currentTotalBeats = 0;
-    for (let i = 0; i < numBlocks; i++) {
-      let transpose = 0;
-      let rhythmMod: 'none' | 'chop' | 'syncopate' | 'chop+syncopate' = 'none';
-      let velocityMod = 0;
-      
-      // Add some humanization to velocity
-      velocityMod += Math.floor(Math.random() * 10) - 5;
-      
-      const blockEvents = generateBlock(truncatedNotes, transpose, rhythmMod, velocityMod);
-      
-      for (const event of blockEvents) {
-        const waitBeats = getBeats(event.wait);
-        const durationBeats = getBeats(event.duration);
-        
-        if (currentTotalBeats + waitBeats >= targetBeats) break;
-        
-        customEvents.push(event);
-        currentTotalBeats += waitBeats + durationBeats;
-        
-        if (currentTotalBeats >= targetBeats) break;
-      }
-      
-      if (currentTotalBeats >= targetBeats) break;
-    }
-    
-    // Ensure the track is exactly the requested length (4 or 8 bars)
-    if (currentTotalBeats < targetBeats) {
-      const remainingTicks = Math.round((targetBeats - currentTotalBeats) * 128);
-      if (remainingTicks > 0) {
-        customEvents.push(new MidiWriter.NoteEvent({ 
-          pitch: ['C4'], 
-          duration: 'T1', 
-          wait: `T${remainingTicks - 1}`, 
-          velocity: 0 
-        }));
-      }
-    }
-    
+
+    const targetBeats = bars * 4;
+    // Stretch factor so the notes perfectly span targetBeats
+    const stretchFactor = originalTotalBeats > 0 ? targetBeats / originalTotalBeats : 1;
+
+    let cumulativeOriginalBeats = 0;
+    let previousStretchedTicks = 0;
+
+    midiNotes.forEach((note) => {
+      let pitches = Array.isArray(note.pitch) ? note.pitch : note.pitch.split(',').map(p => p.trim());
+      let transposedPitches = pitches.map(p => isDrums ? p : transposePitch(p, 0));
+
+      const origWait = getBeats(note.wait);
+      const origDuration = getBeats(note.duration);
+
+      // Start and end times in the original timeline (in beats)
+      const origStart = cumulativeOriginalBeats + origWait;
+      const origEnd = origStart + origDuration;
+
+      // Move original timeline forward
+      cumulativeOriginalBeats = origEnd;
+
+      // Map to the stretched timeline
+      const scaledStartBeats = origStart * stretchFactor;
+      const scaledEndBeats = origEnd * stretchFactor;
+
+      // Convert beats to ticks (128 ticks per beat)
+      const scaledStartTicks = Math.round(scaledStartBeats * 128);
+      const scaledEndTicks = Math.round(scaledEndBeats * 128);
+
+      // Calculate relative ticks
+      const waitTicks = Math.max(0, scaledStartTicks - previousStretchedTicks);
+      const durationTicks = Math.max(1, scaledEndTicks - scaledStartTicks);
+
+      // Update previous stretched ticks tracker
+      previousStretchedTicks = scaledStartTicks + durationTicks;
+
+      const velocity = Math.min(127, Math.max(1, note.velocity || 100));
+
+      customEvents.push(new MidiWriter.NoteEvent({
+        pitch: transposedPitches,
+        duration: `T${durationTicks}`,
+        wait: `T${waitTicks}`,
+        velocity: velocity
+      }));
+    });
+
     track.addEvent(customEvents);
     return track;
   }

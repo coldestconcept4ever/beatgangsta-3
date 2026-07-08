@@ -563,24 +563,32 @@ const getSimplifiedJSFXDatabase = (installedJsfxPacks: string[], starredPlugins:
 const ADVANCED_MIDI_PROMPT = `
     CRITICAL - ADVANCED MIDI & DRUM PATTERN GENERATION:
     Always include decent, best-in-class patterns instead of sometimes leaving it simple, so users don't feel cheated.
+    
+    CRITICAL - CHORD POLYPHONY RULE:
+    - For Chords: You MUST write chord notes in a single object inside the 'midiNotes' array with a comma-separated pitch string (e.g., "A3,C4,E4") instead of separate note objects. This is absolutely crucial for polyphony and ensures correct midi playback and prevents truncation!
+    
+    CRITICAL - EXHAUSTIVE DRUM KIT INSTRUMENT PARAMETERS:
+    - For EACH virtual instrument field (e.g., 'kickVirtualInstrument', 'snareVirtualInstrument', 'hiHatVirtualInstrument', 'clapVirtualInstrument', 'bassVirtualInstrument'), you MUST include a complete and exhaustive list of parameter settings and values (at least 6-10 specific parameters, like Cutoff, Decay, Resonance, Envelope settings, Drive, Tuning, etc., with their precise values and a short explanation) right inside the text string. Do NOT just name the plugin.
+    - For EACH FX plugin inside any FX arrays (e.g., 'kickFXPlugins', 'snareFXPlugins', 'hiHatFXPlugins', 'clapFXPlugins', 'bassFXPlugins', and the instrument 'fxPlugins' arrays), you MUST include EXHAUSTIVE parameter values in the settings/deepDive fields. Do NOT be brief. Specify at least 4-8 specific, real-world parameters per FX plugin.
+
     CRITICAL - DRUM INSTRUMENTS AND FX ADVICE in 'drumKitAdvice':
     You MUST provide detailed and valid recommendations in the 'drumKitAdvice' object:
     - 'hiHat': Specific tuning/muffling/style advice for the hi-hats.
     - 'clap': Specific acoustic, layered, or performance-style advice for claps/rimshots/percussions (e.g., room acoustics, handclapping count, or synthetic layering).
     - 'bass': Specific acoustic bass guitar tuning or synth bass/808 sub layering style advice (e.g., sidechain interaction with kick, glide settings, sub bass EQ cuts).
-    - 'kickVirtualInstrument': Recommend EXACTLY which virtual instrument / synth plugin to load for the Kick sound.
+    - 'kickVirtualInstrument': Recommend EXACTLY which virtual instrument / synth plugin to load for the Kick sound, accompanied by an exhaustive list of 6-10 parameter settings (e.g., Tune: 50Hz, Decay: 65%, Saturation: 20%, Drive: 15%, Cutoff: 120Hz).
       - If JSFX MODE IS ACTIVE, you MUST recommend a native JSFX instrument like "JS: Thunderkick" or "JS: 50 Hz Kicker" with exact slider/index settings (e.g. Freq: 55Hz, Decay: 70%, Click: 30%).
       - If JSFX MODE IS INACTIVE, recommend a top VST virtual instrument like "SubLab", "Serum" (with a sub sine sweep patch), "EZdrummer 3", or "Sitala", with detailed preset/sound-shaping parameters.
     - 'kickFXPlugins': An array of FX plugins to add onto the Kick track to make it sound industry-grade.
       - If JSFX MODE IS ACTIVE, use JSFX from the database like "JS: Digital Drum Compressor", "JS: Saturation", "JS: Bad Buss Mojo Waveshaper", or "JS: Transient Controller" with exact settings.
       - If JSFX MODE IS INACTIVE, use VSTs like "FabFilter Pro-C 2", "Decapitator", "rc-20 retro color", or "Devil-Loc" with exact settings.
-    - 'snareVirtualInstrument': Recommend which virtual instrument / sample-trigger to load for the Snare (e.g., "JS: Gaussian Noise Generator" or Cockos drum samplers in JSFX mode, or "Sitala", "Addictive Drums 2", or "Battery 4" in VST mode) and its parameters.
+    - 'snareVirtualInstrument': Recommend which virtual instrument / sample-trigger to load for the Snare (e.g., "JS: Gaussian Noise Generator" or Cockos drum samplers in JSFX mode, or "Sitala", "Addictive Drums 2", or "Battery 4" in VST mode) with detailed parameters/envelope settings.
     - 'snareFXPlugins': An array of FX plugins to enhance the Snare (e.g., "JS: Dirt Squeeze Compressor" or "JS: Delay" in JSFX mode, or "Pro-Q 3", "Decapitator", or "Valhalla VintageVerb" in VST mode) with exact settings.
     - 'hiHatVirtualInstrument': Recommend which virtual instrument to use for the Hi-Hat (e.g. "JS: Gaussian Noise Generator" high-passed in JSFX mode, or "Sitala" / "Battery 4" in VST mode) with detailed parameters.
     - 'hiHatFXPlugins': An array of FX plugins to enhance the Hi-Hat (e.g. "JS: Transient Controller" or "JS: Chorus" in JSFX mode, or "rc-20 retro color" wow/flutter & noise or "MicroShift" in VST mode) with exact settings.
     - 'clapVirtualInstrument': Recommend which virtual instrument / sample-trigger to load for the Clap (e.g., "JS: White Noise Generator" or native JSFX samplers in JSFX mode, or "Sitala", "Battery 4", or custom clap samples in VST mode) with detailed parameters.
     - 'clapFXPlugins': An array of FX plugins to enhance the Clap (e.g., "JS: Ozzifier Chorus", "JS: Delay" or "JS: Tremolo" in JSFX mode, or "Valhalla VintageVerb", "Soundtoys Decapitator", or "MicroShift" in VST mode) with exact settings.
-    - 'bassVirtualInstrument': Recommend EXACTLY which virtual instrument / synth plugin to load for the Bass / 808 sound.
+    - 'bassVirtualInstrument': Recommend EXACTLY which virtual instrument / synth plugin to load for the Bass / 808 sound with detailed parameters (e.g., Glide, Distortion, Sub level, Filter envelope).
       - If JSFX MODE IS ACTIVE, you MUST recommend a native JSFX instrument or synth like "JS: Tone Generator" (configured as a sub sine/triangle wave), or a native Cockos synth plugin with precise settings.
       - If JSFX MODE IS INACTIVE, recommend top VSTs like "SubLab", "Spectrasonics Trilian", "Serum" (for 808 glides/sub bass), "Arturia Mini V", or "Trilogy" with exact preset details.
     - 'bassFXPlugins': An array of FX plugins to shape, saturate, compress, or sidechain the Bass/808.
@@ -3233,7 +3241,7 @@ export const getAudioBeatRecommendations = async (plugins: VSTPlugin[], audioBas
         parts: parts
       },
       config: {
-        customAction: 'audio_analysis_recipe',
+        ...(geminiFileUri || audioBase64 ? { customAction: 'audio_analysis_recipe' } : {}),
         responseMimeType: "application/json",
         safetySettings: [
           { category: HarmCategory.HARM_CATEGORY_HARASSMENT, threshold: HarmBlockThreshold.OFF },
