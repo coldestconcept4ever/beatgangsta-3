@@ -15,6 +15,7 @@ import { fetchWithDetailedError } from './lib/api';
 import { parseRpp } from './utils/reaperUtils';
 import { getReaperLua } from './lib/reaperLua';
 import { JSFX_DATABASE } from './data/jsfxResearch';
+import { DEFAULT_OWNED_XPAND_PRESETS, XPAND_CATEGORIES, XpandPreset } from './data/xpandPresets';
 
 import { AvianField } from './components/RavenField';
 import { PluginCard } from './components/PluginCard';
@@ -50,6 +51,7 @@ import { TutorialOverlay } from './components/TutorialOverlay';
 import { StatusPage } from './components/StatusPage';
 import { JSFXDatabaseViewer } from './components/JSFXDatabaseViewer';
 import { JSFXAutomationChains } from './components/JSFXAutomationChains';
+import { XpandDatabaseViewer } from './components/XpandDatabaseViewer';
 import { AdminDashboard } from './components/AdminDashboard';
 import { BetaApplicationModal } from './components/BetaApplicationModal';
 import { AnimatePresence, motion } from 'motion/react';
@@ -441,6 +443,7 @@ const App: React.FC = () => {
     return false;
   });
   const [showJsfxDatabase, setShowJsfxDatabase] = useState(false);
+  const [showXpandDatabase, setShowXpandDatabase] = useState(false);
   const [showJsfxAutomationChains, setShowJsfxAutomationChains] = useState(false);
   const [showAdminDashboard, setShowAdminDashboard] = useState(false);
   const [showBetaApplyModal, setShowBetaApplyModal] = useState(false);
@@ -606,7 +609,21 @@ const App: React.FC = () => {
     }
   });
   const [sortBy, setSortBy] = useState<'name' | 'vendor' | 'type'>('type');
-  const [gearRackTab, setGearRackTab] = useState<'vst' | 'jsfx'>('vst');
+  const [gearRackTab, setGearRackTab] = useState<'vst' | 'jsfx' | 'xpand'>('vst');
+  const [xpandPresets, setXpandPresets] = useState<XpandPreset[]>(() => {
+    try {
+      const saved = localStorage.getItem('bg_xpand_presets');
+      return saved ? JSON.parse(saved) : DEFAULT_OWNED_XPAND_PRESETS;
+    } catch (e) {
+      return DEFAULT_OWNED_XPAND_PRESETS;
+    }
+  });
+  const [xpandSearch, setXpandSearch] = useState<string>('');
+  const [xpandCategoryFilter, setXpandCategoryFilter] = useState<string>('All');
+  const [newPresetName, setNewPresetName] = useState<string>('');
+  const [newPresetCategory, setNewPresetCategory] = useState<string>('000 Soft Pads');
+  const [bulkInputText, setBulkInputText] = useState<string>('');
+  const [showBulkImport, setShowBulkImport] = useState<boolean>(false);
   const [selectedFolder, setSelectedFolder] = useState<string | null>(null);
   const [folderToRemove, setFolderToRemove] = useState<string | null>(null);
   const [deletedPlugins, setDeletedPlugins] = useState<VSTPlugin[]>(() => {
@@ -1247,6 +1264,26 @@ The AI was unable to verify these parameters. Please investigate.`;
     }
   }, []);
 
+  const handleSaveXpandPresets = useCallback(async (presetsToSave: XpandPreset[]) => {
+    if (!userRef.current) return;
+    try {
+      await fetchWithDetailedError('/api/xpand-presets/save', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ uid: userRef.current.uid, presets: presetsToSave })
+      });
+    } catch (e) {
+      console.error("Failed to save Xpand presets to Turso", e);
+    }
+  }, []);
+
+  useEffect(() => {
+    localStorage.setItem('bg_xpand_presets', JSON.stringify(xpandPresets));
+    if (user) {
+      handleSaveXpandPresets(xpandPresets);
+    }
+  }, [xpandPresets, user, handleSaveXpandPresets]);
+
   useEffect(() => {
     if (user) {
       const loadUserPlugins = async () => {
@@ -1266,7 +1303,21 @@ The AI was unable to verify these parameters. Please investigate.`;
           console.error("Failed to load user plugins from Turso", e);
         }
       };
+      
+      const loadXpandPresets = async () => {
+        try {
+          const res = await fetchWithDetailedError(`/api/xpand-presets/load?uid=${user.uid}`);
+          const data = await res.json();
+          if (data.presets && data.presets.length > 0) {
+            setXpandPresets(data.presets);
+          }
+        } catch (e) {
+          console.error("Failed to load Xpand presets from Turso", e);
+        }
+      };
+
       loadUserPlugins();
+      loadXpandPresets();
     }
   }, [user]);
   const [isCloudSyncing, setIsCloudSyncing] = useState(false);
@@ -3574,6 +3625,27 @@ The AI was unable to verify these parameters. Please investigate.`;
     return plugins.filter(p => p.type !== 'Studio One Function');
   }, [plugins]);
 
+  const filteredXpandPresets = useMemo(() => {
+    let filtered = xpandPresets;
+
+    if (xpandSearch) {
+      const searchLower = xpandSearch.toLowerCase();
+      filtered = filtered.filter(p => p.preset_name.toLowerCase().includes(searchLower) || p.category.toLowerCase().includes(searchLower));
+    }
+
+    if (xpandCategoryFilter !== 'All') {
+      if (xpandCategoryFilter === 'Owned') {
+        filtered = filtered.filter(p => p.is_owned);
+      } else if (xpandCategoryFilter === 'Unowned') {
+        filtered = filtered.filter(p => !p.is_owned);
+      } else {
+        filtered = filtered.filter(p => p.category === xpandCategoryFilter);
+      }
+    }
+
+    return filtered;
+  }, [xpandPresets, xpandSearch, xpandCategoryFilter]);
+
   const filteredPlugins = useMemo(() => {
     let filtered = allActivePlugins;
     
@@ -5201,7 +5273,7 @@ The AI was unable to verify these parameters. Please investigate.`;
 
     try {
       if (!requireAuth()) return;
-      const response = await getBeatRecommendations(plugins, analogInstruments, analogHardware, drumKits, excludeAnalog, dawType, starredPlugins, isGangstaVox, i18n.language, isMultiBandMode, generationBPM, generationContext, isJsfxMode, installedJsfxPacks);
+      const response = await getBeatRecommendations(plugins, analogInstruments, analogHardware, drumKits, excludeAnalog, dawType, starredPlugins, isGangstaVox, i18n.language, isMultiBandMode, generationBPM, generationContext, isJsfxMode, installedJsfxPacks, xpandPresets);
       clearInterval(progressInterval);
       setGenerationProgress(100);
       clearTimeout(timeoutId);
@@ -5252,7 +5324,7 @@ The AI was unable to verify these parameters. Please investigate.`;
 
     try {
       if (!requireAuth()) return;
-      const response = await getCustomBeatRecommendations(plugins, typeBeatSearch.trim(), analogInstruments, analogHardware, drumKits, excludeAnalog, dawType, starredPlugins, isGangstaVox, i18n.language, isMultiBandMode, generationBPM, generationContext, isJsfxMode, installedJsfxPacks);
+      const response = await getCustomBeatRecommendations(plugins, typeBeatSearch.trim(), analogInstruments, analogHardware, drumKits, excludeAnalog, dawType, starredPlugins, isGangstaVox, i18n.language, isMultiBandMode, generationBPM, generationContext, isJsfxMode, installedJsfxPacks, xpandPresets);
       clearInterval(progressInterval);
       setGenerationProgress(100);
       clearTimeout(timeoutId);
@@ -5304,7 +5376,7 @@ The AI was unable to verify these parameters. Please investigate.`;
 
     try {
       if (!requireAuth()) return;
-      const response = await getSongBeatRecommendations(plugins, songSearch.trim(), analogInstruments, analogHardware, drumKits, excludeAnalog, dawType, starredPlugins, isGangstaVox, i18n.language, isMultiBandMode, generationBPM, generationContext, isJsfxMode, installedJsfxPacks);
+      const response = await getSongBeatRecommendations(plugins, songSearch.trim(), analogInstruments, analogHardware, drumKits, excludeAnalog, dawType, starredPlugins, isGangstaVox, i18n.language, isMultiBandMode, generationBPM, generationContext, isJsfxMode, installedJsfxPacks, xpandPresets);
       clearInterval(progressInterval);
       setGenerationProgress(100);
       clearTimeout(timeoutId);
@@ -6057,7 +6129,8 @@ Provide the exact JSFX plugin name and required sliders/parameters.`;
             installedJsfxPacks,
             recreateBase64,
             recreateFileUri,
-            recreateMimeType
+            recreateMimeType,
+            xpandPresets
           );
         } catch (apiErr: any) {
           console.warn("Initial audio analysis failed, retrying with minimal plugin list...", apiErr);
@@ -6090,7 +6163,8 @@ Provide the exact JSFX plugin name and required sliders/parameters.`;
               installedJsfxPacks,
               recreateBase64,
               recreateFileUri,
-              recreateMimeType
+              recreateMimeType,
+              xpandPresets
             );
           } catch (retryErr: any) {
             console.error("Retry audio analysis failed:", retryErr);
@@ -6430,6 +6504,10 @@ Provide the exact JSFX plugin name and required sliders/parameters.`;
 
   if (showJsfxDatabase) {
     return <JSFXDatabaseViewer onBack={() => setShowJsfxDatabase(false)} theme={theme} />;
+  }
+
+  if (showXpandDatabase) {
+    return <XpandDatabaseViewer onBack={() => setShowXpandDatabase(false)} theme={theme} />;
   }
 
   if (showJsfxAutomationChains) {
@@ -6838,6 +6916,24 @@ Provide the exact JSFX plugin name and required sliders/parameters.`;
                         </button>
                         <div className={`h-px w-full my-1 ${getDropdownTheme(theme).divider}`} />
                       </>
+                    )}
+
+                    {(user?.email === 'recognizemiracles@gmail.com' || user?.email === 'coldestconcept@gmail.com') && (
+                      <button 
+                        onClick={() => {
+                          setShowXpandDatabase(true);
+                          setIsUserMenuOpen(false);
+                        }}
+                        className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-left transition-colors group ${getDropdownTheme(theme).itemHover}`}
+                      >
+                        <div className={`w-7 h-7 rounded-full flex items-center justify-center transition-colors ${theme === 'coldest' ? 'bg-indigo-500 text-white' : 'bg-indigo-500/20 text-indigo-400'}`}>
+                          <Database size={14} />
+                        </div>
+                        <div>
+                          <div className="text-xs font-bold uppercase tracking-wider">Xpand!2 DB</div>
+                          <div className="text-[9px] opacity-50 mt-0.5">View Xpand preset reference</div>
+                        </div>
+                      </button>
                     )}
 
                     {(user?.email === 'recognizemiracles@gmail.com' || user?.email === 'coldestconcept@gmail.com' || user?.email === 'ruhedramarkprod@gmail.com') && (
@@ -9824,6 +9920,19 @@ Provide the exact JSFX plugin name and required sliders/parameters.`;
                     >
                       JSFX Gear Rack
                     </button>
+                    <button
+                      onClick={() => {
+                        setGearRackTab('xpand');
+                        setSelectedFolder(null);
+                      }}
+                      className={`text-sm font-black uppercase tracking-widest pb-3 border-b-2 transition-all ${
+                        gearRackTab === 'xpand' 
+                          ? (theme === 'coldest' || theme === 'chef-mode' ? 'border-slate-800 text-slate-800 font-black' : 'border-white text-white font-black')
+                          : 'border-transparent text-current opacity-40 hover:opacity-75 font-bold'
+                      }`}
+                    >
+                      Xpand!2 Presets ({xpandPresets.filter(p => p.is_owned).length})
+                    </button>
                   </div>
                 </div>
 
@@ -9881,6 +9990,226 @@ Provide the exact JSFX plugin name and required sliders/parameters.`;
                         </div>
                       </div>
                     )}
+                  </>
+                ) : gearRackTab === 'xpand' ? (
+                  <>
+                    <div className="space-y-8">
+                      {/* Header and Controls */}
+                      <div className={`flex flex-col md:flex-row md:items-center justify-between gap-6 p-6 rounded-[2rem] border ${theme === 'coldest' ? 'bg-sky-500/5 border-sky-100' : theme === 'chef-mode' ? 'bg-orange-500/5 border-orange-100' : 'bg-white/5 border-white/10'}`}>
+                        <div>
+                          <h3 className="text-lg font-black uppercase tracking-widest flex items-center gap-2">
+                            <Database className={`w-5 h-5 ${theme === 'coldest' ? 'text-sky-500' : theme === 'chef-mode' ? 'text-orange-500' : 'text-purple-400'}`} /> Xpand!2 Preset Inventory
+                          </h3>
+                          <p className="text-xs opacity-60 mt-1 max-w-2xl leading-relaxed">
+                            Your active inventory of Xpand!2 presets. When recommending sounds using Xpand!2, BeatGangsta will ONLY select from presets marked as **owned** (Green).
+                          </p>
+                        </div>
+                        <div className="flex gap-4">
+                          <button
+                            onClick={() => {
+                              const filteredIds = filteredXpandPresets.map(p => `${p.category}-${p.preset_name}`);
+                              const anyUnowned = filteredXpandPresets.some(p => !p.is_owned);
+                              setXpandPresets(prev => prev.map(p => {
+                                if (filteredIds.includes(`${p.category}-${p.preset_name}`)) {
+                                  return { ...p, is_owned: anyUnowned };
+                                }
+                                return p;
+                              }));
+                            }}
+                            className={`px-4 py-2 rounded-full text-xs font-black uppercase tracking-widest border transition-all hover:scale-105 active:scale-95 ${theme === 'coldest' ? 'bg-sky-50 border-sky-200 text-sky-800' : theme === 'chef-mode' ? 'bg-orange-50 border-orange-200 text-orange-800' : 'bg-white/5 border-white/10 hover:bg-white/10 text-white'}`}
+                          >
+                            Toggle Page All
+                          </button>
+                          <button
+                            onClick={() => setShowBulkImport(!showBulkImport)}
+                            className={`px-4 py-2 rounded-full text-xs font-black uppercase tracking-widest transition-all hover:scale-105 active:scale-95 flex items-center gap-1.5 ${theme === 'coldest' ? 'bg-sky-500 text-white' : theme === 'chef-mode' ? 'bg-orange-500 text-white' : 'bg-purple-600 hover:bg-purple-700 text-white'}`}
+                          >
+                            <Upload size={14} /> Bulk Add / Paste
+                          </button>
+                        </div>
+                      </div>
+
+                      {/* Bulk Import section */}
+                      {showBulkImport && (
+                        <div className={`p-6 rounded-[2rem] border ${theme === 'coldest' ? 'bg-sky-500/5 border-sky-100' : theme === 'chef-mode' ? 'bg-orange-500/5 border-orange-100' : 'bg-white/5 border-white/10'} space-y-4`}>
+                          <div className="flex items-center justify-between">
+                            <h4 className="text-sm font-black uppercase tracking-widest flex items-center gap-2">
+                              <Upload className={`w-4 h-4 ${theme === 'coldest' ? 'text-sky-500' : theme === 'chef-mode' ? 'text-orange-500' : 'text-purple-400'}`} /> Bulk Add Presets
+                            </h4>
+                            <button onClick={() => setShowBulkImport(false)} className="opacity-50 hover:opacity-100">
+                              <X size={18} />
+                            </button>
+                          </div>
+                          <p className="text-xs opacity-60 leading-relaxed">
+                            Paste a list of preset names (one per line). They will be added to the selected category and marked as **owned**.
+                          </p>
+                          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            <div>
+                              <label className="block text-[10px] font-black uppercase tracking-wider mb-1.5 opacity-70">Category</label>
+                              <select
+                                value={newPresetCategory}
+                                onChange={(e) => setNewPresetCategory(e.target.value)}
+                                className={`w-full px-4 py-2 rounded-xl text-xs font-bold outline-none bg-black/40 border border-white/10 focus:border-purple-500 text-white h-10`}
+                              >
+                                {XPAND_CATEGORIES.map(cat => (
+                                  <option key={cat} value={cat}>{cat}</option>
+                                ))}
+                              </select>
+                            </div>
+                            <div className="md:col-span-2">
+                              <label className="block text-[10px] font-black uppercase tracking-wider mb-1.5 opacity-70">Preset Names (one per line)</label>
+                              <textarea
+                                value={bulkInputText}
+                                onChange={(e) => setBulkInputText(e.target.value)}
+                                placeholder="e.g.&#10;My Sweet Lead&#10;Dynamic Pad 4&#10;Heavy 808 Synth"
+                                rows={5}
+                                className="w-full p-4 rounded-xl text-xs font-mono bg-black/40 border border-white/10 focus:border-purple-500 text-white focus:outline-none"
+                              />
+                            </div>
+                          </div>
+                          <div className="flex justify-end gap-3">
+                            <button
+                              onClick={() => {
+                                if (!bulkInputText.trim()) return;
+                                const lines = bulkInputText.split('\n').map(l => l.trim()).filter(Boolean);
+                                const newItems = lines.map(name => ({
+                                  category: newPresetCategory,
+                                  preset_name: name,
+                                  is_owned: true
+                                }));
+                                setXpandPresets(prev => {
+                                  const map = new Map(prev.map(p => [`${p.category}-${p.preset_name}`, p]));
+                                  newItems.forEach(item => {
+                                    map.set(`${item.category}-${item.preset_name}`, item);
+                                  });
+                                  return Array.from(map.values());
+                                });
+                                setBulkInputText('');
+                                setShowBulkImport(false);
+                              }}
+                              className={`px-5 py-2.5 rounded-full text-xs font-black uppercase tracking-widest ${theme === 'coldest' ? 'bg-sky-500 text-white' : theme === 'chef-mode' ? 'bg-orange-500 text-white' : 'bg-purple-600 hover:bg-purple-700 text-white'} transition-all hover:scale-105 active:scale-95`}
+                            >
+                              Add {bulkInputText.split('\n').map(l => l.trim()).filter(Boolean).length} Presets
+                            </button>
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Quick Add Form */}
+                      <div className={`grid grid-cols-1 md:grid-cols-4 gap-4 p-6 rounded-[2rem] border ${theme === 'coldest' ? 'bg-sky-500/5 border-sky-100' : theme === 'chef-mode' ? 'bg-orange-500/5 border-orange-100' : 'bg-white/5 border-white/10'} items-end`}>
+                        <div className="md:col-span-2">
+                          <label className="block text-[10px] font-black uppercase tracking-wider mb-1.5 opacity-70">Category</label>
+                          <select
+                            value={newPresetCategory}
+                            onChange={(e) => setNewPresetCategory(e.target.value)}
+                            className={`w-full px-4 py-2.5 rounded-xl text-xs font-bold outline-none bg-black/40 border border-white/10 text-white h-11`}
+                          >
+                            {XPAND_CATEGORIES.map(cat => (
+                              <option key={cat} value={cat}>{cat}</option>
+                            ))}
+                          </select>
+                        </div>
+                        <div>
+                          <label className="block text-[10px] font-black uppercase tracking-wider mb-1.5 opacity-70">New Preset Name</label>
+                          <input
+                            type="text"
+                            value={newPresetName}
+                            onChange={(e) => setNewPresetName(e.target.value)}
+                            placeholder="Preset name..."
+                            className="w-full px-4 py-2.5 rounded-xl text-xs font-bold bg-black/40 border border-white/10 text-white focus:border-purple-500 focus:outline-none h-11"
+                          />
+                        </div>
+                        <button
+                          onClick={() => {
+                            if (!newPresetName.trim()) return;
+                            setXpandPresets(prev => {
+                              const exists = prev.some(p => p.category === newPresetCategory && p.preset_name.toLowerCase() === newPresetName.trim().toLowerCase());
+                              if (exists) return prev;
+                              return [...prev, { category: newPresetCategory, preset_name: newPresetName.trim(), is_owned: true }];
+                            });
+                            setNewPresetName('');
+                          }}
+                          className={`w-full py-3 rounded-xl text-xs font-black uppercase tracking-widest ${theme === 'coldest' ? 'bg-sky-500 text-white' : theme === 'chef-mode' ? 'bg-orange-500 text-white' : 'bg-white text-black hover:bg-opacity-95'} transition-all hover:scale-105 active:scale-95 h-11`}
+                        >
+                          + Add Preset
+                        </button>
+                      </div>
+
+                      {/* Filter and Search Bar */}
+                      <div className="flex flex-col md:flex-row gap-4">
+                        <div className="relative flex-1">
+                          <input
+                            type="text"
+                            value={xpandSearch}
+                            onChange={(e) => setXpandSearch(e.target.value)}
+                            placeholder="Search presets..."
+                            className="w-full pl-10 pr-4 py-3 rounded-full text-xs font-bold bg-black/40 border border-white/10 text-white focus:outline-none focus:border-purple-500"
+                          />
+                          <svg className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 opacity-50" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                          </svg>
+                          {xpandSearch && (
+                            <button onClick={() => setXpandSearch('')} className="absolute right-4 top-1/2 -translate-y-1/2 opacity-50 hover:opacity-100">
+                              <X size={14} />
+                            </button>
+                          )}
+                        </div>
+                        <div className="w-full md:w-64">
+                          <select
+                            value={xpandCategoryFilter}
+                            onChange={(e) => setXpandCategoryFilter(e.target.value)}
+                            className="w-full px-4 py-3 rounded-full text-xs font-bold bg-black/40 border border-white/10 text-white focus:outline-none"
+                          >
+                            <option value="All">All Categories</option>
+                            <option value="Owned">Show Owned Only</option>
+                            <option value="Unowned">Show Unowned Only</option>
+                            {XPAND_CATEGORIES.map(cat => (
+                              <option key={cat} value={cat}>{cat}</option>
+                            ))}
+                          </select>
+                        </div>
+                      </div>
+
+                      {/* Presets Grid */}
+                      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+                        {filteredXpandPresets.map((preset, idx) => (
+                          <div
+                            key={`${preset.category}-${preset.preset_name}-${idx}`}
+                            onClick={() => {
+                              setXpandPresets(prev => prev.map(p => {
+                                if (p.category === preset.category && p.preset_name === preset.preset_name) {
+                                  return { ...p, is_owned: !p.is_owned };
+                                }
+                                return p;
+                              }));
+                            }}
+                            className={`cursor-pointer p-4 rounded-2xl border transition-all flex flex-col justify-between hover:scale-[1.02] active:scale-[0.98] ${
+                              preset.is_owned 
+                                ? 'bg-emerald-500/10 border-emerald-500 text-emerald-400'
+                                : 'bg-white/5 border-white/10 opacity-60 text-white/80'
+                            }`}
+                          >
+                            <div>
+                              <span className="text-[9px] font-black uppercase tracking-wider block opacity-50 truncate mb-1">
+                                {preset.category}
+                              </span>
+                              <h4 className="text-xs font-black leading-tight break-words">{preset.preset_name}</h4>
+                            </div>
+                            <div className="mt-3 flex items-center justify-between">
+                              <span className={`text-[9px] font-black uppercase px-2 py-0.5 rounded-full ${preset.is_owned ? 'bg-emerald-500/20 text-emerald-400' : 'bg-white/10 text-white/50'}`}>
+                                {preset.is_owned ? 'Owned' : 'No'}
+                              </span>
+                              <div className={`w-3 h-3 rounded-full ${preset.is_owned ? 'bg-emerald-500 shadow-lg shadow-emerald-500/50' : 'bg-white/20'}`} />
+                            </div>
+                          </div>
+                        ))}
+                        {filteredXpandPresets.length === 0 && (
+                          <div className="col-span-full text-center py-12 opacity-50 text-sm font-bold">
+                            No presets found matching search or category filters.
+                          </div>
+                        )}
+                      </div>
+                    </div>
                   </>
                 ) : (
                   <>

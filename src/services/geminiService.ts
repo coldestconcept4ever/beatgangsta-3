@@ -25,12 +25,14 @@ export enum ThinkingLevel {
   HIGH = "HIGH",
   LOW = "LOW",
   MINIMAL = "MINIMAL" }
-import { VSTPlugin, RecommendationResponse, BeatRecipe, SavedRecipe, Hardware, StructuralBlueprint } from "../types";
+import { VSTPlugin, RecommendationResponse, BeatRecipe, SavedRecipe, Hardware, StructuralBlueprint, XpandPreset } from "../types";
 import { fetchWithDetailedError } from "../lib/api";
 import { keepAlive } from "../lib/keepAlive";
 import { getVendorSpecificParameters, normalizeParameterName } from "../utils/pluginUtils";
 import { sanitizeJSON } from "../utils/jsonUtils";
 import { applySafeParameterMappingToCritique, applySafeParameterMappingToChain } from "../utils/safeParameterMapper";
+import { DEFAULT_OWNED_XPAND_PRESETS } from "../data/xpandPresets";
+
 const getMultiBandInstruction = (isMultiBandMode: boolean) => {
   return isMultiBandMode ? `
 MULTI-BAND/GAFFEL MODE ON:
@@ -46,6 +48,52 @@ For each stem, track, or bus that requires an effect:
 4. Multi-band processing MUST use different settings per frequency band. Do not give the same settings to the Lows as you do the Highs.
 5. You may also include a few "General / Pre-Split" plugins for volume levelling BEFORE the multi-band split, but you MUST follow them up with the band-specific plugins.
 ` : '';
+};
+
+export const getXpandInstructions = (xpandPresets?: XpandPreset[]): string => {
+  const presetsToUse = (xpandPresets && xpandPresets.length > 0) ? xpandPresets : DEFAULT_OWNED_XPAND_PRESETS;
+  
+  if (!presetsToUse || presetsToUse.length === 0) {
+    return "";
+  }
+  const owned = presetsToUse.filter(p => p.is_owned);
+  if (owned.length === 0) {
+    return `
+      XPAND!2 CONSTRAINT:
+      The user owns ZERO presets in Xpand!2. DO NOT suggest, recommend, or mention Xpand!2 or any of its presets in any recipes, instructions, instrument tracks, or guides under any circumstances. Suggest other VSTs instead.
+    `;
+  }
+  
+  const grouped: Record<string, string[]> = {};
+  owned.forEach(p => {
+    if (!grouped[p.category]) {
+      grouped[p.category] = [];
+    }
+    grouped[p.category].push(p.preset_name);
+  });
+  
+  let formatted = `
+    XPAND!2 OWNED PRESETS CONSTRAINT:
+    The user owns Xpand!2 but ONLY owns the specific presets listed below. 
+    CRITICAL: You are STRICTLY FORBIDDEN from recommending or suggesting any Xpand!2 preset that is NOT in this list. 
+    If you recommend Xpand!2 for a sound (pad, bass, lead, bell, etc.), you MUST select a preset from the categories/presets below, and specify the exact preset name and category in your settings.
+    If none of the owned presets below fit the vibe, DO NOT suggest Xpand!2. Use other synth plugins instead.
+    
+    Owned Xpand!2 Presets:
+  `;
+  
+  Object.entries(grouped).forEach(([category, presets]) => {
+    formatted += `    - Category "${category}": ${presets.map(p => `"${p}"`).join(", ")}\n`;
+  });
+  
+  formatted += `
+    XPAND!2 SMART KNOB PARAMETER RULES:
+    When giving parameter adjustments for Xpand!2, you MUST format the Smart Knob values correctly.
+    The 6 Smart Knobs dynamically map to different parameters depending on the selected preset. While they often map to (Attack, Decay, Release, Cutoff, Env Depth, Fine Tune), they may also map to other synthesis parameters like FM Level, Vibrato, Wah, Filter Q, etc. Use the appropriate parameter name for the specific preset if you know it, otherwise use the standard 6.
+    The values can include negative numbers (e.g., -50, +30) depending on the specific parameter and how it scales. Use appropriate values as seen in the plugin.
+  `;
+
+  return formatted;
 };
 
 const getEliteProducerSecretsPrompt = (installedJsfxPacks: string[]) => `
@@ -2651,7 +2699,7 @@ export const generateStructuralBlueprint = async (searchQuery: string, language:
     return {} as StructuralBlueprint;
   }
 };
-export const getBeatRecommendations = async (plugins: VSTPlugin[], analogInstruments: Hardware[] = [], analogHardware: Hardware[] = [], drumKits: Hardware[] = [], excludeAnalog: boolean = false, dawType: string | null = null, starredPlugins: string[] = [], isGangstaVox: boolean = false, language: string = 'en', isMultiBandMode: boolean = false, bpm?: string, context?: string, isJsfxMode: boolean = false, installedJsfxPacks: string[] = []): Promise<RecommendationResponse> => {
+export const getBeatRecommendations = async (plugins: VSTPlugin[], analogInstruments: Hardware[] = [], analogHardware: Hardware[] = [], drumKits: Hardware[] = [], excludeAnalog: boolean = false, dawType: string | null = null, starredPlugins: string[] = [], isGangstaVox: boolean = false, language: string = 'en', isMultiBandMode: boolean = false, bpm?: string, context?: string, isJsfxMode: boolean = false, installedJsfxPacks: string[] = [], xpandPresets?: XpandPreset[]): Promise<RecommendationResponse> => {
   const ai = getAI();
   const pluginListStr = plugins.map(p => {
     let str = `${p.vendor} - ${p.name} (${p.type})`;
@@ -2667,6 +2715,7 @@ export const getBeatRecommendations = async (plugins: VSTPlugin[], analogInstrum
   const sphereMicStr = hasSphereMic ? `\nCRITICAL: The user owns a Universal Audio Sphere (DLX/LX) or Townsend Labs L22 microphone. If the recipe involves a vocal tracking chain, you MUST assign the 'UAD Sphere Mic Collection', 'Ocean Way Mic Collection', or 'Bill Putnam Mic Collection' plugin as the VERY FIRST insert plugin on the vocal channel tracking chain. You MUST specifically select a mic model inside it based on the vibe searched. After the mic collection plugin, you can add up to 3 more plugins.` : '';
   const languageInstruction = getLanguageInstruction(language);
   const multiBandInstruction = getMultiBandInstruction(isMultiBandMode);
+  const xpandInstruction = getXpandInstructions(xpandPresets);
   
   const additionalContextStr = context ? `\nUSER SPECIFIED CONTEXT: ${context}\nYou MUST incorporate these instructions or themes tightly into the generated recipe.` : '';
   const bpmStr = bpm ? `\nUSER SPECIFIED EXACT BPM: ${bpm}\nYou MUST use this exact BPM in the recipe, and tailor the midi, drums, and time-based effects (delay, reverb pre-delay) to align perfectly with it.` : '';
@@ -2704,6 +2753,7 @@ export const getBeatRecommendations = async (plugins: VSTPlugin[], analogInstrum
     Analyze my VST plugin list and suggest 1 high-level, extremely detailed "Vocal FX Chain Recipe" for the craziest vocal mix.
     ${additionalContextStr}
     ${bpmStr}
+    ${xpandInstruction}
     Only use plugins from this list.
     CRITICAL: For each plugin, I have provided a list of its actual technical parameters in brackets []. You MUST prioritize using these EXACT parameter names in your 'deepDive' settings. If a parameter is missing, verify its exact existence in the plugin's real-world manual before including it. NEVER hallucinate or invent parameters that do not exist on the plugin's interface.
     Only use plugins from this list:
@@ -2748,6 +2798,7 @@ export const getBeatRecommendations = async (plugins: VSTPlugin[], analogInstrum
     Analyze my VST plugin list and suggest 1 high-level, extremely detailed "Beat Recipe" for the craziest rap beat.
     ${additionalContextStr}
     ${bpmStr}
+    ${xpandInstruction}
     Only use plugins from this list.
     CRITICAL: For each plugin, I have provided a list of its actual technical parameters in brackets []. You MUST prioritize using these EXACT parameter names in your 'deepDive' settings. If a parameter is missing, verify its exact existence in the plugin's real-world manual before including it. NEVER hallucinate or invent parameters that do not exist on the plugin's interface.
     Only use plugins from this list:
@@ -2820,7 +2871,7 @@ export const getBeatRecommendations = async (plugins: VSTPlugin[], analogInstrum
     throw new Error(`Format error in getBeatRecommendations. Details: ${e.message || e}\nRaw: ${typeof jsonStr !== 'undefined' ? jsonStr.substring(0, 500) : "empty"}\nSafety: ${JSON.stringify(response?.candidates?.[0]?.safetyRatings || "none")}`);
   }
 };
-export const getCustomBeatRecommendations = async (plugins: VSTPlugin[], query: string, analogInstruments: Hardware[] = [], analogHardware: Hardware[] = [], drumKits: Hardware[] = [], excludeAnalog: boolean = false, dawType: string | null = null, starredPlugins: string[] = [], isGangstaVox: boolean = false, language: string = 'en', isMultiBandMode: boolean = false, bpm?: string, context?: string, isJsfxMode: boolean = false, installedJsfxPacks: string[] = []): Promise<RecommendationResponse> => {
+export const getCustomBeatRecommendations = async (plugins: VSTPlugin[], query: string, analogInstruments: Hardware[] = [], analogHardware: Hardware[] = [], drumKits: Hardware[] = [], excludeAnalog: boolean = false, dawType: string | null = null, starredPlugins: string[] = [], isGangstaVox: boolean = false, language: string = 'en', isMultiBandMode: boolean = false, bpm?: string, context?: string, isJsfxMode: boolean = false, installedJsfxPacks: string[] = [], xpandPresets?: XpandPreset[]): Promise<RecommendationResponse> => {
   const ai = getAI();
   const pluginListStr = plugins.map(p => {
     let str = `${p.vendor} - ${p.name} (${p.type})`;
@@ -2850,6 +2901,7 @@ export const getCustomBeatRecommendations = async (plugins: VSTPlugin[], query: 
 
   const additionalContextStr = context ? `\nUSER SPECIFIED CONTEXT: ${context}\nYou MUST incorporate these instructions or themes tightly into the generated recipe.` : '';
   const bpmStr = bpm ? `\nUSER SPECIFIED EXACT BPM: ${bpm}\nYou MUST use this exact BPM in the recipe, and tailor the midi, drums, and time-based effects (delay, reverb pre-delay) to align perfectly with it.` : '';
+  const xpandInstruction = getXpandInstructions(xpandPresets);
 
   const nonJsfxDiktat = (dawType === 'REAPER' || dawType === 'Reaper') ? '' : `
       ==================================================
@@ -2882,6 +2934,7 @@ export const getCustomBeatRecommendations = async (plugins: VSTPlugin[], query: 
     Analyze my VST plugin list and suggest 1 high-level, extremely detailed "Vocal FX Chain Recipe" specifically for a "${query} type vocal".
     ${additionalContextStr}
     ${bpmStr}
+    ${xpandInstruction}
     Only use plugins from this list.
     CRITICAL: For each plugin, I have provided a list of its actual technical parameters in brackets []. You MUST prioritize using these EXACT parameter names in your 'deepDive' settings. If a parameter is missing, verify its exact existence in the plugin's real-world manual before including it. NEVER hallucinate or invent parameters that do not exist on the plugin's interface.
     Only use plugins from this list:
@@ -2926,6 +2979,7 @@ export const getCustomBeatRecommendations = async (plugins: VSTPlugin[], query: 
     Analyze my VST plugin list and suggest 1 high-level, extremely detailed "Beat Recipe" specifically for a "${query} type beat".
     ${additionalContextStr}
     ${bpmStr}
+    ${xpandInstruction}
     Only use plugins from this list:
     ${pluginListStr}
     ${analogStr}
@@ -2992,7 +3046,7 @@ export const getCustomBeatRecommendations = async (plugins: VSTPlugin[], query: 
   }
   return result;
 };
-export const getSongBeatRecommendations = async (plugins: VSTPlugin[], songQuery: string, analogInstruments: Hardware[] = [], analogHardware: Hardware[] = [], drumKits: Hardware[] = [], excludeAnalog: boolean = false, dawType: string | null = null, starredPlugins: string[] = [], isGangstaVox: boolean = false, language: string = 'en', isMultiBandMode: boolean = false, bpm?: string, context?: string, isJsfxMode: boolean = false, installedJsfxPacks: string[] = []): Promise<RecommendationResponse> => {
+export const getSongBeatRecommendations = async (plugins: VSTPlugin[], songQuery: string, analogInstruments: Hardware[] = [], analogHardware: Hardware[] = [], drumKits: Hardware[] = [], excludeAnalog: boolean = false, dawType: string | null = null, starredPlugins: string[] = [], isGangstaVox: boolean = false, language: string = 'en', isMultiBandMode: boolean = false, bpm?: string, context?: string, isJsfxMode: boolean = false, installedJsfxPacks: string[] = [], xpandPresets?: XpandPreset[]): Promise<RecommendationResponse> => {
   const blueprint = await generateStructuralBlueprint(songQuery, language);
   const ai = getAI();
   const pluginListStr = plugins.map(p => {
@@ -3010,6 +3064,7 @@ export const getSongBeatRecommendations = async (plugins: VSTPlugin[], songQuery
   
   const additionalContextStr = context ? `\nUSER SPECIFIED CONTEXT: ${context}\nYou MUST incorporate these instructions or themes tightly into the generated recipe.` : '';
   const bpmStr = bpm ? `\nUSER SPECIFIED EXACT BPM: ${bpm}\nYou MUST use this exact BPM in the recipe, and tailor the midi, drums, and time-based effects (delay, reverb pre-delay) to align perfectly with it.` : '';
+  const xpandInstruction = getXpandInstructions(xpandPresets);
 
   const nonJsfxDiktat = (dawType === 'REAPER' || dawType === 'Reaper') ? '' : `
       ==================================================
@@ -3042,6 +3097,7 @@ export const getSongBeatRecommendations = async (plugins: VSTPlugin[], songQuery
     Analyze my VST plugin list and suggest 1 high-level, extremely detailed "Vocal FX Chain Recipe" that recreate the vocal production style, effects, and mixing techniques of the song "${songQuery}".
     ${additionalContextStr}
     ${bpmStr}
+    ${xpandInstruction}
     Only use plugins from this list.
     CRITICAL: For each plugin, I have provided a list of its actual technical parameters in brackets []. You MUST prioritize using these EXACT parameter names in your 'deepDive' settings. If a parameter is missing, verify its exact existence in the plugin's real-world manual before including it. NEVER hallucinate or invent parameters that do not exist on the plugin's interface.
     Only use plugins from this list:
@@ -3085,6 +3141,7 @@ export const getSongBeatRecommendations = async (plugins: VSTPlugin[], songQuery
     Analyze my VST plugin list and suggest 1 high-level, extremely detailed "Beat Recipe" that recreate the production style, bounce, and sonic atmosphere of the song "${songQuery}".
     ${additionalContextStr}
     ${bpmStr}
+    ${xpandInstruction}
     Only use plugins from this list:
     ${pluginListStr}
     ${analogStr}
@@ -3222,7 +3279,7 @@ export const generateContentViaBackend = async (model: string, prompt: string, c
     config
   });
 };
-export const getAudioBeatRecommendations = async (plugins: VSTPlugin[], audioBase64: string | null, audioUrl: string | null, mimeType: string, analogInstruments: Hardware[] = [], analogHardware: Hardware[] = [], drumKits: Hardware[] = [], excludeAnalog: boolean = false, dawType: string | null = null, starredPlugins: string[] = [], isGangstaVox: boolean = false, userContext: string = "", geminiFileUri: string | null = null, language: string = 'en', isMultiBandMode: boolean = false, isJsfxMode: boolean = false, installedJsfxPacks: string[] = [], recreateBase64: string | null = null, recreateFileUri: string | null = null, recreateMimeType: string | null = null): Promise<RecommendationResponse> => {
+export const getAudioBeatRecommendations = async (plugins: VSTPlugin[], audioBase64: string | null, audioUrl: string | null, mimeType: string, analogInstruments: Hardware[] = [], analogHardware: Hardware[] = [], drumKits: Hardware[] = [], excludeAnalog: boolean = false, dawType: string | null = null, starredPlugins: string[] = [], isGangstaVox: boolean = false, userContext: string = "", geminiFileUri: string | null = null, language: string = 'en', isMultiBandMode: boolean = false, isJsfxMode: boolean = false, installedJsfxPacks: string[] = [], recreateBase64: string | null = null, recreateFileUri: string | null = null, recreateMimeType: string | null = null, xpandPresets?: XpandPreset[]): Promise<RecommendationResponse> => {
   const ai = getAI();
   // Limit plugin list to 50 most relevant to avoid context/complexity limits
   const limitedPlugins = plugins.slice(0, 50);
@@ -3245,6 +3302,7 @@ export const getAudioBeatRecommendations = async (plugins: VSTPlugin[], audioBas
   const apolloModel = analogHardware.find(h => h.name.toLowerCase().includes('apollo'))?.name || 'Apollo';
   const hasTownsend = analogHardware.some(h => h.name.toLowerCase().includes('townsend') || h.name.toLowerCase().includes('sphere'));
   const hasOceanWayMic = plugins?.some(p => p.name.toLowerCase().includes('ocean way mic')) || false;
+  const xpandInstruction = getXpandInstructions(xpandPresets);
   
   const hasRecreate = !!(recreateFileUri || recreateBase64);
   const doubleAudioDiktat = hasRecreate ? `
@@ -3299,6 +3357,7 @@ export const getAudioBeatRecommendations = async (plugins: VSTPlugin[], audioBas
     ${sphereMicStr}
     ${contextStr}
     ${doubleAudioDiktat}
+    ${xpandInstruction}
     ${getLanguageInstruction(language)}
     ${GULLFOSS_SPEC_PROMPT}
     ${OZONE_SPEC_PROMPT}
@@ -3355,6 +3414,7 @@ export const getAudioBeatRecommendations = async (plugins: VSTPlugin[], audioBas
     ${sphereMicStr}
     ${contextStr}
     ${doubleAudioDiktat}
+    ${xpandInstruction}
     ${getLanguageInstruction(language)}
     ${GULLFOSS_SPEC_PROMPT}
     ${OZONE_SPEC_PROMPT}

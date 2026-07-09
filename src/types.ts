@@ -486,3 +486,10 @@ export interface SavedCritique extends MixCritique {
   savedAt: string;
   folderId?: string;
 }
+
+export interface XpandPreset {
+  category: string;
+  preset_name: string;
+  is_owned: boolean;
+}
+

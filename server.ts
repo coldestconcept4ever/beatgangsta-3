@@ -168,6 +168,17 @@ async function initDb() {
       `);
       
       await client.execute(`
+        CREATE TABLE IF NOT EXISTS user_xpand_presets (
+          uid TEXT NOT NULL,
+          category TEXT NOT NULL,
+          preset_name TEXT NOT NULL,
+          is_owned INTEGER DEFAULT 1,
+          last_modified DATETIME DEFAULT CURRENT_TIMESTAMP,
+          PRIMARY KEY (uid, category, preset_name)
+        )
+      `);
+      
+      await client.execute(`
         CREATE TABLE IF NOT EXISTS system_health (
           id INTEGER PRIMARY KEY AUTOINCREMENT,
           timestamp INTEGER DEFAULT (strftime('%s', 'now') * 1000),
@@ -4175,6 +4186,60 @@ if (process.env.NODE_ENV !== 'production') {
     } catch (error) {
       console.error("Error loading user plugins:", error);
       res.status(500).json({ error: "Failed to load user plugins" });
+    }
+  });
+
+  app.post("/api/xpand-presets/save", async (req, res) => {
+    try {
+      const { uid, presets } = req.body;
+      if (!uid || !presets || !Array.isArray(presets)) {
+        return res.status(400).json({ error: "Invalid request body" });
+      }
+      const client = await getDb();
+      if (!client) return res.status(500).json({ error: "Database not available" });
+      
+      await client.execute({
+        sql: `DELETE FROM user_xpand_presets WHERE uid = ?`,
+        args: [uid]
+      });
+      
+      if (presets.length > 0) {
+        const statements = presets.map(p => ({
+          sql: `INSERT OR REPLACE INTO user_xpand_presets (uid, category, preset_name, is_owned) VALUES (?, ?, ?, 1)`,
+          args: [uid, p.category, p.preset_name]
+        }));
+        await client.batch(statements);
+      }
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Error saving user Xpand presets:", error);
+      res.status(500).json({ error: "Failed to save Xpand presets" });
+    }
+  });
+
+  app.get("/api/xpand-presets/load", async (req, res) => {
+    try {
+      const { uid } = req.query;
+      if (!uid) return res.status(400).json({ error: "UID is required" });
+      
+      const client = await getDb();
+      if (!client) return res.status(500).json({ error: "Database not available" });
+      
+      const result = await client.execute({
+        sql: `SELECT * FROM user_xpand_presets WHERE uid = ?`,
+        args: [uid as string]
+      });
+      
+      const presets = result.rows.map(row => ({
+        category: row.category,
+        preset_name: row.preset_name,
+        is_owned: row.is_owned === 1
+      }));
+      
+      res.json({ presets });
+    } catch (error) {
+      console.error("Error loading user Xpand presets:", error);
+      res.status(500).json({ error: "Failed to load Xpand presets" });
     }
   });
 
