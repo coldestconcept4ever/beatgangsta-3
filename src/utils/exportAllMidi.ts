@@ -24,48 +24,51 @@ export const generateIndividualMidiFiles = async (recipe: BeatRecipe): Promise<{
   const tracks = recipe.instruments || [];
   for (const ing of tracks) {
     if (isMidiCapable(ing.name, ing.loopGuide)) {
-      
-          let sectionMidiNotes: MidiNote[] | undefined;
-          if (Array.isArray(ing.midiNotes)) {
-            sectionMidiNotes = ing.midiNotes;
-          } else if (ing.midiNotes) {
-            sectionMidiNotes = ing.midiNotes.hook || ing.midiNotes.verse || [];
+      const sections = ['intro', 'verse', 'hook', 'bridge', 'outro'] as const;
+      for (const section of sections) {
+        let sectionMidiNotes: MidiNote[] | undefined;
+        if (Array.isArray(ing.midiNotes)) {
+          if (section !== 'hook') continue;
+          sectionMidiNotes = ing.midiNotes;
+        } else if (ing.midiNotes && typeof ing.midiNotes === 'object') {
+          sectionMidiNotes = (ing.midiNotes as any)[section];
+        }
+
+        if (!sectionMidiNotes || sectionMidiNotes.length === 0) continue;
+
+        let originalTotalBeats = 0;
+        for (const note of sectionMidiNotes) {
+          originalTotalBeats += getBeats(note.wait) + getBeats(note.duration);
+        }
+
+        const naturalBars = Math.max(4, Math.round(originalTotalBeats / 4)) as PatternLength;
+        const lengths: PatternLength[] = naturalBars > 8 ? [naturalBars] : [4, 8];
+        const variations: PatternVariation[] = ['A', 'B'];
+
+        for (const bars of lengths) {
+          for (const variation of variations) {
+            const track = generateMidiTrack(ing.name, ing.loopGuide || '', bpm, bars, variation, recipe.title, sectionMidiNotes);
+            const write = new MidiWriter.Writer([track]);
+            const midiBytes = write.buildFile();
+
+            const baseName = `${safeTitle}_${section}_${ing.name.replace(/[^a-z0-9]/gi, '_')}_${bars}Bar_${variation}_${bpm}BPM`;
+
+            // Add MIDI
+            files.push({
+              name: `${baseName}.mid`,
+              data: window.btoa(String.fromCharCode.apply(null, Array.from(midiBytes))),
+              type: 'midi'
+            });
+
+            // Add Audioloop
+            const loopBlob = await generateAudioLoop(midiBytes, bpm);
+            const loopBuffer = await loopBlob.arrayBuffer();
+            files.push({
+              name: `${baseName}.audioloop`,
+              data: arrayBufferToBase64(loopBuffer),
+              type: 'loop'
+            });
           }
-          
-          let originalTotalBeats = 0;
-          if (sectionMidiNotes) {
-             for (const note of sectionMidiNotes) {
-               originalTotalBeats += getBeats(note.wait) + getBeats(note.duration);
-             }
-          }
-          const naturalBars = Math.max(4, Math.round(originalTotalBeats / 4)) as PatternLength;
-          const lengths: PatternLength[] = naturalBars > 8 ? [naturalBars] : [4, 8];
-          const variations: PatternVariation[] = ['A', 'B'];
-
-          for (const bars of lengths) {
-            for (const variation of variations) {
-
-          const track = generateMidiTrack(ing.name, ing.loopGuide || '', bpm, bars, variation, recipe.title, sectionMidiNotes);
-          const write = new MidiWriter.Writer([track]);
-          const midiBytes = write.buildFile();
-          
-          const baseName = `${safeTitle}_${ing.name.replace(/[^a-z0-9]/gi, '_')}_${bars}Bar_${variation}_${bpm}BPM`;
-          
-          // Add MIDI
-          files.push({
-            name: `${baseName}.mid`,
-            data: window.btoa(String.fromCharCode.apply(null, Array.from(midiBytes))),
-            type: 'midi'
-          });
-
-          // Add Audioloop
-          const loopBlob = await generateAudioLoop(midiBytes, bpm);
-          const loopBuffer = await loopBlob.arrayBuffer();
-          files.push({
-            name: `${baseName}.audioloop`,
-            data: arrayBufferToBase64(loopBuffer),
-            type: 'loop'
-          });
         }
       }
     }
@@ -138,39 +141,44 @@ export const generateAllMidiZip = async (recipe: BeatRecipe, dawType?: string | 
   const instrumentsFolder = zip.folder('Instruments');
   if (instrumentsFolder) {
     const tracks = recipe.instruments || [];
-    for (const ing of tracks) {
-      if (isMidiCapable(ing.name, ing.loopGuide)) {
-        
+    const sections = ['intro', 'verse', 'hook', 'bridge', 'outro'] as const;
+
+    for (const section of sections) {
+      const sectionName = section.charAt(0).toUpperCase() + section.slice(1);
+      const subFolder = instrumentsFolder.folder(sectionName);
+
+      for (const ing of tracks) {
+        if (isMidiCapable(ing.name, ing.loopGuide)) {
           let sectionMidiNotes: MidiNote[] | undefined;
           if (Array.isArray(ing.midiNotes)) {
+            if (section !== 'hook') continue;
             sectionMidiNotes = ing.midiNotes;
-          } else if (ing.midiNotes) {
-            sectionMidiNotes = ing.midiNotes.hook || ing.midiNotes.verse || [];
+          } else if (ing.midiNotes && typeof ing.midiNotes === 'object') {
+            sectionMidiNotes = (ing.midiNotes as any)[section];
           }
-          
+
+          if (!sectionMidiNotes || sectionMidiNotes.length === 0) continue;
+
           let originalTotalBeats = 0;
-          if (sectionMidiNotes) {
-             for (const note of sectionMidiNotes) {
-               originalTotalBeats += getBeats(note.wait) + getBeats(note.duration);
-             }
+          for (const note of sectionMidiNotes) {
+            originalTotalBeats += getBeats(note.wait) + getBeats(note.duration);
           }
+
           const naturalBars = Math.max(4, Math.round(originalTotalBeats / 4)) as PatternLength;
           const lengths: PatternLength[] = naturalBars > 8 ? [naturalBars] : [4, 8];
           const variations: PatternVariation[] = ['A', 'B'];
 
           for (const bars of lengths) {
             for (const variation of variations) {
+              const track = generateMidiTrack(ing.name, ing.loopGuide || '', bpm, bars, variation, recipe.title, sectionMidiNotes);
+              const write = new MidiWriter.Writer([track]);
+              const midiBytes = write.buildFile();
 
-            const track = generateMidiTrack(ing.name, ing.loopGuide || '', bpm, bars, variation, recipe.title, sectionMidiNotes);
-            const write = new MidiWriter.Writer([track]);
-            const midiBytes = write.buildFile();
-            
-            const fileName = `${safeTitle}_${ing.name.replace(/[^a-z0-9]/gi, '_')}_${bars}Bar_${variation}_${bpm}BPM.${extension}`;
-            
-            const subFolderName = `${bars} Bar ${variation}`;
-            const subFolder = instrumentsFolder.folder(subFolderName);
-            
-            subFolder?.file(fileName, midiBytes);
+              const fileName = `${safeTitle}_${ing.name.replace(/[^a-z0-9]/gi, '_')}_${bars}Bar_${variation}_${bpm}BPM.${extension}`;
+
+              const barFolder = subFolder?.folder(`${bars} Bar ${variation}`);
+              barFolder?.file(fileName, midiBytes);
+            }
           }
         }
       }

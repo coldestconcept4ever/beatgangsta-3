@@ -289,6 +289,13 @@ export interface BeatRecipe {
   description: string;
   artistTypes: string[];
   isJsfxMode?: boolean;
+  detectedSectionLengths?: {
+    intro?: number;
+    verse?: number;
+    hook?: number;
+    bridge?: number;
+    outro?: number;
+  };
   
   instruments: InstrumentTrack[];
   busses: BusTrack[];

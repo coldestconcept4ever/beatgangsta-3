@@ -2588,6 +2588,17 @@ The AI was unable to verify these parameters. Please investigate.`;
   const checkAuth = useCallback(async () => {
     try {
       const res = await fetchWithDetailedError('/api/auth/status');
+      
+      // If the response is HTML (which happens when the platform intercepts the request and asks for a cookie check/auth gate),
+      // we should handle it gracefully by setting user to null instead of throwing a JSON parsing error.
+      const contentType = res.headers.get('content-type');
+      if (contentType && contentType.includes('text/html')) {
+        console.warn("[AUTH] /api/auth/status returned HTML instead of JSON. The request might be blocked/redirected by the platform security cookie gate. Treating as unauthenticated.");
+        setUser(null);
+        localStorage.removeItem('bg_user');
+        return;
+      }
+
       const data = await res.json();
       
       if (data.authenticated) {
@@ -2657,8 +2668,9 @@ The AI was unable to verify these parameters. Please investigate.`;
         localStorage.removeItem('bg_user');
       }
     } catch (err: any) {
-      console.error("Auth check failed", err);
-      setError(`Auth check failed: ${err.message}`);
+      console.warn("Auth status check failed (background polling/startup):", err.message || err);
+      // Quietly fall back to unauthenticated state rather than blocking the user with a fatal error banner.
+      setUser(null);
     }
   }, [loadTutorialProgressFromCloud]); // Stable
 

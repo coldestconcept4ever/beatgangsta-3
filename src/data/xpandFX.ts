@@ -18,8 +18,8 @@ export const XPAND_FX_DATABASE: XpandFX[] = [
     category: "Reverbs",
     description: "Standard concert hall reverb simulation offering high density and rich, lush tails.",
     parameters: [
-      { name: "decay", description: "Controls the length of the reverberation tail (measured in seconds).", typicalRange: "0.4 sec to 30.0 sec", recommendedValue: "2.0 sec to 4.0 sec" },
-      { name: "bright", description: "Dampens or opens up high frequencies for space brightness (measured in percentage).", typicalRange: "0% to 100%", recommendedValue: "40% to 60%" }
+      { name: "size", description: "Controls the size and decay length of the reverberation tail (measured in seconds).", typicalRange: "0.4 sec to 30.0 sec", recommendedValue: "2.0 sec to 4.0 sec" },
+      { name: "shape", description: "Controls the reflection shape and density of the hall space (measured in percentage).", typicalRange: "0% to 100%", recommendedValue: "40% to 60%" }
     ],
     proTips: "Great for lead vocals, lush pads, and atmospheric synth keys to build a sense of immense depth."
   },
@@ -28,8 +28,8 @@ export const XPAND_FX_DATABASE: XpandFX[] = [
     category: "Reverbs",
     description: "A mellowed version of the hall reverb with softened early reflections and a gentle tail.",
     parameters: [
-      { name: "decay", description: "Mellowed reverb tail decay length (measured in seconds).", typicalRange: "0.4 sec to 30.0 sec", recommendedValue: "2.5 sec to 4.5 sec" },
-      { name: "bright", description: "Dampens highs heavily to sit warm in the background (measured in percentage).", typicalRange: "0% to 100%", recommendedValue: "25% to 40%" }
+      { name: "size", description: "Mellowed reverb tail size and decay length (measured in seconds).", typicalRange: "0.4 sec to 30.0 sec", recommendedValue: "2.5 sec to 4.5 sec" },
+      { name: "shape", description: "Softened reflection shape and density envelope (measured in percentage).", typicalRange: "0% to 100%", recommendedValue: "25% to 40%" }
     ],
     proTips: "Perfect for delicate background vocals and acoustic guitars where you want space without harshness."
   },
@@ -38,8 +38,8 @@ export const XPAND_FX_DATABASE: XpandFX[] = [
     category: "Reverbs",
     description: "An airy hall reverb with emphasized high-frequency reflections that add a sparkling sheen.",
     parameters: [
-      { name: "decay", description: "Sparkling reverb tail decay length (measured in seconds).", typicalRange: "0.4 sec to 30.0 sec", recommendedValue: "1.8 sec to 3.5 sec" },
-      { name: "bright", description: "Very little high-frequency cut for maximum top-end sheen (measured in percentage).", typicalRange: "0% to 100%", recommendedValue: "75% to 95%" }
+      { name: "size", description: "Sparkling reverb tail size and decay length (measured in seconds).", typicalRange: "0.4 sec to 30.0 sec", recommendedValue: "1.8 sec to 3.5 sec" },
+      { name: "shape", description: "Reflective space shape and high sheen density (measured in percentage).", typicalRange: "0% to 100%", recommendedValue: "75% to 95%" }
     ],
     proTips: "Excellent for adding a luxurious top-end sheen to R&B vocals or clean pop synths."
   },
@@ -58,8 +58,8 @@ export const XPAND_FX_DATABASE: XpandFX[] = [
     category: "Reverbs",
     description: "A highly clustered, thick hall reverb with instant build-up of reflections, producing a solid wall of sound.",
     parameters: [
-      { name: "decay", description: "Highly concentrated reverb tail decay (measured in seconds).", typicalRange: "0.4 sec to 30.0 sec", recommendedValue: "2.2 sec to 5.0 sec" },
-      { name: "bright", description: "Combines high cut with density damping (measured in percentage).", typicalRange: "0% to 100%", recommendedValue: "35% to 55%" }
+      { name: "size", description: "Highly concentrated reverb tail size and decay (measured in seconds).", typicalRange: "0.4 sec to 30.0 sec", recommendedValue: "2.2 sec to 5.0 sec" },
+      { name: "shape", description: "Dense reflection shape and cluster density (measured in percentage).", typicalRange: "0% to 100%", recommendedValue: "35% to 55%" }
     ],
     proTips: "Use for synth brasses or cinematic pad sounds to glue them together into a unified orchestral wall."
   },
@@ -70,8 +70,8 @@ export const XPAND_FX_DATABASE: XpandFX[] = [
     category: "Reverbs",
     description: "Simulates a standard-sized acoustic room. Delivers highly realistic, short, structured reflections.",
     parameters: [
-      { name: "decay", description: "Short room decay length (measured in seconds).", typicalRange: "0.1 sec to 5.0 sec", recommendedValue: "0.6 sec to 1.5 sec" },
-      { name: "bright", description: "Dampens room wall reflections to simulate absorptive materials (measured in percentage).", typicalRange: "0% to 100%", recommendedValue: "45% to 65%" }
+      { name: "size", description: "Short room size and decay length (measured in seconds).", typicalRange: "0.1 sec to 5.0 sec", recommendedValue: "0.6 sec to 1.5 sec" },
+      { name: "shape", description: "Controls the room's acoustic shape and reflection envelope (measured in percentage).", typicalRange: "0% to 100%", recommendedValue: "45% to 65%" }
     ],
     proTips: "Ideal for percussion, acoustic guitars, and vocals that need to sound intimate but present."
   },
@@ -80,8 +80,8 @@ export const XPAND_FX_DATABASE: XpandFX[] = [
     category: "Reverbs",
     description: "A room algorithm designed with highly absorptive wall treatments, creating a damp, soft spatial envelope.",
     parameters: [
-      { name: "decay", description: "Damped room decay length (measured in seconds).", typicalRange: "0.1 sec to 5.0 sec", recommendedValue: "0.5 sec to 1.2 sec" },
-      { name: "bright", description: "Heavy high roll-off damping for intimate, dry acoustic tracking (measured in percentage).", typicalRange: "0% to 100%", recommendedValue: "20% to 35%" }
+      { name: "size", description: "Damped room size and decay length (measured in seconds).", typicalRange: "0.1 sec to 5.0 sec", recommendedValue: "0.5 sec to 1.2 sec" },
+      { name: "shape", description: "Soft room shape and absorption density (measured in percentage).", typicalRange: "0% to 100%", recommendedValue: "20% to 35%" }
     ],
     proTips: "Perfect for taking the sterile edge off direct-input instruments without washing them in obvious reverb."
   },
@@ -90,8 +90,8 @@ export const XPAND_FX_DATABASE: XpandFX[] = [
     category: "Reverbs",
     description: "A room with highly reflective hardwood or tiled surfaces, creating sharp, crisp early reflections.",
     parameters: [
-      { name: "decay", description: "Reflective live room decay length (measured in seconds).", typicalRange: "0.1 sec to 5.0 sec", recommendedValue: "0.8 sec to 1.8 sec" },
-      { name: "bright", description: "Very light damping to emulate highly reflective surfaces like tiles (measured in percentage).", typicalRange: "0% to 100%", recommendedValue: "70% to 90%" }
+      { name: "size", description: "Reflective live room size and decay length (measured in seconds).", typicalRange: "0.1 sec to 5.0 sec", recommendedValue: "0.8 sec to 1.8 sec" },
+      { name: "shape", description: "Crisp tiled room shape and reflection sheen (measured in percentage).", typicalRange: "0% to 100%", recommendedValue: "70% to 90%" }
     ],
     proTips: "Gives acoustic drums and guitars an active, 'live' studio feel."
   },
@@ -110,8 +110,8 @@ export const XPAND_FX_DATABASE: XpandFX[] = [
     category: "Reverbs",
     description: "A highly concentrated, tight room algorithm that clusters early reflections rapidly to add immediate thickness.",
     parameters: [
-      { name: "decay", description: "Highly concentrated room reflections decay (measured in seconds).", typicalRange: "0.1 sec to 5.0 sec", recommendedValue: "0.5 sec to 1.3 sec" },
-      { name: "bright", description: "Dampens high-frequency build-up in small packed spaces (measured in percentage).", typicalRange: "0% to 100%", recommendedValue: "40% to 60%" }
+      { name: "size", description: "Highly concentrated room size and reflection decay (measured in seconds).", typicalRange: "0.1 sec to 5.0 sec", recommendedValue: "0.5 sec to 1.3 sec" },
+      { name: "shape", description: "Compact room shape and packed reflection density (measured in percentage).", typicalRange: "0% to 100%", recommendedValue: "40% to 60%" }
     ],
     proTips: "Works wonderfully to add body and stereo width to thin vocal tracks."
   },
@@ -122,8 +122,8 @@ export const XPAND_FX_DATABASE: XpandFX[] = [
     category: "Reverbs",
     description: "Simulates vintage physical sheet-metal plate reverbs. Highly dense, bright, and metallic.",
     parameters: [
-      { name: "decay", description: "Dense metal sheet plate decay length (measured in seconds).", typicalRange: "0.4 sec to 10.0 sec", recommendedValue: "1.5 sec to 3.0 sec" },
-      { name: "bright", description: "Accentuates the characteristic metallic resonance and sheen (measured in percentage).", typicalRange: "0% to 100%", recommendedValue: "50% to 70%" }
+      { name: "size", description: "Dense metal sheet plate size and decay length (measured in seconds).", typicalRange: "0.4 sec to 10.0 sec", recommendedValue: "1.5 sec to 3.0 sec" },
+      { name: "shape", description: "Resonant plate shape and metal reflection density (measured in percentage).", typicalRange: "0% to 100%", recommendedValue: "50% to 70%" }
     ],
     proTips: "The gold standard for snare drums and lead vocals in pop and rock genres."
   },
@@ -132,8 +132,8 @@ export const XPAND_FX_DATABASE: XpandFX[] = [
     category: "Reverbs",
     description: "A plate reverb with rounded metallic resonances, delivering a smooth, high-density tail without harsh sibilance.",
     parameters: [
-      { name: "decay", description: "Smooth metallic plate decay length (measured in seconds).", typicalRange: "0.4 sec to 10.0 sec", recommendedValue: "1.8 sec to 3.2 sec" },
-      { name: "bright", description: "Subdues sibilant high frequencies to keep plate tail smooth (measured in percentage).", typicalRange: "0% to 100%", recommendedValue: "35% to 50%" }
+      { name: "size", description: "Smooth metallic plate size and decay length (measured in seconds).", typicalRange: "0.4 sec to 10.0 sec", recommendedValue: "1.8 sec to 3.2 sec" },
+      { name: "shape", description: "Rounded reflection shape and soft density envelope (measured in percentage).", typicalRange: "0% to 100%", recommendedValue: "35% to 50%" }
     ],
     proTips: "Perfect for tracking vocals directly when you want the density of a plate but need to keep 'S' sounds smooth."
   },
@@ -142,8 +142,8 @@ export const XPAND_FX_DATABASE: XpandFX[] = [
     category: "Reverbs",
     description: "An ultra-reflective, sparkling plate reverb that accentuates top-end air and metallic high frequencies.",
     parameters: [
-      { name: "decay", description: "Vibrant plate tail decay length (measured in seconds).", typicalRange: "0.4 sec to 10.0 sec", recommendedValue: "1.2 sec to 2.5 sec" },
-      { name: "bright", description: "Preserves maximum top-end metallic sparkle (measured in percentage).", typicalRange: "0% to 100%", recommendedValue: "80% to 100%" }
+      { name: "size", description: "Vibrant plate tail size and decay length (measured in seconds).", typicalRange: "0.4 sec to 10.0 sec", recommendedValue: "1.2 sec to 2.5 sec" },
+      { name: "shape", description: "Highly reflective shape and bright density sheen (measured in percentage).", typicalRange: "0% to 100%", recommendedValue: "80% to 100%" }
     ],
     proTips: "Makes modern rap ad-libs and hi-hats sound expensive and airy."
   },
@@ -162,8 +162,8 @@ export const XPAND_FX_DATABASE: XpandFX[] = [
     category: "Reverbs",
     description: "An incredibly fast-building plate simulation that provides instant stereo diffusion and thick spatial support.",
     parameters: [
-      { name: "decay", description: "Instant high-diffusion plate decay (measured in seconds).", typicalRange: "0.4 sec to 10.0 sec", recommendedValue: "1.5 sec to 3.5 sec" },
-      { name: "bright", description: "Dampens metallic clutter while maintaining rapid stereo width (measured in percentage).", typicalRange: "0% to 100%", recommendedValue: "45% to 60%" }
+      { name: "size", description: "Instant high-diffusion plate size and decay (measured in seconds).", typicalRange: "0.4 sec to 10.0 sec", recommendedValue: "1.5 sec to 3.5 sec" },
+      { name: "shape", description: "Plate shape and rapid stereo width density (measured in percentage).", typicalRange: "0% to 100%", recommendedValue: "45% to 60%" }
     ],
     proTips: "Excellent on synthetic percussion and sound effects to create instantaneous atmosphere."
   },
@@ -174,8 +174,8 @@ export const XPAND_FX_DATABASE: XpandFX[] = [
     category: "Reverbs",
     description: "A combination effect running a swirling chorus into a lush hall reverb, creating a wide, celestial space.",
     parameters: [
-      { name: "decay", description: "Hall reverb decay length (measured in seconds).", typicalRange: "0.4 sec to 30.0 sec", recommendedValue: "2.5 sec to 5.0 sec" },
-      { name: "bright", description: "Modulation rate/intensity and high-frequency open-ness (measured in percentage).", typicalRange: "0% to 100%", recommendedValue: "45% to 65%" }
+      { name: "size", description: "Hall reverb space size and decay length (measured in seconds).", typicalRange: "0.4 sec to 30.0 sec", recommendedValue: "2.5 sec to 5.0 sec" },
+      { name: "shape", description: "Chorus modulation rate and high-frequency shape (measured in percentage).", typicalRange: "0% to 100%", recommendedValue: "45% to 65%" }
     ],
     proTips: "A go-to for lush ambient pads, retro 80s synths, and background vocal stacks."
   },
@@ -184,8 +184,8 @@ export const XPAND_FX_DATABASE: XpandFX[] = [
     category: "Reverbs",
     description: "A gentler version of the Chorus-Reverb combo with subdued modulation and a warm, rolled-off high end.",
     parameters: [
-      { name: "decay", description: "Soft hall reverb decay length (measured in seconds).", typicalRange: "0.4 sec to 30.0 sec", recommendedValue: "2.0 sec to 4.5 sec" },
-      { name: "bright", description: "Subdued chorus modulation rate and heavily filtered high frequencies (measured in percentage).", typicalRange: "0% to 100%", recommendedValue: "30% to 45%" }
+      { name: "size", description: "Soft hall reverb space size and decay length (measured in seconds).", typicalRange: "0.4 sec to 30.0 sec", recommendedValue: "2.0 sec to 4.5 sec" },
+      { name: "shape", description: "Subdued chorus modulation rate and filtered high shape (measured in percentage).", typicalRange: "0% to 100%", recommendedValue: "30% to 45%" }
     ],
     proTips: "Adds beautiful movement to modern electric pianos (EPs) and warm synthesizer keys."
   },
@@ -194,8 +194,8 @@ export const XPAND_FX_DATABASE: XpandFX[] = [
     category: "Reverbs",
     description: "A vibrant Chorus-Reverb combination designed to sparkle, with fast modulation and maximum high-end clarity.",
     parameters: [
-      { name: "decay", description: "Sparkling hall reverb decay length (measured in seconds).", typicalRange: "0.4 sec to 30.0 sec", recommendedValue: "2.2 sec to 4.0 sec" },
-      { name: "bright", description: "Fast chorus modulation sweep and wide-open high-frequency spectrum (measured in percentage).", typicalRange: "0% to 100%", recommendedValue: "70% to 90%" }
+      { name: "size", description: "Sparkling hall reverb space size and decay length (measured in seconds).", typicalRange: "0.4 sec to 30.0 sec", recommendedValue: "2.2 sec to 4.0 sec" },
+      { name: "shape", description: "Fast chorus modulation sweep and wide-open high-frequency shape (measured in percentage).", typicalRange: "0% to 100%", recommendedValue: "70% to 90%" }
     ],
     proTips: "Gives a gorgeous, expensive shimmer to lead pop synths and bright acoustic guitar groups."
   },
@@ -205,7 +205,7 @@ export const XPAND_FX_DATABASE: XpandFX[] = [
     description: "A gated/non-linear reverb effect that cuts off abruptly, perfect for vintage 80s drum sounds.",
     parameters: [
       { name: "time", description: "Cutoff point duration / gated time window (measured in milliseconds).", typicalRange: "10 ms to 500 ms", recommendedValue: "120 ms to 280 ms" },
-      { name: "bright", description: "Dampens high end and adjusts gate envelope density (measured in percentage).", typicalRange: "0% to 100%", recommendedValue: "50%" }
+      { name: "shape", description: "Dampens high end and adjusts gate envelope shape/density (measured in percentage).", typicalRange: "0% to 100%", recommendedValue: "50%" }
     ],
     proTips: "The classic Phil Collins 80s snare trick. Apply heavily on snare tracks and adjust decay to fit the tempo."
   },
@@ -215,7 +215,7 @@ export const XPAND_FX_DATABASE: XpandFX[] = [
     description: "A specialized reverb that swells backwards, building in volume before terminating.",
     parameters: [
       { name: "time", description: "Length of the backwards swell curve (measured in seconds).", typicalRange: "0.1 sec to 5.0 sec", recommendedValue: "1.0 sec to 2.5 sec" },
-      { name: "bright", description: "High-frequency damping of the reversed tail (measured in percentage).", typicalRange: "0% to 100%", recommendedValue: "50% to 70%" }
+      { name: "shape", description: "High-frequency damping and swell envelope shape (measured in percentage).", typicalRange: "0% to 100%", recommendedValue: "50% to 70%" }
     ],
     proTips: "Excellent for vocal transitions or lead synth intros. Put it on a separate track and print the swell."
   },
@@ -225,7 +225,7 @@ export const XPAND_FX_DATABASE: XpandFX[] = [
     description: "Focuses exclusively on the immediate first reflections of an acoustic space, creating thickness without long tails.",
     parameters: [
       { name: "time", description: "Duration of the primary reflection envelope (measured in seconds).", typicalRange: "0.05 sec to 2.0 sec", recommendedValue: "0.1 sec to 0.5 sec" },
-      { name: "bright", description: "Filters top end of immediate reflection clusters (measured in percentage).", typicalRange: "0% to 100%", recommendedValue: "50% to 65%" }
+      { name: "shape", description: "Filters and shapes immediate reflection clusters (measured in percentage).", typicalRange: "0% to 100%", recommendedValue: "50% to 65%" }
     ],
     proTips: "Use to push any instrument slightly back in the mix or widen mono sounds cleanly."
   },
@@ -234,8 +234,8 @@ export const XPAND_FX_DATABASE: XpandFX[] = [
     category: "Reverbs",
     description: "An acoustic space tailor-made for percussion, capturing short, explosive early reflections.",
     parameters: [
-      { name: "decay", description: "Short explosive drum room decay (measured in seconds).", typicalRange: "0.1 sec to 5.0 sec", recommendedValue: "0.4 sec to 1.2 sec" },
-      { name: "bright", description: "Dampens harsh high sibilance from cymbals in room (measured in percentage).", typicalRange: "0% to 100%", recommendedValue: "40% to 55%" }
+      { name: "size", description: "Short explosive drum room size and decay (measured in seconds).", typicalRange: "0.1 sec to 5.0 sec", recommendedValue: "0.4 sec to 1.2 sec" },
+      { name: "shape", description: "Controls the drum room's acoustic shape and absorption (measured in percentage).", typicalRange: "0% to 100%", recommendedValue: "40% to 55%" }
     ],
     proTips: "Breathe life into static electronic drum kits by routing them to this space."
   },
@@ -244,8 +244,8 @@ export const XPAND_FX_DATABASE: XpandFX[] = [
     category: "Reverbs",
     description: "Simulates a small-to-mid sized venue or club, with highly complex reflection patterns.",
     parameters: [
-      { name: "decay", description: "Intimate small club venue decay (measured in seconds).", typicalRange: "0.1 sec to 5.0 sec", recommendedValue: "0.8 sec to 1.8 sec" },
-      { name: "bright", description: "High roll-off simulating carpeted and crowd-filled club acoustics (measured in percentage).", typicalRange: "0% to 100%", recommendedValue: "45% to 60%" }
+      { name: "size", description: "Intimate small club venue size and decay (measured in seconds).", typicalRange: "0.1 sec to 5.0 sec", recommendedValue: "0.8 sec to 1.8 sec" },
+      { name: "shape", description: "Roll-off shape simulating carpeted and crowd-filled club acoustics (measured in percentage).", typicalRange: "0% to 100%", recommendedValue: "45% to 60%" }
     ],
     proTips: "Fantastic for direct-recorded electric bass and electric guitars to place them 'in a physical room'."
   },
@@ -254,8 +254,8 @@ export const XPAND_FX_DATABASE: XpandFX[] = [
     category: "Reverbs",
     description: "A room shape optimized to replicate the cohesive, airy space captured by drum overhead microphones.",
     parameters: [
-      { name: "decay", description: "Cohesive overhead space decay length (measured in seconds).", typicalRange: "0.1 sec to 5.0 sec", recommendedValue: "0.6 sec to 1.4 sec" },
-      { name: "bright", description: "Maintains clean high-frequency transient detail for cymbals (measured in percentage).", typicalRange: "0% to 100%", recommendedValue: "65% to 80%" }
+      { name: "size", description: "Cohesive overhead room size and decay length (measured in seconds).", typicalRange: "0.1 sec to 5.0 sec", recommendedValue: "0.6 sec to 1.4 sec" },
+      { name: "shape", description: "Overhead room shape and high-frequency transient detail shape (measured in percentage).", typicalRange: "0% to 100%", recommendedValue: "65% to 80%" }
     ],
     proTips: "Apply on drum bus tracks to give a unified, organic acoustic bond to separate electronic elements."
   },
@@ -264,8 +264,8 @@ export const XPAND_FX_DATABASE: XpandFX[] = [
     category: "Reverbs",
     description: "A gigantic, cavernous reverb that simulates an open-air sports stadium with deep, delayed echo clusters.",
     parameters: [
-      { name: "decay", description: "Huge open-air arena decay length (measured in seconds).", typicalRange: "0.4 sec to 30.0 sec", recommendedValue: "5.0 sec to 12.0 sec" },
-      { name: "bright", description: "Heavy high cut representing air absorption over distance (measured in percentage).", typicalRange: "0% to 100%", recommendedValue: "30% to 45%" }
+      { name: "size", description: "Huge open-air arena size and decay length (measured in seconds).", typicalRange: "0.4 sec to 30.0 sec", recommendedValue: "5.0 sec to 12.0 sec" },
+      { name: "shape", description: "Stadium reflection shape representing air absorption over distance (measured in percentage).", typicalRange: "0% to 100%", recommendedValue: "30% to 45%" }
     ],
     proTips: "Great for big rock drum fills, transitions, or massive cinematic sound design."
   },
@@ -274,8 +274,8 @@ export const XPAND_FX_DATABASE: XpandFX[] = [
     category: "Reverbs",
     description: "A creative, fluttering reverb with a quick series of discrete early reflections that mimic a slap echo.",
     parameters: [
-      { name: "decay", description: "Fluttering decay length (measured in seconds).", typicalRange: "0.1 sec to 5.0 sec", recommendedValue: "0.5 sec to 1.5 sec" },
-      { name: "bright", description: "Adjusts the brightness and texture of the flutter reflections (measured in percentage).", typicalRange: "0% to 100%", recommendedValue: "50% to 70%" }
+      { name: "size", description: "Fluttering space size and decay length (measured in seconds).", typicalRange: "0.1 sec to 5.0 sec", recommendedValue: "0.5 sec to 1.5 sec" },
+      { name: "shape", description: "Brightness and texture shape of the flutter reflections (measured in percentage).", typicalRange: "0% to 100%", recommendedValue: "50% to 70%" }
     ],
     proTips: "Excellent for adding a quirky, vintage vibe to vocals or synth leads."
   },
@@ -284,8 +284,8 @@ export const XPAND_FX_DATABASE: XpandFX[] = [
     category: "Reverbs",
     description: "An ultra-short, highly damp room simulation designed to place an instrument in a small booth or close space.",
     parameters: [
-      { name: "decay", description: "Ultra-short vocal booth decay length (measured in seconds).", typicalRange: "0.1 sec to 5.0 sec", recommendedValue: "0.1 sec to 0.4 sec" },
-      { name: "bright", description: "Heavy roll-off damping to keep sounds intimate (measured in percentage).", typicalRange: "0% to 100%", recommendedValue: "40% to 55%" }
+      { name: "size", description: "Ultra-short vocal booth size and decay length (measured in seconds).", typicalRange: "0.1 sec to 5.0 sec", recommendedValue: "0.1 sec to 0.4 sec" },
+      { name: "shape", description: "Damping shape to keep close reflections extremely intimate (measured in percentage).", typicalRange: "0% to 100%", recommendedValue: "40% to 55%" }
     ],
     proTips: "Perfect for bringing dry synth lines to life while maintaining an extremely close soundstage."
   },
@@ -295,7 +295,7 @@ export const XPAND_FX_DATABASE: XpandFX[] = [
     description: "Combines short comb-filter delays with a tight reverb to produce a distinctive metallic, tuned resonance.",
     parameters: [
       { name: "decay", description: "Ringing feedback decay length (measured in percentage).", typicalRange: "0% to 100%", recommendedValue: "40% to 65%" },
-      { name: "bright", description: "Frequency damping of the comb-filter feedback nodes (measured in percentage).", typicalRange: "0% to 100%", recommendedValue: "45% to 60%" }
+      { name: "shape", description: "Tuned resonance shape of the comb-filter feedback nodes (measured in percentage).", typicalRange: "0% to 100%", recommendedValue: "45% to 60%" }
     ],
     proTips: "An incredible tool for sound design. Turn up resonance to make drums ring like a robotic tuned synth."
   },

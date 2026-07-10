@@ -815,6 +815,23 @@ export const RecipeCard: React.FC<RecipeCardProps> = ({ recipe: initialRecipe, i
             )}
           </div>
           <p className="text-sm font-bold opacity-90 max-w-2xl leading-relaxed">{recipe.description}</p>
+          {recipe.detectedSectionLengths && (
+            <div className={`mt-4 p-4 rounded-2xl flex flex-wrap gap-x-6 gap-y-2 text-xs border ${
+              theme === 'coldest' 
+                ? 'bg-sky-950/20 border-sky-500/20 text-sky-200' 
+                : theme === 'chef-mode'
+                ? 'bg-orange-50/50 border-orange-200/50 text-orange-900'
+                : 'bg-white/5 border-white/10 text-white'
+            }`}>
+              <span className="font-black uppercase tracking-wider">{t('detected_section_lengths') || 'Detected Section Lengths'}:</span>
+              {Object.entries(recipe.detectedSectionLengths).map(([section, bars]) => (
+                <span key={section} className="flex items-center gap-1">
+                  <span className="capitalize font-bold opacity-75">{section}:</span>
+                  <span className="font-black text-current">{bars} {bars === 1 ? t('bar') || 'bar' : t('bars') || 'bars'}</span>
+                </span>
+              ))}
+            </div>
+          )}
         </div>
         <div className="flex flex-wrap gap-3">
           {onMinimize && (

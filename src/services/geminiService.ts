@@ -93,59 +93,69 @@ export const getXpandInstructions = (xpandPresets?: XpandPreset[]): string => {
     The values can include negative numbers (e.g., -50, +30) depending on the specific parameter and how it scales. Use appropriate values as seen in the plugin.
 
     XPAND!2 FX1 AND FX2 ALGORITHM SELECTOR & PARAMETERS:
-    Xpand!2 has two independent global FX processors (FX1 and FX2). When recommending effects for Xpand!2 instrument parts, you MUST choose from the exact algorithms listed below:
+    Xpand!2 has two independent global FX processors (FX1 and FX2). Each algorithm has EXACTLY TWO parameter knobs. When recommending effects for Xpand!2 instrument parts, you MUST choose from the exact algorithms listed below and suggest values ONLY for its exact two parameters:
     
-    1. REVERBS:
-       - "hall", "soft hall", "bright hall", "predelay hall", "dense hall"
-         (Primary parameters: Decay/Time, Pre-Delay, High Cut, Mix)
-       - "room", "soft room", "bright room", "predelay room", "dense room"
-         (Primary parameters: Time, Pre-Delay, High Cut, Mix)
-       - "plate", "soft plate", "bright plate", "predelay plate", "dense plate"
-         (Primary parameters: Decay/Time, Pre-Delay, High Cut, Mix)
-       - "cho+rev", "cho+rev soft", "cho+rev bright"
-         (Primary parameters: Decay/Time, Chorus Rate, Chorus Depth, Mix)
-       - "non-linear" (Primary parameters: Time/Gate Size, Diffusion, High Cut, Mix)
-       - "reverse reverb" (Primary parameters: Time, Feedback, High Cut, Mix)
-       - "early reflections" (Primary parameters: Reflections Size, Density, Tone, Mix)
-       - "drum room" (Primary parameters: Decay/Size, Pre-Delay, High Cut, Mix)
-       - "club" (Primary parameters: Decay/Time, Pre-Delay, High Cut, Mix)
-       - "overheads" (Primary parameters: Decay/Time, Pre-Delay, High Cut, Mix)
-       - "stadium" (Primary parameters: Decay/Time, Pre-Delay, High Cut, Mix)
-       - "flapper" (Primary parameters: Time, Feedback, Tone, Mix)
-       - "close" (Primary parameters: Size, Pre-Delay, High Cut, Mix)
-       - "resonators" (Primary parameters: Resonance Tone, Decay/Feedback, High Cut, Mix)
+    1. REVERBS (Each has exactly 2 knobs):
+       - "hall", "soft hall", "bright hall", "dense hall":
+         - Knob 1: "size" (decay length in seconds, range: 0.4 sec to 30.0 sec)
+         - Knob 2: "shape" (reflection density/envelope, range: 0% to 100%)
+       - "predelay hall":
+         - Knob 1: "size" (decay length in seconds, range: 0.4 sec to 30.0 sec)
+         - Knob 2: "pre del" (pre-delay time, range: 0 ms to 250 ms)
+       - "room", "soft room", "bright room", "dense room":
+         - Knob 1: "size" (decay length in seconds, range: 0.1 sec to 5.0 sec)
+         - Knob 2: "shape" (reflection density/envelope, range: 0% to 100%)
+       - "predelay room":
+         - Knob 1: "size" (decay length in seconds, range: 0.1 sec to 5.0 sec)
+         - Knob 2: "pre del" (pre-delay time, range: 0 ms to 250 ms)
+       - "plate", "soft plate", "bright plate", "dense plate":
+         - Knob 1: "size" (decay length in seconds, range: 0.4 sec to 10.0 sec)
+         - Knob 2: "shape" (reflection density/envelope, range: 0% to 100%)
+       - "predelay plate":
+         - Knob 1: "size" (decay length in seconds, range: 0.4 sec to 10.0 sec)
+         - Knob 2: "pre del" (pre-delay time, range: 0 ms to 250 ms)
+       - "cho+rev", "cho+rev soft", "cho+rev bright":
+         - Knob 1: "size" (decay length in seconds, range: 0.4 sec to 30.0 sec)
+         - Knob 2: "shape" (chorus rate and high cut shape, range: 0% to 100%)
+       - "non-linear":
+         - Knob 1: "time" (cutoff duration in milliseconds, range: 10 ms to 500 ms)
+         - Knob 2: "shape" (gate envelope shape, range: 0% to 100%)
+       - "reverse reverb":
+         - Knob 1: "time" (swell curve duration in seconds, range: 0.1 sec to 5.0 sec)
+         - Knob 2: "shape" (reversal curve shape, range: 0% to 100%)
+       - "early reflections":
+         - Knob 1: "time" (envelope duration in seconds, range: 0.05 sec to 2.0 sec)
+         - Knob 2: "shape" (reflection density shape, range: 0% to 100%)
+       - "drum room", "club", "overheads", "stadium", "flapper", "close":
+         - Knob 1: "size" (room size/decay in seconds, range: 0.1 sec to 30.0 sec)
+         - Knob 2: "shape" (room reflections/absorption shape, range: 0% to 100%)
+       - "resonators":
+         - Knob 1: "decay" (ringing decay multiplier, range: 0% to 100%)
+         - Knob 2: "shape" (resonance comb-filter shape, range: 0% to 100%)
 
-    2. DELAYS:
-       - "delay" (Primary parameters: Time [sync], Feedback, High Cut, Mix)
-       - "lofi delay" (Primary parameters: Time [sync], Feedback, Bitcrush/Decimate, Mix)
-       - "stereo delay" (Primary parameters: Time L [sync], Time R [sync], Feedback, Mix)
-       - "lofi stereo delay" (Primary parameters: Time L [sync], Time R [sync], Grime/Crush, Mix)
-       - "pingpong" (Primary parameters: Time [sync], Feedback, Stereo Width, Mix)
-       - "lofi pingpong" (Primary parameters: Time [sync], Feedback, Tape Distortion, Mix)
-       - "gallop echo" (Primary parameters: Time [sync], Pattern Intensity, Feedback, Mix)
-       - "tape echo" (Primary parameters: Time [sync], Feedback, Wow & Flutter, Mix)
-       - "ducking delay" (Primary parameters: Time [sync], Feedback, Ducking Threshold, Mix)
-       - "cloud delay" (Primary parameters: Time [sync], Cloud Diffusion, Feedback, Mix)
-       - "chaos delay" (Primary parameters: Time [sync], Chaos Rate, Instability, Mix)
+    2. DELAYS (Each has exactly 2 knobs):
+       - "delay", "lofi delay", "stereo delay", "lofi stereo delay", "pingpong", "lofi pingpong", "gallop echo", "tape echo", "ducking delay", "cloud delay", "chaos delay":
+         - Knob 1: "delay" (tempo-synced note division: e.g., 1/4, 1/8, 1/16, 1/8D, 1/4T)
+         - Knob 2: "fbk" (feedback percentage, range: 0% to 100%)
 
-    3. MODULATION:
-       - "chorus" (Primary parameters: Rate, Depth, Feedback, Mix)
-       - "rich chorus" (Primary parameters: Rate, Depth, Voices, Mix)
-       - "ensemble" (Primary parameters: Rate, Width/Depth, Color, Mix)
-       - "space chorus" (Primary parameters: Rate, Depth, Width, Mix)
-       - "quad chorus" (Primary parameters: Rate, Depth, Feedback, Mix)
-       - "voice mod" (Primary parameters: Rate, Depth, Delay Offset, Mix)
-       - "phase" (Primary parameters: Rate, Depth, Feedback, Mix)
-       - "bi-phase" (Primary parameters: Rate L/R, Sweep Depth, Feedback, Mix)
-       - "deep phaser" (Primary parameters: Rate, Depth, Resonance, Mix)
-       - "flanger" (Primary parameters: Rate, Depth, Feedback, Mix)
+    3. MODULATION (Each has exactly 2 knobs):
+       - "chorus", "rich chorus", "ensemble", "space chorus", "quad chorus", "voice mod", "phase", "bi-phase", "deep phaser":
+         - Knob 1: "rate" (modulation speed in Hertz, range: 0.10 Hz to 10.00 Hz)
+         - Knob 2: "depth" (modulation intensity percentage, range: 0% to 100%)
+       - "flanger":
+         - Knob 1: "rate" (comb-filter speed in Hertz, range: 0.10 Hz to 10.00 Hz)
+         - Knob 2: "fbk" (resonant feedback percentage, range: -100% to 100%)
 
-    4. OTHER:
-       - "detune" (Primary parameters: Detune Amount, Delay Offset, Tone, Mix)
-       - "pitch shift" (Primary parameters: Pitch, Fine Tune, Feedback, Mix)
+    4. OTHER (Each has exactly 2 knobs):
+       - "detune":
+         - Knob 1: "detune" (micro-pitch offset in cents, range: -50 cents to +50 cents)
+         - Knob 2: "delay" (stereo delay offset in milliseconds, range: 0.1 ms to 100.0 ms)
+       - "pitch shift":
+         - Knob 1: "pitch" (semitone shifting, range: -12 semi to +12 semi)
+         - Knob 2: "fine" (fine-tuning pitch offset in cents, range: -50 cents to +50 cents)
 
     CRITICAL RECO_FLOW REQUIREMENT:
-    When you suggest FX1/FX2, specify the exact algorithm name from the list above, explain why that algorithm is perfect for the preset, and provide the exact values for its primary parameters.
+    When you suggest FX1 or FX2, specify the exact algorithm name from the list above. Then, provide the exact parameter names (e.g., Knob 1: size, Knob 2: shape) and their precise values using the correct unit (sec, ms, %, cents, Hz, semitones, note division) based strictly on the rules above. NEVER suggest unlisted parameters like pre-delay, high cut, or mix for algorithms that do not support them.
   `;
 
   return formatted;
@@ -725,9 +735,14 @@ const ADVANCED_MIDI_PROMPT = `
     CRITICAL - GUITAR CAPO RECOMMENDATIONS:
     When generating recipes that include acoustic or electric guitars (especially for indie, rock, alternative, or bright pop styles), strongly consider recommending the use of a capo in the sourceSoundGoal or deepDive (e.g., placing it on the 2nd, 3rd, or 4th fret) to achieve a brighter, more distinctive and chiming sound without breaking strings. Use references like Johnny Marr, Jingle-Jangle style, and The Smiths as inspiration for these recommendations.
     CRITICAL - MIDI LENGTH & DURATION RULES:
-    - You MUST generate EXACTLY 4 or 8 bars of MIDI data for EVERY instrument and drum pattern. Do NOT generate 1, 2, 3, 5, 6, or 7 bars. It MUST be exactly 4 or 8 bars.
-    - For Instrument MIDI Notes: The sum of all 'duration' and 'wait' values in the midiNotes array MUST equal exactly 16 beats (for 4 bars) or 32 beats (for 8 bars).
-    - For Drum Patterns: 16 steps = 1 bar. Therefore, you MUST provide steps ranging from 1 to 64 (for 4 bars) or 1 to 128 (for 8 bars). If isDoubleTime is true, double these numbers (1-128 for 4 bars, 1-256 for 8 bars).
+    - EXCEPTION FOR DOUBLE-AUDIO RECREATION / SONG RECREATION: If you are in double-audio recreation mode (the user has provided a second target track File 2 to recreate FOR), the 4 or 8 bars constraint is completely OVERRIDDEN. You MUST instead analyze the exact section lengths of File 2 (Target) and generate MIDI patterns for both instruments and drums that match those exact detected section bar lengths. Provide these bar lengths in 'detectedSectionLengths'. For example, if File 2 has an 8-bar Intro, 16-bar Verse, and 8-bar Hook, then Intro is 8 bars, Verse is 16 bars, Hook is 8 bars, etc.
+    - Standard Mode: If there is no target track (single-file or text-only), you MUST generate EXACTLY 4 or 8 bars of MIDI data for EVERY instrument and drum pattern. Do NOT generate 1, 2, 3, 5, 6, or 7 bars. It MUST be exactly 4 or 8 bars.
+    - For Instrument MIDI Notes: The sum of all 'duration' and 'wait' values in each section's 'midiNotes' array MUST equal exactly:
+      - (Section Bars * 4) beats. For example, if Verse is 16 bars, the sum of all durations/waits for 'verse' MUST be exactly 64 beats. If Hook is 8 bars, the sum for 'hook' MUST be exactly 32 beats. If a standard 4 bars, it must be exactly 16 beats.
+    - For Drum Patterns: 16 steps = 1 bar. Therefore, you MUST provide steps ranging from 1 to (Section Bars * 16). If isDoubleTime is true, double these numbers (1 to Section Bars * 32). For example:
+      - If Verse is 16 bars: provide steps ranging from 1 to 256 (or 1 to 512 if double time).
+      - If Hook is 8 bars: provide steps ranging from 1 to 128 (or 1 to 256 if double time).
+      - If Intro is 8 bars: provide steps ranging from 1 to 128 (or 1 to 256 if double time).
     - For 'duration' and 'wait' values, you MUST ONLY use valid musical subdivisions: '1' (whole), '2' (half), '4' (quarter), '8' (eighth), '16' (sixteenth), '32', '64', or triplet/dotted variations (e.g., '8t', '4d'). Do NOT use invalid numbers like '6', '3', or '5'.
     For Drum Patterns (kick, snare, hiHat):
     - Differentiated Swing Percentages: Utilize the 'swing' object parameters (0-100) to specify natural, realistic groove. 
@@ -851,7 +866,10 @@ const EXTRACT_RECIPE_MIDI_PROMPT = `
     CRITICAL - EXTRACT RECIPE & FULL ARRANGEMENT MIDI:
     - **CRITICAL COMPUTE DIRECTIVE**: You MUST dedicate maximum compute time to transcribe the FULL song precisely. This is a massive operation. DO NOT rush. Do not give short 4 or 8 bar loops.
     - **ALL INSTRUMENTS**: You MUST detect and include EVERY SINGLE instrument playing in the song (Lead Synth, Pads, Bass, Plucks, Strings, Guitars, Arps, etc.) inside the "instruments" array. Do not skip any element of the arrangement.
-    - **LONG SECTIONS**: You MUST output 16-bar or 32-bar MIDI arrangements for Intro, Verse, Hook, Bridge, Outro for each instrument. (e.g. up to 256 or 512 steps!).
+    - **SECTION STRUCTURAL AWARENESS**:
+      - You MUST analyze the exact sections of the reference song (or target song File 2 in double-audio mode) and detect the precise number of bars for each major section: Intro, Hook, Verse, Bridge, Outro.
+      - Return these exact detected bar lengths in 'detectedSectionLengths' (e.g. intro: 8, verse: 16, hook: 8, bridge: 4, outro: 8).
+      - The generated MIDI patterns (for both instruments and drum patterns) MUST match the exact bar lengths detected for each corresponding section. For example, if the Hook area is detected as 8 bars, the generated Hook MIDI and Hook Drum steps MUST span exactly 8 bars. If the Verse is detected as 16 bars, they MUST span exactly 16 bars. Do NOT use generic 4 or 8 bar placeholders.
 ` + ADVANCED_MIDI_PROMPT;
 
 const RC20_SPEC_PROMPT = `
@@ -1560,6 +1578,18 @@ export const getUnifiedRecipeSchema = (isGangstaVoxMode: boolean = false) => {
       bpm: { type: Type.NUMBER },
       description: { type: Type.STRING },
       artistTypes: { type: Type.ARRAY, items: { type: Type.STRING } },
+      detectedSectionLengths: {
+        type: Type.OBJECT,
+        description: "The detected length of bars for each major section of the track (Intro, Verse, Hook, Bridge, Outro) from the target reference track (File 2), or estimated from File 1 if only one track was uploaded.",
+        properties: {
+          intro: { type: Type.NUMBER },
+          verse: { type: Type.NUMBER },
+          hook: { type: Type.NUMBER },
+          bridge: { type: Type.NUMBER },
+          outro: { type: Type.NUMBER }
+        },
+        required: ["intro", "verse", "hook", "bridge", "outro"]
+      },
       recommendedScale: { type: Type.STRING },
       chordProgression: { type: Type.STRING },
       mixingAdvice: { type: Type.STRING },
@@ -2261,7 +2291,7 @@ export const getUnifiedRecipeSchema = (isGangstaVoxMode: boolean = false) => {
         required: ["vocalTracks", "layeringStrategy"]
       }
     },
-    required: ["title", "style", "bpm", "description", "artistTypes", "instruments", "busses", "drumPatterns", "arrangement", "mixingAdvice", "masterPlugins"]
+    required: ["title", "style", "bpm", "description", "artistTypes", "detectedSectionLengths", "instruments", "busses", "drumPatterns", "arrangement", "mixingAdvice", "masterPlugins"]
   };
   
   if (!isGangstaVoxMode) {
@@ -3371,7 +3401,9 @@ export const getAudioBeatRecommendations = async (plugins: VSTPlugin[], audioBas
       1. Meticulously analyze BOTH audio files to detect their respective BPMs and Keys.
       2. Adapt the extracted instrumentation, chords, basslines, and MIDI patterns of File 1 (Source) so that they fit PERFECTLY with the Key and BPM of File 2 (Target/Recreate-For).
       3. If the user specifies a specific sound to recreate in their context (e.g., "recreate the xylophone sound"), focus heavily on extracting that exact sound/pattern from File 1, and map its MIDI notes and rhythm to the BPM and Key of File 2, selecting the best matching VST from the user's gear rack, and populating every single parameter in 'deepDive' for both the VST instrument and its FX plugins exhaustively.
-      4. The generated MIDI patterns (instruments and drums) MUST represent a full-length cohesive recreation of File 1's parts adapted into File 2's structure/tempo/key.
+      4. Detect the precise bar length of each section (Intro, Verse, Hook, Bridge, Outro) from the Target Track (File 2). Populate the 'detectedSectionLengths' object in the JSON with these exact bar lengths (e.g., {"intro": 8, "verse": 16, "hook": 8, "bridge": 4, "outro": 8}).
+      5. The generated MIDI notes for all instruments and the drum patterns for all parts (kick, snare, hi-hat) MUST span the exact detected bar lengths for each corresponding section of File 2. For instance, if File 2's Hook section is 8 bars long, the MIDI notes for the hook must sum to exactly 32 beats, and the steps in the hook drum patterns must span up to step 128 (or 256 for double time). If the Verse is 16 bars long, they must span exactly 16 bars (64 beats for instruments, up to step 256 or 512 for drums). DO NOT use short 4-bar or generic placeholders.
+      6. Since you are modifying and adding onto File 2 (the user's existing project track), the suggestions and MIDI patterns you generate should be designed as premium, DAWs-ready "additions" (melodic counters, rhythmic grooves, complementary chord layers, or reinforcing percussion) that fit the exact vibe of File 2, rather than just matching tempo. They must sound musically correct and highly professional when dragged-and-dropped directly onto File 2 in the user's DAW.
       ==================================================
   ` : "";
   
