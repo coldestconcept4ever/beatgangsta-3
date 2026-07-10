@@ -609,7 +609,7 @@ const App: React.FC = () => {
     }
   });
   const [sortBy, setSortBy] = useState<'name' | 'vendor' | 'type'>('type');
-  const [gearRackTab, setGearRackTab] = useState<'vst' | 'jsfx' | 'xpand'>('vst');
+  const [gearRackTab, setGearRackTab] = useState<'vst' | 'jsfx'>('vst');
   const [xpandPresets, setXpandPresets] = useState<XpandPreset[]>(() => {
     try {
       const saved = localStorage.getItem('bg_xpand_presets');
@@ -6507,7 +6507,14 @@ Provide the exact JSFX plugin name and required sliders/parameters.`;
   }
 
   if (showXpandDatabase) {
-    return <XpandDatabaseViewer onBack={() => setShowXpandDatabase(false)} theme={theme} />;
+    return (
+      <XpandDatabaseViewer 
+        onBack={() => setShowXpandDatabase(false)} 
+        theme={theme} 
+        xpandPresets={xpandPresets}
+        setXpandPresets={setXpandPresets}
+      />
+    );
   }
 
   if (showJsfxAutomationChains) {
@@ -9920,19 +9927,6 @@ Provide the exact JSFX plugin name and required sliders/parameters.`;
                     >
                       JSFX Gear Rack
                     </button>
-                    <button
-                      onClick={() => {
-                        setGearRackTab('xpand');
-                        setSelectedFolder(null);
-                      }}
-                      className={`text-sm font-black uppercase tracking-widest pb-3 border-b-2 transition-all ${
-                        gearRackTab === 'xpand' 
-                          ? (theme === 'coldest' || theme === 'chef-mode' ? 'border-slate-800 text-slate-800 font-black' : 'border-white text-white font-black')
-                          : 'border-transparent text-current opacity-40 hover:opacity-75 font-bold'
-                      }`}
-                    >
-                      Xpand!2 Presets ({xpandPresets.filter(p => p.is_owned).length})
-                    </button>
                   </div>
                 </div>
 
@@ -9991,7 +9985,7 @@ Provide the exact JSFX plugin name and required sliders/parameters.`;
                       </div>
                     )}
                   </>
-                ) : gearRackTab === 'xpand' ? (
+                ) : false ? (
                   <>
                     <div className="space-y-8">
                       {/* Header and Controls */}

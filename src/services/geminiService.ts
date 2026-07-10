@@ -91,6 +91,61 @@ export const getXpandInstructions = (xpandPresets?: XpandPreset[]): string => {
     When giving parameter adjustments for Xpand!2, you MUST format the Smart Knob values correctly.
     The 6 Smart Knobs dynamically map to different parameters depending on the selected preset. While they often map to (Attack, Decay, Release, Cutoff, Env Depth, Fine Tune), they may also map to other synthesis parameters like FM Level, Vibrato, Wah, Filter Q, etc. Use the appropriate parameter name for the specific preset if you know it, otherwise use the standard 6.
     The values can include negative numbers (e.g., -50, +30) depending on the specific parameter and how it scales. Use appropriate values as seen in the plugin.
+
+    XPAND!2 FX1 AND FX2 ALGORITHM SELECTOR & PARAMETERS:
+    Xpand!2 has two independent global FX processors (FX1 and FX2). When recommending effects for Xpand!2 instrument parts, you MUST choose from the exact algorithms listed below:
+    
+    1. REVERBS:
+       - "hall", "soft hall", "bright hall", "predelay hall", "dense hall"
+         (Primary parameters: Decay/Time, Pre-Delay, High Cut, Mix)
+       - "room", "soft room", "bright room", "predelay room", "dense room"
+         (Primary parameters: Time, Pre-Delay, High Cut, Mix)
+       - "plate", "soft plate", "bright plate", "predelay plate", "dense plate"
+         (Primary parameters: Decay/Time, Pre-Delay, High Cut, Mix)
+       - "cho+rev", "cho+rev soft", "cho+rev bright"
+         (Primary parameters: Decay/Time, Chorus Rate, Chorus Depth, Mix)
+       - "non-linear" (Primary parameters: Time/Gate Size, Diffusion, High Cut, Mix)
+       - "reverse reverb" (Primary parameters: Time, Feedback, High Cut, Mix)
+       - "early reflections" (Primary parameters: Reflections Size, Density, Tone, Mix)
+       - "drum room" (Primary parameters: Decay/Size, Pre-Delay, High Cut, Mix)
+       - "club" (Primary parameters: Decay/Time, Pre-Delay, High Cut, Mix)
+       - "overheads" (Primary parameters: Decay/Time, Pre-Delay, High Cut, Mix)
+       - "stadium" (Primary parameters: Decay/Time, Pre-Delay, High Cut, Mix)
+       - "flapper" (Primary parameters: Time, Feedback, Tone, Mix)
+       - "close" (Primary parameters: Size, Pre-Delay, High Cut, Mix)
+       - "resonators" (Primary parameters: Resonance Tone, Decay/Feedback, High Cut, Mix)
+
+    2. DELAYS:
+       - "delay" (Primary parameters: Time [sync], Feedback, High Cut, Mix)
+       - "lofi delay" (Primary parameters: Time [sync], Feedback, Bitcrush/Decimate, Mix)
+       - "stereo delay" (Primary parameters: Time L [sync], Time R [sync], Feedback, Mix)
+       - "lofi stereo delay" (Primary parameters: Time L [sync], Time R [sync], Grime/Crush, Mix)
+       - "pingpong" (Primary parameters: Time [sync], Feedback, Stereo Width, Mix)
+       - "lofi pingpong" (Primary parameters: Time [sync], Feedback, Tape Distortion, Mix)
+       - "gallop echo" (Primary parameters: Time [sync], Pattern Intensity, Feedback, Mix)
+       - "tape echo" (Primary parameters: Time [sync], Feedback, Wow & Flutter, Mix)
+       - "ducking delay" (Primary parameters: Time [sync], Feedback, Ducking Threshold, Mix)
+       - "cloud delay" (Primary parameters: Time [sync], Cloud Diffusion, Feedback, Mix)
+       - "chaos delay" (Primary parameters: Time [sync], Chaos Rate, Instability, Mix)
+
+    3. MODULATION:
+       - "chorus" (Primary parameters: Rate, Depth, Feedback, Mix)
+       - "rich chorus" (Primary parameters: Rate, Depth, Voices, Mix)
+       - "ensemble" (Primary parameters: Rate, Width/Depth, Color, Mix)
+       - "space chorus" (Primary parameters: Rate, Depth, Width, Mix)
+       - "quad chorus" (Primary parameters: Rate, Depth, Feedback, Mix)
+       - "voice mod" (Primary parameters: Rate, Depth, Delay Offset, Mix)
+       - "phase" (Primary parameters: Rate, Depth, Feedback, Mix)
+       - "bi-phase" (Primary parameters: Rate L/R, Sweep Depth, Feedback, Mix)
+       - "deep phaser" (Primary parameters: Rate, Depth, Resonance, Mix)
+       - "flanger" (Primary parameters: Rate, Depth, Feedback, Mix)
+
+    4. OTHER:
+       - "detune" (Primary parameters: Detune Amount, Delay Offset, Tone, Mix)
+       - "pitch shift" (Primary parameters: Pitch, Fine Tune, Feedback, Mix)
+
+    CRITICAL RECO_FLOW REQUIREMENT:
+    When you suggest FX1/FX2, specify the exact algorithm name from the list above, explain why that algorithm is perfect for the preset, and provide the exact values for its primary parameters.
   `;
 
   return formatted;
