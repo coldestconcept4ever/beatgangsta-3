@@ -22,6 +22,13 @@ interface DrumPatternDisplayProps {
   dawType?: string | null;
   recipeTitle?: string;
   bpm?: number;
+  detectedSectionLengths?: {
+    intro?: number;
+    verse?: number;
+    hook?: number;
+    bridge?: number;
+    outro?: number;
+  };
 }
 
 const StepGrid = ({ steps = [], totalSteps, label, color, textColor, showVelocity, swing = 0, showSwingView }: { steps?: (number | { step: number, velocity: number })[], totalSteps: number, label: string, color: string, textColor: string, showVelocity?: boolean, swing?: number, showSwingView?: boolean }) => {
@@ -147,7 +154,7 @@ const SwingMeter = ({ label, percentage, colorClass }: { label: string, percenta
   );
 };
 
-export const DrumPatternDisplay: React.FC<DrumPatternDisplayProps> = ({ patterns, theme, dawType, recipeTitle = 'Beat', bpm = 120 }) => {
+export const DrumPatternDisplay: React.FC<DrumPatternDisplayProps> = ({ patterns, theme, dawType, recipeTitle = 'Beat', bpm = 120, detectedSectionLengths }) => {
   const { t } = useTranslation();
   const [activeSection, setActiveSection] = useState<keyof typeof patterns>('hook');
   const [localToggles, setLocalToggles] = useState<Record<string, { velocity: boolean, swingView: boolean }>>({});
@@ -211,8 +218,12 @@ export const DrumPatternDisplay: React.FC<DrumPatternDisplayProps> = ({ patterns
     }));
   };
 
+  const activeSectionBars = detectedSectionLengths?.[activeSection] !== undefined
+    ? detectedSectionLengths[activeSection]!
+    : finalBars;
+
   const getDrumMidiBaseData = () => {
-    return generateDrumMidiBaseData(currentPattern, recipeTitle, activeSection, bpm, currentToggles.velocity, 4);
+    return generateDrumMidiBaseData(currentPattern, recipeTitle, activeSection, bpm, currentToggles.velocity, activeSectionBars as any);
   };
 
   const handlePlay = () => {
@@ -241,8 +252,29 @@ export const DrumPatternDisplay: React.FC<DrumPatternDisplayProps> = ({ patterns
       const pattern = patterns[section];
       if (!pattern) continue;
 
-      const midiBytes = generateDrumMidiBaseData(pattern, recipeTitle, section as string, bpm, pattern.velocityHumanized || false, 4);
-      const fileName = `${recipeTitle.replace(/\s+/g, '_')}_${String(section)}_Drums_${bpm}BPM.${extension}`;
+      let sBars = 4;
+      const sCheckMaxBars = (part: any) => {
+        if (!part || !Array.isArray(part.steps)) return;
+        const stepsPerBar = getStepsPerBar(part.isDoubleTime);
+        part.steps.forEach((s: any) => {
+          const stepNum = typeof s === 'number' ? s : s.step;
+          const b = Math.ceil(stepNum / stepsPerBar);
+          if (b > sBars) sBars = b;
+        });
+      };
+      sCheckMaxBars(pattern.kick);
+      sCheckMaxBars(pattern.snare);
+      sCheckMaxBars(pattern.hiHat);
+      sCheckMaxBars(pattern.openHat);
+      sCheckMaxBars(pattern.perc);
+      sCheckMaxBars(pattern.cymbal);
+
+      const sectionBars = detectedSectionLengths?.[section] !== undefined
+        ? detectedSectionLengths[section]!
+        : sBars;
+
+      const midiBytes = generateDrumMidiBaseData(pattern, recipeTitle, section as string, bpm, pattern.velocityHumanized || false, sectionBars as any);
+      const fileName = `${recipeTitle.replace(/\s+/g, '_')}_${String(section)}_Drums_${sectionBars}Bar_${bpm}BPM.${extension}`;
       
       zip.file(fileName, midiBytes);
     }

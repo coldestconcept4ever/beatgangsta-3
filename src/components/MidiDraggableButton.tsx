@@ -62,7 +62,8 @@ export const MidiDraggableButton: React.FC<MidiDraggableButtonProps> = ({
       const midiBytes = write.buildFile();
       
       const extension = 'mid';
-      const fileName = `${recipeTitle.replace(/\s+/g, '_')}_${instrument.replace(/\s+/g, '_')}_${bars}Bar_${variation}_${bpm}BPM.${extension}`;
+      const sectionSuffix = activeSection ? `${activeSection.charAt(0).toUpperCase() + activeSection.slice(1)}_` : '';
+      const fileName = `${recipeTitle.replace(/\s+/g, '_')}_${instrument.replace(/\s+/g, '_')}_${sectionSuffix}${bars}Bar_${variation}_${bpm}BPM.${extension}`;
       
       let downloadUrl: string;
       let mimeType: string;
@@ -183,7 +184,7 @@ export const MidiDraggableButton: React.FC<MidiDraggableButtonProps> = ({
         title={t('download_midi_title', { bars, variation, instrument })}
       >
         <Music className="w-3 h-3" />
-        <span>{bars} {t('bar_label')} {variation}</span>
+        <span>{activeSection ? `${activeSection.toUpperCase()} (${bars}B)` : `${bars} ${t('bar_label')} ${variation}`}</span>
       </button>
     </div>
       <ErrorModal

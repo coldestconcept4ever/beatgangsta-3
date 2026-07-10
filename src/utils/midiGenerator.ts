@@ -4,7 +4,7 @@ import { DrumPattern, MidiNote } from '../types';
 // Dynamic import for JSZip
 const getJSZip = () => import('jszip').then(m => m.default);
 
-export type PatternLength = 4 | 8 | 16 | 32 | 64;
+export type PatternLength = number;
 export type PatternVariation = 'A' | 'B';
 
 export const generateDrumMidiBaseData = (

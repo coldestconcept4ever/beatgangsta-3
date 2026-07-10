@@ -1059,10 +1059,39 @@ export const RecipeCard: React.FC<RecipeCardProps> = ({ recipe: initialRecipe, i
                 <div className="mb-4">
                   <h5 className="text-[8px] font-black uppercase tracking-widest opacity-60 mb-2">{t('drag_midi')}</h5>
                   <div className="flex flex-wrap gap-2">
-                    <MidiDraggableButton instrument={track.name} loopGuide={track.loopGuide || ''} bpm={recipe.bpm} bars={4} variation="A" recipeTitle={recipe.title} theme={theme} dawType={dawType} midiNotes={track.midiNotes} />
-                    <MidiDraggableButton instrument={track.name} loopGuide={track.loopGuide || ''} bpm={recipe.bpm} bars={4} variation="B" recipeTitle={recipe.title} theme={theme} dawType={dawType} midiNotes={track.midiNotes} />
-                    <MidiDraggableButton instrument={track.name} loopGuide={track.loopGuide || ''} bpm={recipe.bpm} bars={8} variation="A" recipeTitle={recipe.title} theme={theme} dawType={dawType} midiNotes={track.midiNotes} />
-                    <MidiDraggableButton instrument={track.name} loopGuide={track.loopGuide || ''} bpm={recipe.bpm} bars={8} variation="B" recipeTitle={recipe.title} theme={theme} dawType={dawType} midiNotes={track.midiNotes} />
+                    {recipe.detectedSectionLengths ? (
+                      Object.entries(recipe.detectedSectionLengths).map(([section, bars]) => {
+                        let hasNotes = false;
+                        if (Array.isArray(track.midiNotes)) {
+                          hasNotes = section === 'hook';
+                        } else if (track.midiNotes && typeof track.midiNotes === 'object') {
+                          hasNotes = !!(track.midiNotes as any)[section];
+                        }
+                        if (!hasNotes) return null;
+                        return (
+                          <MidiDraggableButton 
+                            key={section}
+                            instrument={track.name} 
+                            loopGuide={track.loopGuide || ''} 
+                            bpm={recipe.bpm} 
+                            bars={bars as any} 
+                            variation="A" 
+                            activeSection={section}
+                            recipeTitle={recipe.title} 
+                            theme={theme} 
+                            dawType={dawType} 
+                            midiNotes={track.midiNotes} 
+                          />
+                        );
+                      })
+                    ) : (
+                      <>
+                        <MidiDraggableButton instrument={track.name} loopGuide={track.loopGuide || ''} bpm={recipe.bpm} bars={4} variation="A" recipeTitle={recipe.title} theme={theme} dawType={dawType} midiNotes={track.midiNotes} />
+                        <MidiDraggableButton instrument={track.name} loopGuide={track.loopGuide || ''} bpm={recipe.bpm} bars={4} variation="B" recipeTitle={recipe.title} theme={theme} dawType={dawType} midiNotes={track.midiNotes} />
+                        <MidiDraggableButton instrument={track.name} loopGuide={track.loopGuide || ''} bpm={recipe.bpm} bars={8} variation="A" recipeTitle={recipe.title} theme={theme} dawType={dawType} midiNotes={track.midiNotes} />
+                        <MidiDraggableButton instrument={track.name} loopGuide={track.loopGuide || ''} bpm={recipe.bpm} bars={8} variation="B" recipeTitle={recipe.title} theme={theme} dawType={dawType} midiNotes={track.midiNotes} />
+                      </>
+                    )}
                   </div>
                 </div>
               )}
@@ -1426,7 +1455,7 @@ export const RecipeCard: React.FC<RecipeCardProps> = ({ recipe: initialRecipe, i
           <div className={`p-2 sm:p-6 rounded-[2.5rem] border ${
             theme === 'coldest' ? 'bg-black/40 border-sky-500/20 shadow-inner' : 'bg-black/20 border-white/5'
           }`}>
-            <DrumPatternDisplay patterns={recipe.drumPatterns} theme={theme} dawType={dawType} recipeTitle={recipe.title} bpm={recipe.bpm} />
+            <DrumPatternDisplay patterns={recipe.drumPatterns} theme={theme} dawType={dawType} recipeTitle={recipe.title} bpm={recipe.bpm} detectedSectionLengths={recipe.detectedSectionLengths} />
           </div>
         </div>
       )}

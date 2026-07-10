@@ -42,7 +42,9 @@ export const generateIndividualMidiFiles = async (recipe: BeatRecipe): Promise<{
         }
 
         const naturalBars = Math.max(4, Math.round(originalTotalBeats / 4)) as PatternLength;
-        const lengths: PatternLength[] = naturalBars > 8 ? [naturalBars] : [4, 8];
+        const lengths: PatternLength[] = recipe.detectedSectionLengths?.[section] !== undefined
+          ? [recipe.detectedSectionLengths[section]!]
+          : (naturalBars > 8 ? [naturalBars] : [4, 8]);
         const variations: PatternVariation[] = ['A', 'B'];
 
         for (const bars of lengths) {
@@ -96,7 +98,9 @@ export const generateIndividualMidiFiles = async (recipe: BeatRecipe): Promise<{
         checkMaxBars(pattern.kick);
         checkMaxBars(pattern.snare);
         checkMaxBars(pattern.hiHat);
-        const lengths: PatternLength[] = (naturalBars > 8 ? [naturalBars] : [4, 8]) as PatternLength[];
+        const lengths: PatternLength[] = recipe.detectedSectionLengths?.[section] !== undefined
+          ? [recipe.detectedSectionLengths[section]!]
+          : ((naturalBars > 8 ? [naturalBars] : [4, 8]) as PatternLength[]);
 
         for (const humanized of [true, false]) {
           for (const bars of lengths) {
@@ -165,7 +169,9 @@ export const generateAllMidiZip = async (recipe: BeatRecipe, dawType?: string | 
           }
 
           const naturalBars = Math.max(4, Math.round(originalTotalBeats / 4)) as PatternLength;
-          const lengths: PatternLength[] = naturalBars > 8 ? [naturalBars] : [4, 8];
+          const lengths: PatternLength[] = recipe.detectedSectionLengths?.[section] !== undefined
+            ? [recipe.detectedSectionLengths[section]!]
+            : (naturalBars > 8 ? [naturalBars] : [4, 8]);
           const variations: PatternVariation[] = ['A', 'B'];
 
           for (const bars of lengths) {
@@ -213,7 +219,9 @@ export const generateAllMidiZip = async (recipe: BeatRecipe, dawType?: string | 
         checkMaxBars(pattern.kick);
         checkMaxBars(pattern.snare);
         checkMaxBars(pattern.hiHat);
-        const lengths: PatternLength[] = (naturalBars > 8 ? [naturalBars] : [4, 8]) as PatternLength[];
+        const lengths: PatternLength[] = recipe.detectedSectionLengths?.[section] !== undefined
+          ? [recipe.detectedSectionLengths[section]!]
+          : ((naturalBars > 8 ? [naturalBars] : [4, 8]) as PatternLength[]);
 
         for (const humanized of [true, false]) {
           for (const bars of lengths) {
