@@ -22,7 +22,8 @@ export const generateDrumMidiBaseData = (
     shaperboxTension?: number;
     skakaHumanizeAmount?: number;
     flShiftAmount?: number;
-  }
+  },
+  drumsOnlyType?: 'full' | 'kick' | 'snare' | 'hat'
 ): Uint8Array => {
   if (!currentPattern) return new Uint8Array();
   
@@ -236,12 +237,26 @@ export const generateDrumMidiBaseData = (
   };
 
   // General MIDI Drum Map: Kick = 36 (C1), Snare = 38 (D1), Clap = 39 (D#1), Hi-Hat = 42 (F#1)
-  addDrumEvents(kickTrack, currentPattern.kick?.steps || [], 'C1', currentPattern.kick?.isDoubleTime || false, currentPattern.swing?.kick);
-  const snareNote = currentPattern.snare?.isClap ? 'D#1' : 'D1';
-  addDrumEvents(snareTrack, currentPattern.snare?.steps || [], snareNote, currentPattern.snare?.isDoubleTime || false, currentPattern.swing?.snare);
-  addDrumEvents(hatTrack, currentPattern.hiHat?.steps || [], 'F#1', currentPattern.hiHat?.isDoubleTime || false, currentPattern.swing?.hiHat);
+  let tracksToInclude: MidiWriter.Track[] = [];
+  if (drumsOnlyType === 'kick') {
+    addDrumEvents(kickTrack, currentPattern.kick?.steps || [], 'C1', currentPattern.kick?.isDoubleTime || false, currentPattern.swing?.kick);
+    tracksToInclude.push(kickTrack);
+  } else if (drumsOnlyType === 'snare') {
+    const snareNote = currentPattern.snare?.isClap ? 'D#1' : 'D1';
+    addDrumEvents(snareTrack, currentPattern.snare?.steps || [], snareNote, currentPattern.snare?.isDoubleTime || false, currentPattern.swing?.snare);
+    tracksToInclude.push(snareTrack);
+  } else if (drumsOnlyType === 'hat') {
+    addDrumEvents(hatTrack, currentPattern.hiHat?.steps || [], 'F#1', currentPattern.hiHat?.isDoubleTime || false, currentPattern.swing?.hiHat);
+    tracksToInclude.push(hatTrack);
+  } else {
+    addDrumEvents(kickTrack, currentPattern.kick?.steps || [], 'C1', currentPattern.kick?.isDoubleTime || false, currentPattern.swing?.kick);
+    const snareNote = currentPattern.snare?.isClap ? 'D#1' : 'D1';
+    addDrumEvents(snareTrack, currentPattern.snare?.steps || [], snareNote, currentPattern.snare?.isDoubleTime || false, currentPattern.swing?.snare);
+    addDrumEvents(hatTrack, currentPattern.hiHat?.steps || [], 'F#1', currentPattern.hiHat?.isDoubleTime || false, currentPattern.swing?.hiHat);
+    tracksToInclude = [kickTrack, snareTrack, hatTrack];
+  }
 
-  const write = new MidiWriter.Writer([kickTrack, snareTrack, hatTrack]);
+  const write = new MidiWriter.Writer(tracksToInclude);
   return write.buildFile();
 };
 

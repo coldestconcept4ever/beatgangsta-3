@@ -2910,7 +2910,15 @@ export const getBeatRecommendations = async (plugins: VSTPlugin[], analogInstrum
     Focus on modern sub-genres: Melodic Trap, Dark Drill, High-Energy Rage.
     Identify 2-3 mainstream or commonly known artists who would typically use this specific beat type (e.g., "Lil Wayne type", "Travis Scott type").
     Include a recommended BPM, 'recommendedScale', and 'chordProgression'.
-    You MUST provide the 'instruments' array with AT LEAST 3 DISTINCT "REAL" instruments (e.g., synths, pianos, guitars, strings). 
+    You MUST provide the 'instruments' array with EXACTLY 6 DISTINCT INSTRUMENTS/TRACKS (no more, no less). The 6 tracks MUST be:
+      1. A Pad (Melody track, e.g. using Serum, Keyscape, Omnisphere, or Xpand!2)
+      2. A Lead (Melody track, e.g. using Serum, Omnisphere, or Kontakt)
+      3. A Sub Bass or 808 (Bass track, e.g. using SubLab, Serum, or Trilogy)
+      4. A Kick (Drum/Sampler instrument track with exact sampler settings to synthesize/shape a punchy kick)
+      5. A Hi-Hat (Drum/Sampler instrument track with sampler/envelope settings to shape a clean hi-hat)
+      6. A Clap or Snare (Drum/Sampler instrument track with sampler/envelope settings to shape a crispy clap/snare)
+    CRITICAL: Each of these 6 instruments MUST have a minimum of 2 FX plugins in its 'fxPlugins' array (each with full, detailed 'deepDive' parameter lists).
+    CRITICAL: ALL VST INSTRUMENTS AND ALL FX DEEP DIVES MUST HAVE EXHAUSTIVE PARAMETERS WITH ACTUAL REASONABLE NUMERICAL VALUES. Do not give simple or abbreviated settings. For instance, when using SubLab for the sub bass, you MUST provide exhaustive parameter settings for EVERY section of the plugin (Synth Oscillator, Sample Oscillator, Sub Oscillator, Filter, LFO, and Master Pitch/Glide envelopes).
     CRITICAL: NO SHORTCUTS. You MUST provide exhaustive 'fxPlugins' for every instrument, 'midiNotes' for every instrument, full 'drumPatterns', and full 'masterPlugins'. DO NOT skip anything!
     CRITICAL: 808s and Basslines MUST be included in the 'instruments' array with a detailed 'midiNotes' pattern. DO NOT put 808s in 'drumPatterns'.
     CRITICAL: DO NOT use vocals as a main instrument in the 'instruments' array. Vocals MUST be separate.
@@ -3082,7 +3090,15 @@ export const getCustomBeatRecommendations = async (plugins: VSTPlugin[], query: 
     Ensure the recipe captures the signature sound, bounce, and atmospheric elements associated with ${query}.
     Identify 2-3 mainstream or commonly known artists who would typically use this specific beat type.
     Include a recommended BPM, 'recommendedScale', and 'chordProgression' that fits the vibe.
-    You MUST provide the 'instruments' array with AT LEAST 3 DISTINCT "REAL" instruments (e.g., synths, pianos, guitars, strings). 
+    You MUST provide the 'instruments' array with EXACTLY 6 DISTINCT INSTRUMENTS/TRACKS (no more, no less). The 6 tracks MUST be:
+      1. A Pad (Melody track, e.g. using Serum, Keyscape, Omnisphere, or Xpand!2)
+      2. A Lead (Melody track, e.g. using Serum, Omnisphere, or Kontakt)
+      3. A Sub Bass or 808 (Bass track, e.g. using SubLab, Serum, or Trilogy)
+      4. A Kick (Drum/Sampler instrument track with exact sampler settings to synthesize/shape a punchy kick)
+      5. A Hi-Hat (Drum/Sampler instrument track with sampler/envelope settings to shape a clean hi-hat)
+      6. A Clap or Snare (Drum/Sampler instrument track with sampler/envelope settings to shape a crispy clap/snare)
+    CRITICAL: Each of these 6 instruments MUST have a minimum of 2 FX plugins in its 'fxPlugins' array (each with full, detailed 'deepDive' parameter lists).
+    CRITICAL: ALL VST INSTRUMENTS AND ALL FX DEEP DIVES MUST HAVE EXHAUSTIVE PARAMETERS WITH ACTUAL REASONABLE NUMERICAL VALUES. Do not give simple or abbreviated settings. For instance, when using SubLab for the sub bass, you MUST provide exhaustive parameter settings for EVERY section of the plugin (Synth Oscillator, Sample Oscillator, Sub Oscillator, Filter, LFO, and Master Pitch/Glide envelopes).
     CRITICAL: NO SHORTCUTS. You MUST provide exhaustive 'fxPlugins' for every instrument, 'midiNotes' for every instrument, full 'drumPatterns', and full 'masterPlugins'. DO NOT skip anything!
     CRITICAL: 808s and Basslines MUST be included in the 'instruments' array with a detailed 'midiNotes' pattern. DO NOT put 808s in 'drumPatterns'.
     CRITICAL: DO NOT use vocals as a main instrument in the 'instruments' array. Vocals MUST be separate.
@@ -3256,7 +3272,15 @@ export const getSongBeatRecommendations = async (plugins: VSTPlugin[], songQuery
     CRITICAL: You MUST use the blueprint's microTiming, velocityDynamics, chordVoicing, and repetitionStrategy to generate the MIDI notes and drum patterns. This is essential for achieving an iconic, authentic, high-energy, and highly realistic MIDI quality that perfectly encapsulates the requested tracking.
     Identify 2-3 mainstream or commonly known artists who would typically use this specific beat type.
     Include a recommended BPM, 'recommendedScale', and 'chordProgression' that fits the vibe.
-    You MUST provide the 'instruments' array with AT LEAST 3 DISTINCT "REAL" instruments (e.g., synths, pianos, guitars, strings). 
+    You MUST provide the 'instruments' array with EXACTLY 6 DISTINCT INSTRUMENTS/TRACKS (no more, no less). The 6 tracks MUST be:
+      1. A Pad (Melody track, e.g. using Serum, Keyscape, Omnisphere, or Xpand!2)
+      2. A Lead (Melody track, e.g. using Serum, Omnisphere, or Kontakt)
+      3. A Sub Bass or 808 (Bass track, e.g. using SubLab, Serum, or Trilogy)
+      4. A Kick (Drum/Sampler instrument track with exact sampler settings to synthesize/shape a punchy kick)
+      5. A Hi-Hat (Drum/Sampler instrument track with sampler/envelope settings to shape a clean hi-hat)
+      6. A Clap or Snare (Drum/Sampler instrument track with sampler/envelope settings to shape a crispy clap/snare)
+    CRITICAL: Each of these 6 instruments MUST have a minimum of 2 FX plugins in its 'fxPlugins' array (each with full, detailed 'deepDive' parameter lists).
+    CRITICAL: ALL VST INSTRUMENTS AND ALL FX DEEP DIVES MUST HAVE EXHAUSTIVE PARAMETERS WITH ACTUAL REASONABLE NUMERICAL VALUES. Do not give simple or abbreviated settings. For instance, when using SubLab for the sub bass, you MUST provide exhaustive parameter settings for EVERY section of the plugin (Synth Oscillator, Sample Oscillator, Sub Oscillator, Filter, LFO, and Master Pitch/Glide envelopes).
     CRITICAL: 808s and Basslines MUST be included in the 'instruments' array with a detailed 'midiNotes' pattern. DO NOT put 808s in 'drumPatterns'.
     CRITICAL: DO NOT use vocals as a main instrument in the 'instruments' array. Vocals MUST be separate.
     For each instrument:
@@ -3521,7 +3545,15 @@ export const getAudioBeatRecommendations = async (plugins: VSTPlugin[], audioBas
     Ensure the recipe captures the signature sound, instrumentation, and mixing techniques heard in the audio.
     Identify 2-3 mainstream or commonly known artists who would typically use this specific beat type.
     Include a recommended BPM, 'recommendedScale', and 'chordProgression' that fits the vibe.
-    You MUST provide the 'instruments' array with AT LEAST 3 DISTINCT "REAL" instruments (e.g., synths, pianos, guitars, strings). 
+    You MUST provide the 'instruments' array with EXACTLY 6 DISTINCT INSTRUMENTS/TRACKS (no more, no less). The 6 tracks MUST be:
+      1. A Pad (Melody track, e.g. using Serum, Keyscape, Omnisphere, or Xpand!2)
+      2. A Lead (Melody track, e.g. using Serum, Omnisphere, or Kontakt)
+      3. A Sub Bass or 808 (Bass track, e.g. using SubLab, Serum, or Trilogy)
+      4. A Kick (Drum/Sampler instrument track with exact sampler settings to synthesize/shape a punchy kick)
+      5. A Hi-Hat (Drum/Sampler instrument track with sampler/envelope settings to shape a clean hi-hat)
+      6. A Clap or Snare (Drum/Sampler instrument track with sampler/envelope settings to shape a crispy clap/snare)
+    CRITICAL: Each of these 6 instruments MUST have a minimum of 2 FX plugins in its 'fxPlugins' array (each with full, detailed 'deepDive' parameter lists).
+    CRITICAL: ALL VST INSTRUMENTS AND ALL FX DEEP DIVES MUST HAVE EXHAUSTIVE PARAMETERS WITH ACTUAL REASONABLE NUMERICAL VALUES. Do not give simple or abbreviated settings. For instance, when using SubLab for the sub bass, you MUST provide exhaustive parameter settings for EVERY section of the plugin (Synth Oscillator, Sample Oscillator, Sub Oscillator, Filter, LFO, and Master Pitch/Glide envelopes).
     CRITICAL: 808s and Basslines MUST be included in the 'instruments' array with a detailed 'midiNotes' pattern. DO NOT put 808s in 'drumPatterns'.
     CRITICAL: DO NOT use vocals as a main instrument in the 'instruments' array. Vocals MUST be separate.
     For each instrument:

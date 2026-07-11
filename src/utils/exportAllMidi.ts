@@ -192,15 +192,21 @@ export const generateAllMidiZip = async (recipe: BeatRecipe, dawType?: string | 
   }
 
   // 2. Generate Drum MIDI files
-  const drumsFolder = zip.folder('Drums');
-  if (drumsFolder && recipe.drumPatterns) {
+  if (recipe.drumPatterns) {
     const sections = ['intro', 'verse', 'hook', 'bridge', 'outro'] as const;
+    const fullDrumsFolder = zip.folder('Drums/Full_Mix');
+    const kicksFolder = zip.folder('Drums/Kicks');
+    const hatsFolder = zip.folder('Drums/HiHats');
+    const snaresFolder = zip.folder('Drums/Snares_Claps');
     
     for (const section of sections) {
       const pattern = recipe.drumPatterns[section];
       if (pattern) {
         const sectionName = section.charAt(0).toUpperCase() + section.slice(1);
-        const subFolder = drumsFolder.folder(sectionName);
+        const subFolderFull = fullDrumsFolder?.folder(sectionName);
+        const subFolderKicks = kicksFolder?.folder(sectionName);
+        const subFolderHats = hatsFolder?.folder(sectionName);
+        const subFolderSnares = snaresFolder?.folder(sectionName);
         
         // Generate both humanized and non-humanized versions
         
@@ -225,13 +231,35 @@ export const generateAllMidiZip = async (recipe: BeatRecipe, dawType?: string | 
 
         for (const humanized of [true, false]) {
           for (const bars of lengths) {
+            const humanizedSuffix = humanized ? '_Humanized' : '';
 
-            const midiBytes = generateDrumMidiBaseData(pattern, recipe.title, section, bpm, humanized, bars);
-            if (midiBytes && midiBytes.length > 0) {
-              const humanizedSuffix = humanized ? '_Humanized' : '';
-              const fileName = `${safeTitle}_${section}_Drums${humanizedSuffix}_${bars}Bar_${bpm}BPM.${extension}`;
-              
-              subFolder?.file(fileName, midiBytes);
+            // 1) Full Mix
+            const midiBytesFull = generateDrumMidiBaseData(pattern, recipe.title, section, bpm, humanized, bars, undefined, 'full');
+            if (midiBytesFull && midiBytesFull.length > 0) {
+              const fileName = `${safeTitle}_${section}_FullDrums${humanizedSuffix}_${bars}Bar_${bpm}BPM.${extension}`;
+              subFolderFull?.file(fileName, midiBytesFull);
+            }
+
+            // 2) Kicks Only
+            const midiBytesKick = generateDrumMidiBaseData(pattern, recipe.title, section, bpm, humanized, bars, undefined, 'kick');
+            if (midiBytesKick && midiBytesKick.length > 0) {
+              const fileName = `${safeTitle}_${section}_Kick${humanizedSuffix}_${bars}Bar_${bpm}BPM.${extension}`;
+              subFolderKicks?.file(fileName, midiBytesKick);
+            }
+
+            // 3) Hats Only
+            const midiBytesHat = generateDrumMidiBaseData(pattern, recipe.title, section, bpm, humanized, bars, undefined, 'hat');
+            if (midiBytesHat && midiBytesHat.length > 0) {
+              const fileName = `${safeTitle}_${section}_Hat${humanizedSuffix}_${bars}Bar_${bpm}BPM.${extension}`;
+              subFolderHats?.file(fileName, midiBytesHat);
+            }
+
+            // 4) Snares Only
+            const midiBytesSnare = generateDrumMidiBaseData(pattern, recipe.title, section, bpm, humanized, bars, undefined, 'snare');
+            if (midiBytesSnare && midiBytesSnare.length > 0) {
+              const snareType = pattern.snare?.isClap ? 'Clap' : 'Snare';
+              const fileName = `${safeTitle}_${section}_${snareType}${humanizedSuffix}_${bars}Bar_${bpm}BPM.${extension}`;
+              subFolderSnares?.file(fileName, midiBytesSnare);
             }
           }
         }
