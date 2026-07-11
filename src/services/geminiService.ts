@@ -725,7 +725,13 @@ const ADVANCED_MIDI_PROMPT = `
     CRITICAL - HIGHLY CREATIVE & ENJOYABLE MIDI PATTERNS (ANTI-PLAIN SLOP):
     - You are strictly FORBIDDEN from generating simple, repetitive, or boring 2-note/4-note placeholders. 
     - You MUST generate fully articulated, expressive, and enjoyable patterns with beautiful melody, bounce, syncopation, and chord movement that matches top-tier human musicianship.
-    - Melodies & Lead Arps: Provide at least 15-40 notes with rich variety in pitch, syncopation, and phrase movement over the 4/8 bar structure. Let the melody rise, fall, and transition beautifully.
+    - **MANDATORY UNIQUE SECTION ARRANGEMENTS**: You are STRICTLY FORBIDDEN from repeating or copying the same MIDI notes or drum step patterns across multiple sections. Every single section (Intro, Verse, Hook, Bridge, Outro) MUST have a completely unique, distinct, and highly customized pattern written from scratch specifically for its unique musical function:
+      1. **Intro**: Sparse, atmospheric, and tension-building. Fewer active instruments, lighter percussion, simplified chords, or soft swelling pads that build excitement and build up directly to the Hook or Verse.
+      2. **Verse**: Driving, clean, and rhythmically steady. It MUST be easy to sing or rap over! Avoid busy mid-range melodies or overly complex lead lines that conflict with a vocalist. Keep the groove deep, stable, and supportive.
+      3. **Hook (Chorus)**: Maximum energy, full instrumentation, and unforgettable catchiness! This is the peak of the track. Use lush, fully voiced chords, memorable earworm lead arps/melodies, aggressive kicks/snares, and maximum syncopation/swing.
+      4. **Bridge**: High tension, suspense, and dynamic contrast. Introduce unexpected chord modulations, change up the rhythm, or filter out key elements to create a dramatic build-up that explodes or perfectly resolves back into the final Hook.
+      5. **Outro**: A smooth, elegant comedown or fade-out. Gradually thin out the instrumentation, reduce drum velocities, resolve the final chord progression, and let sustaining notes ring out.
+    - Melodies & Lead Arps: Provide at least 15-40 notes with rich variety in pitch, syncopation, and phrase movement over the section bar structure. Let the melody rise, fall, and transition beautifully.
     - Chord Progressions: Provide at least 8-20 rich, lush chords (incorporating suspended, minor/major 9ths, add9, 11th, and inverted voicings) to create emotional depth instead of flat triads.
     - Basslines & 808s: Provide at least 15-30 notes featuring glides, slides, syncopated rhythms, octave jumps, and dynamic turnarounds that interact flawlessly with the kick.
     - If the user requested a specific song or provided a reference URL, the MIDI notes MUST meticulously recreate the EXACT iconic melodies, rhythms, chords, and basslines of that song note-for-note and perfectly match the movement.
