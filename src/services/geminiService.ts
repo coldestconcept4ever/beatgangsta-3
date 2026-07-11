@@ -676,8 +676,9 @@ const getSimplifiedJSFXDatabase = (installedJsfxPacks: string[], starredPlugins:
 
 const ADVANCED_MIDI_PROMPT = `
     CRITICAL - ADVANCED MIDI & DRUM PATTERN GENERATION:
-    Always include decent, best-in-class, highly engaging, and beautiful patterns instead of sometimes leaving them simple or repetitive, so users are excited to load them into their DAW.
-    - **CRITICAL COMPUTE DIRECTIVE**: You MUST spend maximum compute and reasoning capacity on the MIDI generation. Do not rush. Meticulously recreate the exact iconic melodies, rhythms, chords, and basslines of the reference track, note-for-note. Every single MIDI pattern MUST be perfectly transcribed from the source.
+    - **TAKE YOUR ABSOLUTE TIME (MANDATORY)**: You MUST spend maximum compute and reasoning capacity on the MIDI generation. Do not rush. The user fully expects a longer wait time for these generated results to ensure maximum quality and musical depth. Every single MIDI section (Intro, Verse, Hook, Bridge, Outro) and drum pattern MUST be meticulously double-checked and verified by you (the AI) before returning the JSON to ensure that it is fully complete, detailed, complex, and musical. Under no circumstances should you output unfinished, basic, or abbreviated midi notes or oversimplified placeholders.
+    - Always include decent, best-in-class, highly engaging, and beautiful patterns instead of sometimes leaving them simple or repetitive, so users are excited to load them into their DAW.
+    - **CRITICAL COMPUTE DIRECTIVE**: Meticulously recreate the exact iconic melodies, rhythms, chords, and basslines of the reference track, note-for-note. Every single MIDI pattern MUST be perfectly transcribed from the source.
     
     CRITICAL - ZERO BLANK PARAMETERS IN VSTS & PLUGINS (ABSOLUTE DIRECTIVE):
     - EVERY SINGLE virtual instrument (VST) and FX plugin recommended in the recipe MUST have its "deepDive" array fully populated.
@@ -769,10 +770,10 @@ const ADVANCED_MIDI_PROMPT = `
 `;
 const PRO_Q_3_LAYOUT_PROMPT = `
     CRITICAL - FABFILTER PRO-Q 3 LAYOUT & COMPLEXITY:
-    When suggesting settings for FabFilter Pro-Q 3, you MUST ALWAYS provide at least 6 processing bands. 
-    Every Pro-Q 3 suggestion MUST include a minimum of 6 bands in the 'deepDive' section.
-    AT LEAST 2 of those bands MUST be dynamic bands (Dynamic: On, with a Range value).
-    You MUST use the following EXACT layout for the 'deepDive' section for each of those 6+ bands, ensuring each parameter is labeled for readability:
+    When suggesting settings for FabFilter Pro-Q 3, you MUST ALWAYS provide exactly 6 bands in the 'deepDive' section. 
+    Every Pro-Q 3 suggestion MUST include exactly 6 bands in total (no more, no less) in the 'deepDive' section.
+    AT LEAST 1 of those bands MUST be a dynamic band (Dynamic: On, with a Range value). This is a strict requirement to make sure the sound matches the song uploaded in slot 1 and sounds spectacular on target track 2.
+    You MUST use the following EXACT layout for the 'deepDive' section for each of those 6 bands, ensuring each parameter is labeled for readability:
     Layout Structure (Example for each band):
     - Low End Band: [Freq: 45Hz, Gain: 0.0dB, Type: Low Cut, Slope: 12dB/oct, Q: 0.70, Stereo: Stereo, Dynamic: Off]
     - Band 1-6: [Freq: 250Hz, Gain: -2.5dB, Type: Bell, Slope: 12dB/oct, Q: 1.0, Stereo: Stereo, Dynamic: On, Range: -3.0dB]
