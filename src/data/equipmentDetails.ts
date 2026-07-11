@@ -184,7 +184,73 @@ export const equipmentDetails: Record<string, string> = {
   "AstroLab": "A stage keyboard that combines a vast library of sounds with an intuitive, performance-focused interface.",
   "Summit": "A 16-voice polyphonic synthesizer with a powerful sound engine and a premium keyboard.",
   "Peak": "A desktop polyphonic synthesizer with a hybrid analog/digital sound engine.",
-  "Bass Station II": "A monophonic analog synthesizer with a powerful sound and a versatile feature set.",
+  "Bass Station II": `A legendary monophonic analog synthesizer with a pure, heavy analog sound and exhaustive parameter control.
+
+--- ENGINE ARCHITECTURE & PARAMETERS ---
+
+[OSCILLATORS (Pure Analog Signal Path)]
+- Osc 1 Octave (Range): CC 16 (Val: 0 = 16', 1 = 8', 2 = 4', 3 = 2')
+- Osc 1 Coarse Pitch: CC 17 (Val: 0 to 127 | -12 to +12 Semitones, Center: 64)
+- Osc 1 Fine Pitch: CC 18 (Val: 0 to 127 | -50 to +50 Cents, Center: 64)
+- Osc 1 Waveform: CC 19 (Val: 0 = Sine, 1 = Triangle, 2 = Sawtooth, 3 = Pulse)
+- Osc 1 Pulse Width: CC 20 (Val: 0 to 127 | 5% to 50% duty cycle)
+- Osc 2 Octave (Range): CC 24 (Val: 0 = 16', 1 = 8', 2 = 4', 3 = 2')
+- Osc 2 Coarse Pitch: CC 25 (Val: 0 to 127 | -12 to +12 Semitones, Center: 64)
+- Osc 2 Fine Pitch: CC 26 (Val: 0 to 127 | -50 to +50 Cents, Center: 64)
+- Osc 2 Waveform: CC 27 (Val: 0 = Sine, 1 = Triangle, 2 = Sawtooth, 3 = Pulse)
+- Osc 2 Pulse Width: CC 28 (Val: 0 to 127 | 5% to 50% duty cycle)
+- Osc 1 & 2 Sync: CC 112 (Val: 0 = Off, 127 = On)
+
+[SUB-OSCILLATOR & NOISE]
+- Sub Osc Octave: CC 29 (Val: 0 = -1 Octave, 1 = -2 Octaves)
+- Sub Osc Waveform: CC 30 (Val: 0 = Sine, 1 = Narrow Pulse, 2 = Square)
+- Noise Generator: White Noise source.
+
+[ANALOG PRE-FILTER MIXER]
+- Osc 1 Level: CC 33 (Val: 0 to 127)
+- Osc 2 Level: CC 34 (Val: 0 to 127)
+- Sub Osc Level: CC 35 (Val: 0 to 127)
+- Noise Level: CC 36 (Val: 0 to 127)
+- Ring Modulation Level: CC 37 (Val: 0 to 127)
+- External Input / Feedback Level: CC 38 (Val: 0 to 127)
+
+[FILTER SECTION]
+- Filter Cutoff (Frequency): CC 16 (7-bit) or High-Res 14-bit CC 16 (MSB) + CC 48 (LSB) (Val: 0 to 127)
+- Filter Resonance: CC 82 (7-bit) or High-Res 14-bit CC 82 (MSB) + CC 114 (LSB) (Val: 0 to 127)
+- Filter Slope (Type): CC 83 (Val: 0 = 12dB/oct, 127 = 24dB/oct)
+- Filter Shape (Mode): CC 84 (Val: 0 = Low Pass, 1 = Band Pass, 2 = High Pass)
+- Filter Class Select: CC 85 (Val: 0 = Classic, 127 = Acid Diode-Ladder)
+- Filter Overdrive (Pre-Filter Drive): CC 86 (Val: 0 to 127)
+- Filter Mod Env 2 Depth: CC 87 (Val: 0 to 127 | Bi-polar -64 to +63, Center: 64)
+- Filter LFO 1 Depth: CC 88 (Val: 0 to 127 | Bi-polar -64 to +63, Center: 64)
+
+[ENVELOPES (ADSR)]
+- Amp Env Attack (Env 1): CC 90 (Val: 0 to 127 | 1ms to 10s)
+- Amp Env Decay (Env 1): CC 91 (Val: 0 to 127 | 1ms to 10s)
+- Amp Env Sustain (Env 1): CC 92 (Val: 0 to 127 | Level: Off to Max)
+- Amp Env Release (Env 1): CC 93 (Val: 0 to 127 | 1ms to 10s)
+- Amp Env Trigger Mode: CC 95 (Val: 0 = Single, 1 = Multi, 2 = Autoglide)
+- Mod Env Attack (Env 2): CC 102 (Val: 0 to 127 | 1ms to 10s)
+- Mod Env Decay (Env 2): CC 103 (Val: 0 to 127 | 1ms to 10s)
+- Mod Env Sustain (Env 2): CC 104 (Val: 0 to 127)
+- Mod Env Release (Env 2): CC 105 (Val: 0 to 127 | 1ms to 10s)
+- Mod Env Trigger Mode: CC 107 (Val: 0 = Single, 1 = Multi, 2 = Autoglide)
+
+[LFOs (Dual Low Frequency Oscillators)]
+- LFO 1 Rate (Speed): CC 75 (Val: 0 to 127 | 0Hz to 190Hz)
+- LFO 1 Waveform: CC 76 (Val: 0 = Triangle, 1 = Sawtooth, 2 = Square, 3 = Sample & Hold)
+- LFO 1 Delay: CC 77 (Val: 0 to 127)
+- LFO 1 Slew (Smoothing): CC 78 (Val: 0 to 127)
+- LFO 2 Rate (Speed): CC 79 (Val: 0 to 127 | 0Hz to 190Hz)
+- LFO 2 Waveform: CC 80 (Val: 0 = Triangle, 1 = Sawtooth, 2 = Square, 3 = Sample & Hold)
+- LFO 2 Delay: CC 81 (Val: 0 to 127)
+- LFO 2 Slew (Smoothing): CC 111 (Val: 0 to 127)
+
+[ANALOG POST-FILTER EFFECTS]
+- Analog Distortion (Master Saturation): CC 89 (Val: 0 to 127)
+- Osc Filter Mod (FM modulation of cutoff): CC 115 (Val: 0 to 127)
+- Master Volume: CC 7 (Val: 0 to 127)
+- Portamento (Glide) Time: CC 5 (Val: 0 to 127)`,
   "MiniNova": "A compact and affordable synthesizer with a powerful sound engine and a built-in vocoder.",
   "UltraNova": "A powerful synthesizer with a wide range of sound design possibilities and a built-in audio interface.",
   "Supernova": "A classic virtual analog synthesizer from the '90s, known for its powerful sound and multi-timbral capabilities.",

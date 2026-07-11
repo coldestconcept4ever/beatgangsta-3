@@ -536,5 +536,59 @@ export const getVendorSpecificParameters = (vendor: string, name: string): strin
     return ['Oscillator 1/2/3', 'Filter Cutoff', 'Resonance', 'LFO Rate', 'Envelope Amount', 'Effects'];
   }
 
+  if (v.includes('novation')) {
+    if (n.includes('bass station')) {
+      return [
+        'Osc 1 Range (16\', 8\', 4\', 2\' | CC 16)',
+        'Osc 1 Coarse Pitch (-12 to +12 semitones | CC 17, center 64)',
+        'Osc 1 Fine Pitch (-50 to +50 cents | CC 18, center 64)',
+        'Osc 1 Waveform (Sine, Triangle, Saw, Pulse | CC 19)',
+        'Osc 1 Pulse Width (0 to 127 | CC 20)',
+        'Osc 2 Range (16\', 8\', 4\', 2\' | CC 24)',
+        'Osc 2 Coarse Pitch (-12 to +12 semitones | CC 25, center 64)',
+        'Osc 2 Fine Pitch (-50 to +50 cents | CC 26, center 64)',
+        'Osc 2 Waveform (Sine, Triangle, Saw, Pulse | CC 27)',
+        'Osc 2 Pulse Width (0 to 127 | CC 28)',
+        'Osc 1 to 2 Sync (Off/On | CC 112)',
+        'Sub Osc Range (-1 / -2 Octaves | CC 29)',
+        'Sub Osc Waveform (Sine, Narrow Pulse, Square | CC 30)',
+        'Mixer Osc 1 Level (0 to 127 | CC 33)',
+        'Mixer Osc 2 Level (0 to 127 | CC 34)',
+        'Mixer Sub Osc Level (0 to 127 | CC 35)',
+        'Mixer Noise Level (0 to 127 | CC 36)',
+        'Mixer Ring Mod Level (0 to 127 | CC 37)',
+        'Mixer Ext/Feedback Level (0 to 127 | CC 38)',
+        'Filter Cutoff (0 to 127 | CC 16, 14-bit CC 16/48)',
+        'Filter Resonance (0 to 127 | CC 82, 14-bit CC 82/114)',
+        'Filter Slope (12dB / 24dB per octave | CC 83)',
+        'Filter Shape (Low Pass, Band Pass, High Pass | CC 84)',
+        'Filter Class (Classic, Acid | CC 85)',
+        'Filter Overdrive (Pre-Filter Drive: 0 to 127 | CC 86)',
+        'Filter Mod Env Depth (Bi-polar -64 to +63 | CC 87, center 64)',
+        'Filter LFO 1 Depth (Bi-polar -64 to +63 | CC 88, center 64)',
+        'Amp Env Attack (0 to 127 | CC 90)',
+        'Amp Env Decay (0 to 127 | CC 91)',
+        'Amp Env Sustain (0 to 127 | CC 92)',
+        'Amp Env Release (0 to 127 | CC 93)',
+        'Mod Env Attack (0 to 127 | CC 102)',
+        'Mod Env Decay (0 to 127 | CC 103)',
+        'Mod Env Sustain (0 to 127 | CC 104)',
+        'Mod Env Release (0 to 127 | CC 105)',
+        'Amp Env Trigger Mode (Single, Multi, Autoglide | CC 95)',
+        'Mod Env Trigger Mode (Single, Multi, Autoglide | CC 107)',
+        'LFO 1 Rate (0 to 127 | CC 75)',
+        'LFO 1 Waveform (Triangle, Saw, Square, S&H | CC 76)',
+        'LFO 1 Delay (0 to 127 | CC 77)',
+        'LFO 1 Slew (0 to 127 | CC 78)',
+        'LFO 2 Rate (0 to 127 | CC 79)',
+        'LFO 2 Waveform (Triangle, Saw, Square, S&H | CC 80)',
+        'LFO 2 Delay (0 to 127 | CC 81)',
+        'LFO 2 Slew (0 to 127 | CC 111)',
+        'Effects Analog Distortion (0 to 127 | CC 89)',
+        'Effects Osc Filter Mod (FM modulation: 0 to 127 | CC 115)'
+      ];
+    }
+  }
+
   return [];
 };
