@@ -4723,6 +4723,34 @@ if (process.env.NODE_ENV !== 'production') {
     }
   });
 
+  app.post("/api/pdf/upload-chunk", express.raw({ type: 'application/octet-stream', limit: '100mb' }), async (req, res) => {
+    const { fileName, chunkIndex, totalChunks, sessionId } = req.query;
+    const chunkData = req.body;
+
+    if (!fileName || !chunkIndex || !totalChunks || !sessionId) {
+      return res.status(400).json({ error: "Missing upload parameters" });
+    }
+
+    const tempFilePath = path.join(os.tmpdir(), `pdfsplit-${sessionId}-${fileName}`);
+    try {
+      fs.appendFileSync(tempFilePath, chunkData);
+      
+      const chunkIdxNum = parseInt(chunkIndex as string);
+      const totalChunksNum = parseInt(totalChunks as string);
+      const isLastChunk = chunkIdxNum === totalChunksNum - 1;
+
+      if (isLastChunk) {
+        return res.json({ success: true, completed: true, tempFilePath });
+      } else {
+        return res.json({ success: true, completed: false });
+      }
+    } catch (err: any) {
+      console.error("PDF chunk upload failed:", err);
+      try { fs.unlinkSync(tempFilePath); } catch (e) {}
+      return res.status(500).json({ error: "Chunk upload failed", details: err.message || String(err) });
+    }
+  });
+
   app.post("/api/pdf/split-analyse", async (req, res) => {
     // Increase timeout for long-running AI generations
     req.setTimeout(600000); // 10 minutes
@@ -4736,13 +4764,17 @@ if (process.env.NODE_ENV !== 'production') {
       return res.status(401).json({ error: "Unauthorized access" });
     }
 
-    const { pdfBase64, userPrompt } = req.body;
-    if (!pdfBase64) {
-      return res.status(400).json({ error: "Missing pdfBase64 data" });
+    const { tempFilePath, userPrompt } = req.body;
+    if (!tempFilePath) {
+      return res.status(400).json({ error: "Missing tempFilePath data" });
     }
 
     try {
-      const pdfBuffer = Buffer.from(pdfBase64, 'base64');
+      if (!fs.existsSync(tempFilePath)) {
+        return res.status(400).json({ error: "Uploaded file not found or expired." });
+      }
+
+      const pdfBuffer = fs.readFileSync(tempFilePath);
 
       // 1. Extract text page-by-page
       const pdfParseImport = await import("pdf-parse") as any;
@@ -4775,12 +4807,14 @@ if (process.env.NODE_ENV !== 'production') {
       pages.sort((a, b) => a.pageNum - b.pageNum);
 
       if (pages.length === 0) {
+        try { fs.unlinkSync(tempFilePath); } catch (e) {}
         return res.status(400).json({ error: "Could not extract any text from the PDF. Please make sure it is a text-based (non-scanned) PDF." });
       }
 
       // 2. Call Gemini to determine split boundaries
       const apiKey = process.env.GEMINI_API_KEY;
       if (!apiKey) {
+        try { fs.unlinkSync(tempFilePath); } catch (e) {}
         return res.status(500).json({ error: "Gemini API key is not configured on the server." });
       }
 
@@ -4836,10 +4870,12 @@ Return ONLY the raw JSON object conforming to the schema above. Do not include m
         resultJson = JSON.parse(cleanJsonText);
       } catch (e: any) {
         console.error("Failed to parse Gemini split decision:", e, response.text);
+        try { fs.unlinkSync(tempFilePath); } catch (e) {}
         return res.status(500).json({ error: "AI failed to produce a valid split plan.", rawResponse: response.text });
       }
 
       if (!resultJson || !Array.isArray(resultJson.splits)) {
+        try { fs.unlinkSync(tempFilePath); } catch (e) {}
         return res.status(500).json({ error: "AI split response does not contain a splits list.", rawResponse: response.text });
       }
 
@@ -4875,6 +4911,9 @@ Return ONLY the raw JSON object conforming to the schema above. Do not include m
         }
       }
 
+      // Clean up the temp file
+      try { fs.unlinkSync(tempFilePath); } catch (e) {}
+
       return res.json({
         success: true,
         splits: splitFiles
@@ -4882,6 +4921,7 @@ Return ONLY the raw JSON object conforming to the schema above. Do not include m
 
     } catch (error: any) {
       console.error("Error in PDF split-analyse:", error);
+      try { fs.unlinkSync(tempFilePath); } catch (e) {}
       return res.status(500).json({ error: error.message || "Internal server error during PDF splitting" });
     }
   });

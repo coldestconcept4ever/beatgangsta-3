@@ -1,6 +1,6 @@
 import React, { useState, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { X, Upload, Scissors, Download, FileText, Sparkles, Loader2, RefreshCw, HelpCircle, CheckCircle, AlertTriangle } from 'lucide-react';
+import { X, Upload, Scissors, Download, FileText, Sparkles, Loader2, RefreshCw, HelpCircle, CheckCircle, AlertTriangle, Copy, Check } from 'lucide-react';
 import { saveAs } from 'file-saver';
 import JSZip from 'jszip';
 
@@ -24,7 +24,15 @@ export const PdfSplitter: React.FC<PdfSplitterProps> = ({ onClose, theme }) => {
   const [progress, setProgress] = useState<string>('');
   const [splits, setSplits] = useState<SplitFile[]>([]);
   const [error, setError] = useState<string>('');
+  const [copiedError, setCopiedError] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleCopyError = () => {
+    if (!error) return;
+    navigator.clipboard.writeText(error);
+    setCopiedError(true);
+    setTimeout(() => setCopiedError(false), 2000);
+  };
 
   const isCrazyBird = theme === 'crazy-bird';
 
@@ -115,23 +123,43 @@ export const PdfSplitter: React.FC<PdfSplitterProps> = ({ onClose, theme }) => {
     setLoading(true);
     setError('');
     setSplits([]);
-    setProgress('Reading PDF document...');
+    setProgress('Preparing upload...');
 
     try {
-      // 1. Convert file to Base64
-      const reader = new FileReader();
-      const base64Promise = new Promise<string>((resolve, reject) => {
-        reader.onload = () => {
-          const result = reader.result as string;
-          // Strip the data:application/pdf;base64, prefix
-          const base64 = result.split(',')[1];
-          resolve(base64);
-        };
-        reader.onerror = (err) => reject(err);
-      });
+      const chunkSize = 2 * 1024 * 1024; // 2MB chunks
+      const totalSize = selectedFile.size;
+      const totalChunks = Math.ceil(totalSize / chunkSize);
+      const sessionId = Math.random().toString(36).substring(2, 15);
+      const fileName = selectedFile.name;
 
-      reader.readAsDataURL(selectedFile);
-      const pdfBase64 = await base64Promise;
+      let tempFilePath = '';
+
+      for (let chunkIndex = 0; chunkIndex < totalChunks; chunkIndex++) {
+        const start = chunkIndex * chunkSize;
+        const end = Math.min(start + chunkSize, totalSize);
+        const chunkBlob = selectedFile.slice(start, end);
+        const arrayBuffer = await chunkBlob.arrayBuffer();
+
+        setProgress(`Uploading chunk ${chunkIndex + 1} of ${totalChunks}... (${Math.round((start / totalSize) * 100)}%)`);
+
+        const res = await fetch(`/api/pdf/upload-chunk?fileName=${encodeURIComponent(fileName)}&chunkIndex=${chunkIndex}&totalChunks=${totalChunks}&sessionId=${sessionId}`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/octet-stream'
+          },
+          body: arrayBuffer
+        });
+
+        if (!res.ok) {
+          const data = await res.json();
+          throw new Error(data.error || `Failed to upload chunk ${chunkIndex + 1}`);
+        }
+
+        const data = await res.json();
+        if (data.completed) {
+          tempFilePath = data.tempFilePath;
+        }
+      }
 
       setProgress('Analyzing with Gemini to find logical boundaries...');
 
@@ -142,7 +170,7 @@ export const PdfSplitter: React.FC<PdfSplitterProps> = ({ onClose, theme }) => {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          pdfBase64,
+          tempFilePath,
           userPrompt: userPrompt.trim(),
         }),
       });
@@ -211,9 +239,19 @@ export const PdfSplitter: React.FC<PdfSplitterProps> = ({ onClose, theme }) => {
         {/* Content Body */}
         <div className="p-6 space-y-6 max-h-[75vh] overflow-y-auto custom-scrollbar">
           {error && (
-            <div className="p-4 rounded-xl bg-red-500/15 border border-red-500/30 text-red-300 text-sm flex gap-3 items-start">
-              <AlertTriangle className="shrink-0 mt-0.5" size={16} />
-              <div>{error}</div>
+            <div className="p-4 rounded-xl bg-red-500/15 border border-red-500/30 text-red-300 text-sm flex gap-3 items-start justify-between">
+              <div className="flex gap-3 items-start">
+                <AlertTriangle className="shrink-0 mt-0.5 text-red-400" size={16} />
+                <div className="break-all">{error}</div>
+              </div>
+              <button
+                onClick={handleCopyError}
+                className="shrink-0 flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-red-500/20 hover:bg-red-500/30 text-red-200 hover:text-white text-xs font-semibold transition-all border border-red-500/30 cursor-pointer"
+                title="Copy full error message"
+              >
+                {copiedError ? <Check size={12} /> : <Copy size={12} />}
+                {copiedError ? 'Copied!' : 'Copy Error Log'}
+              </button>
             </div>
           )}
 
