@@ -1164,7 +1164,33 @@ app.post("/api/upload/register-r2-for-gemini", async (req, res) => {
           config: { mimeType: finalMimeType }
         });
         geminiFileUri = uploadResult.uri;
-        console.log(`[R2_GEMINI] Uploaded to Gemini successfully:`, geminiFileUri);
+        console.log(`[R2_GEMINI] Uploaded to Gemini:`, geminiFileUri);
+
+        // Poll for ACTIVE state
+        let fileState = uploadResult.state;
+        let attempts = 0;
+        const maxAttempts = 60; // Up to 60 seconds of polling
+        const fileNameInApi = uploadResult.name; // e.g., "files/xxx"
+        
+        while ((fileState === 'PROCESSING' || !fileState) && attempts < maxAttempts) {
+          console.log(`[R2_GEMINI] File is processing, waiting 1s... (State: ${fileState}, Attempt: ${attempts + 1}/${maxAttempts})`);
+          await new Promise(resolve => setTimeout(resolve, 1000));
+          try {
+            const checkResult = await ai.files.get({ name: fileNameInApi });
+            fileState = checkResult.state;
+          } catch (err: any) {
+            console.warn(`[R2_GEMINI] Error checking file state (will retry):`, err.message || err);
+          }
+          attempts++;
+        }
+
+        if (fileState === 'FAILED') {
+          throw new Error("Gemini File processing failed on Google's servers.");
+        } else if (fileState !== 'ACTIVE') {
+          console.warn(`[R2_GEMINI] File processing did not complete (State: ${fileState}). Continuing anyway.`);
+        } else {
+          console.log(`[R2_GEMINI] File is now ACTIVE and fully ready for generation!`);
+        }
       } else {
         geminiError = "No API key available for Gemini upload";
       }
@@ -1249,6 +1275,45 @@ app.post("/api/upload-chunk", express.raw({ type: 'application/octet-stream', li
                }
              });
         }
+
+        if (geminiFileUri) {
+          try {
+            const userApiKey = req.headers['x-user-api-key'] as string;
+            const apiKey = userApiKey || process.env.GEMINI_API_KEY;
+            if (apiKey) {
+              const { GoogleGenAI } = await import("@google/genai");
+              const ai = new GoogleGenAI({ apiKey });
+              const fileNameInApi = 'files/' + geminiFileUri.split('/').pop();
+              
+              let fileState = 'PROCESSING';
+              let attempts = 0;
+              const maxAttempts = 60;
+              
+              while ((fileState === 'PROCESSING' || !fileState) && attempts < maxAttempts) {
+                console.log(`[PROXY_FINALIZE] File is processing, waiting 1s... (State: ${fileState}, Attempt: ${attempts + 1}/${maxAttempts})`);
+                await new Promise(resolve => setTimeout(resolve, 1000));
+                try {
+                  const checkResult = await ai.files.get({ name: fileNameInApi });
+                  fileState = checkResult.state;
+                } catch (err: any) {
+                  console.warn(`[PROXY_FINALIZE] Error checking file state (will retry):`, err.message || err);
+                }
+                attempts++;
+              }
+              
+              if (fileState === 'FAILED') {
+                console.error("[PROXY_FINALIZE] Gemini File processing failed on Google's servers.");
+              } else if (fileState !== 'ACTIVE') {
+                console.warn(`[PROXY_FINALIZE] File processing did not complete (State: ${fileState}).`);
+              } else {
+                console.log(`[PROXY_FINALIZE] File is now ACTIVE!`);
+              }
+            }
+          } catch (e: any) {
+            console.warn("[PROXY_FINALIZE] Failed to poll file status but continuing anyway:", e.message || e);
+          }
+        }
+
         return res.json({ success: true, geminiFileUri });
       }
       return res.json({ success: true });
@@ -1343,6 +1408,32 @@ app.post("/api/upload-chunk", express.raw({ type: 'application/octet-stream', li
           if (uploadResult && uploadResult.uri) {
             geminiFileUri = uploadResult.uri;
             console.log("Gemini File URI from upload:", geminiFileUri);
+
+            // Poll for ACTIVE state
+            let fileState = uploadResult.state;
+            let attempts = 0;
+            const maxAttempts = 60;
+            const fileNameInApi = uploadResult.name;
+
+            while ((fileState === 'PROCESSING' || !fileState) && attempts < maxAttempts) {
+              console.log(`[CHUNK_UPLOAD] File is processing, waiting 1s... (State: ${fileState}, Attempt: ${attempts + 1}/${maxAttempts})`);
+              await new Promise(resolve => setTimeout(resolve, 1000));
+              try {
+                const checkResult = await ai.files.get({ name: fileNameInApi });
+                fileState = checkResult.state;
+              } catch (err: any) {
+                console.warn(`[CHUNK_UPLOAD] Error checking file state (will retry):`, err.message || err);
+              }
+              attempts++;
+            }
+
+            if (fileState === 'FAILED') {
+              throw new Error("Gemini File processing failed on Google's servers.");
+            } else if (fileState !== 'ACTIVE') {
+              console.warn(`[CHUNK_UPLOAD] File processing did not complete (State: ${fileState}). Continuing anyway.`);
+            } else {
+              console.log(`[CHUNK_UPLOAD] File is now ACTIVE and fully ready for generation!`);
+            }
           } else {
             console.warn("Gemini upload succeeded but no URI returned:", uploadResult);
             geminiError = "No URI returned from Gemini upload";
@@ -4629,6 +4720,169 @@ if (process.env.NODE_ENV !== 'production') {
       } else {
         res.status(error.status || 500).json(errorResponse);
       }
+    }
+  });
+
+  app.post("/api/pdf/split-analyse", async (req, res) => {
+    // Increase timeout for long-running AI generations
+    req.setTimeout(600000); // 10 minutes
+    res.setTimeout(600000); // 10 minutes
+
+    const userEmail = (req as any).session?.user?.email;
+    const authorizedEmails = ['coldestconcept@gmail.com', 'recognizemiracles@gmail.com'];
+    const isLocalDev = process.env.NODE_ENV !== 'production';
+
+    if (!isLocalDev && (!userEmail || !authorizedEmails.includes(userEmail))) {
+      return res.status(401).json({ error: "Unauthorized access" });
+    }
+
+    const { pdfBase64, userPrompt } = req.body;
+    if (!pdfBase64) {
+      return res.status(400).json({ error: "Missing pdfBase64 data" });
+    }
+
+    try {
+      const pdfBuffer = Buffer.from(pdfBase64, 'base64');
+
+      // 1. Extract text page-by-page
+      const pdfParseImport = await import("pdf-parse") as any;
+      const pdfParse = pdfParseImport.default || pdfParseImport;
+      const pages: { pageNum: number; text: string }[] = [];
+
+      const options = {
+        pagerender: (pageData: any) => {
+          const pageIndex = pageData.pageIndex;
+          const pageNum = pageIndex + 1;
+          
+          return pageData.getTextContent().then((textContent: any) => {
+            let text = '';
+            let lastY = null;
+            for (const item of textContent.items) {
+              if (lastY === item.transform[5] || lastY === null) {
+                text += item.str;
+              } else {
+                text += '\n' + item.str;
+              }
+              lastY = item.transform[5];
+            }
+            pages.push({ pageNum, text });
+            return text;
+          });
+        }
+      };
+
+      await pdfParse(pdfBuffer, options);
+      pages.sort((a, b) => a.pageNum - b.pageNum);
+
+      if (pages.length === 0) {
+        return res.status(400).json({ error: "Could not extract any text from the PDF. Please make sure it is a text-based (non-scanned) PDF." });
+      }
+
+      // 2. Call Gemini to determine split boundaries
+      const apiKey = process.env.GEMINI_API_KEY;
+      if (!apiKey) {
+        return res.status(500).json({ error: "Gemini API key is not configured on the server." });
+      }
+
+      const { GoogleGenAI } = await import("@google/genai");
+      const ai = new GoogleGenAI({ apiKey });
+
+      let documentTextRepresentation = "";
+      for (const p of pages) {
+        documentTextRepresentation += `--- START OF PAGE ${p.pageNum} ---\n`;
+        documentTextRepresentation += `${p.text.trim()}\n`;
+        documentTextRepresentation += `--- END OF PAGE ${p.pageNum} ---\n\n`;
+      }
+
+      const prompt = `You are an AI PDF Splitter agent.
+Your task is to analyze a PDF document page-by-page and decide on the optimal page boundaries to split the document into separate logical files based on the user's instructions.
+
+USER INSTRUCTIONS:
+"${userPrompt || "Split this document intelligently into separate sections or documents."}"
+
+CRITICAL LOGICAL INTEGRITY RULES:
+1. Ensure what is split does NOT split through any chat bubble, transcript dialogue message, or important continuous sentence/paragraph. If a dialogue message or paragraph spans across a page boundary (e.g., starts on page 3 and ends on page 4), you MUST group those pages (e.g. pages 3 and 4) together in the same split file. Do NOT split them.
+2. Every page from the original document (from page 1 to page ${pages.length}) MUST be included in EXACTLY ONE split file. Do not omit any pages, and do not duplicate any pages across different split files.
+3. The page ranges for each split file must be contiguous (e.g., page 1-3, page 4-6) or as logical groupings matching the user's intent. Contiguous groupings are highly preferred unless the user explicitly asks for specific page collections.
+
+Please reply with a JSON object in the following format:
+{
+  "splits": [
+    {
+      "fileName": "Descriptive, clean filename (e.g. Part 1 - Welcome and Intro.pdf)",
+      "pages": [1, 2, 3], // Array of 1-indexed page numbers to include in this split file
+      "reason": "Explain briefly why these pages are grouped together and why this split boundary was chosen (e.g., 'Pages 1-3 cover the intro and first conversation block, ending cleanly before the next participant starts on page 4 without cutting any messages.')"
+    }
+  ]
+}
+
+Here is the extracted text of the document page-by-page:
+${documentTextRepresentation}
+
+Return ONLY the raw JSON object conforming to the schema above. Do not include markdown code blocks, backticks, or other text outside the JSON.`;
+
+      const response = await ai.models.generateContent({
+        model: "gemini-2.5-flash",
+        contents: prompt,
+        config: {
+          responseMimeType: "application/json"
+        }
+      });
+
+      let resultJson;
+      try {
+        const text = response.text || "";
+        const cleanJsonText = text.replace(/^```json\s*/i, "").replace(/```\s*$/, "").trim();
+        resultJson = JSON.parse(cleanJsonText);
+      } catch (e: any) {
+        console.error("Failed to parse Gemini split decision:", e, response.text);
+        return res.status(500).json({ error: "AI failed to produce a valid split plan.", rawResponse: response.text });
+      }
+
+      if (!resultJson || !Array.isArray(resultJson.splits)) {
+        return res.status(500).json({ error: "AI split response does not contain a splits list.", rawResponse: response.text });
+      }
+
+      // 3. Generate the split PDFs using pdf-lib
+      const { PDFDocument } = await import("pdf-lib");
+      const srcDoc = await PDFDocument.load(pdfBuffer);
+      const totalSrcPages = srcDoc.getPageCount();
+
+      const splitFiles: { fileName: string; pages: number[]; reason: string; base64: string }[] = [];
+
+      for (const split of resultJson.splits) {
+        const destDoc = await PDFDocument.create();
+        const pageIndicesToCopy: number[] = [];
+        for (const pNum of split.pages) {
+          const idx = pNum - 1;
+          if (idx >= 0 && idx < totalSrcPages) {
+            pageIndicesToCopy.push(idx);
+          }
+        }
+
+        if (pageIndicesToCopy.length > 0) {
+          const copiedPages = await destDoc.copyPages(srcDoc, pageIndicesToCopy);
+          copiedPages.forEach((page) => destDoc.addPage(page));
+          const bytes = await destDoc.save();
+          const base64 = Buffer.from(bytes).toString('base64');
+
+          splitFiles.push({
+            fileName: split.fileName,
+            pages: split.pages,
+            reason: split.reason,
+            base64
+          });
+        }
+      }
+
+      return res.json({
+        success: true,
+        splits: splitFiles
+      });
+
+    } catch (error: any) {
+      console.error("Error in PDF split-analyse:", error);
+      return res.status(500).json({ error: error.message || "Internal server error during PDF splitting" });
     }
   });
 

@@ -54,9 +54,10 @@ import { JSFXAutomationChains } from './components/JSFXAutomationChains';
 import { XpandDatabaseViewer } from './components/XpandDatabaseViewer';
 import { AdminDashboard } from './components/AdminDashboard';
 import { BetaApplicationModal } from './components/BetaApplicationModal';
+import { PdfSplitter } from './components/PdfSplitter';
 import { AnimatePresence, motion } from 'motion/react';
 import { useTranslation } from 'react-i18next';
-import { Download, Globe, Languages, Star, X, Upload, Cpu, Folder as FolderIcon, ShieldCheck, Check, Zap, Rocket, Eye, EyeOff, AlertTriangle, Lock, Shield, Loader2, Gem, Sword, User as UserIcon, Link, Layers, Link2, Palette, Sparkles, Drum, Image as ImageIcon, Crown, CheckCircle2, ExternalLink, Facebook, Instagram, Linkedin, Twitter, Activity, Database, Trash2, Music, Video, Cloud, Settings2, HelpCircle, Copy } from 'lucide-react';
+import { Download, Globe, Languages, Star, X, Upload, Cpu, Folder as FolderIcon, ShieldCheck, Check, Zap, Rocket, Eye, EyeOff, AlertTriangle, Lock, Shield, Loader2, Gem, Sword, User as UserIcon, Link, Layers, Link2, Palette, Sparkles, Drum, Image as ImageIcon, Crown, CheckCircle2, ExternalLink, Facebook, Instagram, Linkedin, Twitter, Activity, Database, Trash2, Music, Video, Cloud, Settings2, HelpCircle, Copy, Scissors } from 'lucide-react';
 import { saveAs } from 'file-saver';
 import tinycolor from 'tinycolor2';
 import Turnstile from 'react-turnstile';
@@ -444,6 +445,7 @@ const App: React.FC = () => {
   });
   const [showJsfxDatabase, setShowJsfxDatabase] = useState(false);
   const [showXpandDatabase, setShowXpandDatabase] = useState(false);
+  const [showPdfSplitter, setShowPdfSplitter] = useState(false);
   const [showJsfxAutomationChains, setShowJsfxAutomationChains] = useState(false);
   const [showAdminDashboard, setShowAdminDashboard] = useState(false);
   const [showBetaApplyModal, setShowBetaApplyModal] = useState(false);
@@ -6916,6 +6918,30 @@ Provide the exact JSFX plugin name and required sliders/parameters.`;
                       </div>
                     </button>
 
+                    {(user?.email === 'recognizemiracles@gmail.com' || user?.email === 'coldestconcept@gmail.com') && (
+                      <>
+                        <button 
+                          onClick={() => {
+                            setShowPdfSplitter(true);
+                            setIsUserMenuOpen(false);
+                          }}
+                          className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-left transition-colors group ${getDropdownTheme(theme).itemHover}`}
+                        >
+                          <div className={`w-7 h-7 rounded-full flex items-center justify-center transition-colors ${theme === 'coldest' ? 'bg-emerald-500 text-white' : 'bg-emerald-500/20 text-emerald-400'}`}>
+                            <Scissors size={14} />
+                          </div>
+                          <div>
+                            <div className="text-xs font-bold uppercase tracking-wider text-emerald-400 font-extrabold flex items-center gap-1">
+                              AI PDF Splitter
+                              <span className="text-[7px] bg-emerald-500/20 text-emerald-400 px-1 py-0.2 rounded border border-emerald-500/30">NEW</span>
+                            </div>
+                            <div className="text-[9px] opacity-50 mt-0.5">Split documents intelligently with AI</div>
+                          </div>
+                        </button>
+                        <div className={`h-px w-full my-1 ${getDropdownTheme(theme).divider}`} />
+                      </>
+                    )}
+
                     {isAdminDashboardAuthorized && (
                       <>
                         <button 
@@ -11255,6 +11281,9 @@ Provide the exact JSFX plugin name and required sliders/parameters.`;
       <React.Suspense fallback={null}>
         {showBetaApplyModal && (
           <BetaApplicationModal onClose={() => setShowBetaApplyModal(false)} theme={theme} />
+        )}
+        {showPdfSplitter && (
+          <PdfSplitter onClose={() => setShowPdfSplitter(false)} theme={theme} />
         )}
         <InternationalizationModal
           isOpen={showInternationalizationModal}

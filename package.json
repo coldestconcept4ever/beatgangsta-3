@@ -37,6 +37,7 @@
     "midi-player-js": "^2.0.17",
     "midi-writer-js": "^3.2.1",
     "motion": "^12.34.2",
+    "pdf-lib": "^1.17.1",
     "pdf-parse": "^2.4.5",
     "react": "^19.2.4",
     "react-dom": "^19.2.4",

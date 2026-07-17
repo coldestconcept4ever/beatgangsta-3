@@ -8,11 +8,12 @@ const test = async () => {
         const response = await ai.models.generateContent({
             model: "gemini-3-flash-preview",
             contents: [
-                { fileData: { fileUri: "https://firebasestorage.googleapis.com/v0/b/project.appspot.com/o/file.mp3?alt=media", mimeType: "audio/mpeg" } },
-                { text: "analyze it" }
+                { text: "Hello, reply with JSON: {\"reply\": \"hi\"}" }
             ],
             config: {
-                responseMimeType: "application/json"
+                responseMimeType: "application/json",
+                // @ts-ignore
+                customAction: "critique"
             }
         });
         console.log("Success:", response.text);
