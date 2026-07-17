@@ -1,0 +1,1 @@
+require("pdf-parse"); if(false) { require.resolve("pdfjs-dist/legacy/build/pdf.worker.mjs"); }
