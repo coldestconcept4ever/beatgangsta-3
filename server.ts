@@ -4782,30 +4782,23 @@ if (process.env.NODE_ENV !== 'production') {
       // 1. Extract text page-by-page
       const pages: { pageNum: number; text: string }[] = [];
 
-      const options = {
-        pagerender: (pageData: any) => {
-          const pageIndex = pageData.pageIndex;
-          const pageNum = pageIndex + 1;
-          
-          return pageData.getTextContent().then((textContent: any) => {
-            let text = '';
-            let lastY = null;
-            for (const item of textContent.items) {
-              if (lastY === item.transform[5] || lastY === null) {
-                text += item.str;
-              } else {
-                text += '\n' + item.str;
-              }
-              lastY = item.transform[5];
-            }
-            pages.push({ pageNum, text });
-            return text;
-          });
+      try {
+        const parserInstance = new pdfParse.PDFParse({ data: pdfBuffer });
+        const textResult = await parserInstance.getText();
+        if (textResult && Array.isArray(textResult.pages)) {
+          for (const page of textResult.pages) {
+            pages.push({
+              pageNum: page.num,
+              text: page.text || ""
+            });
+          }
         }
-      };
+      } catch (err) {
+        console.error("Error during PDF parsing:", err);
+        try { fs.unlinkSync(tempFilePath); } catch (e) {}
+        return res.status(500).json({ error: "Failed to extract text from the PDF: " + (err as Error).message });
+      }
 
-      const pdfParserFn = typeof pdfParse === "function" ? pdfParse : (pdfParse as any).default;
-      await pdfParserFn(pdfBuffer, options);
       pages.sort((a, b) => a.pageNum - b.pageNum);
 
       if (pages.length === 0) {
