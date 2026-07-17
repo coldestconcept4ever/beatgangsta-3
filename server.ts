@@ -1,6 +1,6 @@
 import "dotenv/config";
 import "./src/lib/polyfill.js";
-import * as pdfParse from "pdf-parse";
+import pdfParse from "pdf-parse";
 import express from "express";
 console.log("server.ts loading: imports starting...");
 import path from "path";
@@ -4783,16 +4783,27 @@ if (process.env.NODE_ENV !== 'production') {
       const pages: { pageNum: number; text: string }[] = [];
 
       try {
-        const parserInstance = new pdfParse.PDFParse({ data: pdfBuffer });
-        const textResult = await parserInstance.getText();
-        if (textResult && Array.isArray(textResult.pages)) {
-          for (const page of textResult.pages) {
-            pages.push({
-              pageNum: page.num,
-              text: page.text || ""
+        const options = {
+          pagerender: function(pageData: any) {
+            const pageNum = pageData.pageIndex + 1;
+            return pageData.getTextContent().then(function(textContent: any) {
+              let text = '';
+              let lastY = null;
+              for (const item of textContent.items) {
+                if (lastY === item.transform[5] || lastY === null) {
+                  text += item.str;
+                } else {
+                  text += '\n' + item.str;
+                }
+                lastY = item.transform[5];
+              }
+              pages.push({ pageNum, text });
+              return text;
             });
           }
-        }
+        };
+
+        await pdfParse(pdfBuffer, options);
       } catch (err) {
         console.error("Error during PDF parsing:", err);
         try { fs.unlinkSync(tempFilePath); } catch (e) {}
