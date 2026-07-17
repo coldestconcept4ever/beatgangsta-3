@@ -4920,8 +4920,9 @@ if (process.env.NODE_ENV !== 'production') {
       const pdfBuffer = fs.readFileSync(tempFilePath);
 
       // 1. Extract text page-by-page
-      const pdfParseImport = await import("pdf-parse") as any;
-      const pdfParse = pdfParseImport.default || pdfParseImport;
+      const { createRequire } = await import("module");
+      const require = createRequire(import.meta.url);
+      const pdfParse = require("pdf-parse");
       const pages: { pageNum: number; text: string }[] = [];
 
       const options = {
