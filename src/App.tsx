@@ -7262,7 +7262,9 @@ Provide the exact JSFX plugin name and required sliders/parameters.`;
                   setShowVault(false);
                 }}
                 onOpenCritique={(c) => {
+                  console.log("Vault onOpenCritique called with:", c);
                   setShowVault(false);
+                  setTimeout(() => {
                   try {
                     setError(null); // Clear any previous errors
                     if (!c) {
@@ -7271,10 +7273,8 @@ Provide the exact JSFX plugin name and required sliders/parameters.`;
                     if (!c.id) {
                       throw new Error("Unable to open critique: the critique is missing its unique identifier (ID). The record might be corrupted.");
                     }
-                    if (!c.overallFeedback && !c.title) {
-                      throw new Error(`Unable to open critique (ID: ${c.id}): The critique data is corrupted or incomplete (missing primary feedback text and title).`);
-                    }
-
+                    console.log("Critique valid. Setting critiques...");
+                    
                     setCritiques([c]);
                     setRecipes([]);
                     setViewingRecipe(null);
@@ -7284,6 +7284,8 @@ Provide the exact JSFX plugin name and required sliders/parameters.`;
                     setIsGangstaVox(!!c.isGangstaVox);
                     setFriendMode(false);
                     setImportedSaveFile(null);
+                    
+                    console.log("Critique state updated.");
                     // Update currentAudioInfo if the opened critique has audio
                     if (c.audioBase64 || c.audioUrl || c.geminiFileUri) {
                       setCurrentAudioInfo({
@@ -7306,6 +7308,7 @@ Provide the exact JSFX plugin name and required sliders/parameters.`;
                     console.error("Failed to open critique:", err);
                     setError(err.message || "An unexpected error occurred while loading this critique.");
                   }
+                  }, 50);
                 }}
               />
           </motion.div>
