@@ -336,5 +336,202 @@ export const UAD_PRESETS: Record<string, UADPreset[]> = {
         "High Pass Filter Freq": 50 // 120 Hz HPF to keep low clean
       }
     }
+  ],
+  "uad avalon vt-737sp": [
+    {
+      name: "Glossy Lead Vocal Strip",
+      description: "Generous preamplifier gain, smooth high-pass filter, 4:1 opto compression, and a subtle +2dB boost at 15kHz for the signature Avalon 'air' gloss.",
+      settings: {
+        "Preamplifier Gain": 45, // ~35dB
+        "Preamp Mode": 64, // Mic
+        "High Pass Filter Freq": 40, // ~80 Hz
+        "Compressor Threshold": 55, // Light gain reduction
+        "Compressor Ratio": 72, // 4:1
+        "Compressor Attack": 64, // Medium
+        "Compressor Release": 0, // Fast
+        "EQ Bass Frequency": 60, // 60 Hz
+        "EQ Bass Gain": 64, // 0 dB
+        "EQ Low Mid Frequency": 50, // 200 Hz
+        "EQ Low Mid Gain": 64, // 0 dB
+        "EQ High Mid Frequency": 45, // 1.0 kHz
+        "EQ High Mid Gain": 64, // 0 dB
+        "EQ Treble Frequency": 40, // 15 kHz
+        "EQ Treble Gain": 72, // +2.0 dB
+        "Output Level": 64 // 0 dB
+      }
+    },
+    {
+      name: "Crisp Acoustic Guitar",
+      description: "Clean tube preamp routing, high-pass at 100Hz to remove boominess, fast opto-compression, and a crisp high-shelf EQ sheen.",
+      settings: {
+        "Preamplifier Gain": 35, // ~28dB
+        "Preamp Mode": 64, // Mic
+        "High Pass Filter Freq": 60, // ~100 Hz
+        "Compressor Threshold": 45, // Gentle control
+        "Compressor Ratio": 36, // 2:1
+        "Compressor Attack": 0, // Fast
+        "Compressor Release": 0, // Fast
+        "EQ Bass Frequency": 60, // 60 Hz
+        "EQ Bass Gain": 50, // -3 dB
+        "EQ Low Mid Frequency": 40, // 150 Hz
+        "EQ Low Mid Gain": 64, // 0 dB
+        "EQ High Mid Frequency": 68, // 1.5 kHz
+        "EQ High Mid Gain": 70, // +1.5 dB
+        "EQ Treble Frequency": 60, // 20 kHz
+        "EQ Treble Gain": 74, // +2.5 dB
+        "Output Level": 64
+      }
+    }
+  ],
+  "uad tube-tech cl 1b mk ii": [
+    {
+      name: "Buttery Vocal Staging (Fix-Man)",
+      description: "Industry-standard vocal leveling settings using the Fix-Man timing select for automatically adapting attack/release curves.",
+      settings: {
+        "Gain": 55, // ~12 dB makeup
+        "Threshold": 65, // ~4-6 dB compression
+        "Ratio": 30, // ~3.5:1 ratio
+        "Attack": 64, // Manual attack (ignored in Fix-Man but mapped)
+        "Release": 64, // Manual release (ignored in Fix-Man but mapped)
+        "Attack/Release Select": 127, // Fix-Man
+        "Sidechain High Pass": 127 // SC HPF On (150 Hz)
+      }
+    },
+    {
+      name: "R&B Pinned Bass Hook",
+      description: "Locks the low-end performance firmly in place with a steady 4:1 ratio and manual timing envelope riding.",
+      settings: {
+        "Gain": 60, // ~15 dB makeup
+        "Threshold": 75, // Deep compression
+        "Ratio": 50, // ~5:1 ratio
+        "Attack": 35, // ~15 ms attack
+        "Release": 55, // ~0.8 s release
+        "Attack/Release Select": 0, // Manual
+        "Sidechain High Pass": 64 // SC HPF On (80 Hz)
+      }
+    }
+  ],
+  "uad lexicon 480l": [
+    {
+      name: "Vintage Concert Hall Space",
+      description: "Deep, three-dimensional, highly diffuse 1980s Lexicon vocal hall. Features 2.5s decay and a clean pre-delay gap.",
+      settings: {
+        "Program Select": 0, // Large Hall
+        "Reverb Time": 40, // 2.5 seconds
+        "Size": 50, // 36 meters
+        "Pre-delay": 24, // 24 ms
+        "Diffusion": 64, // High diffusion
+        "Bass Time": 38, // 1.2x bass multiplier
+        "Crossover Frequency": 64, // 500 Hz
+        "Wet/Dry Mix": 127 // 100% Wet
+      }
+    },
+    {
+      name: "Snare Drum Rich Plate",
+      description: "A highly dense, metallic, rich plate algorithm that gives drums stunning tail sizzle and punch.",
+      settings: {
+        "Program Select": 127, // Rich Plate
+        "Reverb Time": 24, // 1.5 seconds
+        "Size": 30, // 20 meters
+        "Pre-delay": 10, // 10 ms
+        "Diffusion": 85, // Extremely high diffusion
+        "Bass Time": 25, // 0.8x bass multiplier
+        "Crossover Frequency": 64, // 500 Hz
+        "Wet/Dry Mix": 100 // 80% Mix
+      }
+    }
+  ],
+  "uad api 2500": [
+    {
+      name: "Patented Master Bus Glue",
+      description: "Clean master bus compressor mapping. Leverages the Loud 'Thrust' sidechain circuit, Old feedback detection, and a slow attack.",
+      settings: {
+        "Threshold": 80, // +2 dBu
+        "Ratio": 15, // 2:1
+        "Attack": 127, // 30 ms
+        "Release": 50, // 0.5 s
+        "Knee Mode": 0, // Soft
+        "Thrust Filter": 127, // Loud Thrust
+        "Type Mode": 0, // Old Feedback
+        "Makeup Gain": 20 // +2 dB
+      }
+    }
+  ],
+  "uad thermionic culture vulture": [
+    {
+      name: "Warm triode Master Glue",
+      description: "Subtle 2nd-order tube harmonic saturation designed to add tape-like analog depth and warmth to a full stereo mix.",
+      settings: {
+        "Drive": 15, // Low drive (subtle harmonics)
+        "Function Select": 0, // Triode
+        "Bias": 64, // Standard 50%
+        "Low Pass Filter": 0, // Off
+        "Output Level": 115, // Volume compensated
+        "Mix": 35 // 30% Parallel mix
+      }
+    },
+    {
+      name: "Pentode Vocal Edge Selector",
+      description: "Injects aggressive odd-order pentode distortion to give thin vocal tracks gritty edge, punch, and mid-range saturation.",
+      settings: {
+        "Drive": 48, // Moderate drive
+        "Function Select": 64, // Pentode
+        "Bias": 50, // Squeezed bias
+        "Low Pass Filter": 64, // 9 kHz cut (smooth edge)
+        "Output Level": 90, // Volume compensated
+        "Mix": 50 // 50% Parallel blend
+      }
+    }
+  ],
+  "uad la-6176": [
+    {
+      name: "Classic Tube Vocal Track",
+      description: "The timeless chain: 610 tube warmth driving an 1176 FET compressor section in 4:1 ratio mode with medium recovery.",
+      settings: {
+        "610 Tube Preamp Gain": 64, // 0 dB step
+        "610 Input Level": 55, // Driven slightly
+        "610 High EQ Freq": 127, // 10 kHz
+        "610 High EQ Gain": 72, // +1.5 dB
+        "610 Low EQ Freq": 64, // 100 Hz
+        "610 Low EQ Gain": 64, // 0 dB
+        "1176 Compressor Threshold": 40, // Triggering 2-4dB reduction
+        "1176 Makeup Gain": 50, // Standard output
+        "1176 Attack": 35, // Position 3 (Moderately slow)
+        "1176 Release": 90, // Position 5.5 (Fast recovery)
+        "1176 Ratio Mode": 0 // 4:1
+      }
+    }
+  ],
+  "uad manley voxbox": [
+    {
+      name: "Pristine All-Tube Vocal Strip",
+      description: "Class A preamplifier with 45dB tube drive, low cut at 80Hz, gentle optical leveling BEFORE the tube gain, and smooth 1kHz mid-presence.",
+      settings: {
+        "Preamp Input Gain": 32, // 45 dB
+        "Preamp Low Cut Filter": 64, // 80 Hz
+        "Compressor Threshold": 35, // Light leveling
+        "Compressor Attack": 64, // Medium
+        "Compressor Release": 64, // Medium
+        "EQ Mid Frequency": 55, // 1.0 kHz
+        "EQ Mid Gain": 72, // +2.0 dB
+        "De-esser Threshold": 40, // Dynamic sibilant control
+        "De-esser Frequency": 64 // 6 kHz
+      }
+    }
+  ],
+  "uad ssl 4000 g bus compressor": [
+    {
+      name: "Classic Console Stereo Glue",
+      description: "The legendary Solid State Logic stereo master glue setup. Ratio 4:1, Attack 30ms, Auto release, and 1-3dB reduction.",
+      settings: {
+        "Threshold": 85, // Light compression trigger
+        "Ratio": 64, // 4:1
+        "Attack": 127, // 30 ms (preserve transients)
+        "Release": 127, // Auto (program-dependent)
+        "Makeup Gain": 25, // +2.5 dB
+        "Sidechain High Pass": 50, // ~80 Hz
+        "Mix / Blend": 127 // 100% Wet
+      }
+    }
   ]
 };

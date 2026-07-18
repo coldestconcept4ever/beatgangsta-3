@@ -4742,11 +4742,25 @@ if (process.env.NODE_ENV !== 'production') {
       return res.status(400).json({ error: "Missing upload parameters" });
     }
 
+    if (!chunkData || !Buffer.isBuffer(chunkData)) {
+      return res.status(400).json({ error: "Invalid or empty raw chunk data received on server" });
+    }
+
     const tempFilePath = path.join(os.tmpdir(), `pdfsplit-${sessionId}-${fileName}`);
     try {
+      const chunkIdxNum = parseInt(chunkIndex as string);
+      
+      // On the first chunk, clean up any pre-existing file from a previous attempt
+      if (chunkIdxNum === 0) {
+        try {
+          if (fs.existsSync(tempFilePath)) {
+            fs.unlinkSync(tempFilePath);
+          }
+        } catch (e) {}
+      }
+
       fs.appendFileSync(tempFilePath, chunkData);
       
-      const chunkIdxNum = parseInt(chunkIndex as string);
       const totalChunksNum = parseInt(totalChunks as string);
       const isLastChunk = chunkIdxNum === totalChunksNum - 1;
 
@@ -4847,52 +4861,16 @@ if (process.env.NODE_ENV !== 'production') {
 
         console.log("[PDF PRE-SLICER] Tall pages detected. Slicing physically into standard pages...");
 
-        // Extract text positions using pdfjs
+        // Extract text positions using pdf-lib sizes (skip slow uninstalled pdfjs-dist)
         const pageTextPositions: any[] = [];
-        try {
-          const pdfjs = await import("pdfjs-dist/legacy/build/pdf.mjs");
-          const loadingTask = pdfjs.getDocument({ data: new Uint8Array(inputBuffer), verbosity: 0 });
-          const doc = await loadingTask.promise;
-          
-          for (let pageNum = 1; pageNum <= totalPages; pageNum++) {
-            const page = await doc.getPage(pageNum);
-            const viewport = page.getViewport({ scale: 1 });
-            const textContent = await page.getTextContent();
-            const items: any[] = [];
-
-            for (const item of textContent.items) {
-              if ('str' in item) {
-                const tm = item.transform;
-                const [x, y] = viewport.convertToViewportPoint(tm[4], tm[5]);
-                items.push({
-                  text: item.str,
-                  x,
-                  y,
-                  width: item.width || 0,
-                  height: item.height || 0
-                });
-              }
-            }
-
-            pageTextPositions.push({
-              pageNum,
-              width: viewport.width,
-              height: viewport.height,
-              items
-            });
-          }
-          await doc.destroy();
-        } catch (err) {
-          console.error("[PDF PRE-SLICER] Error extracting text positions:", err);
-          for (let i = 0; i < totalPages; i++) {
-            const { width, height } = pages[i].getSize();
-            pageTextPositions.push({
-              pageNum: i + 1,
-              width,
-              height,
-              items: []
-            });
-          }
+        for (let i = 0; i < totalPages; i++) {
+          const { width, height } = pages[i].getSize();
+          pageTextPositions.push({
+            pageNum: i + 1,
+            width,
+            height,
+            items: []
+          });
         }
 
         const destDoc = await PDFDocument.create();
@@ -4936,7 +4914,6 @@ if (process.env.NODE_ENV !== 'production') {
 
             // PDF coordinate system is bottom-up
             const pdfYStart = H - yEnd;
-            const pdfYEnd = H - yStart;
 
             newPage.setCropBox(0, pdfYStart, W, sliceHeight);
             newPage.setMediaBox(0, pdfYStart, W, sliceHeight);
@@ -4991,7 +4968,15 @@ if (process.env.NODE_ENV !== 'production') {
       let documentTextRepresentation = "";
       for (const p of pages) {
         documentTextRepresentation += `--- START OF PAGE ${p.pageNum} ---\n`;
-        documentTextRepresentation += `${p.text.trim()}\n`;
+        const text = p.text.trim();
+        // Optimizing the prompt size to prevent Gateway/Nginx timeout limits
+        if (text.length > 1600) {
+          const firstPart = text.substring(0, 800);
+          const lastPart = text.substring(text.length - 800);
+          documentTextRepresentation += `${firstPart}\n... [TRUNCATED MID-PAGE CONTENT] ...\n${lastPart}\n`;
+        } else {
+          documentTextRepresentation += `${text}\n`;
+        }
         documentTextRepresentation += `--- END OF PAGE ${p.pageNum} ---\n\n`;
       }
 
@@ -5034,7 +5019,7 @@ ${documentTextRepresentation}
 Return ONLY the raw JSON object conforming to the schema above. Do not include markdown code blocks, backticks, or other text outside the JSON.`;
 
       const response = await ai.models.generateContent({
-        model: "gemini-3.5-flash",
+        model: "gemini-2.5-flash",
         contents: prompt,
         config: {
           responseMimeType: "application/json"
@@ -5065,10 +5050,17 @@ Return ONLY the raw JSON object conforming to the schema above. Do not include m
       const splitFiles: { fileName: string; pages: number[]; reason: string; base64: string }[] = [];
 
       for (const split of resultJson.splits) {
+        if (!split.pages || !Array.isArray(split.pages)) {
+          continue;
+        }
+
         const destDoc = await PDFDocument.create();
         const pageIndicesToCopy: number[] = [];
         for (const pNum of split.pages) {
-          const idx = pNum - 1;
+          const pNumVal = parseInt(pNum as any);
+          if (isNaN(pNumVal)) continue;
+
+          const idx = pNumVal - 1;
           if (idx >= 0 && idx < totalSrcPages) {
             pageIndicesToCopy.push(idx);
           }
@@ -5082,8 +5074,8 @@ Return ONLY the raw JSON object conforming to the schema above. Do not include m
 
           splitFiles.push({
             fileName: split.fileName,
-            pages: split.pages,
-            reason: split.reason,
+            pages: split.pages.map(p => parseInt(p as any)).filter(p => !isNaN(p)),
+            reason: split.reason || "",
             base64
           });
         }

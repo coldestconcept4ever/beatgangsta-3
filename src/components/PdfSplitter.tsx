@@ -151,8 +151,17 @@ export const PdfSplitter: React.FC<PdfSplitterProps> = ({ onClose, theme }) => {
         });
 
         if (!res.ok) {
-          const data = await res.json();
-          throw new Error(data.error || `Failed to upload chunk ${chunkIndex + 1}`);
+          let errMsg = `Failed to upload chunk ${chunkIndex + 1}`;
+          try {
+            const errData = await res.json();
+            errMsg = errData.error || errMsg;
+          } catch (_) {
+            try {
+              const text = await res.text();
+              errMsg = `Upload error (${res.status}): ${text.substring(0, 200)}`;
+            } catch (_) {}
+          }
+          throw new Error(errMsg);
         }
 
         const data = await res.json();
@@ -175,11 +184,21 @@ export const PdfSplitter: React.FC<PdfSplitterProps> = ({ onClose, theme }) => {
         }),
       });
 
-      const data = await res.json();
       if (!res.ok) {
-        throw new Error(data.error || 'Failed to process PDF.');
+        let errMsg = 'Failed to process PDF.';
+        try {
+          const errData = await res.json();
+          errMsg = errData.error || errMsg;
+        } catch (_) {
+          try {
+            const text = await res.text();
+            errMsg = `Server error (${res.status}): ${text.substring(0, 200)}`;
+          } catch (_) {}
+        }
+        throw new Error(errMsg);
       }
 
+      const data = await res.json();
       setSplits(data.splits || []);
     } catch (err: any) {
       setError(err.message || 'An error occurred during PDF splitting.');
