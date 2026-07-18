@@ -16,8 +16,8 @@ async function testModel(modelName: string) {
 }
 
 async function run() {
-  await testModel("gemini-2.5-flash");
-  await testModel("gemini-2.5-pro");
+  await testModel("gemini-3.5-flash");
+  await testModel("gemini-3.1-pro-preview");
   await testModel("gemini-3-flash-preview");
   await testModel("gemini-3.1-flash-preview");
   await testModel("gemini-3.1-pro-preview");

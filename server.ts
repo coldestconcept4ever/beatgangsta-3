@@ -4859,7 +4859,7 @@ ${documentTextRepresentation}
 Return ONLY the raw JSON object conforming to the schema above. Do not include markdown code blocks, backticks, or other text outside the JSON.`;
 
       const response = await ai.models.generateContent({
-        model: "gemini-2.5-flash",
+        model: "gemini-3.5-flash",
         contents: prompt,
         config: {
           responseMimeType: "application/json"
