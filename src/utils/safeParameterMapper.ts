@@ -534,10 +534,11 @@ export const mapPluginParametersSafely = (
 export const applySafeParameterMappingToChain = (
   chain: DeepDivePlugin[],
   physicalMetrics?: PhysicalMetrics,
-  isMasterBus: boolean = false
+  isMasterBus: boolean = false,
+  isJsfxMode: boolean = true
 ): DeepDivePlugin[] => {
   const mapped = chain.map((plugin) => mapPluginParametersSafely(plugin, physicalMetrics, isMasterBus));
-  return processVocalChainDeesser(mapped, undefined, physicalMetrics);
+  return processVocalChainDeesser(mapped, undefined, physicalMetrics, isJsfxMode);
 };
 
 const isVocalStem = (stemName?: string): boolean => {
@@ -588,7 +589,8 @@ const isCompressorPlugin = (plugin: DeepDivePlugin): boolean => {
 export const processVocalChainDeesser = (
   chain: DeepDivePlugin[],
   targetStem?: string,
-  metrics?: PhysicalMetrics
+  metrics?: PhysicalMetrics,
+  isJsfxMode: boolean = true
 ): DeepDivePlugin[] => {
   if (chain.length === 0) return chain;
 
@@ -615,7 +617,7 @@ export const processVocalChainDeesser = (
       const firstCompIndex = chain.findIndex(isCompressorPlugin);
       
       const defaultDeesser: DeepDivePlugin = {
-        name: "Tukan Deesser",
+        name: isJsfxMode ? "Tukan Deesser" : "De-Esser",
         purpose: "High-Frequency Sibilance Control (De-essing)",
         deepDive: [
           {
@@ -675,6 +677,8 @@ export const applySafeParameterMappingToCritique = (
 
   console.log('[HEADROOM_ALLOCATION] Starting Safe Parameter Mapping post-process for critique...');
 
+  const isJsfxMode = critique.isJsfxMode !== false;
+
   const mappedActionPlan = critique.actionPlan.map((plan) => {
     if (!plan.recommendedChain || plan.recommendedChain.length === 0) return plan;
 
@@ -700,7 +704,7 @@ export const applySafeParameterMappingToCritique = (
       return mapPluginParametersSafely(plugin, targetMetrics, isMasterMode);
     });
 
-    const finalChain = processVocalChainDeesser(mappedChain, plan.targetStem, targetMetrics);
+    const finalChain = processVocalChainDeesser(mappedChain, plan.targetStem, targetMetrics, isJsfxMode);
 
     return {
       ...plan,
