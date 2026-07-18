@@ -50,6 +50,7 @@ const RecipeViewerModal = React.lazy(() => import('./components/RecipeViewerModa
 import { TutorialOverlay } from './components/TutorialOverlay';
 import { StatusPage } from './components/StatusPage';
 import { JSFXDatabaseViewer } from './components/JSFXDatabaseViewer';
+import { UadDatabaseViewer } from './components/UadDatabaseViewer';
 import { JSFXAutomationChains } from './components/JSFXAutomationChains';
 import { XpandDatabaseViewer } from './components/XpandDatabaseViewer';
 import { AdminDashboard } from './components/AdminDashboard';
@@ -444,6 +445,7 @@ const App: React.FC = () => {
     return false;
   });
   const [showJsfxDatabase, setShowJsfxDatabase] = useState(false);
+  const [showUadDatabase, setShowUadDatabase] = useState(false);
   const [showXpandDatabase, setShowXpandDatabase] = useState(false);
   const [showPdfSplitter, setShowPdfSplitter] = useState(false);
   const [showJsfxAutomationChains, setShowJsfxAutomationChains] = useState(false);
@@ -6520,6 +6522,10 @@ Provide the exact JSFX plugin name and required sliders/parameters.`;
     return <JSFXDatabaseViewer onBack={() => setShowJsfxDatabase(false)} theme={theme} />;
   }
 
+  if (showUadDatabase) {
+    return <UadDatabaseViewer onBack={() => setShowUadDatabase(false)} theme={theme} />;
+  }
+
   if (showXpandDatabase) {
     return (
       <XpandDatabaseViewer 
@@ -6995,6 +7001,24 @@ Provide the exact JSFX plugin name and required sliders/parameters.`;
                         <div>
                           <div className="text-xs font-bold uppercase tracking-wider">JSFX DB</div>
                           <div className="text-[9px] opacity-50 mt-0.5">View full plugin reference</div>
+                        </div>
+                      </button>
+                    )}
+
+                    {(user?.email === 'recognizemiracles@gmail.com' || user?.email === 'coldestconcept@gmail.com' || user?.email === 'ruhedramarkprod@gmail.com') && (
+                      <button 
+                        onClick={() => {
+                          setShowUadDatabase(true);
+                          setIsUserMenuOpen(false);
+                        }}
+                        className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-left transition-colors group ${getDropdownTheme(theme).itemHover}`}
+                      >
+                        <div className={`w-7 h-7 rounded-full flex items-center justify-center transition-colors ${theme === 'coldest' ? 'bg-amber-500 text-white' : 'bg-amber-500/20 text-amber-500'}`}>
+                          <Database size={14} />
+                        </div>
+                        <div>
+                          <div className="text-xs font-bold uppercase tracking-wider text-amber-500">UAD Hardware DB</div>
+                          <div className="text-[9px] opacity-50 mt-0.5">UAD Precision Hardware Guide</div>
                         </div>
                       </button>
                     )}

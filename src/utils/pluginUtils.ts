@@ -1,4 +1,5 @@
 import { VSTPlugin } from '../types';
+import { UAD_DATABASE } from '../data/uadDatabase';
 
 /**
  * Maps vendor-specific parameter names to standardized ones or vice versa
@@ -45,6 +46,23 @@ export const normalizeParameterName = (vendor: string, name: string, parameter: 
 export const getVendorSpecificParameters = (vendor: string, name: string): string[] => {
   const v = vendor.toLowerCase();
   const n = name.toLowerCase();
+
+  // Ground truth lookup from the certified UAD Database
+  if (v.includes('universal audio') || v.includes('uad') || v.includes('antares')) {
+    const matchedProfile = UAD_DATABASE.find(p => 
+      n.includes(p.name) || 
+      p.name.includes(n) || 
+      n.includes(p.displayName.toLowerCase())
+    );
+    if (matchedProfile) {
+      return matchedProfile.parameters.map(param => {
+        if (param.options && param.options.length > 0) {
+          return `${param.name} (${param.options.join(', ')})`;
+        }
+        return `${param.name} (${param.range})`;
+      });
+    }
+  }
 
   if (v.includes('izotope')) {
     if (n.includes('ozone')) {

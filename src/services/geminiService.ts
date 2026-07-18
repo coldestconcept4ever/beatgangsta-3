@@ -1,4 +1,5 @@
 import { JSFX_DATABASE } from "../data/jsfxResearch";
+import { UAD_DATABASE } from "../data/uadDatabase";
 
 export enum Type {
   TYPE_UNSPECIFIED = "TYPE_UNSPECIFIED",
@@ -2618,6 +2619,36 @@ export const enrichPluginLibrary = async (
   }
   return enrichedPlugins;
 };
+
+const getUadGroundingPrompt = (vendor: string, name: string): string => {
+  const v = vendor.toLowerCase();
+  const n = name.toLowerCase();
+  if (v.includes('universal audio') || v.includes('uad') || v.includes('antares')) {
+    const matchedProfile = UAD_DATABASE.find(p => 
+      n.includes(p.name) || 
+      p.name.includes(n) || 
+      n.includes(p.displayName.toLowerCase())
+    );
+    if (matchedProfile) {
+      return `
+      CRITICAL - CERTIFIED UAD GROUND-TRUTH DATA DETECTED:
+      This is a pre-verified, certified Universal Audio plugin. You MUST use the following exact hardware-accurate data:
+      Plugin Name: ${matchedProfile.displayName}
+      Category: ${matchedProfile.category}
+      Description: ${matchedProfile.description}
+      Hardware Emulated: ${matchedProfile.hardwareModel}
+      Parameters (EXACT Names & Ranges):
+      ${matchedProfile.parameters.map(p => `- "${p.name}": Range [${p.range}], Default Value: ${p.defaultVal}. Control Description: ${p.description}`).join('\n      ')}
+      Pro Tips & Application Rules:
+      ${matchedProfile.proTips.map(pt => `- ${pt}`).join('\n      ')}
+      
+      You MUST strictly return exactly these parameters in your "parameters" output list. NEVER invent, hallucinate, or add fictional parameter names or incorrect values.
+      `;
+    }
+  }
+  return '';
+};
+
 export const verifyAndCorrectPlugin = async (
   plugin: VSTPlugin, 
   userParameter?: string, 
@@ -2631,6 +2662,7 @@ export const verifyAndCorrectPlugin = async (
     Vendor: ${plugin.vendor}
     Name: ${plugin.name}
     Current Version/Tier: ${plugin.version} ${plugin.tier ? `(${plugin.tier})` : ''}
+    ${getUadGroundingPrompt(plugin.vendor, plugin.name)}
     USER INPUTS:
     - Suggested Parameter to add/verify: ${userParameter || 'None'}
     - Suggested Version/Tier/Edition: ${userVersion || 'None'}
@@ -2713,6 +2745,7 @@ export const researchPluginParameters = async (plugin: VSTPlugin, language: stri
     Vendor: ${plugin.vendor}
     Name: ${plugin.name}
     Version: ${plugin.version}
+    ${getUadGroundingPrompt(plugin.vendor, plugin.name)}
     Your task is to research and provide:
     1. A highly accurate, professional description of the plugin.
     2. A list of its key features.
