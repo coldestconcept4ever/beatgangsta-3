@@ -197,7 +197,8 @@ export const mapPluginParametersSafely = (
     if (!parsed) return setting;
 
     // Track existing output/trim parameters
-    if (paramLower.includes('output') || paramLower.includes('trim') || paramLower.includes('make-up') || paramLower.includes('makeup')) {
+    const isDbGain = paramLower.includes('gain') && parsed.suffix.toLowerCase() === 'db';
+    if (paramLower.includes('output') || paramLower.includes('trim') || paramLower.includes('make-up') || paramLower.includes('makeup') || isDbGain) {
       hasTrimParameter = true;
     }
 
@@ -311,9 +312,10 @@ export const mapPluginParametersSafely = (
       }
     }
     
-    // Track compressor makeup gain
+    // Track compressor makeup gain (only if explicitly in dB or has a dB suffix)
     if (isCompressor && (paramLower.includes('makeup') || paramLower.includes('make-up') || paramLower.includes('gain'))) {
-        if (parsed.value > 0) {
+        const isDbValue = parsed.suffix.toLowerCase() === 'db';
+        if (parsed.value > 0 && isDbValue) {
             totalCompMakeup += parsed.value;
         }
     }
@@ -499,27 +501,22 @@ export const mapPluginParametersSafely = (
     autoTrimValue = -parseFloat(((totalCompMakeup - 6) * 0.5).toFixed(1));
   }
 
-  if (autoTrimValue < -0.5) {
-      if (!hasTrimParameter) {
-          mappedSettings.push({
-              parameter: "Output Trim",
-              value: `${autoTrimValue} dB`,
-              explanation: `Auto-Gain Matching: Reduced by ${autoTrimValue}dB to compensate for internal boosts and prevent gain creep.`
-          });
-      } else {
-          // Find and adjust the existing trim/output
-          for (let i = 0; i < mappedSettings.length; i++) {
-              const pLower = mappedSettings[i].parameter.toLowerCase();
-              if (pLower.includes('output') || pLower.includes('trim') || (isEq && pLower.includes('gain') && pLower.includes('out'))) {
-                  const parsedTrim = parseNumericValue(mappedSettings[i].value);
-                  if (parsedTrim) {
-                      const newTrim = parseFloat((parsedTrim.value + autoTrimValue).toFixed(1));
-                      mappedSettings[i].value = `${newTrim} dB`;
-                      mappedSettings[i].explanation = mappedSettings[i].explanation 
-                        ? `${mappedSettings[i].explanation} (Gain matched: added ${autoTrimValue}dB)`
-                        : `Auto-Gain Matching: Adjusted to prevent gain creep.`;
-                      break;
-                  }
+  if (autoTrimValue < -0.5 && hasTrimParameter) {
+      // Find and adjust the existing trim/output
+      for (let i = 0; i < mappedSettings.length; i++) {
+          const pLower = mappedSettings[i].parameter.toLowerCase();
+          const isEqGainOut = isEq && pLower.includes('gain') && pLower.includes('out');
+          const isCompressorGainOut = isCompressor && (pLower.includes('gain') || pLower.includes('output') || pLower.includes('makeup')) && parseNumericValue(mappedSettings[i].value)?.suffix.toLowerCase() === 'db';
+          
+          if (pLower.includes('output') || pLower.includes('trim') || isEqGainOut || isCompressorGainOut) {
+              const parsedTrim = parseNumericValue(mappedSettings[i].value);
+              if (parsedTrim) {
+                  const newTrim = parseFloat((parsedTrim.value + autoTrimValue).toFixed(1));
+                  mappedSettings[i].value = `${newTrim} dB`;
+                  mappedSettings[i].explanation = mappedSettings[i].explanation 
+                    ? `${mappedSettings[i].explanation} (Gain matched: added ${autoTrimValue}dB)`
+                    : `Auto-Gain Matching: Adjusted to prevent gain creep.`;
+                  break;
               }
           }
       }

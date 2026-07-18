@@ -959,13 +959,15 @@ const VOCAL_MATCHING_AND_COHESION_PROMPT = `
     When multiple vocal stems are present (e.g., a lead vocal on track A taking up one part of the song and another lead/main vocal on track B taking up another part of the song, or any vocal tracks identified as main vocals), you MUST ALWAYS treat them with extreme cohesive care.
     It is an absolute, mandatory requirement to match these vocals together in EQ tone, dynamic range, compression feel, and especially in volume/loudness level, preventing sudden jumps in volume or jarring tone changes.
     
-    0. INTELLIGENT VOCAL ROLE IDENTIFICATION (Lead vs. Backing vs. Ad-lib):
-       - You MUST automatically and intelligently determine the exact role of each vocal stem by analyzing its audio characteristics, signal density, average volume/RMS energy, and any file naming conventions:
+    0. USER-SELECTED ROLES ARE ABSOLUTE (CRITICAL):
+       - You MUST NOT guess or override the role of a stem if the user has explicitly selected/labeled its type/role in the stem options (e.g. 'Lead Vocal', 'Chorus / Hook'). The user-selected dropdown type is the absolute ground-truth.
+       - If a stem is labeled as 'Lead Vocal' or 'Chorus / Hook', you MUST treat it as a main lead vocal. Under no circumstances should you classify it as a backing vocal or ad-lib, even if the filename contains "hook", "back", "dubs", or is the second part of a hook.
+       - ONLY if the user-selected type is 'Other', 'Unknown', or is unspecified should you fall back to automatic identification using the guidelines below:
          - **Lead Vocal Identifiers**: The track with the highest average RMS level, most continuous waveform activity across major song sections, or file labels containing "Lead", "Main", "Vox_L", "Hook", or "Verse".
          - **Backing Vocal / Ad-lib Identifiers**: Tracks that are audibly quieter (often 6dB to 12dB lower in average signal power), sparse/intermittent in waveform density, consisting primarily of phrase endings, harmonized layers, background chops, or file labels containing "Back", "Dubs", "Harm", "Adlib", or "BGV".
        - **Matching Leveling Protocol**: 
-         - If multiple Lead Vocal tracks are identified (e.g., a handoff where artist A sings the first verse on Track 1 and artist B sings the second verse on Track 2), you MUST apply the "Unified Lead matching" protocol to bring them to identical target loudness and identical core mid-range presence.
-         - If a track is identified as a Backing Vocal or Ad-lib, you MUST NOT level-match it to the Lead. Instead, prescribe a strict relative hierarchy: mix the backing vocal or ad-lib 6dB to 12dB lower, high-pass it more aggressively (e.g., at 120Hz-150Hz), compress it with a faster release to "glue" it into the background, and pan it wider to create stereo separation and leave space for the Lead Vocal panned dead center.
+         - If multiple Lead Vocal / Hook tracks are present (including separate hook parts, verse parts, or handoffs), you MUST apply the "Unified Lead matching" protocol to bring them to identical target loudness and identical core mid-range presence.
+         - If a track is explicitly labeled as a Backing Vocal or Ad-lib, or is automatically identified as such in the absence of user labels, you MUST NOT level-match it to the Lead. Instead, prescribe a strict relative hierarchy: mix the backing vocal or ad-lib 6dB to 12dB lower, high-pass it more aggressively (e.g., at 120Hz-150Hz), compress it with a faster release to "glue" it into the background, and pan it wider to create stereo separation and leave space for the Lead Vocal panned dead center.
 
     1. AUTOMATIC VOLUME/LOUDNESS EQUALIZATION:
        - You MUST analyze the relative RMS/LUFS levels of all identified main/lead vocals.
@@ -4075,6 +4077,7 @@ export const getMixCritique = async (
   if (uploadedStems && uploadedStems.length > 0) {
     parts.push({ text: "These are the INDIVIDUAL STEMS that make up the mix:" });
     for (const stem of uploadedStems) {
+      const stemTypeStr = stem.type === 'Other' && stem.customType ? stem.customType : (stem.type || 'Unknown');
       if (stem.uri && stem.uri.trim() !== '') {
         let uri = stem.uri;
         if (uri.includes('/files/')) {
@@ -4084,11 +4087,11 @@ export const getMixCritique = async (
            uri = 'https://generativelanguage.googleapis.com/v1beta/' + (uri.startsWith('files/') ? uri : 'files/' + uri);
         }
         let stemMimeType = stem.mimeType || 'audio/mpeg';
-        parts.push({ text: `Stem Name: ${stem.name || stem.file?.name || 'Unknown Stem'}` });
+        parts.push({ text: `Stem Name: ${stem.name || stem.file?.name || 'Unknown Stem'} (User-Selected Type/Role: ${stemTypeStr})` });
         parts.push({ fileData: { fileUri: uri, mimeType: stemMimeType } });
       } else if (stem.base64 && stem.base64.trim() !== '') {
         let stemMimeType = stem.mimeType || 'audio/mpeg';
-        parts.push({ text: `Stem Name: ${stem.name || stem.file?.name || 'Unknown Stem'}` });
+        parts.push({ text: `Stem Name: ${stem.name || stem.file?.name || 'Unknown Stem'} (User-Selected Type/Role: ${stemTypeStr})` });
         parts.push({ inlineData: { data: stem.base64, mimeType: stemMimeType } });
       }
     }
@@ -4475,6 +4478,7 @@ export const getLyricAnalysis = async (
   if (uploadedStems && uploadedStems.length > 0) {
     parts.push({ text: "These are the INDIVIDUAL STEMS that make up the mix:" });
     for (const stem of uploadedStems) {
+      const stemTypeStr = stem.type === 'Other' && stem.customType ? stem.customType : (stem.type || 'Unknown');
       if (stem.uri && stem.uri.trim() !== '') {
         let uri = stem.uri;
         if (uri.includes('/files/')) {
@@ -4484,11 +4488,11 @@ export const getLyricAnalysis = async (
            uri = 'https://generativelanguage.googleapis.com/v1beta/' + (uri.startsWith('files/') ? uri : 'files/' + uri);
         }
         let stemMimeType = stem.mimeType || 'audio/mpeg';
-        parts.push({ text: `Stem Name: ${stem.name || stem.file?.name || 'Unknown Stem'}` });
+        parts.push({ text: `Stem Name: ${stem.name || stem.file?.name || 'Unknown Stem'} (User-Selected Type/Role: ${stemTypeStr})` });
         parts.push({ fileData: { fileUri: uri, mimeType: stemMimeType } });
       } else if (stem.base64 && stem.base64.trim() !== '') {
         let stemMimeType = stem.mimeType || 'audio/mpeg';
-        parts.push({ text: `Stem Name: ${stem.name || stem.file?.name || 'Unknown Stem'}` });
+        parts.push({ text: `Stem Name: ${stem.name || stem.file?.name || 'Unknown Stem'} (User-Selected Type/Role: ${stemTypeStr})` });
         parts.push({ inlineData: { data: stem.base64, mimeType: stemMimeType } });
       }
     }
