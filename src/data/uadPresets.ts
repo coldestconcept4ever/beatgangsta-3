@@ -533,5 +533,551 @@ export const UAD_PRESETS: Record<string, UADPreset[]> = {
         "Mix / Blend": 127 // 100% Wet
       }
     }
+  ],
+  "uad ua 175b and 176": [
+    {
+      name: "Smooth Vocal Control",
+      description: "Uses the 176 algorithm with a gentle 2:1 ratio, medium-slow attack, and moderately fast release for warm, seamless vocal leveling.",
+      settings: {
+        "Model Select": 127, // UA 176
+        "Input Gain": 40, // Balanced compression trigger
+        "Output Level": 55, // Clean makeup
+        "Attack": 64, // ~4 (Medium)
+        "Release": 35, // ~2.5 (Fast-medium)
+        "Ratio (176)": 0, // 2:1
+        "Sidechain Filter": 0 // Off
+      }
+    },
+    {
+      name: "Vintage Snare Bite",
+      description: "Classic 175B limiting with faster attack and recovery to bring out the natural wood snap and ring of the drum head.",
+      settings: {
+        "Model Select": 0, // UA 175B (Fixed 12:1)
+        "Input Gain": 55, // Driven hard
+        "Output Level": 45, // Compensated level
+        "Attack": 30, // ~2.0 (Fast-medium)
+        "Release": 50, // ~3.5 (Medium)
+        "Ratio (176)": 127, // 12:1 (ignored on 175B, but set)
+        "Sidechain Filter": 127 // 100 Hz
+      }
+    }
+  ],
+  "uad manley variable mu limiter": [
+    {
+      name: "Silk Mastering Glue",
+      description: "Gentle Variable Mu mastering setup. Compress mode, medium-slow attack, and medium recovery to gently weld stereo layers together.",
+      settings: {
+        "Input Gain": 45, // Moderate tube drive
+        "Threshold": 75, // Light compression onset
+        "Attack": 70, // Medium-slow
+        "Recovery / Release": 32, // Med
+        "Output Gain": 50, // Unity gain
+        "HP Sidechain": 127, // On (100 Hz)
+        "Mode Select": 0 // Compress (1.5:1)
+      }
+    },
+    {
+      name: "Thick Parallel Drum Bus",
+      description: "Limit mode, fast attack and fast recovery. Drive input hard to generate aggressive, fat analog saturation on drums.",
+      settings: {
+        "Input Gain": 75, // Heavy tube drive
+        "Threshold": 45, // Deep gain reduction
+        "Attack": 15, // Fast
+        "Recovery / Release": 0, // Fast
+        "Output Gain": 40, // Compensated output
+        "HP Sidechain": 127, // On (100 Hz)
+        "Mode Select": 127 // Limit
+      }
+    }
+  ],
+  "uad dbx 160 compressor": [
+    {
+      name: "Slammin Snare Punch",
+      description: "The definitive VCA snare setting. Pinpoint attack, 3:1 ratio, with fast hard-knee recovery to add punch and weight.",
+      settings: {
+        "Threshold": 64, // Riding the peaks
+        "Compression Ratio": 30, // ~3:1
+        "Output Gain": 64 // +3 dB makeup
+      }
+    },
+    {
+      name: "Heavy Bass Anchor",
+      description: "Locks the low-end performance firmly in place with a moderate ratio and steady gain reduction.",
+      settings: {
+        "Threshold": 50, // Deeper gain reduction
+        "Compression Ratio": 45, // ~4.5:1
+        "Output Gain": 70 // +5 dB makeup
+      }
+    }
+  ],
+  "uad lexicon 224 digital reverb": [
+    {
+      name: "Lush Concert Vocal Hall",
+      description: "Sprawling, highly modulated classic hall with long, warm decay times and balanced bass crossover parameters.",
+      settings: {
+        "Program Select": 0, // Concert Hall
+        "Reverb Time": 40, // 3.2 s
+        "Bass Decay": 64, // 1.0x
+        "Crossover Frequency": 35, // 500 Hz
+        "Treble Decay": 45, // 2.0 kHz
+        "Pre-delay": 35, // 35 ms
+        "Depth": 64, // 50%
+        "Wet/Dry Mix": 127, // 100% Wet
+        "System Noise": 0 // Off
+      }
+    },
+    {
+      name: "Grit Retro Plate",
+      description: "80s percussion plate with system noise active, replicating the gritty converters and brilliant sparkle of the vintage hardware.",
+      settings: {
+        "Program Select": 64, // Percussion Plate
+        "Reverb Time": 20, // 1.8 s
+        "Bass Decay": 32, // 0.6x
+        "Crossover Frequency": 50, // 800 Hz
+        "Treble Decay": 90, // 4.5 kHz
+        "Pre-delay": 15, // 15 ms
+        "Depth": 50, // 40%
+        "Wet/Dry Mix": 127, // 100%
+        "System Noise": 127 // On (vintage grit)
+      }
+    }
+  ],
+  "uad helios type 69 preamp and eq collection": [
+    {
+      name: "Thick Classic Rock Bass",
+      description: "Deep low boost at 60 Hz paired with aggressive preamplifier saturation to create the signature fuzzy, solid retro low end.",
+      settings: {
+        "Preamplifier Gain": 45, // Driven preamp
+        "High EQ Shelf Gain": 64, // 0 dB
+        "Mid EQ Frequency": 32, // 1.4 kHz (unused but set)
+        "Mid EQ Gain": 0, // 0 dB mid
+        "Low EQ Frequency / Mode": 42, // 60 Hz
+        "Low EQ Gain": 60, // Peak boost active
+        "High Pass Filter": 0 // Off
+      }
+    },
+    {
+      name: "Presence Vocal Bite",
+      description: "Aggressive mid-frequency boost at 2.8 kHz combined with subtle high shelf brilliance to cut through dense guitar arrangements.",
+      settings: {
+        "Preamplifier Gain": 25, // Clean pre
+        "High EQ Shelf Gain": 75, // +1.5 dB
+        "Mid EQ Frequency": 64, // 2.8 kHz
+        "Mid EQ Gain": 45, // Musical mid-range boost
+        "Low EQ Frequency / Mode": 64, // 120 Hz (unused but set)
+        "Low EQ Gain": 0, // 0 dB
+        "High Pass Filter": 64 // 40 Hz filter on
+      }
+    }
+  ],
+  "uad century tube channel strip": [
+    {
+      name: "Warm Vocal Tracking",
+      description: "Harmonic tube saturation in the preamplifier, silky air high EQ, and automatic optical leveling for pristine tracking.",
+      settings: {
+        "Preamp Gain": 50, // Warm zone
+        "Low EQ Shelf": 64, // Flat
+        "Mid EQ Sweep": 64, // Flat
+        "High EQ Shelf": 72, // +2 dB air
+        "Compressor Threshold": 35, // Soft, transparent leveling
+        "Master Level": 64 // Unity
+      }
+    },
+    {
+      name: "Punchy DI Bass",
+      description: "Thick low EQ shelf boost combined with medium opto leveling to glue direct-input electric bass tracks.",
+      settings: {
+        "Preamp Gain": 40, // Standard pre
+        "Low EQ Shelf": 76, // +3 dB fatness
+        "Mid EQ Sweep": 55, // -1.5 dB boxiness cut
+        "High EQ Shelf": 64, // Flat
+        "Compressor Threshold": 55, // Controlled peaks
+        "Master Level": 64 // Unity
+      }
+    }
+  ],
+  "uad galaxy tape echo": [
+    {
+      name: "Dub Space Reverb",
+      description: "Combines staggered playback heads with the mechanical spring reverb for legendary multi-dimensional echo loops.",
+      settings: {
+        "Mode Selector": 51, // Mode 5 (Delay + Reverb)
+        "Repeat Rate": 45, // Classic dub tempo
+        "Intensity": 70, // High repetition/feedback
+        "Echo Volume": 55, // Rich delay level
+        "Reverb Volume": 40, // Gritty spring wash
+        "Tape Age": 64, // Used
+        "Bass EQ": 64, // Flat
+        "Treble EQ": 50 // Gentle dampening
+      }
+    },
+    {
+      name: "Organic Slapback Echo",
+      description: "Fast single tape playback with Used tape age for warm, nostalgic rockabilly slapback textures.",
+      settings: {
+        "Mode Selector": 0, // Mode 1 (Head 1 only)
+        "Repeat Rate": 15, // Short delay time
+        "Intensity": 15, // Single slap back
+        "Echo Volume": 64, // Strong slap level
+        "Reverb Volume": 0, // Dry
+        "Tape Age": 127, // Old (warm high-cut)
+        "Bass EQ": 50, // Subtle low cut
+        "Treble EQ": 64 // Flat
+      }
+    }
+  ],
+  "uad oxide tape recorder": [
+    {
+      name: "15 IPS Warm Drum Head",
+      description: "Rich low-end 'head bump' at 15 IPS with GP9 formula, driven hard to naturally compress and glue high-transient drums.",
+      settings: {
+        "Input Gain": 72, // Driven hard (+3 dB)
+        "Output Level": 52, // Compensated gain
+        "Tape Speed": 0, // 15 IPS
+        "Tape Formula": 0, // GP9
+        "EQ Curve": 0 // NAB
+      }
+    },
+    {
+      name: "30 IPS Vocal Silk",
+      description: "Ultra-flat, high-fidelity response at 30 IPS with vintage 456 tape formulation for organic high-end smoothing.",
+      settings: {
+        "Input Gain": 50, // Moderate input drive
+        "Output Level": 50, // Unity level
+        "Tape Speed": 127, // 30 IPS
+        "Tape Formula": 127, // 456
+        "EQ Curve": 127 // CCIR
+      }
+    }
+  ],
+  "uad pure plate reverb": [
+    {
+      name: "Vocal Plate Brilliance",
+      description: "Rich, shimmering plate decay with 25ms pre-delay and boosted high end to deliver gorgeous vocal depth and air.",
+      settings: {
+        "Reverb Time": 45, // 2.2 s
+        "Pre-delay": 32, // 25 ms
+        "Bass EQ": 50, // -2 dB mud cut
+        "Treble EQ": 78, // +3 dB high end sheen
+        "Wet/Dry Mix": 127 // 100% Wet
+      }
+    },
+    {
+      name: "Short Acoustic Space",
+      description: "Very tight decay and short pre-delay to add subtle ambient depth to guitars or auxiliary percussion tracks.",
+      settings: {
+        "Reverb Time": 15, // 1.0 s
+        "Pre-delay": 10, // 5 ms
+        "Bass EQ": 64, // Flat
+        "Treble EQ": 55, // Warm tone
+        "Wet/Dry Mix": 45 // 35% Mix
+      }
+    }
+  ],
+  "uad teletronix la-3a audio leveler": [
+    {
+      name: "Solid Guitars Pin",
+      description: "Fast electro-optical leveling. Locks aggressive strums in place while adding incredible mid-range harmonic weight.",
+      settings: {
+        "Peak Reduction": 55, // Solid leveling (3-5dB GR)
+        "Gain Level": 45, // Balanced makeup output
+        "Compress/Limit": 0, // Compress mode
+        "Sidechain Mod (HF)": 50 // 12 o'clock Flat
+      }
+    },
+    {
+      name: "Smooth Acoustic Rider",
+      description: "Light, transparent dynamic control that gently rides fingerstyle guitar performances.",
+      settings: {
+        "Peak Reduction": 25, // Subtle opto reduction
+        "Gain Level": 35, // Soft makeup output
+        "Compress/Limit": 0, // Compress mode
+        "Sidechain Mod (HF)": 127 // High HF sensitivity (ignore bass thuds)
+      }
+    }
+  ],
+  "uad hitsville reverb chambers": [
+    {
+      name: "Chamber 2 Vocal Gold",
+      description: "Sprawling, beautiful attic reverb designed for lead vocals using vintage Altec playback speakers and Neumann KM86 capture mics.",
+      settings: {
+        "Chamber Select": 127, // Chamber 2
+        "Decay": 60, // Elegant long tail
+        "Pre-delay": 25, // 25 ms pre-delay
+        "Speaker Select": 0, // Original
+        "Microphone": 0, // KM86
+        "Mic Position": 64, // Mid distance
+        "Wet/Dry Mix": 127 // 100% Wet
+      }
+    },
+    {
+      name: "Chamber 1 Band Glue",
+      description: "Authentic instrument chamber configuration using Chamber 1 with Neumann U67s at a far distance to glue backing horns, guitars, or keys.",
+      settings: {
+        "Chamber Select": 0, // Chamber 1
+        "Decay": 45, // Medium decay
+        "Pre-delay": 10, // Short separation
+        "Speaker Select": 127, // Modern
+        "Microphone": 64, // U67
+        "Mic Position": 127, // Far distance
+        "Wet/Dry Mix": 127 // 100% Wet
+      }
+    }
+  ],
+  "uad hitsville eq collection": [
+    {
+      name: "AM Radio Vocal Cut",
+      description: "Pushes critical mid frequencies at 800 Hz and 2 kHz while rolling off muddy 320 Hz to make lead vocals cut through any mix.",
+      settings: {
+        "EQ Model": 0, // Graphic
+        "50 Hz Gain": 64, // Flat (0 dB)
+        "130 Hz Gain": 64, // Flat
+        "320 Hz Gain": 48, // -2 dB cut
+        "800 Hz Gain": 104, // +5 dB boost
+        "2 kHz Gain": 112, // +6 dB boost
+        "5 kHz Gain": 80, // +2 dB boost
+        "12.5 kHz Gain": 72, // +1 dB boost
+        "Output Gain": 72 // +1 dB makeup
+      }
+    },
+    {
+      name: "Motown Bass FAT",
+      description: "Creates the massive legendary Motown bass weight by boosting 50 Hz and 130 Hz with broad, interactive passive induction.",
+      settings: {
+        "EQ Model": 0, // Graphic
+        "50 Hz Gain": 112, // +6 dB boost
+        "130 Hz Gain": 104, // +5 dB boost
+        "320 Hz Gain": 80, // +2 dB boost
+        "800 Hz Gain": 56, // -1 dB cut
+        "2 kHz Gain": 64, // Flat
+        "5 kHz Gain": 64, // Flat
+        "12.5 kHz Gain": 64, // Flat
+        "Output Gain": 56 // -1 dB attenuation
+      }
+    }
+  ],
+  "uad neve 1084": [
+    {
+      name: "Vocal Preamp Warmth",
+      description: "Generates rich, vintage analog warmth by driving the preamp section, paired with high-pass filtering and subtle mid presence.",
+      settings: {
+        "Input Gain": 55, // Driven warm
+        "High Pass Filter": 64, // 70 Hz
+        "Low EQ Frequency": 32, // 60 Hz
+        "Low EQ Gain": 64, // Flat
+        "Mid EQ Frequency": 32, // 1.6 kHz
+        "Mid EQ Gain": 80, // +2 dB mid presence
+        "Mid Q Factor": 0, // Normal Q
+        "High EQ Frequency": 64, // 12 kHz
+        "High EQ Gain": 76, // +1.5 dB air
+        "Output Fader": 64 // Unity
+      }
+    },
+    {
+      name: "Surgical Snare Crack",
+      description: "Adds explosive punch and definition to snare drums using the narrow High-Q filter mode at 3.2 kHz to catch critical wood crack.",
+      settings: {
+        "Input Gain": 35, // Clean preamp
+        "High Pass Filter": 32, // 45 Hz
+        "Low EQ Frequency": 64, // 110 Hz
+        "Low EQ Gain": 72, // +1 dB low body
+        "Mid EQ Frequency": 48, // 3.2 kHz
+        "Mid EQ Gain": 96, // +4 dB boost
+        "Mid Q Factor": 127, // High Q active
+        "High EQ Frequency": 0, // 10 kHz
+        "High EQ Gain": 80, // +2 dB crisp air
+        "Output Fader": 48 // -2 dB output attenuation
+      }
+    }
+  ],
+  "uad oxford inflator": [
+    {
+      name: "Stereo Bus Tube Maximizer",
+      description: "Enriches the master bus stereo image by expanding dynamic peaks and applying a warm, tube-style harmonic curve without digital clipping.",
+      settings: {
+        "Input": 64, // +1.5 dB drive
+        "Effect": 108, // 85% blend
+        "Curve": 85, // +3.5 curve
+        "Output": 120, // -0.2 dB ceiling
+        "Clip 0dB": 127, // On
+        "Band Split": 127 // On (triple-band clean processing)
+      }
+    },
+    {
+      name: "Slammed Drum Parallel",
+      description: "Drives the saturation curve to the absolute limit for parallel drum buses to inject extreme weight, punch, and analog vibe.",
+      settings: {
+        "Input": 110, // +5.0 dB drive
+        "Effect": 127, // 100% full effect
+        "Curve": 105, // +4.8 harmonic curve
+        "Output": 100, // -1.0 dB safety ceiling
+        "Clip 0dB": 127, // On
+        "Band Split": 0 // Off (full band intermodulation distortion)
+      }
+    }
+  ],
+  "uad emt 140": [
+    {
+      name: "Plate B Lush Vocal",
+      description: "Generates a deep, warm, and highly-regarded vocal plate wash using the historic Plate B unit with 180Hz low filtering.",
+      settings: {
+        "Plate Select": 64, // Plate B
+        "Reverb Time": 71, // 2.8 s
+        "Pre-delay": 45, // 35 ms pre-delay
+        "Bass Cut Filter": 50, // 180 Hz cut
+        "Input Filter": 0, // Off
+        "Wet/Dry Mix": 127 // 100% Wet
+      }
+    },
+    {
+      name: "Plate A Snare Decay",
+      description: "Bright, exciting retro plate decay tailored for percussion, rolling off muddy low end at 270Hz to preserve snappy transients.",
+      settings: {
+        "Plate Select": 0, // Plate A
+        "Reverb Time": 40, // 1.6 s
+        "Pre-delay": 20, // 15 ms
+        "Bass Cut Filter": 75, // 270 Hz cut
+        "Input Filter": 0, // Off
+        "Wet/Dry Mix": 101 // ~80% Mix
+      }
+    }
+  ],
+  "uad emt 250": [
+    {
+      name: "Modulated Choir Hall",
+      description: "The classic, ultra-spacious EMT 250 reverberation setup featuring rich pitch modulation and custom high-frequency dampening.",
+      settings: {
+        "Mode Selector": 0, // Reverb
+        "Decay (Lever 1)": 85, // 3.2 s
+        "Low Decay (Lever 2)": 80, // +1.5 dB multiplier
+        "High Decay (Lever 3)": 40, // -1.0 dB dampening
+        "Pre-delay (Lever 4)": 70, // 45 ms pre-delay
+        "Output Mix": 127 // 100% Wet
+      }
+    },
+    {
+      name: "Slap Vocal Space",
+      description: "Tight, retro 1.2s reverb decay with boosted high frequencies and low pre-delay to sit closely behind speech or vocals.",
+      settings: {
+        "Mode Selector": 0, // Reverb
+        "Decay (Lever 1)": 35, // 1.2 s
+        "Low Decay (Lever 2)": 40, // -1.0 dB cut
+        "High Decay (Lever 3)": 75, // +1.0 dB boost
+        "Pre-delay (Lever 4)": 25, // 15 ms
+        "Output Mix": 45 // 35% Wet mix
+      }
+    }
+  ],
+  "uad korg sdd-3000": [
+    {
+      name: "The Edge Dotted Eighths",
+      description: "The definitive rhythmic digital delay configuration with moderate triangle modulation, high feedback, and low-end filtering.",
+      settings: {
+        "Input Level": 64, // -10 dB
+        "Input Attenuator": 65, // Active preamp drive
+        "Delay Time": 75, // 380 ms
+        "Feedback": 45, // Substantial repeats
+        "Filter High Cut": 50, // 4 kHz cut
+        "Filter Low Cut": 25, // 125 Hz cut
+        "Mod Waveform": 32, // Triangle
+        "Mod Frequency": 12, // 1.5 Hz speed
+        "Mod Intensity": 25 // 25% modulation depth
+      }
+    },
+    {
+      name: "Retro Slapback Drive",
+      description: "Short slapback delay with the input level pushed hard to saturate the preamplifier, adding grit and thickness to guitar lines.",
+      settings: {
+        "Input Level": 0, // -20 dB (highest sensitivity)
+        "Input Attenuator": 80, // Heavily driven preamp
+        "Delay Time": 24, // 120 ms
+        "Feedback": 15, // Single repeat
+        "Filter High Cut": 0, // Off
+        "Filter Low Cut": 0, // Off
+        "Mod Waveform": 0, // Sine
+        "Mod Frequency": 4, // 0.5 Hz
+        "Mod Intensity": 10 // Soft pitch movement
+      }
+    }
+  ],
+  "uad neve 33609": [
+    {
+      name: "Smooth Master Glue",
+      description: "The gold standard master bus configuration using a gentle 1.5:1 ratio and automatic recovery for cohesive, transparent leveling.",
+      settings: {
+        "Compressor Threshold": 64, // ~0 dBu
+        "Compressor Ratio": 0, // 1.5:1
+        "Compressor Recovery": 80, // Auto 1
+        "Compressor Gain": 25, // +2 dB make up
+        "Limiter Threshold": 100, // +10 dBu (inactive)
+        "Limiter Attack": 127, // Slow
+        "Limiter Recovery": 80 // Auto 1
+      }
+    },
+    {
+      name: "Thick Parallel Drum Smasher",
+      description: "Aggressive diode-bridge squash using a heavy 4:1 ratio and quick 400ms recovery to pump room mics and fatten overheads.",
+      settings: {
+        "Compressor Threshold": 30, // Deep threshold
+        "Compressor Ratio": 64, // 4:1 ratio
+        "Compressor Recovery": 25, // 400 ms recovery
+        "Compressor Gain": 75, // +6 dB makeup
+        "Limiter Threshold": 50, // +6 dBu limiter ceiling
+        "Limiter Attack": 0, // Fast
+        "Limiter Recovery": 25 // 100 ms recovery
+      }
+    }
+  ],
+  "uad empirical labs el7 fatso": [
+    {
+      name: "Warm Tape Saturator",
+      description: "Authentic dynamic analog tape emulation. Warmth level 3 rounds high-mid sibilance while the Tranny adds low iron harmonics.",
+      settings: {
+        "Input Level": 65, // Saturates input tape head
+        "Output Level": 45, // Compensated level
+        "Warmth": 50, // Warmth 3 active
+        "Tranny": 127, // Transformer active
+        "Compressor Mode": 0 // Off
+      }
+    },
+    {
+      name: "Spank Drum Bus Glue",
+      description: "Uses the legendary fast, explosive 'Spank' compressor curve combined with tape saturation to slam and pump parallel drums.",
+      settings: {
+        "Input Level": 75, // Deep saturation drive
+        "Output Level": 38, // Makeup compensation
+        "Warmth": 64, // Warmth 4 active
+        "Tranny": 127, // Transformer active
+        "Compressor Mode": 32 // Spank curve
+      }
+    }
+  ],
+  "uad moog multimode filter": [
+    {
+      name: "Lush Sweeping Resonator",
+      description: "Warm transistor ladder sweeping Low Pass filter driven to +8dB with substantial envelope modulation reacting to audio dynamics.",
+      settings: {
+        "Filter Cutoff": 50, // ~1.5 kHz
+        "Resonance": 65, // Juicy, ringing resonance
+        "Drive": 40, // +8 dB warmth saturation
+        "Filter Mode": 0, // Low Pass
+        "Envelope Amount": 85, // Strong dynamic sweeps
+        "LFO Rate": 30, // 1.2 Hz
+        "LFO Amount": 35 // Moderate movement
+      }
+    },
+    {
+      name: "Gritty Sub Drive Filter",
+      description: "Aggressive low end warmth filter designed for synth or bass guitars, utilizing a heavy +15dB input overdrive.",
+      settings: {
+        "Filter Cutoff": 20, // ~400 Hz
+        "Resonance": 35, // Balanced low bump
+        "Drive": 75, // +15 dB overdrive saturation
+        "Filter Mode": 0, // Low Pass
+        "Envelope Amount": 0, // Fixed cutoff
+        "LFO Rate": 0, // Off
+        "LFO Amount": 0 // Off
+      }
+    }
   ]
 };

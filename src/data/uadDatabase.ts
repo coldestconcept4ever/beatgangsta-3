@@ -1777,6 +1777,1262 @@ export const UAD_DATABASE: UADPluginProfile[] = [
         type: "knob"
       }
     ]
+  },
+  {
+    name: "uad ua 175b and 176",
+    displayName: "UAD UA 175B and 176 Tube Compressor Collection",
+    category: "Dynamics",
+    description: "The direct precursors to the legendary 1176. These custom-crafted tube limiters deliver rich, warm harmonic texture and fast, feedback-style gain reduction.",
+    hardwareModel: "Universal Audio 175B and 176 Tube Limiters",
+    proTips: [
+      "The 175B has a fixed ratio of about 12:1, whereas the 176 lets you select from 2:1, 4:1, 8:1, or 12:1. Use 2:1 on the 176 for soft, vocal leveling.",
+      "As a feedback compressor, the Input control drives both the signal level and the amount of compression. Always balance it with the Output control.",
+      "Engage the Sidechain filter at 100 Hz to prevent high-energy sub-bass elements from over-triggering the tube gain reduction circuit."
+    ],
+    parameters: [
+      {
+        name: "Model Select",
+        range: "UA 175B / UA 176",
+        defaultVal: "UA 176",
+        description: "Switches between the 175B and 176 limiter emulation algorithms.",
+        type: "switch",
+        options: ["UA 175B", "UA 176"]
+      },
+      {
+        name: "Input Gain",
+        range: "0 to 100 (Continuous)",
+        defaultVal: "30",
+        description: "Controls the input signal level and simultaneously increases compression.",
+        type: "knob"
+      },
+      {
+        name: "Output Level",
+        range: "0 to 100 (Continuous)",
+        defaultVal: "60",
+        description: "Controls the final output makeup volume level.",
+        type: "knob"
+      },
+      {
+        name: "Attack",
+        range: "1 to 7 (Fast to Slow)",
+        defaultVal: "3",
+        description: "Sets transient attack speed. Unlike standard units, higher is slower.",
+        type: "knob"
+      },
+      {
+        name: "Release",
+        range: "1 to 7 (Fast to Slow)",
+        defaultVal: "4",
+        description: "Sets recovery release speed. Higher values indicate slower recovery.",
+        type: "knob"
+      },
+      {
+        name: "Ratio (176)",
+        range: "2:1 / 4:1 / 8:1 / 12:1",
+        defaultVal: "4:1",
+        description: "Selects active compression ratio curve on the 176 model.",
+        type: "select",
+        options: ["2:1", "4:1", "8:1", "12:1"]
+      },
+      {
+        name: "Sidechain Filter",
+        range: "Off / 100 Hz",
+        defaultVal: "Off",
+        description: "Applies a high pass filter on the sidechain detector path.",
+        type: "switch",
+        options: ["Off", "100 Hz"]
+      }
+    ]
+  },
+  {
+    name: "uad manley variable mu limiter",
+    displayName: "UAD Manley Variable Mu Limiter",
+    category: "Dynamics",
+    description: "The gold standard tube mastering compressor. Celebrated for its lush Class A vacuum tube sound, dynamic 'Variable Mu' tube bias reduction, and pristine stereo bus gluing.",
+    hardwareModel: "Manley Labs Variable Mu Stereo Limiter Compressor",
+    proTips: [
+      "Drive the Input knob higher and lower the Threshold to saturate the custom tube stage, yielding deep, rich analog saturation.",
+      "The classic master bus recipe: set Threshold for a gentle 1 to 2 dB of gain reduction, with a Medium recovery speed and 'Compress' ratio mode.",
+      "Engage High Pass Sidechain to let punchy kick drums pass through cleanly without causing the entire stereo image to pump."
+    ],
+    parameters: [
+      {
+        name: "Input Gain",
+        range: "0 to 100 (Continuous)",
+        defaultVal: "40",
+        description: "Sets input level and drives the vacuum tube gain reduction stage.",
+        type: "knob"
+      },
+      {
+        name: "Threshold",
+        range: "0 to 100 (Continuous)",
+        defaultVal: "80",
+        description: "Sets the signal level where variable mu compression begins.",
+        type: "knob"
+      },
+      {
+        name: "Attack",
+        range: "Fast (0.1 ms) to Slow (30 ms)",
+        defaultVal: "Fast",
+        description: "Sets the attack speed of the dual-channel gain cell.",
+        type: "knob"
+      },
+      {
+        name: "Recovery / Release",
+        range: "Fast / Med / Med-Slow / Slow / Dual",
+        defaultVal: "Med",
+        description: "Adjusts recovery timing. Dual uses a complex multi-stage release.",
+        type: "select",
+        options: ["Fast", "Med", "Med-Slow", "Slow", "Dual"]
+      },
+      {
+        name: "Output Gain",
+        range: "0 to 100 (Continuous)",
+        defaultVal: "50",
+        description: "Sets final stereo makeup gain level.",
+        type: "knob"
+      },
+      {
+        name: "HP Sidechain",
+        range: "Off / On (100 Hz)",
+        defaultVal: "Off",
+        description: "Bypasses sub-100Hz low end frequencies from entering the sidechain detection circuit.",
+        type: "switch",
+        options: ["Off", "On"]
+      },
+      {
+        name: "Mode Select",
+        range: "Compress / Limit",
+        defaultVal: "Compress",
+        description: "Switches between a soft 1.5:1 ratio and a sharp limiting slope.",
+        type: "switch",
+        options: ["Compress", "Limit"]
+      }
+    ]
+  },
+  {
+    name: "uad dbx 160 compressor",
+    displayName: "UAD dbx 160 Compressor",
+    category: "Dynamics",
+    description: "The classic VCA hard-knee compressor. Renowned for its solid, ultra-fast transient response, creating punchy, forward snare drums, thick bass guitars, and energetic acoustic tracks.",
+    hardwareModel: "dbx 160 VCA Compressor/Limiter",
+    proTips: [
+      "Keep the ratio low (2:1 or 3:1) and the threshold high to gently ride a bass guitar or snare track for an cohesive, tight performance.",
+      "For explosive, gritty drums, drop the Threshold to -10dB or -20dB and set the Ratio to Infinity:1 to generate intense pump and room sizzle.",
+      "Because it is a hard-knee compressor, small adjustments to the Threshold make huge differences in overall character."
+    ],
+    parameters: [
+      {
+        name: "Threshold",
+        range: "-40 dB to +20 dB",
+        defaultVal: "0 dB",
+        description: "Sets the precise level where hard-knee compression triggers.",
+        type: "knob"
+      },
+      {
+        name: "Compression Ratio",
+        range: "1:1 to Infinity:1",
+        defaultVal: "3:1",
+        description: "Sets the active compression slope. Inf:1 acts as a brickwall brick limiter.",
+        type: "knob"
+      },
+      {
+        name: "Output Gain",
+        range: "-20 dB to +20 dB",
+        defaultVal: "0 dB",
+        description: "Compensates output makeup volume after aggressive hard-knee reduction.",
+        type: "knob"
+      }
+    ]
+  },
+  {
+    name: "uad lexicon 224 digital reverb",
+    displayName: "UAD Lexicon 224 Digital Reverb",
+    category: "Reverbs & Delays",
+    description: "The definitive late 70s and 80s digital reverb. Delivers incredibly lush, long, modulated hall and plate spaces that define the signature sounds of countless classic records.",
+    hardwareModel: "Lexicon 224 Digital Reverberator",
+    proTips: [
+      "Program 1 (Concert Hall) and Program 2 (Vocal Hall) are the gold standards for sprawling, high-modulation vocal reverb trails.",
+      "The 'Bass Decay' multiplier is highly interactive with the Crossover slider. Increase Bass Decay past 1.0x to add thick, warm decay to orchestral rooms.",
+      "Toggle the System Noise switch to 'On' to hear the gritty, low-fidelity 12-bit converter hum that gives the original unit its retro charm."
+    ],
+    parameters: [
+      {
+        name: "Program Select",
+        range: "1 to 8 (Hall, Room, Plate, etc.)",
+        defaultVal: "Concert Hall",
+        description: "Selects the digital reverberation algorithm program.",
+        type: "select",
+        options: ["Concert Hall", "Vocal Hall", "Large Room", "Acoustic Chamber", "Percussion Plate", "Constant Density Plate", "Chorus", "Inverted Room"]
+      },
+      {
+        name: "Reverb Time",
+        range: "0.6 s to 70 s",
+        defaultVal: "2.5 s",
+        description: "Sets the mid-frequency reverb decay time.",
+        type: "knob"
+      },
+      {
+        name: "Bass Decay",
+        range: "0.5x to 2.0x",
+        defaultVal: "1.0x",
+        description: "Multiplies low frequency decay relative to Reverb Time.",
+        type: "knob"
+      },
+      {
+        name: "Crossover Frequency",
+        range: "100 Hz to 10.9 kHz",
+        defaultVal: "500 Hz",
+        description: "Sets the frequency boundary separating Bass and Mid-frequency decay.",
+        type: "knob"
+      },
+      {
+        name: "Treble Decay",
+        range: "100 Hz to 10.9 kHz",
+        defaultVal: "2.5 kHz",
+        description: "Sets the low-pass filter frequency for high end reverb dampening.",
+        type: "knob"
+      },
+      {
+        name: "Pre-delay",
+        range: "0 ms to 320 ms",
+        defaultVal: "24 ms",
+        description: "Sets the delay time before the onset of early reflections and reverb.",
+        type: "knob"
+      },
+      {
+        name: "Depth",
+        range: "0 to 100",
+        defaultVal: "50",
+        description: "Varies the acoustic space's perceived physical depth and listener position.",
+        type: "knob"
+      },
+      {
+        name: "Wet/Dry Mix",
+        range: "0% to 100%",
+        defaultVal: "100%",
+        description: "Controls dry/wet output ratio. Set to 100% when on an auxiliary send.",
+        type: "knob"
+      },
+      {
+        name: "System Noise",
+        range: "Off / On",
+        defaultVal: "Off",
+        description: "Enables vintage 12-bit hardware converter hum, hiss, and dynamic noise.",
+        type: "switch",
+        options: ["Off", "On"]
+      }
+    ]
+  },
+  {
+    name: "uad helios type 69 preamp and eq collection",
+    displayName: "UAD Helios Type 69 Preamp and EQ Collection",
+    category: "Equalizers",
+    description: "The sound of 1970s British rock. Emulates the legendary Helios console strips with highly musical, broad, interactive frequency bands and aggressive custom lustrum iron transformers.",
+    hardwareModel: "Helios Type 69 Console Channel Strip",
+    proTips: [
+      "Select 60Hz or 120Hz on the Low EQ and dial in a boost to add tight, robust weight to kick drums and analog synthesizers.",
+      "The Mid EQ band is incredibly aggressive and vocal. Select 1.4 kHz or 2.8 kHz and add a slight boost for a forward, energetic guitar tone.",
+      "Push the Preamplifier gain past 50 dB to saturate the virtual Lustraphone iron transformer, adding rich, fuzzy grit."
+    ],
+    parameters: [
+      {
+        name: "Preamplifier Gain",
+        range: "20 dB to 80 dB",
+        defaultVal: "30 dB",
+        description: "Sets input gain and drives the vintage console preamplifier.",
+        type: "knob"
+      },
+      {
+        name: "High EQ Shelf Gain",
+        range: "-10 dB to +10 dB (Fixed 10 kHz)",
+        defaultVal: "0 dB",
+        description: "Controls broad, silky high-frequency shelving attenuation or boost.",
+        type: "knob"
+      },
+      {
+        name: "Mid EQ Frequency",
+        range: "0.7 kHz / 1.0 kHz / 1.4 kHz / 2.0 kHz / 2.8 kHz / 3.5 kHz / 4.5 kHz / 6.0 kHz",
+        defaultVal: "1.4 kHz",
+        description: "Selects the active mid-range frequency band.",
+        type: "select",
+        options: ["0.7 kHz", "1.0 kHz", "1.4 kHz", "2.0 kHz", "2.8 kHz", "3.5 kHz", "4.5 kHz", "6.0 kHz"]
+      },
+      {
+        name: "Mid EQ Gain",
+        range: "0 dB to +16 dB (Peak)",
+        defaultVal: "0 dB",
+        description: "Controls the amplitude of the highly musical mid frequency inductor boost.",
+        type: "knob"
+      },
+      {
+        name: "Low EQ Frequency / Mode",
+        range: "30 Hz / 50 Hz / 60 Hz / 120 Hz / 250 Hz / 400 Hz",
+        defaultVal: "60 Hz",
+        description: "Selects the target frequency for the low band boost or shelving cut.",
+        type: "select",
+        options: ["30 Hz", "50 Hz", "60 Hz", "120 Hz", "250 Hz", "400 Hz"]
+      },
+      {
+        name: "Low EQ Gain",
+        range: "0 to 15 (Peak Boost) or -10 dB (Shelf Cut)",
+        defaultVal: "0",
+        description: "Controls low end weight. Boost operates as a peak filter; cut acts as a shelving filter.",
+        type: "knob"
+      },
+      {
+        name: "High Pass Filter",
+        range: "Off / 40 Hz / 80 Hz",
+        defaultVal: "Off",
+        description: "Employs an ultra-steep high pass filter to eliminate low-end sub rumble.",
+        type: "select",
+        options: ["Off", "40 Hz", "80 Hz"]
+      }
+    ]
+  },
+  {
+    name: "uad century tube channel strip",
+    displayName: "UAD Century Tube Channel Strip",
+    category: "Channel Strips",
+    description: "The ultimate modern, intuitive workflow tool. Integrates a warm, harmonic vacuum tube preamp, simple 3-band musical equalizer, and a rapid auto-leveling opto compressor.",
+    hardwareModel: "UA Custom Century Vacuum Tube Channel Strip",
+    proTips: [
+      "Drive the Preamp Gain knob until the indicators point to 'Warm' to add harmonic depth and vintage grit to vocals or bass lines.",
+      "The optical compressor has only a single Threshold knob and includes automatic makeup gain, making leveling smooth and effortless.",
+      "Keep the EQ bands flat or use small boosts to shape tracks on the way in for high-fidelity, production-ready stems."
+    ],
+    parameters: [
+      {
+        name: "Preamp Gain",
+        range: "0 to 100 (Continuous)",
+        defaultVal: "35",
+        description: "Adjusts vacuum tube preamplifier input level and saturation thickness.",
+        type: "knob"
+      },
+      {
+        name: "Low EQ Shelf",
+        range: "-12 dB to +12 dB",
+        defaultVal: "0 dB",
+        description: "Broad, musical 100 Hz shelving boost or cut.",
+        type: "knob"
+      },
+      {
+        name: "Mid EQ Sweep",
+        range: "-12 dB to +12 dB (Fixed 1 kHz)",
+        defaultVal: "0 dB",
+        description: "Selects boost/cut amplitude for the mid-range band.",
+        type: "knob"
+      },
+      {
+        name: "High EQ Shelf",
+        range: "-12 dB to +12 dB",
+        defaultVal: "0 dB",
+        description: "Silky 10 kHz shelving boost or cut to add air and gloss.",
+        type: "knob"
+      },
+      {
+        name: "Compressor Threshold",
+        range: "0 to 100 (Continuous)",
+        defaultVal: "0",
+        description: "Controls the threshold of the automatic-makeup optical gain cell.",
+        type: "knob"
+      },
+      {
+        name: "Master Level",
+        range: "-Infinity to +12 dB",
+        defaultVal: "0 dB",
+        description: "Adjusts final output level of the channel strip.",
+        type: "knob"
+      }
+    ]
+  },
+  {
+    name: "uad galaxy tape echo",
+    displayName: "UAD Galaxy Tape Echo",
+    category: "Reverbs & Delays",
+    description: "The gold-standard multi-head tape delay. Captures the pitch wow/flutter, warm magnetic tape saturation, and lush, grainy spring reverb of the legendary Roland Space Echo.",
+    hardwareModel: "Roland RE-201 Space Echo",
+    proTips: [
+      "Rotate the Mode Selector through modes 1 to 11 to combine the three staggered playback tape heads with the analog spring reverb tank.",
+      "Turn the Intensity knob past 50% (12 o'clock) to send the delay line into beautiful, self-oscillating feedback loops.",
+      "Set Tape Age to 'Old' to attenuate high frequencies in the feedback loop and add vintage pitch drift (wow & flutter)."
+    ],
+    parameters: [
+      {
+        name: "Mode Selector",
+        range: "1 to 11 (Head & Reverb modes)",
+        defaultVal: "5",
+        description: "Selects combinations of playback heads 1, 2, 3, and the spring reverb.",
+        type: "select",
+        options: ["1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11"]
+      },
+      {
+        name: "Repeat Rate",
+        range: "0 to 100 (Continuous Delay Time)",
+        defaultVal: "50",
+        description: "Controls the physical speed of the tape, setting delay duration.",
+        type: "knob"
+      },
+      {
+        name: "Intensity",
+        range: "0 to 100 (Feedback)",
+        defaultVal: "35",
+        description: "Adjusts feedback repetition. Higher values trigger self-oscillation.",
+        type: "knob"
+      },
+      {
+        name: "Echo Volume",
+        range: "0 to 100",
+        defaultVal: "40",
+        description: "Sets the output volume of the wet delay tape playback signal.",
+        type: "knob"
+      },
+      {
+        name: "Reverb Volume",
+        range: "0 to 100",
+        defaultVal: "0",
+        description: "Sets the level of the gritty, mechanical spring reverb tank.",
+        type: "knob"
+      },
+      {
+        name: "Tape Age",
+        range: "New / Used / Old",
+        defaultVal: "Used",
+        description: "Changes the age of the loaded tape formula, adding high-cut filtering and wow/flutter.",
+        type: "switch",
+        options: ["New", "Used", "Old"]
+      },
+      {
+        name: "Bass EQ",
+        range: "-10 dB to +10 dB",
+        defaultVal: "0 dB",
+        description: "Adjusts low-frequency tone of the delay/reverb feedback loop.",
+        type: "knob"
+      },
+      {
+        name: "Treble EQ",
+        range: "-10 dB to +10 dB",
+        defaultVal: "0 dB",
+        description: "Adjusts high-frequency tone of the delay/reverb feedback loop.",
+        type: "knob"
+      }
+    ]
+  },
+  {
+    name: "uad oxide tape recorder",
+    displayName: "UAD Oxide Tape Recorder",
+    category: "Tape & Saturation",
+    description: "Streamlined magnetic tape saturation. Offers the rich low-end 'head bump', transient rounding, and harmonic cohesion of physical tape machines in an incredibly easy-to-use package.",
+    hardwareModel: "Universal Audio Oxide Tape Saturation System",
+    proTips: [
+      "Drive the Input Gain hard to slam the virtual tape, allowing the VU meters to ride in the red for thick tape saturation and natural limiting.",
+      "Switch to 15 IPS tape speed to get a beefy, warm low-end boost (head bump) on bass guitars or kick drums.",
+      "Use 30 IPS tape speed on vocal groups and string ensembles for high fidelity and smooth, organic transient leveling."
+    ],
+    parameters: [
+      {
+        name: "Input Gain",
+        range: "-20 dB to +20 dB",
+        defaultVal: "0 dB",
+        description: "Controls the input signal level driving the magnetic tape saturation engine.",
+        type: "knob"
+      },
+      {
+        name: "Output Level",
+        range: "-20 dB to +20 dB",
+        defaultVal: "0 dB",
+        description: "Controls final clean makeup output volume.",
+        type: "knob"
+      },
+      {
+        name: "Tape Speed",
+        range: "15 IPS / 30 IPS",
+        defaultVal: "15 IPS",
+        description: "Selects tape transport speed. 15 IPS emphasizes low end; 30 IPS has flatter high end.",
+        type: "switch",
+        options: ["15 IPS", "30 IPS"]
+      },
+      {
+        name: "Tape Formula",
+        range: "GP9 / 456",
+        defaultVal: "GP9",
+        description: "Selects tape formulation: GP9 is modern with higher headroom; 456 is vintage and saturates faster.",
+        type: "switch",
+        options: ["GP9", "456"]
+      },
+      {
+        name: "EQ Curve",
+        range: "NAB / CCIR",
+        defaultVal: "NAB",
+        description: "Switches the active high frequency pre-emphasis and de-emphasis curve standards.",
+        type: "switch",
+        options: ["NAB", "CCIR"]
+      }
+    ]
+  },
+  {
+    name: "uad pure plate reverb",
+    displayName: "UAD Pure Plate Reverb",
+    category: "Reverbs & Delays",
+    description: "The essence of physical plate reverberation. Simple, CPU-efficient, and beautifully modeled, delivering the signature shimmering organic wash of classic steel plates.",
+    hardwareModel: "UA Precision Plate Reverb",
+    proTips: [
+      "For a clean, articulate vocal space, set Pre-delay around 20-30 ms so that sibilant consonants aren't buried in the shimmering plate reverb.",
+      "Use the Treble EQ dial to add a +2dB or +4dB boost, giving the reverb decay tail a gorgeous, silky airiness.",
+      "For deep acoustic guitars, roll the Bass EQ down to -3dB to avoid low-mid mud accumulating in the stereo soundstage."
+    ],
+    parameters: [
+      {
+        name: "Reverb Time",
+        range: "0.5 s to 5.5 s",
+        defaultVal: "2.0 s",
+        description: "Sets overall plate reverberation decay length.",
+        type: "knob"
+      },
+      {
+        name: "Pre-delay",
+        range: "0 ms to 120 ms",
+        defaultVal: "15 ms",
+        description: "Sets timing delay before early reflections and plate decay trigger.",
+        type: "knob"
+      },
+      {
+        name: "Bass EQ",
+        range: "-12 dB to +6 dB (Shelf)",
+        defaultVal: "0 dB",
+        description: "Controls low-end shelving gain on the reverberated output.",
+        type: "knob"
+      },
+      {
+        name: "Treble EQ",
+        range: "-12 dB to +6 dB (Shelf)",
+        defaultVal: "0 dB",
+        description: "Controls high-end shelving gain to shape the brightness of the reverb tail.",
+        type: "knob"
+      },
+      {
+        name: "Wet/Dry Mix",
+        range: "0% to 100%",
+        defaultVal: "100%",
+        description: "Adjusts dry to wet signal ratio. Set to 100% for aux send returns.",
+        type: "knob"
+      }
+    ]
+  },
+  {
+    name: "uad teletronix la-3a audio leveler",
+    displayName: "UAD Teletronix LA-3A Audio Leveler",
+    category: "Dynamics",
+    description: "The solid-state optical leveling champion. Renowned for its rapid, responsive electro-optical cell and discrete class A circuitry, adding mid-range warmth and rock-solid leveling to guitars and vocals.",
+    hardwareModel: "Teletronix LA-3A Solid-State Opto-compressor",
+    proTips: [
+      "The LA-3A features a faster, tighter response than the LA-2A, making it the absolute favorite for pinning electric guitars and overhead drums.",
+      "Use the sidechain High-Frequency (HF) control to roll off bass response from entering the T4 optical detector, avoiding pumping on low-end thuds.",
+      "A Peak Reduction setting between 40 and 60 on backing vocals creates a solid, cohesive backing stem that glues into the stereo field."
+    ],
+    parameters: [
+      {
+        name: "Peak Reduction",
+        range: "0 to 100 (Continuous)",
+        defaultVal: "30",
+        description: "Drives input gain into the T4 electro-optical cell, increasing compression depth.",
+        type: "knob"
+      },
+      {
+        name: "Gain Level",
+        range: "0 to 100 (Continuous)",
+        defaultVal: "40",
+        description: "Sets final output makeup gain.",
+        type: "knob"
+      },
+      {
+        name: "Compress/Limit",
+        range: "Compress / Limit",
+        defaultVal: "Compress",
+        description: "Switches between a smooth, program-dependent compression ratio and a hard peak limit curve.",
+        type: "switch",
+        options: ["Compress", "Limit"]
+      },
+      {
+        name: "Sidechain Mod (HF)",
+        range: "0 to 100 (Full Flat to HF Sensitive)",
+        defaultVal: "50",
+        description: "Adjusts detector sensitivity. Turning counter-clockwise makes the compressor ignore low-frequency bass energy.",
+        type: "knob"
+      }
+    ]
+  },
+  {
+    name: "uad hitsville reverb chambers",
+    displayName: "UAD Hitsville Reverb Chambers",
+    category: "Reverbs & Delays",
+    description: "The sound of Motown. Captures the physical, custom-built attic reverb chambers used to shape the historic vocal and instrument sound of classic Motown records at 2648 West Grand Boulevard.",
+    hardwareModel: "Hitsville U.S.A. Attic Reverb Chambers",
+    proTips: [
+      "Switch between Chamber 1 (historically used for backing bands) and Chamber 2 (tailored for Lead Vocals) to find the perfect acoustic profile.",
+      "The 'Mic Position' slider is highly dynamic. Choose 'Far' to emphasize the natural ambient diffusion of the brick and plaster chamber walls.",
+      "To mimic the exact Motown technique, use the 'KM86' microphone option with the original speakers and keep the Decay around 2.5 seconds."
+    ],
+    parameters: [
+      {
+        name: "Chamber Select",
+        range: "Chamber 1 / Chamber 2",
+        defaultVal: "Chamber 2",
+        description: "Selects between the two custom-built concrete and drywall attic reverb chambers.",
+        type: "switch",
+        options: ["Chamber 1", "Chamber 2"]
+      },
+      {
+        name: "Decay",
+        range: "0 to 100 (Continuous)",
+        defaultVal: "50",
+        description: "Adjusts the virtual decay length of the chamber reflections.",
+        type: "knob"
+      },
+      {
+        name: "Pre-delay",
+        range: "0 ms to 100 ms",
+        defaultVal: "10 ms",
+        description: "Applies delay before the sound enters the chamber speaker path.",
+        type: "knob"
+      },
+      {
+        name: "Speaker Select",
+        range: "Original / Modern",
+        defaultVal: "Original",
+        description: "Switches the playback speaker between vintage Altec and modern studio monitors.",
+        type: "switch",
+        options: ["Original", "Modern"]
+      },
+      {
+        name: "Microphone",
+        range: "KM86 / U67 / D24",
+        defaultVal: "KM86",
+        description: "Selects the capture microphone used inside the chamber room.",
+        type: "select",
+        options: ["KM86", "U67", "D24"]
+      },
+      {
+        name: "Mic Position",
+        range: "Close / Mid / Far",
+        defaultVal: "Mid",
+        description: "Changes the physical distance of the microphones from the playback speakers.",
+        type: "select",
+        options: ["Close", "Mid", "Far"]
+      },
+      {
+        name: "Wet/Dry Mix",
+        range: "0% to 100%",
+        defaultVal: "100%",
+        description: "Sets the ratio of wet chamber reverb to dry signal.",
+        type: "knob"
+      }
+    ]
+  },
+  {
+    name: "uad hitsville eq collection",
+    displayName: "UAD Hitsville EQ Collection",
+    category: "Equalizers",
+    description: "The secret sauce of Hitsville USA. Emulates the custom-built, passive graphic and mastering equalizers that defined the punchy, high-mid heavy Motown radio-ready sound.",
+    hardwareModel: "Hitsville Custom active inductor Equalizer",
+    proTips: [
+      "Motown mixers boosted the 800 Hz and 2 kHz bands aggressively on snare drums and vocals to make them stand out on low-fidelity AM car radios.",
+      "On mastering, use the 'Mastering EQ' model with stepped, half-dB detents for precise balance across the mix bus.",
+      "Engage the low-end 50 Hz and 130 Hz bands to add rich, vintage warmth to bass lines, giving them authentic Motown roundness."
+    ],
+    parameters: [
+      {
+        name: "EQ Model",
+        range: "Graphic / Mastering",
+        defaultVal: "Graphic",
+        description: "Switches between the original graphic channel EQ and the stereo mastering EQ.",
+        type: "switch",
+        options: ["Graphic", "Mastering"]
+      },
+      {
+        name: "50 Hz Gain",
+        range: "-8 dB to +8 dB (Stepped)",
+        defaultVal: "0 dB",
+        description: "Boosts or cuts low-end weight at 50 Hz.",
+        type: "knob"
+      },
+      {
+        name: "130 Hz Gain",
+        range: "-8 dB to +8 dB (Stepped)",
+        defaultVal: "0 dB",
+        description: "Controls the low-mid punch and body at 130 Hz.",
+        type: "knob"
+      },
+      {
+        name: "320 Hz Gain",
+        range: "-8 dB to +8 dB (Stepped)",
+        defaultVal: "0 dB",
+        description: "Controls warmth or boxiness around 320 Hz.",
+        type: "knob"
+      },
+      {
+        name: "800 Hz Gain",
+        range: "-8 dB to +8 dB (Stepped)",
+        defaultVal: "0 dB",
+        description: "Injects aggressive mid-range presence and grit at 800 Hz.",
+        type: "knob"
+      },
+      {
+        name: "2 kHz Gain",
+        range: "-8 dB to +8 dB (Stepped)",
+        defaultVal: "0 dB",
+        description: "Adds bite, intelligibility, and definition at 2 kHz.",
+        type: "knob"
+      },
+      {
+        name: "5 kHz Gain",
+        range: "-8 dB to +8 dB (Stepped)",
+        defaultVal: "0 dB",
+        description: "Brings forward vocal breath and guitar snap at 5 kHz.",
+        type: "knob"
+      },
+      {
+        name: "12.5 kHz Gain",
+        range: "-8 dB to +8 dB (Stepped)",
+        defaultVal: "0 dB",
+        description: "Adds silky analog air and sheen at 12.5 kHz.",
+        type: "knob"
+      },
+      {
+        name: "Output Gain",
+        range: "-12 dB to +12 dB",
+        defaultVal: "0 dB",
+        description: "Sets the final output makeup level.",
+        type: "knob"
+      }
+    ]
+  },
+  {
+    name: "uad neve 1084",
+    displayName: "UAD Neve 1084 Preamp and EQ",
+    category: "Preamps & Microphones",
+    description: "The absolute gold standard of British console preamps. Shares the same rich Class A transformer-driven preamp as the 1073 but adds highly versatile, selectable EQ frequencies and a High-Q option.",
+    hardwareModel: "Neve 1084 Channel Amplifier",
+    proTips: [
+      "Drive the red Input Gain knob past 50 dB to saturate the virtual custom Marinair input transformer, yielding creamy British harmonic distortion.",
+      "The 1084 features a High Q button on the Mid band. Engage it to narrow the bandwidth for highly surgical, precise mid-range sculpting.",
+      "Switch the High band to 16 kHz and add a slight 2 dB boost to give acoustic guitars and overheads an incredibly smooth, silky sheen."
+    ],
+    parameters: [
+      {
+        name: "Input Gain",
+        range: "Line (-20 to +10) / Mic (-80 to -20) dB",
+        defaultVal: "0 dB",
+        description: "Controls input preamplifier level, stepping in 5 dB increments to drive transformer saturation.",
+        type: "knob"
+      },
+      {
+        name: "High Pass Filter",
+        range: "Off / 45 Hz / 70 Hz / 160 Hz / 360 Hz",
+        defaultVal: "Off",
+        description: "Selects the cutoff frequency of the high-pass filter curve.",
+        type: "select",
+        options: ["Off", "45 Hz", "70 Hz", "160 Hz", "360 Hz"]
+      },
+      {
+        name: "Low EQ Frequency",
+        range: "35 Hz / 60 Hz / 110 Hz / 220 Hz",
+        defaultVal: "60 Hz",
+        description: "Sets target frequency for low-frequency shelving boost or cut.",
+        type: "select",
+        options: ["35 Hz", "60 Hz", "110 Hz", "220 Hz"]
+      },
+      {
+        name: "Low EQ Gain",
+        range: "-16 dB to +16 dB",
+        defaultVal: "0 dB",
+        description: "Adjusts low-shelf boost or cut amplitude.",
+        type: "knob"
+      },
+      {
+        name: "Mid EQ Frequency",
+        range: "0.35 / 0.7 / 1.6 / 3.2 / 4.8 / 7.2 kHz",
+        defaultVal: "1.6 kHz",
+        description: "Sets target center frequency for the peaking mid band filter.",
+        type: "select",
+        options: ["0.35 kHz", "0.7 kHz", "1.6 kHz", "3.2 kHz", "4.8 kHz", "7.2 kHz"]
+      },
+      {
+        name: "Mid EQ Gain",
+        range: "-18 dB to +18 dB",
+        defaultVal: "0 dB",
+        description: "Adjusts mid-frequency boost or cut amplitude.",
+        type: "knob"
+      },
+      {
+        name: "Mid Q Factor",
+        range: "Normal / High Q",
+        defaultVal: "Normal",
+        description: "Switches the mid-range band bandwidth between broad (Normal) and narrow (High Q).",
+        type: "switch",
+        options: ["Normal", "High Q"]
+      },
+      {
+        name: "High EQ Frequency",
+        range: "10 kHz / 12 kHz / 16 kHz",
+        defaultVal: "12 kHz",
+        description: "Selects the high shelving EQ frequency band.",
+        type: "select",
+        options: ["10 kHz", "12 kHz", "16 kHz"]
+      },
+      {
+        name: "High EQ Gain",
+        range: "-16 dB to +16 dB",
+        defaultVal: "0 dB",
+        description: "Adjusts high-frequency shelving boost or cut amplitude.",
+        type: "knob"
+      },
+      {
+        name: "Output Fader",
+        range: "-Infinity to +12 dB",
+        defaultVal: "0 dB",
+        description: "Adjusts final output clean volume, attenuating hot signals.",
+        type: "knob"
+      }
+    ]
+  },
+  {
+    name: "uad oxford inflator",
+    displayName: "UAD Oxford Inflator",
+    category: "Tape & Saturation",
+    description: "The legendary dynamic expander and loudness maximizer. Increases average program loudness without clipping, raising punch and digital headroom while introducing warm, tube-like harmonic saturation.",
+    hardwareModel: "Sonnox Oxford Inflator DSP System",
+    proTips: [
+      "Slam the 'Input' until the meter starts clipping slightly, then increase the 'Effect' slider to 100% to fatten weak acoustic guitars or synthetic leads.",
+      "The 'Curve' control shapes the harmonic profile. Negative values are linear; positive values add thick tube-style second and third-order harmonics.",
+      "Engage 'Clip 0dB' to use the Inflator as a gentle analog-style brickwall saturation clipper on drums or mastering stems."
+    ],
+    parameters: [
+      {
+        name: "Input",
+        range: "-6 dB to +12 dB",
+        defaultVal: "0 dB",
+        description: "Sets input level driving the tube saturation and expansion algorithm.",
+        type: "knob"
+      },
+      {
+        name: "Effect",
+        range: "0% to 100%",
+        defaultVal: "100%",
+        description: "Sets the wet/dry blend ratio of the processed signal.",
+        type: "knob"
+      },
+      {
+        name: "Curve",
+        range: "-5.0 to +5.0",
+        defaultVal: "0.0",
+        description: "Changes the curvature of the harmonic saturation curve, shaping warmth and punch.",
+        type: "knob"
+      },
+      {
+        name: "Output",
+        range: "-6 dB to 0 dB",
+        defaultVal: "0 dB",
+        description: "Controls the final output ceiling limit.",
+        type: "knob"
+      },
+      {
+        name: "Clip 0dB",
+        range: "Off / On",
+        defaultVal: "On",
+        description: "Enables safety hard-clipping at 0dBFS.",
+        type: "switch",
+        options: ["Off", "On"]
+      },
+      {
+        name: "Band Split",
+        range: "Off / On",
+        defaultVal: "Off",
+        description: "Splits processing into three frequency bands for cleaner, less intermodulated results.",
+        type: "switch",
+        options: ["Off", "On"]
+      }
+    ]
+  },
+  {
+    name: "uad emt 140",
+    displayName: "UAD EMT 140 Plate Reverb",
+    category: "Reverbs & Delays",
+    description: "The ultimate physical plate reverb. Captures the three highly unique steel plates sourced from The Plant Studios, delivering rich, organic, and beautifully shimmering reverberation tails.",
+    hardwareModel: "EMT 140 Magnetic Plate Reverberator",
+    proTips: [
+      "Plate A is brilliant and metallic (great for drums); Plate B is warm and balanced (ideal for vocals); Plate C is modern and full (perfect for acoustic groups).",
+      "Use 'Pre-delay' (around 20-40 ms) to keep lead vocals up front, preventing them from washing out in the reverb field.",
+      "Set the 'Bass Cut' filter to 180 Hz or 270 Hz to clear out low end muddiness and rumble, keeping the stereo field clean."
+    ],
+    parameters: [
+      {
+        name: "Plate Select",
+        range: "Plate A / Plate B / Plate C",
+        defaultVal: "Plate B",
+        description: "Switches between three distinct steel plates with unique dampening responses.",
+        type: "select",
+        options: ["Plate A", "Plate B", "Plate C"]
+      },
+      {
+        name: "Reverb Time",
+        range: "0.5 s to 5.0 s",
+        defaultVal: "2.0 s",
+        description: "Adjusts mechanical dampening pad, altering the length of the plate decay.",
+        type: "knob"
+      },
+      {
+        name: "Pre-delay",
+        range: "0 ms to 250 ms",
+        defaultVal: "20 ms",
+        description: "Determines delay time before the signal excites the steel plate.",
+        type: "knob"
+      },
+      {
+        name: "Bass Cut Filter",
+        range: "Off / 90 Hz / 180 Hz / 270 Hz / 360 Hz",
+        defaultVal: "180 Hz",
+        description: "Cuts muddy low end from the plate inputs.",
+        type: "select",
+        options: ["Off", "90 Hz", "180 Hz", "270 Hz", "360 Hz"]
+      },
+      {
+        name: "Input Filter",
+        range: "Off / 250 Hz",
+        defaultVal: "Off",
+        description: "Bypasses low frequency energy below 250 Hz from triggering reverb excitation.",
+        type: "switch",
+        options: ["Off", "250 Hz"]
+      },
+      {
+        name: "Wet/Dry Mix",
+        range: "0% to 100%",
+        defaultVal: "100%",
+        description: "Blends direct dry signal with processed plate output.",
+        type: "knob"
+      }
+    ]
+  },
+  {
+    name: "uad emt 250",
+    displayName: "UAD EMT 250 Digital Reverb",
+    category: "Reverbs & Delays",
+    description: "The legendary first digital reverberator. Resembling a red space console, it uses iconic lever controls to deliver incredibly lush, warm, and highly-regarded modulated halls and delays.",
+    hardwareModel: "EMT 250 Electronic Reverberator System",
+    proTips: [
+      "Lever 1 sets main decay time; Levers 2 and 3 shape the decay of low and high frequencies separately, allowing highly custom room profiles.",
+      "Reverb mode features deep, organic pitch modulation in its algorithm. Use it on acoustic piano for a gorgeous, shimmering backing wash.",
+      "Switch to 'Delay' or 'Chorus' mode to use the vintage, highly colorful AD/DA converter circuitry for 12-bit retro slapbacks."
+    ],
+    parameters: [
+      {
+        name: "Mode Selector",
+        range: "Reverb / Delay / Phase / Chorus / Echo / Space",
+        defaultVal: "Reverb",
+        description: "Selects the active digital processing algorithm.",
+        type: "select",
+        options: ["Reverb", "Delay", "Phase", "Chorus", "Echo", "Space"]
+      },
+      {
+        name: "Decay (Lever 1)",
+        range: "0.4 s to 4.5 s",
+        defaultVal: "2.0 s",
+        description: "Sets main decay time in seconds.",
+        type: "knob"
+      },
+      {
+        name: "Low Decay (Lever 2)",
+        range: "-3 dB to +3 dB",
+        defaultVal: "0 dB",
+        description: "Controls the low-frequency decay multiplier relative to the main decay time.",
+        type: "knob"
+      },
+      {
+        name: "High Decay (Lever 3)",
+        range: "-3 dB to +3 dB",
+        defaultVal: "0 dB",
+        description: "Controls high-frequency decay pad to dampen or extend top-end tail.",
+        type: "knob"
+      },
+      {
+        name: "Pre-delay (Lever 4)",
+        range: "0 ms to 80 ms",
+        defaultVal: "20 ms",
+        description: "Controls pre-delay time before reverb onset.",
+        type: "knob"
+      },
+      {
+        name: "Output Mix",
+        range: "0% to 100%",
+        defaultVal: "100%",
+        description: "Adjusts the processed dry/wet balance.",
+        type: "knob"
+      }
+    ]
+  },
+  {
+    name: "uad korg sdd-3000",
+    displayName: "UAD Korg SDD-3000 Digital Delay",
+    category: "Reverbs & Delays",
+    description: "The legendary 1980s rack delay. Famous for its highly interactive, colorful analog input preamplifier circuitry, custom feedback filters, and deep pitch modulation.",
+    hardwareModel: "Korg SDD-3000 Digital Delay",
+    proTips: [
+      "The input preamp is highly dynamic. Choose '-10 dB' and drive the Input attenuator higher to introduce sweet, organic preamplifier saturation.",
+      "For a classic 'The Edge' delay sound, set delay time to a dotted eighth note value (around 350-450 ms), select Triangle modulation, and increase Intensity slightly.",
+      "Use the Low Cut and High Cut filters in the feedback path to make delay repeats sit perfectly behind a live vocal without causing frequency build-ups."
+    ],
+    parameters: [
+      {
+        name: "Input Level",
+        range: "-20 dB / -10 dB / +4 dB",
+        defaultVal: "-10 dB",
+        description: "Sets the headroom sensitivity of the physical analog preamp section.",
+        type: "select",
+        options: ["-20 dB", "-10 dB", "+4 dB"]
+      },
+      {
+        name: "Input Attenuator",
+        range: "0 to 100",
+        defaultVal: "50",
+        description: "Controls input level driving the analog preamp stage.",
+        type: "knob"
+      },
+      {
+        name: "Delay Time",
+        range: "1 ms to 1023 ms",
+        defaultVal: "350 ms",
+        description: "Sets the physical digital delay time in milliseconds.",
+        type: "knob"
+      },
+      {
+        name: "Feedback",
+        range: "0 to 100",
+        defaultVal: "30",
+        description: "Controls the feedback level of delay repetitions.",
+        type: "knob"
+      },
+      {
+        name: "Filter High Cut",
+        range: "Off / 8 kHz / 4 kHz / 2 kHz / 1 kHz",
+        defaultVal: "Off",
+        description: "Applies high-cut dampening on delay repetitions.",
+        type: "select",
+        options: ["Off", "8 kHz", "4 kHz", "2 kHz", "1 kHz"]
+      },
+      {
+        name: "Filter Low Cut",
+        range: "Off / 125 Hz / 250 Hz / 500 Hz",
+        defaultVal: "Off",
+        description: "Applies high-pass filtering on delay repetitions.",
+        type: "select",
+        options: ["Off", "125 Hz", "250 Hz", "500 Hz"]
+      },
+      {
+        name: "Mod Waveform",
+        range: "Sine / Triangle / Square / Random",
+        defaultVal: "Triangle",
+        description: "Selects LFO modulation waveform for delay time modulation.",
+        type: "select",
+        options: ["Sine", "Triangle", "Square", "Random"]
+      },
+      {
+        name: "Mod Frequency",
+        range: "0.1 Hz to 15 Hz",
+        defaultVal: "1.0 Hz",
+        description: "Controls speed of LFO delay time modulation.",
+        type: "knob"
+      },
+      {
+        name: "Mod Intensity",
+        range: "0 to 100",
+        defaultVal: "15",
+        description: "Controls the depth of delay pitch modulation.",
+        type: "knob"
+      }
+    ]
+  },
+  {
+    name: "uad neve 33609",
+    displayName: "UAD Neve 33609 Stereo Limiter Compressor",
+    category: "Dynamics",
+    description: "The legendary British diode bridge compressor. Delivers an unmatched, creamy glue, thick low-end body, and fast-acting master bus leveling.",
+    hardwareModel: "Neve 33609 Stereo Limiter/Compressor",
+    proTips: [
+      "The classic master bus glue: set ratio to 1.5:1 or 2:1, select Auto 1 recovery, and let the gain reduction meter dance between 1 and 2 dB.",
+      "The Limiter section sits before the compressor. Use it with a fast attack to catch quick transient peaks on drum overheads, leaving the compressor to smooth the sustain.",
+      "Drive the Headroom switch to change the physical operating level, introducing subtle transformer saturation on hot source materials."
+    ],
+    parameters: [
+      {
+        name: "Compressor Threshold",
+        range: "-20 dBu to +10 dBu",
+        defaultVal: "0 dBu",
+        description: "Sets the dBu level where diode bridge compression begins.",
+        type: "knob"
+      },
+      {
+        name: "Compressor Ratio",
+        range: "1.5:1 / 2:1 / 3:1 / 4:1 / 6:1",
+        defaultVal: "2:1",
+        description: "Selects active compression ratio curve.",
+        type: "select",
+        options: ["1.5:1", "2:1", "3:1", "4:1", "6:1"]
+      },
+      {
+        name: "Compressor Recovery",
+        range: "100 ms / 400 ms / 800 ms / 1.5 s / Auto 1 / Auto 2",
+        defaultVal: "Auto 1",
+        description: "Sets compressor recovery speed. Auto modes feature program-dependent multi-stage releases.",
+        type: "select",
+        options: ["100 ms", "400 ms", "800 ms", "1.5 s", "Auto 1", "Auto 2"]
+      },
+      {
+        name: "Compressor Gain",
+        range: "0 dB to 20 dB",
+        defaultVal: "0 dB",
+        description: "Adjusts makeup gain after compression.",
+        type: "knob"
+      },
+      {
+        name: "Limiter Threshold",
+        range: "+4 dBu to +15 dBu",
+        defaultVal: "+10 dBu",
+        description: "Sets independent threshold level for the brickwall limiting section.",
+        type: "knob"
+      },
+      {
+        name: "Limiter Attack",
+        range: "Fast / Slow",
+        defaultVal: "Slow",
+        description: "Selects limiting response speed.",
+        type: "switch",
+        options: ["Fast", "Slow"]
+      },
+      {
+        name: "Limiter Recovery",
+        range: "50 ms / 100 ms / 200 ms / 800 ms / Auto 1 / Auto 2",
+        defaultVal: "Auto 1",
+        description: "Sets recovery release time of the limiter circuit.",
+        type: "select",
+        options: ["50 ms", "100 ms", "200 ms", "800 ms", "Auto 1", "Auto 2"]
+      }
+    ]
+  },
+  {
+    name: "uad empirical labs el7 fatso",
+    displayName: "UAD Empirical Labs EL7 FATSO Compressor",
+    category: "Tape & Saturation",
+    description: "The ultimate Full Analog Tape Simulator and Optimizer. Generates the authentic harmonic warmth, soft clipping, and high-frequency tape-saturation character of vintage magnetic tape machines.",
+    hardwareModel: "Empirical Labs EL7 FATSO Jr/Sr",
+    proTips: [
+      "Increase 'Input Level' to drive the tape head emulation. As the 'Saturation' LEDs light up, they indicate thick, tape-style second and third-order harmonic growth.",
+      "The 'Warmth' filter is a dynamic, high-frequency limiter that rounds out harsh, digital high-mids (especially good on harsh cymbals or acoustic strums).",
+      "Engage 'Tranny' (transformer emulation) to add thick low-end sub weight and glue, mimicking high-iron console transformers."
+    ],
+    parameters: [
+      {
+        name: "Input Level",
+        range: "0 to 10 (Continuous)",
+        defaultVal: "5",
+        description: "Drives input gain into the analog tape saturation engine and compressor circuitry.",
+        type: "knob"
+      },
+      {
+        name: "Output Level",
+        range: "0 to 10 (Continuous)",
+        defaultVal: "5",
+        description: "Controls final clean output level.",
+        type: "knob"
+      },
+      {
+        name: "Warmth",
+        range: "Off / 1 to 7",
+        defaultVal: "Off",
+        description: "Sets active dynamic high-frequency saturation limiting filter. Higher values round out transients faster.",
+        type: "select",
+        options: ["Off", "1", "2", "3", "4", "5", "6", "7"]
+      },
+      {
+        name: "Tranny",
+        range: "Off / On",
+        defaultVal: "Off",
+        description: "Bridges a virtual custom transformer into the output path, adding low-frequency sub harmonics.",
+        type: "switch",
+        options: ["Off", "On"]
+      },
+      {
+        name: "Compressor Mode",
+        range: "Off / Buss / Spank / Logic / Tracking",
+        defaultVal: "Off",
+        description: "Selects active compression curves. Spank is highly aggressive; Buss is a smooth SSL-style curve.",
+        type: "select",
+        options: ["Off", "Buss", "Spank", "Logic", "Tracking"]
+      }
+    ]
+  },
+  {
+    name: "uad moog multimode filter",
+    displayName: "UAD Moog Multimode Filter Collection",
+    category: "Tape & Saturation",
+    description: "The definitive analog ladder filter. Delivers the legendary rich, sweeping resonance, aggressive input-drive saturation, and high-performance LFO/Envelope modulations of Moog modules.",
+    hardwareModel: "Moog Music Multimode Filter System",
+    proTips: [
+      "Drive the 'Drive' knob past +10 dB to saturate the physical transistor ladder inputs, delivering a lush, gritty fuzz that beefs up virtual synths or live bass guitars.",
+      "Set Resonance high (past 80%) to generate standard self-oscillation. Sweeping the Cutoff will yield classic space-age laser sound effects.",
+      "Engage the LFO Rate and set Waveform to Square to create synchronized, rhythmic pumping filter gates on synth pads."
+    ],
+    parameters: [
+      {
+        name: "Filter Cutoff",
+        range: "20 Hz to 20 kHz",
+        defaultVal: "1.0 kHz",
+        description: "Determines the corner frequency of the Moog transistor ladder filter.",
+        type: "knob"
+      },
+      {
+        name: "Resonance",
+        range: "0 to 100 (Continuous)",
+        defaultVal: "20",
+        description: "Controls filter resonance peak. High values trigger absolute self-oscillation.",
+        type: "knob"
+      },
+      {
+        name: "Drive",
+        range: "+0 dB to +20 dB",
+        defaultVal: "+0 dB",
+        description: "Drives input signal into the ladder inputs, adding warm, fat harmonic distortion.",
+        type: "knob"
+      },
+      {
+        name: "Filter Mode",
+        range: "Low Pass / Band Pass / High Pass",
+        defaultVal: "Low Pass",
+        description: "Selects active filter band configuration.",
+        type: "select",
+        options: ["Low Pass", "Band Pass", "High Pass"]
+      },
+      {
+        name: "Envelope Amount",
+        range: "-10 to +10",
+        defaultVal: "0",
+        description: "Modulates filter cutoff frequency using the input audio's dynamic amplitude envelope.",
+        type: "knob"
+      },
+      {
+        name: "LFO Rate",
+        range: "0.05 Hz to 25 Hz",
+        defaultVal: "1.0 Hz",
+        description: "Controls the frequency speed of the low frequency oscillator.",
+        type: "knob"
+      },
+      {
+        name: "LFO Amount",
+        range: "0 to 100",
+        defaultVal: "0",
+        description: "Controls the depth of filter cutoff modulation by the LFO.",
+        type: "knob"
+      }
+    ]
   }
 ];
 
