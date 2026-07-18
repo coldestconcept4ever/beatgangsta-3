@@ -1,11 +1,110 @@
-import React, { useState, useMemo } from 'react';
-import { ArrowLeft, Search, Database, Sliders, Info, Cpu, CheckCircle, HelpCircle, Flame, Sparkles } from 'lucide-react';
+import React, { useState, useMemo, useEffect } from 'react';
+import { ArrowLeft, Search, Database, Sliders, Info, Cpu, CheckCircle, HelpCircle, Flame, Sparkles, RotateCcw, Copy, Check, Volume2 } from 'lucide-react';
 import { UAD_DATABASE, UADPluginProfile, UADParameter } from '../data/uadDatabase';
+import { UAD_PRESETS, UADPreset } from '../data/uadPresets';
 
 export const UadDatabaseViewer = ({ onBack, theme }: { onBack: () => void; theme: string }) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedPlugin, setSelectedPlugin] = useState<UADPluginProfile | null>(UAD_DATABASE[0] || null);
   const [selectedCategory, setSelectedCategory] = useState<string>('All');
+  const [paramValues, setParamValues] = useState<Record<string, number>>({});
+  const [copiedParam, setCopiedParam] = useState<string | null>(null);
+  const [copiedConfig, setCopiedConfig] = useState(false);
+  const [showOClockMode, setShowOClockMode] = useState(true);
+
+  // Helper to map default parameter string value to a 0-127 MIDI value
+  const getInitialMidiValue = (param: UADParameter): number => {
+    if (param.options && param.options.length > 0) {
+      const idx = param.options.indexOf(param.defaultVal);
+      if (idx !== -1) {
+        const N = param.options.length;
+        if (N === 1) return 127;
+        return Math.round((idx / (N - 1)) * 127);
+      }
+    }
+    
+    // Try parsing number from defaultVal
+    const numMatch = param.defaultVal.match(/[-+]?[0-9]*\.?[0-9]+/);
+    if (numMatch) {
+      const val = parseFloat(numMatch[0]);
+      const rangeNums = param.range.match(/[-+]?[0-9]*\.?[0-9]+/g);
+      if (rangeNums && rangeNums.length >= 2) {
+        const min = parseFloat(rangeNums[0]);
+        const max = parseFloat(rangeNums[rangeNums.length - 1]);
+        if (max > min) {
+          const clamped = Math.max(min, Math.min(max, val));
+          const fraction = (clamped - min) / (max - min);
+          return Math.round(fraction * 127);
+        }
+      }
+    }
+    return 64; // Default center
+  };
+
+  // Helper to turn MIDI number into elegant o'clock representation
+  const getOClockPosition = (midiVal: number): string => {
+    const totalHours = (midiVal / 127) * 10;
+    const rawHour = 7 + totalHours;
+    
+    let hours = Math.floor(rawHour);
+    let minutes = Math.round((rawHour - hours) * 60);
+    
+    // Round minutes to nearest 5 for natural hardware click feel
+    minutes = Math.round(minutes / 5) * 5;
+    if (minutes === 60) {
+      minutes = 0;
+      hours += 1;
+    }
+    
+    let displayHour = hours;
+    if (displayHour > 12) {
+      displayHour -= 12;
+    }
+    if (displayHour === 0) {
+      displayHour = 12;
+    }
+    
+    const formattedMinutes = minutes.toString().padStart(2, '0');
+    return `${displayHour}:${formattedMinutes} o'clock`;
+  };
+
+  // Helper to translate MIDI 0-127 to approximate hardware display value
+  const getPhysicalValue = (param: UADParameter, midiVal: number): string => {
+    if (param.options && param.options.length > 0) {
+      const N = param.options.length;
+      const idx = Math.min(N - 1, Math.floor((midiVal / 127) * N));
+      return param.options[idx];
+    }
+    
+    const rangeNums = param.range.match(/[-+]?[0-9]*\.?[0-9]+/g);
+    if (rangeNums && rangeNums.length >= 2) {
+      const min = parseFloat(rangeNums[0]);
+      const max = parseFloat(rangeNums[rangeNums.length - 1]);
+      const fraction = midiVal / 127;
+      const rawVal = min + fraction * (max - min);
+      
+      const hasDecimals = param.range.includes('.') || Math.abs(max - min) < 20;
+      const valFormatted = hasDecimals ? rawVal.toFixed(1) : Math.round(rawVal).toString();
+      
+      const suffixMatch = param.range.match(/[a-zA-Z%-]+/);
+      const unit = suffixMatch ? ` ${suffixMatch[0]}` : '';
+      
+      return `${valFormatted}${unit}`;
+    }
+    
+    return `${Math.round((midiVal / 127) * 100)}%`;
+  };
+
+  // Populate dynamic parameter values whenever selected plugin changes
+  useEffect(() => {
+    if (selectedPlugin) {
+      const initial: Record<string, number> = {};
+      selectedPlugin.parameters.forEach(param => {
+        initial[param.name] = getInitialMidiValue(param);
+      });
+      setParamValues(initial);
+    }
+  }, [selectedPlugin]);
 
   const categories = useMemo(() => {
     const cats = new Set(UAD_DATABASE.map(p => p.category));
@@ -192,53 +291,271 @@ export const UadDatabaseViewer = ({ onBack, theme }: { onBack: () => void; theme
                 </ul>
               </div>
 
+              {/* Preset Quick-Selector Panel */}
+              {UAD_PRESETS[selectedPlugin.name.toLowerCase()] && (
+                <div className={`p-4 rounded-2xl border ${
+                  isColdest ? 'bg-slate-50 border-slate-200' : 'bg-zinc-950/40 border-white/5'
+                }`}>
+                  <h4 className="text-xs font-black uppercase tracking-widest text-amber-500 flex items-center gap-1.5 mb-3">
+                    <Sparkles size={14} className="animate-spin-slow" /> Iconic Hardware Preset Selector
+                  </h4>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    {UAD_PRESETS[selectedPlugin.name.toLowerCase()].map((preset, idx) => {
+                      // Check if current settings match the preset roughly
+                      const isMatching = Object.entries(preset.settings).every(
+                        ([name, val]) => Math.abs((paramValues[name] ?? -999) - val) < 5
+                      );
+
+                      return (
+                        <button
+                          key={idx}
+                          onClick={() => {
+                            setParamValues(prev => ({
+                              ...prev,
+                              ...preset.settings
+                            }));
+                          }}
+                          className={`p-3 rounded-xl border text-left transition-all relative overflow-hidden group ${
+                            isMatching
+                              ? 'border-amber-500 bg-amber-500/10 text-amber-500 ring-2 ring-amber-500/20'
+                              : isColdest
+                                ? 'bg-white border-slate-200 hover:border-slate-300 text-slate-800'
+                                : 'bg-zinc-900 border-white/5 hover:border-white/15 text-zinc-300'
+                          }`}
+                        >
+                          <div className="flex items-center justify-between gap-2 mb-1">
+                            <span className="text-xs font-black uppercase tracking-wide truncate pr-4">{preset.name}</span>
+                            <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded ${
+                              isMatching ? 'bg-amber-500/20 text-amber-500' : 'opacity-40 bg-current/10 text-current'
+                            }`}>
+                              {isMatching ? 'ACTIVE' : 'PRESET'}
+                            </span>
+                          </div>
+                          <p className="text-[11px] opacity-70 line-clamp-2 leading-relaxed">{preset.description}</p>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+
               {/* Exact Parameters Bound List */}
-              <div className="flex-1 flex flex-col gap-3">
-                <h4 className="text-xs font-black uppercase tracking-widest flex items-center gap-1.5 opacity-60">
-                  <Sliders size={14} /> Exact Parameters & Ranges ({selectedPlugin.parameters.length})
-                </h4>
-                
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {selectedPlugin.parameters.map((param, idx) => (
-                    <div 
-                      key={idx} 
-                      className={`p-4 rounded-xl border flex flex-col gap-1.5 group transition-colors ${
-                        isColdest 
-                          ? 'bg-slate-50 border-slate-200 hover:border-amber-500/30' 
-                          : 'bg-zinc-950 border-white/5 hover:border-amber-500/30'
+              <div className="flex-1 flex flex-col gap-4">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-dashed border-current/10 pb-3">
+                  <h4 className="text-xs font-black uppercase tracking-widest flex items-center gap-1.5 opacity-70">
+                    <Sliders size={14} /> Interactive MIDI & O'clock Controller Mapping ({selectedPlugin.parameters.length})
+                  </h4>
+                  
+                  <div className="flex items-center gap-2">
+                    {/* Copy Full Config */}
+                    <button
+                      onClick={() => {
+                        const configStr = JSON.stringify(
+                          {
+                            plugin: selectedPlugin.displayName,
+                            hardwareModel: selectedPlugin.hardwareModel,
+                            parameters: Object.entries(paramValues).map(([name, midiVal]) => {
+                              const p = selectedPlugin.parameters.find(x => x.name === name);
+                              return {
+                                name,
+                                midiValue: midiVal,
+                                oClock: getOClockPosition(midiVal),
+                                physicalValue: p ? getPhysicalValue(p, midiVal) : 'N/A'
+                              };
+                            })
+                          },
+                          null,
+                          2
+                        );
+                        navigator.clipboard.writeText(configStr);
+                        setCopiedConfig(true);
+                        setTimeout(() => setCopiedConfig(false), 2000);
+                      }}
+                      className={`px-3 py-1.5 rounded-lg text-xs font-bold uppercase tracking-wider transition-all flex items-center gap-1.5 border ${
+                        copiedConfig
+                          ? 'border-emerald-500/30 bg-emerald-500/15 text-emerald-500'
+                          : isColdest
+                            ? 'bg-white border-slate-200 text-slate-700 hover:bg-slate-50'
+                            : 'bg-zinc-900 border-white/5 text-zinc-300 hover:bg-zinc-800'
                       }`}
                     >
-                      <div className="flex items-start justify-between gap-2">
-                        <span className="text-xs font-black uppercase tracking-wide group-hover:text-amber-500 transition-colors">
-                          {param.name}
-                        </span>
-                        <span className={`text-[10px] px-2 py-0.5 rounded font-bold uppercase ${
-                          param.type === 'knob' ? 'bg-blue-500/10 text-blue-500' :
-                          param.type === 'switch' ? 'bg-indigo-500/10 text-indigo-500' :
-                          param.type === 'select' ? 'bg-purple-500/10 text-purple-500' : 'bg-zinc-500/10 text-zinc-500'
-                        }`}>
-                          {param.type || 'knob'}
-                        </span>
-                      </div>
-                      
-                      <div className="flex items-center gap-3 my-1">
-                        <div className="flex-1 h-1.5 rounded-full bg-current/10 relative overflow-hidden">
-                          <div className="absolute top-0 bottom-0 left-0 w-3/5 bg-amber-500 rounded-full" />
+                      {copiedConfig ? (
+                        <>
+                          <Check size={12} /> Config Copied!
+                        </>
+                      ) : (
+                        <>
+                          <Copy size={12} /> Copy MIDI Config JSON
+                        </>
+                      )}
+                    </button>
+                  </div>
+                </div>
+                
+                <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
+                  {selectedPlugin.parameters.map((param, idx) => {
+                    const midiVal = paramValues[param.name] ?? getInitialMidiValue(param);
+                    const oClock = getOClockPosition(midiVal);
+                    const physicalVal = getPhysicalValue(param, midiVal);
+                    const angle = -135 + (midiVal / 127) * 270;
+
+                    return (
+                      <div 
+                        key={idx} 
+                        className={`p-4 rounded-2xl border flex flex-col sm:flex-row gap-4 items-center sm:items-start group transition-all duration-300 relative ${
+                          isColdest 
+                            ? 'bg-slate-50 border-slate-200/80 hover:border-amber-500/30 hover:shadow-sm' 
+                            : 'bg-zinc-950 border-white/5 hover:border-amber-500/30 hover:bg-zinc-950/80'
+                        }`}
+                      >
+                        {/* Rotary Dial Left side column */}
+                        <div className="flex flex-col items-center justify-center gap-2 shrink-0 pt-1">
+                          <div className="relative group/knob select-none">
+                            {/* Knob Outer Bezel / Backplate */}
+                            <div 
+                              className={`w-16 h-16 rounded-full border-2 flex items-center justify-center relative shadow-lg cursor-ns-resize transition-all duration-150 ${
+                                isColdest 
+                                  ? 'bg-slate-100 border-slate-300 hover:border-amber-500 hover:bg-slate-50' 
+                                  : 'bg-zinc-900 border-white/10 hover:border-amber-500 hover:bg-zinc-800'
+                              }`}
+                              style={{ transform: `rotate(${angle}deg)` }}
+                              onWheel={(e) => {
+                                e.preventDefault();
+                                const delta = e.deltaY < 0 ? 4 : -4;
+                                const newVal = Math.max(0, Math.min(127, midiVal + delta));
+                                setParamValues(prev => ({ ...prev, [param.name]: newVal }));
+                              }}
+                            >
+                              {/* Classic Pointer Line */}
+                              <div className="w-1.5 h-6 bg-gradient-to-b from-amber-500 to-amber-600 rounded-full absolute top-1 shadow-sm" />
+                              {/* Metal Center Cap */}
+                              <div className={`w-7 h-7 rounded-full border shadow-inner flex items-center justify-center ${
+                                isColdest ? 'bg-white border-slate-200' : 'bg-black border-white/10'
+                              }`}>
+                                <div className="w-2.5 h-2.5 rounded-full bg-amber-500/20" />
+                              </div>
+                            </div>
+                            
+                            {/* Subtle scroll wheel indicator tooltip on hover */}
+                            <div className="absolute -top-7 left-1/2 -translate-x-1/2 bg-black/80 text-white text-[9px] font-mono font-bold uppercase py-0.5 px-1.5 rounded opacity-0 group-hover/knob:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-20">
+                              Scroll to Turn
+                            </div>
+                          </div>
+
+                          {/* O'Clock position readout */}
+                          <span className="text-[11px] font-mono font-bold text-amber-500 text-center tracking-tight bg-amber-500/5 px-2 py-0.5 rounded border border-amber-500/10">
+                            {oClock}
+                          </span>
                         </div>
-                        <span className="text-xs font-mono font-bold opacity-80 whitespace-nowrap">
-                          {param.range}
-                        </span>
-                      </div>
 
-                      <div className="text-[11px] opacity-70 leading-relaxed mt-1">
-                        {param.description}
-                      </div>
+                        {/* Interactive sliders & value info (Right side column) */}
+                        <div className="flex-1 flex flex-col gap-2 w-full">
+                          <div className="flex items-start justify-between gap-2 border-b border-current/5 pb-1.5">
+                            <div className="text-left">
+                              <span className="text-xs font-black uppercase tracking-wide group-hover:text-amber-500 transition-colors block">
+                                {param.name}
+                              </span>
+                              <span className="text-[10px] opacity-50 block leading-none mt-0.5">
+                                {param.description}
+                              </span>
+                            </div>
+                            
+                            {/* Action Buttons */}
+                            <div className="flex items-center gap-1">
+                              {/* Reset */}
+                              <button
+                                onClick={() => {
+                                  const defVal = getInitialMidiValue(param);
+                                  setParamValues(prev => ({ ...prev, [param.name]: defVal }));
+                                }}
+                                title="Reset to default"
+                                className={`p-1 rounded-md transition-colors ${
+                                  isColdest ? 'hover:bg-slate-200 text-slate-400 hover:text-slate-600' : 'hover:bg-white/10 text-zinc-500 hover:text-white'
+                                }`}
+                              >
+                                <RotateCcw size={11} />
+                              </button>
+                              
+                              {/* Copy Individual Parameter Info */}
+                              <button
+                                onClick={() => {
+                                  const text = `${param.name}: ${physicalVal} (${oClock}, MIDI: ${midiVal})`;
+                                  navigator.clipboard.writeText(text);
+                                  setCopiedParam(param.name);
+                                  setTimeout(() => setCopiedParam(null), 1500);
+                                }}
+                                title="Copy dial value"
+                                className={`p-1 rounded-md transition-colors ${
+                                  isColdest ? 'hover:bg-slate-200 text-slate-400 hover:text-slate-600' : 'hover:bg-white/10 text-zinc-500 hover:text-white'
+                                }`}
+                              >
+                                {copiedParam === param.name ? <Check size={11} className="text-emerald-500" /> : <Copy size={11} />}
+                              </button>
+                            </div>
+                          </div>
 
-                      <div className="text-[10px] font-mono opacity-50 mt-1">
-                        Default: <span className="font-bold text-amber-500">{param.defaultVal}</span>
+                          {/* Dynamic slider or discrete buttons selector */}
+                          <div className="flex flex-col gap-2 mt-1">
+                            {param.options && param.options.length > 0 ? (
+                              /* Discrete Step Selector Group */
+                              <div className="flex flex-wrap gap-1">
+                                {param.options.map((opt, oIdx) => {
+                                  const N = param.options!.length;
+                                  const targetMidi = N === 1 ? 127 : Math.round((oIdx / (N - 1)) * 127);
+                                  const isActive = Math.abs(midiVal - targetMidi) < Math.ceil(127 / N);
+                                  
+                                  return (
+                                    <button
+                                      key={oIdx}
+                                      onClick={() => {
+                                        setParamValues(prev => ({ ...prev, [param.name]: targetMidi }));
+                                      }}
+                                      className={`px-2 py-1 rounded text-[10px] font-black uppercase tracking-wider transition-all border ${
+                                        isActive
+                                          ? 'bg-amber-500 border-amber-500 text-black shadow-sm font-black'
+                                          : isColdest
+                                            ? 'bg-white border-slate-200 text-slate-600 hover:bg-slate-100'
+                                            : 'bg-zinc-900 border-white/5 text-zinc-400 hover:bg-zinc-800'
+                                      }`}
+                                    >
+                                      {opt}
+                                    </button>
+                                  );
+                                })}
+                              </div>
+                            ) : (
+                              /* Continuous Range Slider */
+                              <div className="flex items-center gap-3">
+                                <input
+                                  type="range"
+                                  min="0"
+                                  max="127"
+                                  value={midiVal}
+                                  onChange={(e) => {
+                                    setParamValues(prev => ({ ...prev, [param.name]: parseInt(e.target.value) }));
+                                  }}
+                                  className="flex-1 h-1.5 rounded-full bg-current/10 accent-amber-500 cursor-pointer outline-none focus:outline-none"
+                                />
+                              </div>
+                            )}
+
+                            {/* Info Readouts (Physical and MIDI value) */}
+                            <div className="flex justify-between items-center text-[10px] font-mono opacity-60 mt-1">
+                              <div>
+                                Hardware Value: <span className="font-bold text-amber-500">{physicalVal}</span>
+                                <span className="opacity-50 ml-1">({param.range})</span>
+                              </div>
+                              <div className="flex items-center gap-2">
+                                <span>MIDI: <span className="font-bold">{midiVal}</span></span>
+                                <span>•</span>
+                                <span>Default: <span className="opacity-75">{param.defaultVal}</span></span>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
                       </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               </div>
             </div>

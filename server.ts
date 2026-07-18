@@ -4838,9 +4838,20 @@ USER INSTRUCTIONS:
 "${userPrompt || "Split this document intelligently into separate sections or documents."}"
 
 CRITICAL LOGICAL INTEGRITY RULES:
-1. Ensure what is split does NOT split through any chat bubble, transcript dialogue message, or important continuous sentence/paragraph. If a dialogue message or paragraph spans across a page boundary (e.g., starts on page 3 and ends on page 4), you MUST group those pages (e.g. pages 3 and 4) together in the same split file. Do NOT split them.
-2. Every page from the original document (from page 1 to page ${pages.length}) MUST be included in EXACTLY ONE split file. Do not omit any pages, and do not duplicate any pages across different split files.
-3. The page ranges for each split file must be contiguous (e.g., page 1-3, page 4-6) or as logical groupings matching the user's intent. Contiguous groupings are highly preferred unless the user explicitly asks for specific page collections.
+1. STRICT TARGET SIZE & SPLIT MANDATE:
+   - You MUST fully respect any specific page size limits, target ranges, or division sizes specified by the user (e.g., "split into 9x11 pages" means each split file should contain between 9 and 11 pages).
+   - If the user asks for a split, or if the document exceeds the user's requested maximum size, you are STRICTLY FORBIDDEN from keeping the entire document in a single split file. You MUST split it into multiple parts matching the requested sizes as closely as possible.
+   - If a continuous transcript or chat dialogue spans across the entire document, you STILL MUST split the document at intervals matching the user's target size. Do NOT merge them all into a single file.
+
+2. CHAT BUBBLE & DIALOGUE PRESERVATION (FIND CLEANEST BREAK):
+   - To keep chat bubbles, message bubbles, or paragraphs intact inside the split files, look for the absolute cleanest page boundary within the target range (e.g., if the target is 9 to 11 pages, inspect the page transitions around Page 9->10, Page 10->11, and Page 11->12).
+   - A boundary is clean if it occurs between chat bubbles, between sentences, between different speakers, or at a natural topic transition.
+   - Choose the page boundary in that target window that has the least cross-page dialogue overlap, and split there.
+   - You must prioritize dividing the document into the requested approximate sizes over keeping the entire transcript unbroken.
+
+3. PAGE COVERAGE & INTEGRITY:
+   - Every page from the original document (from page 1 to page ${pages.length}) MUST be included in EXACTLY ONE split file. Do not omit any pages, and do not duplicate any pages across different split files.
+   - The page ranges for each split file must be contiguous (e.g., pages 1-10, pages 11-21, etc.).
 
 Please reply with a JSON object in the following format:
 {
@@ -4848,7 +4859,7 @@ Please reply with a JSON object in the following format:
     {
       "fileName": "Descriptive, clean filename (e.g. Part 1 - Welcome and Intro.pdf)",
       "pages": [1, 2, 3], // Array of 1-indexed page numbers to include in this split file
-      "reason": "Explain briefly why these pages are grouped together and why this split boundary was chosen (e.g., 'Pages 1-3 cover the intro and first conversation block, ending cleanly before the next participant starts on page 4 without cutting any messages.')"
+      "reason": "Explain briefly why these pages are grouped together and why this split boundary was chosen (e.g., 'Pages 1-10 cover the intro and first conversation block, ending cleanly before the next participant starts on page 11 without cutting any messages.')"
     }
   ]
 }
