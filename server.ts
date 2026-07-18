@@ -4785,7 +4785,171 @@ if (process.env.NODE_ENV !== 'production') {
         return res.status(400).json({ error: "Uploaded file not found or expired." });
       }
 
-      const pdfBuffer = fs.readFileSync(tempFilePath);
+      let pdfBuffer = fs.readFileSync(tempFilePath);
+
+      // Helper function to find optimal cut Y coordinate
+      function findOptimalCutY(items: any[], currentTop: number, idealCut: number, H: number): number {
+        const minCut = Math.max(currentTop + 200, idealCut - 150); // Ensure page has at least 200pt content
+        const maxCut = Math.min(H - 100, idealCut + 50); // Ensure remaining page has at least 100pt content
+
+        if (minCut >= maxCut) {
+          return idealCut;
+        }
+
+        let bestY = idealCut;
+        let minIntersections = Infinity;
+
+        for (let y = Math.floor(minCut); y <= Math.ceil(maxCut); y++) {
+          let intersections = 0;
+          for (const item of items) {
+            // In viewport coordinate space, y increases downwards.
+            // Item baseline is item.y. Text typically occupies [item.y - item.height - 4, item.y + 4]
+            const yStart = item.y - (item.height || 12) - 4;
+            const yEnd = item.y + 4;
+            if (y >= yStart && y <= yEnd) {
+              intersections++;
+            }
+          }
+
+          if (intersections < minIntersections) {
+            minIntersections = intersections;
+            bestY = y;
+          } else if (intersections === minIntersections) {
+            // If same intersections, prefer the one closer to idealCut
+            if (Math.abs(y - idealCut) < Math.abs(bestY - idealCut)) {
+              bestY = y;
+            }
+          }
+        }
+
+        return bestY;
+      }
+
+      // Helper function to pre-slice tall PDF pages
+      async function preSliceTallPdf(inputBuffer: Buffer): Promise<Buffer> {
+        const { PDFDocument } = await import("pdf-lib");
+        const srcDoc = await PDFDocument.load(inputBuffer);
+        const totalPages = srcDoc.getPageCount();
+        const pages = srcDoc.getPages();
+
+        let hasTallPages = false;
+        for (let i = 0; i < totalPages; i++) {
+          const { height } = pages[i].getSize();
+          if (height > 900) {
+            hasTallPages = true;
+            break;
+          }
+        }
+
+        if (!hasTallPages) {
+          return inputBuffer;
+        }
+
+        console.log("[PDF PRE-SLICER] Tall pages detected. Slicing physically into standard pages...");
+
+        // Extract text positions using pdfjs
+        const pageTextPositions: any[] = [];
+        try {
+          const pdfjs = await import("pdfjs-dist/legacy/build/pdf.mjs");
+          const loadingTask = pdfjs.getDocument({ data: new Uint8Array(inputBuffer), verbosity: 0 });
+          const doc = await loadingTask.promise;
+          
+          for (let pageNum = 1; pageNum <= totalPages; pageNum++) {
+            const page = await doc.getPage(pageNum);
+            const viewport = page.getViewport({ scale: 1 });
+            const textContent = await page.getTextContent();
+            const items: any[] = [];
+
+            for (const item of textContent.items) {
+              if ('str' in item) {
+                const tm = item.transform;
+                const [x, y] = viewport.convertToViewportPoint(tm[4], tm[5]);
+                items.push({
+                  text: item.str,
+                  x,
+                  y,
+                  width: item.width || 0,
+                  height: item.height || 0
+                });
+              }
+            }
+
+            pageTextPositions.push({
+              pageNum,
+              width: viewport.width,
+              height: viewport.height,
+              items
+            });
+          }
+          await doc.destroy();
+        } catch (err) {
+          console.error("[PDF PRE-SLICER] Error extracting text positions:", err);
+          for (let i = 0; i < totalPages; i++) {
+            const { width, height } = pages[i].getSize();
+            pageTextPositions.push({
+              pageNum: i + 1,
+              width,
+              height,
+              items: []
+            });
+          }
+        }
+
+        const destDoc = await PDFDocument.create();
+
+        for (let i = 0; i < totalPages; i++) {
+          const srcPage = pages[i];
+          const { width: W, height: H } = srcPage.getSize();
+          const textData = pageTextPositions[i] || { items: [] };
+
+          if (H <= 900) {
+            // Copy page as-is
+            const [copied] = await destDoc.copyPages(srcDoc, [i]);
+            destDoc.addPage(copied);
+            continue;
+          }
+
+          // Slice this tall page!
+          const targetHeight = 792; // 11 inches
+          const cuts: number[] = [];
+          let currentTop = 0;
+
+          while (currentTop < H) {
+            if (H - currentTop <= targetHeight + 50) {
+              break;
+            }
+
+            const idealCut = currentTop + targetHeight;
+            const cutY = findOptimalCutY(textData.items, currentTop, idealCut, H);
+            cuts.push(cutY);
+            currentTop = cutY;
+          }
+
+          const slices = [0, ...cuts, H];
+          for (let j = 0; j < slices.length - 1; j++) {
+            const yStart = slices[j];
+            const yEnd = slices[j + 1];
+            const sliceHeight = yEnd - yStart;
+
+            const [copied] = await destDoc.copyPages(srcDoc, [i]);
+            const newPage = destDoc.addPage(copied);
+
+            // PDF coordinate system is bottom-up
+            const pdfYStart = H - yEnd;
+            const pdfYEnd = H - yStart;
+
+            newPage.setCropBox(0, pdfYStart, W, sliceHeight);
+            newPage.setMediaBox(0, pdfYStart, W, sliceHeight);
+          }
+        }
+
+        const savedBytes = await destDoc.save();
+        return Buffer.from(savedBytes);
+      }
+
+      // Run pre-slicing
+      pdfBuffer = await preSliceTallPdf(pdfBuffer);
+      fs.writeFileSync(tempFilePath, pdfBuffer);
 
       // 1. Extract text page-by-page
       const pages: { pageNum: number; text: string }[] = [];

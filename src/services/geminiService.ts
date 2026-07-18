@@ -1164,6 +1164,22 @@ const GLOBAL_PARAMETER_STRICTNESS_PROMPT = `
        - A premium 6-plugin chain MUST be modeled all the time for vocal or stem processing to ensure a grammy-level sound.
     5. STRICT LEVEL-MATCHED GAIN STAGING: Anytime you use a plugin that alters volume (like EQ cuts/boosts, compression, saturation, etc.), you MUST configure the plugin's output level/trim/makeup gain parameter so that the perceived output volume matches the input volume (level-matching). The goal is zero cumulative volume change across the chain (avoid gain creep). Avoid outputting any settings that add massive cumulative gain. Never suggest chains with cumulative gain hikes that exceed a total of +3dB across the entire chain. Each individual plugin should ideally have a net gain change of 0dB (or within +/- 1dB).
     6. STRICT DISTORTION & CLIPPING PREVENTION (ZERO DISTORTION TOLERANCE): Under no circumstances should any recommended mastering/leveling chain push the overall loudness of an instrumental or full mix to extreme levels that cause digital clipping, harmonic degradation, or audible distortion. Keep target integrated loudness within safe, professional streaming levels (typically -14.0 LUFS to -10.0 LUFS for competitive music, never pushing past -8.0 LUFS unless explicitly requested, and absolutely never pushing towards -4.0 LUFS which ruins dynamic range and causes major distortion). Always set the limiter's output ceiling/margin to a secure buffer (minimum -1.0 dB or -1.0 dBTP true peak, never higher than -0.5 dB) to prevent inter-sample clipping on downstream D/A converters. Always preserve at least 1.0 to 2.0 dB of clean dynamic headroom before the final limiting/clipping stage. Unless the user explicitly asks for "lo-fi distortion" or "bitcrushing" as a creative artistic effect, you must strictly avoid suggesting aggressive waveshapers, hard clippers, or overdriven compressors/saturators on full mixes or master buses.
+    7. MANDATORY UNIVERSAL AUDIO (UAD) PARAMETER O'CLOCK VALUE RULE:
+       - Whenever you recommend or suggest any parameter value for any Universal Audio (UAD) plugin (e.g. LA-2A, 1176, Pultec EQP-1A, Neve 1073, API Vision, SSL 4000 E, Fairchild 670, Studer A800, Ampex ATR-102, Empirical Labs Distressor, Capitol Chambers, Lexicon 224, etc.):
+       - You MUST display the EXACT physical setting AND its exact physical knob rotation as an "o'clock" position (ranging from 7:00 o'clock to 5:00 o'clock representing the standard physical dial sweep).
+       - For example:
+         - Instead of writing "Peak Reduction: 40" or "Peak Reduction: 4", you MUST write "Peak Reduction: 40 (1:00 o'clock)" or "Peak Reduction: 40 [1:00 o'clock]".
+         - Instead of writing "Input: 30", you MUST write "Input: 30 (10:15 o'clock)".
+         - Instead of writing "Gain: +3.5dB" or "Gain: 3.5", you MUST write "Gain: +3.5dB (12:45 o'clock)".
+         - Instead of writing "Time Constant: 4", you MUST write "Time Constant: 4 (12:00 o'clock)".
+       - This rule applies strictly to ALL parameter values in the "value" fields inside 'deepDive', 'vocalElements', 'trackingChain', and in any text-based mix advice, action plans, or recipes.
+       - O'clock physical positions always map linear percentage/MIDI range 0-100 or 0-10 to the 7:00 to 5:00 clock sweep:
+         - 0% or 0 value = 7:00 o'clock (fully counter-clockwise)
+         - 25% or 2.5 value = 9:30 o'clock
+         - 50% or 5.0 value = 12:00 o'clock (straight up)
+         - 75% or 7.5 value = 2:30 o'clock
+         - 100% or 10 value = 5:00 o'clock (fully clockwise)
+       - YOU MUST NEVER SUGGEST A UAD PLUGIN PARAMETER VALUE WITHOUT SPECIFYING ITS EXACT O'CLOCK POSITION. THIS IS THE USER'S HIGHEST PRIORITY.
     CRITICAL WARNING: NEVER RETURN AN EMPTY RECIPES ARRAY. You MUST ALWAYS generate at least one complete recipe that fulfills the user's request, regardless of strictness constraints.
 `;
 function postProcessResult(result: any) {
