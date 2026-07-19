@@ -4987,6 +4987,8 @@ if (process.env.NODE_ENV !== 'production') {
         }
 
         let isAnyTallPage = false;
+
+        const combinedDoc = await PDFDocument.create();
         
         for (let pIdx = 0; pIdx < totalSrcPages; pIdx++) {
             const page = srcDoc.getPage(pIdx);
@@ -4997,12 +4999,12 @@ if (process.env.NODE_ENV !== 'production') {
 
             if (numSlices > 1) {
                 isAnyTallPage = true;
-                const idealCuts1000: number[] = [];
+                const idealCuts1000 = [];
                 for (let i = 1; i < numSlices; i++) {
                     idealCuts1000.push(Math.round((i / numSlices) * 1000));
                 }
 
-                let cutPointsGemini: number[] = [...idealCuts1000];
+                let cutPointsGemini = [...idealCuts1000];
 
                 if (ai) {
                     try {
@@ -5015,7 +5017,7 @@ Return ONLY a valid JSON array of ${numSlices - 1} integers representing the saf
 Example format: [205, 410, 605]`;
                         
                         const response = await ai.models.generateContent({
-                            model: "gemini-3.1-pro",
+                            model: "gemini-1.5-pro",
                             contents: [
                                 { role: "user", parts: [
                                     { inlineData: { mimeType: "application/pdf", data: pdfBuffer.toString("base64") } },
@@ -5038,82 +5040,43 @@ Example format: [205, 410, 605]`;
                     }
                 }
 
-                // Map Gemini 0-1000 (top to bottom) to pdf-lib Y coordinates (0 to height from bottom)
                 let pdfCuts = cutPointsGemini.map(gy => height * (1 - (gy / 1000)));
-                pdfCuts.sort((a, b) => a - b); // Ascending from bottom (0) to top (height)
+                pdfCuts.sort((a, b) => a - b); 
 
-                // The cuts define the top boundaries of the slices starting from the bottom.
                 let currentBottom = 0;
                 const cuts = [...pdfCuts, height];
                 
-                // For naming, we usually want top-to-bottom. But pdf-lib coordinate space 0 is bottom.
-                // We will iterate bottom to top, but name them in reverse so part 1 is the top.
-                // Or easier: generate the PDFs, then reverse the array so part 1 is top!
-                const tempSlices = [];
-
-                for (let i = 0; i < cuts.length; i++) {
+                const [embedded] = await combinedDoc.embedPdf(pdfBuffer, [pIdx]);
+                
+                // We want to insert the slices in top-to-bottom order into combinedDoc.
+                // Since our cuts are bottom-up (0 is bottom), we should process the cuts from top to bottom!
+                // Wait, cuts array is [y1, y2, ..., height] sorted ascending (bottom to top).
+                // To get top-to-bottom slices, we should iterate backwards!
+                
+                for (let i = cuts.length - 1; i >= 0; i--) {
                     const cutTop = cuts[i];
-                    const sliceHeight = cutTop - currentBottom;
+                    const cutBottom = i === 0 ? 0 : cuts[i - 1];
+                    const sliceHeight = cutTop - cutBottom;
                     
-                    const sliceDoc = await PDFDocument.create();
-                    const slicePage = sliceDoc.addPage([width, sliceHeight]);
-                    
-                    const [embedded] = await sliceDoc.embedPdf(pdfBuffer, [pIdx]);
+                    const slicePage = combinedDoc.addPage([width, sliceHeight]);
                     slicePage.drawPage(embedded, {
                         x: 0,
-                        y: -currentBottom
-                    });
-                    
-                    const base64 = Buffer.from(await sliceDoc.save()).toString("base64");
-                    tempSlices.push({
-                        base64,
-                        pages: [pIdx + 1]
-                    });
-                    
-                    currentBottom = cutTop;
-                }
-
-                // tempSlices are ordered from bottom to top. We reverse to get top to bottom.
-                tempSlices.reverse();
-                for (let i = 0; i < tempSlices.length; i++) {
-                    splitFiles.push({
-                        fileName: `${originalFileNameWithoutExt}_Page${pIdx + 1}_Part${i + 1}.pdf`,
-                        pages: tempSlices[i].pages,
-                        reason: `AI Visual-Aware Slice (Part ${i + 1} of ${cuts.length}) - intelligently cropped to avoid cutting chat bubbles.`,
-                        base64: tempSlices[i].base64
+                        y: -cutBottom
                     });
                 }
             } else {
-                // Normal page, no need to slice vertically
-                const sliceDoc = await PDFDocument.create();
-                const [copied] = await sliceDoc.copyPages(srcDoc, [pIdx]);
-                sliceDoc.addPage(copied);
-                const base64 = Buffer.from(await sliceDoc.save()).toString("base64");
-                splitFiles.push({
-                    fileName: `${originalFileNameWithoutExt}_Page${pIdx + 1}.pdf`,
-                    pages: [pIdx + 1],
-                    reason: `Standard 9x11 sized page extraction.`,
-                    base64
-                });
+                const [copied] = await combinedDoc.copyPages(srcDoc, [pIdx]);
+                combinedDoc.addPage(copied);
             }
         }
 
-        // Add the fully combined version as the last item for convenience, if there were tall pages sliced
-        if (isAnyTallPage) {
-            const combinedDoc = await PDFDocument.create();
-            for (const f of splitFiles) {
-                const tempDoc = await PDFDocument.load(Buffer.from(f.base64, 'base64'));
-                const copiedPages = await combinedDoc.copyPages(tempDoc, tempDoc.getPageIndices());
-                copiedPages.forEach((p) => combinedDoc.addPage(p));
-            }
-            const fullDocBase64 = Buffer.from(await combinedDoc.save()).toString('base64');
-            splitFiles.unshift({
-                fileName: `${originalFileNameWithoutExt}_fits_9x11_all_pages.pdf`,
-                pages: Array.from({ length: totalSrcPages }, (_, idx) => idx + 1),
-                reason: `Combined document perfectly sliced into ${splitFiles.length} standard 11-inch (9x11) pages. Print this file for perfect pagination!`,
-                base64: fullDocBase64
-            });
-        }
+        const fullDocBase64 = Buffer.from(await combinedDoc.save()).toString('base64');
+        splitFiles.push({
+            fileName: `${originalFileNameWithoutExt}_fits_9x11.pdf`,
+            pages: Array.from({ length: combinedDoc.getPageCount() }, (_, idx) => idx + 1),
+            reason: `Combined document properly sliced into standard 11-inch (9x11) pages. Print this file for perfect pagination!`,
+            base64: fullDocBase64
+        });
 
         try { fs.unlinkSync(tempFilePath); } catch (e) {}
 
