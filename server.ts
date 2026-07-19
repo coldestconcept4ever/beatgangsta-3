@@ -4974,73 +4974,140 @@ if (process.env.NODE_ENV !== 'production') {
 
         const splitFiles: { fileName: string; pages: number[]; reason: string; base64: string }[] = [];
 
-        // 1. Add the fully-sliced document (extremely convenient so they can download/print all 11-inch standard pages in one file)
-        const fullDocBytes = await srcDoc.save();
-        const fullDocBase64 = Buffer.from(fullDocBytes).toString('base64');
-        splitFiles.push({
-          fileName: `${originalFileNameWithoutExt}_fits_9x11_all_pages.pdf`,
-          pages: Array.from({ length: totalSrcPages }, (_, idx) => idx + 1),
-          reason: `We detected your document is an image/screenshot (no selectable text). We've successfully sliced it physically into ${totalSrcPages} standard 11-inch (9x11) pages so it is print-ready! Download this combined file to print the entire log perfectly on standard paper.`,
-          base64: fullDocBase64
-        });
-
-        // 2. Parse split sizing based on user prompt or defaults
-        let splitSize = 1;
-        const promptLower = (userPrompt || "").toLowerCase();
-        const everyMatch = promptLower.match(/every\s+(\d+)\s+page/);
-        const splitMatch = promptLower.match(/split\s+(\d+)\s+page/);
-        const groupsOfMatch = promptLower.match(/groups\s+of\s+(\d+)/);
-        const intoMatch = promptLower.match(/into\s+(\d+)\s+(files|parts|pages)/);
-
-        if (everyMatch) {
-          splitSize = parseInt(everyMatch[1]);
-        } else if (splitMatch) {
-          splitSize = parseInt(splitMatch[1]);
-        } else if (groupsOfMatch) {
-          splitSize = parseInt(groupsOfMatch[1]);
-        } else if (intoMatch) {
-          const parts = parseInt(intoMatch[1]);
-          if (parts > 0) {
-            splitSize = Math.max(1, Math.ceil(totalSrcPages / parts));
-          }
-        } else {
-          // If they ask for 9x11 pages, we provide files of 1 page each or small batches.
-          if (totalSrcPages > 15) {
-            splitSize = 5;
-          } else {
-            splitSize = 1;
-          }
+        const apiKey = process.env.GEMINI_API_KEY;
+        let ai = null;
+        if (apiKey) {
+           const { GoogleGenAI } = await import("@google/genai");
+           ai = new GoogleGenAI({ apiKey });
         }
 
-        if (isNaN(splitSize) || splitSize < 1) {
-          splitSize = 1;
+        let isAnyTallPage = false;
+        
+        for (let pIdx = 0; pIdx < totalSrcPages; pIdx++) {
+            const page = srcDoc.getPage(pIdx);
+            const { width, height } = page.getSize();
+            const targetRatio = 11 / 8.5; // roughly 1.294
+            const idealSliceHeight = width * targetRatio;
+            const numSlices = Math.max(1, Math.ceil(height / idealSliceHeight));
+
+            if (numSlices > 1) {
+                isAnyTallPage = true;
+                const idealCuts1000: number[] = [];
+                for (let i = 1; i < numSlices; i++) {
+                    idealCuts1000.push(Math.round((i / numSlices) * 1000));
+                }
+
+                let cutPointsGemini: number[] = [...idealCuts1000];
+
+                if (ai) {
+                    try {
+                        const prompt = `You are an expert visual document analyzer.
+Analyze page ${pIdx + 1} of the provided PDF. It is a tall screenshot or scanned document.
+I need to slice this page horizontally into ${numSlices} standard printable pages.
+The ideal cut points (in a normalized 0-1000 Y-coordinate scale, where 0 is the top edge and 1000 is the bottom edge) are roughly: ${JSON.stringify(idealCuts1000)}.
+Please visually examine the document at those approximate Y-coordinates and find the nearest safe horizontal gap (empty space, background color) so that no chat bubble, text, or image is cut in half.
+Return ONLY a valid JSON array of ${numSlices - 1} integers representing the safe Y-coordinates.
+Example format: [205, 410, 605]`;
+                        
+                        const response = await ai.models.generateContent({
+                            model: "gemini-1.5-pro",
+                            contents: [
+                                { role: "user", parts: [
+                                    { inlineData: { mimeType: "application/pdf", data: pdfBuffer.toString("base64") } },
+                                    { text: prompt }
+                                ]}
+                            ]
+                        });
+                        
+                        const text = response.text || "";
+                        const match = text.match(/\[[\s\S]*\]/);
+                        if (match) {
+                            const parsed = JSON.parse(match[0]);
+                            if (Array.isArray(parsed) && parsed.length === numSlices - 1) {
+                                cutPointsGemini = parsed;
+                                console.log(`[PDF SPLITTER] Gemini vision refined cuts for page ${pIdx+1}:`, cutPointsGemini);
+                            }
+                        }
+                    } catch (err) {
+                        console.error("[PDF SPLITTER] Gemini vision split failed for page " + (pIdx+1) + ", falling back to geometric cuts:", err);
+                    }
+                }
+
+                // Map Gemini 0-1000 (top to bottom) to pdf-lib Y coordinates (0 to height from bottom)
+                let pdfCuts = cutPointsGemini.map(gy => height * (1 - (gy / 1000)));
+                pdfCuts.sort((a, b) => a - b); // Ascending from bottom (0) to top (height)
+
+                // The cuts define the top boundaries of the slices starting from the bottom.
+                let currentBottom = 0;
+                const cuts = [...pdfCuts, height];
+                
+                // For naming, we usually want top-to-bottom. But pdf-lib coordinate space 0 is bottom.
+                // We will iterate bottom to top, but name them in reverse so part 1 is the top.
+                // Or easier: generate the PDFs, then reverse the array so part 1 is top!
+                const tempSlices = [];
+
+                for (let i = 0; i < cuts.length; i++) {
+                    const cutTop = cuts[i];
+                    const sliceHeight = cutTop - currentBottom;
+                    
+                    const sliceDoc = await PDFDocument.create();
+                    const slicePage = sliceDoc.addPage([width, sliceHeight]);
+                    
+                    const [embedded] = await sliceDoc.embedPdf(pdfBuffer, [pIdx]);
+                    slicePage.drawPage(embedded, {
+                        x: 0,
+                        y: -currentBottom
+                    });
+                    
+                    const base64 = Buffer.from(await sliceDoc.save()).toString("base64");
+                    tempSlices.push({
+                        base64,
+                        pages: [pIdx + 1]
+                    });
+                    
+                    currentBottom = cutTop;
+                }
+
+                // tempSlices are ordered from bottom to top. We reverse to get top to bottom.
+                tempSlices.reverse();
+                for (let i = 0; i < tempSlices.length; i++) {
+                    splitFiles.push({
+                        fileName: `${originalFileNameWithoutExt}_Page${pIdx + 1}_Part${i + 1}.pdf`,
+                        pages: tempSlices[i].pages,
+                        reason: `AI Visual-Aware Slice (Part ${i + 1} of ${cuts.length}) - intelligently cropped to avoid cutting chat bubbles.`,
+                        base64: tempSlices[i].base64
+                    });
+                }
+            } else {
+                // Normal page, no need to slice vertically
+                const sliceDoc = await PDFDocument.create();
+                const [copied] = await sliceDoc.copyPages(srcDoc, [pIdx]);
+                sliceDoc.addPage(copied);
+                const base64 = Buffer.from(await sliceDoc.save()).toString("base64");
+                splitFiles.push({
+                    fileName: `${originalFileNameWithoutExt}_Page${pIdx + 1}.pdf`,
+                    pages: [pIdx + 1],
+                    reason: `Standard 9x11 sized page extraction.`,
+                    base64
+                });
+            }
         }
 
-        // 3. Generate sequential splits
-        for (let idx = 0; idx < totalSrcPages; idx += splitSize) {
-          const pageNumbers: number[] = [];
-          for (let pIdx = idx; pIdx < idx + splitSize && pIdx < totalSrcPages; pIdx++) {
-            pageNumbers.push(pIdx + 1);
-          }
-
-          const destDoc = await PDFDocument.create();
-          const pageIndicesToCopy = pageNumbers.map(p => p - 1);
-          const copiedPages = await destDoc.copyPages(srcDoc, pageIndicesToCopy);
-          copiedPages.forEach((page) => destDoc.addPage(page));
-          const bytes = await destDoc.save();
-          const base64 = Buffer.from(bytes).toString('base64');
-
-          let nameRange = `Page_${pageNumbers[0]}`;
-          if (pageNumbers.length > 1) {
-            nameRange = `Pages_${pageNumbers[0]}_to_${pageNumbers[pageNumbers.length - 1]}`;
-          }
-
-          splitFiles.push({
-            fileName: `${originalFileNameWithoutExt}_${nameRange}.pdf`,
-            pages: pageNumbers,
-            reason: `Physical slice containing ${nameRange} of the screenshot/scanned document, precisely cropped to fit 11-inch (9x11) printer paper size.`,
-            base64
-          });
+        // Add the fully combined version as the last item for convenience, if there were tall pages sliced
+        if (isAnyTallPage) {
+            const combinedDoc = await PDFDocument.create();
+            for (const f of splitFiles) {
+                const tempDoc = await PDFDocument.load(Buffer.from(f.base64, 'base64'));
+                const copiedPages = await combinedDoc.copyPages(tempDoc, tempDoc.getPageIndices());
+                copiedPages.forEach((p) => combinedDoc.addPage(p));
+            }
+            const fullDocBase64 = Buffer.from(await combinedDoc.save()).toString('base64');
+            splitFiles.unshift({
+                fileName: `${originalFileNameWithoutExt}_fits_9x11_all_pages.pdf`,
+                pages: Array.from({ length: totalSrcPages }, (_, idx) => idx + 1),
+                reason: `Combined document perfectly sliced into ${splitFiles.length} standard 11-inch (9x11) pages. Print this file for perfect pagination!`,
+                base64: fullDocBase64
+            });
         }
 
         try { fs.unlinkSync(tempFilePath); } catch (e) {}
