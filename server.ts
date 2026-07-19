@@ -5010,7 +5010,7 @@ Return ONLY a valid JSON array of ${numSlices - 1} integers representing the saf
 Example format: [205, 410, 605]`;
                         
                         const response = await ai.models.generateContent({
-                            model: "gemini-1.5-pro",
+                            model: "gemini-3.1-pro",
                             contents: [
                                 { role: "user", parts: [
                                     { inlineData: { mimeType: "application/pdf", data: pdfBuffer.toString("base64") } },
