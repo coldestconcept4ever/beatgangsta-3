@@ -226,11 +226,35 @@ export const UadDatabaseViewer = ({ onBack, theme }: { onBack: () => void; theme
                   >
                     <div className="flex items-center justify-between gap-2">
                       <span className="text-xs font-bold tracking-widest uppercase opacity-40">{plugin.category}</span>
-                      <span className={`text-[10px] font-mono px-2 py-0.5 rounded-full ${
-                        isColdest ? 'bg-slate-100 text-slate-600' : 'bg-zinc-800 text-zinc-400'
-                      }`}>
-                        {plugin.parameters.length} controls
-                      </span>
+                      <div className="flex items-center gap-1.5">
+                        <span className={`text-[10px] font-mono px-2 py-0.5 rounded-full ${
+                          isColdest ? 'bg-slate-100 text-slate-600' : 'bg-zinc-800 text-zinc-400'
+                        }`}>
+                          {plugin.parameters.length} controls
+                        </span>
+                        {plugin.authorizationStatus && (
+                          <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded border flex items-center gap-1 ${
+                            plugin.authorizationStatus === "Authorized for all devices"
+                              ? "bg-emerald-500/10 text-emerald-500 border-emerald-500/20"
+                              : plugin.authorizationStatus === "Demo expired"
+                                ? "bg-rose-500/10 text-rose-500 border-rose-500/20"
+                                : "bg-amber-500/10 text-amber-500 border-amber-500/20"
+                          }`}>
+                            <span className={`w-1.5 h-1.5 rounded-full ${
+                              plugin.authorizationStatus === "Authorized for all devices"
+                                ? "bg-emerald-500"
+                                : plugin.authorizationStatus === "Demo expired"
+                                  ? "bg-rose-500"
+                                  : "bg-amber-500"
+                            }`} />
+                            {plugin.authorizationStatus === "Authorized for all devices"
+                              ? "Authorized"
+                              : plugin.authorizationStatus === "Demo expired"
+                                ? "Expired"
+                                : "Demo"}
+                          </span>
+                        )}
+                      </div>
                     </div>
                     <h3 className="font-black text-sm uppercase tracking-wide group-hover:text-amber-500 transition-colors">
                       {plugin.displayName}
@@ -261,7 +285,27 @@ export const UadDatabaseViewer = ({ onBack, theme }: { onBack: () => void; theme
                       <Cpu size={12} /> {selectedPlugin.hardwareModel}
                     </span>
                   </div>
-                  <h2 className="text-xl sm:text-2xl font-black uppercase tracking-tight">{selectedPlugin.displayName}</h2>
+                  <div className="flex flex-wrap items-center gap-2.5">
+                    <h2 className="text-xl sm:text-2xl font-black uppercase tracking-tight">{selectedPlugin.displayName}</h2>
+                    {selectedPlugin.authorizationStatus && (
+                      <span className={`text-xs font-bold px-2.5 py-1 rounded-full border flex items-center gap-1.5 ${
+                        selectedPlugin.authorizationStatus === "Authorized for all devices"
+                          ? "bg-emerald-500/10 text-emerald-500 border-emerald-500/25"
+                          : selectedPlugin.authorizationStatus === "Demo expired"
+                            ? "bg-rose-500/10 text-rose-500 border-rose-500/25"
+                            : "bg-amber-500/10 text-amber-500 border-amber-500/25"
+                      }`}>
+                        <span className={`w-2 h-2 rounded-full ${
+                          selectedPlugin.authorizationStatus === "Authorized for all devices"
+                            ? "bg-emerald-500 animate-pulse"
+                            : selectedPlugin.authorizationStatus === "Demo expired"
+                              ? "bg-rose-500"
+                              : "bg-amber-500"
+                        }`} />
+                        {selectedPlugin.authorizationStatus}
+                      </span>
+                    )}
+                  </div>
                   <p className="text-sm opacity-80 mt-1.5 max-w-2xl leading-relaxed">{selectedPlugin.description}</p>
                 </div>
                 
