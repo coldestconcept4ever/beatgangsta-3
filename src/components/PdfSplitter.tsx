@@ -331,6 +331,9 @@ END OF DIAGNOSTIC REPORT
       }
 
       const data = await res.json();
+      if (data.error) {
+        throw new Error(data.error);
+      }
       setSplits(data.splits || []);
     } catch (err: any) {
       const technicalDetails = err.technicalDetails || {

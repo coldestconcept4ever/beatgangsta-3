@@ -4794,9 +4794,12 @@ if (process.env.NODE_ENV !== 'production') {
       return res.status(400).json({ error: "Missing tempFilePath data" });
     }
 
+    res.writeHead(200, { "Content-Type": "application/json" });
+    const keepAliveInterval = setInterval(() => { res.write(" "); }, 15000);
     try {
       if (!fs.existsSync(tempFilePath)) {
-        return res.status(400).json({ error: "Uploaded file not found or expired." });
+        res.write(JSON.stringify({ error: "Uploaded file not found or expired." }));
+        return res.end();
       }
 
       let pdfBuffer = fs.readFileSync(tempFilePath);
@@ -4945,7 +4948,8 @@ if (process.env.NODE_ENV !== 'production') {
       } catch (err) {
         console.error("Error during PDF parsing:", err);
         try { fs.unlinkSync(tempFilePath); } catch (e) {}
-        return res.status(500).json({ error: "Failed to extract text from the PDF: " + (err as Error).message });
+        res.write(JSON.stringify({ error: "Failed to extract text from the PDF: " + (err as Error).message }));
+        return res.end();
       }
 
       pages.sort((a, b) => a.pageNum - b.pageNum);
@@ -4959,7 +4963,8 @@ if (process.env.NODE_ENV !== 'production') {
 
         if (totalSrcPages === 0) {
           try { fs.unlinkSync(tempFilePath); } catch (e) {}
-          return res.status(400).json({ error: "The uploaded PDF has 0 physical pages." });
+          res.write(JSON.stringify({ error: "The uploaded PDF has 0 physical pages." }));
+        return res.end();
         }
 
         const baseTempName = path.basename(tempFilePath);
@@ -5112,18 +5117,20 @@ Example format: [205, 410, 605]`;
 
         try { fs.unlinkSync(tempFilePath); } catch (e) {}
 
-        return res.json({
+        res.write(JSON.stringify({
           success: true,
           splits: splitFiles,
           isFallback: true
-        });
+        }));
+        return res.end();
       }
 
       // 2. Call Gemini to determine split boundaries
       const apiKey = process.env.GEMINI_API_KEY;
       if (!apiKey) {
         try { fs.unlinkSync(tempFilePath); } catch (e) {}
-        return res.status(500).json({ error: "Gemini API key is not configured on the server." });
+        res.write(JSON.stringify({ error: "Gemini API key is not configured on the server." }));
+        return res.end();
       }
 
       const { GoogleGenAI } = await import("@google/genai");
@@ -5198,12 +5205,14 @@ Return ONLY the raw JSON object conforming to the schema above. Do not include m
       } catch (e: any) {
         console.error("Failed to parse Gemini split decision:", e, response.text);
         try { fs.unlinkSync(tempFilePath); } catch (e) {}
-        return res.status(500).json({ error: "AI failed to produce a valid split plan.", rawResponse: response.text });
+        res.write(JSON.stringify({ error: "AI failed to produce a valid split plan.", rawResponse: response.text }));
+        return res.end();
       }
 
       if (!resultJson || !Array.isArray(resultJson.splits)) {
         try { fs.unlinkSync(tempFilePath); } catch (e) {}
-        return res.status(500).json({ error: "AI split response does not contain a splits list.", rawResponse: response.text });
+        res.write(JSON.stringify({ error: "AI split response does not contain a splits list.", rawResponse: response.text }));
+        return res.end();
       }
 
       // 3. Generate the split PDFs using pdf-lib
@@ -5248,17 +5257,22 @@ Return ONLY the raw JSON object conforming to the schema above. Do not include m
       // Clean up the temp file
       try { fs.unlinkSync(tempFilePath); } catch (e) {}
 
-      return res.json({
+      res.write(JSON.stringify({
         success: true,
         splits: splitFiles
-      });
+      }));
+        return res.end();
 
     } catch (error: any) {
       console.error("Error in PDF split-analyse:", error);
       try { fs.unlinkSync(tempFilePath); } catch (e) {}
-      return res.status(500).json({ error: error.message || "Internal server error during PDF splitting" });
+      res.write(JSON.stringify({ error: error.message || "Internal server error during PDF splitting" }));
+      return res.end();
+    } finally {
+      clearInterval(keepAliveInterval);
     }
   });
+
 
   app.post("/api/verify-turnstile", async (req, res) => {
     const token = req.body["cf-turnstile-response"];
