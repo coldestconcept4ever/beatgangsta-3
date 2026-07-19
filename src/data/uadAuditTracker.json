@@ -1,0 +1,178 @@
+{
+  "currentAudit": {
+    "number": 23,
+    "name": "uad oxford supresser ds",
+    "displayName": "UAD Oxford SuprEsser DS",
+    "status": "Approved & Updated"
+  },
+  "auditHistory": [
+    {
+      "number": 1,
+      "name": "uad elysia karacter stereo saturator",
+      "displayName": "UAD elysia karacter Stereo Saturator",
+      "auditedAt": "2026-07-19T07:48:00Z",
+      "status": "Approved - Ready for Update"
+    },
+    {
+      "number": 2,
+      "name": "uad black box analog design hg-2",
+      "displayName": "UAD Black Box Analog Design HG-2",
+      "auditedAt": "2026-07-19T07:58:30Z",
+      "status": "Approved & Updated"
+    },
+    {
+      "number": 3,
+      "name": "uad elysia alpha compressor v2",
+      "displayName": "UAD elysia alpha compressor V2",
+      "auditedAt": "2026-07-19T08:09:30Z",
+      "status": "Approved & Updated"
+    },
+    {
+      "number": 4,
+      "name": "uad spl vitalizer mk3-t",
+      "displayName": "UAD SPL Vitalizer MK3-T",
+      "auditedAt": "2026-07-19T08:19:00Z",
+      "status": "Approved & Updated"
+    },
+    {
+      "number": 5,
+      "name": "uad shadow hills mastering compressor class a",
+      "displayName": "UAD Shadow Hills Mastering Compressor Class A",
+      "auditedAt": "2026-07-19T08:30:30Z",
+      "status": "Approved & Updated"
+    },
+    {
+      "number": 6,
+      "name": "uad maag audio eq4 ms",
+      "displayName": "UAD Maag Audio EQ4 MS",
+      "auditedAt": "2026-07-19T08:41:00Z",
+      "status": "Approved & Updated"
+    },
+    {
+      "number": 7,
+      "name": "uad a-type multiband enhancer",
+      "displayName": "UAD A-Type Multiband Enhancer",
+      "auditedAt": "2026-07-19T08:46:00Z",
+      "status": "Approved & Updated"
+    },
+    {
+      "number": 8,
+      "name": "uad la-6176 signature channel strip",
+      "displayName": "UAD LA-6176 Signature Channel Strip",
+      "auditedAt": "2026-07-19T08:47:30Z",
+      "status": "Approved & Updated"
+    },
+    {
+      "number": 9,
+      "name": "uad antares auto-tune realtime x",
+      "displayName": "UAD Antares Auto-Tune Realtime X",
+      "auditedAt": "2026-07-19T08:51:30Z",
+      "status": "Approved & Updated"
+    },
+    {
+      "number": 10,
+      "name": "uad hemisphere mic collection",
+      "displayName": "UAD Hemisphere Mic Collection",
+      "auditedAt": "2026-07-19T09:01:00Z",
+      "status": "Approved & Updated"
+    },
+    {
+      "number": 11,
+      "name": "uad c-suite c-max limiter",
+      "displayName": "UAD C-Suite C-Max Limiter",
+      "auditedAt": "2026-07-19T09:09:30Z",
+      "status": "Approved & Updated"
+    },
+    {
+      "number": 12,
+      "name": "uad hitsville reverb chambers",
+      "displayName": "UAD Hitsville Reverb Chambers",
+      "auditedAt": "2026-07-19T09:14:15Z",
+      "status": "Approved & Updated"
+    },
+    {
+      "number": 13,
+      "name": "uad c-suite c-axe guitar noise suppressor",
+      "displayName": "UAD C-Suite C-Axe Guitar Noise Suppressor",
+      "auditedAt": "2026-07-19T09:16:55Z",
+      "status": "Approved & Updated"
+    },
+    {
+      "number": 14,
+      "name": "uad hitsville eq collection",
+      "displayName": "UAD Hitsville EQ Collection",
+      "auditedAt": "2026-07-19T09:20:45Z",
+      "status": "Approved & Updated"
+    },
+    {
+      "number": 15,
+      "name": "uad ams dmx 15-80 s digital delay and pitch shifter",
+      "displayName": "UAD AMS DMX 15-80 S Digital Delay and Pitch Shifter",
+      "auditedAt": "2026-07-19T09:25:35Z",
+      "status": "Approved & Updated"
+    },
+    {
+      "number": 16,
+      "name": "uad manley reference microphone preamplifier",
+      "displayName": "UAD Manley Reference Microphone Preamplifier",
+      "auditedAt": "2026-07-19T09:35:30Z",
+      "status": "Approved & Updated"
+    },
+    {
+      "number": 17,
+      "name": "uad api vision channel strip collection",
+      "displayName": "UAD API Vision Channel Strip Collection",
+      "auditedAt": "2026-07-19T09:50:15Z",
+      "status": "Approved & Updated"
+    },
+    {
+      "number": 18,
+      "name": "uad api preamp",
+      "displayName": "UAD API Preamp",
+      "auditedAt": "2026-07-19T09:51:10Z",
+      "status": "Approved & Updated"
+    },
+    {
+      "number": 19,
+      "name": "uad c-suite c-vox noise and ambience reduction",
+      "displayName": "UAD C-Suite C-Vox Noise and Ambience Reduction",
+      "auditedAt": "2026-07-19T09:51:45Z",
+      "status": "Approved & Updated"
+    },
+    {
+      "number": 20,
+      "name": "uad neve dynamics collection",
+      "displayName": "UAD Neve Dynamics Collection",
+      "auditedAt": "2026-07-19T09:55:30Z",
+      "status": "Approved & Updated"
+    },
+    {
+      "number": 21,
+      "name": "uad neve 1084 preamp and eq",
+      "displayName": "UAD Neve 1084 Preamp and EQ",
+      "auditedAt": "2026-07-19T10:01:45Z",
+      "status": "Approved & Updated"
+    },
+    {
+      "number": 22,
+      "name": "uad avalon vt-737sp channel strip",
+      "displayName": "UAD Avalon VT-737sp Channel Strip",
+      "auditedAt": "2026-07-19T10:07:30Z",
+      "status": "Approved & Updated"
+    },
+    {
+      "number": 23,
+      "name": "uad oxford supresser ds",
+      "displayName": "UAD Oxford SuprEsser DS",
+      "auditedAt": "2026-07-19T10:11:45Z",
+      "status": "Approved & Updated"
+    }
+  ],
+  "totalPluginsCount": 188,
+  "systemRules": [
+    "Always state the current audit number (out of 188) and the exact plugin name.",
+    "Perform rigorous research on the hardware chassis front panel, layout, default parameters, and o'clock positions.",
+    "Contrast current database definitions against physical reality.",
+    "Wait for user approval or direction before applying updates, or apply immediately if requested."
+  ]
+}

@@ -28,30 +28,30 @@ export const UAD_DATABASE: UADPluginProfile[] = [
     "parameters": [
       {
         "name": "Drive",
-        "range": "0 dB to 100 dB",
-        "defaultVal": "0 dB",
+        "range": "1 to 11",
+        "defaultVal": "1",
         "description": "Controls the input gain and level of saturation injected into the signal.",
         "type": "knob"
       },
       {
         "name": "Color",
-        "range": "Dark to Bright",
-        "defaultVal": "Center",
+        "range": "1 to 11",
+        "defaultVal": "6",
         "description": "Adjusts the tilt filter to shape the high/low frequency response of the saturation.",
         "type": "knob"
       },
       {
         "name": "Gain",
-        "range": "-24 dB to +24 dB",
-        "defaultVal": "0 dB",
-        "description": "Provides makeup output gain to balance saturated levels.",
+        "range": "1 to 11",
+        "defaultVal": "6",
+        "description": "Provides makeup output gain to balance saturated levels (unity gain is at 6).",
         "type": "knob"
       },
       {
         "name": "Mix",
-        "range": "0% to 100%",
-        "defaultVal": "100%",
-        "description": "Enables parallel processing by blending dry and saturated signals.",
+        "range": "1 to 11",
+        "defaultVal": "11",
+        "description": "Enables parallel processing by blending dry (1) and saturated (11) signals.",
         "type": "knob"
       },
       {
@@ -122,6 +122,39 @@ export const UAD_DATABASE: UADPluginProfile[] = [
         "type": "knob"
       },
       {
+        "name": "Air Freq",
+        "range": "10 kHz / 4.8 kHz",
+        "defaultVal": "10 kHz",
+        "description": "Selects the high-shelf cutoff frequency for the passive-style Air band.",
+        "type": "switch",
+        "options": [
+          "10 kHz",
+          "4.8 kHz"
+        ]
+      },
+      {
+        "name": "Saturation Circuit",
+        "range": "On / Off",
+        "defaultVal": "On",
+        "description": "Engages or bypasses the parallel tube saturation path.",
+        "type": "switch",
+        "options": [
+          "On",
+          "Off"
+        ]
+      },
+      {
+        "name": "Air Circuit",
+        "range": "On / Off",
+        "defaultVal": "On",
+        "description": "Engages or bypasses the active high-shelf Air filter.",
+        "type": "switch",
+        "options": [
+          "On",
+          "Off"
+        ]
+      },
+      {
         "name": "Output Trim",
         "range": "-12 dB to +12 dB",
         "defaultVal": "0 dB",
@@ -172,10 +205,45 @@ export const UAD_DATABASE: UADPluginProfile[] = [
         "type": "knob"
       },
       {
+        "name": "Makeup Gain",
+        "range": "0 dB to +15 dB",
+        "defaultVal": "0 dB",
+        "description": "Provides clean makeup level adjustment up to +15 dB after VCA compression.",
+        "type": "knob"
+      },
+      {
         "name": "Mix",
         "range": "0% to 100%",
         "defaultVal": "100%",
         "description": "Enables parallel compression directly inside the module.",
+        "type": "knob"
+      },
+      {
+        "name": "Niveau Freq",
+        "range": "20 Hz to 20 kHz",
+        "defaultVal": "1.0 kHz",
+        "description": "Sets the pivot frequency for the unique tilt-style Niveau filter.",
+        "type": "knob"
+      },
+      {
+        "name": "Niveau Level",
+        "range": "-6.0 dB to +6.0 dB",
+        "defaultVal": "0.0 dB",
+        "description": "Controls the amount of high/low frequency tilt applied around the pivot point.",
+        "type": "knob"
+      },
+      {
+        "name": "Sidechain Freq",
+        "range": "30 Hz to 300 Hz",
+        "defaultVal": "80 Hz",
+        "description": "Adjusts the low-cut frequency of the internal sidechain high-pass filter.",
+        "type": "knob"
+      },
+      {
+        "name": "Lmt Threshold",
+        "range": "Off to +12 dB",
+        "defaultVal": "Off",
+        "description": "Engages the discrete, soft-clipping peak limiter stage to catch fast transients.",
         "type": "knob"
       },
       {
@@ -187,6 +255,50 @@ export const UAD_DATABASE: UADPluginProfile[] = [
         "options": [
           "Bypassed",
           "Active"
+        ]
+      },
+      {
+        "name": "Auto Fast Attack",
+        "range": "Off / On",
+        "defaultVal": "Off",
+        "description": "Automatically speeds up the attack time for fast transients.",
+        "type": "switch",
+        "options": [
+          "Off",
+          "On"
+        ]
+      },
+      {
+        "name": "Auto Fast Release",
+        "range": "Off / On",
+        "defaultVal": "Off",
+        "description": "Automatically speeds up the release time for short transients to prevent pumping.",
+        "type": "switch",
+        "options": [
+          "Off",
+          "On"
+        ]
+      },
+      {
+        "name": "Comp Mode",
+        "range": "Feedback (FB) / Feedforward (FF)",
+        "defaultVal": "FB",
+        "description": "Selects between traditional Feedback and aggressive, modern Feedforward compression styles.",
+        "type": "switch",
+        "options": [
+          "FB",
+          "FF"
+        ]
+      },
+      {
+        "name": "M/S Mode",
+        "range": "Stereo / Mid-Side",
+        "defaultVal": "Stereo",
+        "description": "Toggles between normal L/R Stereo and advanced Mid-Side encoding matrix.",
+        "type": "switch",
+        "options": [
+          "Stereo",
+          "M/S"
         ]
       }
     ],
@@ -206,13 +318,13 @@ export const UAD_DATABASE: UADPluginProfile[] = [
     "parameters": [
       {
         "name": "Drive",
-        "range": "-20 dB to +6 dB",
+        "range": "-20 dB to +8 dB",
         "defaultVal": "0 dB",
         "description": "Sets the input drive level feeding the psychoacoustic processing circuitry.",
         "type": "knob"
       },
       {
-        "name": "Bass Type",
+        "name": "Bass Sound",
         "range": "Soft / Tight",
         "defaultVal": "Soft",
         "description": "Chooses between warm, resonant bass (Soft) or transient-focused, solid bass (Tight).",
@@ -223,10 +335,17 @@ export const UAD_DATABASE: UADPluginProfile[] = [
         ]
       },
       {
-        "name": "Bass Gain",
-        "range": "-15 dB to +15 dB",
-        "defaultVal": "0 dB",
-        "description": "Controls the amplitude of the optimized low-frequency spectrum.",
+        "name": "Bass Level",
+        "range": "0 to 10",
+        "defaultVal": "0",
+        "description": "Controls the level of the selected bass sound (Soft or Tight) added to the mix.",
+        "type": "knob"
+      },
+      {
+        "name": "Bass Compression",
+        "range": "Off to 10",
+        "defaultVal": "Off",
+        "description": "Controls the threshold of the dynamic bass compressor, limiting low-end peaks.",
         "type": "knob"
       },
       {
@@ -238,14 +357,28 @@ export const UAD_DATABASE: UADPluginProfile[] = [
       },
       {
         "name": "Process",
-        "range": "0 to 100",
+        "range": "0 to 10",
         "defaultVal": "0",
         "description": "Applies high-frequency presence and clarity sweetening relative to the tune control.",
         "type": "knob"
       },
       {
+        "name": "LC-EQ Frequency",
+        "range": "2 kHz to 20 kHz",
+        "defaultVal": "10 kHz",
+        "description": "Sets the frequency for the passive coil-based high frequency EQ circuit.",
+        "type": "knob"
+      },
+      {
+        "name": "LC-EQ Intensity",
+        "range": "0 to 10",
+        "defaultVal": "0",
+        "description": "Controls the level of high-frequency passive boost relative to the LC-EQ frequency.",
+        "type": "knob"
+      },
+      {
         "name": "Stereo Expander",
-        "range": "0 to 100",
+        "range": "0 to 10",
         "defaultVal": "0",
         "description": "Utilizes phase-correlation mapping to expand the perceived stereo field width.",
         "type": "knob"
@@ -262,35 +395,62 @@ export const UAD_DATABASE: UADPluginProfile[] = [
     "name": "uad shadow hills mastering compressor class a",
     "displayName": "UAD Shadow Hills Mastering Compressor Class A",
     "category": "Dynamics",
-    "description": "An exacting emulation of the ultra-exclusive Class-A version of the Shadow Hills Mastering Compressor. It couples dual-stage compression—optical and discrete VCA—with hand-wired Lundahl transformers to offer unmatched punch, transient definition, and analog character.",
+    "description": "An exacting digital software emulation of the ultra-exclusive Class-A hardware version of the Shadow Hills Mastering Compressor. This plugin replicates the dual-stage compression—optical and discrete VCA—complete with hand-wired Lundahl transformers, and expands on the original hardware with advanced digital software controls like continuous sidechain filtering, headroom styling, Mono Maker, and Stereo Width tools.",
     "hardwareModel": "Shadow Hills Mastering Compressor Class A",
     "parameters": [
       {
+        "name": "Matrix Mode",
+        "range": "Stereo / Dual Mono / M/S",
+        "defaultVal": "Stereo",
+        "description": "Selects the channel configuration mode: standard Stereo, Dual Mono (independent L/R), or Mid/Side (M/S) decoding.",
+        "type": "select",
+        "options": [
+          "Stereo",
+          "Dual Mono",
+          "M/S"
+        ]
+      },
+      {
         "name": "Optical Threshold",
-        "range": "-40 dB to +10 dB",
-        "defaultVal": "0 dB",
-        "description": "Controls the input level feeding the smooth optical leveling amplifier stage.",
+        "range": "1 to 10",
+        "defaultVal": "1",
+        "description": "Sets the threshold level for the smooth optical leveling amplifier stage.",
         "type": "knob"
       },
       {
+        "name": "Optical Recover",
+        "range": "1 to Auto",
+        "defaultVal": "1",
+        "description": "Selects the recovery rate settings (1, 2, 5, 10, Dual, or Auto) for the T4 optical cell.",
+        "type": "select",
+        "options": [
+          "1",
+          "2",
+          "5",
+          "10",
+          "Dual",
+          "Auto"
+        ]
+      },
+      {
         "name": "Optical Gain",
-        "range": "0 dB to +20 dB",
-        "defaultVal": "0 dB",
-        "description": "Applies makeup volume gain for the optical compressor stage.",
+        "range": "1 to 10",
+        "defaultVal": "1",
+        "description": "Adjusts output makeup gain for the optical compressor section.",
         "type": "knob"
       },
       {
         "name": "VCA Threshold",
-        "range": "-20 dB to +20 dB",
-        "defaultVal": "0 dB",
-        "description": "Sets the threshold for the ultra-punchy discrete VCA compressor stage.",
+        "range": "1 to 10",
+        "defaultVal": "1",
+        "description": "Sets the threshold level for the ultra-punchy discrete VCA compressor stage.",
         "type": "knob"
       },
       {
         "name": "VCA Ratio",
         "range": "1.2:1 to Flood",
         "defaultVal": "1.2:1",
-        "description": "Selects the compression slope slope for the VCA section.",
+        "description": "Selects the compression slope (1.2:1, 2:1, 3:1, 4:1, 6:1, 10:1, Flood) for the VCA section.",
         "type": "select",
         "options": [
           "1.2:1",
@@ -303,22 +463,94 @@ export const UAD_DATABASE: UADPluginProfile[] = [
         ]
       },
       {
+        "name": "VCA Attack",
+        "range": "0.1 ms to 30 ms",
+        "defaultVal": "30 ms",
+        "description": "Sets the attack response speed (0.1, 0.5, 1, 3, 10, 30 milliseconds) for the VCA stage.",
+        "type": "select",
+        "options": [
+          "0.1 ms",
+          "0.5 ms",
+          "1 ms",
+          "3 ms",
+          "10 ms",
+          "30 ms"
+        ]
+      },
+      {
+        "name": "VCA Recover",
+        "range": "0.1s to Dual",
+        "defaultVal": "0.1s",
+        "description": "Selects recovery time settings (0.1, 0.2, 0.5, 1.2s, Auto, or Dual) for the VCA compressor stage.",
+        "type": "select",
+        "options": [
+          "0.1s",
+          "0.2s",
+          "0.5s",
+          "1.2s",
+          "Auto",
+          "Dual"
+        ]
+      },
+      {
+        "name": "VCA Gain",
+        "range": "1 to 10",
+        "defaultVal": "1",
+        "description": "Adjusts output makeup gain for the discrete VCA compressor section.",
+        "type": "knob"
+      },
+      {
         "name": "Output Transformer",
         "range": "Nickel / Iron / Steel",
         "defaultVal": "Nickel",
-        "description": "Selects the physical output transformer material to apply unique distortion profiles.",
+        "description": "Selects the output transformer material to apply unique frequency-dependent distortion profiles.",
         "type": "select",
         "options": [
           "Nickel",
           "Iron",
           "Steel"
         ]
+      },
+      {
+        "name": "Sidechain Filter",
+        "range": "Off to 666 Hz",
+        "defaultVal": "Off",
+        "description": "Controls the continuous sidechain high-pass filter frequency to keep bass transients from triggering compression.",
+        "type": "knob"
+      },
+      {
+        "name": "Headroom",
+        "range": "-4 dB to +16 dB",
+        "defaultVal": "0 dB",
+        "description": "Adjusts the internal operating level offset, allowing the user to increase or decrease total dynamic range saturation.",
+        "type": "knob"
+      },
+      {
+        "name": "Mono Maker",
+        "range": "Off to 22 kHz",
+        "defaultVal": "Off",
+        "description": "Sums low-frequency stereo signals to mono at the selected cutoff frequency to solidify the low-end center image.",
+        "type": "knob"
+      },
+      {
+        "name": "Stereo Width",
+        "range": "0% to 400%",
+        "defaultVal": "100%",
+        "description": "Widens or narrows the perceived stereo field without affecting center channel elements.",
+        "type": "knob"
+      },
+      {
+        "name": "Parallel Mix",
+        "range": "0% to 100%",
+        "defaultVal": "100%",
+        "description": "Sets the blend percentage between the dry uncompressed signal and the processed wet signal.",
+        "type": "knob"
       }
     ],
     "proTips": [
-      "The Class A model is punchier than the standard version. Use the Optical compressor first with a very slow, smooth gain reduction of 1-2 dB to level out vocal or master dynamics.",
-      "Follow the Optical stage with the Discrete VCA compressor. Set the Ratio to 1.2:1 with a slow attack (30ms) and fast recovery (0.1s) to glue the master bus perfectly.",
-      "Switch the Output Transformer selector. Use 'Nickel' for clean, transparent high-end sheen; 'Iron' for punchy, saturated midrange harmonic weight; and 'Steel' for deep, low-end sub-bass density."
+      "In the digital software realm, leverage the 'M/S' Matrix Mode on master buses to compress the center (Mid) signal differently than the wide (Sides) elements.",
+      "Activate the software's active Sidechain Filter (set around 80-120 Hz) to allow deep kick drums and sub-bass frequencies to pass through without pumping the overall mix.",
+      "Use 'Mono Maker' to narrow everything below 90 Hz to mono, and gently boost 'Stereo Width' to 110-120% to give your software mix an expensive, wide feel while maintaining perfect mono compatibility."
     ],
     "authorizationStatus": "Demo not started"
   },
@@ -326,42 +558,79 @@ export const UAD_DATABASE: UADPluginProfile[] = [
     "name": "uad maag audio eq4 ms",
     "displayName": "UAD Maag Audio EQ4 MS",
     "category": "Equalizers",
-    "description": "A professional, six-band dual-channel mastering equalizer famous for its phase-coherent performance and legendary high-shelving 'Air Band'. This MS version adds powerful Mid/Side processing matrix functionality for clinical spatial shaping.",
+    "description": "An advanced digital software emulation of the legendary Mäag Audio EQ4M dual-mono mastering hardware equalizer. Replicating the phase-coherent six-band design and famous high-shelving 'Air Band', this software plugin expands on the original with a Mid/Side (M/S) matrix, continuous sidechain Mono Maker, Stereo Width enhancement, Parallel Mix, and custom Headroom controls.",
     "hardwareModel": "Maag Audio EQ4M Dual Mono EQ",
     "parameters": [
+      {
+        "name": "Matrix Mode",
+        "range": "Stereo / Dual Mono / M/S",
+        "defaultVal": "Stereo",
+        "description": "Selects the channel configuration mode: standard Stereo, Dual Mono, or Mid/Side (M/S) encoding.",
+        "type": "select",
+        "options": [
+          "Stereo",
+          "Dual Mono",
+          "M/S"
+        ]
+      },
+      {
+        "name": "Input Gain",
+        "range": "-12 dB to +12 dB",
+        "defaultVal": "0 dB",
+        "description": "Adjusts the input level entering the equalization circuitry.",
+        "type": "knob"
+      },
+      {
+        "name": "Stereo Link",
+        "range": "Unlinked / Linked",
+        "defaultVal": "Linked",
+        "description": "Binds the Left/Mid and Right/Side control parameters for symmetrical operation.",
+        "type": "select",
+        "options": [
+          "Unlinked",
+          "Linked"
+        ]
+      },
       {
         "name": "Sub Gain (10 Hz)",
         "range": "-4.5 dB to +15 dB",
         "defaultVal": "0 dB",
-        "description": "Controls the sub-bass weight at 10 Hz.",
+        "description": "Controls the phase-coherent sub-bass weight at 10 Hz.",
         "type": "knob"
       },
       {
         "name": "40 Hz Gain",
         "range": "-4.5 dB to +15 dB",
         "defaultVal": "0 dB",
-        "description": "Adjusts low-frequency punch at 40 Hz.",
+        "description": "Adjusts low-frequency warmth and chest punch at 40 Hz.",
         "type": "knob"
       },
       {
         "name": "160 Hz Gain",
         "range": "-4.5 dB to +15 dB",
         "defaultVal": "0 dB",
-        "description": "Controls low-mid warmth at 160 Hz.",
+        "description": "Controls mid-bass presence and low-mid warmth at 160 Hz.",
+        "type": "knob"
+      },
+      {
+        "name": "650 Hz Gain",
+        "range": "-4.5 dB to +15 dB",
+        "defaultVal": "0 dB",
+        "description": "Adjusts mid-range definition and throatiness at 650 Hz.",
         "type": "knob"
       },
       {
         "name": "2.5 kHz Gain",
         "range": "-4.5 dB to +15 dB",
         "defaultVal": "0 dB",
-        "description": "Adjusts upper-mid frequency bite and vocal articulation.",
+        "description": "Adjusts upper-mid frequency bite and vocal articulation at 2.5 kHz.",
         "type": "knob"
       },
       {
         "name": "Air Band Freq",
         "range": "2.5 / 5 / 10 / 20 / 40 kHz",
         "defaultVal": "20 kHz",
-        "description": "Selects the center frequency for the high-shelving Air Band.",
+        "description": "Selects the high-frequency shelf frequency for the legendary Air Band.",
         "type": "select",
         "options": [
           "2.5 kHz",
@@ -375,14 +644,53 @@ export const UAD_DATABASE: UADPluginProfile[] = [
         "name": "Air Band Gain",
         "range": "-4.5 dB to +15 dB",
         "defaultVal": "0 dB",
-        "description": "Controls the legendary high-frequency air boost.",
+        "description": "Controls the legendary high-frequency air boost/cut sheen.",
         "type": "knob"
+      },
+      {
+        "name": "Mono Maker",
+        "range": "Off to 22 kHz",
+        "defaultVal": "Off",
+        "description": "Sums the low-frequency stereo image to mono at the selected cutoff frequency to stabilize the low end.",
+        "type": "knob"
+      },
+      {
+        "name": "Stereo Width",
+        "range": "0% to 400%",
+        "defaultVal": "100%",
+        "description": "Widens or narrows the perceived stereo field without losing center elements.",
+        "type": "knob"
+      },
+      {
+        "name": "Parallel Mix",
+        "range": "0% to 100%",
+        "defaultVal": "100%",
+        "description": "Blends the unprocessed dry signal with the equalized wet signal.",
+        "type": "knob"
+      },
+      {
+        "name": "Headroom",
+        "range": "-4 dB to +12 dB",
+        "defaultVal": "0 dB",
+        "description": "Calibrates the internal operating level offset to fine-tune analog harmonic coloration.",
+        "type": "knob"
+      },
+      {
+        "name": "EQ Bypass",
+        "range": "In / Bypass",
+        "defaultVal": "In",
+        "description": "Engages or completely bypasses the equalizer processing channels.",
+        "type": "select",
+        "options": [
+          "In",
+          "Bypass"
+        ]
       }
     ],
     "proTips": [
-      "Switch the plugin to 'M/S' mode. Boost the Air Band (set at 20 kHz or 40 kHz) on the 'Sides' channel to open up the stereo width of overheads and room mics without cluttering the center.",
-      "Use the Sub Gain band on the 'Mid' channel around 10 Hz to tighten up sub-harmonic rumble or add a solid foundation to kick drums and basses.",
-      "To avoid high-frequency harshness, start by setting the Air Freq to 40 kHz and dial in 1.5 dB of gain. It adds microscopic sparkle that opens the mix beautifully."
+      "In the software domain, switch 'Matrix Mode' to 'M/S' and un-link parameters. Boost 'Air Band Gain' at 40 kHz on the Sides (Right channel) only to introduce spectacular stereo air and width without pushing up center-panned sibilance.",
+      "Activate the digital-only 'Mono Maker' around 100 Hz. This will fold all bass frequencies below that point to mono, locking the kick and bass to the absolute center while letting the Mäag EQ's smooth bands widen mid-high instruments.",
+      "Adjust the 'Headroom' control downwards if your incoming digital signals are hitting the plugin too hot, allowing you to avoid digital clipping and maintain the sweet-sounding harmonic saturation of the modeled hardware."
     ],
     "authorizationStatus": "Demo not started"
   },
@@ -390,56 +698,155 @@ export const UAD_DATABASE: UADPluginProfile[] = [
     "name": "uad a-type multiband enhancer",
     "displayName": "UAD A-Type Multiband Enhancer",
     "category": "Tape & Saturation",
-    "description": "Emulates the iconic trick of using a modified vintage Dolby A-Type noise-reduction unit as a high-frequency dynamic enhancer. It separates audio into four bands, applying level-dependent processing that delivers brilliant, air-filled excitement to vocals and acoustic tracks.",
-    "hardwareModel": "Dolby Type A 361 Dynamic Card Modification",
+    "description": "A high-fidelity hardware emulation of a vintage Dolby Type A 361 noise-reduction encoder modified for the famous high-frequency 'vocal trick'. It splits incoming audio into four frequency-dependent compressor bands, enabling targeted dynamic enhancement that injects beautiful, non-linear harmonic sparkle and breathy 'air' to vocals, acoustic guitars, and full mixes.",
+    "hardwareModel": "Dolby Type A 361 Noise Reduction Unit (Vocal Trick Mod)",
     "parameters": [
       {
-        "name": "Input Drive",
+        "name": "Channel Mode",
+        "range": "Stereo / Dual Mono / M/S",
+        "defaultVal": "Stereo",
+        "description": "Sets the channel architecture mode: standard Stereo, independent Left/Right Dual Mono, or Mid/Side (M/S) matrix processing.",
+        "type": "select",
+        "options": [
+          "Stereo",
+          "Dual Mono",
+          "M/S"
+        ]
+      },
+      {
+        "name": "Input Gain",
         "range": "-12 dB to +12 dB",
         "defaultVal": "0 dB",
-        "description": "Adjusts the incoming signal level hitting the dynamic detector bands.",
+        "description": "Adjusts the input level hitting the dynamic detector circuits to control the compression threshold.",
         "type": "knob"
       },
       {
-        "name": "Band 1 Boost (Low)",
+        "name": "Stereo Link",
+        "range": "Unlinked / Linked",
+        "defaultVal": "Linked",
+        "description": "Links Left/Mid and Right/Side control settings for absolute phase-symmetric stereo operation.",
+        "type": "select",
+        "options": [
+          "Unlinked",
+          "Linked"
+        ]
+      },
+      {
+        "name": "Band 1 Active (Low)",
+        "range": "In / Out",
+        "defaultVal": "Out",
+        "description": "Enables or completely bypasses processing for Band 1 (frequencies below 80 Hz).",
+        "type": "select",
+        "options": [
+          "In",
+          "Out"
+        ]
+      },
+      {
+        "name": "Band 1 Gain (Low)",
         "range": "0% to 100%",
         "defaultVal": "0%",
-        "description": "Applies dynamic harmonic enhancement below 80 Hz.",
+        "description": "Adjusts the dynamic expansion and enhancement contribution of the low-frequency band.",
         "type": "knob"
       },
       {
-        "name": "Band 2 Boost (Mid-Low)",
+        "name": "Band 2 Active (Mid-Low)",
+        "range": "In / Out",
+        "defaultVal": "Out",
+        "description": "Enables or completely bypasses processing for Band 2 (mid-low frequencies 80 Hz to 3 kHz).",
+        "type": "select",
+        "options": [
+          "In",
+          "Out"
+        ]
+      },
+      {
+        "name": "Band 2 Gain (Mid-Low)",
         "range": "0% to 100%",
         "defaultVal": "0%",
-        "description": "Applies dynamic enhancement between 80 Hz and 3 kHz.",
+        "description": "Adjusts the dynamic expansion and enhancement contribution of the mid-low frequency band.",
         "type": "knob"
       },
       {
-        "name": "Band 3 Boost (Mid-High)",
+        "name": "Band 3 Active (Mid-High)",
+        "range": "In / Out",
+        "defaultVal": "In",
+        "description": "Enables or completely bypasses processing for Band 3 (presence frequencies 3 kHz to 9 kHz).",
+        "type": "select",
+        "options": [
+          "In",
+          "Out"
+        ]
+      },
+      {
+        "name": "Band 3 Gain (Mid-High)",
         "range": "0% to 100%",
         "defaultVal": "30%",
-        "description": "Applies dynamic enhancement between 3 kHz and 9 kHz (vocal and guitar presence).",
+        "description": "Controls the dynamic expansion and compression level for the 3 kHz to 9 kHz range, ideal for mid-high presence.",
         "type": "knob"
       },
       {
-        "name": "Band 4 Boost (High)",
+        "name": "Band 4 Active (High)",
+        "range": "In / Out",
+        "defaultVal": "In",
+        "description": "Enables or completely bypasses processing for Band 4 (high-frequency air band above 9 kHz).",
+        "type": "select",
+        "options": [
+          "In",
+          "Out"
+        ]
+      },
+      {
+        "name": "Band 4 Gain (High)",
         "range": "0% to 100%",
         "defaultVal": "40%",
-        "description": "Applies dynamic enhancement above 9 kHz (silky air band).",
+        "description": "Controls the dynamic expansion and compression level for the extreme top end (frequencies above 9 kHz).",
         "type": "knob"
       },
       {
-        "name": "Output Level",
+        "name": "Direct Blend (Dry)",
+        "range": "0% to 100%",
+        "defaultVal": "100%",
+        "description": "Controls the amount of clean, unprocessed dry signal blended in parallel with the dynamic enhancement bands.",
+        "type": "knob"
+      },
+      {
+        "name": "Harmonic Saturation",
+        "range": "Off / Vintage / Hot",
+        "defaultVal": "Vintage",
+        "description": "Simulates non-linear tape-like transformer saturation generated by driving the original 361 electronics.",
+        "type": "select",
+        "options": [
+          "Off",
+          "Vintage",
+          "Hot"
+        ]
+      },
+      {
+        "name": "Analog Noise Floor",
+        "range": "Off / -90 dB / -75 dB / -60 dB",
+        "defaultVal": "Off",
+        "description": "Configures the emulated hardware noise floor level, adding vintage character and self-noise.",
+        "type": "select",
+        "options": [
+          "Off",
+          "-90 dB",
+          "-75 dB",
+          "-60 dB"
+        ]
+      },
+      {
+        "name": "Output Gain",
         "range": "-12 dB to +12 dB",
         "defaultVal": "0 dB",
-        "description": "Controls the final output makeup level.",
+        "description": "Sets the final output makeup volume level.",
         "type": "knob"
       }
     ],
     "proTips": [
-      "Use this as an alternative to EQ on background vocal groups. It dynamically lifts high-end sibilance and breathiness without making the track sound harsh or clinical.",
-      "Activate only the top two bands (Bands 3 & 4) on dull acoustic guitars to bring out dynamic pick scraping, string detail, and finger noise.",
-      "Keep input levels modest. The dynamic expansion reacts heavily to signal level; driving it too hard will compress the enhancement instead of adding air."
+      "To execute the legendary 'Dolby Vocal Trick', disable Band 1 (Low) and Band 2 (Mid-Low) entirely by switching them to 'Out'. Dial in Band 4 Gain (High) to taste. This isolates the dynamic high-shelving expansion, yielding breathtaking, hiss-free vocal intimacy.",
+      "Set Channel Mode to 'M/S' (Mid-Side), un-link Left and Right channels, and bypass Bands 1 and 2. On the Side channel (Right channel), boost Band 3 and 4 to 60% while leaving the Mid channel (Left channel) subtle or bypassed. This adds a brilliant, ultra-wide dimensional air field to acoustic guitars and background pads.",
+      "The dynamic compression curves react heavily to signal level. Adjust 'Input Gain' until the plugin registers moderate gain reduction on transient peaks, then dial 'Direct Blend (Dry)' back to 70% to maintain pristine low-end transient weight."
     ],
     "authorizationStatus": "Demo not started"
   },
@@ -447,14 +854,27 @@ export const UAD_DATABASE: UADPluginProfile[] = [
     "name": "uad la-6176 signature channel strip",
     "displayName": "UAD LA-6176 Signature Channel Strip",
     "category": "Channel Strips",
-    "description": "The definitive combination of the warm, harmonic 610-B tube preamp/EQ section and the fast, aggressive FET-based compression circuitry of the legendary 1176. This channel strip offers vintage tube leveling and solid-state transient control in a single, powerful chain.",
-    "hardwareModel": "Universal Audio LA-6176 Signature Hardware Channel Strip",
+    "description": "The premier physical emulation of Universal Audio's premier 6176 hardware channel strip. It combines the legendary, warm, harmonic-rich 610-B tube preamplifier and dual-shelving EQ with the ultra-fast, aggressive FET-based dynamic control of the iconic 1176LN Limiting Amplifier in a single, versatile, and highly responsive channel path.",
+    "hardwareModel": "Universal Audio 6176 Vintage Channel Strip",
     "parameters": [
+      {
+        "name": "Preamp Source & Impedance",
+        "range": "Mic 500 Ω / Mic 2.0 kΩ / Line 13.8 kΩ / Hi-Z 47 kΩ / Hi-Z 2.2 MΩ",
+        "defaultVal": "Mic 2.0 kΩ",
+        "type": "select",
+        "options": [
+          "Mic 500 Ω",
+          "Mic 2.0 kΩ",
+          "Line 13.8 kΩ",
+          "Hi-Z 47 kΩ",
+          "Hi-Z 2.2 MΩ"
+        ],
+        "description": "Sets the input source type and input impedance load. Lowering microphone impedance to 500 Ω darkens and heavily saturates passive mics."
+      },
       {
         "name": "Preamp Gain",
         "range": "-10 dB / -5 dB / 0 dB / +5 dB / +10 dB",
         "defaultVal": "0 dB",
-        "description": "Sets preamplifier input step level.",
         "type": "switch",
         "options": [
           "-10 dB",
@@ -462,55 +882,147 @@ export const UAD_DATABASE: UADPluginProfile[] = [
           "0 dB",
           "+5 dB",
           "+10 dB"
-        ]
+        ],
+        "description": "Stepped coarse input gain control of the 610 tube circuit stage."
       },
       {
-        "name": "Input Level",
+        "name": "Preamp Level",
         "range": "0 to 10",
         "defaultVal": "5",
-        "description": "Sets continuous gain to drive the preamp tubes.",
-        "type": "knob"
+        "type": "knob",
+        "description": "Continuous level potentiometer that drives the incoming signal into the 12AX7 and 12AT7 preamp tubes."
+      },
+      {
+        "name": "Input Pad",
+        "range": "Off / -15 dB",
+        "defaultVal": "Off",
+        "type": "select",
+        "options": [
+          "Off",
+          "-15 dB"
+        ],
+        "description": "Introduces a passive -15 dB attenuation pad on the microphone input to prevent overload."
+      },
+      {
+        "name": "Phase Reverse",
+        "range": "Normal / Inverted",
+        "defaultVal": "Normal",
+        "type": "select",
+        "options": [
+          "Normal",
+          "Inverted"
+        ],
+        "description": "Reverses signal polarity by 180 degrees to resolve multi-mic alignment issues."
+      },
+      {
+        "name": "High EQ Frequency",
+        "range": "4.5 kHz / 7.0 kHz / 10 kHz",
+        "defaultVal": "10 kHz",
+        "type": "select",
+        "options": [
+          "4.5 kHz",
+          "7.0 kHz",
+          "10 kHz"
+        ],
+        "description": "Selects the high-shelving equalizer band's corner frequency."
       },
       {
         "name": "High EQ Gain",
         "range": "-9 dB to +9 dB",
         "defaultVal": "0 dB",
-        "description": "Boosts or cuts high-frequency shelving filter.",
-        "type": "knob"
+        "type": "knob",
+        "description": "Sets continuous boost or cut gain level for the high EQ shelving band."
       },
       {
-        "name": "Compressor Peak Reduction",
-        "range": "0 to 100",
-        "defaultVal": "0",
-        "description": "Controls compressor threshold level (Peak Reduction).",
-        "type": "knob"
-      },
-      {
-        "name": "Compressor Ratio",
-        "range": "4:1 / 8:1 / 12:1 / 20:1 / Bypass",
-        "defaultVal": "4:1",
-        "description": "Selects active FET compression ratio curve.",
+        "name": "Low EQ Frequency",
+        "range": "70 Hz / 100 Hz / 200 Hz",
+        "defaultVal": "100 Hz",
         "type": "select",
         "options": [
+          "70 Hz",
+          "100 Hz",
+          "200 Hz"
+        ],
+        "description": "Selects the low-shelving equalizer band's corner frequency."
+      },
+      {
+        "name": "Low EQ Gain",
+        "range": "-9 dB to +9 dB",
+        "defaultVal": "0 dB",
+        "type": "knob",
+        "description": "Sets continuous boost or cut gain level for the low EQ shelving band."
+      },
+      {
+        "name": "Routing Mode",
+        "range": "Split / Join",
+        "defaultVal": "Join",
+        "type": "select",
+        "options": [
+          "Split",
+          "Join"
+        ],
+        "description": "In 'Join' mode, the 610 preamp output directly feeds the 1176 compressor. In 'Split' mode, both modules act as independent mono devices."
+      },
+      {
+        "name": "1176 Input Level",
+        "range": "0 to 40",
+        "defaultVal": "20",
+        "type": "knob",
+        "description": "Adjusts the input level entering the 1176LN circuit. Since threshold is fixed, driving the input increases compression depth."
+      },
+      {
+        "name": "1176 Output Level",
+        "range": "0 to 40",
+        "defaultVal": "20",
+        "type": "knob",
+        "description": "Adjusts final output makeup gain of the class-A line amplifier."
+      },
+      {
+        "name": "1176 Ratio",
+        "range": "1:1 / 4:1 / 8:1 / 12:1 / 20:1 / All-Button",
+        "defaultVal": "4:1",
+        "type": "select",
+        "options": [
+          "1:1",
           "4:1",
           "8:1",
           "12:1",
           "20:1",
-          "Bypass"
-        ]
+          "All-Button"
+        ],
+        "description": "Sets compression ratio. '1:1' bypasses dynamic gain reduction while passing audio through active circuitry. 'All-Button' activates British Mode."
       },
       {
-        "name": "1176 Makeup Gain",
-        "range": "0 to 100",
-        "defaultVal": "50",
-        "description": "Adjusts makeup volume post-compression.",
-        "type": "knob"
+        "name": "1176 Attack Time",
+        "range": "1 to 7 (800 µs to 20 µs)",
+        "defaultVal": "3",
+        "type": "knob",
+        "description": "Sets compressor attack time. Control is inverted: 1 is the slowest (800 microseconds) and 7 is the fastest (20 microseconds)."
+      },
+      {
+        "name": "1176 Release Time",
+        "range": "1 to 7 (1100 ms to 50 ms)",
+        "defaultVal": "5",
+        "type": "knob",
+        "description": "Sets compressor release time. Control is inverted: 1 is the slowest (1.1 seconds) and 7 is the fastest (50 milliseconds)."
+      },
+      {
+        "name": "VUMeter Source",
+        "range": "GR / Out +4 / Out +8",
+        "defaultVal": "GR",
+        "type": "select",
+        "options": [
+          "GR",
+          "Out +4",
+          "Out +8"
+        ],
+        "description": "Toggles VU meter to monitor gain reduction level or average output level calibrated at +4 or +8 dBm."
       }
     ],
     "proTips": [
-      "Drive the 610 tube preamp 'Input Level' to 7 or 8 for classic vintage tube saturation, then use the Gain stepped switch (-5dB) to manage level matching.",
-      "For a classic retro lead vocal sound, route the 610 preamp directly into the 1176 FET section in 4:1 ratio mode. Adjust the threshold knob until peaks trigger 2-4dB of compression.",
-      "Engage high EQ boost at 10 kHz to instantly add open, glassy tube silkiness to acoustic guitars or vocals."
+      "For a classic, gritty indie rock vocal, set 'Preamp Source' to 'Mic 500 Ω' (to load the mic heavily), push 'Preamp Gain' to '+5 dB', and dial 'Preamp Level' to 7 or 8. This drives the dual-triode tube stage into thick, harmonic saturation before hitting the compressor.",
+      "To get the famous 'drum room smash', set 'Routing Mode' to 'Join', select '1176 Ratio' as 'All-Button' (British Mode), and set both '1176 Attack Time' and '1176 Release Time' to '7' (fastest). Drive '1176 Input Level' to 30 for explosive, pumpy, high-energy room transients.",
+      "Use 'Split' mode in the studio or software to run the 610 tube preamp on one channel (e.g. tracking a dry guitar) while using the 1176 section as a standalone external insert processor for bass guitar on another channel."
     ],
     "authorizationStatus": "Authorized for all devices"
   },
@@ -518,49 +1030,131 @@ export const UAD_DATABASE: UADPluginProfile[] = [
     "name": "uad antares auto-tune realtime x",
     "displayName": "UAD Antares Auto-Tune Realtime X",
     "category": "Dynamics",
-    "description": "The industry-standard pitch correction software running at near-zero latency on Apollo DSP. It provides real-time correction, classic pitch-glide effects, formant correction, and humanization controls designed to retain expressiveness while achieving perfect tuning.",
-    "hardwareModel": "Antares Auto-Tune Hardware DSP Engine",
+    "description": "The industry-standard real-time pitch correction engine running with sub-millisecond latency on Apollo DSP hardware. Offers precise, instant tuning, classic pitch-glide effects, advanced formant correction, and intelligent humanization algorithms to correct pitch transparently or create dramatic vocal transformations in real time.",
+    "hardwareModel": "Antares Auto-Tune Hardware DSP Engine & Algorithm",
     "parameters": [
+      {
+        "name": "Input Type",
+        "range": "Soprano / Alto/Tenor / Low Male / Instrument / Bass",
+        "defaultVal": "Alto/Tenor",
+        "type": "select",
+        "options": [
+          "Soprano",
+          "Alto/Tenor",
+          "Low Male",
+          "Instrument",
+          "Bass"
+        ],
+        "description": "Matches the pitch tracking algorithm to the input source's register for optimal, glitch-free pitch detection."
+      },
+      {
+        "name": "Key",
+        "range": "C / C# / D / D# / E / F / F# / G / G# / A / A# / B",
+        "defaultVal": "C",
+        "type": "select",
+        "options": [
+          "C",
+          "C#",
+          "D",
+          "D#",
+          "E",
+          "F",
+          "F#",
+          "G",
+          "G#",
+          "A",
+          "A#",
+          "B"
+        ],
+        "description": "Sets the root key of the pitch correction scale."
+      },
+      {
+        "name": "Scale",
+        "range": "Chromatic / Major / Minor / Pentatonic / Minor Blues / Whole Tone",
+        "defaultVal": "Chromatic",
+        "type": "select",
+        "options": [
+          "Chromatic",
+          "Major",
+          "Minor",
+          "Pentatonic",
+          "Minor Blues",
+          "Whole Tone"
+        ],
+        "description": "Selects the musical scale to which the vocal notes will be pulled."
+      },
       {
         "name": "Retune Speed",
         "range": "0 ms to 400 ms",
         "defaultVal": "20 ms",
-        "description": "Controls how rapidly the pitch correction engine locks the signal to the scale notes.",
-        "type": "knob"
+        "type": "knob",
+        "description": "Sets how quickly Auto-Tune pulls the input pitch to the target scale notes. 0 ms is instantaneous (robotic), while 20-80 ms preserves natural pitch gestures."
       },
       {
         "name": "Flex-Tune",
         "range": "0 to 100",
         "defaultVal": "0",
-        "description": "Allows natural pitch expression by ignoring safe, expressive microtonal drifts.",
-        "type": "knob"
+        "type": "knob",
+        "description": "Allows natural pitch expression by ignoring safe, expressive microtonal drifts and only applying correction when the singer gets too close to scale boundaries."
       },
       {
         "name": "Humanize",
         "range": "0 to 100",
         "defaultVal": "0",
-        "description": "Applies dynamic speed reduction on long, sustained vocal notes to preserve natural vibrato.",
-        "type": "knob"
+        "type": "knob",
+        "description": "Applies selective, dynamic speed reduction on long, sustained vocal notes to preserve natural vibrato and organic decay."
+      },
+      {
+        "name": "Formant Correction",
+        "range": "Off / On",
+        "defaultVal": "Off",
+        "type": "select",
+        "options": [
+          "Off",
+          "On"
+        ],
+        "description": "When enabled, preserves the singer's natural throat resonance across large pitch transpositions to prevent the 'chipmunk' or 'giant' effect."
       },
       {
         "name": "Throat Length",
         "range": "50% to 150%",
         "defaultVal": "100%",
-        "description": "Alters throat format modeling to shift the acoustic size of the vocal tract.",
-        "type": "knob"
+        "type": "knob",
+        "description": "Adjusts the virtual vocal tract's physical volume. Lower values make the voice lighter and brighter; higher values add chest resonance and depth."
+      },
+      {
+        "name": "Detune",
+        "range": "430.0 Hz to 450.0 Hz",
+        "defaultVal": "440.0 Hz",
+        "type": "knob",
+        "description": "Calibrates the target reference frequency of A4. Crucial for matching pitch correction with instruments tuned outside standard A=440."
+      },
+      {
+        "name": "Tracking / Relax",
+        "range": "1 to 100",
+        "defaultVal": "50",
+        "type": "knob",
+        "description": "Controls how relaxed the pitch tracker is. Higher values prevent flutter on noisy, breathy, or throat-heavy vocals, while lower values offer rapid, raw tracking."
       },
       {
         "name": "Natural Vibrato",
         "range": "-12 to +12",
         "defaultVal": "0",
-        "description": "Amplifies or attenuates the singer's natural, organic vibrato depth.",
-        "type": "knob"
+        "type": "knob",
+        "description": "Attenuates or amplifies the singer's natural, organic vibrato depth without modifying their timing."
+      },
+      {
+        "name": "Correction Mix",
+        "range": "0% to 100%",
+        "defaultVal": "100%",
+        "type": "knob",
+        "description": "Blends the raw, dry input signal with the pitch-corrected signal for subtle, multi-voice or parallel tuning."
       }
     ],
     "proTips": [
-      "For the iconic modern trap vocal effect, set Retune Speed to 0 ms (12 o'clock/fastest position) and pull down Humanize. This locks the pitch instantly with heavy robotic sliding.",
-      "To achieve natural, transparent vocal correction, use a Retune Speed of 20-50 ms, and dial in 'Flex-Tune' around 50%. This only pulls bad notes into tune while leaving expressive pitch slides intact.",
-      "The 'Throat Length' knob models physical vocal tract changes. Turn it slightly clockwise to add chest resonance and depth, or counter-clockwise for a lighter, brighter vocal."
+      "For the iconic modern trap or hyperpop vocal effect, set 'Retune Speed' to 0 ms, disable both 'Flex-Tune' and 'Humanize', and keep 'Formant Correction' 'Off'. This locks the pitch instantaneously with highly stylized, robotic transitions.",
+      "To achieve transparent, 'unheard' vocal tuning, set 'Retune Speed' to 20-50 ms, increase 'Flex-Tune' to 40-60%, and dial in 'Humanize' to 30%. This allows natural pitch slides and subtle expressive drifts to pass untouched while catching obvious flat/sharp notes.",
+      "Activate 'Formant Correction' and adjust 'Throat Length' to 110-115% to add physical weight, depth, and masculine chest resonance to thin vocals, or set it to 85-92% to make a backing vocal sound lighter, airy, and feminine."
     ],
     "authorizationStatus": "Authorized for all devices"
   },
@@ -568,352 +1162,486 @@ export const UAD_DATABASE: UADPluginProfile[] = [
     "name": "uad hemisphere mic collection",
     "displayName": "UAD Hemisphere Mic Collection",
     "category": "Preamps & Microphones",
-    "description": "The state-of-the-art microphone modeling system designed specifically for UA microphones. It gives you the authentic sound of legendary dynamic, ribbon, and condenser mics, complete with adjustable proximity, axis alignment, and filter settings.",
-    "hardwareModel": "Townsend Labs Sphere / UA Standard Microphones",
+    "description": "The state-of-the-art microphone modeling system designed specifically for UA microphones. Recreates the legendary sound of vintage dynamic, ribbon, and condenser mics, complete with adjustable proximity, off-axis rotation modeling, and custom filter slopes.",
+    "hardwareModel": "UA Standard Microphones & Custom Modeling DSP",
     "parameters": [
       {
         "name": "Mic Model",
-        "range": "DN-57 / LD-87 / RB-121 / DN-7",
+        "range": "LD-87 / LD-47 / LD-67 / LD-251 / LD-12 / DN-7 / DN-57 / DN-421 / DN-441 / RB-121 / RB-4038",
         "defaultVal": "LD-87",
-        "description": "Selects the exact target microphone model to emulate.",
         "type": "select",
         "options": [
-          "DN-57",
           "LD-87",
+          "LD-47",
+          "LD-67",
+          "LD-251",
+          "LD-12",
+          "DN-7",
+          "DN-57",
+          "DN-421",
+          "DN-441",
           "RB-121",
-          "DN-7"
-        ]
+          "RB-4038"
+        ],
+        "description": "Selects the specific physical microphone model to emulate, recreating its distinct frequency response, transient behavior, and polar pattern characteristics."
       },
       {
         "name": "Proximity",
         "range": "-50% to +150%",
         "defaultVal": "100%",
-        "description": "Digitally alters the physical bass response based on distance from the microphone diaphragm.",
-        "type": "knob"
+        "type": "knob",
+        "description": "Digitally models the physical distance from the source. Turn clockwise to increase bass proximity buildup; turn counter-clockwise to attenuate low-end mud."
       },
       {
         "name": "Low Cut Filter",
         "range": "Off / 50 Hz / 80 Hz / 120 Hz",
         "defaultVal": "Off",
-        "description": "Enables low-frequency rolloff to clean up structural rumble.",
         "type": "select",
         "options": [
           "Off",
           "50 Hz",
           "80 Hz",
           "120 Hz"
-        ]
+        ],
+        "description": "Engages low-frequency roll-off to clean up structural rumble, customized to the acoustic filter slopes of the selected microphone model."
       },
       {
-        "name": "Output Gain",
-        "range": "-12 dB to +12 dB",
-        "defaultVal": "0 dB",
-        "description": "Stages output volume from the microphone emulation.",
-        "type": "knob"
+        "name": "Axis",
+        "range": "0° to 180°",
+        "defaultVal": "0°",
+        "type": "knob",
+        "description": "Simulates angling the microphone away from the source (0° to 180° off-axis) to capture a more mellow frequency response and tame harsh high-end sibilance."
       },
       {
         "name": "Phase Polarity",
         "range": "Normal / Invert",
         "defaultVal": "Normal",
-        "description": "Inverts polarity of the microphone signal to prevent phase cancellation.",
         "type": "switch",
         "options": [
           "Normal",
           "Invert"
-        ]
+        ],
+        "description": "Inverts the electrical phase polarity of the microphone signal to prevent multi-mic phase cancellation."
+      },
+      {
+        "name": "Output Gain",
+        "range": "-12.0 dB to +12.0 dB",
+        "defaultVal": "0.0 dB",
+        "type": "knob",
+        "description": "Stages clean output makeup gain from the emulation engine before sending the signal downstream."
       }
     ],
     "proTips": [
-      "You can adjust the 'Proximity Effect' in real time after recording. If a vocal sounds too muddy or boomy, slide the proximity knob counter-clockwise to digitally pull the mic away.",
-      "Pair the Hemisphere emulations with the UA 610 preamp on the input stage. The combination of rich tube preamp saturation and vintage dynamic microphone modeling mimics iconic 70s rock recordings.",
-      "Engage the low-cut switch directly inside the mic modeler to remove sub-harmonic floor vibrations before they impact upstream compressors."
+      "To tame an excessively harsh, bright acoustic guitar or a sibilant vocalist, adjust the 'Axis' knob clockwise (around 30°-60°). This virtually rotates the microphone off-axis, naturally smoothing out high-frequency transients without needing heavy EQ.",
+      "When dual-miking a snare drum, load Hemisphere on both the top and bottom mics. Use 'DN-57' on top and bottom, but switch the bottom mic's 'Phase Polarity' to 'Invert' to prevent low-end hollow phase cancellation.",
+      "For dry, warm, intimate vocals, select 'LD-47' or 'LD-251' and increase 'Proximity' to 120%. This emulates the classic proximity effect of a singer getting close to a high-end tube condenser, adding deep chest resonance."
     ],
-    "authorizationStatus": "Demo not started"
+    "authorizationStatus": "Approved & Updated"
   },
   {
     "name": "uad c-suite c-max limiter",
     "displayName": "UAD C-Suite C-Max Limiter",
     "category": "Dynamics",
-    "description": "A high-performance brickwall limiter developed specifically by C-Suite Audio for real-time and mastering applications. Combining transparent loudness maximization with dynamic transient recovery and peak-clipping options, it yields modern competitive levels with minimal distortion.",
-    "hardwareModel": "C-Suite Audio DSP Mastering Limiter",
+    "description": "A high-performance digital brickwall limiter developed by C-Suite Audio for real-time tracking, live streaming, and high-fidelity mastering. It merges transparent peak-limiting algorithms with dynamic transient preservation and a continuous character clipper to deliver maximum competitive loudness without high-frequency softening.",
+    "hardwareModel": "C-Suite Audio DSP Mastering Limiter Design",
     "parameters": [
       {
         "name": "Threshold",
-        "range": "-30 dB to 0 dB",
-        "defaultVal": "0 dB",
-        "description": "Sets the gain threshold where brickwall limiting and volume maximization engage.",
-        "type": "knob"
+        "range": "-30.0 dB to 0.0 dB",
+        "defaultVal": "0.0 dB",
+        "type": "knob",
+        "description": "Pulls down the operational brickwall limiting threshold, automatically applying compensating makeup gain to increase perceived loudness."
       },
       {
         "name": "Ceiling",
-        "range": "-2.0 dB to 0 dB",
-        "defaultVal": "-0.2 dB",
-        "description": "Sets the absolute maximum peak limit allowed at the output of the plugin.",
-        "type": "knob"
+        "range": "-2.00 dB to 0.00 dB",
+        "defaultVal": "-0.20 dB",
+        "type": "knob",
+        "description": "Determines the absolute maximum peak output level allowed to leave the limiter, ensuring digital safety margins."
       },
       {
-        "name": "Release Time",
-        "range": "1 ms to 1000 ms",
-        "defaultVal": "100 ms",
-        "description": "Controls how fast the peak limiter releases after catching a transient.",
-        "type": "knob"
+        "name": "Release",
+        "range": "1.0 ms to 1000.0 ms",
+        "defaultVal": "100.0 ms",
+        "type": "knob",
+        "description": "Controls the gain-recovery speed after a peak transient triggers attenuation, allowing fine-tuning between modern punch and organic decay."
       },
       {
         "name": "Character",
-        "range": "Transparent to Clip",
-        "defaultVal": "Transparent",
-        "description": "Determines the saturation curve shape of peak limiting, from clinical transparency to warm clipping.",
-        "type": "knob"
+        "range": "0% to 100%",
+        "defaultVal": "0%",
+        "type": "knob",
+        "description": "Interpolates the limiting curve behavior. At 0%, the limiting is completely transparent; turning clockwise toward 100% blends in soft-clipping saturation to retain click transients."
       }
     ],
     "proTips": [
-      "This limiter excels at transient preservation. Use the 'Character' knob to control how the limiter behaves during gain reduction: dial left for ultra-clean transparency, or right for punchy clip clipping.",
-      "Set Ceiling to -1.0 dB to prevent inter-sample peaks from clipping during MP3/AAC compression on streaming platforms.",
-      "Pair this with a tape saturator before it; saturators round off high peaks smoothly, allowing C-Max to push 2-3 dB of extra master volume effortlessly."
+      "To master punchy, modern genres like EDM or Trap, dial the 'Character' knob up to 60-80%. This smoothly blends the transparent brickwall limiter into a fast soft-clipper, letting you push transient-heavy material 1.5-2 dB hotter before digital distortion becomes audible.",
+      "Always set the 'Ceiling' parameter to -1.00 dB when prepping files for digital streaming platforms. This creates a critical headroom margin to prevent lossy conversion codecs (like MP3, AAC, or OGG) from clipping during playback.",
+      "Place a high-quality tape emulator (such as the Studer A800) directly before the C-Max Limiter. Setting the tape machine to tape-compress transients by 1-2 dB softens high peaks naturally, allowing C-Max to work far more transparently on the master bus."
     ],
-    "authorizationStatus": "Demo not started"
+    "authorizationStatus": "Approved & Updated"
   },
   {
     "name": "uad hitsville reverb chambers",
     "displayName": "UAD Hitsville Reverb Chambers",
     "category": "Reverbs & Delays",
-    "description": "The legendary sound of the Hitsville U.S.A. attic reverb chambers that shaped the historic Motown sound. It replicates the unique acoustic characteristics of the custom plaster-and-concrete spaces, offering original vintage speaker and microphone configurations.",
-    "hardwareModel": "Hitsville U.S.A. Attic Reverb Chambers",
+    "description": "Recreates the legendary, chart-topping acoustic reverb chambers located in the attic of Motown's historic Hitsville U.S.A. studios. Meticulously modeled on the custom drywall, plaster, and concrete spaces, it delivers original vintage speaker playback and physical microphone capture configurations that shaped the iconic '60s Motown sound.",
+    "hardwareModel": "Hitsville U.S.A. Attic Reverb Chambers (Chamber 1 & 2)",
     "parameters": [
       {
         "name": "Chamber Select",
         "range": "Chamber 1 / Chamber 2",
         "defaultVal": "Chamber 2",
-        "description": "Selects between the two custom-built concrete and drywall attic reverb chambers.",
         "type": "switch",
         "options": [
           "Chamber 1",
           "Chamber 2"
-        ]
-      },
-      {
-        "name": "Decay",
-        "range": "0 to 100",
-        "defaultVal": "50",
-        "description": "Adjusts the virtual decay length of the chamber reflections.",
-        "type": "knob"
-      },
-      {
-        "name": "Pre-delay",
-        "range": "0 ms to 100 ms",
-        "defaultVal": "10 ms",
-        "description": "Applies delay before the sound enters the chamber speaker path.",
-        "type": "knob"
+        ],
+        "description": "Selects between the two physical attic chambers: Chamber 1 (primarily used for instrumentation) and Chamber 2 (tailored for lead vocals)."
       },
       {
         "name": "Speaker Select",
         "range": "Original / Modern",
         "defaultVal": "Original",
-        "description": "Switches the playback speaker between vintage Altec and modern studio monitors.",
         "type": "switch",
         "options": [
           "Original",
           "Modern"
-        ]
+        ],
+        "description": "Toggles the sound source speaker inside the chamber between the vintage Altec/University horn drivers and high-fidelity modern studio monitors."
       },
       {
         "name": "Microphone",
         "range": "KM86 / U67 / D24",
         "defaultVal": "KM86",
-        "description": "Selects the capture microphone used inside the chamber room.",
         "type": "select",
         "options": [
           "KM86",
           "U67",
           "D24"
-        ]
+        ],
+        "description": "Selects the custom capsule capture mic used inside the space: Neumann KM86 condenser, Neumann U67 tube, or Electro-Voice D24 dynamic."
+      },
+      {
+        "name": "Mic Position",
+        "range": "Near / Far",
+        "defaultVal": "Far",
+        "type": "switch",
+        "options": [
+          "Near",
+          "Far"
+        ],
+        "description": "Determines physical microphone placement relative to the speaker, controlling the ratio of direct horn-drive to diffuse room acoustics."
+      },
+      {
+        "name": "Decay",
+        "range": "0% to 100%",
+        "defaultVal": "50%",
+        "type": "knob",
+        "description": "Varies the electronic and acoustic absorption parameters to scale the virtual reverberation decay time."
+      },
+      {
+        "name": "Pre-delay",
+        "range": "0.0 ms to 100.0 ms",
+        "defaultVal": "10.0 ms",
+        "type": "knob",
+        "description": "Introduces a digital timing offset before signal enters the chamber, separating the dry transient from the bloom of the reverb."
+      },
+      {
+        "name": "Low EQ",
+        "range": "-12.0 dB to +12.0 dB",
+        "defaultVal": "0.0 dB",
+        "type": "knob",
+        "description": "Applies a classic Motown-style low-shelf equalization curve to shape the low-end mud or warm resonance of the reverb signal."
+      },
+      {
+        "name": "Mid EQ",
+        "range": "-12.0 dB to +12.0 dB",
+        "defaultVal": "0.0 dB",
+        "type": "knob",
+        "description": "Sweeps a custom mid-band bell filter to emphasize or attenuate the vocal presence frequencies within the chamber."
+      },
+      {
+        "name": "High EQ",
+        "range": "-12.0 dB to +12.0 dB",
+        "defaultVal": "0.0 dB",
+        "type": "knob",
+        "description": "Applies a high-frequency shelving filter to dial in modern sheen or maintain dark, vintage authenticity."
+      },
+      {
+        "name": "Width",
+        "range": "0% to 100%",
+        "defaultVal": "100%",
+        "type": "knob",
+        "description": "Adjusts the stereo image width of the dual-microphone chamber capture, from pure center mono to ultra-wide stereo."
       },
       {
         "name": "Wet/Dry Mix",
-        "range": "0% to 100%",
-        "defaultVal": "100%",
-        "description": "Sets the ratio of wet chamber reverb to dry signal.",
-        "type": "knob"
+        "range": "0.0% to 100.0%",
+        "defaultVal": "100.0%",
+        "type": "knob",
+        "description": "Controls the balance between the dry direct signal and the wet reverberated acoustic return."
       }
     ],
     "proTips": [
-      "Switch between Chamber 1 (historically used for backing bands) and Chamber 2 (tailored for Lead Vocals) to find the perfect acoustic profile.",
-      "The 'Mic Position' slider is highly dynamic. Choose 'Far' to emphasize the natural ambient diffusion of the brick and plaster chamber walls.",
-      "To mimic the exact Motown technique, use the 'KM86' microphone option with the original speakers and keep the Decay around 2.5 seconds."
+      "For the signature Motown vocal sound: load Chamber 2, select the KM86 microphone, set Mic Position to 'Far', and use the original speakers. Add about 15.0 ms of Pre-delay to separate the lead vocal transient from the reverb tail.",
+      "To add rich, vintage depth to horn sections or backing vocals without muddying the mix, use Chamber 1, set Mic Position to 'Near', and aggressively roll off the 'Low EQ' by -6.0 dB to clean up low-mid build-up.",
+      "When using Hitsville Reverb Chambers as a stereo aux return, keep 'Wet/Dry Mix' at 100.0% and push the 'Width' parameter fully clockwise. This delivers an expansive, immersive stereo field that beautifully wraps around center-panned dry elements."
     ],
-    "authorizationStatus": "Authorized for all devices"
+    "authorizationStatus": "Approved & Updated"
   },
   {
     "name": "uad c-suite c-axe guitar noise suppressor",
     "displayName": "UAD C-Suite C-Axe Guitar Noise Suppressor",
     "category": "Guitar & Bass",
-    "description": "A dedicated, high-performance dynamic noise suppressor engineered specifically for electric guitar and bass players. Running with ultra-low latency, it tracks signal dynamics to eliminate single-coil buzz, electromagnetic hum, and high-gain amp hiss without altering your pick-attack transient details or natural sustain.",
-    "hardwareModel": "C-Suite Audio High-Gain Suppressor",
+    "description": "A dedicated, dynamic noise suppressor engineered specifically for electric guitar and bass players. Running with ultra-low latency, it tracks signal envelope dynamics to transparently suppress single-coil hum, 60Hz electromagnetic interference, and heavy high-gain amp hiss without compromising pick-attack transients, palm-mute chunk, or natural feedback sustain.",
+    "hardwareModel": "C-Suite Audio DSP Guitar Noise Suppressor",
     "parameters": [
       {
         "name": "Threshold",
-        "range": "-80 dB to 0 dB",
-        "defaultVal": "-50 dB",
-        "description": "Determines the signal level threshold below which static gating and noise suppression engage.",
-        "type": "knob"
+        "range": "-80.0 dB to 0.0 dB",
+        "defaultVal": "-50.0 dB",
+        "type": "knob",
+        "description": "Sets the operational decibel threshold below which dynamic noise suppression and expansion engage."
       },
       {
         "name": "Attenuation",
-        "range": "0 dB to -40 dB",
-        "defaultVal": "-20 dB",
-        "description": "Sets the depth of volume suppression applied to background noise when the gate is active.",
-        "type": "knob"
+        "range": "0.0 dB to -40.0 dB",
+        "defaultVal": "-20.0 dB",
+        "type": "knob",
+        "description": "Determines the maximum amount of noise reduction applied to the signal floor when the guitar is not playing."
       },
       {
         "name": "Recovery Speed",
         "range": "Fast to Slow",
         "defaultVal": "Medium",
-        "description": "Controls how fast the suppression releases once a guitar transient is detected.",
-        "type": "knob"
+        "type": "knob",
+        "description": "Fine-tunes the release and recovery timing of the suppression engine, allowing quick damping for tight rhythmic work or slow release for solos."
       },
       {
         "name": "Suppression Mode",
         "range": "Gate / Clean / High-Gain",
         "defaultVal": "High-Gain",
-        "description": "Switches between standard gating, soft acoustic guitar expansion, or heavy-metal suppression.",
         "type": "select",
         "options": [
           "Gate",
           "Clean",
           "High-Gain"
-        ]
+        ],
+        "description": "Selects the optimized DSP algorithm: 'Gate' for clinical hard gating, 'Clean' for gentle downward expansion, or 'High-Gain' for heavy-distortion hiss tracking."
       }
     ],
     "proTips": [
-      "Place this plugin as the very first slot in your guitar insert chain. Removing noise before hitting saturated amplifiers or distortion pedals prevents background hiss from being amplified.",
-      "The 'Focus' parameter focuses the suppression engine. Set to High-Gain if you play fast palm-muted riffs, or Lead if you require long, sustaining guitar notes.",
-      "For single-coil hum, use the 'Low' detection focus mode to isolate and duck low-end electronic hum perfectly."
+      "Always insert C-Axe in the very first slot of your guitar signal chain. Suppressing noise before it hits high-gain amp simulators, compressors, or distortion pedals prevents background hum from being amplified into an uncontrollable roar.",
+      "For rapid palm-muted riffs, set 'Recovery Speed' toward 'Fast' so that the noise floor is immediately ducked between notes. For sustaining blues leads or ambient reverb-drenched lines, adjust it toward 'Slow' to prevent natural note decay from being chopped off.",
+      "Use 'Clean' mode for acoustic guitars or pristine clean electric tones. It utilizes a soft, non-intrusive expander ratio that smoothly reduces preamp hiss and finger squeaks while maintaining organic pick dynamics and transient transparency."
     ],
-    "authorizationStatus": "Demo not started"
+    "authorizationStatus": "Approved & Updated"
   },
   {
     "name": "uad hitsville eq collection",
     "displayName": "UAD Hitsville EQ Collection",
     "category": "Equalizers",
-    "description": "A pristine emulation of the custom-built, passive graphic equalizers designed by Motown engineers to carve out the punchy, midrange-forward character of the Hitsville catalog. Ideal for shaping vocals, drums, and full mixes with instant retro vibe.",
-    "hardwareModel": "Hitsville Custom active inductor Equalizer",
+    "description": "An exquisite emulation of the custom-built, passive graphic equalizers designed by Motown engineers to carve out the punchy, midrange-forward character of the Hitsville catalog. It includes both the original 7-band channel EQ and the dual-channel mastering equalizer for cohesive vintage vibe and stereo control.",
+    "hardwareModel": "Hitsville Custom passive inductor Equalizers",
     "parameters": [
       {
         "name": "EQ Model",
         "range": "Graphic / Mastering",
         "defaultVal": "Graphic",
-        "description": "Switches between the original graphic channel EQ and the stereo mastering EQ.",
         "type": "switch",
         "options": [
           "Graphic",
           "Mastering"
-        ]
+        ],
+        "description": "Switches between the original 7-band graphic channel equalizer and the expanded dual-channel mastering EQ."
       },
       {
         "name": "50 Hz Gain",
-        "range": "-8 dB to +8 dB (Stepped)",
-        "defaultVal": "0 dB",
-        "description": "Boosts or cuts low-end weight at 50 Hz.",
-        "type": "knob"
+        "range": "-8.0 dB to +8.0 dB (Stepped)",
+        "defaultVal": "0.0 dB",
+        "type": "knob",
+        "description": "Controls low-end power and sub-bass weight with broad, passive inductor-based curves."
+      },
+      {
+        "name": "130 Hz Gain",
+        "range": "-8.0 dB to +8.0 dB (Stepped)",
+        "defaultVal": "0.0 dB",
+        "type": "knob",
+        "description": "Shapes the upper-bass and low-mid warmth, perfect for dialing in bass guitar body and snare weight."
+      },
+      {
+        "name": "320 Hz Gain",
+        "range": "-8.0 dB to +8.0 dB (Stepped)",
+        "defaultVal": "0.0 dB",
+        "type": "knob",
+        "description": "Attenuates mid-range boxiness or boosts to inject thick vintage body around 320 Hz."
       },
       {
         "name": "800 Hz Gain",
-        "range": "-8 dB to +8 dB (Stepped)",
-        "defaultVal": "0 dB",
-        "description": "Injects aggressive mid-range presence and grit at 800 Hz.",
-        "type": "knob"
+        "range": "-8.0 dB to +8.0 dB (Stepped)",
+        "defaultVal": "0.0 dB",
+        "type": "knob",
+        "description": "Controls the critical 800 Hz band, the focal point of the iconic punchy, midrange-forward Motown sound."
       },
       {
         "name": "2 kHz Gain",
-        "range": "-8 dB to +8 dB (Stepped)",
-        "defaultVal": "0 dB",
-        "description": "Adds bite, intelligibility, and definition at 2 kHz.",
-        "type": "knob"
+        "range": "-8.0 dB to +8.0 dB (Stepped)",
+        "defaultVal": "0.0 dB",
+        "type": "knob",
+        "description": "Controls vocal bite, presence, and horn section articulation in the upper midrange."
+      },
+      {
+        "name": "5 kHz Gain",
+        "range": "-8.0 dB to +8.0 dB (Stepped)",
+        "defaultVal": "0.0 dB",
+        "type": "knob",
+        "description": "Determines guitar crunch, drum snap, and overall high-frequency definition at 5 kHz."
       },
       {
         "name": "12.5 kHz Gain",
-        "range": "-8 dB to +8 dB (Stepped)",
-        "defaultVal": "0 dB",
-        "description": "Adds silky analog air and sheen at 12.5 kHz.",
-        "type": "knob"
+        "range": "-8.0 dB to +8.0 dB (Stepped)",
+        "defaultVal": "0.0 dB",
+        "type": "knob",
+        "description": "Boosts to add silky analog air and high-frequency sheen or cuts to eliminate excessive sibilance."
+      },
+      {
+        "name": "Channel Mode",
+        "range": "Stereo / Dual Mono / Mid-Side",
+        "defaultVal": "Stereo",
+        "type": "switch",
+        "options": [
+          "Stereo",
+          "Dual Mono",
+          "Mid-Side"
+        ],
+        "description": "Configures channel routing for the Mastering EQ, enabling independent Mid/Side or left/right processing."
+      },
+      {
+        "name": "Input Gain",
+        "range": "-8.0 dB to +8.0 dB",
+        "defaultVal": "0.0 dB",
+        "type": "knob",
+        "description": "Adjusts input signal level driving into the passive EQ filter circuitry."
+      },
+      {
+        "name": "Output Gain",
+        "range": "-8.0 dB to +8.0 dB",
+        "defaultVal": "0.0 dB",
+        "type": "knob",
+        "description": "Adjusts final output signal level to achieve clean volume matching."
       }
     ],
     "proTips": [
-      "Motown mixers boosted the 800 Hz and 2 kHz bands aggressively on snare drums and vocals to make them stand out on low-fidelity AM car radios.",
-      "On mastering, use the 'Mastering EQ' model with stepped, half-dB detents for precise balance across the mix bus.",
-      "Engage the low-end 50 Hz and 130 Hz bands to add rich, vintage warmth to bass lines, giving them authentic Motown roundness."
+      "The original Hitsville graphic EQ uses passive inductor-based filters that have a highly musical, wide Q. To emulate the iconic Motown vocal presence, aggressively boost 800 Hz and 2 kHz by 2 to 3 dB. This carves out a forward, punchy signature that cuts through dense mixes even on low-fidelity speakers.",
+      "When using the Hitsville EQ Mastering plugin, switch 'Channel Mode' to 'Mid-Side' (M/S). Try boosting the 12.5 kHz band on the Side channel by 1.0 or 1.5 dB to expand the ambient high-frequency width and air of the mix without making the center-panned lead vocal overly harsh.",
+      "To give a thin bass guitar or bass synth authentic vintage 'roundness,' apply a 2 to 3 dB boost at 50 Hz and a subtle 1 dB boost at 130 Hz. Since the passive filters interact beautifully, this creates a cohesive low-end foundation that feels warm and saturated rather than muddy."
     ],
-    "authorizationStatus": "Authorized for all devices"
+    "authorizationStatus": "Approved & Updated"
   },
   {
     "name": "uad ams dmx 15-80 s digital delay and pitch shifter",
     "displayName": "UAD AMS DMX 15-80 S Digital Delay and Pitch Shifter",
     "category": "Reverbs & Delays",
-    "description": "An authentic software recreation of the pioneering 1980s microprocessor stereo digital delay and pitch shifter. Beloved by top producers, it delivers legendary pitch-shifted widening, gritty early-digital conversion, and lush feedback modulation.",
-    "hardwareModel": "AMS DMX 15-80 S Delay Processor",
+    "description": "A meticulous emulation of the world's first microprocessor-controlled, 15-bit stereo digital delay and pitch shifter. Renowned for its unique high-frequency sheen, grit, and incredible widening, it brings the distinct character and pitch-shifted space of 1980s music production directly to your DAW.",
+    "hardwareModel": "AMS Custom Microprocessor 15-Bit Delay & Pitch Shifter",
     "parameters": [
       {
-        "name": "Delay Time L",
-        "range": "0 ms to 999 ms",
+        "name": "Delay L",
+        "range": "0 ms to 6500 ms",
         "defaultVal": "250 ms",
-        "description": "Sets the delay time for the Left channel.",
-        "type": "knob"
+        "type": "knob",
+        "description": "Sets the delay time for Left (Channel A) with millisecond precision, replicating the classic dual-delay board memory expansion."
       },
       {
-        "name": "Delay Time R",
-        "range": "0 ms to 999 ms",
+        "name": "Delay R",
+        "range": "0 ms to 6500 ms",
         "defaultVal": "350 ms",
-        "description": "Sets the delay time for the Right channel.",
-        "type": "knob"
+        "type": "knob",
+        "description": "Sets the delay time for Right (Channel B) with millisecond precision."
       },
       {
         "name": "Feedback L",
         "range": "0% to 100%",
         "defaultVal": "20%",
-        "description": "Controls the regeneration level of the Left channel delay.",
-        "type": "knob"
+        "type": "knob",
+        "description": "Determines the amount of regeneration fed back into Left Channel A."
       },
       {
         "name": "Feedback R",
         "range": "0% to 100%",
         "defaultVal": "20%",
-        "description": "Controls the regeneration level of the Right channel delay.",
-        "type": "knob"
+        "type": "knob",
+        "description": "Determines the amount of regeneration fed back into Right Channel B."
       },
       {
-        "name": "Pitch Shift L",
-        "range": "-12 to +12 semitones",
-        "defaultVal": "0",
-        "description": "Adjusts pitch transposition for the Left channel.",
-        "type": "knob"
+        "name": "Pitch Ratio L",
+        "range": "0.900 to 1.100",
+        "defaultVal": "1.000",
+        "type": "knob",
+        "description": "Adjusts pitch transposition for the left channel as a precise ratio. Recreates the legendary hardware ratio display (e.g., 1.015 for +15 cents)."
       },
       {
-        "name": "Pitch Shift R",
-        "range": "-12 to +12 semitones",
-        "defaultVal": "0",
-        "description": "Adjusts pitch transposition for the Right channel.",
-        "type": "knob"
+        "name": "Pitch Ratio R",
+        "range": "0.900 to 1.100",
+        "defaultVal": "1.000",
+        "type": "knob",
+        "description": "Adjusts pitch transposition for the right channel as a precise ratio, perfect for standard stereo widening."
+      },
+      {
+        "name": "VCO Speed",
+        "range": "0.1 Hz to 20.0 Hz",
+        "defaultVal": "1.0 Hz",
+        "type": "knob",
+        "description": "Controls the frequency of the low-frequency oscillator modulating the delay times for deep chorus or subtle movement."
+      },
+      {
+        "name": "VCO Depth",
+        "range": "0% to 100%",
+        "defaultVal": "0%",
+        "type": "knob",
+        "description": "Sets the depth of delay modulation, driving tape-like wow, flutter, and organic pitch-swept chorus."
+      },
+      {
+        "name": "Mix",
+        "range": "0% to 100% Wet",
+        "defaultVal": "50%",
+        "type": "knob",
+        "description": "Provides precise dry/wet balance, allowing insertion directly on an aux bus or a lead track."
+      },
+      {
+        "name": "Input Level",
+        "range": "-inf to +12.0 dB",
+        "defaultVal": "0.0 dB",
+        "type": "knob",
+        "description": "Calibrates the incoming signal hitting the unique 15-bit converters, driving vintage warmth and analog saturation."
+      },
+      {
+        "name": "Output Level",
+        "range": "-inf to +12.0 dB",
+        "defaultVal": "0.0 dB",
+        "type": "knob",
+        "description": "Adjusts the final output gain to keep level consistency during heavy delay and pitch transposition."
       }
     ],
     "proTips": [
-      "Set the Left Channel to a very short delay (20 ms) and shift pitch up by +9 cents. Set the Right Channel to 35 ms and shift pitch down by -9 cents. This creates the classic 80s micro-pitch stereo vocal widening.",
-      "Crank the Feedback to 80% with slight pitch transposition on long delay settings to generate organic, evolving space-echo pitch spirals.",
-      "Engage VCO lock-in to dynamically modulate the delay time, introducing a lush, tape-like chorus and flutter on electric guitars."
+      "To dial in the legendary 'Stereo Widening' effect that defined 80s lead vocals (the 'Micro-Pitch' patch), set Left Delay to 15-20 ms and Pitch Ratio L to 1.009 (approx +9 cents). Set Right Delay to 30-35 ms and Pitch Ratio R to 0.991 (approx -9 cents). Keep Feedback at 0% and set the Mix to around 30% Wet. This produces a huge, lush stereo image that never gets muddy.",
+      "Activate the VCO delay modulation on high-feedback settings to generate a vintage tape-style modulated echo. Setting 'VCO Speed' around 0.5 Hz and 'VCO Depth' around 15% will cause the pitch of repeats to slowly drift and wobble, simulating the mechanical variations of vintage tape delay.",
+      "For avant-garde pitch-shift spirals, set Delay L to 400 ms, Pitch Ratio L to 1.059 (transposing up a semitone), and Feedback L to 65%. Every time the delay regenerates, the pitch will step up progressively, creating a brilliant, cascading soundscape that ascends into space."
     ],
-    "authorizationStatus": "Demo expired"
+    "authorizationStatus": "Approved & Updated"
   },
   {
     "name": "uad manley reference microphone preamplifier",
     "displayName": "UAD Manley Reference Microphone Preamplifier",
     "category": "Preamps & Microphones",
-    "description": "An authentic emulation of the legendary Manley high-end tube preamplifier circuitry. Recreating the luxurious, high-voltage Class-A design, it delivers exceptional warmth, sweet high-end triode tube saturation, and rich harmonic depth. Designed to run inside Apollo's Unison preamp slots, it matches the physical input impedance, gain staging, and circuit behaviors of the classic hardware, providing an incredible analog front-end for vocals, acoustic instruments, and line-level signals.",
-    "hardwareModel": "Manley Mono/Dual Mono Tube Microphone Preamplifier",
+    "description": "An authentic emulation of the legendary Manley high-end tube preamplifier circuitry. Recreating the luxurious, high-voltage Class-A vacuum tube design, it delivers exceptional warmth, sweet high-end triode tube saturation, and rich harmonic depth. Running in Apollo's Unison preamp slots, it matches the physical input impedance, custom transformer gain staging, and exact circuit behaviors of the classic hardware, providing a premium analog front-end for vocals and acoustic instruments.",
+    "hardwareModel": "Manley Dual Mono Class-A Tube Microphone Preamplifier",
     "parameters": [
       {
         "name": "Gain",
-        "range": "40 dB to 60 dB",
-        "defaultVal": "40 dB",
-        "description": "Sets the coarse triode tube amplification level in 5 dB steps, altering the primary drive and headroom of the circuit.",
+        "range": "40.0 dB to 60.0 dB (5 dB Steps)",
+        "defaultVal": "40.0 dB",
         "type": "select",
         "options": [
           "40 dB",
@@ -921,78 +1649,133 @@ export const UAD_DATABASE: UADPluginProfile[] = [
           "50 dB",
           "55 dB",
           "60 dB"
-        ]
+        ],
+        "description": "Sets the coarse triode tube amplification level in 5 dB increments, altering the feedback, gain staging, and primary headroom of the tube circuit."
       },
       {
         "name": "Attenuate",
-        "range": "0 to -24 dB",
-        "defaultVal": "0 dB",
-        "description": "A continuously variable passive input attenuator to control the level hitting the tube stage.",
-        "type": "knob"
+        "range": "0.0 dB to -24.0 dB",
+        "defaultVal": "0.0 dB",
+        "type": "knob",
+        "description": "A continuously variable passive input attenuator positioned before the first tube stage to control the level hitting the circuit."
       },
       {
         "name": "Low Cut",
-        "range": "Flat / 50 Hz / 100 Hz",
+        "range": "Flat / 80 Hz / 120 Hz",
         "defaultVal": "Flat",
-        "description": "Selects the high-pass filter cutoff frequency to eliminate unwanted sub-bass rumble.",
         "type": "select",
         "options": [
           "Flat",
-          "50 Hz",
-          "100 Hz"
-        ]
+          "80 Hz",
+          "120 Hz"
+        ],
+        "description": "Selects the high-pass filter cutoff frequency (12 dB per octave slope) to eliminate unwanted low-frequency rumble and wind noise."
       },
       {
         "name": "Phase",
         "range": "Normal / Invert",
         "defaultVal": "Normal",
-        "description": "Inverts the polarity of the microphone preamplifier signal.",
         "type": "switch",
         "options": [
           "Normal",
           "Invert"
-        ]
+        ],
+        "description": "Inverts the phase polarity of the microphone preamplifier signal by 180 degrees."
       }
     ],
     "proTips": [
-      "For clean vocal tracking, set the Gain to 40 dB and use the Attenuate knob to control your peak level. This maintains maximum headroom and pristine transparency.",
-      "To inject thick tube warmth into acoustic guitars, crank the Gain step switch to 50 dB or 55 dB and back down the Attenuate knob to about -10 dB to drive the input triode stage into heavy musical saturation."
+      "For pristine, clean vocal tracking with maximum headroom, set the 'Gain' to 40 dB and use the continuously variable 'Attenuate' knob to control your peak level. This maintains maximum transient transparency.",
+      "To drive the input triode stage into lush tube saturation and inject thick analog warmth into acoustic guitars or vocals, crank the 'Gain' switch to 50 dB or 55 dB and back down the passive 'Attenuate' knob to about -10 dB.",
+      "Always engage the 80 Hz Low Cut filter on lead vocal sessions. This cleanly rolls off sub-bass rumble and mic stand thumps without compromising the warm body or vocal resonance of the singer."
     ],
-    "authorizationStatus": "Authorized for all devices"
+    "authorizationStatus": "Approved & Updated"
   },
   {
     "name": "uad api vision channel strip collection",
     "displayName": "UAD API Vision Channel Strip Collection",
     "category": "Channel Strips",
-    "description": "The definitive emulation of API's flagship analog console modules, capturing the punchy, high-headroom, and aggressive solid-state character that defined modern American rock and pop. Powered by Unison technology, this plugin models the complete signal path of the 212L preamp, the 225L compressor, the 235L gate/expander, and the legendary 550L/560 five-band proportional-Q equalizers to deliver unmatched mid-range bite and transient impact.",
-    "hardwareModel": "API Vision Analog Console Modules (212L, 225L, 235L, 550L)",
+    "description": "The definitive emulation of API's flagship analog console modules, capturing the punchy, high-headroom, and aggressive solid-state character that defined modern American rock and pop. Powered by Unison technology, this plugin models the complete signal path of the 212L preamp, the 215L passive sweep filters, the 225L compressor, the 235L gate/expander, and the legendary 550L/560 proportional-Q equalizers to deliver unmatched mid-range bite and transient impact.",
+    "hardwareModel": "API Vision Analog Console Modules (212L, 215L, 225L, 235L, 550L/560)",
     "parameters": [
       {
         "name": "212L Preamp Gain",
-        "range": "+12 dB to +65 dB",
-        "defaultVal": "12 dB",
-        "description": "Sets input gain and drives the API 2520 discrete op-amp for mid-range harmonic bite.",
-        "type": "knob"
+        "range": "+12.0 dB to +65.0 dB",
+        "defaultVal": "+12.0 dB",
+        "type": "knob",
+        "description": "Sets the input level and drives the classic API 2520 discrete op-amp and custom 2622 input transformer for punchy mid-range harmonic coloration."
+      },
+      {
+        "name": "215L Lo-Cut Filter",
+        "range": "20.0 Hz to 600.0 Hz",
+        "defaultVal": "20.0 Hz (Off)",
+        "type": "knob",
+        "description": "Continuously variable high-pass filter (12 dB per octave slope) to clean up sub-bass rumble, with an dedicated active/bypass switch."
+      },
+      {
+        "name": "215L Hi-Cut Filter",
+        "range": "1.0 kHz to 20.0 kHz",
+        "defaultVal": "20.0 kHz (Off)",
+        "type": "knob",
+        "description": "Continuously variable low-pass filter (6 dB per octave slope) to smooth out high frequencies."
       },
       {
         "name": "225L Compressor Threshold",
-        "range": "-20 dBu to +10 dBu",
-        "defaultVal": "10 dBu",
-        "description": "Sets the signal level threshold above which compression begins.",
-        "type": "knob"
+        "range": "-20.0 dBu to +10.0 dBu",
+        "defaultVal": "+10.0 dBu",
+        "type": "knob",
+        "description": "Determines the level at which the compressor begins gain reduction."
       },
       {
         "name": "225L Compressor Ratio",
         "range": "1.0:1 to Inf:1",
         "defaultVal": "2.0:1",
-        "description": "Determines the compression ratio.",
-        "type": "knob"
+        "type": "knob",
+        "description": "Sets the compression ratio, varying from subtle level stabilization to heavy limiting."
+      },
+      {
+        "name": "225L Thrust Switch",
+        "range": "Out / In",
+        "defaultVal": "Out",
+        "type": "switch",
+        "options": [
+          "Out",
+          "In"
+        ],
+        "description": "Engages API's patented Thrust sidechain filter (2 dB per octave rise starting at 200 Hz), protecting low end power from pumping."
+      },
+      {
+        "name": "225L Compressor Type",
+        "range": "Old (Feed-Back) / New (Feed-Forward)",
+        "defaultVal": "New (Feed-Forward)",
+        "type": "switch",
+        "options": [
+          "Old (Feed-Back)",
+          "New (Feed-Forward)"
+        ],
+        "description": "Selects between smooth vintage feedback compression or fast modern feed-forward compression."
+      },
+      {
+        "name": "235L Gate Threshold",
+        "range": "-80.0 dBu to +10.0 dBu",
+        "defaultVal": "-80.0 dBu",
+        "type": "knob",
+        "description": "Sets the gate or expander open threshold level to isolate source material from background noise."
+      },
+      {
+        "name": "550L/560 EQ Module Selector",
+        "range": "550L / 560",
+        "defaultVal": "550L",
+        "type": "switch",
+        "options": [
+          "550L",
+          "560"
+        ],
+        "description": "Switches the active equalizer module between the four-band 550L parametric and the ten-band 560 graphic EQ."
       },
       {
         "name": "550L High EQ Freq",
-        "range": "2 kHz to 20 kHz",
-        "defaultVal": "10 kHz",
-        "description": "Selects the frequency of the high-frequency band.",
+        "range": "2.0 kHz to 20.0 kHz",
+        "defaultVal": "10.0 kHz",
         "type": "select",
         "options": [
           "2 kHz",
@@ -1004,28 +1787,23 @@ export const UAD_DATABASE: UADPluginProfile[] = [
           "12.5 kHz",
           "15 kHz",
           "20 kHz"
-        ]
+        ],
+        "description": "Selects the frequency of the high-frequency band of the 550L equalizer."
       },
       {
         "name": "550L High EQ Gain",
-        "range": "-12 dB to +12 dB",
-        "defaultVal": "0 dB",
-        "description": "Boosts or cuts the high-frequency shelving or peaking band.",
-        "type": "knob"
-      },
-      {
-        "name": "235L Gate Threshold",
-        "range": "-80 dBu to +10 dBu",
-        "defaultVal": "-80 dBu",
-        "description": "Determines when the gate or expander opens to let signal pass.",
-        "type": "knob"
+        "range": "-12.0 dB to +12.0 dB (2 dB Steps)",
+        "defaultVal": "0.0 dB",
+        "type": "knob",
+        "description": "Boosts or cuts the high-frequency band using the proprietary proportional-Q circuit which narrows bandwidth at higher gains."
       }
     ],
     "proTips": [
-      "For drum groups, toggle the 225L Compressor Type to 'New' feed-forward mode. Keep ratio at 4:1 with a fast release to maximize snap and decay on cymbals and rooms.",
-      "Use the 550L EQ module for vocal tracking. The Proportional Q ensures that narrow boosts stay surgical, while gentle 2 dB boosts at 10 kHz widen to add high-end sheen."
+      "For punchy acoustic drums and room mics, toggle the 225L Compressor Type to 'New' (feed-forward) mode, engage the 'Thrust' sidechain switch, and select a 4:1 ratio with a fast release to maximize decay and snap.",
+      "The 550L parametric EQ uses a Proportional-Q design: small gain changes (e.g., 2 dB) are very wide and musical for sweetening, while larger moves (e.g., 6 dB+) become narrow and surgical for carving out resonances.",
+      "Engage the 215L Lo-Cut filter at 80 Hz on snare and toms to aggressively roll off low-end cabinet rumble without sacrificing the punch and body of the drum shell."
     ],
-    "authorizationStatus": "Authorized for all devices"
+    "authorizationStatus": "Approved & Updated"
   },
   {
     "name": "uad api preamp",
@@ -1035,51 +1813,70 @@ export const UAD_DATABASE: UADPluginProfile[] = [
     "hardwareModel": "API 212L Microphone Preamplifier",
     "parameters": [
       {
+        "name": "Input Type",
+        "range": "Mic / Line",
+        "defaultVal": "Mic",
+        "type": "switch",
+        "options": [
+          "Mic",
+          "Line"
+        ],
+        "description": "Switches the preamp circuit impedance and gain structure between Mic-level and Line-level signals."
+      },
+      {
         "name": "Gain",
-        "range": "10 dB to 65 dB",
-        "defaultVal": "12 dB",
-        "description": "Drives the 2520 op-amp stage for punchy, classic solid-state color.",
-        "type": "knob"
+        "range": "+12.0 dB to +65.0 dB",
+        "defaultVal": "+12.0 dB",
+        "type": "knob",
+        "description": "Adjusts the input amplification level, driving the virtual API 2520 discrete op-amp and custom transformer into warm solid-state harmonic saturation."
       },
       {
         "name": "Pad",
-        "range": "Off / -20 dB",
+        "range": "Off / -20.0 dB",
         "defaultVal": "Off",
-        "description": "Applies a -20 dB attenuation block to manage high-level incoming signals.",
         "type": "switch",
         "options": [
-          "Off露出",
-          " -20 dB"
-        ]
+          "Off",
+          "-20 dB"
+        ],
+        "description": "Attenuates the incoming analog signal by -20 dB before the input transformer to protect the preamp stage from clipping with hot sources."
       },
       {
         "name": "Low Cut Filter",
-        "range": "Off / 75 Hz",
+        "range": "Off / 75.0 Hz",
         "defaultVal": "Off",
-        "description": "Engages a high-pass filter with a 12 dB per octave slope at 75 Hz.",
         "type": "switch",
         "options": [
           "Off",
           "75 Hz"
-        ]
+        ],
+        "description": "Engages a sharp 12 dB per octave high-pass filter at 75 Hz to cut low-frequency rumble and room vibration."
       },
       {
         "name": "Phase",
         "range": "Normal / Invert",
         "defaultVal": "Normal",
-        "description": "Inverts the polarity of the incoming microphone signal.",
         "type": "switch",
         "options": [
           "Normal",
           "Invert"
-        ]
+        ],
+        "description": "Inverts the polarity of the input signal by 180 degrees to resolve phase cancellation issues in multi-mic setups."
+      },
+      {
+        "name": "Output Fader",
+        "range": "-inf to +12.0 dB",
+        "defaultVal": "0.0 dB",
+        "type": "knob",
+        "description": "Controls the clean output level trim after the preamp circuit to optimize gain-staging into the DAW or virtual mixer."
       }
     ],
     "proTips": [
       "When tracking direct electric bass, drive the Gain control up to 45 dB with the Pad engaged to saturate the API 2520 op-amp, adding thickness and weight to the low-mids.",
-      "For drum overheads, leave the Pad off and set Gain to 20 dB to allow the transient peaks of the cymbals to naturally trigger the fast-responding API circuit without clipping."
+      "For drum overheads, leave the Pad off and set Gain to 20 dB to allow the transient peaks of the cymbals to naturally trigger the fast-responding API circuit without clipping.",
+      "If you want to inject warm console color on a pre-recorded track, insert this plugin in Line mode and boost the Gain knob until the yellow LEDs illuminate, then pull down the Output Fader to balance the levels."
     ],
-    "authorizationStatus": "Authorized for all devices"
+    "authorizationStatus": "Approved & Updated"
   },
   {
     "name": "uad c-suite c-vox noise and ambience reduction",
@@ -1092,70 +1889,95 @@ export const UAD_DATABASE: UADPluginProfile[] = [
         "name": "Reduction",
         "range": "0% to 100%",
         "defaultVal": "0%",
-        "description": "Controls the dynamic depth of noise and ambience suppression.",
-        "type": "knob"
+        "type": "knob",
+        "description": "Controls the amount of background noise suppression applied to the incoming vocal signal."
+      },
+      {
+        "name": "Ambience",
+        "range": "0% to 100%",
+        "defaultVal": "0%",
+        "type": "knob",
+        "description": "Independently controls the attenuation of room reflections and ambient reverberation to dry up live mic tracks."
       },
       {
         "name": "Mode",
         "range": "Vocal / Voice",
         "defaultVal": "Vocal",
-        "description": "Optimizes the internal algorithms for musical vocal tracking or spoken word applications.",
         "type": "switch",
         "options": [
           "Vocal",
           "Voice"
-        ]
+        ],
+        "description": "Optimizes the internal signal model specifically for musical vocal phrasing or spoken word applications."
       },
       {
         "name": "Low Cut Filter",
         "range": "Off / 80 Hz / 120 Hz",
         "defaultVal": "Off",
-        "description": "Cuts out low frequency rumble prior to the noise suppression stage.",
         "type": "select",
         "options": [
           "Off",
           "80 Hz",
           "120 Hz"
-        ]
+        ],
+        "description": "Cuts out unwanted low-frequency rumble and wind noise prior to the main suppression algorithms."
       },
       {
         "name": "High Cut Filter",
         "range": "Off / 8 kHz / 12 kHz",
         "defaultVal": "Off",
-        "description": "Rolls off harsh high-frequency environmental hiss in non-speech zones.",
         "type": "select",
         "options": [
           "Off",
           "8 kHz",
           "12 kHz"
-        ]
+        ],
+        "description": "Rolls off harsh high-frequency hiss or fan noise to focus the vocal range."
+      },
+      {
+        "name": "Output Trim",
+        "range": "-24.0 dB to +12.0 dB",
+        "defaultVal": "0.0 dB",
+        "type": "knob",
+        "description": "Applies a clean gain trim to the output signal to compensate for level changes caused by noise attenuation."
       }
     ],
     "proTips": [
       "Start with Reduction set at 35% on Vocal mode during live tracking to clean up home studio reflections without deadening the singer's performance or vocal formants.",
-      "For podcast recording in untreated rooms, switch to Voice mode, apply an 80 Hz Low Cut Filter, and dial up Reduction to 50% for pristine, broadcast-ready dialogue."
+      "For podcast recording in untreated rooms, switch to Voice mode, apply an 80 Hz Low Cut Filter, and dial up Reduction to 50% for pristine, broadcast-ready dialogue.",
+      "Use the 'Ambience' knob separately from the 'Reduction' knob to attenuate persistent flutter echo or boxy room modes on acoustic guitar and vocal tracks without over-processing."
     ],
-    "authorizationStatus": "Authorized for all devices"
+    "authorizationStatus": "Approved & Updated"
   },
   {
     "name": "uad neve dynamics collection",
     "displayName": "UAD Neve Dynamics Collection",
     "category": "Dynamics",
-    "description": "An exquisite emulation of classic British Neve diode-bridge dynamics processors. This collection recreates the iconic Neve 2254 and 33609 limiter/compressors, delivering their legendary creamy, round transient response, thick density, and musical coloration. Ideal for gluing the stereo mix bus, taming dynamic drum groups, or adding rich warmth to vocals and acoustic pianos.",
-    "hardwareModel": "Neve 2254/33609 Diode-Bridge Dynamics",
+    "description": "An exquisite emulation of classic British Neve diode-bridge dynamics processors. Recreating the iconic Neve 33609 stereo bus compressor/limiter and Neve 2254 mono channel compressor/limiter, it delivers their legendary creamy, round transient response, thick density, and rich harmonic warmth. Ideal for taming drum groups, gluing the master mix bus, or adding vintage analog coloration.",
+    "hardwareModel": "Neve 33609 & 2254 Diode-Bridge Limiters/Compressors",
     "parameters": [
       {
+        "name": "Dynamics Model",
+        "range": "33609 / 2254",
+        "defaultVal": "33609",
+        "type": "switch",
+        "options": [
+          "33609",
+          "2254"
+        ],
+        "description": "Selects between the legendary 33609 stereo bus compressor or the creamy, color-rich 2254 mono diode-bridge channel compressor."
+      },
+      {
         "name": "Compressor Threshold",
-        "range": "-20 dBu to +10 dBu",
-        "defaultVal": "10 dBu",
-        "description": "Sets the signal level above which diode-bridge compression begins.",
-        "type": "knob"
+        "range": "-20.0 dBu to +10.0 dBu (2 dB Steps)",
+        "defaultVal": "+10.0 dBu",
+        "type": "knob",
+        "description": "Determines the signal level threshold above which the diode-bridge compressor begins gain reduction."
       },
       {
         "name": "Compressor Ratio",
         "range": "1.5:1 / 2:1 / 3:1 / 4:1 / 6:1",
         "defaultVal": "3:1",
-        "description": "Selects the compression slope slope.",
         "type": "select",
         "options": [
           "1.5:1",
@@ -1163,62 +1985,198 @@ export const UAD_DATABASE: UADPluginProfile[] = [
           "3:1",
           "4:1",
           "6:1"
-        ]
+        ],
+        "description": "Selects the compression slope (ratio) of the diode-bridge compressor stage."
       },
       {
         "name": "Compressor Recovery",
-        "range": "100 ms / 400 ms / 800 ms / 1.5 s / Auto",
+        "range": "100 ms to 1.5 s / Auto 1 & 2",
         "defaultVal": "400 ms",
-        "description": "Sets the release time of the compressor circuit.",
         "type": "select",
         "options": [
           "100 ms",
           "400 ms",
           "800 ms",
           "1.5 s",
-          "Auto"
-        ]
+          "a1 (Auto 1)",
+          "a2 (Auto 2)"
+        ],
+        "description": "Sets the compressor release time. Auto settings provide program-dependent recovery, ideal for complex stereo program material."
       },
       {
         "name": "Limiter Threshold",
-        "range": "+4 dBu to +20 dBu",
-        "defaultVal": "+20 dBu",
-        "description": "Sets the threshold of the secondary, ultra-fast peak limiting stage.",
-        "type": "knob"
+        "range": "+4.0 dBu to +15.0 dBu (0.5 dB Steps)",
+        "defaultVal": "+15.0 dBu",
+        "type": "knob",
+        "description": "Determines the threshold of the secondary, fast-acting peak limiter circuit."
+      },
+      {
+        "name": "Limiter Recovery",
+        "range": "50 ms to 800 ms / Auto 1 & 2",
+        "defaultVal": "100 ms",
+        "type": "select",
+        "options": [
+          "50 ms",
+          "100 ms",
+          "200 ms",
+          "800 ms",
+          "a1 (Auto 1)",
+          "a2 (Auto 2)"
+        ],
+        "description": "Sets the release time of the brickwall limiter stage, allowing clean peak containment."
+      },
+      {
+        "name": "Limiter Attack",
+        "range": "Slow (4.0 ms) / Fast (2.0 ms)",
+        "defaultVal": "Slow",
+        "type": "switch",
+        "options": [
+          "Slow",
+          "Fast"
+        ],
+        "description": "Selects the speed of the peak limiter attack time, handling fast transients or maintaining natural envelope shape."
+      },
+      {
+        "name": "Sidechain Filter",
+        "range": "Off / 180.0 Hz",
+        "defaultVal": "Off",
+        "type": "switch",
+        "options": [
+          "Off",
+          "180 Hz"
+        ],
+        "description": "Engages a 180 Hz high-pass filter in the compressor's detection circuit to prevent heavy low-frequency energy from triggering excessive pumping."
+      },
+      {
+        "name": "Headroom Control",
+        "range": "4.0 dB to 28.0 dB",
+        "defaultVal": "16.0 dB",
+        "type": "knob",
+        "description": "Adjusts the internal operating level of the plugin to scale headroom and easily drive the virtual transformers into colorful saturation."
       },
       {
         "name": "Makeup Gain",
-        "range": "0 dB to +20 dB",
-        "defaultVal": "0 dB",
-        "description": "Controls output signal volume recovery after gain reduction.",
-        "type": "knob"
+        "range": "0.0 dB to +20.0 dB (2 dB Steps)",
+        "defaultVal": "0.0 dB",
+        "type": "knob",
+        "description": "Controls output signal volume recovery after gain reduction."
+      },
+      {
+        "name": "Dry/Wet Mix",
+        "range": "0.0% to 100.0%",
+        "defaultVal": "100.0%",
+        "type": "knob",
+        "description": "Blends dry (unprocessed) signal with wet (compressed) signal to enable clean parallel diode-bridge compression."
       }
     ],
     "proTips": [
-      "To glue a stereo mix bus, set the compressor to 1.5:1 ratio, Recovery to Auto, and dial the Threshold to achieve a subtle 1.5 dB of gain reduction. This provides cohesive, warm vintage density.",
-      "On a drum sub-mix, use 4:1 ratio, set Recovery to 100 ms, and slam the threshold to 0 dBu to induce warm, pumping energy and bring out room decays."
+      "To glue a stereo mix bus seamlessly, choose the 33609 model, set the compressor to a 1.5:1 ratio, Recovery to a1 (Auto 1), and dial the Threshold to achieve a subtle 1.5 dB of gain reduction. This provides cohesive, warm vintage density without destroying dynamics.",
+      "On a drum sub-mix, select the 2254 model for a thicker, chunkier tone, set Ratio to 4:1, Compressor Recovery to 100 ms, and engage the 180 Hz Sidechain Filter. This drives the drums into warm, pumping energy while preserving kick drum punch.",
+      "Utilize parallel compression by slamming the compressor threshold to -10 dBu with a 6:1 ratio, then backing down the 'Dry/Wet Mix' knob to around 30% to inject thick analog weight and room ambience beneath your main drums or vocals."
     ],
-    "authorizationStatus": "Authorized for all devices"
+    "authorizationStatus": "Approved & Updated"
   },
   {
     "name": "uad neve 1084 preamp and eq",
     "displayName": "UAD Neve 1084 Preamp and EQ",
     "category": "Preamps & Microphones",
-    "description": "A precise emulation of Neve's classic Class-A channel amplifier. Building upon the famous 1073 preamp architecture, the 1084 delivers the same rich, transformer-coupled preamp section but expands equalizing versatility by adding three selectable high shelf frequencies, a mid-band High-Q switch, and a high-pass/low-pass filter network. Perfect for surgical tone sculpting with heavy British character.",
-    "hardwareModel": "Neve 1084 Channel Amplifier",
+    "description": "A precise emulation of Neve's classic Class-A channel amplifier with expanded EQ capabilities. Recreating the iconic Class-A Marinair transformer-coupled preamplifier and passive inductor EQ design, the 1084 delivers the legendary British punch, warmth, and harmonic richness. It builds upon the famous 1073 EQ by adding selectable high shelf frequencies, a mid-band High-Q switch, and a high-pass/low-pass filter network for ultimate tone-shaping control.",
+    "hardwareModel": "Neve 1084 Channel Amplifier with Inductor EQ",
     "parameters": [
       {
+        "name": "Input Type",
+        "range": "Mic / Line",
+        "defaultVal": "Mic",
+        "type": "switch",
+        "options": [
+          "Mic",
+          "Line"
+        ],
+        "description": "Switches the input signal path impedance and sensitivity range between Mic-level and Line-level sources."
+      },
+      {
         "name": "Input Gain",
-        "range": "-80 dB to +10 dB",
-        "defaultVal": "0 dB",
-        "description": "Drives the virtual Class-A Marinair transformer, stepping in 5 dB increments.",
-        "type": "knob"
+        "range": "-80.0 dB to +10.0 dB (5 dB Steps)",
+        "defaultVal": "0.0 dB",
+        "type": "knob",
+        "description": "Adjusts the sensitivity level, driving the virtual Class-A Marinair transformer. Mic range spans -80 to -20 dB; Line range spans -20 to +10 dB."
+      },
+      {
+        "name": "High EQ Frequency",
+        "range": "10.0 kHz / 12.0 kHz / 16.0 kHz",
+        "defaultVal": "12.0 kHz",
+        "type": "select",
+        "options": [
+          "10 kHz",
+          "12 kHz",
+          "16 kHz"
+        ],
+        "description": "Selects the target corner frequency for the high-frequency shelving filter, providing a distinct airy top-end character."
+      },
+      {
+        "name": "High EQ Gain",
+        "range": "-16.0 dB to +16.0 dB",
+        "defaultVal": "0.0 dB",
+        "type": "knob",
+        "description": "Adjusts the boost or cut level of the high shelving filter to add beautiful top-end sheen or reduce harshness."
+      },
+      {
+        "name": "Mid EQ Frequency",
+        "range": "0.36 kHz / 0.7 kHz / 1.6 kHz / 3.2 kHz / 4.8 kHz / 7.2 kHz",
+        "defaultVal": "1.6 kHz",
+        "type": "select",
+        "options": [
+          "0.36 kHz",
+          "0.7 kHz",
+          "1.6 kHz",
+          "3.2 kHz",
+          "4.8 kHz",
+          "7.2 kHz"
+        ],
+        "description": "Sets the center frequency of the peaking mid-band inductor-based equalizer."
+      },
+      {
+        "name": "Mid EQ Gain",
+        "range": "-18.0 dB to +18.0 dB",
+        "defaultVal": "0.0 dB",
+        "type": "knob",
+        "description": "Controls the amount of boost or cut applied to the selected midrange frequency band."
+      },
+      {
+        "name": "Mid Q Factor",
+        "range": "Normal / High Q",
+        "defaultVal": "Normal",
+        "type": "switch",
+        "options": [
+          "Normal",
+          "High Q"
+        ],
+        "description": "Switches the mid-band bandwidth. Normal provides a wide, musical curve; High Q sharpens the filter for surgical notch filtering."
+      },
+      {
+        "name": "Low EQ Frequency",
+        "range": "35.0 Hz / 60.0 Hz / 110.0 Hz / 220.0 Hz",
+        "defaultVal": "110.0 Hz",
+        "type": "select",
+        "options": [
+          "35 Hz",
+          "60 Hz",
+          "110 Hz",
+          "220 Hz"
+        ],
+        "description": "Sets the target frequency for the low-frequency shelving filter to manage low-end weight."
+      },
+      {
+        "name": "Low EQ Gain",
+        "range": "-16.0 dB to +16.0 dB",
+        "defaultVal": "0.0 dB",
+        "type": "knob",
+        "description": "Controls the boost or cut level of the low shelving filter to shape sub-bass or low midrange body."
       },
       {
         "name": "High Pass Filter",
-        "range": "Off / 45 Hz / 70 Hz / 160 Hz / 360 Hz",
+        "range": "Off / 45.0 Hz / 70.0 Hz / 160.0 Hz / 360.0 Hz",
         "defaultVal": "Off",
-        "description": "Selects the low frequency cutoff point for the high-pass filter.",
         "type": "select",
         "options": [
           "Off",
@@ -1226,59 +2184,60 @@ export const UAD_DATABASE: UADPluginProfile[] = [
           "70 Hz",
           "160 Hz",
           "360 Hz"
-        ]
+        ],
+        "description": "Engages a step high-pass filter to clean up low-frequency rumble, floor vibration, or mic handling noise."
       },
       {
-        "name": "High EQ Frequency",
-        "range": "10 kHz / 12 kHz / 16 kHz",
-        "defaultVal": "12 kHz",
-        "description": "Sets the target frequency for the high-frequency shelving filter.",
+        "name": "Low Pass Filter",
+        "range": "Off / 6.0 kHz / 8.0 kHz / 10.0 kHz / 14.0 kHz / 18.0 kHz",
+        "defaultVal": "Off",
         "type": "select",
         "options": [
+          "Off",
+          "6 kHz",
+          "8 kHz",
           "10 kHz",
-          "12 kHz",
-          "16 kHz"
-        ]
+          "14 kHz",
+          "18 kHz"
+        ],
+        "description": "Engages a low-pass filter to roll off unnecessary high-frequency hiss, digital harshness, or cymbal bleed."
       },
       {
-        "name": "Mid EQ Gain",
-        "range": "-18 dB to +18 dB",
-        "defaultVal": "0 dB",
-        "description": "Boosts or cuts the peaking mid-band frequency.",
-        "type": "knob"
-      },
-      {
-        "name": "Mid EQ Frequency",
-        "range": "0.35 kHz / 0.7 kHz / 1.6 kHz / 3.2 kHz / 4.8 kHz / 7.2 kHz",
-        "defaultVal": "1.6 kHz",
-        "description": "Sets the center frequency of the parametric mid band.",
-        "type": "select",
-        "options": [
-          "0.35 kHz",
-          "0.7 kHz",
-          "1.6 kHz",
-          "3.2 kHz",
-          "4.8 kHz",
-          "7.2 kHz"
-        ]
-      },
-      {
-        "name": "Mid Q Factor",
-        "range": "Normal / High Q",
+        "name": "Phase",
+        "range": "Normal / Invert",
         "defaultVal": "Normal",
-        "description": "Switches the mid filter bandwidth between broad and narrow settings.",
         "type": "switch",
         "options": [
           "Normal",
-          "High Q"
-        ]
+          "Invert"
+        ],
+        "description": "Inverts the signal polarity by 180 degrees to correct phase mismatches in multi-microphone configurations."
+      },
+      {
+        "name": "EQ Bypass",
+        "range": "In / Out",
+        "defaultVal": "In",
+        "type": "switch",
+        "options": [
+          "In",
+          "Out"
+        ],
+        "description": "Completely bypasses or engages the active equalizer section, leaving the preamp saturation intact when set to Out."
+      },
+      {
+        "name": "Output Trim",
+        "range": "-24.0 dB to +12.0 dB",
+        "defaultVal": "0.0 dB",
+        "type": "knob",
+        "description": "Adjusts the final output level of the channel strip, allowing you to drive the Input Gain heavily for vintage saturation while leveling the signal."
       }
     ],
     "proTips": [
       "Engage High Q on the mid band at 3.2 kHz to carve out narrow, harsh resonance peaks from electric guitars, while preserving the surrounding warm frequencies.",
-      "Set High EQ to 16 kHz and boost 2 to 4 dB on acoustic guitars to inject a beautifully soft, expensive-sounding air band that sits perfectly in a pop mix."
+      "Set High EQ to 16 kHz and boost 2 to 4 dB on acoustic guitars to inject a beautifully soft, expensive-sounding air band that sits perfectly in a pop mix.",
+      "Drive the Input Gain to +50 or +60 dB in Mic mode to color a clean vocal track with gorgeous British transformer saturation, then engage the Low Pass Filter at 14 kHz and pull down the Output Trim to sweeten the tone and suppress analog hiss."
     ],
-    "authorizationStatus": "Authorized for all devices"
+    "authorizationStatus": "Approved & Updated"
   },
   {
     "name": "uad avalon vt-737sp channel strip",
@@ -1288,115 +2247,298 @@ export const UAD_DATABASE: UADPluginProfile[] = [
     "hardwareModel": "Avalon Design VT-737sp Class-A Vacuum Tube Channel Strip",
     "parameters": [
       {
-        "name": "Preamplifier Gain",
-        "range": "0 dB to +60 dB",
-        "defaultVal": "30 dB",
-        "description": "Adjusts the twin-triode vacuum tube preamp input gain stage.",
-        "type": "knob"
-      },
-      {
-        "name": "Compressor Threshold",
-        "range": "-20 dB to +20 dB",
-        "defaultVal": "0 dB",
-        "description": "Sets the level at which the optical compressor starts gain attenuation.",
-        "type": "knob"
-      },
-      {
-        "name": "Compressor Ratio",
-        "range": "1:1 / 1.5:1 / 2:1 / 3:1 / 4:1 / 10:1 / 20:1",
-        "defaultVal": "4:1",
-        "description": "Selects the compression slope slope.",
-        "type": "select",
+        "name": "Input Type",
+        "range": "Mic / Line / Hi-Z",
+        "defaultVal": "Mic",
+        "type": "switch",
         "options": [
-          "1:1",
-          "1.5:1",
-          "2:1",
-          "3:1",
-          "4:1",
-          "10:1",
-          "20:1"
-        ]
+          "Mic",
+          "Line",
+          "Hi-Z"
+        ],
+        "description": "Selects the active input source, adjusting input impedance and circuit path for microphones, line-level gear, or high-impedance instruments."
       },
       {
-        "name": "Treble Frequency",
-        "range": "10 kHz to 32 kHz",
-        "defaultVal": "15 kHz",
-        "description": "Sets the high shelving EQ frequency band (includes the famous 32 kHz air band).",
-        "type": "knob"
+        "name": "Preamplifier Gain",
+        "range": "0.0 dB to +60.0 dB",
+        "defaultVal": "30.0 dB",
+        "type": "knob",
+        "description": "Adjusts the twin-triode vacuum tube preamplifier's input amplification stage to dial in tube warmth and harmonic texture."
       },
       {
-        "name": "Treble Gain",
-        "range": "-20 dB to +20 dB",
-        "defaultVal": "0 dB",
-        "description": "Boosts or cuts the high-frequency passive shelving filter.",
-        "type": "knob"
+        "name": "High Gain Boost",
+        "range": "Off / +10.0 dB",
+        "defaultVal": "Off",
+        "type": "switch",
+        "options": [
+          "Off",
+          "On"
+        ],
+        "description": "Engages an extra +10 dB of clean gain boost inside the tube preamplifier stage, perfect for low-output microphones or extra tube drive."
       },
       {
         "name": "High Pass Filter Freq",
-        "range": "Off / 30 Hz to 140 Hz",
+        "range": "Off / 30.0 Hz to 140.0 Hz",
         "defaultVal": "Off",
-        "description": "Sets the active high pass filter cutoff frequency.",
-        "type": "knob"
+        "type": "knob",
+        "description": "Sets the cutoff frequency of the built-in 18 dB per octave high pass filter to eliminate low-end rumble and mechanical noise."
+      },
+      {
+        "name": "Compressor Threshold",
+        "range": "-30.0 dB to +20.0 dB",
+        "defaultVal": "0.0 dB",
+        "type": "knob",
+        "description": "Sets the input level threshold at which the slow-reacting, musical optical compressor begins level attenuation."
+      },
+      {
+        "name": "Compressor Ratio",
+        "range": "1.0:1 to 20.0:1",
+        "defaultVal": "4.0:1",
+        "type": "knob",
+        "description": "Determines the compression ratio of the opto-compressor. Low ratios are transparent, while high ratios act as soft-knee limiters."
+      },
+      {
+        "name": "Compressor Attack",
+        "range": "2.0 ms to 200.0 ms",
+        "defaultVal": "20.0 ms",
+        "type": "knob",
+        "description": "Sets the attack speed of the opto-circuit, letting transients pass naturally or catching peaks quickly."
+      },
+      {
+        "name": "Compressor Release",
+        "range": "100.0 ms to 10.0 s",
+        "defaultVal": "500.0 ms",
+        "type": "knob",
+        "description": "Sets the release time of the optical level detector, allowing smooth level riding."
+      },
+      {
+        "name": "EQ Pre-Compressor",
+        "range": "Post-Comp / Pre-Comp",
+        "defaultVal": "Post-Comp",
+        "type": "switch",
+        "options": [
+          "Post-Comp",
+          "Pre-Comp"
+        ],
+        "description": "Reorders the signal chain, placing the four-band EQ before the optical compressor in the audio path when set to Pre-Comp."
+      },
+      {
+        "name": "EQ to Compressor Sidechain",
+        "range": "Off / On",
+        "defaultVal": "Off",
+        "type": "switch",
+        "options": [
+          "Off",
+          "On"
+        ],
+        "description": "Links the EQ mid-bands directly into the optical compressor's sidechain circuit to enable de-essing or frequency-dependent compression."
+      },
+      {
+        "name": "Treble EQ Frequency",
+        "range": "10.0 kHz / 15.0 kHz / 20.0 kHz / 32.0 kHz",
+        "defaultVal": "15.0 kHz",
+        "type": "select",
+        "options": [
+          "10 kHz",
+          "15 kHz",
+          "20 kHz",
+          "32 kHz"
+        ],
+        "description": "Selects the corner frequency of the passive high shelving filter, including the legendary 32 kHz 'Air' band."
+      },
+      {
+        "name": "Treble EQ Gain",
+        "range": "-20.0 dB to +20.0 dB",
+        "defaultVal": "0.0 dB",
+        "type": "knob",
+        "description": "Controls the boost or cut of the passive high shelf, providing modern high-end sheen or dark vintage warmth."
+      },
+      {
+        "name": "High Mid EQ Frequency",
+        "range": "220.0 Hz to 2.8 kHz (x10: 2.2 kHz to 28.0 kHz)",
+        "defaultVal": "1.0 kHz",
+        "type": "knob",
+        "description": "Sweeps the center frequency of the high-mid peaking band, multiplying by 10 when the range switch is active."
+      },
+      {
+        "name": "High Mid EQ Gain",
+        "range": "-16.0 dB to +16.0 dB",
+        "defaultVal": "0.0 dB",
+        "type": "knob",
+        "description": "Sets the boost or cut amount of the high-mid parametric filter for fine vocal presence adjustment."
+      },
+      {
+        "name": "High Mid EQ Q-Factor",
+        "range": "0.2 to 2.0 (Variable)",
+        "defaultVal": "1.0",
+        "type": "knob",
+        "description": "Adjusts the bandwidth (Q) of the high-mid peaking EQ band from broad, musical curves to narrow, surgical cuts."
+      },
+      {
+        "name": "Low Mid EQ Frequency",
+        "range": "35.0 Hz to 450.0 Hz (x10: 350.0 Hz to 4.5 kHz)",
+        "defaultVal": "150.0 Hz",
+        "type": "knob",
+        "description": "Sweeps the center frequency of the low-mid peaking band, multiplying by 10 when the range switch is active."
+      },
+      {
+        "name": "Low Mid EQ Gain",
+        "range": "-16.0 dB to +16.0 dB",
+        "defaultVal": "0.0 dB",
+        "type": "knob",
+        "description": "Controls the boost or cut of the low-mid parametric filter to add chest weight or scoop out boxy resonances."
+      },
+      {
+        "name": "Low Mid EQ Q-Factor",
+        "range": "0.2 to 2.0 (Variable)",
+        "defaultVal": "1.0",
+        "type": "knob",
+        "description": "Adjusts the bandwidth (Q) of the low-mid peaking EQ band from wide warmth to narrow surgical notch filtering."
+      },
+      {
+        "name": "Bass EQ Frequency",
+        "range": "15.0 Hz / 30.0 Hz / 60.0 Hz / 150.0 Hz",
+        "defaultVal": "60.0 Hz",
+        "type": "select",
+        "options": [
+          "15 Hz",
+          "30 Hz",
+          "60 Hz",
+          "150 Hz"
+        ],
+        "description": "Sets the frequency for the passive low-end shelving or peaking equalizer stage."
+      },
+      {
+        "name": "Bass EQ Gain",
+        "range": "-24.0 dB to +24.0 dB",
+        "defaultVal": "0.0 dB",
+        "type": "knob",
+        "description": "Controls the low-end boost or cut. The passive circuit provides immense, clean low-end weight without muddiness."
+      },
+      {
+        "name": "Bass EQ Mode",
+        "range": "Shelf / Peak",
+        "defaultVal": "Shelf",
+        "type": "switch",
+        "options": [
+          "Shelf",
+          "Peak"
+        ],
+        "description": "Switches the low frequency equalizer curve between a smooth shelving shape or a resonant peaking bell curve."
+      },
+      {
+        "name": "Output Level",
+        "range": "-40.0 dB to +10.0 dB",
+        "defaultVal": "0.0 dB",
+        "type": "knob",
+        "description": "Controls the final output level of the channel strip, allowing you to pad down heavy internal saturation before returning to the DAW."
       }
     ],
     "proTips": [
-      "For a classic R&B lead vocal, set Treble Frequency to 32 kHz and boost the Treble Gain by 3 dB. This yields the ultra-smooth, high-end 'gloss' that Avalon is famous for.",
-      "Keep the compressor ratio at 2:1, attack set to fast, and release set to slow to ride vocal performances transparently without squeezing the life out of them."
+      "For a classic, expensive R&B lead vocal, select the 32 kHz frequency on the Treble EQ and boost the Gain by 2 to 4 dB. This injects the ultra-smooth, silky 'high-glass' air band that Avalon is world-famous for.",
+      "Keep the Compressor Ratio at 2:1 or 3:1 with a fast Attack and slow Release. This keeps the opto-attenuator riding vocal levels transparently and musical, without inducing compression artifacts.",
+      "If you need to tame a sibilant vocalist, engage 'EQ to Compressor Sidechain' and use the High Mid EQ centered around 5.0 kHz to 7.0 kHz with a narrow Q. This converts the opto-compressor into an extremely smooth, premium tube de-esser."
     ],
-    "authorizationStatus": "Authorized for all devices"
+    "authorizationStatus": "Approved & Updated"
   },
   {
     "name": "uad oxford supresser ds",
     "displayName": "UAD Oxford SuprEsser DS",
     "category": "Dynamics",
-    "description": "An exceptionally surgical, professional dynamic de-esser. Utilizing a highly advanced linear-phase crossover filter with real-time FFT spectrum tracking, the SuprEsser isolates and compresses only the offending sibilance frequencies when they exceed the threshold, ensuring transparent, lisp-free vocal treatments.",
-    "hardwareModel": "Sonnox Oxford SuprEsser DS",
+    "description": "An exceptionally surgical, professional dynamic de-esser. Utilizing a highly advanced linear-phase crossover filter with real-time FFT spectrum tracking, the SuprEsser isolates and compresses only the offending sibilance frequencies when they exceed the threshold, ensuring transparent, lisp-free vocal treatments with zero latency.",
+    "hardwareModel": "Sonnox Oxford SuprEsser DS Linear-Phase Dynamic Equalizer",
     "parameters": [
       {
         "name": "Threshold",
-        "range": "-50 dB to 0 dB",
-        "defaultVal": "-20 dB",
-        "description": "Determines the activation level for dynamic spectral attenuation.",
-        "type": "knob"
+        "range": "-50.0 dB to 0.0 dB",
+        "defaultVal": "-20.0 dB",
+        "type": "knob",
+        "description": "Determines the input signal level above which dynamic spectral attenuation is triggered."
       },
       {
         "name": "Center Frequency",
-        "range": "1 kHz to 20 kHz",
+        "range": "20.0 Hz to 20.0 kHz",
         "defaultVal": "6.5 kHz",
-        "description": "Targets the exact frequency of vocal sibilance or whistling cymbals.",
-        "type": "knob"
+        "type": "knob",
+        "description": "Targets the exact central frequency of vocal sibilance, harshness, or whistling resonances."
       },
       {
         "name": "Bandwidth",
-        "range": "0.1 to 4.0 Octaves",
-        "defaultVal": "1.0 Octave",
-        "description": "Sets the frequency range width around the selected center frequency.",
-        "type": "knob"
+        "range": "0.10 to 4.00 Octaves",
+        "defaultVal": "1.00 Octave",
+        "type": "knob",
+        "description": "Sets the frequency width around the selected center frequency for targeted dynamic EQ action."
       },
       {
-        "name": "Reduction Amount",
-        "range": "0 dB to -24 dB",
-        "defaultVal": "0 dB",
-        "description": "Sets the maximum allowable dynamic gain reduction.",
-        "type": "knob"
+        "name": "Max Reduction (Range)",
+        "range": "0.0 dB to -24.0 dB",
+        "defaultVal": "-12.0 dB",
+        "type": "knob",
+        "description": "Sets the absolute maximum allowable dynamic gain reduction to prevent over-de-essing or lisping."
+      },
+      {
+        "name": "Attack Time",
+        "range": "0.5 ms to 100.0 ms",
+        "defaultVal": "1.0 ms",
+        "type": "knob",
+        "description": "Adjusts how rapidly the dynamic attenuator reacts to sibilant peaks."
+      },
+      {
+        "name": "Release Time",
+        "range": "5.0 ms to 1.0 s",
+        "defaultVal": "50.0 ms",
+        "type": "knob",
+        "description": "Sets the recovery speed of the gain reduction circuit to prevent vocal pumping."
       },
       {
         "name": "Auto Threshold",
         "range": "Off / On",
         "defaultVal": "Off",
-        "description": "Engages dynamic tracking to lower or raise threshold based on the input signal level.",
         "type": "switch",
         "options": [
           "Off",
           "On"
-        ]
+        ],
+        "description": "Engages dynamic signal tracking to automatically shift the threshold based on the signal's overall volume level."
+      },
+      {
+        "name": "Listen Mode",
+        "range": "Main / Sibilance / Diff",
+        "defaultVal": "Main",
+        "type": "switch",
+        "options": [
+          "Main",
+          "Sibilance",
+          "Diff"
+        ],
+        "description": "Auditions different signal paths: Main for the processed output, Sibilance to isolate the targeted band, or Diff to hear exactly what is being subtracted."
+      },
+      {
+        "name": "Filter Type",
+        "range": "Band Pass / High Pass / Low Pass",
+        "defaultVal": "Band Pass",
+        "type": "switch",
+        "options": [
+          "Band Pass",
+          "High Pass",
+          "Low Pass"
+        ],
+        "description": "Selects the crossover filter shape: Band Pass for localized notch de-essing, High Pass for high shelf attenuation, or Low Pass for dynamic low-end control."
+      },
+      {
+        "name": "Wet/Dry Mix",
+        "range": "0% to 100%",
+        "defaultVal": "100%",
+        "type": "knob",
+        "description": "Blends the dry input signal with the dynamically de-essed signal for parallel processing."
       }
     ],
     "proTips": [
-      "When dealing with dynamic singers, turn on 'Auto Threshold'. This ensures that quiet, intimate vocal lines are de-essed just as effectively as loud, belted choruses.",
-      "Set the Center Frequency around 3.5 kHz with a narrow Bandwidth to isolate and squash the painful 'clicky' pick attack transients of clean electric guitars."
+      "When dealing with highly dynamic or moving vocalists, turn on 'Auto Threshold' to ensure that quiet, intimate vocal lines are de-essed just as effectively as loud, belted choruses.",
+      "Set the Center Frequency around 3.5 kHz with a narrow Bandwidth and fast Attack/Release to isolate and squash the painful 'clicky' pick attack transients of clean electric guitars.",
+      "Engage 'Diff' mode in the Listen Selector to hear exactly what sibilant energy is being removed, allowing you to fine-tune the Bandwidth without guessing."
     ],
-    "authorizationStatus": "Authorized for all devices"
+    "authorizationStatus": "Approved & Updated"
   },
   {
     "name": "uad diezel vh4 amplifier",

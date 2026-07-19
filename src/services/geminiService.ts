@@ -2448,12 +2448,13 @@ export const enrichPluginLibrary = async (
       - 'Utility & Metering': Tuners, Analyzers, Gain Staging, Phase Tools. (e.g., Span, Insight, Metric AB)
       - 'Creative FX': Granular, Glitch, Pitch Shifters (like Little AlterBoy), Multi-FX (like RC-20), or anything that doesn't fit above.
       CRITICAL:
-      1. Do NOT categorize everything as 'Creative FX'. This is a sign of failure.
-      2. If a plugin is a well-known instrument, it MUST be 'Instruments'.
-      3. If a plugin is a well-known compressor, it MUST be 'Dynamics'.
-      4. For each plugin, first explain your reasoning for the category choice.
-      5. Provide a professional, helpful description for each.
-      6. Return the results in the EXACT order of the list provided.
+      1. SOFTWARE EMULATION CLARITY: Many of these items are digital software plugin emulations of physical analog hardware (especially all Universal Audio / UAD plugins). You MUST research, describe, and analyze them strictly as digital SOFTWARE PLUGINS, not the physical hardware units themselves. Their description, features, and technical parameter lists must reflect the controls and digital features found on the software plugin's interface, rather than physical unit chassis details or physical device limitations.
+      2. Do NOT categorize everything as 'Creative FX'. This is a sign of failure.
+      3. If a plugin is a well-known instrument, it MUST be 'Instruments'.
+      4. If a plugin is a well-known compressor, it MUST be 'Dynamics'.
+      5. For each plugin, first explain your reasoning for the category choice.
+      6. Provide a professional, helpful description for each.
+      7. Return the results in the EXACT order of the list provided.
       CRITICAL: You MUST generate the descriptions and features in the following language: ${language}.
     `;
     try {
@@ -2689,6 +2690,7 @@ export const verifyAndCorrectPlugin = async (
     4. If the version/tier is different from the current one, perform a full re-research of the plugin for that specific edition.
     5. CRITICAL: If the user-suggested parameter is INCORRECT or does not exist for this plugin/version, DO NOT include it in the "parameters" list of the "updatedPlugin". Only include verified, real-world parameters.
     RESEARCH REQUIREMENTS:
+    - SOFTWARE EMULATION CLARITY: Many of these plugins (especially Universal Audio / UAD plugins) are software emulations of real physical hardware. You MUST strictly treat and research them as digital software plugins, NOT as the physical hardware units themselves. Your findings, descriptions, and verified parameters must reflect the software interface, controls, and digital features, rather than physical chassis details.
     - Find official manuals or technical documentation to confirm parameters.
     - Be extremely precise. "Advanced" versions often have modules that "Standard" versions lack.
     - If you cannot find evidence for a parameter, assume it is incorrect.
@@ -2763,7 +2765,7 @@ export const researchPluginParameters = async (plugin: VSTPlugin, language: stri
     Version: ${plugin.version}
     ${getUadGroundingPrompt(plugin.vendor, plugin.name)}
     Your task is to research and provide:
-    1. A highly accurate, professional description of the plugin.
+    1. A highly accurate, professional description of the plugin. SOFTWARE EMULATION CLARITY: Since many of these (especially all Universal Audio / UAD plugins) are software emulations of physical hardware units, you MUST research, describe, and analyze them strictly as digital software plugins, NOT as physical hardware units. Ensure the description, key features, and parameters represent the digital software interface and controls.
     2. A list of its key features.
     3. The most accurate category (Instruments, Dynamics, Equalizers, Reverb & Delay, Modulation, Distortion & Saturation, Utility & Metering, Creative FX).
     4. An EXHAUSTIVE list of ALL actual technical parameter names found on the plugin's interface. Be precise and thorough. For complex plugins, provide all available parameters . Do NOT be lazy.

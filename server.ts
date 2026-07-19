@@ -4777,9 +4777,8 @@ if (process.env.NODE_ENV !== 'production') {
   });
 
   app.post("/api/pdf/split-analyse", async (req, res) => {
-    // Increase timeout for long-running AI generations
-    req.setTimeout(600000); // 10 minutes
-    res.setTimeout(600000); // 10 minutes
+    req.setTimeout(600000);
+    res.setTimeout(600000);
 
     const userEmail = (req as any).session?.user?.email;
     const authorizedEmails = ['coldestconcept@gmail.com', 'recognizemiracles@gmail.com'];
@@ -4796,6 +4795,7 @@ if (process.env.NODE_ENV !== 'production') {
 
     res.writeHead(200, { "Content-Type": "application/json" });
     const keepAliveInterval = setInterval(() => { res.write(" "); }, 15000);
+
     try {
       if (!fs.existsSync(tempFilePath)) {
         res.write(JSON.stringify({ error: "Uploaded file not found or expired." }));
@@ -4803,202 +4803,50 @@ if (process.env.NODE_ENV !== 'production') {
       }
 
       let pdfBuffer = fs.readFileSync(tempFilePath);
+      const { PDFDocument } = await import("pdf-lib");
+      const srcDoc = await PDFDocument.load(pdfBuffer);
+      const totalSrcPages = srcDoc.getPageCount();
 
-      // Helper function to find optimal cut Y coordinate
-      function findOptimalCutY(items: any[], currentTop: number, idealCut: number, H: number): number {
-        const minCut = Math.max(currentTop + 200, idealCut - 150); // Ensure page has at least 200pt content
-        const maxCut = Math.min(H - 100, idealCut + 50); // Ensure remaining page has at least 100pt content
+      const baseTempName = require('path').basename(tempFilePath);
+      let originalFileName = "document.pdf";
+      const fnMatch = baseTempName.match(/^pdfsplit-[^-]+-(.+)$/);
+      if (fnMatch && fnMatch[1]) {
+        originalFileName = fnMatch[1];
+      } else {
+        originalFileName = baseTempName.replace(/^pdfsplit-/, "");
+      }
+      const originalFileNameWithoutExt = originalFileName.replace(/\.pdf$/i, "");
 
-        if (minCut >= maxCut) {
-          return idealCut;
-        }
-
-        let bestY = idealCut;
-        let minIntersections = Infinity;
-
-        for (let y = Math.floor(minCut); y <= Math.ceil(maxCut); y++) {
-          let intersections = 0;
-          for (const item of items) {
-            // In viewport coordinate space, y increases downwards.
-            // Item baseline is item.y. Text typically occupies [item.y - item.height - 4, item.y + 4]
-            const yStart = item.y - (item.height || 12) - 4;
-            const yEnd = item.y + 4;
-            if (y >= yStart && y <= yEnd) {
-              intersections++;
-            }
-          }
-
-          if (intersections < minIntersections) {
-            minIntersections = intersections;
-            bestY = y;
-          } else if (intersections === minIntersections) {
-            // If same intersections, prefer the one closer to idealCut
-            if (Math.abs(y - idealCut) < Math.abs(bestY - idealCut)) {
-              bestY = y;
-            }
-          }
-        }
-
-        return bestY;
+      const splitFiles: { fileName: string; pages: number[]; reason: string; base64: string }[] = [];
+      const apiKey = process.env.GEMINI_API_KEY;
+      let ai = null;
+      if (apiKey) {
+         const { GoogleGenAI } = await import("@google/genai");
+         ai = new GoogleGenAI({ apiKey });
       }
 
-      // Helper function to pre-slice tall PDF pages
-      async function preSliceTallPdf(inputBuffer: Buffer): Promise<Buffer> {
-        const { PDFDocument } = await import("pdf-lib");
-        const srcDoc = await PDFDocument.load(inputBuffer);
-        const totalPages = srcDoc.getPageCount();
-        const pages = srcDoc.getPages();
-
-        let hasTallPages = false;
-        for (let i = 0; i < totalPages; i++) {
-          const { height } = pages[i].getSize();
-          if (height > 900) {
-            hasTallPages = true;
-            break;
-          }
+      // Check if there are any tall pages
+      let hasTallPages = false;
+      for (let i = 0; i < totalSrcPages; i++) {
+        const { height } = srcDoc.getPage(i).getSize();
+        if (height > 1000) { // Standard is 792. >1000 means it's an extended/tall page
+          hasTallPages = true;
+          break;
         }
-
-        if (!hasTallPages) {
-          return inputBuffer;
-        }
-
-        console.log("[PDF PRE-SLICER] Tall pages detected. Slicing physically into standard pages...");
-
-        // Extract text positions using pdf-lib sizes (skip slow uninstalled pdfjs-dist)
-        const pageTextPositions: any[] = [];
-        for (let i = 0; i < totalPages; i++) {
-          const { width, height } = pages[i].getSize();
-          pageTextPositions.push({
-            pageNum: i + 1,
-            width,
-            height,
-            items: []
-          });
-        }
-
-        const destDoc = await PDFDocument.create();
-
-        for (let i = 0; i < totalPages; i++) {
-          const srcPage = pages[i];
-          const { width: W, height: H } = srcPage.getSize();
-          const textData = pageTextPositions[i] || { items: [] };
-
-          if (H <= 900) {
-            // Copy page as-is
-            const [copied] = await destDoc.copyPages(srcDoc, [i]);
-            destDoc.addPage(copied);
-            continue;
-          }
-
-          // Slice this tall page!
-          const targetHeight = 792; // 11 inches
-          const cuts: number[] = [];
-          let currentTop = 0;
-
-          while (currentTop < H) {
-            if (H - currentTop <= targetHeight + 50) {
-              break;
-            }
-
-            const idealCut = currentTop + targetHeight;
-            const cutY = findOptimalCutY(textData.items, currentTop, idealCut, H);
-            cuts.push(cutY);
-            currentTop = cutY;
-          }
-
-          const slices = [0, ...cuts, H];
-          for (let j = 0; j < slices.length - 1; j++) {
-            const yStart = slices[j];
-            const yEnd = slices[j + 1];
-            const sliceHeight = yEnd - yStart;
-
-            const [copied] = await destDoc.copyPages(srcDoc, [i]);
-            const newPage = destDoc.addPage(copied);
-
-            // PDF coordinate system is bottom-up
-            const pdfYStart = H - yEnd;
-
-            newPage.setCropBox(0, pdfYStart, W, sliceHeight);
-            newPage.setMediaBox(0, pdfYStart, W, sliceHeight);
-          }
-        }
-
-        const savedBytes = await destDoc.save();
-        return Buffer.from(savedBytes);
       }
 
-      // Run pre-slicing
-      pdfBuffer = await preSliceTallPdf(pdfBuffer);
-      fs.writeFileSync(tempFilePath, pdfBuffer);
-
-      // 1. Extract text page-by-page
-      const pages: { pageNum: number; text: string }[] = [];
-
-      try {
-        const parserInstance = new PDFParse({ data: pdfBuffer });
-        const textResult = await parserInstance.getText();
-        if (textResult && Array.isArray(textResult.pages)) {
-          for (const page of textResult.pages) {
-            pages.push({
-              pageNum: page.num,
-              text: page.text || ""
-            });
-          }
-        }
-      } catch (err) {
-        console.error("Error during PDF parsing:", err);
-        try { fs.unlinkSync(tempFilePath); } catch (e) {}
-        res.write(JSON.stringify({ error: "Failed to extract text from the PDF: " + (err as Error).message }));
-        return res.end();
-      }
-
-      pages.sort((a, b) => a.pageNum - b.pageNum);
-
-      if (pages.length === 0) {
-        console.log("[PDF SPLITTER] Scanned or image-only PDF detected (0 text pages). Performing geometric-only fallback split...");
-        
-        const { PDFDocument } = await import("pdf-lib");
-        const srcDoc = await PDFDocument.load(pdfBuffer);
-        const totalSrcPages = srcDoc.getPageCount();
-
-        if (totalSrcPages === 0) {
-          try { fs.unlinkSync(tempFilePath); } catch (e) {}
-          res.write(JSON.stringify({ error: "The uploaded PDF has 0 physical pages." }));
-        return res.end();
-        }
-
-        const baseTempName = path.basename(tempFilePath);
-        let originalFileName = "document.pdf";
-        const fnMatch = baseTempName.match(/^pdfsplit-[^-]+-(.+)$/);
-        if (fnMatch && fnMatch[1]) {
-          originalFileName = fnMatch[1];
-        } else {
-          originalFileName = baseTempName.replace(/^pdfsplit-/, "");
-        }
-        const originalFileNameWithoutExt = originalFileName.replace(/\.pdf$/i, "");
-
-        const splitFiles: { fileName: string; pages: number[]; reason: string; base64: string }[] = [];
-
-        const apiKey = process.env.GEMINI_API_KEY;
-        let ai = null;
-        if (apiKey) {
-           const { GoogleGenAI } = await import("@google/genai");
-           ai = new GoogleGenAI({ apiKey });
-        }
-
-        let isAnyTallPage = false;
-
+      if (hasTallPages) {
+        console.log("[PDF SPLITTER] Tall page detected. Using physical vision-based slicing.");
         const combinedDoc = await PDFDocument.create();
         
         for (let pIdx = 0; pIdx < totalSrcPages; pIdx++) {
             const page = srcDoc.getPage(pIdx);
             const { width, height } = page.getSize();
-            const targetRatio = 11 / 8.5; // roughly 1.294
+            const targetRatio = 11 / 8.5; 
             const idealSliceHeight = width * targetRatio;
             const numSlices = Math.max(1, Math.ceil(height / idealSliceHeight));
 
             if (numSlices > 1) {
-                isAnyTallPage = true;
                 const idealCuts1000 = [];
                 for (let i = 1; i < numSlices; i++) {
                     idealCuts1000.push(Math.round((i / numSlices) * 1000));
@@ -5043,19 +4891,11 @@ Example format: [205, 410, 605]`;
                 let pdfCuts = cutPointsGemini.map(gy => height * (1 - (gy / 1000)));
                 pdfCuts.sort((a, b) => a - b); 
 
-                let currentBottom = 0;
-                const cuts = [...pdfCuts, height];
-                
                 const [embedded] = await combinedDoc.embedPdf(pdfBuffer, [pIdx]);
                 
-                // We want to insert the slices in top-to-bottom order into combinedDoc.
-                // Since our cuts are bottom-up (0 is bottom), we should process the cuts from top to bottom!
-                // Wait, cuts array is [y1, y2, ..., height] sorted ascending (bottom to top).
-                // To get top-to-bottom slices, we should iterate backwards!
-                
-                for (let i = cuts.length - 1; i >= 0; i--) {
-                    const cutTop = cuts[i];
-                    const cutBottom = i === 0 ? 0 : cuts[i - 1];
+                for (let i = pdfCuts.length; i >= 0; i--) {
+                    const cutTop = i === pdfCuts.length ? height : pdfCuts[i];
+                    const cutBottom = i === 0 ? 0 : pdfCuts[i - 1];
                     const sliceHeight = cutTop - cutBottom;
                     
                     const slicePage = combinedDoc.addPage([width, sliceHeight]);
@@ -5074,47 +4914,52 @@ Example format: [205, 410, 605]`;
         splitFiles.push({
             fileName: `${originalFileNameWithoutExt}_fits_9x11.pdf`,
             pages: Array.from({ length: combinedDoc.getPageCount() }, (_, idx) => idx + 1),
-            reason: `Combined document properly sliced into standard 11-inch (9x11) pages. Print this file for perfect pagination!`,
+            reason: `Combined document properly sliced into standard 11-inch pages. Print this file for perfect pagination!`,
             base64: fullDocBase64
         });
 
-        try { fs.unlinkSync(tempFilePath); } catch (e) {}
-
-        res.write(JSON.stringify({
-          success: true,
-          splits: splitFiles,
-          isFallback: true
-        }));
-        return res.end();
-      }
-
-      // 2. Call Gemini to determine split boundaries
-      const apiKey = process.env.GEMINI_API_KEY;
-      if (!apiKey) {
-        try { fs.unlinkSync(tempFilePath); } catch (e) {}
-        res.write(JSON.stringify({ error: "Gemini API key is not configured on the server." }));
-        return res.end();
-      }
-
-      const { GoogleGenAI } = await import("@google/genai");
-      const ai = new GoogleGenAI({ apiKey });
-
-      let documentTextRepresentation = "";
-      for (const p of pages) {
-        documentTextRepresentation += `--- START OF PAGE ${p.pageNum} ---\n`;
-        const text = p.text.trim();
-        // Optimizing the prompt size to prevent Gateway/Nginx timeout limits
-        if (text.length > 1600) {
-          const firstPart = text.substring(0, 800);
-          const lastPart = text.substring(text.length - 800);
-          documentTextRepresentation += `${firstPart}\n... [TRUNCATED MID-PAGE CONTENT] ...\n${lastPart}\n`;
-        } else {
-          documentTextRepresentation += `${text}\n`;
+      } else {
+        // Standard logical splitting for normal-sized PDFs using gemini-2.5-flash
+        console.log("[PDF SPLITTER] Normal pages detected. Performing logical text-based split.");
+        
+        const PDFParse = ((await import("pdf-parse")) as any).default || ((await import("pdf-parse")) as any);
+        const pages: { pageNum: number; text: string }[] = [];
+        try {
+          const parserInstance = new PDFParse({ data: pdfBuffer });
+          const textResult = await parserInstance.getText();
+          if (textResult && Array.isArray(textResult.pages)) {
+            for (const page of textResult.pages) {
+              pages.push({
+                pageNum: page.num,
+                text: page.text || ""
+              });
+            }
+          }
+        } catch (err) {
+          console.error("Error during PDF parsing:", err);
         }
-        documentTextRepresentation += `--- END OF PAGE ${p.pageNum} ---\n\n`;
-      }
 
-      const prompt = `You are an AI PDF Splitter agent.
+        pages.sort((a, b) => a.pageNum - b.pageNum);
+        
+        if (pages.length === 0) {
+          res.write(JSON.stringify({ error: "The uploaded PDF has 0 text pages, and is not a tall image. Cannot perform logical split." }));
+          return res.end();
+        }
+
+        let documentTextRepresentation = "";
+        for (const p of pages) {
+          const text = p.text.trim();
+          if (text.length > 2000) {
+            const firstPart = text.substring(0, 800);
+            const lastPart = text.substring(text.length - 800);
+            documentTextRepresentation += `${firstPart}\n... [TRUNCATED MID-PAGE CONTENT] ...\n${lastPart}\n`;
+          } else {
+            documentTextRepresentation += `${text}\n`;
+          }
+          documentTextRepresentation += `--- END OF PAGE ${p.pageNum} ---\n\n`;
+        }
+
+        const prompt = `You are an AI PDF Splitter agent.
 Your task is to analyze a PDF document page-by-page and decide on the optimal page boundaries to split the document into separate logical files based on the user's instructions.
 
 USER INSTRUCTIONS:
@@ -5122,27 +4967,18 @@ USER INSTRUCTIONS:
 
 CRITICAL LOGICAL INTEGRITY RULES:
 1. STRICT TARGET SIZE & SPLIT MANDATE:
-   - You MUST fully respect any specific page size limits, target ranges, or division sizes specified by the user (e.g., "split into 9x11 pages" means each split file should contain between 9 and 11 pages).
-   - If the user asks for a split, or if the document exceeds the user's requested maximum size, you are STRICTLY FORBIDDEN from keeping the entire document in a single split file. You MUST split it into multiple parts matching the requested sizes as closely as possible.
-   - If a continuous transcript or chat dialogue spans across the entire document, you STILL MUST split the document at intervals matching the user's target size. Do NOT merge them all into a single file.
-
-2. CHAT BUBBLE & DIALOGUE PRESERVATION (FIND CLEANEST BREAK):
-   - To keep chat bubbles, message bubbles, or paragraphs intact inside the split files, look for the absolute cleanest page boundary within the target range (e.g., if the target is 9 to 11 pages, inspect the page transitions around Page 9->10, Page 10->11, and Page 11->12).
-   - A boundary is clean if it occurs between chat bubbles, between sentences, between different speakers, or at a natural topic transition.
-   - Choose the page boundary in that target window that has the least cross-page dialogue overlap, and split there.
-   - You must prioritize dividing the document into the requested approximate sizes over keeping the entire transcript unbroken.
-
-3. PAGE COVERAGE & INTEGRITY:
-   - Every page from the original document (from page 1 to page ${pages.length}) MUST be included in EXACTLY ONE split file. Do not omit any pages, and do not duplicate any pages across different split files.
+   - You MUST fully respect any specific page size limits, target ranges, or division sizes specified by the user.
+2. PAGE COVERAGE & INTEGRITY:
+   - Every page from the original document MUST be included in EXACTLY ONE split file. Do not omit any pages.
    - The page ranges for each split file must be contiguous (e.g., pages 1-10, pages 11-21, etc.).
 
 Please reply with a JSON object in the following format:
 {
   "splits": [
     {
-      "fileName": "Descriptive, clean filename (e.g. Part 1 - Welcome and Intro.pdf)",
-      "pages": [1, 2, 3], // Array of 1-indexed page numbers to include in this split file
-      "reason": "Explain briefly why these pages are grouped together and why this split boundary was chosen (e.g., 'Pages 1-10 cover the intro and first conversation block, ending cleanly before the next participant starts on page 11 without cutting any messages.')"
+      "fileName": "Descriptive filename.pdf",
+      "pages": [1, 2, 3], 
+      "reason": "Explain briefly why these pages are grouped together."
     }
   ]
 }
@@ -5150,81 +4986,71 @@ Please reply with a JSON object in the following format:
 Here is the extracted text of the document page-by-page:
 ${documentTextRepresentation}
 
-Return ONLY the raw JSON object conforming to the schema above. Do not include markdown code blocks, backticks, or other text outside the JSON.`;
+Return ONLY the raw JSON object conforming to the schema above. Do not include markdown code blocks.`;
 
-      const response = await ai.models.generateContent({
-        model: "gemini-2.5-flash",
-        contents: prompt,
-        config: {
-          responseMimeType: "application/json"
-        }
-      });
-
-      let resultJson;
-      try {
-        const text = response.text || "";
-        const cleanJsonText = text.replace(/^```json\s*/i, "").replace(/```\s*$/, "").trim();
-        resultJson = JSON.parse(cleanJsonText);
-      } catch (e: any) {
-        console.error("Failed to parse Gemini split decision:", e, response.text);
-        try { fs.unlinkSync(tempFilePath); } catch (e) {}
-        res.write(JSON.stringify({ error: "AI failed to produce a valid split plan.", rawResponse: response.text }));
-        return res.end();
-      }
-
-      if (!resultJson || !Array.isArray(resultJson.splits)) {
-        try { fs.unlinkSync(tempFilePath); } catch (e) {}
-        res.write(JSON.stringify({ error: "AI split response does not contain a splits list.", rawResponse: response.text }));
-        return res.end();
-      }
-
-      // 3. Generate the split PDFs using pdf-lib
-      const { PDFDocument } = await import("pdf-lib");
-      const srcDoc = await PDFDocument.load(pdfBuffer);
-      const totalSrcPages = srcDoc.getPageCount();
-
-      const splitFiles: { fileName: string; pages: number[]; reason: string; base64: string }[] = [];
-
-      for (const split of resultJson.splits) {
-        if (!split.pages || !Array.isArray(split.pages)) {
-          continue;
+        let resultJson;
+        if (ai) {
+          const response = await ai.models.generateContent({
+            model: "gemini-2.5-flash",
+            contents: prompt,
+            config: { responseMimeType: "application/json" }
+          });
+          try {
+            const text = response.text || "";
+            const cleanJsonText = text.replace(/^```json\s*/i, "").replace(/```\s*$/, "").trim();
+            resultJson = JSON.parse(cleanJsonText);
+          } catch (e) {
+            console.error("Failed to parse Gemini split decision:", e);
+            res.write(JSON.stringify({ error: "AI failed to produce a valid split plan." }));
+            return res.end();
+          }
+        } else {
+             res.write(JSON.stringify({ error: "Gemini API key missing." }));
+             return res.end();
         }
 
-        const destDoc = await PDFDocument.create();
-        const pageIndicesToCopy: number[] = [];
-        for (const pNum of split.pages) {
-          const pNumVal = parseInt(pNum as any);
-          if (isNaN(pNumVal)) continue;
+        if (!resultJson || !Array.isArray(resultJson.splits)) {
+          res.write(JSON.stringify({ error: "AI split response does not contain a splits list." }));
+          return res.end();
+        }
 
-          const idx = pNumVal - 1;
-          if (idx >= 0 && idx < totalSrcPages) {
-            pageIndicesToCopy.push(idx);
+        for (const split of resultJson.splits) {
+          if (!split.pages || !Array.isArray(split.pages)) continue;
+          
+          const destDoc = await PDFDocument.create();
+          const pageIndicesToCopy: number[] = [];
+          
+          for (const pNum of split.pages) {
+            const pNumVal = parseInt(pNum as any);
+            if (isNaN(pNumVal)) continue;
+            const idx = pNumVal - 1;
+            if (idx >= 0 && idx < totalSrcPages) {
+              pageIndicesToCopy.push(idx);
+            }
+          }
+          
+          if (pageIndicesToCopy.length > 0) {
+            const copiedPages = await destDoc.copyPages(srcDoc, pageIndicesToCopy);
+            copiedPages.forEach((page) => destDoc.addPage(page));
+            const bytes = await destDoc.save();
+            const base64 = Buffer.from(bytes).toString('base64');
+            splitFiles.push({
+              fileName: split.fileName || `split_${Date.now()}.pdf`,
+              pages: split.pages.map(p => parseInt(p as any)).filter(p => !isNaN(p)),
+              reason: split.reason || "",
+              base64
+            });
           }
         }
-
-        if (pageIndicesToCopy.length > 0) {
-          const copiedPages = await destDoc.copyPages(srcDoc, pageIndicesToCopy);
-          copiedPages.forEach((page) => destDoc.addPage(page));
-          const bytes = await destDoc.save();
-          const base64 = Buffer.from(bytes).toString('base64');
-
-          splitFiles.push({
-            fileName: split.fileName,
-            pages: split.pages.map(p => parseInt(p as any)).filter(p => !isNaN(p)),
-            reason: split.reason || "",
-            base64
-          });
-        }
       }
 
-      // Clean up the temp file
       try { fs.unlinkSync(tempFilePath); } catch (e) {}
-
+      
       res.write(JSON.stringify({
         success: true,
         splits: splitFiles
       }));
-        return res.end();
+      return res.end();
 
     } catch (error: any) {
       console.error("Error in PDF split-analyse:", error);
