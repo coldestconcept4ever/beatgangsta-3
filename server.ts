@@ -4951,8 +4951,105 @@ if (process.env.NODE_ENV !== 'production') {
       pages.sort((a, b) => a.pageNum - b.pageNum);
 
       if (pages.length === 0) {
+        console.log("[PDF SPLITTER] Scanned or image-only PDF detected (0 text pages). Performing geometric-only fallback split...");
+        
+        const { PDFDocument } = await import("pdf-lib");
+        const srcDoc = await PDFDocument.load(pdfBuffer);
+        const totalSrcPages = srcDoc.getPageCount();
+
+        if (totalSrcPages === 0) {
+          try { fs.unlinkSync(tempFilePath); } catch (e) {}
+          return res.status(400).json({ error: "The uploaded PDF has 0 physical pages." });
+        }
+
+        const baseTempName = path.basename(tempFilePath);
+        let originalFileName = "document.pdf";
+        const fnMatch = baseTempName.match(/^pdfsplit-[^-]+-(.+)$/);
+        if (fnMatch && fnMatch[1]) {
+          originalFileName = fnMatch[1];
+        } else {
+          originalFileName = baseTempName.replace(/^pdfsplit-/, "");
+        }
+        const originalFileNameWithoutExt = originalFileName.replace(/\.pdf$/i, "");
+
+        const splitFiles: { fileName: string; pages: number[]; reason: string; base64: string }[] = [];
+
+        // 1. Add the fully-sliced document (extremely convenient so they can download/print all 11-inch standard pages in one file)
+        const fullDocBytes = await srcDoc.save();
+        const fullDocBase64 = Buffer.from(fullDocBytes).toString('base64');
+        splitFiles.push({
+          fileName: `${originalFileNameWithoutExt}_fits_9x11_all_pages.pdf`,
+          pages: Array.from({ length: totalSrcPages }, (_, idx) => idx + 1),
+          reason: `We detected your document is an image/screenshot (no selectable text). We've successfully sliced it physically into ${totalSrcPages} standard 11-inch (9x11) pages so it is print-ready! Download this combined file to print the entire log perfectly on standard paper.`,
+          base64: fullDocBase64
+        });
+
+        // 2. Parse split sizing based on user prompt or defaults
+        let splitSize = 1;
+        const promptLower = (userPrompt || "").toLowerCase();
+        const everyMatch = promptLower.match(/every\s+(\d+)\s+page/);
+        const splitMatch = promptLower.match(/split\s+(\d+)\s+page/);
+        const groupsOfMatch = promptLower.match(/groups\s+of\s+(\d+)/);
+        const intoMatch = promptLower.match(/into\s+(\d+)\s+(files|parts|pages)/);
+
+        if (everyMatch) {
+          splitSize = parseInt(everyMatch[1]);
+        } else if (splitMatch) {
+          splitSize = parseInt(splitMatch[1]);
+        } else if (groupsOfMatch) {
+          splitSize = parseInt(groupsOfMatch[1]);
+        } else if (intoMatch) {
+          const parts = parseInt(intoMatch[1]);
+          if (parts > 0) {
+            splitSize = Math.max(1, Math.ceil(totalSrcPages / parts));
+          }
+        } else {
+          // If they ask for 9x11 pages, we provide files of 1 page each or small batches.
+          if (totalSrcPages > 15) {
+            splitSize = 5;
+          } else {
+            splitSize = 1;
+          }
+        }
+
+        if (isNaN(splitSize) || splitSize < 1) {
+          splitSize = 1;
+        }
+
+        // 3. Generate sequential splits
+        for (let idx = 0; idx < totalSrcPages; idx += splitSize) {
+          const pageNumbers: number[] = [];
+          for (let pIdx = idx; pIdx < idx + splitSize && pIdx < totalSrcPages; pIdx++) {
+            pageNumbers.push(pIdx + 1);
+          }
+
+          const destDoc = await PDFDocument.create();
+          const pageIndicesToCopy = pageNumbers.map(p => p - 1);
+          const copiedPages = await destDoc.copyPages(srcDoc, pageIndicesToCopy);
+          copiedPages.forEach((page) => destDoc.addPage(page));
+          const bytes = await destDoc.save();
+          const base64 = Buffer.from(bytes).toString('base64');
+
+          let nameRange = `Page_${pageNumbers[0]}`;
+          if (pageNumbers.length > 1) {
+            nameRange = `Pages_${pageNumbers[0]}_to_${pageNumbers[pageNumbers.length - 1]}`;
+          }
+
+          splitFiles.push({
+            fileName: `${originalFileNameWithoutExt}_${nameRange}.pdf`,
+            pages: pageNumbers,
+            reason: `Physical slice containing ${nameRange} of the screenshot/scanned document, precisely cropped to fit 11-inch (9x11) printer paper size.`,
+            base64
+          });
+        }
+
         try { fs.unlinkSync(tempFilePath); } catch (e) {}
-        return res.status(400).json({ error: "Could not extract any text from the PDF. Please make sure it is a text-based (non-scanned) PDF." });
+
+        return res.json({
+          success: true,
+          splits: splitFiles,
+          isFallback: true
+        });
       }
 
       // 2. Call Gemini to determine split boundaries

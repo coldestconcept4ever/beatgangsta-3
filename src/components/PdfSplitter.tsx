@@ -129,7 +129,9 @@ END OF DIAGNOSTIC REPORT
   const isCrazyBird = theme === 'crazy-bird';
 
   const handleDragOver = (e: React.DragEvent) => {
-    e.preventDefault();
+    if (e.cancelable) {
+      e.preventDefault();
+    }
     setIsDragging(true);
   };
 
@@ -138,7 +140,9 @@ END OF DIAGNOSTIC REPORT
   };
 
   const handleDrop = (e: React.DragEvent) => {
-    e.preventDefault();
+    if (e.cancelable) {
+      e.preventDefault();
+    }
     setIsDragging(false);
     const files = e.dataTransfer.files;
     if (files && files.length > 0) {
@@ -247,15 +251,18 @@ END OF DIAGNOSTIC REPORT
           let errMsg = `Failed to upload chunk ${chunkIndex + 1}`;
           let details: any = null;
           try {
-            const errData = await res.json();
-            errMsg = errData.error || errMsg;
-            details = errData.details || errData;
-          } catch (_) {
+            const text = await res.text();
             try {
-              const text = await res.text();
+              const errData = JSON.parse(text);
+              errMsg = errData.error || errMsg;
+              details = errData.details || errData;
+            } catch (_) {
               errMsg = `Upload error (${res.status}): ${text.substring(0, 200)}`;
               details = text;
-            } catch (_) {}
+            }
+          } catch (readErr: any) {
+            errMsg = `Upload error (${res.status}): Unable to read response body.`;
+            details = readErr.message;
           }
           
           const throwErr = new Error(errMsg);
@@ -296,16 +303,19 @@ END OF DIAGNOSTIC REPORT
         let details: any = null;
         let rawResponse = '';
         try {
-          const errData = await res.json();
-          errMsg = errData.error || errMsg;
-          details = errData.details || null;
-          rawResponse = errData.rawResponse || '';
-        } catch (_) {
+          const text = await res.text();
           try {
-            const text = await res.text();
-            errMsg = `Server error (${res.status}): ${text.substring(0, 200)}`;
+            const errData = JSON.parse(text);
+            errMsg = errData.error || errMsg;
+            details = errData.details || errData;
+            rawResponse = errData.rawResponse || '';
+          } catch (_) {
+            errMsg = `Server error (${res.status}): ${text.substring(0, 400)}`;
             details = text;
-          } catch (_) {}
+          }
+        } catch (readErr: any) {
+          errMsg = `Server error (${res.status}): Unable to read response body.`;
+          details = readErr.message;
         }
         
         const throwErr = new Error(errMsg);

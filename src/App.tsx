@@ -4914,17 +4914,23 @@ The AI was unable to verify these parameters. Please investigate.`;
   };
 
   const handleDragOver = (e: React.DragEvent) => {
-    e.preventDefault();
+    if (e.cancelable) {
+      e.preventDefault();
+    }
     setIsDragging(true);
   };
 
   const handleDragLeave = (e: React.DragEvent) => {
-    e.preventDefault();
+    if (e.cancelable) {
+      e.preventDefault();
+    }
     setIsDragging(false);
   };
 
   const handleDrop = (e: React.DragEvent) => {
-    e.preventDefault();
+    if (e.cancelable) {
+      e.preventDefault();
+    }
     setIsDragging(false);
     const files = e.dataTransfer.files ? Array.from(e.dataTransfer.files) : [];
     if (files.length === 0) return;
