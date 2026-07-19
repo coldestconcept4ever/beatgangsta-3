@@ -24,12 +24,104 @@ export const PdfSplitter: React.FC<PdfSplitterProps> = ({ onClose, theme }) => {
   const [progress, setProgress] = useState<string>('');
   const [splits, setSplits] = useState<SplitFile[]>([]);
   const [error, setError] = useState<string>('');
+  const [detailedErrorLog, setDetailedErrorLog] = useState<string>('');
   const [copiedError, setCopiedError] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  const triggerError = (userMessage: string, technicalDetails: any = {}) => {
+    setError(userMessage);
+    
+    const timestamp = new Date().toISOString();
+    const localTime = new Date().toLocaleString();
+    const fileName = selectedFile?.name || 'N/A';
+    const fileSize = selectedFile ? `${(selectedFile.size / (1024 * 1024)).toFixed(2)} MB (${selectedFile.size} bytes)` : 'N/A';
+    const promptSnippet = userPrompt.trim() ? `"${userPrompt.trim()}"` : 'None (Automatic Smart Split)';
+    
+    let report = `=====================================================
+            AI PDF SPLITTER DIAGNOSTIC REPORT
+=====================================================
+Generated At:   ${localTime} (${timestamp})
+File Name:      ${fileName}
+File Size:      ${fileSize}
+User Prompt:    ${promptSnippet}
+
+-----------------------------------------------------
+ERROR DETAILS
+-----------------------------------------------------
+Message:        ${userMessage}
+Stage/Step:     ${technicalDetails.stage || 'N/A'}
+Endpoint:       ${technicalDetails.endpoint || 'Client-side or generic action'}
+
+-----------------------------------------------------
+TECHNICAL TRACE & DIAGNOSTICS
+-----------------------------------------------------
+`;
+
+    if (technicalDetails.status) {
+      report += `HTTP Status Code: ${technicalDetails.status}\n`;
+    }
+    if (technicalDetails.statusText) {
+      report += `HTTP Status Text: ${technicalDetails.statusText}\n`;
+    }
+    if (technicalDetails.chunkIndex !== undefined) {
+      report += `Chunk Progress:   Failed at chunk ${technicalDetails.chunkIndex + 1} of ${technicalDetails.totalChunks}\n`;
+    }
+    if (technicalDetails.rawResponse) {
+      report += `\nRaw AI Model Output:\n${technicalDetails.rawResponse}\n`;
+    }
+    if (technicalDetails.details) {
+      report += `\nServer Error Details:\n${typeof technicalDetails.details === 'object' ? JSON.stringify(technicalDetails.details, null, 2) : technicalDetails.details}\n`;
+    }
+    if (technicalDetails.errorStack) {
+      report += `\nStack Trace:\n${technicalDetails.errorStack}\n`;
+    }
+
+    report += `
+-----------------------------------------------------
+INTELLIGENT SOLUTIONS & TROUBLESHOOTING GUIDE
+-----------------------------------------------------
+`;
+
+    const lMsg = userMessage.toLowerCase();
+    const lDetails = JSON.stringify(technicalDetails).toLowerCase();
+    
+    if (lMsg.includes('api key') || lDetails.includes('api key') || lMsg.includes('unauthorized') || lDetails.includes('unauthorized')) {
+      report += `👉 GEMINI API KEY TROUBLESHOOTING:
+   - Make sure your GEMINI_API_KEY environment variable is configured on the server.
+   - Go to the Settings menu in Google AI Studio, locate API Keys/Secrets, and verify the key is present and correct.
+   - If running locally, check that your .env file exists and contains GEMINI_API_KEY.\n`;
+    } else if (lMsg.includes('extract text') || lMsg.includes('non-scanned') || lDetails.includes('parser') || lDetails.includes('pdfjs')) {
+      report += `👉 TEXT PARSING / FORMAT TROUBLESHOOTING:
+   - This PDF Splitter relies on extracting structured text page-by-page to intelligently divide the document (e.g., separating chat bubbles, finding logical boundaries).
+   - Scanned PDF documents, picture/image-only PDFs, or encrypted/password-protected PDFs cannot be read by the text parser.
+   - Try converting or exporting your document to a searchable PDF format with OCR enabled before processing.\n`;
+    } else if (lMsg.includes('valid json') || lMsg.includes('split plan') || lMsg.includes('splits list') || lDetails.includes('json')) {
+      report += `👉 AI RESPONSE PARSING TROUBLESHOOTING:
+   - The AI model returned a formatting structure that could not be parsed as valid JSON.
+   - This can happen if the text of the PDF is extremely complex, contains unusual characters, or if your custom instructions are overly restrictive.
+   - Try simplifying or omitting your custom "Split Instructions" and let the smart automatic split handle the logic.\n`;
+    } else if (lMsg.includes('upload') || lMsg.includes('chunk') || lDetails.includes('chunk')) {
+      report += `👉 FILE UPLOAD / SIZE TROUBLESHOOTING:
+   - A chunk failed to transfer successfully due to a transient network drop or file size constraints.
+   - Try refreshing the page, using a more stable connection, or splitting the document into smaller sub-files before processing.\n`;
+    } else {
+      report += `👉 GENERAL TROUBLESHOOTING CHECKS:
+   - Verify the PDF is not corrupt and can be opened in a standard web browser.
+   - Refresh the page and try the upload again.
+   - Copy this entire detailed report and send it to the developer or paste it into your AI Studio Chat console for assistance.\n`;
+    }
+
+    report += `=====================================================
+END OF DIAGNOSTIC REPORT
+=====================================================`;
+
+    setDetailedErrorLog(report);
+  };
+
   const handleCopyError = () => {
-    if (!error) return;
-    navigator.clipboard.writeText(error);
+    const textToCopy = detailedErrorLog || error;
+    if (!textToCopy) return;
+    navigator.clipboard.writeText(textToCopy);
     setCopiedError(true);
     setTimeout(() => setCopiedError(false), 2000);
   };
@@ -116,12 +208,13 @@ export const PdfSplitter: React.FC<PdfSplitterProps> = ({ onClose, theme }) => {
 
   const handleSplit = async () => {
     if (!selectedFile) {
-      setError('Please select a PDF file first.');
+      triggerError('Please select a PDF file first.', { stage: 'File validation' });
       return;
     }
 
     setLoading(true);
     setError('');
+    setDetailedErrorLog('');
     setSplits([]);
     setProgress('Preparing upload...');
 
@@ -152,16 +245,30 @@ export const PdfSplitter: React.FC<PdfSplitterProps> = ({ onClose, theme }) => {
 
         if (!res.ok) {
           let errMsg = `Failed to upload chunk ${chunkIndex + 1}`;
+          let details: any = null;
           try {
             const errData = await res.json();
             errMsg = errData.error || errMsg;
+            details = errData.details || errData;
           } catch (_) {
             try {
               const text = await res.text();
               errMsg = `Upload error (${res.status}): ${text.substring(0, 200)}`;
+              details = text;
             } catch (_) {}
           }
-          throw new Error(errMsg);
+          
+          const throwErr = new Error(errMsg);
+          (throwErr as any).technicalDetails = {
+            endpoint: '/api/pdf/upload-chunk',
+            stage: `Uploading file chunks (${chunkIndex + 1}/${totalChunks})`,
+            status: res.status,
+            statusText: res.statusText,
+            chunkIndex,
+            totalChunks,
+            details
+          };
+          throw throwErr;
         }
 
         const data = await res.json();
@@ -186,22 +293,42 @@ export const PdfSplitter: React.FC<PdfSplitterProps> = ({ onClose, theme }) => {
 
       if (!res.ok) {
         let errMsg = 'Failed to process PDF.';
+        let details: any = null;
+        let rawResponse = '';
         try {
           const errData = await res.json();
           errMsg = errData.error || errMsg;
+          details = errData.details || null;
+          rawResponse = errData.rawResponse || '';
         } catch (_) {
           try {
             const text = await res.text();
             errMsg = `Server error (${res.status}): ${text.substring(0, 200)}`;
+            details = text;
           } catch (_) {}
         }
-        throw new Error(errMsg);
+        
+        const throwErr = new Error(errMsg);
+        (throwErr as any).technicalDetails = {
+          endpoint: '/api/pdf/split-analyse',
+          stage: 'Gemini intelligent splitting and layout analysis',
+          status: res.status,
+          statusText: res.statusText,
+          details,
+          rawResponse
+        };
+        throw throwErr;
       }
 
       const data = await res.json();
       setSplits(data.splits || []);
     } catch (err: any) {
-      setError(err.message || 'An error occurred during PDF splitting.');
+      const technicalDetails = err.technicalDetails || {
+        stage: 'Client-side file split initiation',
+        errorStack: err.stack,
+        details: err
+      };
+      triggerError(err.message || 'An error occurred during PDF splitting.', technicalDetails);
     } finally {
       setLoading(false);
       setProgress('');
@@ -217,6 +344,7 @@ export const PdfSplitter: React.FC<PdfSplitterProps> = ({ onClose, theme }) => {
     setUserPrompt('');
     setSplits([]);
     setError('');
+    setDetailedErrorLog('');
   };
 
   return (
@@ -258,19 +386,32 @@ export const PdfSplitter: React.FC<PdfSplitterProps> = ({ onClose, theme }) => {
         {/* Content Body */}
         <div className="p-6 space-y-6 max-h-[75vh] overflow-y-auto custom-scrollbar">
           {error && (
-            <div className="p-4 rounded-xl bg-red-500/15 border border-red-500/30 text-red-300 text-sm flex gap-3 items-start justify-between">
-              <div className="flex gap-3 items-start">
-                <AlertTriangle className="shrink-0 mt-0.5 text-red-400" size={16} />
-                <div className="break-all">{error}</div>
+            <div className="flex flex-col gap-3 p-4 rounded-xl bg-red-500/15 border border-red-500/30 text-red-300 text-sm">
+              <div className="flex gap-3 items-start justify-between">
+                <div className="flex gap-3 items-start">
+                  <AlertTriangle className="shrink-0 mt-0.5 text-red-400" size={16} />
+                  <div className="break-all font-semibold">{error}</div>
+                </div>
+                <button
+                  onClick={handleCopyError}
+                  className="shrink-0 flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-red-500/20 hover:bg-red-500/30 text-red-200 hover:text-white text-xs font-semibold transition-all border border-red-500/30 cursor-pointer"
+                  title="Copy full error message and troubleshooting report"
+                >
+                  {copiedError ? <Check size={12} /> : <Copy size={12} />}
+                  {copiedError ? 'Copied Log!' : 'Copy Error Log'}
+                </button>
               </div>
-              <button
-                onClick={handleCopyError}
-                className="shrink-0 flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-red-500/20 hover:bg-red-500/30 text-red-200 hover:text-white text-xs font-semibold transition-all border border-red-500/30 cursor-pointer"
-                title="Copy full error message"
-              >
-                {copiedError ? <Check size={12} /> : <Copy size={12} />}
-                {copiedError ? 'Copied!' : 'Copy Error Log'}
-              </button>
+
+              {detailedErrorLog && (
+                <details className="mt-1 text-xs text-zinc-400 bg-zinc-950/85 p-3 rounded-lg border border-red-950/50 space-y-2">
+                  <summary className="cursor-pointer font-semibold text-zinc-300 hover:text-white select-none transition-colors outline-none">
+                    Show Technical Diagnostics & Solutions
+                  </summary>
+                  <pre className="mt-2 max-h-48 overflow-y-auto whitespace-pre-wrap font-mono text-[10px] text-zinc-500 bg-black/60 p-2.5 rounded border border-zinc-800 custom-scrollbar select-text">
+                    {detailedErrorLog}
+                  </pre>
+                </details>
+              )}
             </div>
           )}
 
