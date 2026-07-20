@@ -1,8 +1,8 @@
 {
   "currentAudit": {
-    "number": 36,
-    "name": "uad helios type 69 preamp and eq collection",
-    "displayName": "UAD Helios Type 69 Preamp and EQ Collection",
+    "number": 37,
+    "name": "uad empirical labs el8 distressor compressor",
+    "displayName": "UAD Empirical Labs EL8 Distressor Compressor",
     "status": "Approved & Updated"
   },
   "auditHistory": [
@@ -257,11 +257,18 @@
       "displayName": "UAD Helios Type 69 Preamp and EQ Collection",
       "auditedAt": "2026-07-20T16:35:00Z",
       "status": "Approved & Updated"
+    },
+    {
+      "number": 37,
+      "name": "uad empirical labs el8 distressor compressor",
+      "displayName": "UAD Empirical Labs EL8 Distressor Compressor",
+      "auditedAt": "2026-07-20T16:45:00Z",
+      "status": "Approved & Updated"
     }
   ],
-  "totalPluginsCount": 122,
+  "totalPluginsCount": 112,
   "systemRules": [
-    "Always state the current audit number (out of 122) and the exact plugin name.",
+    "Always state the current audit number (out of 112) and the exact plugin name.",
     "Perform rigorous research on the hardware chassis front panel, layout, default parameters, and o'clock positions.",
     "Contrast current database definitions against physical reality.",
     "Wait for user approval or direction before applying updates, or apply immediately if requested."

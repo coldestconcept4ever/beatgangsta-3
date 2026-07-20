@@ -3,6 +3,55 @@ import { ArrowLeft, Search, Database, Sliders, Info, Cpu, CheckCircle, HelpCircl
 import { UAD_DATABASE, UADPluginProfile, UADParameter } from '../data/uadDatabase';
 import { UAD_PRESETS, UADPreset } from '../data/uadPresets';
 
+const PRESET_MAPPING: Record<string, string> = {
+  "uad empirical labs el8 distressor compressor": "uad empirical labs distressor",
+  "uad ts overdrive": "uad ts808 tube screamer",
+  "uad studio d chorus": "uad roland dimension d",
+  "uad brigade chorus": "uad roland ce-1",
+  "uad ams rmx16 expanded digital reverb": "uad ams rmx16 digital reverb",
+  "uad ua 610-b tube preamp and eq": "uad ua 610 tube preamp and eq collection",
+  "uad fairchild tube limiter collection": "uad fairchild 670",
+  "uad pultec passive eq collection": "uad pultec eqp-1a",
+  "uad ocean way studios room modeler": "uad ocean way studios legacy",
+  "uad ua 1176 limiter collection": "uad 1176ln rev e",
+  "uad mxr flanger-doubler": "uad mxr flanger doubler",
+  "uad bx_digital v2 eq": "uad brainworx bx_digital v2",
+  "uad moog multimode legacy filter": "uad moog multimode filter",
+  "uad ua 1176ln legacy limiter": "uad 1176ln rev e",
+  "uad ua 1176se legacy limiter": "uad 1176se rev g",
+  "uad pultec-pro legacy eq": "uad pultec eqp-1a",
+  "uad realverb-pro room modeler": "uad realverb pro"
+};
+
+const cleanPresetName = (s: string) => s.toLowerCase()
+  .replace(/^(uad|ux|bx_)\s*/ig, "")
+  .replace(/\s*(collection|compressor|limiter|equalizer|eq|amplifier|preamp|reverb|delay|tape|recorder|channel\s*strip|ds|v2|v3|effects)\s*$/ig, "")
+  .trim();
+
+export const getPluginPresets = (pluginName: string): UADPreset[] | undefined => {
+  const lowerName = pluginName.toLowerCase().trim();
+  
+  if (PRESET_MAPPING[lowerName]) {
+    return UAD_PRESETS[PRESET_MAPPING[lowerName]];
+  }
+  
+  if (UAD_PRESETS[lowerName]) {
+    return UAD_PRESETS[lowerName];
+  }
+  
+  const dbClean = cleanPresetName(lowerName);
+  const matchKey = Object.keys(UAD_PRESETS).find(k => {
+    const pClean = cleanPresetName(k);
+    return pClean === dbClean || dbClean.includes(pClean) || pClean.includes(dbClean);
+  });
+  
+  if (matchKey) {
+    return UAD_PRESETS[matchKey];
+  }
+  
+  return undefined;
+};
+
 export const UadDatabaseViewer = ({ onBack, theme }: { onBack: () => void; theme: string }) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedPlugin, setSelectedPlugin] = useState<UADPluginProfile | null>(UAD_DATABASE[0] || null);
@@ -124,6 +173,11 @@ export const UadDatabaseViewer = ({ onBack, theme }: { onBack: () => void; theme
       return matchesSearch && matchesCategory;
     });
   }, [searchQuery, selectedCategory]);
+
+  const presets = useMemo(() => {
+    if (!selectedPlugin) return undefined;
+    return getPluginPresets(selectedPlugin.name);
+  }, [selectedPlugin]);
 
   // Keep selected plugin valid if query filters it out
   React.useEffect(() => {
@@ -336,7 +390,7 @@ export const UadDatabaseViewer = ({ onBack, theme }: { onBack: () => void; theme
               </div>
 
               {/* Preset Quick-Selector Panel */}
-              {UAD_PRESETS[selectedPlugin.name.toLowerCase()] && (
+              {presets && (
                 <div className={`p-4 rounded-2xl border ${
                   isColdest ? 'bg-slate-50 border-slate-200' : 'bg-zinc-950/40 border-white/5'
                 }`}>
@@ -344,7 +398,7 @@ export const UadDatabaseViewer = ({ onBack, theme }: { onBack: () => void; theme
                     <Sparkles size={14} className="animate-spin-slow" /> Iconic Hardware Preset Selector
                   </h4>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    {UAD_PRESETS[selectedPlugin.name.toLowerCase()].map((preset, idx) => {
+                    {presets.map((preset, idx) => {
                       // Check if current settings match the preset roughly
                       const isMatching = Object.entries(preset.settings).every(
                         ([name, val]) => Math.abs((paramValues[name] ?? -999) - val) < 5
