@@ -4,6 +4,7 @@ import { UAD_DATABASE, UADPluginProfile, UADParameter } from '../data/uadDatabas
 import { UAD_PRESETS, UADPreset } from '../data/uadPresets';
 
 const PRESET_MAPPING: Record<string, string> = {
+  "uad marshall plexi classic amplifier": "uad marshall plexi classic",
   "uad empirical labs el8 distressor compressor": "uad empirical labs distressor",
   "uad ts overdrive": "uad ts808 tube screamer",
   "uad studio d chorus": "uad roland dimension d",

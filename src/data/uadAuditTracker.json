@@ -1,8 +1,8 @@
 {
   "currentAudit": {
-    "number": 37,
-    "name": "uad empirical labs el8 distressor compressor",
-    "displayName": "UAD Empirical Labs EL8 Distressor Compressor",
+    "number": 39,
+    "name": "uad ocean way microphone collection",
+    "displayName": "UAD Ocean Way Microphone Collection",
     "status": "Approved & Updated"
   },
   "auditHistory": [
@@ -263,6 +263,20 @@
       "name": "uad empirical labs el8 distressor compressor",
       "displayName": "UAD Empirical Labs EL8 Distressor Compressor",
       "auditedAt": "2026-07-20T16:45:00Z",
+      "status": "Approved & Updated"
+    },
+    {
+      "number": 38,
+      "name": "uad marshall plexi classic amplifier",
+      "displayName": "UAD Marshall Plexi Classic Amplifier",
+      "auditedAt": "2026-07-20T16:55:00Z",
+      "status": "Approved & Updated"
+    },
+    {
+      "number": 39,
+      "name": "uad ocean way microphone collection",
+      "displayName": "UAD Ocean Way Microphone Collection",
+      "auditedAt": "2026-07-20T17:05:00Z",
       "status": "Approved & Updated"
     }
   ],

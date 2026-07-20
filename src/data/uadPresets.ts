@@ -2058,6 +2058,32 @@ export const UAD_PRESETS: Record<string, UADPreset[]> = {
       }
     }
   ],
+  "uad ocean way microphone collection": [
+    {
+      "name": "Warm Vintage OWS 47",
+      "description": "Emulates the legendary Neumann U47 from Ocean Way's private collection. Perfect for rich, warm lead vocals and acoustic guitars.",
+      "settings": {
+        "Mic Model": 0,
+        "Polar Pattern": 64,
+        "Proximity": 64,
+        "Axis": 0,
+        "Low Cut Filter": 0,
+        "Output Level": 64
+      }
+    },
+    {
+      "name": "Pristine Acoustic OWS 54",
+      "description": "Models the rare small-diaphragm KM54 tube microphone. Beautifully detailed, articulate, and ideal for dynamic acoustic string instruments.",
+      "settings": {
+        "Mic Model": 64,
+        "Polar Pattern": 64,
+        "Proximity": 50,
+        "Axis": 15,
+        "Low Cut Filter": 0,
+        "Output Level": 64
+      }
+    }
+  ],
   "uad neve preamp": [
     {
       "name": "Warm Class-A Vocal Prep",
@@ -2298,7 +2324,17 @@ export const UAD_PRESETS: Record<string, UADPreset[]> = {
         "Bass": 45,
         "Middle": 65,
         "Treble": 55,
-        "Presence": 65
+        "Presence": 65,
+        "Input Gain": 64,
+        "Gate Threshold": 0,
+        "Gate Release": 12,
+        "Mic 1 Select": 0,
+        "Mic 1 Volume": 127,
+        "Mic 1 Pan": 64,
+        "Mic 2 Select": 64,
+        "Mic 2 Volume": 0,
+        "Mic 2 Pan": 64,
+        "Master Out": 64
       }
     },
     {
@@ -2310,7 +2346,17 @@ export const UAD_PRESETS: Record<string, UADPreset[]> = {
         "Bass": 55,
         "Middle": 50,
         "Treble": 45,
-        "Presence": 40
+        "Presence": 40,
+        "Input Gain": 64,
+        "Gate Threshold": 0,
+        "Gate Release": 12,
+        "Mic 1 Select": 0,
+        "Mic 1 Volume": 127,
+        "Mic 1 Pan": 64,
+        "Mic 2 Select": 64,
+        "Mic 2 Volume": 0,
+        "Mic 2 Pan": 64,
+        "Master Out": 64
       }
     }
   ],
