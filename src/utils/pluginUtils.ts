@@ -185,7 +185,7 @@ export const getVendorSpecificParameters = (vendor: string, name: string): strin
       return ['Gain', 'Low Cut', 'Phase', 'Output'];
     }
     if (n.includes('century tube')) {
-      return ['Preamp Gain', 'Low Shelf', 'High Shelf', 'Compressor Threshold', 'Output'];
+      return ['Preamp Gain', 'Input Select', 'Low EQ Shelf', 'Mid EQ Gain', 'Mid EQ Freq', 'High EQ Shelf', 'Compressor Threshold', 'Master Level'];
     }
     if (n.includes('ua 610-b')) {
       return ['Level', 'High Shelf', 'Low Shelf', 'Gain', 'Output'];
@@ -291,6 +291,9 @@ export const getVendorSpecificParameters = (vendor: string, name: string): strin
     }
     if (n.includes('bx_digital')) {
       return ['Gain', 'Freq', 'Q', 'Stereo Width', 'Mono Maker', 'Bass Shift', 'Presence Shift'];
+    }
+    if (n.includes('bx_masterdesk')) {
+      return ['Volume', 'Foundation', 'De-Esser', 'Bass', 'Mids', 'Presence', 'Treble', 'Compressor Mix', 'Mono Maker', 'Stereo Width', 'THD', 'Output Trim'];
     }
     if (n.includes('eq4')) {
       return ['Sub', '40Hz', '160Hz', '650Hz', '2.5kHz', 'Air Gain', 'Air Band Freq'];

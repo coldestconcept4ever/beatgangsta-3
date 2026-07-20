@@ -2691,6 +2691,7 @@ export const verifyAndCorrectPlugin = async (
     5. CRITICAL: If the user-suggested parameter is INCORRECT or does not exist for this plugin/version, DO NOT include it in the "parameters" list of the "updatedPlugin". Only include verified, real-world parameters.
     RESEARCH REQUIREMENTS:
     - SOFTWARE EMULATION CLARITY: Many of these plugins (especially Universal Audio / UAD plugins) are software emulations of real physical hardware. You MUST strictly treat and research them as digital software plugins, NOT as the physical hardware units themselves. Your findings, descriptions, and verified parameters must reflect the software interface, controls, and digital features, rather than physical chassis details.
+    - ABSOLUTELY NO HARDWARE-ONLY CONTROLS: You MUST NOT include physical hardware-only dials, internal calibration selectors, or chassis controls (e.g. physical tube bias adjustments, coarse-gain stepped physical pots, transformer rewiring selectors) that do not exist as automatable parameters on the digital UAD software plugin GUI. Only include parameters that are directly adjustable in the UAD software plugin.
     - Find official manuals or technical documentation to confirm parameters.
     - Be extremely precise. "Advanced" versions often have modules that "Standard" versions lack.
     - If you cannot find evidence for a parameter, assume it is incorrect.
@@ -2766,9 +2767,10 @@ export const researchPluginParameters = async (plugin: VSTPlugin, language: stri
     ${getUadGroundingPrompt(plugin.vendor, plugin.name)}
     Your task is to research and provide:
     1. A highly accurate, professional description of the plugin. SOFTWARE EMULATION CLARITY: Since many of these (especially all Universal Audio / UAD plugins) are software emulations of physical hardware units, you MUST research, describe, and analyze them strictly as digital software plugins, NOT as physical hardware units. Ensure the description, key features, and parameters represent the digital software interface and controls.
-    2. A list of its key features.
-    3. The most accurate category (Instruments, Dynamics, Equalizers, Reverb & Delay, Modulation, Distortion & Saturation, Utility & Metering, Creative FX).
-    4. An EXHAUSTIVE list of ALL actual technical parameter names found on the plugin's interface. Be precise and thorough. For complex plugins, provide all available parameters . Do NOT be lazy.
+    2. ABSOLUTELY NO HARDWARE-ONLY CONTROLS GUARD: You MUST strictly omit any physical-chassis/hardware-only controls (such as coarse/fine stepped input dials, internal bias pots, or physical switches that exist on the analog hardware unit but are NOT implemented as parameters/controls in the digital software plugin GUI). Only include parameters that are active and automatable in the UAD software plugin.
+    3. A list of its key features.
+    4. The most accurate category (Instruments, Dynamics, Equalizers, Reverb & Delay, Modulation, Distortion & Saturation, Utility & Metering, Creative FX).
+    5. An EXHAUSTIVE list of ALL actual technical parameter names found on the plugin's interface. Be precise and thorough. For complex plugins, provide all available parameters . Do NOT be lazy.
     ${getLanguageInstruction(language)}
   `;
   const response = await ai.models.generateContent({
