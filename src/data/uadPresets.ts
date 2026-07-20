@@ -2061,10 +2061,9 @@ export const UAD_PRESETS: Record<string, UADPreset[]> = {
   "uad neve preamp": [
     {
       "name": "Warm Class-A Vocal Prep",
-      "description": "Smooth Neve preamp saturation to thicken lead vocals, with low rumble filtered at 80 Hz.",
+      "description": "Smooth Neve preamp saturation to thicken lead vocals, with low rumble filtered at 80 Hz. Automatically loads 1200 Ω input impedance for optimal high frequency response.",
       "settings": {
         "Input Gain": 35,
-        "Impedance": 0,
         "Pad": 0,
         "Phase": 0,
         "Low Cut Filter": 127,
@@ -2073,10 +2072,9 @@ export const UAD_PRESETS: Record<string, UADPreset[]> = {
     },
     {
       "name": "Driven Snare Transformer Sat",
-      "description": "Drives input transformer hard to saturate snare hits, adding classic British weight with 300 ohm low impedance loading.",
+      "description": "Drives input transformer hard to saturate snare hits, adding classic British weight. Pushing gain automatically switches input impedance to 600 Ω.",
       "settings": {
         "Input Gain": 55,
-        "Impedance": 127,
         "Pad": 127,
         "Phase": 0,
         "Low Cut Filter": 0,

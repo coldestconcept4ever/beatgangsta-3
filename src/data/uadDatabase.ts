@@ -405,7 +405,7 @@ export const UAD_DATABASE: UADPluginProfile[] = [
       "When dual-miking a snare drum, load Hemisphere on both the top and bottom mics. Use 'DN-57' on top and bottom, but switch the bottom mic's 'Phase Polarity' to 'Invert' to prevent low-end hollow phase cancellation.",
       "For dry, warm, intimate vocals, select 'LD-47' or 'LD-251' and increase 'Proximity' to 120%. This emulates the classic proximity effect of a singer getting close to a high-end tube condenser, adding deep chest resonance."
     ],
-    "authorizationStatus": "Approved & Updated"
+    "authorizationStatus": "Demo not started"
   },
   {
     "name": "uad c-suite c-max limiter",
@@ -448,7 +448,7 @@ export const UAD_DATABASE: UADPluginProfile[] = [
       "Always set the 'Ceiling' parameter to -1.00 dB when prepping files for digital streaming platforms. This creates a critical headroom margin to prevent lossy conversion codecs (like MP3, AAC, or OGG) from clipping during playback.",
       "Place a high-quality tape emulator (such as the Studer A800) directly before the C-Max Limiter. Setting the tape machine to tape-compress transients by 1-2 dB softens high peaks naturally, allowing C-Max to work far more transparently on the master bus."
     ],
-    "authorizationStatus": "Approved & Updated"
+    "authorizationStatus": "Demo not started"
   },
   {
     "name": "uad hitsville reverb chambers",
@@ -557,7 +557,7 @@ export const UAD_DATABASE: UADPluginProfile[] = [
       "To add rich, vintage depth to horn sections or backing vocals without muddying the mix, use Chamber 1, set Mic Position to 'Near', and aggressively roll off the 'Low EQ' by -6.0 dB to clean up low-mid build-up.",
       "When using Hitsville Reverb Chambers as a stereo aux return, keep 'Wet/Dry Mix' at 100.0% and push the 'Width' parameter fully clockwise. This delivers an expansive, immersive stereo field that beautifully wraps around center-panned dry elements."
     ],
-    "authorizationStatus": "Approved & Updated"
+    "authorizationStatus": "Authorized for all devices"
   },
   {
     "name": "uad c-suite c-axe guitar noise suppressor",
@@ -605,7 +605,7 @@ export const UAD_DATABASE: UADPluginProfile[] = [
       "For rapid palm-muted riffs, set 'Recovery Speed' toward 'Fast' so that the noise floor is immediately ducked between notes. For sustaining blues leads or ambient reverb-drenched lines, adjust it toward 'Slow' to prevent natural note decay from being chopped off.",
       "Use 'Clean' mode for acoustic guitars or pristine clean electric tones. It utilizes a soft, non-intrusive expander ratio that smoothly reduces preamp hiss and finger squeaks while maintaining organic pick dynamics and transient transparency."
     ],
-    "authorizationStatus": "Approved & Updated"
+    "authorizationStatus": "Demo not started"
   },
   {
     "name": "uad hitsville eq collection",
@@ -706,7 +706,7 @@ export const UAD_DATABASE: UADPluginProfile[] = [
       "When using the Hitsville EQ Mastering plugin, switch 'Channel Mode' to 'Mid-Side' (M/S). Try boosting the 12.5 kHz band on the Side channel by 1.0 or 1.5 dB to expand the ambient high-frequency width and air of the mix without making the center-panned lead vocal overly harsh.",
       "To give a thin bass guitar or bass synth authentic vintage 'roundness,' apply a 2 to 3 dB boost at 50 Hz and a subtle 1 dB boost at 130 Hz. Since the passive filters interact beautifully, this creates a cohesive low-end foundation that feels warm and saturated rather than muddy."
     ],
-    "authorizationStatus": "Approved & Updated"
+    "authorizationStatus": "Authorized for all devices"
   },
   {
     "name": "uad ams dmx 15-80 s digital delay and pitch shifter",
@@ -798,7 +798,7 @@ export const UAD_DATABASE: UADPluginProfile[] = [
       "Activate the VCO delay modulation on high-feedback settings to generate a vintage tape-style modulated echo. Setting 'VCO Speed' around 0.5 Hz and 'VCO Depth' around 15% will cause the pitch of repeats to slowly drift and wobble, simulating the mechanical variations of vintage tape delay.",
       "For avant-garde pitch-shift spirals, set Delay L to 400 ms, Pitch Ratio L to 1.059 (transposing up a semitone), and Feedback L to 65%. Every time the delay regenerates, the pitch will step up progressively, creating a brilliant, cascading soundscape that ascends into space."
     ],
-    "authorizationStatus": "Approved & Updated"
+    "authorizationStatus": "Demo expired"
   },
   {
     "name": "uad manley reference microphone preamplifier",
@@ -857,7 +857,7 @@ export const UAD_DATABASE: UADPluginProfile[] = [
       "To drive the input triode stage into lush tube saturation and inject thick analog warmth into acoustic guitars or vocals, crank the 'Gain' switch to 50 dB or 55 dB and back down the passive 'Attenuate' knob to about -10 dB.",
       "Always engage the 80 Hz Low Cut filter on lead vocal sessions. This cleanly rolls off sub-bass rumble and mic stand thumps without compromising the warm body or vocal resonance of the singer."
     ],
-    "authorizationStatus": "Approved & Updated"
+    "authorizationStatus": "Authorized for all devices"
   },
   {
     "name": "uad api vision channel strip collection",
@@ -972,7 +972,7 @@ export const UAD_DATABASE: UADPluginProfile[] = [
       "The 550L parametric EQ uses a Proportional-Q design: small gain changes (e.g., 2 dB) are very wide and musical for sweetening, while larger moves (e.g., 6 dB+) become narrow and surgical for carving out resonances.",
       "Engage the 215L Lo-Cut filter at 80 Hz on snare and toms to aggressively roll off low-end cabinet rumble without sacrificing the punch and body of the drum shell."
     ],
-    "authorizationStatus": "Approved & Updated"
+    "authorizationStatus": "Authorized for all devices"
   },
   {
     "name": "uad api preamp",
@@ -1045,7 +1045,7 @@ export const UAD_DATABASE: UADPluginProfile[] = [
       "For drum overheads, leave the Pad off and set Gain to 20 dB to allow the transient peaks of the cymbals to naturally trigger the fast-responding API circuit without clipping.",
       "If you want to inject warm console color on a pre-recorded track, insert this plugin in Line mode and boost the Gain knob until the yellow LEDs illuminate, then pull down the Output Fader to balance the levels."
     ],
-    "authorizationStatus": "Approved & Updated"
+    "authorizationStatus": "Authorized for all devices"
   },
   {
     "name": "uad c-suite c-vox noise and ambience reduction",
@@ -1116,7 +1116,7 @@ export const UAD_DATABASE: UADPluginProfile[] = [
       "For podcast recording in untreated rooms, switch to Voice mode, apply an 80 Hz Low Cut Filter, and dial up Reduction to 50% for pristine, broadcast-ready dialogue.",
       "Use the 'Ambience' knob separately from the 'Reduction' knob to attenuate persistent flutter echo or boxy room modes on acoustic guitar and vocal tracks without over-processing."
     ],
-    "authorizationStatus": "Approved & Updated"
+    "authorizationStatus": "Authorized for all devices"
   },
   {
     "name": "uad neve dynamics collection",
@@ -1243,7 +1243,7 @@ export const UAD_DATABASE: UADPluginProfile[] = [
       "On a drum sub-mix, select the 2254 model for a thicker, chunkier tone, set Ratio to 4:1, Compressor Recovery to 100 ms, and engage the 180 Hz Sidechain Filter. This drives the drums into warm, pumping energy while preserving kick drum punch.",
       "Utilize parallel compression by slamming the compressor threshold to -10 dBu with a 6:1 ratio, then backing down the 'Dry/Wet Mix' knob to around 30% to inject thick analog weight and room ambience beneath your main drums or vocals."
     ],
-    "authorizationStatus": "Approved & Updated"
+    "authorizationStatus": "Authorized for all devices"
   },
   {
     "name": "uad neve 1084 preamp and eq",
@@ -1406,7 +1406,7 @@ export const UAD_DATABASE: UADPluginProfile[] = [
       "Set High EQ to 16 kHz and boost 2 to 4 dB on acoustic guitars to inject a beautifully soft, expensive-sounding air band that sits perfectly in a pop mix.",
       "Drive the Input Gain to +50 or +60 dB in Mic mode to color a clean vocal track with gorgeous British transformer saturation, then engage the Low Pass Filter at 14 kHz and pull down the Output Trim to sweeten the tone and suppress analog hiss."
     ],
-    "authorizationStatus": "Approved & Updated"
+    "authorizationStatus": "Authorized for all devices"
   },
   {
     "name": "uad avalon vt-737sp channel strip",
@@ -1608,7 +1608,7 @@ export const UAD_DATABASE: UADPluginProfile[] = [
       "Keep the Compressor Ratio at 2:1 or 3:1 with a fast Attack and slow Release. This keeps the opto-attenuator riding vocal levels transparently and musical, without inducing compression artifacts.",
       "If you need to tame a sibilant vocalist, engage 'EQ to Compressor Sidechain' and use the High Mid EQ centered around 5.0 kHz to 7.0 kHz with a narrow Q. This converts the opto-compressor into an extremely smooth, premium tube de-esser."
     ],
-    "authorizationStatus": "Approved & Updated"
+    "authorizationStatus": "Authorized for all devices"
   },
   {
     "name": "uad oxford supresser ds",
@@ -1707,7 +1707,7 @@ export const UAD_DATABASE: UADPluginProfile[] = [
       "Set the Center Frequency around 3.5 kHz with a narrow Bandwidth and fast Attack/Release to isolate and squash the painful 'clicky' pick attack transients of clean electric guitars.",
       "Engage 'Diff' mode in the Listen Selector to hear exactly what sibilant energy is being removed, allowing you to fine-tune the Bandwidth without guessing."
     ],
-    "authorizationStatus": "Approved & Updated"
+    "authorizationStatus": "Authorized for all devices"
   },
   {
     "name": "uad diezel vh4 amplifier",
@@ -1863,7 +1863,7 @@ export const UAD_DATABASE: UADPluginProfile[] = [
       "Use Channel 1 (Clean) with Bass rolled back and Presence pushed to 7.0, then dial in 15% of the FX Delay Mix for a glassy, high-headroom ambient clean tone.",
       "Engage 'Pre' on the Tight Filter and set Tight Frequency to 90 Hz when tracking down-tuned or 7-string guitars to eliminate mud and flub before the preamp stage."
     ],
-    "authorizationStatus": "Approved & Updated"
+    "authorizationStatus": "Demo not started"
   },
   {
     "name": "uad auto-tune realtime access",
@@ -1934,7 +1934,7 @@ export const UAD_DATABASE: UADPluginProfile[] = [
       "For transparent pitch leveling during live tracking or tracking demos, choose a Medium retune speed paired with Light or Normal humanize to subtly transparently center vocals without robotic artifacts.",
       "Double-check your song's scale key using a pitch analyzer before committing; a mismatched key will result in unstable note jumps and pitch flutter."
     ],
-    "authorizationStatus": "Approved & Updated"
+    "authorizationStatus": "Authorized for all devices"
   },
   {
     "name": "uad ua 175b and 176 tube compressor collection",
@@ -2033,7 +2033,7 @@ export const UAD_DATABASE: UADPluginProfile[] = [
       "Use the UA 175B model on bass guitars. Crank the Input Gain past 50.0 to saturate the vacuum tube grid, creating a thick, warm harmonic growl that pins the low-end perfectly.",
       "Engage the Sidechain HP Filter at 90 Hz when using the UA 176 on drum sub-mixes to prevent the kick drum from dragging down the entire overhead image, allowing clean snare smash."
     ],
-    "authorizationStatus": "Approved & Updated"
+    "authorizationStatus": "Authorized for all devices"
   },
   {
     "name": "uad capitol chambers",
@@ -2172,7 +2172,7 @@ export const UAD_DATABASE: UADPluginProfile[] = [
       "For acoustic guitars and strings, choose Chamber 2 with the ribbon RCA 44BX microphone model and the Tannoy Gold speaker driver. Increase the Decay to 4.5s and dial in the Treble to +2.5 dB to introduce a gorgeous, velvety top-end sheen that sparkles without sibilance, while keeping Low Cut at 120 Hz to prevent low-end mud.",
       "When processing drums, load Chamber 6 with the Shure SM57 dynamic microphone and Altec 604 speakers. Pull the Microphone Position down to 15% for an aggressive, explosive near-speaker ambience, set the Decay to a tight 1.8s, and sweep the Low Cut to 80 Hz for an organic room texture that adds dramatic punch and realistic body."
     ],
-    "authorizationStatus": "Approved & Updated"
+    "authorizationStatus": "Authorized for all devices"
   },
   {
     "name": "uad tube-tech cl 1b mk ii",
@@ -2265,7 +2265,7 @@ export const UAD_DATABASE: UADPluginProfile[] = [
       "For electric bass, use a high ratio (6:1) with a manual 20 ms attack and 0.3s release. Engage the Sidechain Low Cut at 80 Hz or 150 Hz to prevent deep sub-harmonics from pumping the compression, pinning down the low-end while preserving punchy string definition.",
       "Utilize the Mix knob to perform parallel vocal compression directly on the track. Dial in aggressive 10:1 ratio squashing with the Threshold down to -25 dB, then blend the Mix back to 35% to inject heavy vintage harmonic density without sacrificing performance transients."
     ],
-    "authorizationStatus": "Approved & Updated"
+    "authorizationStatus": "Authorized for all devices"
   },
   {
     "name": "uad v76 preamp",
@@ -2339,7 +2339,7 @@ export const UAD_DATABASE: UADPluginProfile[] = [
       "Push an electric bass or synthesizers into rich overdrive by cranking the Gain to 62 dB or 68 dB. Engage the -20 dB Pad to tames hot incoming transients, and back off the Output Trim to avoid digital clipping, imparting a warm, growling tube compression and grit.",
       "For vocals needing vintage character, start with Gain at 38 dB or 44 dB for subtle pentode tube warming. Utilize the 80 Hz High Pass Filter if proximity effect is present, allowing clean, glassy vocals with maximum analog warmth."
     ],
-    "authorizationStatus": "Approved & Updated"
+    "authorizationStatus": "Authorized for all devices"
   },
   {
     "name": "uad auto-tune realtime advanced",
@@ -2481,7 +2481,7 @@ export const UAD_DATABASE: UADPluginProfile[] = [
       "For the iconic, hard-tuned pop and trap 'T-Pain effect', pull the Retune Speed down to 0 ms, set Flex-Tune and Humanize to 0, and turn on Classic Mode. This locks the pitch correction-engine instantaneously to the target scale notes with aggressive transition characteristics.",
       "When pitch-shifting or transposing vocals, engage Formant Correction to preserve the organic vocal tract character. For creative sound design, adjust Throat Length to reshape vocal timber—shortening it can add a youthful brightness, while lengthening it deepens the voice."
     ],
-    "authorizationStatus": "Approved & Updated"
+    "authorizationStatus": "Authorized for all devices"
   },
   {
     "name": "uad diezel herbert amplifier",
@@ -2593,7 +2593,7 @@ export const UAD_DATABASE: UADPluginProfile[] = [
       "The Diezel Herbert has extreme power-amp headroom. Set the Master Volume higher (around 6.0) and back off on the Preamp Gain (around 3.5 to 4.5) to get a punchier, tighter transient response for progressive metal riffs.",
       "Adjust the Deep control carefully to match your monitoring environment. Since it controls sub-resonance below 100 Hz, setting it too high can easily muddy up a mix, while a sweet spot of 3.0 keeps palm mutes incredibly heavy yet controlled."
     ],
-    "authorizationStatus": "Approved & Updated"
+    "authorizationStatus": "Demo not started"
   },
   {
     "name": "uad lexicon 480l digital reverb and effects",
@@ -2703,7 +2703,7 @@ export const UAD_DATABASE: UADPluginProfile[] = [
       "Adjust the 'Size' parameter to change the virtual room's physical dimensions. Decreasing size while maintaining decay produces a highly dense, rich early reflection cluster.",
       "The 'Ambience' program is brilliant for drums or dry rhythm sections—it provides spatial 'glue' and acoustic texture without washing out the mix."
     ],
-    "authorizationStatus": "Approved & Updated"
+    "authorizationStatus": "Authorized for all devices"
   },
   {
     "name": "uad softube vocoder",
@@ -2820,7 +2820,7 @@ export const UAD_DATABASE: UADPluginProfile[] = [
       "Adjust the 'Bands' knob. Set to 8 bands for a highly vintage, lo-fi robotic sound, or 20 bands for modern, clear, and highly intelligible vocoded speech.",
       "Automate the 'Unvoiced Level' parameter. This blends high-frequency noise transients back into the signal, ensuring consonant letters like 'S' and 'T' remain perfectly clear."
     ],
-    "authorizationStatus": "Approved & Updated"
+    "authorizationStatus": "Authorized for all devices"
   },
   {
     "name": "uad ams neve dfc channel strip",
@@ -3024,7 +3024,7 @@ export const UAD_DATABASE: UADPluginProfile[] = [
       "Its parametric EQ has an incredibly clean curve. Start with very narrow band Q-factors to cleanly notch out resonance before boosting wide shelves.",
       "The compressor features a unique 'Hysteresis' parameter that prevents the gate from opening and closing too rapidly on erratic signals like voiceover tracks."
     ],
-    "authorizationStatus": "Approved & Updated"
+    "authorizationStatus": "Authorized for all devices"
   },
   {
     "name": "uad suhr se100 amplifier",
@@ -3175,7 +3175,7 @@ export const UAD_DATABASE: UADPluginProfile[] = [
       "Set the 'Feedback' knob past 12 o'clock to tighten the bass response. It changes how the power amplifier reacts, giving you a faster, modern rhythm tracking.",
       "Switch cabinet IR presets to pair the SE100 with Greenback 4x12 speakers for classic British rock, or V30 4x12s for modern high-gain metal."
     ],
-    "authorizationStatus": "Approved & Updated"
+    "authorizationStatus": "Demo not started"
   },
   {
     "name": "uad bx_masterdesk classic",
@@ -3211,7 +3211,7 @@ export const UAD_DATABASE: UADPluginProfile[] = [
       "If the bass gets too boomy on small monitors, back off the Foundation filter slightly to shift energy into clean high-end air.",
       "Keep Output Trim at -0.2 dB to prevent digital clipping when uploading to digital streaming platforms."
     ],
-    "authorizationStatus": "Approved & Updated"
+    "authorizationStatus": "Demo not started"
   },
   {
     "name": "uad century tube channel strip",
@@ -3352,7 +3352,7 @@ export const UAD_DATABASE: UADPluginProfile[] = [
       "The optical compressor has only a single Threshold knob and includes automatic makeup gain, making leveling smooth and effortless.",
       "Keep the EQ bands flat or use small boosts to shape tracks on the way in for high-fidelity, production-ready stems."
     ],
-    "authorizationStatus": "Approved & Updated"
+    "authorizationStatus": "Authorized for all devices"
   },
   {
     "name": "uad bx_masterdesk",
@@ -3506,7 +3506,7 @@ export const UAD_DATABASE: UADPluginProfile[] = [
       "Adjust the 'Volume' knob until you hit around -2dB of gain reduction on the integrated limiter meter. This ensures maximum loudness without squeezing the life out of your song.",
       "Engage 'Mono Maker' around 100 Hz to lock sub bass strictly to mono, keeping the low-end perfectly centered and punching hard."
     ],
-    "authorizationStatus": "Approved & Updated"
+    "authorizationStatus": "Demo not started"
   },
   {
     "name": "uad suhr pt100 amplifier",
@@ -3740,7 +3740,7 @@ export const UAD_DATABASE: UADPluginProfile[] = [
       "Channel 1 features a bright switch. Pair it with single-coil pickups to achieve crystal-clear, clean funky rhythm tracks.",
       "Use the 'Feedback' switch on Channel 3 to tighten or loosen bass resonance depending on whether you play chunky riffs or fluid solos."
     ],
-    "authorizationStatus": "Approved & Updated"
+    "authorizationStatus": "Demo not started"
   },
   {
     "name": "uad putnam microphone collection",
@@ -3812,7 +3812,7 @@ export const UAD_DATABASE: UADPluginProfile[] = [
       "Adjust the Proximity control counter-clockwise on the BP-44 ribbon emulation to eliminate proximity low-end rumble while preserving its signature warm high-end roll-off.",
       "Engage the low cut at 80 Hz directly in the mic modeler to clear away room air conditioner hum before compression."
     ],
-    "authorizationStatus": "Approved & Updated"
+    "authorizationStatus": "Authorized for all devices"
   },
   {
     "name": "uad ampeg svt-vr classic bass amplifier",
@@ -3870,7 +3870,7 @@ export const UAD_DATABASE: UADPluginProfile[] = [
       "Engage 'Ultra-Lo' to add massive, rumbling sub-bass weight, but be sure to keep the Bass control balanced to avoid overloading the console bus.",
       "Crank the Volume control to saturate the virtual power tubes for organic, thick analog compression and natural harmonic growl."
     ],
-    "authorizationStatus": "Approved & Updated"
+    "authorizationStatus": "Authorized for all devices"
   },
   {
     "name": "uad neve preamp",
@@ -3881,21 +3881,10 @@ export const UAD_DATABASE: UADPluginProfile[] = [
     "parameters": [
       {
         "name": "Input Gain",
-        "range": "20 dB to 80 dB",
-        "defaultVal": "30 dB",
-        "description": "Drives the Class-A input transformer for signature Neve analog saturation.",
+        "range": "-20 dB to -80 dB",
+        "defaultVal": "-30 dB",
+        "description": "Sets input level/mic sensitivity. Automatically sets mic input impedance to 1200 Ω when set between -20 dB and -50 dB, or to 600 Ω when set between -55 dB and -80 dB.",
         "type": "knob"
-      },
-      {
-        "name": "Impedance",
-        "range": "1200 Ω / 300 Ω",
-        "defaultVal": "1200 Ω",
-        "description": "Selects the microphone input transformer impedance, shifting high-frequency response and resonance.",
-        "type": "switch",
-        "options": [
-          "1200 Ω",
-          "300 Ω"
-        ]
       },
       {
         "name": "Pad",
@@ -3943,7 +3932,7 @@ export const UAD_DATABASE: UADPluginProfile[] = [
       "Enable the Pad switch if your drums are clipping the input, allowing you to drive the preamp transformer for saturation without clipping.",
       "Always engage the 80 Hz Low Cut filter on vocals to clean up any mic rumble before it hits downstream dynamics processors."
     ],
-    "authorizationStatus": "Approved & Updated"
+    "authorizationStatus": "Authorized for all devices"
   },
   {
     "name": "uad helios type 69 preamp and eq collection",
@@ -4070,7 +4059,7 @@ export const UAD_DATABASE: UADPluginProfile[] = [
       "The Mid EQ band is incredibly aggressive and vocal. Select 1.4 kHz or 2.8 kHz and add a slight boost for a forward, energetic guitar tone.",
       "Push the Preamplifier gain past 50 dB to saturate the virtual Lustraphone iron transformer, adding rich, fuzzy grit."
     ],
-    "authorizationStatus": "Approved & Updated"
+    "authorizationStatus": "Authorized for all devices"
   },
   {
     "name": "uad empirical labs el8 distressor compressor",
