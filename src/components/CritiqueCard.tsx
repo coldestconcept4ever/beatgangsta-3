@@ -40,6 +40,7 @@ interface CritiqueCardProps {
   onMinimize?: () => void;
   isMultiBandMode?: boolean;
   dawType?: string | null;
+  lunaSumming?: 'api' | 'off' | 'neve';
   reaperSyncPin?: string | null;
   reaperSyncEmail?: string | null;
   isJsfxMode?: boolean;
@@ -148,7 +149,7 @@ const getDawSpecificGuide = (daw: string | null) => {
   };
 };
 
-export const CritiqueCard: React.FC<CritiqueCardProps> = ({ critique, stems = [], theme, plugins, analogInstruments = [], analogHardware = [], audioBase64, audioUrl, geminiFileUri, mimeType, isSaved, onSave, onUpdateCritique, onReCritique, currentAudioInfo, onLogReceipt, onCorrectPlugin, onContactSupport, onMinimize, isMultiBandMode = false, dawType = null, reaperSyncPin, reaperSyncEmail, isJsfxMode = false }) => {
+export const CritiqueCard: React.FC<CritiqueCardProps> = ({ critique, stems = [], theme, plugins, analogInstruments = [], analogHardware = [], audioBase64, audioUrl, geminiFileUri, mimeType, isSaved, onSave, onUpdateCritique, onReCritique, currentAudioInfo, onLogReceipt, onCorrectPlugin, onContactSupport, onMinimize, isMultiBandMode = false, dawType = null, lunaSumming = 'off', reaperSyncPin, reaperSyncEmail, isJsfxMode = false }) => {
   const { t, i18n } = useTranslation();
   const [specificHelpQuery, setSpecificHelpQuery] = useState('');
   const [isLoadingSpecificHelp, setIsLoadingSpecificHelp] = useState(false);
@@ -765,7 +766,11 @@ export const CritiqueCard: React.FC<CritiqueCardProps> = ({ critique, stems = []
         critique.isJsfxMode || false, // 20 (isJsfxMode)
         [], // 21 (installedJsfxPacks)
         [], // 22 (starredPlugins)
-        physicalMetrics // 23 (physicalMetrics)
+        physicalMetrics, // 23 (physicalMetrics)
+        undefined, // 24 (referencePhysicalMetrics)
+        undefined, // 25 (stemsPhysicalMetrics)
+        dawType, // 26 (dawType)
+        lunaSumming // 27 (lunaSumming)
       );
       const isWav = file.type.includes('audio/wav');
       if (onLogReceipt) onLogReceipt('Re-Critique Mix', isWav ? 25 : 10);

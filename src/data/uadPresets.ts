@@ -42,7 +42,7 @@ export const UAD_PRESETS: Record<string, UADPreset[]> = {
       }
     }
   ],
-  "uadx la-2a silver": [
+  "uad teletronix la-2a leveler collection": [
     {
       "name": "Gold-Standard Vocal Leveler",
       "description": "The classic smooth LA-2A vocal tracking. Sets 2-4dB of warm opto leveling with rapid recovery on transients.",
@@ -74,13 +74,13 @@ export const UAD_PRESETS: Record<string, UADPreset[]> = {
       }
     }
   ],
-  "uad 1176ln rev e": [
+  "uad ua 1176 limiter collection": [
     {
       "name": "British All-Button / Dr. Pepper Drums",
       "description": "Engages the famous 'All-Button / British' mode. Extreme compression curve, fast attack, and fastest release for explosive room mic energy.",
       "settings": {
-        "Input": 75,
-        "Output": 35,
+        "Input Gain": 75,
+        "Output Gain": 35,
         "Attack": 54,
         "Release": 127,
         "Ratio": 127
@@ -90,8 +90,8 @@ export const UAD_PRESETS: Record<string, UADPreset[]> = {
       "name": "In-Your-Face Lead Vocal (4:1)",
       "description": "Surgical vocal clamping. Uses a gentle 4:1 ratio, medium attack to let vocal consonants breathe, and fast release to ride tail levels.",
       "settings": {
-        "Input": 45,
-        "Output": 55,
+        "Input Gain": 45,
+        "Output Gain": 55,
         "Attack": 36,
         "Release": 105,
         "Ratio": 0
@@ -101,15 +101,15 @@ export const UAD_PRESETS: Record<string, UADPreset[]> = {
       "name": "Solid Solid-State Bass Lock",
       "description": "Locks down dynamic sub-bass. Uses 8:1 ratio, fast attack to prevent any visual clipping, and medium release for steady sustain.",
       "settings": {
-        "Input": 60,
-        "Output": 48,
+        "Input Gain": 60,
+        "Output Gain": 48,
         "Attack": 127,
         "Release": 64,
         "Ratio": 31
       }
     }
   ],
-  "uad pultec eqp-1a": [
+  "uad pultec passive eq collection": [
     {
       "name": "Legendary Pultec Low End Trick",
       "description": "Boosts and cuts simultaneously at 60Hz. Tightens the kick drum/sub-bass by boosting the bass while carving a sub-bass resonant dip right above it.",
@@ -139,7 +139,7 @@ export const UAD_PRESETS: Record<string, UADPreset[]> = {
       }
     }
   ],
-  "uad neve 1073": [
+  "uad neve 1073 preamp and eq collection": [
     {
       "name": "Warm Saturation & High Silk",
       "description": "Red mic preamp input driven hard to saturate the analog transformers, balanced by output trim. High shelf boosted for high end sparkle.",
@@ -173,7 +173,7 @@ export const UAD_PRESETS: Record<string, UADPreset[]> = {
       }
     }
   ],
-  "uad api vision channel strip": [
+  "uad api vision channel strip legacy": [
     {
       "name": "Punchy Acoustic Drum Snare",
       "description": "API preamp driven for transient bite, fast old-school feedback compressor, and aggressive Proportional Q boosts in mid-range punch.",
@@ -195,7 +195,7 @@ export const UAD_PRESETS: Record<string, UADPreset[]> = {
       }
     }
   ],
-  "uad ssl 4000 e": [
+  "uad ssl 4000 e legacy channel strip": [
     {
       "name": "Slammed Snare with Gate/Expander",
       "description": "Aggressive SSL VCA compression followed by expansion to gate snare bleed, using steep Black EQ filters for tight snap.",
@@ -221,7 +221,7 @@ export const UAD_PRESETS: Record<string, UADPreset[]> = {
       }
     }
   ],
-  "uad fairchild 670": [
+  "uad fairchild tube limiter collection": [
     {
       "name": "Stereo Master Bus Silk & Glue",
       "description": "Iconic master bus setup. Slow-acting Time Constant 4 provides gentle, program-dependent leveling with lush stereo image glue.",
@@ -247,13 +247,13 @@ export const UAD_PRESETS: Record<string, UADPreset[]> = {
       }
     }
   ],
-  "uad studer a800": [
+  "uad studer a800 tape recorder": [
     {
       "name": "Thick 15 IPS Kick & Bass Bump",
       "description": "Emulates 15 IPS physical tape speed to introduce the organic 'bass bump' resonance, combined with 456 tape driven hot for analog saturation.",
       "settings": {
-        "Input": 85,
-        "Output": 42,
+        "Input Gain": 85,
+        "Output Gain": 42,
         "Tape Speed": 64,
         "Tape Formula": 32,
         "Cal Level": 64,
@@ -265,8 +265,8 @@ export const UAD_PRESETS: Record<string, UADPreset[]> = {
       "name": "Ultra-Fi 30 IPS Vocal Glue",
       "description": "Set at high-fidelity 30 IPS physical transport speed for completely flat response with smooth tape high-frequency compression.",
       "settings": {
-        "Input": 48,
-        "Output": 64,
+        "Input Gain": 48,
+        "Output Gain": 64,
         "Tape Speed": 127,
         "Tape Formula": 96,
         "Cal Level": 127,
@@ -275,7 +275,7 @@ export const UAD_PRESETS: Record<string, UADPreset[]> = {
       }
     }
   ],
-  "uad ampex atr-102": [
+  "uad ampex atr-102 tape recorder": [
     {
       "name": "Classic 1/2 Inch Stereo Master Finish",
       "description": "The gold standard master bus gluing setup. GP9 tape width, 1/2 inch head size, and 15 IPS speed for final gloss, punch and tape width.",
@@ -296,7 +296,7 @@ export const UAD_PRESETS: Record<string, UADPreset[]> = {
       "name": "Warm Dist-2 Vocal Distress",
       "description": "Ratio 6:1 (Opto mode style), medium slow attack to preserve consonants, and Dist 2 engaged to inject warm tube 2nd-order harmonics.",
       "settings": {
-        "Input": 52,
+        "Input Gain": 52,
         "Output": 48,
         "Attack": 64,
         "Release": 52,
@@ -310,7 +310,7 @@ export const UAD_PRESETS: Record<string, UADPreset[]> = {
       "name": "Slammed Parallel Nuke Drums",
       "description": "Ratio set to NUKE limiting curves. Rapid attack clamps transients, and Dist 3 injects tape-style 3rd-order odd harmonics.",
       "settings": {
-        "Input": 85,
+        "Input Gain": 85,
         "Output": 40,
         "Attack": 25,
         "Release": 96,
@@ -394,7 +394,7 @@ export const UAD_PRESETS: Record<string, UADPreset[]> = {
         "Attack": 64,
         "Release": 64,
         "Attack/Release Select": 127,
-        "Sidechain High Pass": 127
+        "Sidechain Low Cut": 127
       }
     },
     {
@@ -407,7 +407,7 @@ export const UAD_PRESETS: Record<string, UADPreset[]> = {
         "Attack": 35,
         "Release": 55,
         "Attack/Release Select": 0,
-        "Sidechain High Pass": 64
+        "Sidechain Low Cut": 64
       }
     }
   ],
@@ -441,7 +441,7 @@ export const UAD_PRESETS: Record<string, UADPreset[]> = {
       }
     }
   ],
-  "uad api 2500": [
+  "uad api 2500 bus compressor": [
     {
       "name": "Patented Master Bus Glue",
       "description": "Clean master bus compressor mapping. Leverages the Loud 'Thrust' sidechain circuit, Old feedback detection, and a slow attack.",
@@ -457,7 +457,7 @@ export const UAD_PRESETS: Record<string, UADPreset[]> = {
       }
     }
   ],
-  "uad thermionic culture vulture": [
+  "uad thermionic culture vulture distortion": [
     {
       "name": "Warm triode Master Glue",
       "description": "Subtle 2nd-order tube harmonic saturation designed to add tape-like analog depth and warmth to a full stereo mix.",
@@ -502,7 +502,7 @@ export const UAD_PRESETS: Record<string, UADPreset[]> = {
       }
     }
   ],
-  "uad manley voxbox": [
+  "uad manley voxbox channel strip": [
     {
       "name": "Pristine All-Tube Vocal Strip",
       "description": "Class A preamplifier with 45dB tube drive, low cut at 80Hz, gentle optical leveling BEFORE the tube gain, and smooth 1kHz mid-presence.",
@@ -519,18 +519,22 @@ export const UAD_PRESETS: Record<string, UADPreset[]> = {
       }
     }
   ],
-  "uad ssl 4000 g bus compressor": [
+  "uad ssl 4000 g legacy bus compressor": [
     {
       "name": "Classic Console Stereo Glue",
-      "description": "The legendary Solid State Logic stereo master glue setup. Ratio 4:1, Attack 30ms, Auto release, and 1-3dB reduction.",
+      "description": "The legendary Solid State Logic stereo master glue setup. Ratio 4, Attack 30, Auto release, and 1-3dB reduction.",
       "settings": {
-        "Threshold": 85,
-        "Ratio": 64,
-        "Attack": 127,
-        "Release": 127,
-        "Makeup Gain": 25,
-        "Sidechain High Pass": 50,
-        "Mix / Blend": 127
+        "Threshold": 8.5,
+        "Ratio": 1,
+        "Attack": 5,
+        "Release": 4,
+        "Make-Up": 2.5,
+        "SC Filter": 1,
+        "Mix": 100,
+        "Headroom": 16,
+        "Rate": 10,
+        "Fade": 0,
+        "In": 1
       }
     }
   ],
@@ -563,41 +567,43 @@ export const UAD_PRESETS: Record<string, UADPreset[]> = {
     }
   ],
   "uad manley variable mu limiter": [
+
     {
       "name": "Silk Mastering Glue",
       "description": "Gentle Variable Mu mastering setup. Compress mode, medium-slow attack, and medium recovery to gently weld stereo layers together.",
       "settings": {
-        "Input Gain": 45,
+        "Input": 45,
         "Threshold": 75,
         "Attack": 70,
-        "Recovery / Release": 32,
-        "Output Gain": 50,
-        "HP Sidechain": 127,
-        "Mode Select": 0
+        "Recovery": 32,
+        "Output": 50,
+        "Sidechain HPF": 127,
+        "Compress/Limit": 0
       }
     },
     {
       "name": "Thick Parallel Drum Bus",
       "description": "Limit mode, fast attack and fast recovery. Drive input hard to generate aggressive, fat analog saturation on drums.",
       "settings": {
-        "Input Gain": 75,
+        "Input": 75,
         "Threshold": 45,
         "Attack": 15,
-        "Recovery / Release": 0,
-        "Output Gain": 40,
-        "HP Sidechain": 127,
-        "Mode Select": 127
+        "Recovery": 0,
+        "Output": 40,
+        "Sidechain HPF": 127,
+        "Compress/Limit": 127
       }
     }
-  ],
+  
+],
   "uad dbx 160 compressor": [
     {
       "name": "Slammin Snare Punch",
       "description": "The definitive VCA snare setting. Pinpoint attack, 3:1 ratio, with fast hard-knee recovery to add punch and weight.",
       "settings": {
         "Threshold": 64,
-        "Compression Ratio": 30,
-        "Output Gain": 64
+        "Compression": 30,
+        "Output": 64
       }
     },
     {
@@ -605,8 +611,8 @@ export const UAD_PRESETS: Record<string, UADPreset[]> = {
       "description": "Locks the low-end performance firmly in place with a moderate ratio and steady gain reduction.",
       "settings": {
         "Threshold": 50,
-        "Compression Ratio": 45,
-        "Output Gain": 70
+        "Compression": 45,
+        "Output": 70
       }
     }
   ],
@@ -804,9 +810,9 @@ export const UAD_PRESETS: Record<string, UADPreset[]> = {
       "description": "Fast electro-optical leveling. Locks aggressive strums in place while adding incredible mid-range harmonic weight.",
       "settings": {
         "Peak Reduction": 55,
-        "Gain Level": 45,
-        "Compress/Limit": 0,
-        "Sidechain Mod (HF)": 50
+        "Gain": 45,
+        "Mode": 0,
+        "HF Filter": 50
       }
     },
     {
@@ -814,9 +820,9 @@ export const UAD_PRESETS: Record<string, UADPreset[]> = {
       "description": "Light, transparent dynamic control that gently rides fingerstyle guitar performances.",
       "settings": {
         "Peak Reduction": 25,
-        "Gain Level": 35,
-        "Compress/Limit": 0,
-        "Sidechain Mod (HF)": 127
+        "Gain": 35,
+        "Mode": 0,
+        "HF Filter": 127
       }
     }
   ],
@@ -919,10 +925,10 @@ export const UAD_PRESETS: Record<string, UADPreset[]> = {
       "name": "Stereo Bus Tube Maximizer",
       "description": "Enriches the master bus stereo image by expanding dynamic peaks and applying a warm, tube-style harmonic curve without digital clipping.",
       "settings": {
-        "Input": 64,
+        "Input Gain": 64,
         "Effect": 108,
         "Curve": 85,
-        "Output": 120,
+        "Output Gain": 120,
         "Clip 0dB": 127,
         "Band Split": 127
       }
@@ -931,16 +937,16 @@ export const UAD_PRESETS: Record<string, UADPreset[]> = {
       "name": "Slammed Drum Parallel",
       "description": "Drives the saturation curve to the absolute limit for parallel drum buses to inject extreme weight, punch, and analog vibe.",
       "settings": {
-        "Input": 110,
+        "Input Gain": 110,
         "Effect": 127,
         "Curve": 105,
-        "Output": 100,
+        "Output Gain": 100,
         "Clip 0dB": 127,
         "Band Split": 0
       }
     }
   ],
-  "uad emt 140": [
+  "uad emt 140 plate reverb": [
     {
       "name": "Plate B Lush Vocal",
       "description": "Generates a deep, warm, and highly-regarded vocal plate wash using the historic Plate B unit with 180Hz low filtering.",
@@ -966,7 +972,7 @@ export const UAD_PRESETS: Record<string, UADPreset[]> = {
       }
     }
   ],
-  "uad emt 250": [
+  "uad emt 250 digital reverb": [
     {
       "name": "Modulated Choir Hall",
       "description": "The classic, ultra-spacious EMT 250 reverberation setup featuring rich pitch modulation and custom high-frequency dampening.",
@@ -992,39 +998,47 @@ export const UAD_PRESETS: Record<string, UADPreset[]> = {
       }
     }
   ],
-  "uad korg sdd-3000": [
+  "uad korg sdd-3000 digital delay": [
     {
       "name": "The Edge Dotted Eighths",
       "description": "The definitive rhythmic digital delay configuration with moderate triangle modulation, high feedback, and low-end filtering.",
       "settings": {
-        "Input Level": 64,
-        "Input Attenuator": 65,
-        "Delay Time": 75,
-        "Feedback": 45,
-        "Filter High Cut": 50,
-        "Filter Low Cut": 25,
-        "Mod Waveform": 32,
-        "Mod Frequency": 12,
-        "Mod Intensity": 25
+        "Input Attenuator": 1,
+        "Input Level": 6.5,
+        "Delay Time": 380,
+        "Feedback": 4.5,
+        "Filter Low Cut": 1,
+        "Filter High Cut": 1,
+        "Mod Waveform": 0,
+        "Mod Frequency": 1.2,
+        "Mod Intensity": 2.5,
+        "Hold": 0,
+        "Output Attenuator": 1,
+        "Balance": 0,
+        "Mode": 0
       }
     },
     {
       "name": "Retro Slapback Drive",
       "description": "Short slapback delay with the input level pushed hard to saturate the preamplifier, adding grit and thickness to guitar lines.",
       "settings": {
-        "Input Level": 0,
-        "Input Attenuator": 80,
-        "Delay Time": 24,
-        "Feedback": 15,
-        "Filter High Cut": 0,
+        "Input Attenuator": 0,
+        "Input Level": 8,
+        "Delay Time": 120,
+        "Feedback": 1.5,
         "Filter Low Cut": 0,
+        "Filter High Cut": 0,
         "Mod Waveform": 0,
-        "Mod Frequency": 4,
-        "Mod Intensity": 10
+        "Mod Frequency": 0.4,
+        "Mod Intensity": 1,
+        "Hold": 0,
+        "Output Attenuator": 1,
+        "Balance": 0,
+        "Mode": 0
       }
     }
   ],
-  "uad neve 33609": [
+  "uad neve 33609 stereo limiter compressor": [
     {
       "name": "Smooth Master Glue",
       "description": "The gold standard master bus configuration using a gentle 1.5:1 ratio and automatic recovery for cohesive, transparent leveling.",
@@ -1052,7 +1066,7 @@ export const UAD_PRESETS: Record<string, UADPreset[]> = {
       }
     }
   ],
-  "uad empirical labs el7 fatso": [
+  "uad empirical labs el7 fatso compressor": [
     {
       "name": "Warm Tape Saturator",
       "description": "Authentic dynamic analog tape emulation. Warmth level 3 rounds high-mid sibilance while the Tranny adds low iron harmonics.",
@@ -1076,31 +1090,41 @@ export const UAD_PRESETS: Record<string, UADPreset[]> = {
       }
     }
   ],
-  "uad moog multimode filter": [
+  "uad moog multimode filter collection": [
     {
       "name": "Lush Sweeping Resonator",
-      "description": "Warm transistor ladder sweeping Low Pass filter driven to +8dB with substantial envelope modulation reacting to audio dynamics.",
+      "description": "Warm transistor ladder sweeping 4-pole filter driven with substantial envelope modulation reacting to audio dynamics.",
       "settings": {
+        "Drive": 40,
+        "Env Amount": 85,
+        "Smooth / Fast": 0,
         "Filter Cutoff": 50,
         "Resonance": 65,
-        "Drive": 40,
-        "Filter Mode": 0,
-        "Envelope Amount": 85,
+        "Spacing": 0,
+        "Poles": 3,
+        "LFO Amount": 35,
         "LFO Rate": 30,
-        "LFO Amount": 35
+        "LFO Wave": 1,
+        "Mix": 100,
+        "Output": 0
       }
     },
     {
       "name": "Gritty Sub Drive Filter",
-      "description": "Aggressive low end warmth filter designed for synth or bass guitars, utilizing a heavy +15dB input overdrive.",
+      "description": "Aggressive low end warmth filter designed for synth or bass guitars, utilizing a heavy input overdrive.",
       "settings": {
+        "Drive": 75,
+        "Env Amount": 0,
+        "Smooth / Fast": 1,
         "Filter Cutoff": 20,
         "Resonance": 35,
-        "Drive": 75,
-        "Filter Mode": 0,
-        "Envelope Amount": 0,
+        "Spacing": 0,
+        "Poles": 3,
+        "LFO Amount": 0,
         "LFO Rate": 0,
-        "LFO Amount": 0
+        "LFO Wave": 0,
+        "Mix": 100,
+        "Output": 0
       }
     }
   ],
@@ -1248,7 +1272,7 @@ export const UAD_PRESETS: Record<string, UADPreset[]> = {
       }
     }
   ],
-  "uad manley massive passive": [
+  "uad manley massive passive eq collection": [
     {
       "name": "Vocal Silk Shelf",
       "description": "Gentle, ultra-sweet high-frequency shelf lift at 16 kHz to add pristine air and breath to lead vocals without sibilant grain.",
@@ -1318,7 +1342,7 @@ export const UAD_PRESETS: Record<string, UADPreset[]> = {
       }
     }
   ],
-  "uad neve 88rs": [
+  "uad neve 88rs channel strip collection": [
     {
       "name": "88RS Vocal Polish Channel",
       "description": "A highly cohesive lead vocal channel strip. Preamp saturation is managing levels, into gentle VCA compression and smooth high shelf sweetening.",
@@ -1364,7 +1388,7 @@ export const UAD_PRESETS: Record<string, UADPreset[]> = {
         "160 Hz Gain": 52,
         "650 Hz Gain": 64,
         "2.5 kHz Gain": 72,
-        "Output Gain": 56
+        "Output": 56
       }
     },
     {
@@ -1378,7 +1402,7 @@ export const UAD_PRESETS: Record<string, UADPreset[]> = {
         "160 Hz Gain": 64,
         "650 Hz Gain": 45,
         "2.5 kHz Gain": 64,
-        "Output Gain": 60
+        "Output": 60
       }
     }
   ],
@@ -1389,7 +1413,7 @@ export const UAD_PRESETS: Record<string, UADPreset[]> = {
       "settings": {
         "Attack": 96,
         "Sustain": 42,
-        "Output Gain": 50,
+        "Output": 50,
         "Limiter": 127,
         "Sidechain Filter": 64
       }
@@ -1400,7 +1424,7 @@ export const UAD_PRESETS: Record<string, UADPreset[]> = {
       "settings": {
         "Attack": 35,
         "Sustain": 110,
-        "Output Gain": 75,
+        "Output": 75,
         "Limiter": 0,
         "Sidechain Filter": 0
       }
@@ -1484,6 +1508,38 @@ export const UAD_PRESETS: Record<string, UADPreset[]> = {
       }
     }
   ],
+  "uad antares auto-tune realtime": [
+    {
+      "name": "Hard Pitch T-Pain Style",
+      "description": "Zero retune speed and zero humanize for maximum robotic pitch correction.",
+      "settings": {
+        "Input Type": 1,
+        "Retune Speed": 0,
+        "Humanize": 0,
+        "Flex-Tune": 0,
+        "Natural Vibrato": 0,
+        "Key": 0,
+        "Scale": 2,
+        "Detune": 440,
+        "Tracking": 50
+      }
+    },
+    {
+      "name": "Transparent Pop Vocal",
+      "description": "Gentle pitch correction that allows natural expression and vibrato to pass through.",
+      "settings": {
+        "Input Type": 1,
+        "Retune Speed": 40,
+        "Humanize": 30,
+        "Flex-Tune": 25,
+        "Natural Vibrato": 0,
+        "Key": 0,
+        "Scale": 2,
+        "Detune": 440,
+        "Tracking": 50
+      }
+    }
+  ],
   "uad antares auto-tune realtime x": [
     {
       "name": "Trap Vocals Hard Auto Pitch",
@@ -1508,6 +1564,75 @@ export const UAD_PRESETS: Record<string, UADPreset[]> = {
       }
     }
   ],
+  "uad sphere mic collection": [
+    {
+      "name": "Vintage 47 Vocal",
+      "description": "Iconic vintage large diaphragm condenser sound, perfectly on-axis with cardioid pattern for lead vocals.",
+      "settings": {
+        "Mic Model": 0,
+        "Polar Pattern": 50,
+        "Proximity": 0,
+        "Dual Mode": 0,
+        "Filter": 0,
+        "Axis": 0,
+        "IsoSphere": 0
+      }
+    },
+    {
+      "name": "Bright Acoustic Guitar",
+      "description": "Small diaphragm condenser (SD-451) with a slight off-axis rotation to tame harsh transients.",
+      "settings": {
+        "Mic Model": 6,
+        "Polar Pattern": 50,
+        "Proximity": -10,
+        "Dual Mode": 0,
+        "Filter": 1,
+        "Axis": 15,
+        "IsoSphere": 0
+      }
+    }
+  ],
+  "uad studio d chorus": [
+    {
+      "name": "Wide Vocal Dimension",
+      "description": "Classic setting on Button 4 for the maximum spatial widening of lead vocals.",
+      "settings": {
+        "Dimension Mode": 4,
+        "Mono / Stereo": 1
+      }
+    },
+    {
+      "name": "All Buttons In Synth",
+      "description": "Aggressive, ultra-wide dimensional shift achieved by depressing all mode buttons.",
+      "settings": {
+        "Dimension Mode": 5,
+        "Mono / Stereo": 1
+      }
+    }
+  ],
+  "uad brigade chorus": [
+    {
+      "name": "Lush Warm Chorus",
+      "description": "The classic, lush analog CE-1 chorus effect for electric guitar and keyboards.",
+      "settings": {
+        "Effect Mode": 0,
+        "Chorus Intensity": 70,
+        "Input Level": 64,
+        "Direct / Effect": 1
+      }
+    },
+    {
+      "name": "Watery Vibrato",
+      "description": "Vintage pitch modulation with a medium-fast rate and deep intensity.",
+      "settings": {
+        "Effect Mode": 1,
+        "Vibrato Rate": 40,
+        "Vibrato Depth": 50,
+        "Input Level": 64,
+        "Direct / Effect": 1
+      }
+    }
+  ],
   "uad hemisphere mic collection": [
     {
       "name": "Lush Large Diaphragm Condenser",
@@ -1516,7 +1641,7 @@ export const UAD_PRESETS: Record<string, UADPreset[]> = {
         "Mic Model": 35,
         "Proximity": 110,
         "Low Cut Filter": 0,
-        "Output Gain": 64,
+        "Output": 64,
         "Phase Polarity": 0
       }
     },
@@ -1527,7 +1652,7 @@ export const UAD_PRESETS: Record<string, UADPreset[]> = {
         "Mic Model": 127,
         "Proximity": 85,
         "Low Cut Filter": 40,
-        "Output Gain": 75,
+        "Output": 75,
         "Phase Polarity": 0
       }
     }
@@ -2060,7 +2185,7 @@ export const UAD_PRESETS: Record<string, UADPreset[]> = {
   ],
   "uad ocean way microphone collection": [
     {
-      "name": "Warm Vintage OWS 47",
+      "name": "Warm Vintage OW-47",
       "description": "Emulates the legendary Neumann U47 from Ocean Way's private collection. Perfect for rich, warm lead vocals and acoustic guitars.",
       "settings": {
         "Mic Model": 0,
@@ -2072,7 +2197,7 @@ export const UAD_PRESETS: Record<string, UADPreset[]> = {
       }
     },
     {
-      "name": "Pristine Acoustic OWS 54",
+      "name": "Pristine Acoustic OW-K54",
       "description": "Models the rare small-diaphragm KM54 tube microphone. Beautifully detailed, articulate, and ideal for dynamic acoustic string instruments.",
       "settings": {
         "Mic Model": 64,
@@ -2159,7 +2284,7 @@ export const UAD_PRESETS: Record<string, UADPreset[]> = {
       "name": "Lush Liquid Analog Chorus",
       "description": "Thick, glassy 1976 bucket-brigade chorus sweep that retro guitars and keys require.",
       "settings": {
-        "Mode Select": 0,
+        "Mode": 0,
         "Chorus Intensity": 45,
         "Vibrato Depth": 0,
         "Vibrato Rate": 40,
@@ -2170,7 +2295,7 @@ export const UAD_PRESETS: Record<string, UADPreset[]> = {
       "name": "Vintage Leslie Pitch Wobble",
       "description": "CE-1 pitch vibrato mode simulating warm acoustic Leslie speaker rotations.",
       "settings": {
-        "Mode Select": 127,
+        "Mode": 127,
         "Chorus Intensity": 0,
         "Vibrato Depth": 35,
         "Vibrato Rate": 65,
@@ -2556,7 +2681,7 @@ export const UAD_PRESETS: Record<string, UADPreset[]> = {
       }
     }
   ],
-  "uad fender 55 tweed deluxe": [
+  "uad fender 55 tweed deluxe amplifier": [
     {
       "name": "Tweed Glassy Clean",
       "description": "Sets volume low for maximum clean headroom, with high-end shimmer on the Jensen speaker.",
@@ -2604,7 +2729,7 @@ export const UAD_PRESETS: Record<string, UADPreset[]> = {
       }
     }
   ],
-  "uad harrison 32c channel eq": [
+  "uad harrison 32c eq": [
     {
       "name": "Musical Vocal Sheen",
       "description": "Applies sweet silk at 12 kHz, cuts low-mid vocal boxiness at 300 Hz, and cleans up sub-bass floor at 80 Hz.",
@@ -2670,1382 +2795,38 @@ export const UAD_PRESETS: Record<string, UADPreset[]> = {
       }
     }
   ],
-  "uad ams rmx16 digital reverb": [
+  "uad ams rmx16 expanded digital reverb": [
+
     {
       "name": "Phil Collins 80s Gated Snare",
-      "description": "Generates the legendary, explosive gated snare sound using the dense 'Non-Lin 2' algorithm with tight decay timing.",
+      "description": "Generates the legendary, explosive gated snare sound using the dense 'NonLin 2' algorithm with tight decay timing.",
       "settings": {
-        "Reverb Program": 4,
-        "Decay Time": 40,
-        "Pre-Delay": 15,
-        "High Frequency Decay Filter": 64,
-        "Low Frequency Decay Filter": 40,
-        "Mix": 127
+        "Input": 6.5,
+        "Mix": 100,
+        "Output": 5,
+        "Program": 6,
+        "Decay Time": 1.5,
+        "Pre Delay": 15,
+        "Low": 4,
+        "High": 2
       }
     },
     {
-      "name": "3D Lush Vocal Plate",
-      "description": "Provides beautiful digital plate warmth with subtle HF excitation and LF cleanup for transparent vocal depth.",
+      "name": "Lush 80s Vocal Ambience",
+      "description": "A spacious, natural Ambience program setting to add deep room size to vocals without cluttering the mix.",
       "settings": {
-        "Reverb Program": 3,
-        "Decay Time": 70,
-        "Pre-Delay": 32,
-        "High Frequency Decay Filter": 85,
-        "Low Frequency Decay Filter": 45,
-        "Mix": 45
+        "Input": 5,
+        "Mix": 25,
+        "Output": 5,
+        "Program": 0,
+        "Decay Time": 3.2,
+        "Pre Delay": 40,
+        "Low": 0,
+        "High": -2
       }
     }
-  ],
-  "uad cooper time cube mkii delay": [
-    {
-      "name": "Haas Stereo Widener",
-      "description": "Uses the legendary Haas effect to expand a mono track into massive 3D stereo width by setting A to 14ms and B to 28ms.",
-      "settings": {
-        "Coarse Delay A": 0,
-        "Fine Delay A": 0,
-        "Decay A (Feedback)": 10,
-        "Coarse Delay B": 4,
-        "Fine Delay B": 30,
-        "Decay B (Feedback)": 12,
-        "Channel Mode": 1
-      }
-    },
-    {
-      "name": "Resonant Mechanical Double",
-      "description": "Engages moderate decay on 32ms coarse settings to emulate the unique metallic tube acoustic reflections.",
-      "settings": {
-        "Coarse Delay A": 5,
-        "Fine Delay A": 64,
-        "Decay A (Feedback)": 45,
-        "Coarse Delay B": 5,
-        "Fine Delay B": 80,
-        "Decay B (Feedback)": 50,
-        "Channel Mode": 0
-      }
-    }
-  ],
-  "uad mxr flanger doubler": [
-    {
-      "name": "Vintage Jet-Engine Sweep",
-      "description": "Pushes regeneration high and speed extremely slow for that classic 70s sweeping jet-plane flanging on drums or guitars.",
-      "settings": {
-        "Operation Mode": 0,
-        "Manual": 32,
-        "Width": 102,
-        "Speed": 15,
-        "Regeneration (Feedback)": 114,
-        "Mix": 64
-      }
-    },
-    {
-      "name": "Lush BBD Vocal Doubling",
-      "description": "Switches to Doubler mode with mild speed modulation for a thick, warm bucket-brigade double-tracked vocal finish.",
-      "settings": {
-        "Operation Mode": 1,
-        "Manual": 85,
-        "Width": 45,
-        "Speed": 25,
-        "Regeneration (Feedback)": 64,
-        "Mix": 90
-      }
-    }
-  ],
-  "uad little labs ibp phase alignment tool": [
-    {
-      "name": "DI Bass Phase Lock",
-      "description": "Slightly shifts DI bass track phase around 60 degrees to lock low-end punch when combined with a mic'd cabinet.",
-      "settings": {
-        "Phase Adjust": 42,
-        "Phase Switch": 0,
-        "Delay Adjust": 0,
-        "Delay State": 0,
-        "Phase Center": 0
-      }
-    },
-    {
-      "name": "Snare Dual-Mic Alignment",
-      "description": "Inverts polarity and sweeps continuous phase with 0.8ms micro-delay to align top/bottom snare mics perfectly.",
-      "settings": {
-        "Phase Adjust": 76,
-        "Phase Switch": 127,
-        "Delay Adjust": 25,
-        "Delay State": 127,
-        "Phase Center": 127
-      }
-    }
-  ],
-  "uad dangerous bax eq": [
-    {
-      "name": "Master Bus Polish and Sweep",
-      "description": "Cuts sub-audible low rumble at 12 Hz, boosts low-end body at 84 Hz, and sweetens mix air with +1.5 dB shelf at 18 kHz.",
-      "settings": {
-        "Low Cut Filter": 1,
-        "Low EQ Frequency": 1,
-        "Low EQ Boost/Cut": 70,
-        "High EQ Frequency": 6,
-        "High EQ Boost/Cut": 76,
-        "High Cut Filter": 7
-      }
-    },
-    {
-      "name": "Silky Acoustic Guitar Finish",
-      "description": "Tightens lows at 30 Hz, scoops low-mids at 98 Hz, and boosts glassy clarity with +2.0 dB at 7.1 kHz.",
-      "settings": {
-        "Low Cut Filter": 4,
-        "Low EQ Frequency": 2,
-        "Low EQ Boost/Cut": 54,
-        "High EQ Frequency": 5,
-        "High EQ Boost/Cut": 82,
-        "High Cut Filter": 5
-      }
-    }
-  ],
-  "uad sonnox oxford envolution": [
-    {
-      "name": "Dull Snare Crack Maximizer",
-      "description": "Surgically target 4 kHz transients, boosting attack transients by +4.5 dB for exceptional snare cracking speed.",
-      "settings": {
-        "Transient Gain": 85,
-        "Transient Attack": 20,
-        "Transient Frequency": 80,
-        "Sustain Gain": 64,
-        "Sustain Release": 30,
-        "Sustain Frequency": 64,
-        "Mix": 127
-      }
-    },
-    {
-      "name": "Drum Room Acoustic Sustain",
-      "description": "Saves low-mid sustain while boosting sustain gain to expand room size and draw out realistic acoustic ring.",
-      "settings": {
-        "Transient Gain": 64,
-        "Transient Attack": 30,
-        "Transient Frequency": 64,
-        "Sustain Gain": 95,
-        "Sustain Release": 85,
-        "Sustain Frequency": 32,
-        "Mix": 102
-      }
-    }
-  ],
-  "uad drawmer 1973 multi-band compressor": [
-    {
-      "name": "Master Bus Air and Big Glue",
-      "description": "Engages 'Big' low sidechain and 'Air' treble excitation to dynamically compress mid bands while sweetening master extremes.",
-      "settings": {
-        "Low/Mid Crossover": 25,
-        "Mid/High Crossover": 85,
-        "Low Threshold": 45,
-        "Mid Threshold": 50,
-        "High Threshold": 48,
-        "Low Band Style": 127,
-        "High Band Style": 127,
-        "Mix": 50
-      }
-    },
-    {
-      "name": "Acoustic Guitar Dynamic Shine",
-      "description": "Locks mid-frequency strum dynamic swings tightly, allowing high air shelf expansion to sweeten decay.",
-      "settings": {
-        "Low/Mid Crossover": 35,
-        "Mid/High Crossover": 90,
-        "Low Threshold": 64,
-        "Mid Threshold": 38,
-        "High Threshold": 50,
-        "Low Band Style": 0,
-        "High Band Style": 127,
-        "Mix": 127
-      }
-    }
-  ],
-  "uad waterfall rotary speaker": [
-    {
-      "name": "Lush Slow Chorale Rotor",
-      "description": "Slow rotating speakers with clean tube preamp drive and wide microphone spacing for dimensional depth.",
-      "settings": {
-        "Speed": 0,
-        "Drive": 42,
-        "Horn Speed": 64,
-        "Drum Speed": 64,
-        "Mic Distance": 80,
-        "Mic Angle": 45,
-        "Mix": 127
-      }
-    },
-    {
-      "name": "Growling Heavy Fast Tremolo",
-      "description": "Speeds up speakers to Tremolo, pushing Drive to hot tube distortion for aggressive growling organ cabinets.",
-      "settings": {
-        "Speed": 2,
-        "Drive": 95,
-        "Horn Speed": 75,
-        "Drum Speed": 50,
-        "Mic Distance": 25,
-        "Mic Angle": 0,
-        "Mix": 90
-      }
-    }
-  ],
-  "uad ua 610-a": [
-    {
-      "name": "Certified Studio Default",
-      "description": "Optimized basic configuration to get a balanced start on vocals or instruments.",
-      "settings": {
-        "Input Gain": 64,
-        "Level": 64,
-        "High EQ Frequency": 0,
-        "Low EQ Frequency": 0
-      }
-    },
-    {
-      "name": "Aggressive Drive & Focus",
-      "description": "Pushes internal preamps or thresholds hard for dynamic presence and character.",
-      "settings": {
-        "Input Gain": 95,
-        "Level": 95,
-        "High EQ Frequency": 127,
-        "Low EQ Frequency": 127
-      }
-    }
-  ],
-  "uad brent averill 1073": [
-    {
-      "name": "Certified Studio Default",
-      "description": "Optimized basic configuration to get a balanced start on vocals or instruments.",
-      "settings": {
-        "Mic Gain": 64,
-        "High Shelf": 64,
-        "Mid Band Gain": 64,
-        "Low Cut": 0
-      }
-    },
-    {
-      "name": "Aggressive Drive & Focus",
-      "description": "Pushes internal preamps or thresholds hard for dynamic presence and character.",
-      "settings": {
-        "Mic Gain": 95,
-        "High Shelf": 95,
-        "Mid Band Gain": 95,
-        "Low Cut": 127
-      }
-    }
-  ],
-  "uad custom shop 1073": [
-    {
-      "name": "Certified Studio Default",
-      "description": "Optimized basic configuration to get a balanced start on vocals or instruments.",
-      "settings": {
-        "Preamp Drive": 64,
-        "Low Band EQ": 64,
-        "Phase Invert": 0
-      }
-    },
-    {
-      "name": "Aggressive Drive & Focus",
-      "description": "Pushes internal preamps or thresholds hard for dynamic presence and character.",
-      "settings": {
-        "Preamp Drive": 95,
-        "Low Band EQ": 95,
-        "Phase Invert": 127
-      }
-    }
-  ],
-  "uad helios type 69 legacy": [
-    {
-      "name": "Certified Studio Default",
-      "description": "Optimized basic configuration to get a balanced start on vocals or instruments.",
-      "settings": {
-        "Bass Cut": 64,
-        "Mid Freq": 64,
-        "Mid Gain": 64
-      }
-    },
-    {
-      "name": "Aggressive Drive & Focus",
-      "description": "Pushes internal preamps or thresholds hard for dynamic presence and character.",
-      "settings": {
-        "Bass Cut": 95,
-        "Mid Freq": 95,
-        "Mid Gain": 95
-      }
-    }
-  ],
-  "uad ssl e-series preamp": [
-    {
-      "name": "Certified Studio Default",
-      "description": "Optimized basic configuration to get a balanced start on vocals or instruments.",
-      "settings": {
-        "Line Gain": 64,
-        "Pad": 0,
-        "High-Pass Filter": 64
-      }
-    },
-    {
-      "name": "Aggressive Drive & Focus",
-      "description": "Pushes internal preamps or thresholds hard for dynamic presence and character.",
-      "settings": {
-        "Line Gain": 95,
-        "Pad": 127,
-        "High-Pass Filter": 95
-      }
-    }
-  ],
-  "uad telefunken v76 legacy": [
-    {
-      "name": "Certified Studio Default",
-      "description": "Optimized basic configuration to get a balanced start on vocals or instruments.",
-      "settings": {
-        "Gain Step": 64,
-        "Low Cut Filter": 0,
-        "Output Fader": 64
-      }
-    },
-    {
-      "name": "Aggressive Drive & Focus",
-      "description": "Pushes internal preamps or thresholds hard for dynamic presence and character.",
-      "settings": {
-        "Gain Step": 95,
-        "Low Cut Filter": 127,
-        "Output Fader": 95
-      }
-    }
-  ],
-  "uad teletronix la-2a gray": [
-    {
-      "name": "Certified Studio Default",
-      "description": "Optimized basic configuration to get a balanced start on vocals or instruments.",
-      "settings": {
-        "Peak Reduction": 64,
-        "Gain": 64,
-        "Mode": 0
-      }
-    },
-    {
-      "name": "Aggressive Drive & Focus",
-      "description": "Pushes internal preamps or thresholds hard for dynamic presence and character.",
-      "settings": {
-        "Peak Reduction": 95,
-        "Gain": 95,
-        "Mode": 127
-      }
-    }
-  ],
-  "uad teletronix la-2": [
-    {
-      "name": "Certified Studio Default",
-      "description": "Optimized basic configuration to get a balanced start on vocals or instruments.",
-      "settings": {
-        "Peak Reduction": 64,
-        "Gain": 64,
-        "Compress / Limit": 0
-      }
-    },
-    {
-      "name": "Aggressive Drive & Focus",
-      "description": "Pushes internal preamps or thresholds hard for dynamic presence and character.",
-      "settings": {
-        "Peak Reduction": 95,
-        "Gain": 95,
-        "Compress / Limit": 127
-      }
-    }
-  ],
-  "uad 1176se rev g": [
-    {
-      "name": "Certified Studio Default",
-      "description": "Optimized basic configuration to get a balanced start on vocals or instruments.",
-      "settings": {
-        "Input": 64,
-        "Output": 64,
-        "Attack": 64,
-        "Release": 64,
-        "Ratio": 0
-      }
-    },
-    {
-      "name": "Aggressive Drive & Focus",
-      "description": "Pushes internal preamps or thresholds hard for dynamic presence and character.",
-      "settings": {
-        "Input": 95,
-        "Output": 95,
-        "Attack": 95,
-        "Release": 95,
-        "Ratio": 127
-      }
-    }
-  ],
-  "uad 1176 rev a": [
-    {
-      "name": "Certified Studio Default",
-      "description": "Optimized basic configuration to get a balanced start on vocals or instruments.",
-      "settings": {
-        "Input Drive": 64,
-        "Output level": 64,
-        "Attack Rate": 64,
-        "Release Rate": 64
-      }
-    },
-    {
-      "name": "Aggressive Drive & Focus",
-      "description": "Pushes internal preamps or thresholds hard for dynamic presence and character.",
-      "settings": {
-        "Input Drive": 95,
-        "Output level": 95,
-        "Attack Rate": 95,
-        "Release Rate": 95
-      }
-    }
-  ],
-  "uad 1176ae 40th anniversary": [
-    {
-      "name": "Certified Studio Default",
-      "description": "Optimized basic configuration to get a balanced start on vocals or instruments.",
-      "settings": {
-        "Input Threshold": 64,
-        "Output Gain": 64,
-        "Ratio Switch": 0
-      }
-    },
-    {
-      "name": "Aggressive Drive & Focus",
-      "description": "Pushes internal preamps or thresholds hard for dynamic presence and character.",
-      "settings": {
-        "Input Threshold": 95,
-        "Output Gain": 95,
-        "Ratio Switch": 127
-      }
-    }
-  ],
-  "uad fairchild 660": [
-    {
-      "name": "Certified Studio Default",
-      "description": "Optimized basic configuration to get a balanced start on vocals or instruments.",
-      "settings": {
-        "Threshold": 64,
-        "Time Constant": 64,
-        "Input Gain": 64
-      }
-    },
-    {
-      "name": "Aggressive Drive & Focus",
-      "description": "Pushes internal preamps or thresholds hard for dynamic presence and character.",
-      "settings": {
-        "Threshold": 95,
-        "Time Constant": 95,
-        "Input Gain": 95
-      }
-    }
-  ],
-  "uad neve 2254": [
-    {
-      "name": "Certified Studio Default",
-      "description": "Optimized basic configuration to get a balanced start on vocals or instruments.",
-      "settings": {
-        "Comp Ratio": 0,
-        "Comp Threshold": 64,
-        "Limiter Threshold": 64,
-        "Comp Recovery": 64
-      }
-    },
-    {
-      "name": "Aggressive Drive & Focus",
-      "description": "Pushes internal preamps or thresholds hard for dynamic presence and character.",
-      "settings": {
-        "Comp Ratio": 127,
-        "Comp Threshold": 95,
-        "Limiter Threshold": 95,
-        "Comp Recovery": 95
-      }
-    }
-  ],
-  "uad precision buss compressor": [
-    {
-      "name": "Certified Studio Default",
-      "description": "Optimized basic configuration to get a balanced start on vocals or instruments.",
-      "settings": {
-        "Threshold": 64,
-        "Ratio": 0,
-        "Sidechain Filter": 0,
-        "Release": 64
-      }
-    },
-    {
-      "name": "Aggressive Drive & Focus",
-      "description": "Pushes internal preamps or thresholds hard for dynamic presence and character.",
-      "settings": {
-        "Threshold": 95,
-        "Ratio": 127,
-        "Sidechain Filter": 127,
-        "Release": 95
-      }
-    }
-  ],
-  "uad precision limiter": [
-    {
-      "name": "Certified Studio Default",
-      "description": "Optimized basic configuration to get a balanced start on vocals or instruments.",
-      "settings": {
-        "Ceiling": 64,
-        "Gain Boost": 64,
-        "Release Time": 64
-      }
-    },
-    {
-      "name": "Aggressive Drive & Focus",
-      "description": "Pushes internal preamps or thresholds hard for dynamic presence and character.",
-      "settings": {
-        "Ceiling": 95,
-        "Gain Boost": 95,
-        "Release Time": 95
-      }
-    }
-  ],
-  "uad precision maximizer": [
-    {
-      "name": "Certified Studio Default",
-      "description": "Optimized basic configuration to get a balanced start on vocals or instruments.",
-      "settings": {
-        "Limit Drive": 64,
-        "Shape Control": 64,
-        "Mix": 64,
-        "Bands Mode": 0
-      }
-    },
-    {
-      "name": "Aggressive Drive & Focus",
-      "description": "Pushes internal preamps or thresholds hard for dynamic presence and character.",
-      "settings": {
-        "Limit Drive": 95,
-        "Shape Control": 95,
-        "Mix": 95,
-        "Bands Mode": 127
-      }
-    }
-  ],
-  "uad precision de-esser": [
-    {
-      "name": "Certified Studio Default",
-      "description": "Optimized basic configuration to get a balanced start on vocals or instruments.",
-      "settings": {
-        "Threshold": 64,
-        "Frequency": 64,
-        "Bandwidth": 0,
-        "Mode": 0
-      }
-    },
-    {
-      "name": "Aggressive Drive & Focus",
-      "description": "Pushes internal preamps or thresholds hard for dynamic presence and character.",
-      "settings": {
-        "Threshold": 95,
-        "Frequency": 95,
-        "Bandwidth": 127,
-        "Mode": 127
-      }
-    }
-  ],
-  "uad valley people dyna-mite": [
-    {
-      "name": "Certified Studio Default",
-      "description": "Optimized basic configuration to get a balanced start on vocals or instruments.",
-      "settings": {
-        "Threshold": 64,
-        "Release": 64,
-        "Mode": 0
-      }
-    },
-    {
-      "name": "Aggressive Drive & Focus",
-      "description": "Pushes internal preamps or thresholds hard for dynamic presence and character.",
-      "settings": {
-        "Threshold": 95,
-        "Release": 95,
-        "Mode": 127
-      }
-    }
-  ],
-  "uad bx_optical compressor": [
-    {
-      "name": "Certified Studio Default",
-      "description": "Optimized basic configuration to get a balanced start on vocals or instruments.",
-      "settings": {
-        "Gain Reduction": 64,
-        "Makeup": 64,
-        "Sidechain": 0
-      }
-    },
-    {
-      "name": "Aggressive Drive & Focus",
-      "description": "Pushes internal preamps or thresholds hard for dynamic presence and character.",
-      "settings": {
-        "Gain Reduction": 95,
-        "Makeup": 95,
-        "Sidechain": 127
-      }
-    }
-  ],
-  "uad api 527 compressor": [
-    {
-      "name": "Certified Studio Default",
-      "description": "Optimized basic configuration to get a balanced start on vocals or instruments.",
-      "settings": {
-        "Threshold": 64,
-        "Ratio": 64,
-        "Thrust Filter": 0,
-        "Type": 0
-      }
-    },
-    {
-      "name": "Aggressive Drive & Focus",
-      "description": "Pushes internal preamps or thresholds hard for dynamic presence and character.",
-      "settings": {
-        "Threshold": 95,
-        "Ratio": 95,
-        "Thrust Filter": 127,
-        "Type": 127
-      }
-    }
-  ],
-  "uad pultec meq-5 mid-range eq": [
-    {
-      "name": "Certified Studio Default",
-      "description": "Optimized basic configuration to get a balanced start on vocals or instruments.",
-      "settings": {
-        "Low Mid Peak Freq": 64,
-        "Low Mid Boost": 64,
-        "Mid Dip Freq": 64,
-        "Mid Dip Gain": 64
-      }
-    },
-    {
-      "name": "Aggressive Drive & Focus",
-      "description": "Pushes internal preamps or thresholds hard for dynamic presence and character.",
-      "settings": {
-        "Low Mid Peak Freq": 95,
-        "Low Mid Boost": 95,
-        "Mid Dip Freq": 95,
-        "Mid Dip Gain": 95
-      }
-    }
-  ],
-  "uad pultec hlf-3c filter": [
-    {
-      "name": "Certified Studio Default",
-      "description": "Optimized basic configuration to get a balanced start on vocals or instruments.",
-      "settings": {
-        "High Pass": 0,
-        "Low Pass": 0
-      }
-    },
-    {
-      "name": "Aggressive Drive & Focus",
-      "description": "Pushes internal preamps or thresholds hard for dynamic presence and character.",
-      "settings": {
-        "High Pass": 127,
-        "Low Pass": 127
-      }
-    }
-  ],
-  "uad neve 31102": [
-    {
-      "name": "Certified Studio Default",
-      "description": "Optimized basic configuration to get a balanced start on vocals or instruments.",
-      "settings": {
-        "High Shelf Boost": 64,
-        "Mid Band Freq": 64,
-        "Mid Band Gain": 64
-      }
-    },
-    {
-      "name": "Aggressive Drive & Focus",
-      "description": "Pushes internal preamps or thresholds hard for dynamic presence and character.",
-      "settings": {
-        "High Shelf Boost": 95,
-        "Mid Band Freq": 95,
-        "Mid Band Gain": 95
-      }
-    }
-  ],
-  "uad api 550b": [
-    {
-      "name": "Certified Studio Default",
-      "description": "Optimized basic configuration to get a balanced start on vocals or instruments.",
-      "settings": {
-        "High Band": 64,
-        "High Gain": 64,
-        "Mid High Band": 64,
-        "Mid High Gain": 64
-      }
-    },
-    {
-      "name": "Aggressive Drive & Focus",
-      "description": "Pushes internal preamps or thresholds hard for dynamic presence and character.",
-      "settings": {
-        "High Band": 95,
-        "High Gain": 95,
-        "Mid High Band": 95,
-        "Mid High Gain": 95
-      }
-    }
-  ],
-  "uad millennia nseq-2 parametric eq": [
-    {
-      "name": "Certified Studio Default",
-      "description": "Optimized basic configuration to get a balanced start on vocals or instruments.",
-      "settings": {
-        "Twin Topology": 0,
-        "High Shelf Freq": 64,
-        "High Shelf Gain": 64
-      }
-    },
-    {
-      "name": "Aggressive Drive & Focus",
-      "description": "Pushes internal preamps or thresholds hard for dynamic presence and character.",
-      "settings": {
-        "Twin Topology": 127,
-        "High Shelf Freq": 95,
-        "High Shelf Gain": 95
-      }
-    }
-  ],
-  "uad sonnox oxford eq": [
-    {
-      "name": "Certified Studio Default",
-      "description": "Optimized basic configuration to get a balanced start on vocals or instruments.",
-      "settings": {
-        "EQ Curve Type": 0,
-        "Band 3 Gain": 64,
-        "Band 3 Q": 64
-      }
-    },
-    {
-      "name": "Aggressive Drive & Focus",
-      "description": "Pushes internal preamps or thresholds hard for dynamic presence and character.",
-      "settings": {
-        "EQ Curve Type": 127,
-        "Band 3 Gain": 95,
-        "Band 3 Q": 95
-      }
-    }
-  ],
-  "uad cambridge eq": [
-    {
-      "name": "Certified Studio Default",
-      "description": "Optimized basic configuration to get a balanced start on vocals or instruments.",
-      "settings": {
-        "Low Cut Filter Slope": 64,
-        "High Cut Filter Slope": 64,
-        "Band 2 Q-Factor": 64
-      }
-    },
-    {
-      "name": "Aggressive Drive & Focus",
-      "description": "Pushes internal preamps or thresholds hard for dynamic presence and character.",
-      "settings": {
-        "Low Cut Filter Slope": 95,
-        "High Cut Filter Slope": 95,
-        "Band 2 Q-Factor": 95
-      }
-    }
-  ],
-  "uad tonelux tilt active eq": [
-    {
-      "name": "Certified Studio Default",
-      "description": "Optimized basic configuration to get a balanced start on vocals or instruments.",
-      "settings": {
-        "Tilt Control": 64,
-        "Low-Pass Filter": 64
-      }
-    },
-    {
-      "name": "Aggressive Drive & Focus",
-      "description": "Pushes internal preamps or thresholds hard for dynamic presence and character.",
-      "settings": {
-        "Tilt Control": 95,
-        "Low-Pass Filter": 95
-      }
-    }
-  ],
-  "uad tube-tech pe 1c program equalizer": [
-    {
-      "name": "Certified Studio Default",
-      "description": "Optimized basic configuration to get a balanced start on vocals or instruments.",
-      "settings": {
-        "Low Boost Freq": 0,
-        "Low Boost Amount": 64,
-        "Low Atten Amount": 64
-      }
-    },
-    {
-      "name": "Aggressive Drive & Focus",
-      "description": "Pushes internal preamps or thresholds hard for dynamic presence and character.",
-      "settings": {
-        "Low Boost Freq": 127,
-        "Low Boost Amount": 95,
-        "Low Atten Amount": 95
-      }
-    }
-  ],
-  "uad tube-tech me 1b mid-range equalizer": [
-    {
-      "name": "Certified Studio Default",
-      "description": "Optimized basic configuration to get a balanced start on vocals or instruments.",
-      "settings": {
-        "Mid Boost Freq": 64,
-        "Mid Boost Gain": 64,
-        "Mid Dip Freq": 64
-      }
-    },
-    {
-      "name": "Aggressive Drive & Focus",
-      "description": "Pushes internal preamps or thresholds hard for dynamic presence and character.",
-      "settings": {
-        "Mid Boost Freq": 95,
-        "Mid Boost Gain": 95,
-        "Mid Dip Freq": 95
-      }
-    }
-  ],
-  "uad brainworx bx_digital v2": [
-    {
-      "name": "Certified Studio Default",
-      "description": "Optimized basic configuration to get a balanced start on vocals or instruments.",
-      "settings": {
-        "Mono-maker": 64,
-        "Mid High Shelf": 64,
-        "Side High Shelf": 64
-      }
-    },
-    {
-      "name": "Aggressive Drive & Focus",
-      "description": "Pushes internal preamps or thresholds hard for dynamic presence and character.",
-      "settings": {
-        "Mono-maker": 95,
-        "Mid High Shelf": 95,
-        "Side High Shelf": 95
-      }
-    }
-  ],
-  "uad precision equalizer": [
-    {
-      "name": "Certified Studio Default",
-      "description": "Optimized basic configuration to get a balanced start on vocals or instruments.",
-      "settings": {
-        "Low Cut Filter": 0,
-        "Band 1 Gain": 64,
-        "Band 4 Gain": 64
-      }
-    },
-    {
-      "name": "Aggressive Drive & Focus",
-      "description": "Pushes internal preamps or thresholds hard for dynamic presence and character.",
-      "settings": {
-        "Low Cut Filter": 127,
-        "Band 1 Gain": 95,
-        "Band 4 Gain": 95
-      }
-    }
-  ],
-  "uad harrison 32c se eq": [
-    {
-      "name": "Certified Studio Default",
-      "description": "Optimized basic configuration to get a balanced start on vocals or instruments.",
-      "settings": {
-        "Low EQ Frequency": 64,
-        "High Pass Filter": 64,
-        "Low Gain": 64
-      }
-    },
-    {
-      "name": "Aggressive Drive & Focus",
-      "description": "Pushes internal preamps or thresholds hard for dynamic presence and character.",
-      "settings": {
-        "Low EQ Frequency": 95,
-        "High Pass Filter": 95,
-        "Low Gain": 95
-      }
-    }
-  ],
-  "uad ssl 4000 g channel strip": [
-    {
-      "name": "Certified Studio Default",
-      "description": "Optimized basic configuration to get a balanced start on vocals or instruments.",
-      "settings": {
-        "EQ Type": 0,
-        "Dyn Threshold": 64,
-        "Exp Threshold": 64
-      }
-    },
-    {
-      "name": "Aggressive Drive & Focus",
-      "description": "Pushes internal preamps or thresholds hard for dynamic presence and character.",
-      "settings": {
-        "EQ Type": 127,
-        "Dyn Threshold": 95,
-        "Exp Threshold": 95
-      }
-    }
-  ],
-  "uad ssl 9000 k channel strip": [
-    {
-      "name": "Certified Studio Default",
-      "description": "Optimized basic configuration to get a balanced start on vocals or instruments.",
-      "settings": {
-        "Gain": 64,
-        "Gate Threshold": 64,
-        "Comp Attack": 64
-      }
-    },
-    {
-      "name": "Aggressive Drive & Focus",
-      "description": "Pushes internal preamps or thresholds hard for dynamic presence and character.",
-      "settings": {
-        "Gain": 95,
-        "Gate Threshold": 95,
-        "Comp Attack": 95
-      }
-    }
-  ],
-  "uad api vision channel strip legacy": [
-    {
-      "name": "Certified Studio Default",
-      "description": "Optimized basic configuration to get a balanced start on vocals or instruments.",
-      "settings": {
-        "Preamp Gain": 64,
-        "Comp Threshold": 64,
-        "Low Cut Filter": 0
-      }
-    },
-    {
-      "name": "Aggressive Drive & Focus",
-      "description": "Pushes internal preamps or thresholds hard for dynamic presence and character.",
-      "settings": {
-        "Preamp Gain": 95,
-        "Comp Threshold": 95,
-        "Low Cut Filter": 127
-      }
-    }
-  ],
-  "uad brainworx bx_console ssc": [
-    {
-      "name": "Certified Studio Default",
-      "description": "Optimized basic configuration to get a balanced start on vocals or instruments.",
-      "settings": {
-        "TMT Channel": 0,
-        "Input Gain": 64,
-        "EQ Low Boost": 64
-      }
-    },
-    {
-      "name": "Aggressive Drive & Focus",
-      "description": "Pushes internal preamps or thresholds hard for dynamic presence and character.",
-      "settings": {
-        "TMT Channel": 127,
-        "Input Gain": 95,
-        "EQ Low Boost": 95
-      }
-    }
-  ],
-  "uad brainworx bx_console n": [
-    {
-      "name": "Certified Studio Default",
-      "description": "Optimized basic configuration to get a balanced start on vocals or instruments.",
-      "settings": {
-        "TMT Active": 0,
-        "VCA Compressor Threshold": 64,
-        "Gate Threshold": 64
-      }
-    },
-    {
-      "name": "Aggressive Drive & Focus",
-      "description": "Pushes internal preamps or thresholds hard for dynamic presence and character.",
-      "settings": {
-        "TMT Active": 127,
-        "VCA Compressor Threshold": 95,
-        "Gate Threshold": 95
-      }
-    }
-  ],
-  "uad brainworx bx_console focusrite sc": [
-    {
-      "name": "Certified Studio Default",
-      "description": "Optimized basic configuration to get a balanced start on vocals or instruments.",
-      "settings": {
-        "Preamp Drive": 64,
-        "ISA 110 Low EQ": 64,
-        "ISA 130 Compressor": 64
-      }
-    },
-    {
-      "name": "Aggressive Drive & Focus",
-      "description": "Pushes internal preamps or thresholds hard for dynamic presence and character.",
-      "settings": {
-        "Preamp Drive": 95,
-        "ISA 110 Low EQ": 95,
-        "ISA 130 Compressor": 95
-      }
-    }
-  ],
-  "uad neve 88rs legacy": [
-    {
-      "name": "Certified Studio Default",
-      "description": "Optimized basic configuration to get a balanced start on vocals or instruments.",
-      "settings": {
-        "Preamp Level": 64,
-        "Comp Limit": 64,
-        "Gate Range": 64
-      }
-    },
-    {
-      "name": "Aggressive Drive & Focus",
-      "description": "Pushes internal preamps or thresholds hard for dynamic presence and character.",
-      "settings": {
-        "Preamp Level": 95,
-        "Comp Limit": 95,
-        "Gate Range": 95
-      }
-    }
-  ],
-  "uad ams neve dfc legacy": [
-    {
-      "name": "Certified Studio Default",
-      "description": "Optimized basic configuration to get a balanced start on vocals or instruments.",
-      "settings": {
-        "Gate Threshold": 64,
-        "Parametric Low Gain": 64,
-        "Output Limit": 64
-      }
-    },
-    {
-      "name": "Aggressive Drive & Focus",
-      "description": "Pushes internal preamps or thresholds hard for dynamic presence and character.",
-      "settings": {
-        "Gate Threshold": 95,
-        "Parametric Low Gain": 95,
-        "Output Limit": 95
-      }
-    }
-  ],
-  "uad oxide tape recorder legacy": [
-    {
-      "name": "Certified Studio Default",
-      "description": "Optimized basic configuration to get a balanced start on vocals or instruments.",
-      "settings": {
-        "Tape Speed": 0,
-        "Input Drive": 64,
-        "EQ Curve": 0
-      }
-    },
-    {
-      "name": "Aggressive Drive & Focus",
-      "description": "Pushes internal preamps or thresholds hard for dynamic presence and character.",
-      "settings": {
-        "Tape Speed": 127,
-        "Input Drive": 95,
-        "EQ Curve": 127
-      }
-    }
-  ],
-  "uad ampex master tape legacy": [
-    {
-      "name": "Certified Studio Default",
-      "description": "Optimized basic configuration to get a balanced start on vocals or instruments.",
-      "settings": {
-        "Tape Speed Select": 0,
-        "Tape Formula": 0,
-        "Bias Control": 0
-      }
-    },
-    {
-      "name": "Aggressive Drive & Focus",
-      "description": "Pushes internal preamps or thresholds hard for dynamic presence and character.",
-      "settings": {
-        "Tape Speed Select": 127,
-        "Tape Formula": 127,
-        "Bias Control": 127
-      }
-    }
-  ],
-  "uad studer multi tape legacy": [
-    {
-      "name": "Certified Studio Default",
-      "description": "Optimized basic configuration to get a balanced start on vocals or instruments.",
-      "settings": {
-        "Speed Select": 0,
-        "Tape Cal": 0,
-        "Input Stage": 64
-      }
-    },
-    {
-      "name": "Aggressive Drive & Focus",
-      "description": "Pushes internal preamps or thresholds hard for dynamic presence and character.",
-      "settings": {
-        "Speed Select": 127,
-        "Tape Cal": 127,
-        "Input Stage": 95
-      }
-    }
-  ],
-  "uad vertigo vsm-3 satellite": [
-    {
-      "name": "Certified Studio Default",
-      "description": "Optimized basic configuration to get a balanced start on vocals or instruments.",
-      "settings": {
-        "2nd Harmonic Drive": 64,
-        "3rd Harmonic Drive": 64,
-        "Mode Select": 0
-      }
-    },
-    {
-      "name": "Aggressive Drive & Focus",
-      "description": "Pushes internal preamps or thresholds hard for dynamic presence and character.",
-      "settings": {
-        "2nd Harmonic Drive": 95,
-        "3rd Harmonic Drive": 95,
-        "Mode Select": 127
-      }
-    }
-  ],
-  "uad brainworx bx_saturator v2": [
-    {
-      "name": "Certified Studio Default",
-      "description": "Optimized basic configuration to get a balanced start on vocals or instruments.",
-      "settings": {
-        "Low Mid Saturation": 64,
-        "High Mid Saturation": 64,
-        "Crossover Frequency": 64
-      }
-    },
-    {
-      "name": "Aggressive Drive & Focus",
-      "description": "Pushes internal preamps or thresholds hard for dynamic presence and character.",
-      "settings": {
-        "Low Mid Saturation": 95,
-        "High Mid Saturation": 95,
-        "Crossover Frequency": 95
-      }
-    }
-  ],
-  "uad oto biscuit 8-bit effects processor": [
-    {
-      "name": "Certified Studio Default",
-      "description": "Optimized basic configuration to get a balanced start on vocals or instruments.",
-      "settings": {
-        "Bit Crush Depth": 64,
-        "Sample Rate Clock": 64,
-        "Filter Cutoff": 64
-      }
-    },
-    {
-      "name": "Aggressive Drive & Focus",
-      "description": "Pushes internal preamps or thresholds hard for dynamic presence and character.",
-      "settings": {
-        "Bit Crush Depth": 95,
-        "Sample Rate Clock": 95,
-        "Filter Cutoff": 95
-      }
-    }
-  ],
-  "uad raw distortion pedal": [
-    {
-      "name": "Certified Studio Default",
-      "description": "Optimized basic configuration to get a balanced start on vocals or instruments.",
-      "settings": {
-        "Distortion Amount": 64,
-        "Filter EQ": 64,
-        "Output Volume": 64
-      }
-    },
-    {
-      "name": "Aggressive Drive & Focus",
-      "description": "Pushes internal preamps or thresholds hard for dynamic presence and character.",
-      "settings": {
-        "Distortion Amount": 95,
-        "Filter EQ": 95,
-        "Output Volume": 95
-      }
-    }
-  ],
-  "uad ts808 tube screamer": [
-    {
-      "name": "Certified Studio Default",
-      "description": "Optimized basic configuration to get a balanced start on vocals or instruments.",
-      "settings": {
-        "Overdrive Gain": 64,
-        "Tone Center": 64,
-        "Level Output": 64
-      }
-    },
-    {
-      "name": "Aggressive Drive & Focus",
-      "description": "Pushes internal preamps or thresholds hard for dynamic presence and character.",
-      "settings": {
-        "Overdrive Gain": 95,
-        "Tone Center": 95,
-        "Level Output": 95
-      }
-    }
-  ],
-  "uad proco rat distortion": [
-    {
-      "name": "Certified Studio Default",
-      "description": "Optimized basic configuration to get a balanced start on vocals or instruments.",
-      "settings": {
-        "Drive Level": 64,
-        "Filter Cut": 64,
-        "Master Vol": 64
-      }
-    },
-    {
-      "name": "Aggressive Drive & Focus",
-      "description": "Pushes internal preamps or thresholds hard for dynamic presence and character.",
-      "settings": {
-        "Drive Level": 95,
-        "Filter Cut": 95,
-        "Master Vol": 95
-      }
-    }
-  ],
-  "uad realverb pro": [
-    {
-      "name": "Certified Studio Default",
-      "description": "Optimized basic configuration to get a balanced start on vocals or instruments.",
-      "settings": {
-        "Room Material": 0,
-        "Decay Time": 64,
-        "Mix": 64
-      }
-    },
-    {
-      "name": "Aggressive Drive & Focus",
-      "description": "Pushes internal preamps or thresholds hard for dynamic presence and character.",
-      "settings": {
-        "Room Material": 127,
-        "Decay Time": 95,
-        "Mix": 95
-      }
-    }
-  ],
-  "uad dreamverb room modeler": [
-    {
-      "name": "Certified Studio Default",
-      "description": "Optimized basic configuration to get a balanced start on vocals or instruments.",
-      "settings": {
-        "Space Size": 64,
-        "Reflections Level": 64,
-        "Early Materials": 0
-      }
-    },
-    {
-      "name": "Aggressive Drive & Focus",
-      "description": "Pushes internal preamps or thresholds hard for dynamic presence and character.",
-      "settings": {
-        "Space Size": 95,
-        "Reflections Level": 95,
-        "Early Materials": 127
-      }
-    }
-  ],
-  "uad ocean way studios legacy": [
-    {
-      "name": "Certified Studio Default",
-      "description": "Optimized basic configuration to get a balanced start on vocals or instruments.",
-      "settings": {
-        "Room Select": 0,
-        "Mic Distance": 0,
-        "Pre Delay": 64
-      }
-    },
-    {
-      "name": "Aggressive Drive & Focus",
-      "description": "Pushes internal preamps or thresholds hard for dynamic presence and character.",
-      "settings": {
-        "Room Select": 127,
-        "Mic Distance": 127,
-        "Pre Delay": 95
-      }
-    }
-  ],
-  "uad brainworx bx_roomms": [
-    {
-      "name": "Certified Studio Default",
-      "description": "Optimized basic configuration to get a balanced start on vocals or instruments.",
-      "settings": {
-        "Mono-maker": 64,
-        "Decay": 64,
-        "Side Width": 64
-      }
-    },
-    {
-      "name": "Aggressive Drive & Focus",
-      "description": "Pushes internal preamps or thresholds hard for dynamic presence and character.",
-      "settings": {
-        "Mono-maker": 95,
-        "Decay": 95,
-        "Side Width": 95
-      }
-    }
-  ],
-  "uad ep-34 tape echo legacy": [
-    {
-      "name": "Certified Studio Default",
-      "description": "Optimized basic configuration to get a balanced start on vocals or instruments.",
-      "settings": {
-        "Delay Time Select": 64,
-        "Echo Feedback": 64,
-        "Tape Age": 0
-      }
-    },
-    {
-      "name": "Aggressive Drive & Focus",
-      "description": "Pushes internal preamps or thresholds hard for dynamic presence and character.",
-      "settings": {
-        "Delay Time Select": 95,
-        "Echo Feedback": 95,
-        "Tape Age": 127
-      }
-    }
-  ],
-  "uad korg sdd-3000 legacy": [
-    {
-      "name": "Certified Studio Default",
-      "description": "Optimized basic configuration to get a balanced start on vocals or instruments.",
-      "settings": {
-        "Delay Step": 64,
-        "Filter Cut": 0,
-        "Modulation Depth": 64
-      }
-    },
-    {
-      "name": "Aggressive Drive & Focus",
-      "description": "Pushes internal preamps or thresholds hard for dynamic presence and character.",
-      "settings": {
-        "Delay Step": 95,
-        "Filter Cut": 127,
-        "Modulation Depth": 95
-      }
-    }
-  ],
-  "uad cooper time cube mkii legacy": [
-    {
-      "name": "Certified Studio Default",
-      "description": "Optimized basic configuration to get a balanced start on vocals or instruments.",
-      "settings": {
-        "Coarse Delay A": 64,
-        "Coarse Delay B": 64,
-        "Mix A/B": 64
-      }
-    },
-    {
-      "name": "Aggressive Drive & Focus",
-      "description": "Pushes internal preamps or thresholds hard for dynamic presence and character.",
-      "settings": {
-        "Coarse Delay A": 95,
-        "Coarse Delay B": 95,
-        "Mix A/B": 95
-      }
-    }
-  ],
+  
+],
   "uad ams rmx16 legacy": [
     {
       "name": "Certified Studio Default",
@@ -4331,7 +3112,7 @@ export const UAD_PRESETS: Record<string, UADPreset[]> = {
       "name": "Certified Studio Default",
       "description": "Optimized basic configuration to get a balanced start on vocals or instruments.",
       "settings": {
-        "Gain Level": 64,
+        "Gain": 64,
         "Bright Voicing": 0,
         "Output Master": 64
       }
@@ -4340,7 +3121,7 @@ export const UAD_PRESETS: Record<string, UADPreset[]> = {
       "name": "Aggressive Drive & Focus",
       "description": "Pushes internal preamps or thresholds hard for dynamic presence and character.",
       "settings": {
-        "Gain Level": 95,
+        "Gain": 95,
         "Bright Voicing": 127,
         "Output Master": 95
       }

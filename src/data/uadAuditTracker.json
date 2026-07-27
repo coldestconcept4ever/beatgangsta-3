@@ -1,10 +1,5 @@
 {
-  "currentAudit": {
-    "number": 39,
-    "name": "uad ocean way microphone collection",
-    "displayName": "UAD Ocean Way Microphone Collection",
-    "status": "Approved & Updated"
-  },
+  "currentAudit": 64,
   "auditHistory": [
     {
       "number": 1,
@@ -278,6 +273,608 @@
       "displayName": "UAD Ocean Way Microphone Collection",
       "auditedAt": "2026-07-20T17:05:00Z",
       "status": "Approved & Updated"
+    },
+    {
+      "number": 40,
+      "name": "uad ts overdrive",
+      "displayName": "UAD TS Overdrive",
+      "auditedAt": "2026-07-20T17:15:00Z",
+      "status": "Approved & Updated"
+    },
+    {
+      "number": 41,
+      "name": "uad korg sdd-3000 digital delay",
+      "displayName": "UAD Korg SDD-3000 Digital Delay",
+      "auditedAt": "2026-07-27T04:49:35.808Z",
+      "status": "Approved & Updated"
+    },
+    {
+      "number": 42,
+      "name": "uad ams rmx16 expanded digital reverb",
+      "displayName": "UAD AMS RMX16 Expanded Digital Reverb",
+      "auditedAt": "2026-07-27T04:59:25.056Z",
+      "status": "Approved & Updated"
+    },
+    {
+      "number": 43,
+      "name": "uad pure plate reverb",
+      "displayName": "UAD Pure Plate Reverb",
+      "auditedAt": "2026-07-27T05:03:03.318Z",
+      "status": "Approved & Updated"
+    },
+    {
+      "number": 44,
+      "name": "uad ssl 4000 g bus compressor collection",
+      "displayName": "UAD SSL 4000 G Bus Compressor Collection",
+      "auditedAt": "2026-07-27T05:06:14.511Z",
+      "status": "Approved & Updated"
+    },
+    {
+      "number": 45,
+      "name": "uad antares auto-tune realtime",
+      "displayName": "UAD Antares Auto-Tune Realtime",
+      "auditedAt": "2026-07-27T05:09:17.905Z",
+      "status": "Approved & Updated"
+    },
+    {
+      "number": 46,
+      "name": "uad moog multimode filter collection",
+      "displayName": "UAD Moog Multimode Filter Collection",
+      "auditedAt": "2026-07-27T05:14:18.994Z",
+      "status": "Approved & Updated"
+    },
+    {
+      "number": 36,
+      "name": "uad ssl 4000 e channel strip collection",
+      "displayName": "UAD SSL 4000 E Channel Strip Collection",
+      "auditedAt": "2026-07-27T05:17:27.986Z",
+      "status": "Approved & Updated"
+    },
+    {
+      "number": 37,
+      "name": "uad api 2500 bus compressor",
+      "displayName": "UAD API 2500 Bus Compressor",
+      "auditedAt": "2026-07-27T05:17:59.982Z",
+      "status": "Approved & Updated"
+    },
+    {
+      "number": 38,
+      "name": "uad sphere mic collection",
+      "displayName": "UAD Sphere Mic Collection",
+      "auditedAt": "2026-07-27T05:20:05.134Z",
+      "status": "Approved & Updated"
+    },
+    {
+      "number": 39,
+      "name": "uad manley voxbox channel strip",
+      "displayName": "UAD Manley VOXBOX Channel Strip",
+      "auditedAt": "2026-07-27T05:20:42.663Z",
+      "status": "Approved & Updated"
+    },
+    {
+      "number": 40,
+      "name": "uad galaxy tape echo",
+      "displayName": "UAD Galaxy Tape Echo",
+      "auditedAt": "2026-07-27T05:21:11.523Z",
+      "status": "Approved & Updated"
+    },
+    {
+      "number": 41,
+      "name": "uad studio d chorus",
+      "displayName": "UAD Studio D Chorus",
+      "auditedAt": "2026-07-27T05:21:45.155Z",
+      "status": "Approved & Updated"
+    },
+    {
+      "number": 42,
+      "name": "uad brigade chorus",
+      "displayName": "UAD Brigade Chorus",
+      "auditedAt": "2026-07-27T05:22:26.387Z",
+      "status": "Approved & Updated"
+    },
+    {
+      "number": 43,
+      "name": "uad fender 55 tweed deluxe amplifier",
+      "displayName": "UAD Fender 55 Tweed Deluxe Amplifier",
+      "auditedAt": "2026-07-27T05:25:28.806Z",
+      "status": "Approved & Updated"
+    },
+    {
+      "number": 44,
+      "name": "uad bx_digital v3 eq collection",
+      "displayName": "UAD bx_digital V3 EQ Collection",
+      "auditedAt": "2026-07-27T05:25:45.485Z",
+      "status": "Approved"
+    },
+    {
+      "number": 45,
+      "name": "uad oxide tape recorder",
+      "displayName": "UAD Oxide Tape Recorder",
+      "auditedAt": "2026-07-27T05:26:12.834Z",
+      "status": "Approved"
+    },
+    {
+      "number": 46,
+      "name": "uad akg bx 20 spring reverb",
+      "displayName": "UAD AKG BX 20 Spring Reverb",
+      "auditedAt": "2026-07-27T05:26:33.025Z",
+      "status": "Approved"
+    },
+    {
+      "number": 47,
+      "name": "uad tube-tech eq collection",
+      "displayName": "UAD Tube-Tech EQ Collection",
+      "auditedAt": "2026-07-27T05:27:02.560Z",
+      "status": "Approved & Updated"
+    },
+    {
+      "number": 48,
+      "name": "uad neve 88rs channel strip collection",
+      "displayName": "UAD Neve 88RS Channel Strip Collection",
+      "auditedAt": "2026-07-27T05:27:39.105Z",
+      "status": "Approved & Updated"
+    },
+    {
+      "number": 49,
+      "name": "uad tube-tech cl 1b compressor",
+      "displayName": "UAD Tube-Tech CL 1B Compressor (Legacy)",
+      "auditedAt": "2026-07-27T05:28:25.258Z",
+      "status": "Approved & Updated"
+    },
+    {
+      "number": 50,
+      "name": "uad raw distortion",
+      "displayName": "UAD Raw Distortion",
+      "auditedAt": "2026-07-27T05:28:47.001Z",
+      "status": "Approved"
+    },
+    {
+      "number": 51,
+      "name": "uad bermuda triangle distortion",
+      "displayName": "UAD Bermuda Triangle Distortion",
+      "auditedAt": "2026-07-27T05:29:01.164Z",
+      "status": "Approved"
+    },
+    {
+      "number": 52,
+      "name": "uad manley variable mu limiter",
+      "displayName": "UAD Manley Variable Mu Limiter",
+      "auditedAt": "2026-07-27T05:30:05.622Z",
+      "status": "Approved & Updated"
+    },
+    {
+      "number": 53,
+      "name": "uad massenburg designworks mdweq5 eq",
+      "displayName": "UAD Massenburg DesignWorks MDWEQ5 EQ",
+      "auditedAt": "2026-07-27T05:35:48.414Z",
+      "status": "Approved & Updated"
+    },
+    {
+      "number": 54,
+      "name": "uad ams rmx16 expanded digital reverb",
+      "displayName": "UAD AMS RMX16 Expanded Digital Reverb",
+      "auditedAt": "2026-07-27T05:36:31.281Z",
+      "status": "Approved & Updated"
+    },
+    {
+      "number": 55,
+      "name": "uad ams rmx16 legacy",
+      "displayName": "UAD AMS RMX16 Digital Reverb (Legacy)",
+      "auditedAt": "2026-07-27T05:36:31.282Z",
+      "status": "Approved & Updated"
+    },
+    {
+      "number": 56,
+      "name": "uad thermionic culture vulture distortion",
+      "displayName": "UAD Thermionic Culture Vulture Distortion",
+      "auditedAt": "2026-07-27T05:36:58.780Z",
+      "status": "Approved & Updated"
+    },
+    {
+      "number": 57,
+      "name": "uad neve 1073 preamp and eq collection",
+      "displayName": "UAD Neve 1073 Preamp and EQ Collection",
+      "auditedAt": "2026-07-27T05:37:29.275Z",
+      "status": "Approved & Updated"
+    },
+    {
+      "number": 58,
+      "name": "uad ua 610-a tube preamp and eq",
+      "displayName": "UAD UA 610-A Tube Preamp and EQ",
+      "auditedAt": "2026-07-27T05:38:40.098Z",
+      "status": "Approved & Updated"
+    },
+    {
+      "number": 59,
+      "name": "uad ua 610-b tube preamp and eq",
+      "displayName": "UAD UA 610-B Tube Preamp and EQ",
+      "auditedAt": "2026-07-27T05:38:40.098Z",
+      "status": "Approved & Updated"
+    },
+    {
+      "number": 60,
+      "name": "uad fairchild tube limiter collection",
+      "displayName": "UAD Fairchild Tube Limiter Collection",
+      "auditedAt": "2026-07-27T05:39:21.279Z",
+      "status": "Approved & Updated"
+    },
+    {
+      "number": 61,
+      "name": "uad api vision channel strip legacy",
+      "displayName": "UAD API Vision Channel Strip Legacy",
+      "auditedAt": "2026-07-27T05:39:55.093Z",
+      "status": "Approved & Updated"
+    },
+    {
+      "number": 62,
+      "name": "uad pultec passive eq collection",
+      "displayName": "UAD Pultec Passive EQ Collection",
+      "auditedAt": "2026-07-27T05:40:27.479Z",
+      "status": "Approved & Updated"
+    },
+    {
+      "number": 63,
+      "name": "uad ocean way studios room modeler",
+      "displayName": "UAD Ocean Way Studios Room Modeler",
+      "auditedAt": "2026-07-27T05:40:51.328Z",
+      "status": "Approved & Updated"
+    },
+    {
+      "number": 64,
+      "name": "uad oxford inflator",
+      "displayName": "UAD Oxford Inflator",
+      "auditedAt": "2026-07-27T05:41:20.266Z",
+      "status": "Approved & Updated"
+    },
+    {
+      "number": 65,
+      "name": "uad teletronix la-2a leveler collection",
+      "displayName": "UAD Teletronix LA-2A Leveler Collection",
+      "auditedAt": "2026-07-27T05:41:50.030Z",
+      "status": "Approved & Updated"
+    },
+    {
+      "number": 66,
+      "name": "uad api 550a",
+      "displayName": "UAD API 550A Parametric EQ",
+      "auditedAt": "2026-07-27T05:42:35.248Z",
+      "status": "Approved & Updated"
+    },
+    {
+      "number": 67,
+      "name": "uad api 560",
+      "displayName": "UAD API 560 Graphic EQ",
+      "auditedAt": "2026-07-27T05:42:35.249Z",
+      "status": "Approved & Updated"
+    },
+    {
+      "number": 68,
+      "name": "uad precision k-stereo ambience recovery",
+      "displayName": "UAD Precision K-Stereo Ambience Recovery",
+      "auditedAt": "2026-07-27T05:43:04.826Z",
+      "status": "Approved & Updated"
+    },
+    {
+      "number": 69,
+      "name": "uad ua 1176 limiter collection",
+      "displayName": "UAD UA 1176 Limiter Collection",
+      "auditedAt": "2026-07-27T05:43:33.733Z",
+      "status": "Approved & Updated"
+    },
+    {
+      "number": 70,
+      "name": "uad mxr flanger-doubler",
+      "displayName": "UAD MXR Flanger-Doubler",
+      "auditedAt": "2026-07-27T05:44:52.188Z",
+      "status": "Approved & Updated"
+    },
+    {
+      "number": 71,
+      "name": "uad little labs vog bass enhancer",
+      "displayName": "UAD Little Labs VOG Bass Enhancer",
+      "auditedAt": "2026-07-27T05:45:08.532Z",
+      "status": "Approved & Updated"
+    },
+    {
+      "number": 72,
+      "name": "uad ampex atr-102 tape recorder",
+      "displayName": "UAD Ampex ATR-102 Tape Recorder",
+      "auditedAt": "2026-07-27T05:45:34.385Z",
+      "status": "Approved & Updated"
+    },
+    {
+      "number": 83,
+      "name": "uad bx_digital v2 eq",
+      "displayName": "UAD bx_digital V2 EQ",
+      "auditedAt": "2026-07-27T05:47:27.260Z",
+      "status": "Approved & Updated"
+    },
+    {
+      "number": 84,
+      "name": "uad lexicon 224 digital reverb",
+      "displayName": "UAD Lexicon 224 Digital Reverb",
+      "auditedAt": "2026-07-27T05:48:00.359Z",
+      "status": "Approved & Updated"
+    },
+    {
+      "number": 85,
+      "name": "uad lexicon 224 legacy",
+      "displayName": "UAD Lexicon 224 Digital Reverb (Legacy)",
+      "auditedAt": "2026-07-27T05:48:00.360Z",
+      "status": "Approved & Updated"
+    },
+    {
+      "number": 86,
+      "name": "uad ssl 4000 e legacy channel strip",
+      "displayName": "UAD SSL 4000 E Legacy Channel Strip",
+      "auditedAt": "2026-07-27T05:48:38.666Z",
+      "status": "Approved & Updated"
+    },
+    {
+      "number": 87,
+      "name": "uad ssl 4000 g legacy bus compressor",
+      "displayName": "UAD SSL 4000 G Legacy Bus Compressor",
+      "auditedAt": "2026-07-27T05:49:07.911Z",
+      "status": "Approved & Updated"
+    },
+    {
+      "number": 88,
+      "name": "uad studer a800 tape recorder",
+      "displayName": "UAD Studer A800 Tape Recorder",
+      "auditedAt": "2026-07-27T05:49:35.292Z",
+      "status": "Approved & Updated"
+    },
+    {
+      "number": 89,
+      "name": "uad ep-34 tape echo",
+      "displayName": "UAD EP-34 Tape Echo",
+      "auditedAt": "2026-07-27T05:50:06.249Z",
+      "status": "Approved & Updated"
+    },
+    {
+      "number": 90,
+      "name": "uad precision enhancer hz",
+      "displayName": "UAD Precision Enhancer Hz",
+      "auditedAt": "2026-07-27T05:50:27.393Z",
+      "status": "Approved & Updated"
+    },
+    {
+      "number": 91,
+      "name": "uad manley massive passive eq collection",
+      "displayName": "UAD Manley Massive Passive EQ Collection",
+      "auditedAt": "2026-07-27T05:51:09.085Z",
+      "status": "Approved & Updated"
+    },
+    {
+      "number": 92,
+      "name": "uad trident a-range eq",
+      "displayName": "UAD Trident A-Range EQ",
+      "auditedAt": "2026-07-27T05:51:34.626Z",
+      "status": "Approved & Updated"
+    },
+    {
+      "number": 93,
+      "name": "uad empirical labs el7 fatso compressor",
+      "displayName": "UAD Empirical Labs EL7 FATSO Compressor",
+      "auditedAt": "2026-07-27T05:52:01.796Z",
+      "status": "Approved & Updated"
+    },
+    {
+      "number": 94,
+      "name": "uad emt 250 digital reverb",
+      "displayName": "UAD EMT 250 Digital Reverb",
+      "auditedAt": "2026-07-27T05:52:38.185Z",
+      "status": "Approved & Updated"
+    },
+    {
+      "number": 95,
+      "name": "uad neve 31102 eq",
+      "displayName": "UAD Neve 31102 EQ",
+      "auditedAt": "2026-07-27T05:53:16.388Z",
+      "status": "Approved & Updated"
+    },
+    {
+      "number": 96,
+      "name": "uad cooper time cube delay",
+      "displayName": "UAD Cooper Time Cube Delay",
+      "auditedAt": "2026-07-27T21:00:57.172Z",
+      "status": "Approved & Updated"
+    },
+    {
+      "number": 97,
+      "name": "uad harrison 32c eq",
+      "displayName": "UAD Harrison 32C EQ",
+      "auditedAt": "2026-07-27T21:01:25.708Z",
+      "status": "Approved & Updated"
+    },
+    {
+      "number": 98,
+      "name": "uad little labs ibp phase alignment",
+      "displayName": "UAD Little Labs IBP Phase Alignment",
+      "auditedAt": "2026-07-27T21:01:42.120Z",
+      "status": "Approved & Updated"
+    },
+    {
+      "number": 99,
+      "name": "uad moog multimode legacy filter",
+      "displayName": "UAD Moog Multimode Legacy Filter",
+      "auditedAt": "2026-07-27T21:02:01.360Z",
+      "status": "Approved & Updated"
+    },
+    {
+      "number": 100,
+      "name": "uad precision enhancer khz",
+      "displayName": "UAD Precision Enhancer kHz",
+      "auditedAt": "2026-07-27T21:02:17.530Z",
+      "status": "Approved & Updated"
+    },
+    {
+      "number": 101,
+      "name": "uad dbx 160 compressor",
+      "displayName": "UAD dbx 160 Compressor",
+      "auditedAt": "2026-07-27T21:03:18.494Z",
+      "status": "Approved & Updated"
+    },
+    {
+      "number": 102,
+      "name": "uad precision buss compressor",
+      "displayName": "UAD Precision Buss Compressor",
+      "auditedAt": "2026-07-27T21:03:52.798Z",
+      "status": "Approved & Updated"
+    },
+    {
+      "number": 103,
+      "name": "uad precision de-esser",
+      "displayName": "UAD Precision De-Esser",
+      "auditedAt": "2026-07-27T21:04:14.512Z",
+      "status": "Approved & Updated"
+    },
+    {
+      "number": 104,
+      "name": "uad precision maximizer",
+      "displayName": "UAD Precision Maximizer",
+      "auditedAt": "2026-07-27T21:04:40.158Z",
+      "status": "Approved & Updated"
+    },
+    {
+      "number": 105,
+      "name": "uad teletronix la-3a audio leveler",
+      "displayName": "UAD Teletronix LA-3A Audio Leveler",
+      "auditedAt": "2026-07-27T21:05:15.251Z",
+      "status": "Approved & Updated"
+    },
+    {
+      "number": 106,
+      "name": "uad neve 88rs legacy channel strip",
+      "displayName": "UAD Neve 88RS Legacy Channel Strip",
+      "auditedAt": "2026-07-27T21:05:35.817Z",
+      "status": "Approved"
+    },
+    {
+      "number": 107,
+      "name": "uad helios type 69 legacy eq",
+      "displayName": "UAD Helios Type 69 Legacy EQ",
+      "auditedAt": "2026-07-27T21:05:59.842Z",
+      "status": "Approved & Updated"
+    },
+    {
+      "number": 108,
+      "name": "uad neve 1081 eq",
+      "displayName": "UAD Neve 1081 EQ",
+      "auditedAt": "2026-07-27T21:06:33.846Z",
+      "status": "Approved & Updated"
+    },
+    {
+      "number": 109,
+      "name": "uad neve 33609 stereo limiter compressor",
+      "displayName": "UAD Neve 33609 Stereo Limiter Compressor",
+      "auditedAt": "2026-07-27T21:07:00.892Z",
+      "status": "Approved & Updated"
+    },
+    {
+      "number": 110,
+      "name": "uad neve 1073 legacy eq",
+      "displayName": "UAD Neve 1073 Legacy EQ",
+      "auditedAt": "2026-07-27T21:07:30.010Z",
+      "status": "Approved & Updated"
+    },
+    {
+      "number": 111,
+      "name": "uad precision multiband compressor",
+      "displayName": "UAD Precision Multiband Compressor",
+      "auditedAt": "2026-07-27T21:07:56.476Z",
+      "status": "Approved"
+    },
+    {
+      "number": 112,
+      "name": "uad precision equalizer",
+      "displayName": "UAD Precision Equalizer",
+      "auditedAt": "2026-07-27T21:08:23.039Z",
+      "status": "Approved & Updated"
+    },
+    {
+      "number": 113,
+      "name": "uad emt 140 plate reverb",
+      "displayName": "UAD EMT 140 Plate Reverb",
+      "auditedAt": "2026-07-27T21:08:48.615Z",
+      "status": "Approved & Updated"
+    },
+    {
+      "number": 114,
+      "name": "uad precision limiter",
+      "displayName": "UAD Precision Limiter",
+      "auditedAt": "2026-07-27T21:09:09.641Z",
+      "status": "Approved"
+    },
+    {
+      "number": 115,
+      "name": "uad teletronix la-2a legacy leveler",
+      "displayName": "UAD Teletronix LA-2A Legacy Leveler",
+      "auditedAt": "2026-07-27T21:09:27.900Z",
+      "status": "Approved"
+    },
+    {
+      "number": 116,
+      "name": "uad ua 1176ln legacy limiter",
+      "displayName": "UAD UA 1176LN Legacy Limiter",
+      "auditedAt": "2026-07-27T21:09:54.223Z",
+      "status": "Approved"
+    },
+    {
+      "number": 117,
+      "name": "uad ua 1176se legacy limiter",
+      "displayName": "UAD UA 1176SE Legacy Limiter",
+      "auditedAt": "2026-07-27T21:09:54.223Z",
+      "status": "Approved"
+    },
+    {
+      "number": 118,
+      "name": "uad pultec-pro legacy eq",
+      "displayName": "UAD Pultec-Pro Legacy EQ",
+      "auditedAt": "2026-07-27T21:09:54.223Z",
+      "status": "Approved"
+    },
+    {
+      "number": 119,
+      "name": "uad fairchild 670 legacy limiter",
+      "displayName": "UAD Fairchild 670 Legacy Limiter",
+      "auditedAt": "2026-07-27T21:09:54.223Z",
+      "status": "Approved"
+    },
+    {
+      "number": 120,
+      "name": "uad dreamverb room modeler",
+      "displayName": "UAD DreamVerb Room Modeler",
+      "auditedAt": "2026-07-27T21:09:54.223Z",
+      "status": "Approved"
+    },
+    {
+      "number": 121,
+      "name": "uad cambridge eq",
+      "displayName": "UAD Cambridge EQ",
+      "auditedAt": "2026-07-27T21:10:38.839Z",
+      "status": "Approved & Updated"
+    },
+    {
+      "number": 122,
+      "name": "uad realverb-pro room modeler",
+      "displayName": "UAD RealVerb-Pro Room Modeler",
+      "auditedAt": "2026-07-27T21:10:38.839Z",
+      "status": "Approved"
+    },
+    {
+      "number": 123,
+      "name": "uad pultec eqp-1a legacy eq",
+      "displayName": "UAD Pultec EQP-1A Legacy EQ",
+      "auditedAt": "2026-07-27T21:10:54.154Z",
+      "status": "Approved"
+    },
+    {
+      "number": 124,
+      "name": "uad precision mix rack collection",
+      "displayName": "UAD Precision Mix Rack Collection",
+      "auditedAt": "2026-07-27T21:11:08.917Z",
+      "status": "Approved"
     }
   ],
   "totalPluginsCount": 112,

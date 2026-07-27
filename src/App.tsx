@@ -1732,6 +1732,9 @@ The AI was unable to verify these parameters. Please investigate.`;
   const [enrichEta, setEnrichEta] = useState(0);
   const [enrichStatus, setEnrichStatus] = useState('');
   const [searchTerm, setSearchTerm] = useState<string>('');
+  const [manualPluginName, setManualPluginName] = useState<string>('');
+  const [manualPluginBrand, setManualPluginBrand] = useState<string>('');
+  const [isResearching, setIsResearching] = useState<boolean>(false);
   const [typeBeatSearch, setTypeBeatSearch] = useState<string>('');
   const [songSearch, setSongSearch] = useState<string>('');
   const [audioAnalysisLoading, setAudioAnalysisLoading] = useState(false);
@@ -5325,6 +5328,45 @@ The AI was unable to verify these parameters. Please investigate.`;
     }
   };
 
+
+  const handleManualResearchAndAdd = async () => {
+    if (!manualPluginName.trim() || !manualPluginBrand.trim()) return;
+    setIsResearching(true);
+    try {
+      const pluginToResearch: VSTPlugin = {
+        name: manualPluginName.trim(),
+        vendor: manualPluginBrand.trim(),
+        type: 'vst'
+      };
+      // Use the geminiService function to get category & parameters
+      const researchedPlugin = await researchPluginParameters(pluginToResearch, i18n.language);
+      
+      setPlugins(prev => {
+        // Prevent duplicates
+        if (prev.some(p => p.name === researchedPlugin.name && p.vendor === researchedPlugin.vendor)) {
+          return prev;
+        }
+        return [...prev, researchedPlugin];
+      });
+      
+      setManualPluginName('');
+      setManualPluginBrand('');
+    } catch (err) {
+      console.error('Failed to research plugin:', err);
+      // Fallback: add it without parameters
+      setPlugins(prev => {
+        if (prev.some(p => p.name === manualPluginName.trim() && p.vendor === manualPluginBrand.trim())) {
+          return prev;
+        }
+        return [...prev, { name: manualPluginName.trim(), vendor: manualPluginBrand.trim(), type: 'vst' }];
+      });
+      setManualPluginName('');
+      setManualPluginBrand('');
+    } finally {
+      setIsResearching(false);
+    }
+  };
+
   const handleTypeBeatSearch = async () => {
     if (!requireAuth()) return;
     
@@ -8380,104 +8422,7 @@ Provide the exact JSFX plugin name and required sliders/parameters.`;
                 <div className="animate-in fade-in slide-in-from-bottom-4 duration-300 flex flex-col items-center mt-4 mb-4">
                   <button onClick={handleGenerate} disabled={loading || mainTab === null} className={`py-4 px-12 rounded-full font-black text-xs select-none shadow-lg hover:scale-105 active:scale-95 transition-all disabled:scale-100 ${theme === 'coldest' || theme === 'chef-mode' ? 'bg-sky-500 text-white' : 'bg-white text-black'} ${mainTab === null ? 'blur-[8px] opacity-40' : ''}`}>{loading ? t('architecting') : t('get_random_recipes')}</button>
                   
-                  {(dawType === 'REAPER' || dawType === 'Reaper') && (
-                    <div className="flex justify-center mt-6 gap-3">
-                      <div className={`inline-flex items-center gap-3 rounded-full px-4 py-2 ${theme === 'coldest' ? 'bg-white/40' : 'bg-black/40'}`}>
-                        <span className={`text-[10px] font-black uppercase tracking-widest transition-colors ${!isJsfxMode ? (theme === 'coldest' ? 'text-slate-900' : 'text-white') : (theme === 'coldest' ? 'text-slate-500' : 'text-white/50')}`}>REAPER JSFX ONLY</span>
-                        <button 
-                          onClick={() => handleToggleJsfxMode(!isJsfxMode)}
-                          className={`relative w-10 h-5 rounded-full transition-colors ${isJsfxMode ? 'bg-[#10b981]' : 'bg-slate-400/50'}`}
-                        >
-                          <div className={`absolute top-0.5 left-0.5 w-4 h-4 rounded-full bg-white transition-transform ${isJsfxMode ? 'translate-x-5' : 'translate-x-0'}`} />
-                        </button>
-                      </div>
-                      <button
-                        onClick={() => setShowReapackReposModal(true)}
-                        className={`inline-flex items-center gap-2 rounded-full px-4 py-2 ${theme === 'coldest' ? 'bg-white/40 hover:bg-white/60' : 'bg-black/40 hover:bg-black/60'} transition-colors`}
-                      >
-                        <Database className="w-3.5 h-3.5 text-[#10b981]" />
-                        <span className={`text-[10px] font-black uppercase tracking-widest ${theme === 'coldest' ? 'text-slate-900' : 'text-white'}`}>
-                          ReaPack JSFX Repositories
-                        </span>
-                      </button>
-                    </div>
-                  )}
-                </div>
-              )}
-
-              {inputMode === 'search' && (
-              <div className={`transition-all duration-700 ${mainTab === null ? 'blur-[8px] pointer-events-none opacity-40' : 'animate-in fade-in slide-in-from-bottom-4 duration-300'}`}>
-                <div className={`flex flex-col gap-4 ${showChain ? '-mt-12' : ''}`}>
-                  <div className="text-center mb-4 mt-6">
-                    <div className={`w-20 h-20 mx-auto rounded-full flex items-center justify-center mb-4 shadow-lg ${theme === 'coldest' ? 'bg-sky-500/10 text-sky-500 shadow-sky-500/20' : 'bg-purple-500/20 text-purple-400 shadow-purple-500/20'}`}>
-                      <span className="text-4xl text-glow-pulse">🔍</span>
-                    </div>
-                    <h3 className={`text-[12px] font-black uppercase tracking-[0.2em] opacity-80 ${theme === 'coldest' || theme === 'chef-mode' ? 'text-slate-800' : 'text-white'}`}>
-                      Generate recipe using search terms
-                    </h3>
-                  </div>
-                  <div className="flex flex-col sm:flex-row gap-4">
-                  <div className="relative flex-1 group overflow-hidden rounded-full">
-                    <input 
-                      id="input-vibe-search"
-                      type="text" 
-                      value={typeBeatSearch}
-                      onChange={(e) => setTypeBeatSearch(e.target.value)}
-                      onKeyDown={(e) => e.key === 'Enter' && handleTypeBeatSearch()}
-                      className={`w-full py-5 pl-8 pr-32 sm:pr-40 rounded-full text-sm font-black focus:outline-none transition-all border-2 ${theme === 'coldest' ? 'bg-white/40 border-sky-100 focus:border-sky-400 text-slate-900' : theme === 'chef-mode' ? 'bg-white/60 border-orange-100 focus:border-orange-400 text-slate-900' : 'bg-black/60 border-white/10 focus:border-white/30 text-white'}`}
-                    />
-                    {!typeBeatSearch && (
-                      <div className="absolute inset-y-0 left-8 right-32 sm:right-40 flex items-center overflow-hidden pointer-events-none">
-                        <div className={`whitespace-nowrap animate-marquee text-sm font-black ${theme === 'coldest' ? 'text-slate-600' : theme === 'chef-mode' ? 'text-slate-600' : 'text-white/50'}`}>
-                          {currentVibeExample}...     {currentVibeExample}...
-                        </div>
-                      </div>
-                    )}
-                    <div className="absolute right-6 top-1/2 -translate-y-1/2 flex items-center gap-2 pointer-events-none">
-                      <span className={`text-[10px] font-black uppercase tracking-widest opacity-60 ${theme === 'coldest' || theme === 'chef-mode' ? 'text-slate-900' : 'text-white'}`}>{t('vibe_search')}</span>
-                    </div>
-                  </div>
-                  <button 
-                    onClick={handleTypeBeatSearch} 
-                    disabled={loading || !typeBeatSearch.trim()} 
-                    className={`py-5 px-12 rounded-full font-black text-xs select-none shadow-xl hover:scale-105 active:scale-95 transition-all disabled:opacity-50 disabled:scale-100 ${theme === 'coldest' || theme === 'chef-mode' ? 'bg-orange-500 text-white' : 'bg-white text-black'}`}
-                  >
-                    {loading ? t('searching') : t('search_vibe')}
-                  </button>
-                </div>
-
-                <div className="flex flex-col sm:flex-row gap-4">
-                  <div className="relative flex-1 group overflow-hidden rounded-full">
-                    <input 
-                      id="input-song-search"
-                      type="text" 
-                      value={songSearch}
-                      onChange={(e) => setSongSearch(e.target.value)}
-                      onKeyDown={(e) => e.key === 'Enter' && handleSongSearch()}
-                      className={`w-full py-5 pl-8 pr-32 sm:pr-40 rounded-full text-sm font-black focus:outline-none transition-all border-2 ${theme === 'coldest' ? 'bg-white/40 border-sky-100 focus:border-sky-400 text-slate-900' : theme === 'chef-mode' ? 'bg-white/60 border-orange-100 focus:border-orange-400 text-slate-900' : 'bg-black/60 border-white/10 focus:border-white/30 text-white'}`}
-                    />
-                    {!songSearch && (
-                      <div className="absolute inset-y-0 left-8 right-32 sm:right-40 flex items-center overflow-hidden pointer-events-none">
-                        <div className={`whitespace-nowrap animate-marquee text-sm font-black ${theme === 'coldest' ? 'text-slate-600' : theme === 'chef-mode' ? 'text-slate-600' : 'text-white/50'}`}>
-                          {currentSongExamples[0]}...     {currentSongExamples[1]}...
-                        </div>
-                      </div>
-                    )}
-                    <div className="absolute right-6 top-1/2 -translate-y-1/2 flex items-center gap-2 pointer-events-none">
-                      <span className={`text-[10px] font-black uppercase tracking-widest opacity-60 ${theme === 'coldest' || theme === 'chef-mode' ? 'text-slate-900' : 'text-white'}`}>{t('song_search_label')}</span>
-                    </div>
-                  </div>
-                  <button 
-                    onClick={handleSongSearch} 
-                    disabled={loading || !songSearch.trim()} 
-                    className={`py-5 px-12 rounded-full font-black text-xs select-none shadow-xl hover:scale-105 active:scale-95 transition-all disabled:opacity-50 disabled:scale-100 ${theme === 'coldest' || theme === 'chef-mode' ? 'bg-sky-600 text-white' : 'bg-white/20 text-white'}`}
-                  >
-                    {loading ? t('searching') : t('search_song')}
-                  </button>
-                  </div>
-                </div>
-                
-                {(dawType === 'REAPER' || dawType === 'Reaper') && (
+                                  {(dawType === 'REAPER' || dawType === 'Reaper') && (
                   <div className="flex justify-center mt-6 gap-3">
                     <div className={`inline-flex items-center gap-3 rounded-full px-4 py-2 ${theme === 'coldest' ? 'bg-white/40' : 'bg-black/40'}`}>
                       <span className={`text-[10px] font-black uppercase tracking-widest transition-colors ${!isJsfxMode ? (theme === 'coldest' ? 'text-slate-900' : 'text-white') : (theme === 'coldest' ? 'text-slate-500' : 'text-white/50')}`}>REAPER JSFX ONLY</span>
@@ -8497,6 +8442,23 @@ Provide the exact JSFX plugin name and required sliders/parameters.`;
                         ReaPack JSFX Repositories
                       </span>
                     </button>
+                  </div>
+                )}
+                {dawType === 'LUNA' && (
+                  <div className="flex justify-center mt-6 gap-3">
+                    <div className={`inline-flex items-center gap-3 rounded-full px-4 py-2 ${theme === 'coldest' ? 'bg-white/40' : 'bg-black/40'}`}>
+                      <span className={`text-[10px] font-black uppercase tracking-widest transition-colors ${lunaSumming === 'api' ? (theme === 'coldest' ? 'text-sky-600' : 'text-sky-400') : (theme === 'coldest' ? 'text-slate-500' : 'text-white/50')}`}>API SUMMING</span>
+                      
+                      <div className={`relative w-16 h-6 rounded-full flex items-center px-1 cursor-pointer transition-colors ${theme === 'coldest' ? 'bg-slate-300' : 'bg-slate-800'}`} onClick={() => setLunaSumming(lunaSumming === 'api' ? 'off' : (lunaSumming === 'off' ? 'neve' : 'api'))}>
+                         <div className={`absolute w-4 h-4 rounded-full bg-white shadow transition-all duration-300 ${lunaSumming === 'api' ? 'left-1 bg-sky-500' : lunaSumming === 'neve' ? 'left-[44px] bg-red-500' : 'left-6 bg-slate-400'}`} />
+                      </div>
+                      
+                      <span className={`text-[10px] font-black uppercase tracking-widest transition-colors ${lunaSumming === 'neve' ? (theme === 'coldest' ? 'text-red-600' : 'text-red-400') : (theme === 'coldest' ? 'text-slate-500' : 'text-white/50')}`}>NEVE SUMMING</span>
+                      
+                      <span className={`ml-2 text-[10px] font-black uppercase tracking-widest transition-colors ${lunaSumming === 'off' ? (theme === 'coldest' ? 'text-slate-900' : 'text-white') : (theme === 'coldest' ? 'text-slate-500' : 'text-white/50')}`}>
+                        {lunaSumming === 'off' ? 'OFF' : ''}
+                      </span>
+                    </div>
                   </div>
                 )}
               </div>
@@ -9833,6 +9795,40 @@ Provide the exact JSFX plugin name and required sliders/parameters.`;
                       onChange={(e) => setSearchTerm(e.target.value)} 
                       className={`py-4 px-8 text-sm font-bold focus:outline-none transition-all w-64 sm:w-96 rounded-full ${theme === 'coldest' ? 'bg-white/40 border-white text-slate-800' : theme === 'chef-mode' ? 'bg-white/60 border-white text-slate-900' : 'bg-black/60 border-white/10 text-white'}`} 
                     />
+                  </div>
+                  
+                  {/* Add Manual Plugin */}
+                  <div className="flex flex-col items-center mt-6 w-full max-w-2xl">
+                     <h4 className={`text-[10px] font-black uppercase tracking-[0.2em] opacity-80 mb-3 ${theme === 'coldest' || theme === 'chef-mode' ? 'text-slate-800' : 'text-white'}`}>
+                       Add New Plugins Manually
+                     </h4>
+                     <div className="flex flex-col sm:flex-row gap-3 w-full justify-center items-center">
+                       <input 
+                         type="text" 
+                         placeholder="Plugin Name" 
+                         value={manualPluginName} 
+                         onChange={(e) => setManualPluginName(e.target.value)} 
+                         className={`py-3 px-6 text-sm font-bold focus:outline-none transition-all w-full sm:w-64 rounded-full ${theme === 'coldest' ? 'bg-white/40 border-white text-slate-800' : theme === 'chef-mode' ? 'bg-white/60 border-white text-slate-900' : 'bg-black/60 border-white/10 text-white'}`} 
+                       />
+                       <input 
+                         type="text" 
+                         placeholder="Brand / Vendor Name" 
+                         value={manualPluginBrand} 
+                         onChange={(e) => setManualPluginBrand(e.target.value)} 
+                         className={`py-3 px-6 text-sm font-bold focus:outline-none transition-all w-full sm:w-64 rounded-full ${theme === 'coldest' ? 'bg-white/40 border-white text-slate-800' : theme === 'chef-mode' ? 'bg-white/60 border-white text-slate-900' : 'bg-black/60 border-white/10 text-white'}`} 
+                       />
+                       <button
+                         onClick={handleManualResearchAndAdd}
+                         disabled={isResearching || !manualPluginName.trim() || !manualPluginBrand.trim()}
+                         className={`py-3 px-6 rounded-full font-black text-xs uppercase tracking-widest transition-all whitespace-nowrap shadow-lg hover:scale-105 active:scale-95 disabled:opacity-50 disabled:scale-100 ${theme === 'coldest' || theme === 'chef-mode' ? 'bg-sky-500 text-white' : 'bg-white/20 text-white'}`}
+                       >
+                         {isResearching ? (
+                           <span className="flex items-center gap-2"><Loader2 className="w-3 h-3 animate-spin" /> Researching...</span>
+                         ) : (
+                           "Research & Add"
+                         )}
+                       </button>
+                     </div>
                   </div>
                 </div>
                 

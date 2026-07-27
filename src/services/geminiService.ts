@@ -1,5 +1,6 @@
 import { JSFX_DATABASE } from "../data/jsfxResearch";
 import { UAD_DATABASE } from "../data/uadDatabase";
+import { VST_DATABASE } from "../data/vstDatabase";
 
 export enum Type {
   TYPE_UNSPECIFIED = "TYPE_UNSPECIFIED",

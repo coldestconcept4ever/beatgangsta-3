@@ -2677,10 +2677,18 @@ export const UAD_DATABASE: UADPluginProfile[] = [
       },
       {
         "name": "Axis",
-        "range": "0° to 180°",
-        "defaultVal": "0°",
-        "description": "Simulates rotating the virtual microphone off-axis to tame harsh transients or room resonances.",
+        "range": "0 to 180 degrees",
+        "defaultVal": "0 degrees",
+        "description": "Simulates rotating the physical microphone off-axis from the source.",
         "type": "knob"
+      },
+      {
+        "name": "IsoSphere",
+        "range": "Off / On",
+        "defaultVal": "Off",
+        "description": "Reduces room coloration and acoustic reflections.",
+        "type": "switch",
+        "options": ["Off", "On"]
       },
       {
         "name": "Low Cut Filter",
@@ -3198,17 +3206,22 @@ export const UAD_DATABASE: UADPluginProfile[] = [
     "parameters": [
       {
         "name": "Mic Model",
-        "range": "OWS 47 / OWS 12 / OWS 269 / OWS 54 / OWS 50 / OWS 4038",
-        "defaultVal": "OWS 47",
+        "range": "OW-47 / OW-12 #1 / OW-12 #2 / OW-49 / OW-269 / OW-800 / OW-50 / OW-K54 / OW-55 / OW-K3A / OW-57U3",
+        "defaultVal": "OW-47",
         "description": "Selects the custom modeled microphone from the Ocean Way archive.",
         "type": "select",
         "options": [
-          "OWS 47",
-          "OWS 12",
-          "OWS 269",
-          "OWS 54",
-          "OWS 50",
-          "OWS 4038"
+          "OW-47",
+          "OW-12 #1",
+          "OW-12 #2",
+          "OW-49",
+          "OW-269",
+          "OW-800",
+          "OW-50",
+          "OW-K54",
+          "OW-55",
+          "OW-K3A",
+          "OW-57U3"
         ]
       },
       {
@@ -3265,21 +3278,21 @@ export const UAD_DATABASE: UADPluginProfile[] = [
     "hardwareModel": "Ibanez TS808 Tube Screamer Pedal",
     "parameters": [
       {
-        "name": "Overdrive Gain",
+        "name": "Overdrive",
         "range": "0 to 10",
         "defaultVal": "3",
         "description": "Sets asymmetrical overdrive gain.",
         "type": "knob"
       },
       {
-        "name": "Tone Center",
+        "name": "Tone",
         "range": "0 to 10",
         "defaultVal": "5",
         "description": "Mid-frequency sweep focus filter.",
         "type": "knob"
       },
       {
-        "name": "Level Output",
+        "name": "Level",
         "range": "0 to 10",
         "defaultVal": "7",
         "description": "Controls output pedal makeup level.",
@@ -3293,7 +3306,7 @@ export const UAD_DATABASE: UADPluginProfile[] = [
     ],
     "authorizationStatus": "Authorized for all devices"
   },
-  {
+      {
     "name": "uad korg sdd-3000 digital delay",
     "displayName": "UAD Korg SDD-3000 Digital Delay",
     "category": "Reverbs & Delays",
@@ -3301,16 +3314,23 @@ export const UAD_DATABASE: UADPluginProfile[] = [
     "hardwareModel": "Korg SDD-3000 Digital Delay",
     "parameters": [
       {
-        "name": "Input Level",
-        "range": "-20 dB / -10 dB / +4 dB",
+        "name": "Input Attenuator",
+        "range": "-30 dB / -10 dB / +4 dB",
         "defaultVal": "-10 dB",
         "description": "Sets the headroom sensitivity of the physical analog preamp section.",
         "type": "select",
         "options": [
-          "-20 dB",
+          "-30 dB",
           "-10 dB",
           "+4 dB"
         ]
+      },
+      {
+        "name": "Input Level",
+        "range": "0 to 10",
+        "defaultVal": "5",
+        "description": "Adjusts the input gain into the delay line.",
+        "type": "knob"
       },
       {
         "name": "Delay Time",
@@ -3321,23 +3341,48 @@ export const UAD_DATABASE: UADPluginProfile[] = [
       },
       {
         "name": "Feedback",
-        "range": "0 to 100",
-        "defaultVal": "30",
+        "range": "0 to 10",
+        "defaultVal": "3",
         "description": "Controls the feedback level of delay repetitions.",
         "type": "knob"
       },
       {
+        "name": "Filter Low Cut",
+        "range": "FLAT / 125 Hz / 250 Hz / 500 Hz",
+        "defaultVal": "FLAT",
+        "description": "Applies low-cut dampening on delay repetitions.",
+        "type": "select",
+        "options": [
+          "FLAT",
+          "125 Hz",
+          "250 Hz",
+          "500 Hz"
+        ]
+      },
+      {
         "name": "Filter High Cut",
-        "range": "Off / 8 kHz / 4 kHz / 2 kHz / 1 kHz",
-        "defaultVal": "Off",
+        "range": "FLAT / 8 kHz / 4 kHz / 2 kHz",
+        "defaultVal": "FLAT",
         "description": "Applies high-cut dampening on delay repetitions.",
         "type": "select",
         "options": [
-          "Off",
+          "FLAT",
           "8 kHz",
           "4 kHz",
-          "2 kHz",
-          "1 kHz"
+          "2 kHz"
+        ]
+      },
+      {
+        "name": "Mod Waveform",
+        "range": "Triangle / Square / Envelope / Random",
+        "defaultVal": "Triangle",
+        "description": "Selects the LFO modulation waveform shape.",
+        "type": "select",
+        "options": [
+          "Triangle",
+          "Square",
+          "Envelope",
+          "Random"
         ]
       },
       {
@@ -3349,78 +3394,151 @@ export const UAD_DATABASE: UADPluginProfile[] = [
       },
       {
         "name": "Mod Intensity",
-        "range": "0 to 100",
-        "defaultVal": "15",
+        "range": "0 to 10",
+        "defaultVal": "1.5",
         "description": "Controls the depth of delay pitch modulation.",
         "type": "knob"
+      },
+      {
+        "name": "Hold",
+        "range": "Off / On",
+        "defaultVal": "Off",
+        "description": "Repeats the full delay buffer continuously when engaged.",
+        "type": "switch"
+      },
+      {
+        "name": "Output Attenuator",
+        "range": "-20 dB / -10 dB / +4 dB",
+        "defaultVal": "-10 dB",
+        "description": "Level adjustment at the output stage.",
+        "type": "select",
+        "options": [
+          "-20 dB",
+          "-10 dB",
+          "+4 dB"
+        ]
+      },
+      {
+        "name": "Balance",
+        "range": "L10 to R10",
+        "defaultVal": "Center",
+        "description": "L/R Balance knob for stereo imaging.",
+        "type": "knob"
+      },
+      {
+        "name": "Mode",
+        "range": "1 / 2 / 3 / 4 / 5",
+        "defaultVal": "1",
+        "description": "Selects the stereo panning and phase configuration.",
+        "type": "select",
+        "options": [
+          "1",
+          "2",
+          "3",
+          "4",
+          "5"
+        ]
       }
     ],
     "proTips": [
-      "The input preamp is highly dynamic. Choose '-10 dB' and drive the Input attenuator higher to introduce sweet, organic preamplifier saturation.",
+      "The input preamp is highly dynamic. Choose '-30 dB' and drive the Input Level higher to introduce sweet, organic preamplifier saturation.",
       "For a classic 'The Edge' delay sound, set delay time to a dotted eighth note value (around 350-450 ms), select Triangle modulation, and increase Intensity slightly.",
       "Use the Low Cut and High Cut filters in the feedback path to make delay repeats sit perfectly behind a live vocal without causing frequency build-ups."
     ],
     "authorizationStatus": "Authorized for all devices"
   },
-  {
+    {
     "name": "uad ams rmx16 expanded digital reverb",
     "displayName": "UAD AMS RMX16 Expanded Digital Reverb",
     "category": "Reverbs & Delays",
-    "description": "A low-latency legacy version of the legendary AMS RMX16 digital reverb, famous for its era-defining 'Non-Lin 2' gated snare reverb.",
+    "description": "An exacting emulation of the legendary AMS RMX16 digital reverb, featuring the original 9 programs plus 9 rare custom programs, famous for its era-defining 'NonLin 2' gated snare reverb.",
     "hardwareModel": "AMS RMX16 Digital Reverb",
     "parameters": [
       {
-        "name": "Program Select",
-        "range": "Ambassador / Non-Lin / Chorus / Echo / Hall / Plate",
-        "defaultVal": "Hall",
-        "description": "Selects physical AMS digital microcode algorithm.",
+        "name": "Input",
+        "range": "0 to 10",
+        "defaultVal": "5",
+        "description": "Adjusts the input level to the reverb processor.",
+        "type": "knob"
+      },
+      {
+        "name": "Mix",
+        "range": "0% to 100%",
+        "defaultVal": "100%",
+        "description": "Controls the wet/dry balance of the effect.",
+        "type": "knob"
+      },
+      {
+        "name": "Output",
+        "range": "0 to 10",
+        "defaultVal": "5",
+        "description": "Adjusts the overall output level.",
+        "type": "knob"
+      },
+      {
+        "name": "Program",
+        "range": "Ambience / Room / Hall / Plate / Echo / Chorus / NonLin 2 / Reverse 1 / Reverse 2 / Delay / Freeze / Image / NonLin 1 / Plate 2 / Hall 2 / Room 2 / Chorus 2 / Hall C",
+        "defaultVal": "NonLin 2",
+        "description": "Selects the digital reverb algorithm.",
         "type": "select",
         "options": [
-          "Ambassador",
-          "Non-Lin",
-          "Chorus",
-          "Echo",
+          "Ambience",
+          "Room",
           "Hall",
-          "Plate"
+          "Plate",
+          "Echo",
+          "Chorus",
+          "NonLin 2",
+          "Reverse 1",
+          "Reverse 2",
+          "Delay",
+          "Freeze",
+          "Image",
+          "NonLin 1",
+          "Plate 2",
+          "Hall 2",
+          "Room 2",
+          "Chorus 2",
+          "Hall C"
         ]
       },
       {
         "name": "Decay Time",
-        "range": "0.1 to 9.9 s",
+        "range": "0.0 to 9.9 s",
         "defaultVal": "2.4 s",
-        "description": "Reverb tail length fader.",
+        "description": "Sets the length of the reverb tail or effect duration.",
         "type": "knob"
       },
       {
-        "name": "Pre-Delay",
-        "range": "0 to 125 ms",
+        "name": "Pre Delay",
+        "range": "0 to 990 ms",
         "defaultVal": "10 ms",
-        "description": "Pre delay prior to early reflections blooming.",
+        "description": "Sets the time before the onset of reverberation.",
         "type": "knob"
       },
       {
-        "name": "Low EQ",
-        "range": "-12 dB to +12 dB",
-        "defaultVal": "0 dB",
-        "description": "Applies low frequency shelving EQ filter to wet signal.",
+        "name": "Low",
+        "range": "-9 to +9",
+        "defaultVal": "0",
+        "description": "Adjusts the low-frequency decay characteristics.",
         "type": "knob"
       },
       {
-        "name": "High EQ",
-        "range": "-12 dB to +12 dB",
-        "defaultVal": "0 dB",
-        "description": "Applies high frequency shelving EQ filter to wet signal.",
+        "name": "High",
+        "range": "-9 to +9",
+        "defaultVal": "0",
+        "description": "Adjusts the high-frequency decay characteristics.",
         "type": "knob"
       }
     ],
     "proTips": [
-      "Apply the classic Non-Lin 2 algorithm on snare drums for the iconic 1980s Phil Collins snare sound.",
-      "Use the Ambience algorithm to add massive, luxurious room depth to acoustic pop vocals.",
-      "Keep the wet mix low; a little RMX16 goes a long way to glue synth lines."
+      "Select 'NonLin 2', dial in a short Decay Time, and apply it to a snare drum for the classic 1980s Phil Collins explosive gated snare effect.",
+      "The 'Ambience' program is fantastic for adding invisible space and size to vocals without washing them out in a long reverb tail.",
+      "The Expanded version's 'Chorus 2' and 'Delay' programs offer great pitch-thickening and rhythmic options beyond standard reverb."
     ],
     "authorizationStatus": "Authorized for all devices"
   },
-  {
+    {
     "name": "uad pure plate reverb",
     "displayName": "UAD Pure Plate Reverb",
     "category": "Reverbs & Delays",
@@ -3470,7 +3588,7 @@ export const UAD_DATABASE: UADPluginProfile[] = [
     ],
     "authorizationStatus": "Authorized for all devices"
   },
-  {
+    {
     "name": "uad ssl 4000 g bus compressor collection",
     "displayName": "UAD SSL 4000 G Bus Compressor Collection",
     "category": "Dynamics",
@@ -3486,68 +3604,103 @@ export const UAD_DATABASE: UADPluginProfile[] = [
       },
       {
         "name": "Ratio",
-        "range": "2:1 / 4:1 / 10:1",
-        "defaultVal": "4:1",
+        "range": "2 / 4 / 10",
+        "defaultVal": "4",
         "description": "Selects active compression ratio curve.",
         "type": "select",
         "options": [
-          "2:1",
-          "4:1",
-          "10:1"
+          "2",
+          "4",
+          "10"
         ]
       },
       {
         "name": "Attack",
-        "range": "0.1 ms / 0.3 ms / 1.0 ms / 3.0 ms / 10 ms / 30 ms",
-        "defaultVal": "30 ms",
-        "description": "Selects static transient attack speed.",
+        "range": ".1 / .3 / 1 / 3 / 10 / 30",
+        "defaultVal": "30",
+        "description": "Selects static transient attack speed in milliseconds.",
         "type": "select",
         "options": [
-          "0.1 ms",
-          "0.3 ms",
-          "1.0 ms",
-          "3.0 ms",
-          "10 ms",
-          "30 ms"
+          ".1",
+          ".3",
+          "1",
+          "3",
+          "10",
+          "30"
         ]
       },
       {
         "name": "Release",
-        "range": "0.1 s / 0.3 s / 0.6 s / 1.2 s / Auto",
+        "range": ".1 / .3 / .6 / 1.2 / Auto",
         "defaultVal": "Auto",
         "description": "Adjusts recovery speed. Auto uses a dynamic dual-stage timing network.",
         "type": "select",
         "options": [
-          "0.1 s",
-          "0.3 s",
-          "0.6 s",
-          "1.2 s",
+          ".1",
+          ".3",
+          ".6",
+          "1.2",
           "Auto"
         ]
       },
       {
-        "name": "Makeup Gain",
-        "range": "-5 dB to +15 dB",
+        "name": "Make-Up",
+        "range": "0 dB to +15 dB",
         "defaultVal": "0 dB",
         "description": "Compensates master stereo output volume levels.",
         "type": "knob"
       },
       {
-        "name": "Sidechain High Pass",
-        "range": "Off / 18 Hz to 150 Hz",
+        "name": "SC Filter",
+        "range": "Off to 500 Hz",
         "defaultVal": "Off",
         "description": "Cuts sub-bass frequencies from entering sidechain gain detection.",
         "type": "knob"
+      },
+      {
+        "name": "Mix",
+        "range": "0% to 100%",
+        "defaultVal": "100%",
+        "description": "Parallel compression blend.",
+        "type": "knob"
+      },
+      {
+        "name": "Headroom",
+        "range": "+4 dB to +28 dB",
+        "defaultVal": "+16 dB",
+        "description": "Adjusts the internal operating level.",
+        "type": "knob"
+      },
+      {
+        "name": "Rate",
+        "range": "1 to 60 s",
+        "defaultVal": "10 s",
+        "description": "Determines the duration of the Auto Fade.",
+        "type": "knob"
+      },
+      {
+        "name": "Fade",
+        "range": "Off / Fade In / Fade Out",
+        "defaultVal": "Off",
+        "description": "Engages the classic SSL VCA master fader Auto-Fade.",
+        "type": "switch"
+      },
+      {
+        "name": "In",
+        "range": "Off / On",
+        "defaultVal": "On",
+        "description": "Bypasses the compressor circuitry.",
+        "type": "switch"
       }
     ],
     "proTips": [
-      "The classic 'Mix Glue' formula: Ratio 4:1, Attack 30ms, Release Auto, and adjust Threshold to draw a rhythmic 1 to 3 dB of gain reduction.",
-      "Engage the Sidechain High Pass filter at 80Hz to allow deep kick drums and sub-basses to pass through cleanly without pumping the entire master mix.",
-      "Utilize the built-in Mix/Blend control to perform high-ratio parallel master bus compression, preserving natural transients while pulling up soft room elements."
+      "The classic 'Mix Glue' formula: Ratio 4, Attack 30, Release Auto, and adjust Threshold to draw a rhythmic 1 to 3 dB of gain reduction.",
+      "Engage the SC Filter at around 80-120 Hz to allow deep kick drums and sub-basses to pass through cleanly without pumping the entire master mix.",
+      "Utilize the built-in Mix control to perform high-ratio parallel master bus compression, preserving natural transients while pulling up soft room elements."
     ],
     "authorizationStatus": "Authorized for all devices"
   },
-  {
+    {
     "name": "uad antares auto-tune realtime",
     "displayName": "UAD Antares Auto-Tune Realtime",
     "category": "Dynamics",
@@ -3555,9 +3708,23 @@ export const UAD_DATABASE: UADPluginProfile[] = [
     "hardwareModel": "Antares Auto-Tune Pitch Correction Processor",
     "parameters": [
       {
+        "name": "Input Type",
+        "range": "Soprano / Alto/Tenor / Low Male / Instrument / Bass Inst",
+        "defaultVal": "Alto/Tenor",
+        "description": "Matches the pitch tracking algorithm to the input source's register for optimal, glitch-free pitch detection.",
+        "type": "select",
+        "options": [
+          "Soprano",
+          "Alto/Tenor",
+          "Low Male",
+          "Instrument",
+          "Bass Inst"
+        ]
+      },
+      {
         "name": "Retune Speed",
-        "range": "0ms to 400ms",
-        "defaultVal": "20ms",
+        "range": "0 to 400",
+        "defaultVal": "20",
         "description": "Controls how fast the pitch correction snaps the audio to the target note.",
         "type": "knob"
       },
@@ -3573,6 +3740,13 @@ export const UAD_DATABASE: UADPluginProfile[] = [
         "range": "0 to 100",
         "defaultVal": "0",
         "description": "Provides natural corrective expression by leaving pitch variance uncorrected outside a targeted range.",
+        "type": "knob"
+      },
+      {
+        "name": "Natural Vibrato",
+        "range": "-12 to +12",
+        "defaultVal": "0",
+        "description": "Amplifies or tames the natural vibrato profile of the incoming vocalist.",
         "type": "knob"
       },
       {
@@ -3598,37 +3772,67 @@ export const UAD_DATABASE: UADPluginProfile[] = [
       },
       {
         "name": "Scale",
-        "range": "Major / Minor / Chromatic",
+        "range": "Major / Minor / Chromatic / 26 others",
         "defaultVal": "Chromatic",
         "description": "Sets the active target interval scale constraints.",
         "type": "select",
         "options": [
           "Major",
           "Minor",
-          "Chromatic"
+          "Chromatic",
+          "26 others"
         ]
       },
       {
-        "name": "Natural Vibrato",
-        "range": "-12 to +12",
-        "defaultVal": "0",
-        "description": "Amplifies or tames the natural vibrato profile of the incoming vocalist.",
+        "name": "Detune",
+        "range": "427.4 Hz to 452.9 Hz",
+        "defaultVal": "440.0 Hz",
+        "description": "Calibrates the target reference frequency of A4.",
+        "type": "knob"
+      },
+      {
+        "name": "Tracking",
+        "range": "1 to 100",
+        "defaultVal": "50",
+        "description": "Controls how relaxed the pitch tracker is. Higher values prevent flutter on noisy vocals.",
         "type": "knob"
       }
     ],
     "proTips": [
-      "For a totally transparent performance correction, set Retune Speed to a moderate 20ms to 50ms and increase Humanize to around 30 to allow natural pitch glides during fast vocal transitions.",
+      "For a totally transparent performance correction, set Retune Speed to a moderate 20 to 50 and increase Humanize to around 30 to allow natural pitch glides during fast vocal transitions.",
       "To get the modern signature trap or pop hard-tuned sound, set Retune Speed instantly to 0 (fastest) and turn Flex-Tune to 0, locking the vocalist's pitch directly to the target scale grid."
     ],
     "authorizationStatus": "Authorized for all devices"
   },
-  {
+    {
     "name": "uad moog multimode filter collection",
     "displayName": "UAD Moog Multimode Filter Collection",
     "category": "Equalizers",
     "description": "The definitive analog ladder filter. Delivers the legendary rich, sweeping resonance, aggressive input-drive saturation, and high-performance LFO/Envelope modulations of Moog modules.",
     "hardwareModel": "Moog Music Multimode Filter System",
     "parameters": [
+      {
+        "name": "Drive",
+        "range": "-20 dB to +20 dB",
+        "defaultVal": "0 dB",
+        "description": "Drives input signal into the ladder inputs, adding warm, fat harmonic distortion.",
+        "type": "knob"
+      },
+      {
+        "name": "Env Amount",
+        "range": "-10 to +10",
+        "defaultVal": "0",
+        "description": "Modulates filter cutoff frequency using the input audio's dynamic amplitude envelope.",
+        "type": "knob"
+      },
+      {
+        "name": "Smooth / Fast",
+        "range": "Smooth / Fast",
+        "defaultVal": "Smooth",
+        "description": "Selects the envelope follower response time.",
+        "type": "select",
+        "options": ["Smooth", "Fast"]
+      },
       {
         "name": "Filter Cutoff",
         "range": "20 Hz to 20 kHz",
@@ -3638,53 +3842,71 @@ export const UAD_DATABASE: UADPluginProfile[] = [
       },
       {
         "name": "Resonance",
-        "range": "0 to 100",
-        "defaultVal": "20",
+        "range": "0 to 10",
+        "defaultVal": "2.0",
         "description": "Controls filter resonance peak. High values trigger absolute self-oscillation.",
         "type": "knob"
       },
       {
-        "name": "Drive",
-        "range": "+0 dB to +20 dB",
-        "defaultVal": "+0 dB",
-        "description": "Drives input signal into the ladder inputs, adding warm, fat harmonic distortion.",
+        "name": "Spacing",
+        "range": "-1.0 to +1.0",
+        "defaultVal": "0",
+        "description": "Offsets the Cutoff frequency between the left and right channels for stereo widening.",
         "type": "knob"
       },
       {
-        "name": "Filter Mode",
-        "range": "Low Pass / Band Pass / High Pass",
-        "defaultVal": "Low Pass",
-        "description": "Selects active filter band configuration.",
+        "name": "Poles",
+        "range": "1 / 2 / 3 / 4",
+        "defaultVal": "4",
+        "description": "Selects the filter slope (6, 12, 18, or 24 dB/Oct).",
         "type": "select",
-        "options": [
-          "Low Pass",
-          "Band Pass",
-          "High Pass"
-        ]
+        "options": ["1", "2", "3", "4"]
       },
       {
-        "name": "Envelope Amount",
-        "range": "-10 to +10",
+        "name": "LFO Amount",
+        "range": "0 to 10",
         "defaultVal": "0",
-        "description": "Modulates filter cutoff frequency using the input audio's dynamic amplitude envelope.",
+        "description": "Sets the depth of the LFO modulation on the Filter Cutoff.",
         "type": "knob"
       },
       {
         "name": "LFO Rate",
-        "range": "0.05 Hz to 25 Hz",
+        "range": "0.01 Hz to 25 Hz / Sync",
         "defaultVal": "1.0 Hz",
         "description": "Controls the frequency speed of the low frequency oscillator.",
+        "type": "knob"
+      },
+      {
+        "name": "LFO Wave",
+        "range": "Sine / Tri / Saw Up / Saw Dn / Square / Random",
+        "defaultVal": "Sine",
+        "description": "Selects the shape of the LFO modulation.",
+        "type": "select",
+        "options": ["Sine", "Tri", "Saw Up", "Saw Dn", "Square", "Random"]
+      },
+      {
+        "name": "Mix",
+        "range": "0% to 100%",
+        "defaultVal": "100%",
+        "description": "Blends the dry input signal with the filtered signal.",
+        "type": "knob"
+      },
+      {
+        "name": "Output",
+        "range": "-20 dB to +20 dB",
+        "defaultVal": "0 dB",
+        "description": "Adjusts the final output gain to compensate for drive or resonance.",
         "type": "knob"
       }
     ],
     "proTips": [
       "Drive the 'Drive' knob past +10 dB to saturate the physical transistor ladder inputs, delivering a lush, gritty fuzz that beefs up virtual synths or live bass guitars.",
-      "Set Resonance high (past 80%) to generate standard self-oscillation. Sweeping the Cutoff will yield classic space-age laser sound effects.",
-      "Engage the LFO Rate and set Waveform to Square to create synchronized, rhythmic pumping filter gates on synth pads."
+      "Set Resonance high to generate standard self-oscillation. Sweeping the Cutoff will yield classic space-age laser sound effects.",
+      "Use the Spacing parameter on stereo tracks to offset the cutoff frequencies of the left and right channels, creating an incredibly wide stereo image from mono sources."
     ],
     "authorizationStatus": "Authorized for all devices"
   },
-  {
+    {
     "name": "uad ssl 4000 e channel strip collection",
     "displayName": "UAD SSL 4000 E Channel Strip Collection",
     "category": "Channel Strips",
@@ -3700,16 +3922,52 @@ export const UAD_DATABASE: UADPluginProfile[] = [
       },
       {
         "name": "Compressor Threshold",
-        "range": "-30 dB to +10 dB",
+        "range": "+10 dB to -20 dB",
         "defaultVal": "+10 dB",
         "description": "Sets the compression start point.",
         "type": "knob"
       },
       {
         "name": "Compressor Ratio",
-        "range": "1:1 to infinity:1",
-        "defaultVal": "2:1",
+        "range": "1 to Infinity",
+        "defaultVal": "1",
         "description": "Sets the compression slope.",
+        "type": "knob"
+      },
+      {
+        "name": "Compressor Attack",
+        "range": "Auto / Fast",
+        "defaultVal": "Auto",
+        "description": "Toggles between auto attack and fast attack for the compressor.",
+        "type": "select",
+        "options": ["Auto", "Fast"]
+      },
+      {
+        "name": "Compressor Release",
+        "range": "0.1s to 4s",
+        "defaultVal": "0.1s",
+        "description": "Sets the compressor release time.",
+        "type": "knob"
+      },
+      {
+        "name": "Gate/Expander Threshold",
+        "range": "-30 dB to +10 dB",
+        "defaultVal": "-30 dB",
+        "description": "Sets the threshold for the noise gate / expander.",
+        "type": "knob"
+      },
+      {
+        "name": "Gate Range",
+        "range": "0 to 40 dB",
+        "defaultVal": "0",
+        "description": "Determines the depth of gain reduction when the gate is closed.",
+        "type": "knob"
+      },
+      {
+        "name": "Gate Release",
+        "range": "0.1s to 4s",
+        "defaultVal": "0.1s",
+        "description": "Sets the gate release time.",
         "type": "knob"
       },
       {
@@ -3717,24 +3975,73 @@ export const UAD_DATABASE: UADPluginProfile[] = [
         "range": "Black / Brown",
         "defaultVal": "Black",
         "description": "Switches EQ filter response from 'Black' (steeper, cleaner) to 'Brown' (wider, warmer).",
-        "type": "switch",
+        "type": "select",
         "options": [
           "Black",
           "Brown"
         ]
       },
       {
+        "name": "High EQ Freq",
+        "range": "1.5 kHz to 16 kHz",
+        "defaultVal": "8 kHz",
+        "description": "Sets the frequency for the High EQ band.",
+        "type": "knob"
+      },
+      {
         "name": "High EQ Gain",
         "range": "-15 dB to +15 dB",
         "defaultVal": "0 dB",
-        "description": "Gain control for high EQ band.",
+        "description": "Gain control for the High EQ band.",
+        "type": "knob"
+      },
+      {
+        "name": "H-Mid EQ Freq",
+        "range": "0.6 kHz to 7 kHz",
+        "defaultVal": "1.5 kHz",
+        "description": "Sets the frequency for the High-Mid EQ band.",
+        "type": "knob"
+      },
+      {
+        "name": "H-Mid EQ Gain",
+        "range": "-15 dB to +15 dB",
+        "defaultVal": "0 dB",
+        "description": "Gain control for the High-Mid EQ band.",
+        "type": "knob"
+      },
+      {
+        "name": "H-Mid EQ Q-Factor",
+        "range": "0.5 to 3",
+        "defaultVal": "1",
+        "description": "Adjusts the bandwidth (Q) of the High-Mid EQ.",
+        "type": "knob"
+      },
+      {
+        "name": "L-Mid EQ Freq",
+        "range": "0.2 kHz to 2.5 kHz",
+        "defaultVal": "0.6 kHz",
+        "description": "Sets the frequency for the Low-Mid EQ band.",
+        "type": "knob"
+      },
+      {
+        "name": "L-Mid EQ Gain",
+        "range": "-15 dB to +15 dB",
+        "defaultVal": "0 dB",
+        "description": "Gain control for the Low-Mid EQ band.",
+        "type": "knob"
+      },
+      {
+        "name": "Low EQ Freq",
+        "range": "30 Hz to 450 Hz",
+        "defaultVal": "100 Hz",
+        "description": "Sets the frequency for the Low EQ band.",
         "type": "knob"
       },
       {
         "name": "Low EQ Gain",
         "range": "-15 dB to +15 dB",
         "defaultVal": "0 dB",
-        "description": "Gain control for low EQ band.",
+        "description": "Gain control for the Low EQ band.",
         "type": "knob"
       }
     ],
@@ -3744,7 +4051,7 @@ export const UAD_DATABASE: UADPluginProfile[] = [
     ],
     "authorizationStatus": "Authorized for all devices"
   },
-  {
+    {
     "name": "uad api 2500 bus compressor",
     "displayName": "UAD API 2500 Bus Compressor",
     "category": "Dynamics",
@@ -3760,7 +4067,7 @@ export const UAD_DATABASE: UADPluginProfile[] = [
       },
       {
         "name": "Ratio",
-        "range": "1.5:1 / 2:1 / 3:1 / 4:1 / 10:1",
+        "range": "1.5:1 / 2:1 / 3:1 / 4:1 / 10:1 / infinity",
         "defaultVal": "2:1",
         "description": "Selects active compression ratio curve.",
         "type": "select",
@@ -3769,12 +4076,13 @@ export const UAD_DATABASE: UADPluginProfile[] = [
           "2:1",
           "3:1",
           "4:1",
-          "10:1"
+          "10:1",
+          "infinity"
         ]
       },
       {
         "name": "Attack",
-        "range": "0.03 ms / 0.1 ms / 0.3 ms / 1.0 ms / 3.0 ms / 10 ms / 30 ms",
+        "range": "0.03 / 0.1 / 0.3 / 1.0 / 3.0 / 10 / 30 ms",
         "defaultVal": "30 ms",
         "description": "Determines transient onset response speed.",
         "type": "select",
@@ -3790,7 +4098,7 @@ export const UAD_DATABASE: UADPluginProfile[] = [
       },
       {
         "name": "Release",
-        "range": "0.05 s / 0.1 s / 0.2 s / 0.5 s / 1.0 s / 2.0 s / Variable",
+        "range": "0.05 / 0.1 / 0.2 / 0.5 / 1.0 / 2.0 s / Variable",
         "defaultVal": "0.5 s",
         "description": "Adjusts speed of recovery to unity gain.",
         "type": "select",
@@ -3805,11 +4113,26 @@ export const UAD_DATABASE: UADPluginProfile[] = [
         ]
       },
       {
+        "name": "Variable Release",
+        "range": "0.05 s to 3 s",
+        "defaultVal": "0.5 s",
+        "description": "Continuous control for release time when Variable is selected.",
+        "type": "knob"
+      },
+      {
+        "name": "Knee Mode",
+        "range": "Soft / Med / Hard",
+        "defaultVal": "Hard",
+        "description": "Selects the compression knee shape.",
+        "type": "select",
+        "options": ["Soft", "Med", "Hard"]
+      },
+      {
         "name": "Thrust Filter",
         "range": "Norm / Med / Loud",
         "defaultVal": "Norm",
         "description": "Activates sidechain spectral filter to preserve low-end power.",
-        "type": "switch",
+        "type": "select",
         "options": [
           "Norm",
           "Med",
@@ -3821,11 +4144,33 @@ export const UAD_DATABASE: UADPluginProfile[] = [
         "range": "Old / New",
         "defaultVal": "New",
         "description": "Switches feedback (Old) vs feed-forward (New) detection architecture.",
-        "type": "switch",
+        "type": "select",
         "options": [
           "Old",
           "New"
         ]
+      },
+      {
+        "name": "L/R Link",
+        "range": "0% to 100%",
+        "defaultVal": "100%",
+        "description": "Determines stereo linking behavior between left and right channels.",
+        "type": "knob"
+      },
+      {
+        "name": "Makeup Gain",
+        "range": "0 to 24 dB",
+        "defaultVal": "0",
+        "description": "Adjusts output makeup gain.",
+        "type": "knob"
+      },
+      {
+        "name": "Manual / Auto Gain",
+        "range": "Manual / Auto",
+        "defaultVal": "Manual",
+        "description": "Toggles manual or automatic makeup gain.",
+        "type": "select",
+        "options": ["Manual", "Auto"]
       }
     ],
     "proTips": [
@@ -3844,16 +4189,21 @@ export const UAD_DATABASE: UADPluginProfile[] = [
     "parameters": [
       {
         "name": "Mic Model",
-        "range": "LD-47 / LD-251 / LD-67 / DN-57 / RB-121",
-        "defaultVal": "LD-47",
-        "description": "Selects the specific vintage microphone model emulation.",
+        "range": "LD-47K / LD-12 / LD-67 / LD-87 / LD-414 / LD-251 / SD-451 / RB-121 / DN-57 / DN-7",
+        "defaultVal": "LD-47K",
+        "description": "Selects the specific vintage microphone model emulation (34 included models).",
         "type": "select",
         "options": [
-          "LD-47",
-          "LD-251",
+          "LD-47K",
+          "LD-12",
           "LD-67",
+          "LD-87",
+          "LD-414",
+          "LD-251",
+          "SD-451",
+          "RB-121",
           "DN-57",
-          "RB-121"
+          "DN-7"
         ]
       },
       {
@@ -3909,7 +4259,7 @@ export const UAD_DATABASE: UADPluginProfile[] = [
     ],
     "authorizationStatus": "Authorized for all devices"
   },
-  {
+    {
     "name": "uad manley voxbox channel strip",
     "displayName": "UAD Manley VOXBOX Channel Strip",
     "category": "Channel Strips",
@@ -3921,7 +4271,7 @@ export const UAD_DATABASE: UADPluginProfile[] = [
         "range": "40 dB to 60 dB",
         "defaultVal": "45 dB",
         "description": "Step selector for input vacuum tube gain drive.",
-        "type": "switch",
+        "type": "select",
         "options": [
           "40 dB",
           "45 dB",
@@ -3932,12 +4282,12 @@ export const UAD_DATABASE: UADPluginProfile[] = [
       },
       {
         "name": "Preamp Low Cut Filter",
-        "range": "Off / 80 Hz / 120 Hz",
-        "defaultVal": "Off",
+        "range": "Flat / 80 Hz / 120 Hz",
+        "defaultVal": "Flat",
         "description": "Steep custom low-cut filter to manage vocal sibilants and rumble.",
-        "type": "switch",
+        "type": "select",
         "options": [
-          "Off",
+          "Flat",
           "80 Hz",
           "120 Hz"
         ]
@@ -3950,17 +4300,33 @@ export const UAD_DATABASE: UADPluginProfile[] = [
         "type": "knob"
       },
       {
+        "name": "Compressor Attack",
+        "range": "Fast / Med Fast / Med / Med Slow / Slow",
+        "defaultVal": "Med",
+        "description": "Sets the opto compressor attack speed.",
+        "type": "select",
+        "options": ["Fast", "Med Fast", "Med", "Med Slow", "Slow"]
+      },
+      {
+        "name": "Compressor Release",
+        "range": "Fast / Med Fast / Med / Med Slow / Slow",
+        "defaultVal": "Med",
+        "description": "Sets the opto compressor release speed.",
+        "type": "select",
+        "options": ["Fast", "Med Fast", "Med", "Med Slow", "Slow"]
+      },
+      {
         "name": "EQ Mid Frequency",
         "range": "200 Hz to 7.2 kHz",
         "defaultVal": "1.0 kHz",
-        "description": "Sets center frequency for passive mid-range boost EQ.",
+        "description": "Sets center frequency for passive mid-range dip EQ.",
         "type": "knob"
       },
       {
         "name": "EQ Mid Gain",
-        "range": "-10 dB to +10 dB",
+        "range": "-10 dB to 0 dB",
         "defaultVal": "0 dB",
-        "description": "Adjusts passive mid-range boost level.",
+        "description": "Adjusts passive mid-range cut level.",
         "type": "knob"
       },
       {
@@ -3969,6 +4335,14 @@ export const UAD_DATABASE: UADPluginProfile[] = [
         "defaultVal": "0",
         "description": "Sets dynamic sibilant compression threshold.",
         "type": "knob"
+      },
+      {
+        "name": "De-esser Frequency",
+        "range": "3 kHz / 6 kHz / 9 kHz / 12 kHz / Limit",
+        "defaultVal": "3 kHz",
+        "description": "Selects the target frequency band for the De-Esser, or functions as a Limiter.",
+        "type": "select",
+        "options": ["3 kHz", "6 kHz", "9 kHz", "12 kHz", "Limit"]
       }
     ],
     "proTips": [
@@ -3978,7 +4352,7 @@ export const UAD_DATABASE: UADPluginProfile[] = [
     ],
     "authorizationStatus": "Authorized for all devices"
   },
-  {
+    {
     "name": "uad galaxy tape echo",
     "displayName": "UAD Galaxy Tape Echo",
     "category": "Reverbs & Delays",
@@ -4020,6 +4394,20 @@ export const UAD_DATABASE: UADPluginProfile[] = [
         "type": "knob"
       },
       {
+        "name": "Bass EQ",
+        "range": "-15 dB to +15 dB",
+        "defaultVal": "0 dB",
+        "description": "Adjusts the low frequency content of the echo and reverb signals.",
+        "type": "knob"
+      },
+      {
+        "name": "Treble EQ",
+        "range": "-15 dB to +15 dB",
+        "defaultVal": "0 dB",
+        "description": "Adjusts the high frequency content of the echo and reverb signals.",
+        "type": "knob"
+      },
+      {
         "name": "Echo Volume",
         "range": "0 to 100",
         "defaultVal": "40",
@@ -4038,12 +4426,20 @@ export const UAD_DATABASE: UADPluginProfile[] = [
         "range": "New / Used / Old",
         "defaultVal": "Used",
         "description": "Changes the age of the loaded tape formula, adding high-cut filtering and wow/flutter.",
-        "type": "switch",
+        "type": "select",
         "options": [
           "New",
           "Used",
           "Old"
         ]
+      },
+      {
+        "name": "Splice",
+        "range": "Off / On",
+        "defaultVal": "Off",
+        "description": "Activates the tape splice feature for organic wow/flutter dropout.",
+        "type": "switch",
+        "options": ["Off", "On"]
       }
     ],
     "proTips": [
@@ -4053,7 +4449,7 @@ export const UAD_DATABASE: UADPluginProfile[] = [
     ],
     "authorizationStatus": "Authorized for all devices"
   },
-  {
+    {
     "name": "uad studio d chorus",
     "displayName": "UAD Studio D Chorus",
     "category": "Reverbs & Delays",
@@ -4062,55 +4458,35 @@ export const UAD_DATABASE: UADPluginProfile[] = [
     "parameters": [
       {
         "name": "Dimension Mode",
-        "range": "Buttons 1, 2, 3, 4, or combinations",
+        "range": "Off / 1 / 2 / 3 / 4 / All",
         "defaultVal": "4",
         "description": "Selects active BBD delay line combinations for stereo spatial depth.",
         "type": "select",
         "options": [
-          "Button 1",
-          "Button 2",
-          "Button 3",
-          "Button 4",
-          "All Buttons"
+          "Off",
+          "1",
+          "2",
+          "3",
+          "4",
+          "All"
         ]
       },
       {
-        "name": "Mono/Stereo Switch",
+        "name": "Mono / Stereo",
         "range": "Mono / Stereo",
         "defaultVal": "Stereo",
         "description": "Enables raw mono or widened spatial stereo signal processing path.",
         "type": "switch",
-        "options": [
-          "Mono",
-          "Stereo"
-        ]
-      },
-      {
-        "name": "Input Level",
-        "range": "Off to 0 dB",
-        "defaultVal": "0 dB",
-        "description": "Sets the input level of the dry signal driving the internal electronics.",
-        "type": "knob"
-      },
-      {
-        "name": "Active/Bypass",
-        "range": "Active / Off",
-        "defaultVal": "Active",
-        "description": "Toggles between enabling the chorus processing or bypassing it completely.",
-        "type": "switch",
-        "options": [
-          "Active",
-          "Off"
-        ]
+        "options": ["Mono", "Stereo"]
       }
     ],
     "proTips": [
       "To add instant width and vocal glide without the 'warble' of a typical chorus, engage Mode 4. It provides the deepest spatial depth and makes lead vocals sit perfectly wide in a busy pop mix.",
-      "Try pressing multiple buttons simultaneously (e.g., Mode 1 and Mode 3) as the original hardware did, to yield custom complex BBD delay-line combinations that work wonderfully on synthesizer pads."
+      "Engage 'All' buttons as the original hardware did to yield custom complex BBD delay-line combinations that work wonderfully on synthesizer pads."
     ],
     "authorizationStatus": "Authorized for all devices"
   },
-  {
+    {
     "name": "uad brigade chorus",
     "displayName": "UAD Brigade Chorus",
     "category": "Reverbs & Delays",
@@ -4122,7 +4498,7 @@ export const UAD_DATABASE: UADPluginProfile[] = [
         "range": "Chorus / Vibrato",
         "defaultVal": "Chorus",
         "description": "Switches the internal circuit architecture between wide, shimmering chorus or pitch-modulating vibrato.",
-        "type": "switch",
+        "type": "select",
         "options": [
           "Chorus",
           "Vibrato"
@@ -4151,21 +4527,18 @@ export const UAD_DATABASE: UADPluginProfile[] = [
       },
       {
         "name": "Input Level",
-        "range": "-infinity to +10 dB",
-        "defaultVal": "0 dB",
+        "range": "0 to 10",
+        "defaultVal": "5",
         "description": "Drives the integrated high-impedance solid-state hardware preamp stage.",
         "type": "knob"
       },
       {
-        "name": "Direct/Effect Switch",
+        "name": "Direct / Effect",
         "range": "Direct / Effect",
         "defaultVal": "Effect",
-        "description": "Outputs dry/wet mix (Effect) or wet-only signal (Direct) for parallel auxiliary loops.",
-        "type": "switch",
-        "options": [
-          "Direct",
-          "Effect"
-        ]
+        "description": "Toggles between bypassing the effect (Direct) and enabling it (Effect).",
+        "type": "select",
+        "options": ["Direct", "Effect"]
       }
     ],
     "proTips": [
@@ -4174,7 +4547,7 @@ export const UAD_DATABASE: UADPluginProfile[] = [
     ],
     "authorizationStatus": "Authorized for all devices"
   },
-  {
+    {
     "name": "uad fender 55 tweed deluxe amplifier",
     "displayName": "UAD Fender 55 Tweed Deluxe Amplifier",
     "category": "Guitar & Bass",
@@ -4196,14 +4569,14 @@ export const UAD_DATABASE: UADPluginProfile[] = [
         "type": "knob"
       },
       {
-        "name": "Tone",
+        "name": "Tone Control",
         "range": "1 to 12",
         "defaultVal": "6",
         "description": "Sweeps the overall high-frequency and low-frequency tonal balance.",
         "type": "knob"
       },
       {
-        "name": "Speaker Select",
+        "name": "Speaker Selection",
         "range": "JP12 / Vintage / JBL",
         "defaultVal": "Vintage",
         "description": "Selects the speaker model to change speaker compression and response curves.",
@@ -4212,6 +4585,18 @@ export const UAD_DATABASE: UADPluginProfile[] = [
           "JP12",
           "Vintage",
           "JBL"
+        ]
+      },
+      {
+        "name": "Mic Placement",
+        "range": "On Axis / Off Axis / Edge",
+        "defaultVal": "On Axis",
+        "description": "Selects the microphone placement relative to the speaker cone.",
+        "type": "select",
+        "options": [
+          "On Axis",
+          "Off Axis",
+          "Edge"
         ]
       },
       {
@@ -4416,13 +4801,21 @@ export const UAD_DATABASE: UADPluginProfile[] = [
     ],
     "authorizationStatus": "Authorized for all devices"
   },
-  {
+    {
     "name": "uad tube-tech eq collection",
     "displayName": "UAD Tube-Tech EQ Collection",
     "category": "Equalizers",
     "description": "The gold standard of Pultec-style tube equalizers. Bundles the PE 1C Program Equalizer for broad, silky low/high shelf sweetening and the ME 1B Mid-Range Equalizer for pristine mid-frequency carving.",
     "hardwareModel": "Tube-Tech PE 1C and ME 1B Tube Equalizers",
     "parameters": [
+      {
+        "name": "Active Unit",
+        "range": "PE 1C / ME 1B / Both",
+        "defaultVal": "Both",
+        "description": "Selects the active equalizer module in the channel strip.",
+        "type": "select",
+        "options": ["PE 1C", "ME 1B", "Both"]
+      },
       {
         "name": "Low Freq (PE 1C)",
         "range": "20 / 30 / 60 / 100 Hz",
@@ -4438,14 +4831,14 @@ export const UAD_DATABASE: UADPluginProfile[] = [
       },
       {
         "name": "Low Boost (PE 1C)",
-        "range": "0 to 10 (Continuous)",
+        "range": "0 to 10",
         "defaultVal": "0",
         "description": "Boosts low-frequency shelving band on the PE 1C.",
         "type": "knob"
       },
       {
         "name": "Low Atten (PE 1C)",
-        "range": "0 to 10 (Continuous)",
+        "range": "0 to 10",
         "defaultVal": "0",
         "description": "Attenuates low-frequency shelving band on the PE 1C.",
         "type": "knob"
@@ -4470,17 +4863,50 @@ export const UAD_DATABASE: UADPluginProfile[] = [
         ]
       },
       {
+        "name": "High Boost Q (PE 1C)",
+        "range": "Sharp to Broad",
+        "defaultVal": "Broad",
+        "description": "Adjusts bandwidth of the High Boost peaking filter on the PE 1C.",
+        "type": "knob"
+      },
+      {
         "name": "High Boost Gain (PE 1C)",
-        "range": "0 to 10 (Continuous)",
+        "range": "0 to 10",
         "defaultVal": "0",
         "description": "Adjusts peaking high boost gain on the PE 1C.",
         "type": "knob"
       },
       {
+        "name": "High Atten Freq (PE 1C)",
+        "range": "5 / 10 / 20 kHz",
+        "defaultVal": "10 kHz",
+        "description": "Sets target frequency for high-frequency shelving attenuation on the PE 1C.",
+        "type": "select",
+        "options": ["5 kHz", "10 kHz", "20 kHz"]
+      },
+      {
         "name": "High Atten Gain (PE 1C)",
-        "range": "0 to 10 (Continuous)",
+        "range": "0 to 10",
         "defaultVal": "0",
         "description": "Adjusts high shelf shelving attenuation on the PE 1C.",
+        "type": "knob"
+      },
+      {
+        "name": "Mid Boost Freq (ME 1B)",
+        "range": "0.2 / 0.3 / 0.5 / 0.7 / 1 / 1.5 / 2 / 3 / 4 / 5 / 7 kHz",
+        "defaultVal": "1 kHz",
+        "description": "Sets target frequency for mid-range peaking boost on the ME 1B.",
+        "type": "select",
+        "options": [
+          "0.2 kHz", "0.3 kHz", "0.5 kHz", "0.7 kHz", "1 kHz", "1.5 kHz",
+          "2 kHz", "3 kHz", "4 kHz", "5 kHz", "7 kHz"
+        ]
+      },
+      {
+        "name": "Mid Boost Gain (ME 1B)",
+        "range": "0 to 10",
+        "defaultVal": "0",
+        "description": "Adjusts mid-range peaking boost gain on the ME 1B.",
         "type": "knob"
       }
     ],
@@ -4491,7 +4917,7 @@ export const UAD_DATABASE: UADPluginProfile[] = [
     ],
     "authorizationStatus": "Authorized for all devices"
   },
-  {
+    {
     "name": "uad neve 88rs channel strip collection",
     "displayName": "UAD Neve 88RS Channel Strip Collection",
     "category": "Channel Strips",
@@ -4506,16 +4932,37 @@ export const UAD_DATABASE: UADPluginProfile[] = [
         "type": "knob"
       },
       {
-        "name": "Low Cut Filter",
-        "range": "Out / 20 Hz to 300 Hz",
+        "name": "High Cut Filter",
+        "range": "Out / 7.5 kHz to 18 kHz",
         "defaultVal": "Out",
-        "description": "Applies a steep 18dB/octave high-pass filter.",
+        "description": "Applies a steep 12dB/octave low-pass filter.",
+        "type": "knob"
+      },
+      {
+        "name": "Low Cut Filter",
+        "range": "Out / 31.5 Hz to 315 Hz",
+        "defaultVal": "Out",
+        "description": "Applies a steep 12dB/octave high-pass filter.",
+        "type": "knob"
+      },
+      {
+        "name": "Gate Threshold",
+        "range": "-25 dBu to +15 dBu",
+        "defaultVal": "-25 dBu",
+        "description": "Adjusts the threshold for the Gate/Expander module.",
+        "type": "knob"
+      },
+      {
+        "name": "Gate Release",
+        "range": "0.01 s to 3.0 s",
+        "defaultVal": "0.1 s",
+        "description": "Sets the Gate/Expander recovery speed.",
         "type": "knob"
       },
       {
         "name": "Compressor Threshold",
-        "range": "-30 dB to +20 dB",
-        "defaultVal": "+20 dB",
+        "range": "-30 dBu to +20 dBu",
+        "defaultVal": "+20 dBu",
         "description": "Adjusts the threshold for the VCA compressor module.",
         "type": "knob"
       },
@@ -4524,6 +4971,13 @@ export const UAD_DATABASE: UADPluginProfile[] = [
         "range": "1:1 to 10:1 (Continuous)",
         "defaultVal": "2:1",
         "description": "Sets the compression slope.",
+        "type": "knob"
+      },
+      {
+        "name": "Compressor Release",
+        "range": "0.01 s to 3.0 s / Auto",
+        "defaultVal": "0.1 s",
+        "description": "Sets the VCA compressor recovery speed.",
         "type": "knob"
       },
       {
@@ -4548,24 +5002,31 @@ export const UAD_DATABASE: UADPluginProfile[] = [
     ],
     "authorizationStatus": "Authorized for all devices"
   },
-  {
+    {
     "name": "uad tube-tech cl 1b compressor",
-    "displayName": "UAD Tube-Tech CL 1B Compressor",
+    "displayName": "UAD Tube-Tech CL 1B Compressor (Legacy)",
     "category": "Dynamics",
     "description": "An authentic emulation of the iconic Danish blue optical compressor. Renowned for its incredibly smooth, warm, and highly musical tube compression that effortlessly glues vocals, bass, and acoustic guitars without destroying transients.",
     "hardwareModel": "Tube-Tech CL 1B Opto Compressor",
     "parameters": [
       {
+        "name": "Gain",
+        "range": "Off, 0 to +30 dB",
+        "defaultVal": "0 dB",
+        "description": "Applies output makeup gain.",
+        "type": "knob"
+      },
+      {
         "name": "Threshold",
-        "range": "-40 dB to 0 dB",
-        "defaultVal": "-10 dB",
+        "range": "+10 dB to -40 dB",
+        "defaultVal": "+10 dB",
         "description": "Sets the compression threshold level.",
         "type": "knob"
       },
       {
         "name": "Ratio",
         "range": "2:1 to 10:1",
-        "defaultVal": "3:1",
+        "defaultVal": "2:1",
         "description": "Sets the compression ratio.",
         "type": "knob"
       },
@@ -4578,33 +5039,38 @@ export const UAD_DATABASE: UADPluginProfile[] = [
       },
       {
         "name": "Release",
-        "range": "0.05 s to 4 s",
+        "range": "0.05 s to 10 s",
         "defaultVal": "0.5 s",
         "description": "Sets the release time.",
         "type": "knob"
       },
       {
         "name": "Attack/Release Select",
-        "range": "Manual / Preset / Fixed",
+        "range": "Manual / Fix / Fix-Man",
         "defaultVal": "Manual",
         "description": "Selects manual, fixed, or combined program-dependent attack and release behavior.",
         "type": "select",
         "options": [
           "Manual",
-          "Preset",
-          "Fixed"
+          "Fix",
+          "Fix-Man"
         ]
       },
       {
-        "name": "Gain",
-        "range": "0 dB to +30 dB",
-        "defaultVal": "10 dB",
-        "description": "Applies output makeup gain.",
-        "type": "knob"
+        "name": "Meter Select",
+        "range": "Input / Compression / Output",
+        "defaultVal": "Compression",
+        "description": "Determines whether the large physical VU meter displays input levels, decibels of optical gain reduction, or output levels.",
+        "type": "select",
+        "options": [
+          "Input",
+          "Compression",
+          "Output"
+        ]
       }
     ],
     "proTips": [
-      "On lead pop vocals, select 'Fixed' mode. This introduces a dual-time constant release where fast transients recover quickly while the overall average level is leveled out smoothly, keeping the vocal beautifully upfront.",
+      "On lead pop vocals, select 'Fix-Man' mode. This introduces a dual-time constant release where fast transients recover quickly while the overall average level is leveled out smoothly, keeping the vocal beautifully upfront.",
       "For bass guitar, switch to 'Manual' control with a medium-slow Attack (around 12 o'clock) and a fast Release (around 9 o'clock). This allows the initial string pluck transient to slip through untouched before clamping down for ultimate low-end sustain."
     ],
     "authorizationStatus": "Authorized for all devices"
@@ -4679,7 +5145,7 @@ export const UAD_DATABASE: UADPluginProfile[] = [
     ],
     "authorizationStatus": "Authorized for all devices"
   },
-  {
+    {
     "name": "uad manley variable mu limiter",
     "displayName": "UAD Manley Variable Mu Limiter",
     "category": "Dynamics",
@@ -4688,39 +5154,37 @@ export const UAD_DATABASE: UADPluginProfile[] = [
     "parameters": [
       {
         "name": "Input",
-        "range": "-20 dB to +20 dB",
-        "defaultVal": "0 dB",
+        "range": "Min to Max",
+        "defaultVal": "Center",
         "description": "Sets the input level, driving the tube circuitry and determining threshold behavior.",
         "type": "knob"
       },
       {
         "name": "Threshold",
-        "range": "-20 dB to 0 dB",
-        "defaultVal": "0 dB",
+        "range": "Min to Max",
+        "defaultVal": "Center",
         "description": "Sets the compression threshold.",
         "type": "knob"
       },
       {
         "name": "Attack",
-        "range": "15 ms to 70 ms",
-        "defaultVal": "30 ms",
+        "range": "Fast to Slow",
+        "defaultVal": "Medium",
         "description": "Determines the variable compressor attack speed.",
         "type": "knob"
       },
       {
         "name": "Recovery",
-        "range": "0.1 s to 8 s",
-        "defaultVal": "0.2 s",
-        "description": "Sets the recovery (release) time, including manual steps and Auto options.",
+        "range": "Fast / Medium Fast / Medium / Medium Slow / Slow",
+        "defaultVal": "Medium Fast",
+        "description": "Sets the recovery (release) time.",
         "type": "select",
         "options": [
-          "0.1s",
-          "0.2s",
-          "0.4s",
-          "0.6s",
-          "0.8s",
-          "1.6s",
-          "2s to 8s (Auto)"
+          "Fast",
+          "Medium Fast",
+          "Medium",
+          "Medium Slow",
+          "Slow"
         ]
       },
       {
@@ -4728,7 +5192,7 @@ export const UAD_DATABASE: UADPluginProfile[] = [
         "range": "Compress / Limit",
         "defaultVal": "Compress",
         "description": "Toggles between a soft-knee 1.5:1 ratio and a stiffer, punchier 4:1 to 20:1 limit ratio.",
-        "type": "switch",
+        "type": "select",
         "options": [
           "Compress",
           "Limit"
@@ -4736,10 +5200,33 @@ export const UAD_DATABASE: UADPluginProfile[] = [
       },
       {
         "name": "Output",
-        "range": "-20 dB to +20 dB",
-        "defaultVal": "0 dB",
+        "range": "Min to Max",
+        "defaultVal": "Center",
         "description": "Sets the final makeup gain output level.",
         "type": "knob"
+      },
+      {
+        "name": "Headroom",
+        "range": "0 to +30 dB",
+        "defaultVal": "+16 dB",
+        "description": "Adjusts the internal operating level, allowing for clean operation or aggressive saturation.",
+        "type": "knob"
+      },
+      {
+        "name": "Sidechain HPF",
+        "range": "In / Out",
+        "defaultVal": "Out",
+        "description": "Engages a 100 Hz high-pass filter on the sidechain detector.",
+        "type": "select",
+        "options": ["In", "Out"]
+      },
+      {
+        "name": "L/R Link",
+        "range": "Link / Unlinked",
+        "defaultVal": "Link",
+        "description": "Links Left and Right channels for stereo detection.",
+        "type": "select",
+        "options": ["Link", "Unlinked"]
       }
     ],
     "proTips": [
@@ -4748,7 +5235,7 @@ export const UAD_DATABASE: UADPluginProfile[] = [
     ],
     "authorizationStatus": "Authorized for all devices"
   },
-  {
+    {
     "name": "uad massenburg designworks mdweq5 eq",
     "displayName": "UAD Massenburg DesignWorks MDWEQ5 EQ",
     "category": "Equalizers",
@@ -4757,19 +5244,40 @@ export const UAD_DATABASE: UADPluginProfile[] = [
     "parameters": [
       {
         "name": "Band 1 Type",
-        "range": "LF Shelving / Peaking / Low Cut",
-        "defaultVal": "Low Cut",
+        "range": "High Pass / Low Shelf / Peaking",
+        "defaultVal": "Low Shelf",
         "description": "Selects filter type for Band 1.",
         "type": "select",
         "options": [
-          "LF Shelving",
-          "Peaking",
-          "Low Cut"
+          "High Pass",
+          "Low Shelf",
+          "Peaking"
         ]
       },
       {
+        "name": "Band 1 Frequency",
+        "range": "10 Hz to 24 kHz",
+        "defaultVal": "100 Hz",
+        "description": "Sets the center or cutoff frequency for Band 1.",
+        "type": "knob"
+      },
+      {
+        "name": "Band 1 Gain",
+        "range": "-24 dB to +24 dB",
+        "defaultVal": "0 dB",
+        "description": "Adjusts the cut or boost level for Band 1.",
+        "type": "knob"
+      },
+      {
+        "name": "Band 1 Q",
+        "range": "0.1 to 25.6",
+        "defaultVal": "1.0",
+        "description": "Adjusts the bandwidth (Q factor) of Band 1.",
+        "type": "knob"
+      },
+      {
         "name": "Band 3 Frequency",
-        "range": "10 Hz to 20 kHz",
+        "range": "10 Hz to 24 kHz",
         "defaultVal": "1000 Hz",
         "description": "Sets the center frequency for the midrange band.",
         "type": "knob"
@@ -4789,10 +5297,22 @@ export const UAD_DATABASE: UADPluginProfile[] = [
         "type": "knob"
       },
       {
+        "name": "Band 5 Type",
+        "range": "Low Pass / High Shelf / Peaking",
+        "defaultVal": "High Shelf",
+        "description": "Selects filter type for Band 5.",
+        "type": "select",
+        "options": [
+          "Low Pass",
+          "High Shelf",
+          "Peaking"
+        ]
+      },
+      {
         "name": "Band 5 Frequency",
-        "range": "10 Hz to 20 kHz",
+        "range": "10 Hz to 24 kHz",
         "defaultVal": "10000 Hz",
-        "description": "Sets the center frequency for the high frequency band.",
+        "description": "Sets the center or cutoff frequency for Band 5.",
         "type": "knob"
       },
       {
@@ -4801,17 +5321,24 @@ export const UAD_DATABASE: UADPluginProfile[] = [
         "defaultVal": "0 dB",
         "description": "Adjusts the cut or boost level for the high band.",
         "type": "knob"
+      },
+      {
+        "name": "Band 5 Q",
+        "range": "0.1 to 25.6",
+        "defaultVal": "1.0",
+        "description": "Adjusts the bandwidth (Q factor) of Band 5.",
+        "type": "knob"
       }
     ],
     "proTips": [
-      "The MDWEQ5 is famous for its surgical precision and zero phase distortion. To remove an annoying frequency or room resonance from an acoustic guitar, set Q to 25.0, boost the gain to +12 dB, sweep the frequency to locate the whistle, and then notch it down to -10 dB.",
+      "The MDWEQ5 is famous for its surgical precision and zero phase distortion. To remove an annoying frequency or room resonance from an acoustic guitar, set Q to 25.6, boost the gain to +12 dB, sweep the frequency to locate the whistle, and then notch it down to -10 dB.",
       "For mastering, use the High Shelf (Band 5) set around 12 kHz, with a broad Q of 0.5. Gently boost by 0.5 to 1.5 dB. Because of Massenburg's ultra-clean filter math, this adds incredible airy sweetness without any digital harshness."
     ],
     "authorizationStatus": "Authorized for all devices"
   },
-  {
-    "name": "uad ams rmx16 digital reverb",
-    "displayName": "UAD AMS RMX16 Digital Reverb",
+    {
+    "name": "uad ams rmx16 legacy",
+    "displayName": "UAD AMS RMX16 Digital Reverb (Legacy)",
     "category": "Reverbs & Delays",
     "description": "The definitive 1980s microprocessor-controlled digital reverb. Used on countless legendary recordings from Phil Collins to Kate Bush, it is famous for its unique 12-bit converters and lush, characteristic 'Non-Lin 2' and 'Ambience' algorithms.",
     "hardwareModel": "AMS RMX16 Digital Reverberation System",
@@ -4874,7 +5401,7 @@ export const UAD_DATABASE: UADPluginProfile[] = [
     ],
     "authorizationStatus": "Authorized for all devices"
   },
-  {
+    {
     "name": "uad thermionic culture vulture distortion",
     "displayName": "UAD Thermionic Culture Vulture Distortion",
     "category": "Tape & Saturation",
@@ -4889,7 +5416,7 @@ export const UAD_DATABASE: UADPluginProfile[] = [
         "type": "knob"
       },
       {
-        "name": "Function",
+        "name": "Function Select",
         "range": "Triode / Pentode 1 / Pentode 2",
         "defaultVal": "Triode",
         "description": "Changes the tube operational mode and even/odd harmonic distortion curves.",
@@ -4936,16 +5463,23 @@ export const UAD_DATABASE: UADPluginProfile[] = [
         "defaultVal": "10",
         "description": "Sets the final output level of the channel.",
         "type": "knob"
+      },
+      {
+        "name": "Mix",
+        "range": "0% to 100%",
+        "defaultVal": "100%",
+        "description": "Blends the processed wet signal with the dry input signal.",
+        "type": "knob"
       }
     ],
     "proTips": [
       "To glue and warm up a drum bus, select Triode ('T') mode, set Bias around 0.3mA, and gently push the Drive until the meters flicker on peaks. This adds rich second-harmonic distortion without destroying transient snap.",
-      "For aggressive bass grit, switch the Function to Pentode 1 ('P1'), turn on the Overdrive switch, and back off the Bias below 0.2mA to starve the valves, introducing an asymmetric, gated fuzz tone.",
+      "For aggressive bass grit, switch the Function Select to Pentode 1 ('P1'), turn on the Overdrive switch, and back off the Bias below 0.2mA to starve the valves, introducing an asymmetric, gated fuzz tone.",
       "Use it as a parallel effect on lead vocals: set the mode to 'T' with high Drive, engage the 9 kHz Low Pass filter to tame harsh sibilance, and blend it in at 10-15% wet to add density and mid-range cut."
     ],
     "authorizationStatus": "Authorized for all devices"
   },
-  {
+    {
     "name": "uad neve 1073 preamp and eq collection",
     "displayName": "UAD Neve 1073 Preamp and EQ Collection",
     "category": "Preamps & Microphones",
@@ -4953,21 +5487,21 @@ export const UAD_DATABASE: UADPluginProfile[] = [
     "hardwareModel": "Neve 1073 Channel Amplifier",
     "parameters": [
       {
-        "name": "Preamp Gain",
+        "name": "Input Gain",
         "range": "-20 dB to +80 dB",
         "defaultVal": "0 dB",
         "description": "Controls the class-A transistor input stage gain, adding rich harmonic saturation at higher settings.",
         "type": "knob"
       },
       {
-        "name": "High Shelf Gain",
+        "name": "High Shelf EQ Gain",
         "range": "-16 dB to +16 dB",
         "defaultVal": "0 dB",
         "description": "Controls the fixed 12 kHz high-shelving equalizer band boost or cut.",
         "type": "knob"
       },
       {
-        "name": "Mid Frequency",
+        "name": "Mid Band Frequency",
         "range": "Off / 360 Hz / 700 Hz / 1.6 kHz / 3.2 kHz / 4.8 kHz / 7.2 kHz",
         "defaultVal": "Off",
         "description": "Selects the active frequency band for the peaking mid EQ.",
@@ -4983,14 +5517,14 @@ export const UAD_DATABASE: UADPluginProfile[] = [
         ]
       },
       {
-        "name": "Mid Gain",
+        "name": "Mid Band Gain",
         "range": "-18 dB to +18 dB",
         "defaultVal": "0 dB",
         "description": "Controls the mid-frequency band boost or cut.",
         "type": "knob"
       },
       {
-        "name": "Low Frequency",
+        "name": "Low Band Frequency",
         "range": "Off / 35 Hz / 60 Hz / 110 Hz / 220 Hz",
         "defaultVal": "Off",
         "description": "Selects the active shelving frequency for the low EQ band.",
@@ -5004,14 +5538,14 @@ export const UAD_DATABASE: UADPluginProfile[] = [
         ]
       },
       {
-        "name": "Low Gain",
+        "name": "Low Band Gain",
         "range": "-16 dB to +16 dB",
         "defaultVal": "0 dB",
         "description": "Controls the low-frequency band shelving boost or cut.",
         "type": "knob"
       },
       {
-        "name": "High Pass Filter",
+        "name": "High Pass Filter Freq",
         "range": "Off / 50 Hz / 80 Hz / 160 Hz / 300 Hz",
         "defaultVal": "Off",
         "description": "Selects the high-pass passive filter cutoff frequency.",
@@ -5023,6 +5557,35 @@ export const UAD_DATABASE: UADPluginProfile[] = [
           "160 Hz",
           "300 Hz"
         ]
+      },
+      {
+        "name": "Output Level",
+        "range": "-24 dB to +12 dB",
+        "defaultVal": "0 dB",
+        "description": "Controls the final output level.",
+        "type": "knob"
+      },
+      {
+        "name": "Phase Invert",
+        "range": "In / Out",
+        "defaultVal": "Out",
+        "description": "Inverts the phase of the signal.",
+        "type": "switch",
+        "options": [
+          "Out",
+          "In"
+        ]
+      },
+      {
+        "name": "EQ In/Out",
+        "range": "In / Out",
+        "defaultVal": "In",
+        "description": "Bypasses or engages the EQ section.",
+        "type": "switch",
+        "options": [
+          "In",
+          "Out"
+        ]
       }
     ],
     "proTips": [
@@ -5032,7 +5595,7 @@ export const UAD_DATABASE: UADPluginProfile[] = [
     ],
     "authorizationStatus": "Authorized for all devices"
   },
-  {
+    {
     "name": "uad ua 610-a tube preamp and eq",
     "displayName": "UAD UA 610-A Tube Preamp and EQ",
     "category": "Preamps & Microphones",
@@ -5040,25 +5603,36 @@ export const UAD_DATABASE: UADPluginProfile[] = [
     "hardwareModel": "Universal Audio 610-A Modular Amplifier",
     "parameters": [
       {
-        "name": "Preamp Gain",
+        "name": "Gain Step",
         "range": "-10 dB to +10 dB",
         "defaultVal": "0 dB",
-        "description": "Controls tube input stage saturation.",
+        "description": "Controls tube input stage saturation in coarse 5 dB steps.",
         "type": "knob"
       },
       {
-        "name": "Level",
+        "name": "Input Level",
         "range": "0 to 10",
         "defaultVal": "5",
-        "description": "Attenuates output volume of the preamp.",
+        "description": "Attenuates or boosts the level driving the tube stage.",
         "type": "knob"
+      },
+      {
+        "name": "Impedance",
+        "range": "500 ohms / 2.0k ohms",
+        "defaultVal": "2.0k ohms",
+        "description": "Selects input impedance; lower values create a darker and softer transient sound profile.",
+        "type": "select",
+        "options": [
+          "500 ohms",
+          "2.0k ohms"
+        ]
       },
       {
         "name": "High Shelf Freq",
         "range": "4.5 kHz / 10 kHz",
         "defaultVal": "10 kHz",
         "description": "Selects the High shelving frequency.",
-        "type": "switch",
+        "type": "select",
         "options": [
           "4.5 kHz",
           "10 kHz"
@@ -5076,7 +5650,7 @@ export const UAD_DATABASE: UADPluginProfile[] = [
         "range": "50 Hz / 100 Hz",
         "defaultVal": "100 Hz",
         "description": "Selects the Low shelving frequency.",
-        "type": "switch",
+        "type": "select",
         "options": [
           "50 Hz",
           "100 Hz"
@@ -5090,15 +5664,19 @@ export const UAD_DATABASE: UADPluginProfile[] = [
         "type": "knob"
       },
       {
-        "name": "Impedance",
-        "range": "500 ohms / 2.0k ohms",
-        "defaultVal": "2.0k ohms",
-        "description": "Selects input impedance; lower values create a darker and softer transient sound profile.",
+        "name": "Master Level",
+        "range": "-20 dB to +12 dB",
+        "defaultVal": "0 dB",
+        "description": "Sets the final makeup output level.",
+        "type": "knob"
+      },
+      {
+        "name": "Phase Invert",
+        "range": "In / Out",
+        "defaultVal": "Out",
+        "description": "Inverts the phase of the signal.",
         "type": "switch",
-        "options": [
-          "500 ohms",
-          "2.0k ohms"
-        ]
+        "options": ["Out", "In"]
       }
     ],
     "proTips": [
@@ -5108,7 +5686,7 @@ export const UAD_DATABASE: UADPluginProfile[] = [
     ],
     "authorizationStatus": "Authorized for all devices"
   },
-  {
+    {
     "name": "uad ua 610-b tube preamp and eq",
     "displayName": "UAD UA 610-B Tube Preamp and EQ",
     "category": "Preamps & Microphones",
@@ -5116,17 +5694,17 @@ export const UAD_DATABASE: UADPluginProfile[] = [
     "hardwareModel": "Universal Audio 610-B Tube Preamp & EQ",
     "parameters": [
       {
-        "name": "Gain",
+        "name": "Gain Step",
         "range": "-10 dB to +10 dB",
         "defaultVal": "0 dB",
-        "description": "Controls preamp input stage saturation in 5 dB steps.",
+        "description": "Controls tube input stage saturation in coarse 5 dB steps.",
         "type": "knob"
       },
       {
-        "name": "Level",
+        "name": "Input Level",
         "range": "0 to 10",
         "defaultVal": "5",
-        "description": "Provides final output leveling gain stage control.",
+        "description": "Attenuates or boosts the level driving the tube stage.",
         "type": "knob"
       },
       {
@@ -5143,12 +5721,13 @@ export const UAD_DATABASE: UADPluginProfile[] = [
       },
       {
         "name": "High Shelf Freq",
-        "range": "4.5 kHz / 10 kHz",
+        "range": "4.5 kHz / 7 kHz / 10 kHz",
         "defaultVal": "10 kHz",
         "description": "Switches high EQ shelving frequency focus.",
-        "type": "switch",
+        "type": "select",
         "options": [
           "4.5 kHz",
+          "7 kHz",
           "10 kHz"
         ]
       },
@@ -5161,13 +5740,14 @@ export const UAD_DATABASE: UADPluginProfile[] = [
       },
       {
         "name": "Low Shelf Freq",
-        "range": "70 Hz / 100 Hz",
+        "range": "70 Hz / 100 Hz / 200 Hz",
         "defaultVal": "100 Hz",
         "description": "Switches low EQ shelving frequency focus.",
-        "type": "switch",
+        "type": "select",
         "options": [
           "70 Hz",
-          "100 Hz"
+          "100 Hz",
+          "200 Hz"
         ]
       },
       {
@@ -5176,6 +5756,21 @@ export const UAD_DATABASE: UADPluginProfile[] = [
         "defaultVal": "0 dB",
         "description": "Adjusts low shelving band amplification.",
         "type": "knob"
+      },
+      {
+        "name": "Master Level",
+        "range": "-20 dB to +12 dB",
+        "defaultVal": "0 dB",
+        "description": "Sets the final makeup output level.",
+        "type": "knob"
+      },
+      {
+        "name": "Phase Invert",
+        "range": "In / Out",
+        "defaultVal": "Out",
+        "description": "Inverts the phase of the signal.",
+        "type": "switch",
+        "options": ["Out", "In"]
       }
     ],
     "proTips": [
@@ -5185,7 +5780,7 @@ export const UAD_DATABASE: UADPluginProfile[] = [
     ],
     "authorizationStatus": "Authorized for all devices"
   },
-  {
+    {
     "name": "uad fairchild tube limiter collection",
     "displayName": "UAD Fairchild Tube Limiter Collection",
     "category": "Dynamics",
@@ -5230,15 +5825,21 @@ export const UAD_DATABASE: UADPluginProfile[] = [
       },
       {
         "name": "AGC Mode",
-        "range": "Left/Right / Stereo / Mid/Side",
-        "defaultVal": "Stereo",
+        "range": "Left/Right / Lat/Vert (M/S)",
+        "defaultVal": "Left/Right",
         "description": "Determines the internal sidechain and signal linking configuration.",
         "type": "select",
         "options": [
           "Left/Right",
-          "Stereo",
-          "Mid/Side"
+          "Lat/Vert (M/S)"
         ]
+      },
+      {
+        "name": "Output Level",
+        "range": "-20 dB to +20 dB",
+        "defaultVal": "0 dB",
+        "description": "Controls the final makeup gain.",
+        "type": "knob"
       }
     ],
     "proTips": [
@@ -5248,7 +5849,7 @@ export const UAD_DATABASE: UADPluginProfile[] = [
     ],
     "authorizationStatus": "Authorized for all devices"
   },
-  {
+    {
     "name": "uad api vision channel strip legacy",
     "displayName": "UAD API Vision Channel Strip Legacy",
     "category": "Channel Strips",
@@ -5263,58 +5864,96 @@ export const UAD_DATABASE: UADPluginProfile[] = [
         "type": "knob"
       },
       {
-        "name": "225L Comp Threshold",
+        "name": "225L Compressor Threshold",
         "range": "+10 to -20 dB",
         "defaultVal": "+10 dB",
-        "description": "Controls threshold point for discrete feedback compressor.",
+        "description": "Controls threshold point for discrete compressor.",
         "type": "knob"
       },
       {
-        "name": "225L Comp Release",
+        "name": "225L Compressor Ratio",
+        "range": "1.5:1 to 10:1",
+        "defaultVal": "2:1",
+        "description": "Selects dynamic processing compression slope ratios.",
+        "type": "knob"
+      },
+      {
+        "name": "225L Compressor Attack",
+        "range": "Fast / Slow",
+        "defaultVal": "Fast",
+        "description": "Selects fast or slow attack times.",
+        "type": "select",
+        "options": ["Fast", "Slow"]
+      },
+      {
+        "name": "225L Compressor Release",
         "range": "50 ms to 3 s",
         "defaultVal": "500 ms",
         "description": "Controls release times of dynamic gain reduction loop.",
         "type": "knob"
       },
       {
-        "name": "225L Comp Ratio",
-        "range": "1.5:1 / 2:1 / 3:1 / 4:1 / 6:1 / 10:1 / Limit",
-        "defaultVal": "2:1",
-        "description": "Selects dynamic processing compression slope ratios.",
+        "name": "225L Compressor Type",
+        "range": "Old (Feedback) / New (Feed-Forward)",
+        "defaultVal": "Old (Feedback)",
+        "description": "Selects compression style.",
         "type": "select",
-        "options": [
-          "1.5:1",
-          "2:1",
-          "3:1",
-          "4:1",
-          "6:1",
-          "10:1",
-          "Limit"
-        ]
+        "options": ["Old (Feedback)", "New (Feed-Forward)"]
       },
       {
-        "name": "550L EQ High Freq",
-        "range": "2 kHz to 20 kHz",
+        "name": "550L EQ High Band Freq",
+        "range": "2.5 to 20 kHz",
         "defaultVal": "10 kHz",
         "description": "Selects active frequency for 550L EQ High band.",
-        "type": "select",
-        "options": [
-          "2 kHz",
-          "3 kHz",
-          "4 kHz",
-          "5 kHz",
-          "7 kHz",
-          "10 kHz",
-          "12.5 kHz",
-          "15 kHz",
-          "20 kHz"
-        ]
+        "type": "knob"
       },
       {
-        "name": "550L EQ High Gain",
+        "name": "550L EQ High Band Gain",
         "range": "-12 dB to +12 dB",
         "defaultVal": "0 dB",
-        "description": "Controls high-band shelving or peaking EQ gain in 2 dB steps.",
+        "description": "Controls high-band shelving or peaking EQ gain.",
+        "type": "knob"
+      },
+      {
+        "name": "550L EQ High-Mid Freq",
+        "range": "800 Hz to 12.5 kHz",
+        "defaultVal": "3 kHz",
+        "description": "Selects active frequency for 550L EQ High-Mid band.",
+        "type": "knob"
+      },
+      {
+        "name": "550L EQ High-Mid Gain",
+        "range": "-12 dB to +12 dB",
+        "defaultVal": "0 dB",
+        "description": "Controls high-mid EQ gain.",
+        "type": "knob"
+      },
+      {
+        "name": "550L EQ Low-Mid Freq",
+        "range": "75 Hz to 1 kHz",
+        "defaultVal": "400 Hz",
+        "description": "Selects active frequency for 550L EQ Low-Mid band.",
+        "type": "knob"
+      },
+      {
+        "name": "550L EQ Low-Mid Gain",
+        "range": "-12 dB to +12 dB",
+        "defaultVal": "0 dB",
+        "description": "Controls low-mid EQ gain.",
+        "type": "knob"
+      },
+      {
+        "name": "550L EQ Low Band Freq",
+        "range": "30 Hz to 400 Hz",
+        "defaultVal": "50 Hz",
+        "description": "Selects active frequency for 550L EQ Low band.",
+        "type": "knob"
+      },
+      {
+        "name": "550L EQ Low Band Gain",
+        "range": "-12 dB to +12 dB",
+        "defaultVal": "0 dB",
+        "description": "Controls low-band shelving or peaking EQ gain.",
         "type": "knob"
       }
     ],
@@ -5325,13 +5964,26 @@ export const UAD_DATABASE: UADPluginProfile[] = [
     ],
     "authorizationStatus": "Authorized for all devices"
   },
-  {
+    {
     "name": "uad pultec passive eq collection",
     "displayName": "UAD Pultec Passive EQ Collection",
     "category": "Equalizers",
     "description": "The definitive emulation of the highly coveted, classic passive tube EQs. Modeled on vintage EQP-1A, MEQ-5, and HLF-3C units, this collection captures the musical, interlocking filter curves and rich vacuum tube output stages that add high-end silk and low-end authority to any mix.",
     "hardwareModel": "Pultec EQP-1A, MEQ-5, and HLF-3C Passive Equalizers",
     "parameters": [
+      {
+        "name": "Low Frequency Select",
+        "range": "20 / 30 / 60 / 100 Hz",
+        "defaultVal": "30 Hz",
+        "description": "Sets low shelf cutoff frequency.",
+        "type": "select",
+        "options": [
+          "20 Hz",
+          "30 Hz",
+          "60 Hz",
+          "100 Hz"
+        ]
+      },
       {
         "name": "Low Boost",
         "range": "0 to 10",
@@ -5347,29 +5999,9 @@ export const UAD_DATABASE: UADPluginProfile[] = [
         "type": "knob"
       },
       {
-        "name": "Low Frequency",
-        "range": "20 Hz / 30 Hz / 60 Hz / 100 Hz",
-        "defaultVal": "30 Hz",
-        "description": "Sets low shelf cutoff frequency.",
-        "type": "select",
-        "options": [
-          "20 Hz",
-          "30 Hz",
-          "60 Hz",
-          "100 Hz"
-        ]
-      },
-      {
-        "name": "High Boost",
-        "range": "0 to 10",
-        "defaultVal": "0",
-        "description": "Boosts high-frequency peak.",
-        "type": "knob"
-      },
-      {
-        "name": "High Frequency",
-        "range": "3 kHz / 4 kHz / 5 kHz / 8 kHz / 10 kHz / 12 kHz / 16 kHz",
-        "defaultVal": "16 kHz",
+        "name": "High Frequency Select",
+        "range": "3 / 4 / 5 / 8 / 10 / 12 / 16 kHz",
+        "defaultVal": "10 kHz",
         "description": "Sets high boost center frequency.",
         "type": "select",
         "options": [
@@ -5383,6 +6015,32 @@ export const UAD_DATABASE: UADPluginProfile[] = [
         ]
       },
       {
+        "name": "High Bandwidth (Q)",
+        "range": "Sharp to Broad",
+        "defaultVal": "Broad",
+        "description": "Controls the bandwidth (Q) for the high frequency boost.",
+        "type": "knob"
+      },
+      {
+        "name": "High Boost",
+        "range": "0 to 10",
+        "defaultVal": "0",
+        "description": "Boosts high-frequency peak.",
+        "type": "knob"
+      },
+      {
+        "name": "High Atten Frequency",
+        "range": "5 / 10 / 20 kHz",
+        "defaultVal": "10 kHz",
+        "description": "Sets the target frequency for the high attenuation shelf.",
+        "type": "select",
+        "options": [
+          "5 kHz",
+          "10 kHz",
+          "20 kHz"
+        ]
+      },
+      {
         "name": "High Atten",
         "range": "0 to 10",
         "defaultVal": "0",
@@ -5391,8 +6049,8 @@ export const UAD_DATABASE: UADPluginProfile[] = [
       }
     ],
     "proTips": [
-      "Perform the iconic 'Pultec trick' on kick drums by setting Low Frequency to 60 Hz, then simultaneously boosting to 5 and cutting to 4 to tighten sub frequencies while removing low-mid mud.",
-      "Use the MEQ-5 mid-range equalizer to boost lead vocals at 3 kHz (dial to 3) for clean presence that glides effortlessly above acoustic instrumentation."
+      "Perform the iconic 'Pultec trick' on kick drums by setting Low Frequency Select to 60 Hz, then simultaneously boosting Low Boost to 5 and setting Low Atten to 4 to tighten sub frequencies while removing low-mid mud.",
+      "Use a broad High Boost at 12 kHz to add expensive 'expensive air' and breathiness to vocals without introducing harshness."
     ],
     "authorizationStatus": "Authorized for all devices"
   },
@@ -5457,13 +6115,20 @@ export const UAD_DATABASE: UADPluginProfile[] = [
     ],
     "authorizationStatus": "Authorized for all devices"
   },
-  {
+    {
     "name": "uad oxford inflator",
     "displayName": "UAD Oxford Inflator",
     "category": "Dynamics",
     "description": "A legendary loudness and saturation tool that increases apparent volume and presence without altering dynamic range or clipping peaks. It adds warmth, excitement, and analog-style fullness, making individual tracks or full mixes pop.",
     "hardwareModel": "Sonnox Oxford Inflator Digital Processor",
     "parameters": [
+      {
+        "name": "Input Gain",
+        "range": "-12 dB to +12 dB",
+        "defaultVal": "0 dB",
+        "description": "Sets drive level entering the processor.",
+        "type": "knob"
+      },
       {
         "name": "Effect",
         "range": "0% to 100%",
@@ -5479,6 +6144,13 @@ export const UAD_DATABASE: UADPluginProfile[] = [
         "type": "knob"
       },
       {
+        "name": "Output Gain",
+        "range": "-12 dB to +12 dB",
+        "defaultVal": "0 dB",
+        "description": "Adjusts output volume.",
+        "type": "knob"
+      },
+      {
         "name": "Clip 0dB",
         "range": "Off / On",
         "defaultVal": "On",
@@ -5490,11 +6162,15 @@ export const UAD_DATABASE: UADPluginProfile[] = [
         ]
       },
       {
-        "name": "Input",
-        "range": "-10 dB to +6 dB",
-        "defaultVal": "0 dB",
-        "description": "Sets drive level entering the processor.",
-        "type": "knob"
+        "name": "Band Split",
+        "range": "Off / On",
+        "defaultVal": "Off",
+        "description": "Splits the signal into frequency bands to reduce intermodulation distortion.",
+        "type": "switch",
+        "options": [
+          "Off",
+          "On"
+        ]
       }
     ],
     "proTips": [
@@ -5503,7 +6179,7 @@ export const UAD_DATABASE: UADPluginProfile[] = [
     ],
     "authorizationStatus": "Authorized for all devices"
   },
-  {
+    {
     "name": "uad teletronix la-2a leveler collection",
     "displayName": "UAD Teletronix LA-2A Leveler Collection",
     "category": "Dynamics",
@@ -5525,7 +6201,7 @@ export const UAD_DATABASE: UADPluginProfile[] = [
         "type": "knob"
       },
       {
-        "name": "Compress / Limit",
+        "name": "Limit/Compress Switch",
         "range": "Compress / Limit",
         "defaultVal": "Compress",
         "description": "Toggles optical compression ratio.",
@@ -5533,6 +6209,17 @@ export const UAD_DATABASE: UADPluginProfile[] = [
         "options": [
           "Compress",
           "Limit"
+        ]
+      },
+      {
+        "name": "Meter Select",
+        "range": "Gain Reduction / Output",
+        "defaultVal": "Gain Reduction",
+        "description": "Selects what the VU meter displays.",
+        "type": "select",
+        "options": [
+          "Gain Reduction",
+          "Output"
         ]
       }
     ],
@@ -5542,127 +6229,167 @@ export const UAD_DATABASE: UADPluginProfile[] = [
     ],
     "authorizationStatus": "Authorized for all devices"
   },
-  {
-    "name": "uad api 500 eq collection",
-    "displayName": "UAD API 500 EQ Collection",
+    {
+    "name": "uad api 550a",
+    "displayName": "UAD API 550A Parametric EQ",
     "category": "Equalizers",
-    "description": "The ultimate compilation of classic API EQ modules, featuring the 550A 3-band parametric EQ and the 560 10-band graphic EQ. Both models emulate the legendary proportional-Q design, narrowing filter bandwidth at higher gains for focused, high-headroom acoustic shaping.",
-    "hardwareModel": "API 550A 3-Band & API 560 10-Band Equalizers",
+    "description": "The API 550A is a classic 3-band parametric EQ featuring API's legendary proportional-Q design, where the filter bandwidth narrows at higher gains for focused, high-headroom acoustic shaping.",
+    "hardwareModel": "API 550A 3-Band Equalizer",
     "parameters": [
       {
-        "name": "LF Freq",
-        "range": "30 Hz / 40 Hz / 50 Hz / 100 Hz / 200 Hz / 300 Hz / 400 Hz",
-        "defaultVal": "100 Hz",
-        "description": "Sets low band center frequency.",
-        "type": "select",
-        "options": [
-          "30 Hz",
-          "40 Hz",
-          "50 Hz",
-          "100 Hz",
-          "200 Hz",
-          "300 Hz",
-          "400 Hz"
-        ]
+        "name": "Bandpass Filter",
+        "range": "Off / On",
+        "defaultVal": "Off",
+        "description": "Engages a 50Hz to 15kHz bandpass filter.",
+        "type": "switch",
+        "options": ["Off", "On"]
       },
       {
-        "name": "LF Gain",
-        "range": "-12 dB to +12 dB",
-        "defaultVal": "0 dB",
-        "description": "Sets low band boost or cut level.",
-        "type": "select",
-        "options": [
-          "-12 dB",
-          "-9 dB",
-          "-6 dB",
-          "-4 dB",
-          "-2 dB",
-          "0 dB",
-          "+2 dB",
-          "+4 dB",
-          "+6 dB",
-          "+9 dB",
-          "+12 dB"
-        ]
-      },
-      {
-        "name": "MF Freq",
-        "range": "75 Hz / 150 Hz / 180 Hz / 240 Hz / 500 Hz / 800 Hz / 1 kHz / 1.5 kHz / 3 kHz / 5 kHz",
-        "defaultVal": "1.5 kHz",
-        "description": "Sets mid band center frequency.",
-        "type": "select",
-        "options": [
-          "75 Hz",
-          "150 Hz",
-          "180 Hz",
-          "240 Hz",
-          "500 Hz",
-          "800 Hz",
-          "1 kHz",
-          "1.5 kHz",
-          "3 kHz",
-          "5 kHz"
-        ]
-      },
-      {
-        "name": "MF Gain",
-        "range": "-12 dB to +12 dB",
-        "defaultVal": "0 dB",
-        "description": "Sets mid band boost or cut level.",
-        "type": "select",
-        "options": [
-          "-12 dB",
-          "-9 dB",
-          "-6 dB",
-          "-4 dB",
-          "-2 dB",
-          "0 dB",
-          "+2 dB",
-          "+4 dB",
-          "+6 dB",
-          "+9 dB",
-          "+12 dB"
-        ]
-      },
-      {
-        "name": "HF Freq",
-        "range": "2.5 kHz / 5 kHz / 7 kHz / 10 kHz / 12.5 kHz / 15 kHz / 20 kHz",
+        "name": "HF Frequency",
+        "range": "2.5 / 5 / 7 / 10 / 12.5 / 15 / 20 kHz",
         "defaultVal": "10 kHz",
         "description": "Sets high band center frequency.",
         "type": "select",
-        "options": [
-          "2.5 kHz",
-          "5 kHz",
-          "7 kHz",
-          "10 kHz",
-          "12.5 kHz",
-          "15 kHz",
-          "20 kHz"
-        ]
+        "options": ["2.5 kHz", "5 kHz", "7 kHz", "10 kHz", "12.5 kHz", "15 kHz", "20 kHz"]
       },
       {
         "name": "HF Gain",
         "range": "-12 dB to +12 dB",
         "defaultVal": "0 dB",
         "description": "Sets high band boost or cut level.",
+        "type": "knob"
+      },
+      {
+        "name": "HF Mode",
+        "range": "Peak / Shelf",
+        "defaultVal": "Peak",
+        "description": "Sets high band filter mode.",
+        "type": "switch",
+        "options": ["Peak", "Shelf"]
+      },
+      {
+        "name": "MF Frequency",
+        "range": "200 Hz to 5 kHz",
+        "defaultVal": "1.5 kHz",
+        "description": "Sets mid band center frequency.",
         "type": "select",
-        "options": [
-          "-12 dB",
-          "-9 dB",
-          "-6 dB",
-          "-4 dB",
-          "-2 dB",
-          "0 dB",
-          "+2 dB",
-          "+4 dB",
-          "+6 dB",
-          "+9 dB",
-          "+12 dB"
-        ]
+        "options": ["200 Hz", "400 Hz", "600 Hz", "800 Hz", "1.5 kHz", "3 kHz", "5 kHz"]
+      },
+      {
+        "name": "MF Gain",
+        "range": "-12 dB to +12 dB",
+        "defaultVal": "0 dB",
+        "description": "Sets mid band boost or cut level.",
+        "type": "knob"
+      },
+      {
+        "name": "LF Frequency",
+        "range": "30 / 40 / 50 / 100 / 200 / 300 / 400 Hz",
+        "defaultVal": "100 Hz",
+        "description": "Sets low band center frequency.",
+        "type": "select",
+        "options": ["30 Hz", "40 Hz", "50 Hz", "100 Hz", "200 Hz", "300 Hz", "400 Hz"]
+      },
+      {
+        "name": "LF Gain",
+        "range": "-12 dB to +12 dB",
+        "defaultVal": "0 dB",
+        "description": "Sets low band boost or cut level.",
+        "type": "knob"
+      },
+      {
+        "name": "LF Mode",
+        "range": "Peak / Shelf",
+        "defaultVal": "Peak",
+        "description": "Sets low band filter mode.",
+        "type": "switch",
+        "options": ["Peak", "Shelf"]
       }
     ],
     "proTips": [
-      "Utilize the proportional-Q design on snare drums with the 550A; dial +4 dB at 5 kHz to add attack without introducing broad harshness.",
+      "Utilize the proportional-Q design on snare drums with the 550A; dial +4 dB at 5 kHz to add attack without introducing broad harshness."
+    ],
+    "authorizationStatus": "Authorized for all devices"
+  },
+  {
+    "name": "uad api 560",
+    "displayName": "UAD API 560 Graphic EQ",
+    "category": "Equalizers",
+    "description": "The API 560 is a classic 10-band graphic EQ featuring API's legendary proportional-Q design for highly surgical, visual frequency shaping.",
+    "hardwareModel": "API 560 10-Band Equalizer",
+    "parameters": [
+      {
+        "name": "31 Hz",
+        "range": "-12 dB to +12 dB",
+        "defaultVal": "0 dB",
+        "description": "Gain for 31 Hz band.",
+        "type": "knob"
+      },
+      {
+        "name": "63 Hz",
+        "range": "-12 dB to +12 dB",
+        "defaultVal": "0 dB",
+        "description": "Gain for 63 Hz band.",
+        "type": "knob"
+      },
+      {
+        "name": "125 Hz",
+        "range": "-12 dB to +12 dB",
+        "defaultVal": "0 dB",
+        "description": "Gain for 125 Hz band.",
+        "type": "knob"
+      },
+      {
+        "name": "250 Hz",
+        "range": "-12 dB to +12 dB",
+        "defaultVal": "0 dB",
+        "description": "Gain for 250 Hz band.",
+        "type": "knob"
+      },
+      {
+        "name": "500 Hz",
+        "range": "-12 dB to +12 dB",
+        "defaultVal": "0 dB",
+        "description": "Gain for 500 Hz band.",
+        "type": "knob"
+      },
+      {
+        "name": "1 kHz",
+        "range": "-12 dB to +12 dB",
+        "defaultVal": "0 dB",
+        "description": "Gain for 1 kHz band.",
+        "type": "knob"
+      },
+      {
+        "name": "2 kHz",
+        "range": "-12 dB to +12 dB",
+        "defaultVal": "0 dB",
+        "description": "Gain for 2 kHz band.",
+        "type": "knob"
+      },
+      {
+        "name": "4 kHz",
+        "range": "-12 dB to +12 dB",
+        "defaultVal": "0 dB",
+        "description": "Gain for 4 kHz band.",
+        "type": "knob"
+      },
+      {
+        "name": "8 kHz",
+        "range": "-12 dB to +12 dB",
+        "defaultVal": "0 dB",
+        "description": "Gain for 8 kHz band.",
+        "type": "knob"
+      },
+      {
+        "name": "16 kHz",
+        "range": "-12 dB to +12 dB",
+        "defaultVal": "0 dB",
+        "description": "Gain for 16 kHz band.",
+        "type": "knob"
+      }
+    ],
+    "proTips": [
       "Use the 560 10-band graphic EQ on electric guitars; scoop 2 dB at 500 Hz to let vocals breathe, then boost +3 dB at 1.5 kHz for maximum focus."
     ],
     "authorizationStatus": "Authorized for all devices"
@@ -5719,7 +6446,7 @@ export const UAD_DATABASE: UADPluginProfile[] = [
     ],
     "authorizationStatus": "Authorized for all devices"
   },
-  {
+    {
     "name": "uad ua 1176 limiter collection",
     "displayName": "UAD UA 1176 Limiter Collection",
     "category": "Dynamics",
@@ -5727,14 +6454,14 @@ export const UAD_DATABASE: UADPluginProfile[] = [
     "hardwareModel": "Universal Audio 1176LN, 1176SE, & Bluestripe FET Limiters",
     "parameters": [
       {
-        "name": "Input",
+        "name": "Input Gain",
         "range": "-infinity to 0 dB",
         "defaultVal": "-20 dB",
         "description": "Drives level into the gain-reduction circuit.",
         "type": "knob"
       },
       {
-        "name": "Output",
+        "name": "Output Gain",
         "range": "-infinity to 0 dB",
         "defaultVal": "-20 dB",
         "description": "Sets output makeup gain.",
@@ -5878,7 +6605,7 @@ export const UAD_DATABASE: UADPluginProfile[] = [
     ],
     "authorizationStatus": "Authorized for all devices"
   },
-  {
+    {
     "name": "uad ampex atr-102 tape recorder",
     "displayName": "UAD Ampex ATR-102 Tape Recorder",
     "category": "Tape & Saturation",
@@ -5912,6 +6639,18 @@ export const UAD_DATABASE: UADPluginProfile[] = [
         ]
       },
       {
+        "name": "Tape Width",
+        "range": "1/4\" / 1/2\" / 1\"",
+        "defaultVal": "1/2\"",
+        "description": "Adjusts the virtual tape path and tape head hardware configurations.",
+        "type": "select",
+        "options": [
+          "1/4\"",
+          "1/2\"",
+          "1\""
+        ]
+      },
+      {
         "name": "Record Level",
         "range": "-10 dB to +10 dB",
         "defaultVal": "0 dB",
@@ -5919,27 +6658,43 @@ export const UAD_DATABASE: UADPluginProfile[] = [
         "type": "knob"
       },
       {
-        "name": "Bias",
-        "range": "-50% to +150%",
-        "defaultVal": "100%",
-        "description": "Alters the high-frequency bias current, shaping high-end response and harmonic distortion.",
+        "name": "Repro Level",
+        "range": "-10 dB to +10 dB",
+        "defaultVal": "0 dB",
+        "description": "Sets the makeup gain from the reproduction head.",
         "type": "knob"
       },
       {
-        "name": "Tape Width",
-        "range": "0.25 inch / 0.5 inch / 1 inch",
-        "defaultVal": "0.5 inch",
-        "description": "Adjusts the virtual tape path and tape head hardware configurations.",
+        "name": "Bias Mode",
+        "range": "Normal / Over / Under",
+        "defaultVal": "Normal",
+        "description": "Controls bias alignment mode.",
         "type": "select",
         "options": [
-          "0.25 inch",
-          "0.5 inch",
-          "1 inch"
+          "Normal",
+          "Over",
+          "Under"
         ]
+      },
+      {
+        "name": "Tape Hiss Switch",
+        "range": "Off / On",
+        "defaultVal": "On",
+        "description": "Engages physical tape hiss.",
+        "type": "switch",
+        "options": ["Off", "On"]
+      },
+      {
+        "name": "Hum Switch",
+        "range": "Off / On",
+        "defaultVal": "On",
+        "description": "Engages AC power hum.",
+        "type": "switch",
+        "options": ["Off", "On"]
       }
     ],
     "proTips": [
-      "For classic stereo master bus processing, select 15 IPS, use 456 formulation on 0.5-inch tape, and adjust Record Level until your peaks compress by only 1 dB to 2 dB for natural glue.",
+      "For classic stereo master bus processing, select 15 IPS, use 456 formulation on 1/2-inch tape, and adjust Record Level until your peaks compress by only 1 dB to 2 dB for natural glue.",
       "Use 30 IPS with GP9 tape on a 1-inch tape width configuration when mastering acoustic, classical, or jazz recordings for modern, pristine linearity with subtle organic depth."
     ],
     "authorizationStatus": "Authorized for all devices"
@@ -5986,7 +6741,7 @@ export const UAD_DATABASE: UADPluginProfile[] = [
     ],
     "authorizationStatus": "Authorized for all devices"
   },
-  {
+    {
     "name": "uad lexicon 224 digital reverb",
     "displayName": "UAD Lexicon 224 Digital Reverb",
     "category": "Reverbs & Delays",
@@ -5994,7 +6749,7 @@ export const UAD_DATABASE: UADPluginProfile[] = [
     "hardwareModel": "Lexicon 224 Digital Reverberator",
     "parameters": [
       {
-        "name": "Program",
+        "name": "Program Select",
         "range": "1 to 9",
         "defaultVal": "1 Concert",
         "description": "Selects the digital algorithm, from halls and plates to chorus and echo effects.",
@@ -6012,6 +6767,13 @@ export const UAD_DATABASE: UADPluginProfile[] = [
         ]
       },
       {
+        "name": "Reverb Time",
+        "range": "0.6s to 70s",
+        "defaultVal": "2.0s",
+        "description": "Master reverb decay time multiplier.",
+        "type": "slider"
+      },
+      {
         "name": "Bass Decay",
         "range": "0.6s to 70s",
         "defaultVal": "2.0s",
@@ -6019,34 +6781,101 @@ export const UAD_DATABASE: UADPluginProfile[] = [
         "type": "slider"
       },
       {
-        "name": "Mid Decay",
-        "range": "0.6s to 70s",
-        "defaultVal": "2.0s",
-        "description": "Sets the mid-frequency decay time, which defines the perceived size of the reverb space.",
-        "type": "slider"
-      },
-      {
-        "name": "Crossover",
+        "name": "Crossover Frequency",
         "range": "100 Hz to 10.9 kHz",
         "defaultVal": "1.0 kHz",
-        "description": "Determines the split frequency where Bass Decay meets Mid Decay control.",
+        "description": "Determines the split frequency where Bass Decay meets Treble Decay control.",
         "type": "slider"
       },
       {
-        "name": "Pre-Delay",
+        "name": "Treble Decay",
+        "range": "0.6s to 70s",
+        "defaultVal": "2.0s",
+        "description": "Sets the high-frequency decay time.",
+        "type": "slider"
+      },
+      {
+        "name": "Pre-delay",
         "range": "0ms to 256ms",
         "defaultVal": "24ms",
         "description": "Adjusts the delay time before the onset of early reflections and decay tail.",
         "type": "slider"
+      },
+      {
+        "name": "Depth",
+        "range": "0 to 10",
+        "defaultVal": "5",
+        "description": "Adjusts the apparent distance between the listener and the sound source.",
+        "type": "slider"
+      },
+      {
+        "name": "System Noise",
+        "range": "Off / On",
+        "defaultVal": "On",
+        "description": "Engages physical hardware modeling artifacts and system noise.",
+        "type": "switch",
+        "options": ["Off", "On"]
+      },
+      {
+        "name": "Wet/Dry Mix",
+        "range": "0% to 100%",
+        "defaultVal": "100%",
+        "description": "Blends the processed wet signal with the dry input signal.",
+        "type": "knob"
       }
     ],
     "proTips": [
-      "For a rich, blooming vocal halo, choose Program 4 (Constant Plate), set Mid Decay to 3.2s, Bass Decay to 1.2s, and push Pre-Delay to 80ms to keep consonants clear.",
-      "To quickly dial in a vintage 80s gated drum room, use Program 9 (Inverse Reverb) on a parallel snare send, and pull Mid Decay down to 1.5s for instant, explosive decay cutoff."
+      "For a rich, blooming vocal halo, choose Program 4 (Constant Plate), set Treble Decay to 3.2s, Bass Decay to 1.2s, and push Pre-delay to 80ms to keep consonants clear.",
+      "To quickly dial in a vintage 80s gated drum room, use Program 9 (Inverse Reverb) on a parallel snare send, and pull Treble Decay down to 1.5s for instant, explosive decay cutoff."
     ],
     "authorizationStatus": "Authorized for all devices"
   },
   {
+    "name": "uad lexicon 224 legacy",
+    "displayName": "UAD Lexicon 224 Digital Reverb (Legacy)",
+    "category": "Reverbs & Delays",
+    "description": "A legacy emulation of the historic 1978 Lexicon 224 reverberator.",
+    "hardwareModel": "Lexicon 224 Digital Reverberator",
+    "parameters": [
+      {
+        "name": "Program Code",
+        "range": "1 to 9",
+        "defaultVal": "1 Concert",
+        "description": "Selects the digital algorithm.",
+        "type": "select",
+        "options": [
+          "1 Concert",
+          "2 Hall",
+          "3 Room",
+          "4 Plate",
+          "5 Room",
+          "6 Small Plate",
+          "7 Chorus",
+          "8 Echo",
+          "9 Inverse"
+        ]
+      },
+      {
+        "name": "Bass Decay",
+        "range": "0.6s to 70s",
+        "defaultVal": "2.0s",
+        "description": "Sets the low-frequency decay time.",
+        "type": "slider"
+      },
+      {
+        "name": "Mid Decay",
+        "range": "0.6s to 70s",
+        "defaultVal": "2.0s",
+        "description": "Sets the mid-frequency decay time.",
+        "type": "slider"
+      }
+    ],
+    "proTips": [
+      "For a rich, blooming vocal halo, choose Program 4 (Constant Plate), set Mid Decay to 3.2s, Bass Decay to 1.2s."
+    ],
+    "authorizationStatus": "Authorized for all devices"
+  },
+    {
     "name": "uad ssl 4000 e legacy channel strip",
     "displayName": "UAD SSL 4000 E Legacy Channel Strip",
     "category": "Channel Strips",
@@ -6054,7 +6883,64 @@ export const UAD_DATABASE: UADPluginProfile[] = [
     "hardwareModel": "Solid State Logic 4000 E Console Channel Strip",
     "parameters": [
       {
-        "name": "EQ Type",
+        "name": "Input Trim",
+        "range": "-20 dB to +20 dB",
+        "defaultVal": "0 dB",
+        "description": "Adjusts the input level.",
+        "type": "knob"
+      },
+      {
+        "name": "Compressor Threshold",
+        "range": "+10 dB to -20 dB",
+        "defaultVal": "+10 dB",
+        "description": "Sets the threshold for the compressor.",
+        "type": "knob"
+      },
+      {
+        "name": "Compressor Ratio",
+        "range": "1:1 to infinity",
+        "defaultVal": "4:1",
+        "description": "Sets the slope of the integrated VCA compressor.",
+        "type": "knob"
+      },
+      {
+        "name": "Compressor Attack",
+        "range": "Fast / Slow",
+        "defaultVal": "Slow",
+        "description": "Sets compressor attack time.",
+        "type": "switch",
+        "options": ["Slow", "Fast"]
+      },
+      {
+        "name": "Compressor Release",
+        "range": "0.1s to 4s",
+        "defaultVal": "0.1s",
+        "description": "Sets compressor release time.",
+        "type": "knob"
+      },
+      {
+        "name": "Gate/Expander Threshold",
+        "range": "-30 dB to +10 dB",
+        "defaultVal": "-30 dB",
+        "description": "Adjusts the threshold for the expander or noise gate section.",
+        "type": "knob"
+      },
+      {
+        "name": "Gate Range",
+        "range": "0 to 40 dB",
+        "defaultVal": "40 dB",
+        "description": "Adjusts the depth of the gate attenuation.",
+        "type": "knob"
+      },
+      {
+        "name": "Gate Release",
+        "range": "0.1s to 4s",
+        "defaultVal": "0.1s",
+        "description": "Sets gate release time.",
+        "type": "knob"
+      },
+      {
+        "name": "EQ Black/Brown Switch",
         "range": "Black / Brown",
         "defaultVal": "Black",
         "description": "Selects between the clean, resonant Black-Knob and musical, smoother Brown-Knob EQ models.",
@@ -6065,24 +6951,66 @@ export const UAD_DATABASE: UADPluginProfile[] = [
         ]
       },
       {
-        "name": "Compressor Ratio",
-        "range": "1:1 to infinity",
-        "defaultVal": "4:1",
-        "description": "Sets the slope of the integrated VCA compressor.",
+        "name": "High EQ Freq",
+        "range": "1.5 kHz to 16 kHz",
+        "defaultVal": "8 kHz",
+        "description": "Sets high band frequency.",
         "type": "knob"
       },
       {
-        "name": "Gate/Exp Threshold",
-        "range": "-40 dB to +10 dB",
-        "defaultVal": "-20 dB",
-        "description": "Adjusts the threshold for the expander or noise gate section.",
+        "name": "High EQ Gain",
+        "range": "-15 dB to +15 dB",
+        "defaultVal": "0 dB",
+        "description": "Sets high band gain.",
         "type": "knob"
       },
       {
-        "name": "High Pass Filter",
-        "range": "Off / 16 Hz to 350 Hz",
-        "defaultVal": "Off",
-        "description": "Engages the 18dB/octave high pass filter to sweep away sub-bass rumble.",
+        "name": "H-Mid EQ Freq",
+        "range": "0.6 kHz to 7 kHz",
+        "defaultVal": "2 kHz",
+        "description": "Sets high-mid band frequency.",
+        "type": "knob"
+      },
+      {
+        "name": "H-Mid EQ Gain",
+        "range": "-15 dB to +15 dB",
+        "defaultVal": "0 dB",
+        "description": "Sets high-mid band gain.",
+        "type": "knob"
+      },
+      {
+        "name": "H-Mid EQ Q-Factor",
+        "range": "0.5 to 3",
+        "defaultVal": "1",
+        "description": "Sets high-mid band Q.",
+        "type": "knob"
+      },
+      {
+        "name": "L-Mid EQ Freq",
+        "range": "0.2 kHz to 2.5 kHz",
+        "defaultVal": "0.6 kHz",
+        "description": "Sets low-mid band frequency.",
+        "type": "knob"
+      },
+      {
+        "name": "L-Mid EQ Gain",
+        "range": "-15 dB to +15 dB",
+        "defaultVal": "0 dB",
+        "description": "Sets low-mid band gain.",
+        "type": "knob"
+      },
+      {
+        "name": "Low EQ Freq",
+        "range": "30 Hz to 450 Hz",
+        "defaultVal": "100 Hz",
+        "description": "Sets low band frequency.",
+        "type": "knob"
+      },
+      {
+        "name": "Low EQ Gain",
+        "range": "-15 dB to +15 dB",
+        "defaultVal": "0 dB",
+        "description": "Sets low band gain.",
         "type": "knob"
       }
     ],
@@ -6092,7 +7020,7 @@ export const UAD_DATABASE: UADPluginProfile[] = [
     ],
     "authorizationStatus": "Authorized for all devices"
   },
-  {
+    {
     "name": "uad ssl 4000 g legacy bus compressor",
     "displayName": "UAD SSL 4000 G Legacy Bus Compressor",
     "category": "Dynamics",
@@ -6148,11 +7076,56 @@ export const UAD_DATABASE: UADPluginProfile[] = [
         ]
       },
       {
-        "name": "Makeup Gain",
+        "name": "Make-Up",
         "range": "-5 dB to +15 dB",
         "defaultVal": "0 dB",
         "description": "Applies volume compensation after master bus gain reduction.",
         "type": "knob"
+      },
+      {
+        "name": "SC Filter",
+        "range": "Off / On",
+        "defaultVal": "Off",
+        "description": "Sidechain filter.",
+        "type": "switch",
+        "options": ["Off", "On"]
+      },
+      {
+        "name": "Mix",
+        "range": "0% to 100%",
+        "defaultVal": "100%",
+        "description": "Wet/dry blend.",
+        "type": "knob"
+      },
+      {
+        "name": "Headroom",
+        "range": "4 to 28 dB",
+        "defaultVal": "16",
+        "description": "Operating headroom.",
+        "type": "knob"
+      },
+      {
+        "name": "Rate",
+        "range": "1 to 60 s",
+        "defaultVal": "10",
+        "description": "Auto fade rate.",
+        "type": "knob"
+      },
+      {
+        "name": "Fade",
+        "range": "Off / On",
+        "defaultVal": "Off",
+        "description": "Auto fade switch.",
+        "type": "switch",
+        "options": ["Off", "On"]
+      },
+      {
+        "name": "In",
+        "range": "Off / On",
+        "defaultVal": "On",
+        "description": "Bypass switch.",
+        "type": "switch",
+        "options": ["Off", "On"]
       }
     ],
     "proTips": [
@@ -6161,7 +7134,7 @@ export const UAD_DATABASE: UADPluginProfile[] = [
     ],
     "authorizationStatus": "Authorized for all devices"
   },
-  {
+    {
     "name": "uad studer a800 tape recorder",
     "displayName": "UAD Studer A800 Tape Recorder",
     "category": "Tape & Saturation",
@@ -6194,18 +7167,50 @@ export const UAD_DATABASE: UADPluginProfile[] = [
         ]
       },
       {
-        "name": "Input",
+        "name": "Input Gain",
         "range": "-12 dB to +12 dB",
         "defaultVal": "0 dB",
         "description": "Drives the tape record head input, introducing classic tape saturation.",
         "type": "knob"
       },
       {
-        "name": "Output",
+        "name": "Output Gain",
         "range": "-12 dB to +12 dB",
         "defaultVal": "0 dB",
         "description": "Adjusts playback output trim to maintain proper level staging.",
         "type": "knob"
+      },
+      {
+        "name": "Cal Level",
+        "range": "+3 dB / +6 dB / +7.5 dB / +9 dB",
+        "defaultVal": "+6 dB",
+        "description": "Selects the calibration operating level.",
+        "type": "select",
+        "options": [
+          "+3 dB",
+          "+6 dB",
+          "+7.5 dB",
+          "+9 dB"
+        ]
+      },
+      {
+        "name": "Bias",
+        "range": "Under / Normal / Over",
+        "defaultVal": "Normal",
+        "description": "Adjusts the HF bias current.",
+        "type": "knob"
+      },
+      {
+        "name": "Sync/Repro path",
+        "range": "Input / Sync / Repro",
+        "defaultVal": "Repro",
+        "description": "Selects the playback monitor path.",
+        "type": "select",
+        "options": [
+          "Input",
+          "Sync",
+          "Repro"
+        ]
       }
     ],
     "proTips": [
@@ -6214,7 +7219,7 @@ export const UAD_DATABASE: UADPluginProfile[] = [
     ],
     "authorizationStatus": "Authorized for all devices"
   },
-  {
+    {
     "name": "uad ep-34 tape echo",
     "displayName": "UAD EP-34 Tape Echo",
     "category": "Reverbs & Delays",
@@ -6222,8 +7227,8 @@ export const UAD_DATABASE: UADPluginProfile[] = [
     "hardwareModel": "Echoplex EP-3 / EP-4 Tape Delays",
     "parameters": [
       {
-        "name": "Echo Delay",
-        "range": "100ms to 800ms",
+        "name": "Delay Time",
+        "range": "80ms to 700ms",
         "defaultVal": "350ms",
         "description": "Sets delay time by sliding the virtual playback tape head along the path.",
         "type": "slider"
@@ -6236,17 +7241,24 @@ export const UAD_DATABASE: UADPluginProfile[] = [
         "type": "knob"
       },
       {
-        "name": "Echo Volume",
+        "name": "Record Volume",
+        "range": "0 to 10",
+        "defaultVal": "5",
+        "description": "Drives the preamplifier stage, introducing rich analog solid-state saturation to the delay path.",
+        "type": "knob"
+      },
+      {
+        "name": "Echo Mix",
         "range": "0% to 100%",
         "defaultVal": "30%",
         "description": "Balances the dry signal path against the wet, warm tape delay lines.",
         "type": "knob"
       },
       {
-        "name": "Record Volume",
+        "name": "Wow & Flutter",
         "range": "0 to 10",
         "defaultVal": "5",
-        "description": "Drives the preamplifier stage, introducing rich analog solid-state saturation to the delay path.",
+        "description": "Introduces tape speed inconsistency and pitch modulation.",
         "type": "knob"
       },
       {
@@ -6315,7 +7327,7 @@ export const UAD_DATABASE: UADPluginProfile[] = [
     ],
     "authorizationStatus": "Authorized for all devices"
   },
-  {
+    {
     "name": "uad manley massive passive eq collection",
     "displayName": "UAD Manley Massive Passive EQ Collection",
     "category": "Equalizers",
@@ -6323,25 +7335,7 @@ export const UAD_DATABASE: UADPluginProfile[] = [
     "hardwareModel": "Manley Massive Passive Stereo Tube Equalizer",
     "parameters": [
       {
-        "name": "Low Shelf/Bell (Band 1)",
-        "range": "Shelf / Bell",
-        "defaultVal": "Shelf",
-        "description": "Changes the low-frequency band structure from a shelf to a bell curve.",
-        "type": "switch",
-        "options": [
-          "Shelf",
-          "Bell"
-        ]
-      },
-      {
-        "name": "Gain (Band 1)",
-        "range": "-20 dB to +20 dB",
-        "defaultVal": "0 dB",
-        "description": "Sets the degree of cut or boost for the first passive band.",
-        "type": "knob"
-      },
-      {
-        "name": "Frequency (Band 1)",
+        "name": "Low Shelf Freq",
         "range": "22 Hz to 1k Hz",
         "defaultVal": "47 Hz",
         "description": "Selects the passive inductor frequency step for the low-frequency band.",
@@ -6361,15 +7355,110 @@ export const UAD_DATABASE: UADPluginProfile[] = [
         ]
       },
       {
-        "name": "Bandwidth (Band 1)",
+        "name": "Low Gain",
+        "range": "-20 dB to +20 dB",
+        "defaultVal": "0 dB",
+        "description": "Sets the degree of cut or boost for the first passive band.",
+        "type": "knob"
+      },
+      {
+        "name": "Low Bandwidth",
         "range": "Sharp to Broad",
         "defaultVal": "Broad",
         "description": "Alters the Q factor of the low band's passive curve.",
         "type": "knob"
       },
       {
+        "name": "Low Mid Freq",
+        "range": "82 Hz to 3.9k Hz",
+        "defaultVal": "330 Hz",
+        "description": "Selects frequency for low-mid band.",
+        "type": "select",
+        "options": [
+          "82 Hz",
+          "120 Hz",
+          "180 Hz",
+          "270 Hz",
+          "390 Hz",
+          "560 Hz",
+          "820 Hz",
+          "1.2k Hz",
+          "1.8k Hz",
+          "2.7k Hz",
+          "3.9k Hz"
+        ]
+      },
+      {
+        "name": "Low Mid Gain",
+        "range": "-20 dB to +20 dB",
+        "defaultVal": "0 dB",
+        "description": "Sets gain for low-mid band.",
+        "type": "knob"
+      },
+      {
+        "name": "High Mid Freq",
+        "range": "220 Hz to 10k Hz",
+        "defaultVal": "1k Hz",
+        "description": "Selects frequency for high-mid band.",
+        "type": "select",
+        "options": [
+          "220 Hz",
+          "330 Hz",
+          "470 Hz",
+          "680 Hz",
+          "1k Hz",
+          "1.5k Hz",
+          "2.2k Hz",
+          "3.3k Hz",
+          "4.7k Hz",
+          "6.8k Hz",
+          "10k Hz"
+        ]
+      },
+      {
+        "name": "High Mid Gain",
+        "range": "-20 dB to +20 dB",
+        "defaultVal": "0 dB",
+        "description": "Sets gain for high-mid band.",
+        "type": "knob"
+      },
+      {
+        "name": "High Freq",
+        "range": "560 Hz to 27k Hz",
+        "defaultVal": "5.6k Hz",
+        "description": "Selects frequency for high band.",
+        "type": "select",
+        "options": [
+          "560 Hz",
+          "820 Hz",
+          "1.2k Hz",
+          "1.8k Hz",
+          "2.7k Hz",
+          "3.9k Hz",
+          "5.6k Hz",
+          "8.2k Hz",
+          "12k Hz",
+          "16k Hz",
+          "27k Hz"
+        ]
+      },
+      {
+        "name": "High Gain",
+        "range": "-20 dB to +20 dB",
+        "defaultVal": "0 dB",
+        "description": "Sets gain for high band.",
+        "type": "knob"
+      },
+      {
+        "name": "High Bandwidth",
+        "range": "Sharp to Broad",
+        "defaultVal": "Broad",
+        "description": "Alters Q factor for high band.",
+        "type": "knob"
+      },
+      {
         "name": "High Pass Filter",
-        "range": "Off / 22 / 39 / 68 / 120 / 220 Hz",
+        "range": "Off / 22 Hz / 39 Hz / 68 Hz / 120 Hz / 220 Hz",
         "defaultVal": "Off",
         "description": "Engages the stepped, passive high-pass filter circuit.",
         "type": "select",
@@ -6389,7 +7478,7 @@ export const UAD_DATABASE: UADPluginProfile[] = [
     ],
     "authorizationStatus": "Authorized for all devices"
   },
-  {
+    {
     "name": "uad trident a-range eq",
     "displayName": "UAD Trident A-Range EQ",
     "category": "Equalizers",
@@ -6397,43 +7486,39 @@ export const UAD_DATABASE: UADPluginProfile[] = [
     "hardwareModel": "Trident A-Range Console Equalizer",
     "parameters": [
       {
-        "name": "Low Cut",
-        "range": "Off / 25 Hz / 50 Hz / 100 Hz",
-        "defaultVal": "Off",
-        "description": "Engages high-pass filters; multiple buttons can be combined for steeper filtering curves.",
+        "name": "HF Gain",
+        "range": "-15 dB to +15 dB",
+        "defaultVal": "0 dB",
+        "description": "Controls high-frequency shelving gain.",
+        "type": "slider"
+      },
+      {
+        "name": "HF Frequency",
+        "range": "8k / 10k / 12k / 15k Hz",
+        "defaultVal": "10k Hz",
+        "description": "Selects high-frequency shelving band.",
         "type": "select",
         "options": [
-          "Off",
-          "25 Hz",
-          "50 Hz",
-          "100 Hz"
+          "8k Hz",
+          "10k Hz",
+          "12k Hz",
+          "15k Hz"
         ]
       },
       {
-        "name": "Low Gain",
+        "name": "HMF Gain",
         "range": "-15 dB to +15 dB",
         "defaultVal": "0 dB",
-        "description": "Controls the low-frequency shelving boost or cut.",
+        "description": "Controls high-mid frequency bell gain.",
         "type": "slider"
       },
       {
-        "name": "Mid Gain",
-        "range": "-15 dB to +15 dB",
-        "defaultVal": "0 dB",
-        "description": "Controls the selected mid-frequency parametric boost or cut.",
-        "type": "slider"
-      },
-      {
-        "name": "Mid Frequency",
-        "range": "250 to 9k Hz",
-        "defaultVal": "1k Hz",
-        "description": "Selects the center frequency for the mid-range band.",
+        "name": "HMF Frequency",
+        "range": "3k / 5k / 7k / 9k Hz",
+        "defaultVal": "5k Hz",
+        "description": "Selects high-mid frequency band.",
         "type": "select",
         "options": [
-          "250 Hz",
-          "500 Hz",
-          "1k Hz",
-          "2k Hz",
           "3k Hz",
           "5k Hz",
           "7k Hz",
@@ -6441,26 +7526,60 @@ export const UAD_DATABASE: UADPluginProfile[] = [
         ]
       },
       {
-        "name": "High Cut",
-        "range": "Off / 9k / 12k / 15k Hz",
-        "defaultVal": "Off",
-        "description": "Engages low-pass filters to control top-end harshness.",
+        "name": "LMF Gain",
+        "range": "-15 dB to +15 dB",
+        "defaultVal": "0 dB",
+        "description": "Controls low-mid frequency bell gain.",
+        "type": "slider"
+      },
+      {
+        "name": "LMF Frequency",
+        "range": "250 / 500 / 1k / 2k Hz",
+        "defaultVal": "1k Hz",
+        "description": "Selects low-mid frequency band.",
         "type": "select",
         "options": [
-          "Off",
-          "9k Hz",
-          "12k Hz",
-          "15k Hz"
+          "250 Hz",
+          "500 Hz",
+          "1k Hz",
+          "2k Hz"
         ]
+      },
+      {
+        "name": "LF Gain",
+        "range": "-15 dB to +15 dB",
+        "defaultVal": "0 dB",
+        "description": "Controls low-frequency shelving gain.",
+        "type": "slider"
+      },
+      {
+        "name": "LF Frequency",
+        "range": "50 / 80 / 100 / 150 Hz",
+        "defaultVal": "100 Hz",
+        "description": "Selects low-frequency shelving band.",
+        "type": "select",
+        "options": [
+          "50 Hz",
+          "80 Hz",
+          "100 Hz",
+          "150 Hz"
+        ]
+      },
+      {
+        "name": "Input Saturation",
+        "range": "0 to 10",
+        "defaultVal": "5",
+        "description": "Drives the modeled input stage to induce pleasing distortion.",
+        "type": "knob"
       }
     ],
     "proTips": [
-      "To help rock or metal electric guitars cut through a busy mix, set Mid Frequency to 3 kHz and push the gain slider up to +4 dB to engage the legendary inductor bite.",
-      "Combine the 50 Hz and 100 Hz Low Cut buttons simultaneously to create a unique, sharp, resonant cut slope that cleans mud while retaining low punch."
+      "To help rock or metal electric guitars cut through a busy mix, set HMF Frequency to 3 kHz and push the gain slider up to +4 dB to engage the legendary inductor bite.",
+      "Engage the low-end filters by combining frequencies to create unique, sharp, resonant cut slopes that cleans mud while retaining punch."
     ],
     "authorizationStatus": "Authorized for all devices"
   },
-  {
+    {
     "name": "uad empirical labs el7 fatso compressor",
     "displayName": "UAD Empirical Labs EL7 FATSO Compressor",
     "category": "Tape & Saturation",
@@ -6475,6 +7594,13 @@ export const UAD_DATABASE: UADPluginProfile[] = [
         "type": "knob"
       },
       {
+        "name": "Output Level",
+        "range": "0 to 10",
+        "defaultVal": "5",
+        "description": "Adjusts the final playback output gain stage.",
+        "type": "knob"
+      },
+      {
         "name": "Warmth",
         "range": "0 to 10",
         "defaultVal": "3",
@@ -6482,12 +7608,21 @@ export const UAD_DATABASE: UADPluginProfile[] = [
         "type": "knob"
       },
       {
+        "name": "Tranny",
+        "range": "Off / On",
+        "defaultVal": "On",
+        "description": "Engages the transformer emulation circuit to impart low-end harmonics and thicken bass.",
+        "type": "switch",
+        "options": ["Off", "On"]
+      },
+      {
         "name": "Compressor Mode",
-        "range": "Buss / GP / Tracking / Spank",
+        "range": "Off / Buss / GP / Tracking / Spank",
         "defaultVal": "Buss",
         "description": "Selects compression behaviors, from gentle stereo bus processing (Buss) to aggressive brickwall limiting (Spank).",
         "type": "select",
         "options": [
+          "Off",
           "Buss",
           "GP",
           "Tracking",
@@ -6504,13 +7639,6 @@ export const UAD_DATABASE: UADPluginProfile[] = [
           "Off",
           "On"
         ]
-      },
-      {
-        "name": "Output Level",
-        "range": "0 to 10",
-        "defaultVal": "5",
-        "description": "Adjusts the final playback output gain stage.",
-        "type": "knob"
       }
     ],
     "proTips": [
@@ -6519,7 +7647,7 @@ export const UAD_DATABASE: UADPluginProfile[] = [
     ],
     "authorizationStatus": "Authorized for all devices"
   },
-  {
+    {
     "name": "uad emt 250 digital reverb",
     "displayName": "UAD EMT 250 Digital Reverb",
     "category": "Reverbs & Delays",
@@ -6527,50 +7655,52 @@ export const UAD_DATABASE: UADPluginProfile[] = [
     "hardwareModel": "EMT 250 Electronic Reverberator",
     "parameters": [
       {
-        "name": "Reverb Time",
+        "name": "Mode Selector",
+        "range": "Reverb / Chorus / Phase / Delay",
+        "defaultVal": "Reverb",
+        "description": "Selects the digital algorithm.",
+        "type": "select",
+        "options": [
+          "Reverb",
+          "Chorus",
+          "Phase",
+          "Delay"
+        ]
+      },
+      {
+        "name": "Decay (Lever 1)",
         "range": "0.4s to 4.5s",
         "defaultVal": "2.0s",
         "description": "Adjusts the overall decay duration of the generated reverb tail.",
         "type": "slider"
       },
       {
-        "name": "Low Decay",
-        "range": "-12 dB to +12 dB",
-        "defaultVal": "0 dB",
+        "name": "Low Decay (Lever 2)",
+        "range": "0.5 to 2.0 multiplier",
+        "defaultVal": "1.0",
         "description": "Filters and dampens low frequency decay, adjusting bass response inside the reverb.",
         "type": "slider"
       },
       {
-        "name": "High Decay",
-        "range": "-12 dB to +12 dB",
-        "defaultVal": "0 dB",
+        "name": "High Decay (Lever 3)",
+        "range": "0.5 to 2.0 multiplier",
+        "defaultVal": "1.0",
         "description": "Dampens high-frequency decay, simulating carpeted damp spaces or open bright rooms.",
         "type": "slider"
       },
       {
-        "name": "Pre-Delay",
-        "range": "0ms / 20ms / 60ms / 140ms",
-        "defaultVal": "20ms",
+        "name": "Pre-delay (Lever 4)",
+        "range": "0ms / 20ms / 40ms / 60ms",
+        "defaultVal": "0ms",
         "description": "Sets the discrete physical pre-delay interval before reverb reflections commence.",
-        "type": "select",
-        "options": [
-          "0ms",
-          "20ms",
-          "60ms",
-          "140ms"
-        ]
+        "type": "slider"
       },
       {
-        "name": "Output Mode",
-        "range": "Mono / Stereo / Quad",
-        "defaultVal": "Stereo",
-        "description": "Alters physical-modeled microphone output arrangements.",
-        "type": "switch",
-        "options": [
-          "Mono",
-          "Stereo",
-          "Quad"
-        ]
+        "name": "Output Mix",
+        "range": "0% to 100%",
+        "defaultVal": "100%",
+        "description": "Blends the processed wet signal with the dry input signal.",
+        "type": "knob"
       }
     ],
     "proTips": [
@@ -6579,13 +7709,29 @@ export const UAD_DATABASE: UADPluginProfile[] = [
     ],
     "authorizationStatus": "Authorized for all devices"
   },
-  {
+    {
     "name": "uad neve 31102 eq",
     "displayName": "UAD Neve 31102 EQ",
     "category": "Equalizers",
     "description": "Emulates the legendary 31102 console EQ from Neve, celebrated for its raw, aggressive midrange energy and expensive-sounding high-shelf sheen. Originally found on the Neve 8068 console, this EQ provides distinctively musical passive-sounding filters and continuous harmonic coloration when pushed.",
     "hardwareModel": "Neve 31102 Console Equalizer",
     "parameters": [
+      {
+        "name": "Phase Invert",
+        "range": "Off / On",
+        "defaultVal": "Off",
+        "description": "Inverts the phase of the signal.",
+        "type": "switch",
+        "options": ["Off", "On"]
+      },
+      {
+        "name": "EQ In/Out",
+        "range": "In / Out",
+        "defaultVal": "In",
+        "description": "Bypasses the EQ circuitry.",
+        "type": "switch",
+        "options": ["In", "Out"]
+      },
       {
         "name": "High Shelf Freq",
         "range": "10k / 12k / 16k Hz",
@@ -6626,6 +7772,63 @@ export const UAD_DATABASE: UADPluginProfile[] = [
         "defaultVal": "0 dB",
         "description": "Midrange boost or cut.",
         "type": "knob"
+      },
+      {
+        "name": "Mid Q",
+        "range": "Wide / Narrow",
+        "defaultVal": "Wide",
+        "description": "Selects the bandwidth (Q) of the midrange filter.",
+        "type": "switch",
+        "options": ["Wide", "Narrow"]
+      },
+      {
+        "name": "Low Freq",
+        "range": "35 / 60 / 110 / 220 Hz",
+        "defaultVal": "60 Hz",
+        "description": "Low-frequency peaking band selector.",
+        "type": "switch",
+        "options": [
+          "35 Hz",
+          "60 Hz",
+          "110 Hz",
+          "220 Hz"
+        ]
+      },
+      {
+        "name": "Low Gain",
+        "range": "-16 to +16 dB",
+        "defaultVal": "0 dB",
+        "description": "Low-frequency boost or cut.",
+        "type": "knob"
+      },
+      {
+        "name": "Low Cut Freq",
+        "range": "Off / 45 / 70 / 160 / 360 Hz",
+        "defaultVal": "Off",
+        "description": "Selects the low-cut (high-pass) filter frequency.",
+        "type": "switch",
+        "options": [
+          "Off",
+          "45 Hz",
+          "70 Hz",
+          "160 Hz",
+          "360 Hz"
+        ]
+      },
+      {
+        "name": "High Cut Freq",
+        "range": "Off / 14k / 10k / 8k / 6k / 4k Hz",
+        "defaultVal": "Off",
+        "description": "Selects the high-cut (low-pass) filter frequency.",
+        "type": "switch",
+        "options": [
+          "Off",
+          "14k Hz",
+          "10k Hz",
+          "8k Hz",
+          "6k Hz",
+          "4k Hz"
+        ]
       }
     ],
     "proTips": [
@@ -6676,7 +7879,7 @@ export const UAD_DATABASE: UADPluginProfile[] = [
     ],
     "authorizationStatus": "Authorized for all devices"
   },
-  {
+    {
     "name": "uad harrison 32c eq",
     "displayName": "UAD Harrison 32C EQ",
     "category": "Equalizers",
@@ -6684,31 +7887,89 @@ export const UAD_DATABASE: UADPluginProfile[] = [
     "hardwareModel": "Harrison 32C Console Equalizer",
     "parameters": [
       {
-        "name": "Low Pass Filter",
-        "range": "Off / 1.2k to 20k Hz",
+        "name": "Phase Invert",
+        "range": "Off / On",
         "defaultVal": "Off",
-        "description": "Sweeps the high-cut frequency.",
-        "type": "knob"
+        "description": "Inverts signal phase.",
+        "type": "switch",
+        "options": ["Off", "On"]
+      },
+      {
+        "name": "EQ In/Out",
+        "range": "In / Out",
+        "defaultVal": "In",
+        "description": "Bypasses the EQ circuitry.",
+        "type": "switch",
+        "options": ["In", "Out"]
       },
       {
         "name": "High Pass Filter",
-        "range": "Off / 25 to 3150 Hz",
-        "defaultVal": "Off",
+        "range": "Out / 25 to 3.15k Hz",
+        "defaultVal": "Out",
         "description": "Sweeps the low-cut frequency.",
         "type": "knob"
       },
       {
-        "name": "Hi Gain",
-        "range": "-15 to +15 dB",
-        "defaultVal": "0 dB",
-        "description": "High band shelving boost/cut.",
+        "name": "Low Pass Filter",
+        "range": "Out / 400 to 20k Hz",
+        "defaultVal": "Out",
+        "description": "Sweeps the high-cut frequency.",
         "type": "knob"
       },
       {
-        "name": "Low Gain",
+        "name": "HF Frequency",
+        "range": "800 Hz to 16k Hz",
+        "defaultVal": "8k Hz",
+        "description": "High band frequency.",
+        "type": "knob"
+      },
+      {
+        "name": "HF Gain",
         "range": "-15 to +15 dB",
         "defaultVal": "0 dB",
-        "description": "Low band shelving boost/cut.",
+        "description": "High band bell/shelving boost or cut.",
+        "type": "knob"
+      },
+      {
+        "name": "HMF Frequency",
+        "range": "400 Hz to 8k Hz",
+        "defaultVal": "2k Hz",
+        "description": "High-mid band frequency.",
+        "type": "knob"
+      },
+      {
+        "name": "HMF Gain",
+        "range": "-15 to +15 dB",
+        "defaultVal": "0 dB",
+        "description": "High-mid band bell boost or cut.",
+        "type": "knob"
+      },
+      {
+        "name": "LMF Frequency",
+        "range": "200 Hz to 4k Hz",
+        "defaultVal": "1k Hz",
+        "description": "Low-mid band frequency.",
+        "type": "knob"
+      },
+      {
+        "name": "LMF Gain",
+        "range": "-15 to +15 dB",
+        "defaultVal": "0 dB",
+        "description": "Low-mid band bell boost or cut.",
+        "type": "knob"
+      },
+      {
+        "name": "LF Frequency",
+        "range": "40 Hz to 800 Hz",
+        "defaultVal": "100 Hz",
+        "description": "Low band frequency.",
+        "type": "knob"
+      },
+      {
+        "name": "LF Gain",
+        "range": "-15 to +15 dB",
+        "defaultVal": "0 dB",
+        "description": "Low band bell/shelving boost or cut.",
         "type": "knob"
       }
     ],
@@ -6860,7 +8121,7 @@ export const UAD_DATABASE: UADPluginProfile[] = [
     ],
     "authorizationStatus": "Authorized for all devices"
   },
-  {
+    {
     "name": "uad dbx 160 compressor",
     "displayName": "UAD dbx 160 Compressor",
     "category": "Dynamics",
@@ -6882,10 +8143,17 @@ export const UAD_DATABASE: UADPluginProfile[] = [
         "type": "knob"
       },
       {
-        "name": "Output Gain",
+        "name": "Output",
         "range": "-20 to +20 dB",
         "defaultVal": "0 dB",
         "description": "Applies makeup output volume.",
+        "type": "knob"
+      },
+      {
+        "name": "Dry/Wet Mix",
+        "range": "0% to 100%",
+        "defaultVal": "100%",
+        "description": "Blends dry and processed signals for parallel compression.",
         "type": "knob"
       }
     ],
@@ -6895,7 +8163,7 @@ export const UAD_DATABASE: UADPluginProfile[] = [
     ],
     "authorizationStatus": "Authorized for all devices"
   },
-  {
+    {
     "name": "uad precision buss compressor",
     "displayName": "UAD Precision Buss Compressor",
     "category": "Dynamics",
@@ -6924,7 +8192,7 @@ export const UAD_DATABASE: UADPluginProfile[] = [
       },
       {
         "name": "Attack",
-        "range": "0.1 to 100 ms",
+        "range": "0.1 to 32 ms",
         "defaultVal": "10 ms",
         "description": "Sets transient reaction speed.",
         "type": "knob"
@@ -6935,11 +8203,32 @@ export const UAD_DATABASE: UADPluginProfile[] = [
         "defaultVal": "Auto",
         "description": "Adjusts recovery speed.",
         "type": "knob"
+      },
+      {
+        "name": "Filter",
+        "range": "Off / 20 to 500 Hz",
+        "defaultVal": "Off",
+        "description": "Sets the high-pass sidechain filter frequency.",
+        "type": "knob"
+      },
+      {
+        "name": "Mix",
+        "range": "0% to 100%",
+        "defaultVal": "100%",
+        "description": "Blends dry and compressed signal.",
+        "type": "knob"
+      },
+      {
+        "name": "Make Up",
+        "range": "-20 to +20 dB",
+        "defaultVal": "0 dB",
+        "description": "Adjusts makeup output volume.",
+        "type": "knob"
       }
     ],
     "proTips": [
       "Select the 1.5:1 ratio on a master bus for microscopic, near-invisible master gluing that respects the natural dynamics of acoustic ensembles.",
-      "Set the sidechain filter parameter to 120Hz on modern EDM tracks so that deep sub-bass frequencies do not trigger unwanted compressor pumping."
+      "Set the Filter parameter to 120Hz on modern EDM tracks so that deep sub-bass frequencies do not trigger unwanted compressor pumping."
     ],
     "authorizationStatus": "Authorized for all devices"
   },
@@ -6982,7 +8271,7 @@ export const UAD_DATABASE: UADPluginProfile[] = [
     ],
     "authorizationStatus": "Authorized for all devices"
   },
-  {
+    {
     "name": "uad precision maximizer",
     "displayName": "UAD Precision Maximizer",
     "category": "Dynamics",
@@ -6990,17 +8279,10 @@ export const UAD_DATABASE: UADPluginProfile[] = [
     "hardwareModel": "Universal Audio Precision Maximizer",
     "parameters": [
       {
-        "name": "Limit",
+        "name": "Input",
         "range": "0% to 100%",
-        "defaultVal": "0%",
-        "description": "Controls peak-limiting drive amount.",
-        "type": "knob"
-      },
-      {
-        "name": "Mix",
-        "range": "0% to 100%",
-        "defaultVal": "100%",
-        "description": "Wet/Dry parallel processing blend.",
+        "defaultVal": "50%",
+        "description": "Adjusts the input level.",
         "type": "knob"
       },
       {
@@ -7008,6 +8290,13 @@ export const UAD_DATABASE: UADPluginProfile[] = [
         "range": "0% to 100%",
         "defaultVal": "50%",
         "description": "Contours even and odd-order tube-style saturation curves.",
+        "type": "knob"
+      },
+      {
+        "name": "Mix",
+        "range": "0% to 100%",
+        "defaultVal": "100%",
+        "description": "Wet/Dry parallel processing blend.",
         "type": "knob"
       },
       {
@@ -7020,6 +8309,21 @@ export const UAD_DATABASE: UADPluginProfile[] = [
           "1-Band",
           "3-Band"
         ]
+      },
+      {
+        "name": "Limit",
+        "range": "Off / On",
+        "defaultVal": "On",
+        "description": "Engages the final brickwall limiter.",
+        "type": "switch",
+        "options": ["Off", "On"]
+      },
+      {
+        "name": "Output",
+        "range": "-20 to 0 dB",
+        "defaultVal": "0 dB",
+        "description": "Adjusts the final output level ceiling.",
+        "type": "knob"
       }
     ],
     "proTips": [
@@ -7028,7 +8332,7 @@ export const UAD_DATABASE: UADPluginProfile[] = [
     ],
     "authorizationStatus": "Authorized for all devices"
   },
-  {
+    {
     "name": "uad teletronix la-3a audio leveler",
     "displayName": "UAD Teletronix LA-3A Audio Leveler",
     "category": "Dynamics",
@@ -7059,6 +8363,20 @@ export const UAD_DATABASE: UADPluginProfile[] = [
           "Limit",
           "Compress"
         ]
+      },
+      {
+        "name": "Mix",
+        "range": "0% to 100%",
+        "defaultVal": "100%",
+        "description": "Wet/Dry mix for parallel compression.",
+        "type": "knob"
+      },
+      {
+        "name": "HF Filter",
+        "range": "Off / On",
+        "defaultVal": "Off",
+        "description": "Sidechain high-frequency emphasis for de-essing.",
+        "type": "knob"
       }
     ],
     "proTips": [
@@ -7109,7 +8427,7 @@ export const UAD_DATABASE: UADPluginProfile[] = [
     ],
     "authorizationStatus": "Authorized for all devices"
   },
-  {
+    {
     "name": "uad helios type 69 legacy eq",
     "displayName": "UAD Helios Type 69 Legacy EQ",
     "category": "Equalizers",
@@ -7117,11 +8435,18 @@ export const UAD_DATABASE: UADPluginProfile[] = [
     "hardwareModel": "Helios Type 69 Console EQ",
     "parameters": [
       {
-        "name": "Mid Frequency",
+        "name": "10k Gain",
+        "range": "-15 to +15 dB",
+        "defaultVal": "0 dB",
+        "description": "Fixed 10 kHz high-shelf boost/cut.",
+        "type": "knob"
+      },
+      {
+        "name": "Mid Freq",
         "range": "0.7 to 6.0 kHz",
         "defaultVal": "0.7 kHz",
         "description": "Selects the target frequency for the mid-range band.",
-        "type": "select",
+        "type": "switch",
         "options": [
           "0.7 kHz",
           "1.0 kHz",
@@ -7135,29 +8460,41 @@ export const UAD_DATABASE: UADPluginProfile[] = [
       },
       {
         "name": "Mid Gain",
-        "range": "-15dB to +15dB",
+        "range": "Peak or Trough (-15 to +15 dB)",
         "defaultVal": "0 dB",
-        "description": "Sets the boost or cut amount for the selected mid frequency.",
+        "description": "Sets the boost (peak) or cut (trough) amount for the selected mid frequency.",
         "type": "knob"
       },
       {
-        "name": "Bass Cut/Boost",
-        "range": "-15dB to +15dB",
+        "name": "Bass Freq",
+        "range": "50 Hz / 100 Hz / 200 Hz / 300 Hz",
+        "defaultVal": "50 Hz",
+        "description": "Selects the bass band frequency.",
+        "type": "switch",
+        "options": ["50 Hz", "100 Hz", "200 Hz", "300 Hz"]
+      },
+      {
+        "name": "Bass Gain",
+        "range": "-15 to +15 dB",
         "defaultVal": "0 dB",
         "description": "Sets the boost or cut amount for the low-end band.",
         "type": "knob"
       },
       {
-        "name": "High Pass Filter",
-        "range": "Off / 40Hz / 80Hz",
-        "defaultVal": "Off",
-        "description": "Toggles the built-in step high pass filter.",
+        "name": "EQ Bypass",
+        "range": "In / Out",
+        "defaultVal": "In",
+        "description": "Bypasses the EQ circuitry.",
         "type": "switch",
-        "options": [
-          "Off",
-          "40Hz",
-          "80Hz"
-        ]
+        "options": ["In", "Out"]
+      },
+      {
+        "name": "Phase Invert",
+        "range": "In / Out",
+        "defaultVal": "Out",
+        "description": "Flips the phase of the signal.",
+        "type": "switch",
+        "options": ["In", "Out"]
       }
     ],
     "proTips": [
@@ -7166,13 +8503,58 @@ export const UAD_DATABASE: UADPluginProfile[] = [
     ],
     "authorizationStatus": "Authorized for all devices"
   },
-  {
+    {
     "name": "uad neve 1081 eq",
     "displayName": "UAD Neve 1081 EQ",
     "category": "Equalizers",
     "description": "Emulation of Neve's legendary 1972 channel amplifier and equalizer, famous for its punchy, highly flexible four-band design with high and low bandpass filters. It offers detailed surgical control with classic Neve console warmth.",
     "hardwareModel": "Neve 1081 Channel Amplifier",
     "parameters": [
+      {
+        "name": "Phase Invert",
+        "range": "Off / On",
+        "defaultVal": "Off",
+        "description": "Flips the phase of the signal.",
+        "type": "switch",
+        "options": ["Off", "On"]
+      },
+      {
+        "name": "EQ In/Out",
+        "range": "In / Out",
+        "defaultVal": "In",
+        "description": "Bypasses the EQ circuitry.",
+        "type": "switch",
+        "options": ["In", "Out"]
+      },
+      {
+        "name": "High Shelf Freq",
+        "range": "3.3k / 4.7k / 6.8k / 10k / 15k Hz",
+        "defaultVal": "10k Hz",
+        "description": "Selects the high-frequency band target frequency.",
+        "type": "switch",
+        "options": [
+          "3.3k Hz",
+          "4.7k Hz",
+          "6.8k Hz",
+          "10k Hz",
+          "15k Hz"
+        ]
+      },
+      {
+        "name": "High Gain",
+        "range": "-18 to +18 dB",
+        "defaultVal": "0 dB",
+        "description": "High band boost or cut level.",
+        "type": "knob"
+      },
+      {
+        "name": "High Q",
+        "range": "Wide / Narrow",
+        "defaultVal": "Wide",
+        "description": "Toggles between bell and shelf shapes for the high band.",
+        "type": "switch",
+        "options": ["Wide", "Narrow"]
+      },
       {
         "name": "Hi-Mid Frequency",
         "range": "1.5k to 8.2kHz",
@@ -7192,50 +8574,134 @@ export const UAD_DATABASE: UADPluginProfile[] = [
       },
       {
         "name": "Hi-Mid Gain",
-        "range": "-18dB to +18dB",
+        "range": "-18 to +18 dB",
         "defaultVal": "0 dB",
         "description": "Controls high-mid band boost or cut level.",
         "type": "knob"
       },
       {
+        "name": "Hi-Mid Q",
+        "range": "Wide / Narrow",
+        "defaultVal": "Wide",
+        "description": "Selects the bandwidth for the high-mid band.",
+        "type": "switch",
+        "options": ["Wide", "Narrow"]
+      },
+      {
+        "name": "Low-Mid Frequency",
+        "range": "220 Hz to 1.2 kHz",
+        "defaultVal": "390 Hz",
+        "description": "Selects low-mid band target frequency.",
+        "type": "switch",
+        "options": [
+          "220 Hz",
+          "270 Hz",
+          "330 Hz",
+          "390 Hz",
+          "470 Hz",
+          "560 Hz",
+          "680 Hz",
+          "820 Hz",
+          "1000 Hz",
+          "1200 Hz"
+        ]
+      },
+      {
         "name": "Low-Mid Gain",
-        "range": "-18dB to +18dB",
+        "range": "-18 to +18 dB",
         "defaultVal": "0 dB",
         "description": "Controls low-mid band boost or cut level.",
         "type": "knob"
       },
       {
+        "name": "Low-Mid Q",
+        "range": "Wide / Narrow",
+        "defaultVal": "Wide",
+        "description": "Selects the bandwidth for the low-mid band.",
+        "type": "switch",
+        "options": ["Wide", "Narrow"]
+      },
+      {
+        "name": "Low Frequency",
+        "range": "33 / 56 / 100 / 180 / 330 Hz",
+        "defaultVal": "100 Hz",
+        "description": "Selects the low band target frequency.",
+        "type": "switch",
+        "options": [
+          "33 Hz",
+          "56 Hz",
+          "100 Hz",
+          "180 Hz",
+          "330 Hz"
+        ]
+      },
+      {
+        "name": "Low Gain",
+        "range": "-18 to +18 dB",
+        "defaultVal": "0 dB",
+        "description": "Low band boost or cut level.",
+        "type": "knob"
+      },
+      {
+        "name": "Low Q",
+        "range": "Wide / Narrow",
+        "defaultVal": "Wide",
+        "description": "Toggles between bell and shelf shapes for the low band.",
+        "type": "switch",
+        "options": ["Wide", "Narrow"]
+      },
+      {
         "name": "High Pass Filter",
-        "range": "Off / 31 to 315 Hz",
+        "range": "Off / 27 to 315 Hz",
         "defaultVal": "Off",
         "description": "Selects high pass filter step value.",
         "type": "select",
         "options": [
           "Off",
-          "31 Hz",
+          "27 Hz",
           "47 Hz",
-          "68 Hz",
-          "100 Hz",
+          "82 Hz",
           "150 Hz",
-          "220 Hz",
-          "270 Hz",
-          "315 Hz"
+          "270 Hz"
+        ]
+      },
+      {
+        "name": "Low Pass Filter",
+        "range": "Off / 3.9k to 18k Hz",
+        "defaultVal": "Off",
+        "description": "Selects low pass filter step value.",
+        "type": "select",
+        "options": [
+          "Off",
+          "18k Hz",
+          "12k Hz",
+          "8.2k Hz",
+          "5.6k Hz",
+          "3.9k Hz"
         ]
       }
     ],
     "proTips": [
-      "Set the High Pass filter to 47 Hz or 68 Hz on vocal tracks to clean up sub-bass mud while maintaining a warm Neve low-end chest tone.",
+      "Set the High Pass filter to 47 Hz or 82 Hz on vocal tracks to clean up sub-bass mud while maintaining a warm Neve low-end chest tone.",
       "The High-Mid band is extremely powerful for bringing out attack on acoustic guitars; select 3.3 kHz or 4.7 kHz and boost 2-4 dB for a shiny, forward character."
     ],
     "authorizationStatus": "Authorized for all devices"
   },
-  {
+    {
     "name": "uad neve 33609 stereo limiter compressor",
     "displayName": "UAD Neve 33609 Stereo Limiter Compressor",
     "category": "Dynamics",
     "description": "Perfect emulation of the legendary diode-bridge compressor/limiter first introduced in 1969. Famous for its discrete, feedback-style compression that glues stereo tracks, master buses, and drum groups with unmistakable analog fatness.",
     "hardwareModel": "Neve 33609 Stereo Compressor/Limiter",
     "parameters": [
+      {
+        "name": "Compressor In",
+        "range": "In / Out",
+        "defaultVal": "In",
+        "description": "Bypasses the compressor section.",
+        "type": "switch",
+        "options": ["In", "Out"]
+      },
       {
         "name": "Compressor Threshold",
         "range": "-20dBu to +10dBu",
@@ -7244,22 +8710,8 @@ export const UAD_DATABASE: UADPluginProfile[] = [
         "type": "knob"
       },
       {
-        "name": "Compressor Ratio",
-        "range": "1.5:1 to 6:1",
-        "defaultVal": "1.5:1",
-        "description": "Selects compression slope severity.",
-        "type": "select",
-        "options": [
-          "1.5:1",
-          "2:1",
-          "3:1",
-          "4:1",
-          "6:1"
-        ]
-      },
-      {
         "name": "Compressor Recovery",
-        "range": "100ms to Auto2",
+        "range": "100ms / 400ms / 800ms / 1.5s / Auto1 / Auto2",
         "defaultVal": "100ms",
         "description": "Selects compressor recovery time constant.",
         "type": "select",
@@ -7273,11 +8725,63 @@ export const UAD_DATABASE: UADPluginProfile[] = [
         ]
       },
       {
+        "name": "Compressor Gain",
+        "range": "0 to +20 dB",
+        "defaultVal": "0 dB",
+        "description": "Makeup gain for the compressor section.",
+        "type": "knob"
+      },
+      {
+        "name": "Compressor Ratio",
+        "range": "1.5:1 / 2:1 / 3:1 / 4:1 / 6:1",
+        "defaultVal": "1.5:1",
+        "description": "Selects compression slope severity.",
+        "type": "select",
+        "options": [
+          "1.5:1",
+          "2:1",
+          "3:1",
+          "4:1",
+          "6:1"
+        ]
+      },
+      {
+        "name": "Limiter In",
+        "range": "In / Out",
+        "defaultVal": "Out",
+        "description": "Bypasses the limiter section.",
+        "type": "switch",
+        "options": ["In", "Out"]
+      },
+      {
         "name": "Limiter Threshold",
-        "range": "+4dBm to +20dBm",
-        "defaultVal": "+20 dBm",
+        "range": "+4dBm to +15dBm",
+        "defaultVal": "+15 dBm",
         "description": "Sets threshold for the independent peak limiter stage.",
         "type": "knob"
+      },
+      {
+        "name": "Limiter Recovery",
+        "range": "50ms / 100ms / 200ms / 800ms / Auto1 / Auto2",
+        "defaultVal": "50ms",
+        "description": "Sets the limiter recovery time.",
+        "type": "switch",
+        "options": [
+          "50ms",
+          "100ms",
+          "200ms",
+          "800ms",
+          "Auto1",
+          "Auto2"
+        ]
+      },
+      {
+        "name": "Limiter Attack",
+        "range": "Fast / Slow",
+        "defaultVal": "Slow",
+        "description": "Selects limiter attack time.",
+        "type": "switch",
+        "options": ["Fast", "Slow"]
       }
     ],
     "proTips": [
@@ -7286,7 +8790,7 @@ export const UAD_DATABASE: UADPluginProfile[] = [
     ],
     "authorizationStatus": "Authorized for all devices"
   },
-  {
+    {
     "name": "uad neve 1073 legacy eq",
     "displayName": "UAD Neve 1073 Legacy EQ",
     "category": "Equalizers",
@@ -7294,8 +8798,24 @@ export const UAD_DATABASE: UADPluginProfile[] = [
     "hardwareModel": "Neve 1073 Channel Amplifier",
     "parameters": [
       {
+        "name": "Phase",
+        "range": "Off / On",
+        "defaultVal": "Off",
+        "description": "Flips the phase of the signal.",
+        "type": "switch",
+        "options": ["Off", "On"]
+      },
+      {
+        "name": "EQ In/Out",
+        "range": "In / Out",
+        "defaultVal": "In",
+        "description": "Bypasses the EQ circuitry.",
+        "type": "switch",
+        "options": ["In", "Out"]
+      },
+      {
         "name": "High Shelf",
-        "range": "-16dB to +16dB",
+        "range": "-16 to +16 dB",
         "defaultVal": "0 dB",
         "description": "Adjusts 12 kHz high-frequency shelving boost or cut.",
         "type": "knob"
@@ -7317,7 +8837,7 @@ export const UAD_DATABASE: UADPluginProfile[] = [
       },
       {
         "name": "Mid Gain",
-        "range": "-18dB to +18dB",
+        "range": "-18 to +18 dB",
         "defaultVal": "0 dB",
         "description": "Sets boost or cut level of mid band.",
         "type": "knob"
@@ -7333,6 +8853,27 @@ export const UAD_DATABASE: UADPluginProfile[] = [
           "60 Hz",
           "110 Hz",
           "220 Hz"
+        ]
+      },
+      {
+        "name": "Low Gain",
+        "range": "-16 to +16 dB",
+        "defaultVal": "0 dB",
+        "description": "Sets boost or cut level of low band.",
+        "type": "knob"
+      },
+      {
+        "name": "High Pass Filter",
+        "range": "Off / 50 to 300 Hz",
+        "defaultVal": "Off",
+        "description": "Selects high pass filter step value.",
+        "type": "select",
+        "options": [
+          "Off",
+          "50 Hz",
+          "80 Hz",
+          "160 Hz",
+          "300 Hz"
         ]
       }
     ],
@@ -7398,7 +8939,7 @@ export const UAD_DATABASE: UADPluginProfile[] = [
     ],
     "authorizationStatus": "Authorized for all devices"
   },
-  {
+    {
     "name": "uad precision equalizer",
     "displayName": "UAD Precision Equalizer",
     "category": "Equalizers",
@@ -7425,33 +8966,66 @@ export const UAD_DATABASE: UADPluginProfile[] = [
         ]
       },
       {
-        "name": "High Shelf Gain",
-        "range": "-8dB to +8dB",
-        "defaultVal": "0 dB",
-        "description": "Sets boost or cut level on high-shelf band.",
+        "name": "Low Band Freq",
+        "range": "10 Hz to 2.0 kHz",
+        "defaultVal": "100 Hz",
+        "description": "Selects low band center frequency.",
         "type": "knob"
       },
       {
-        "name": "High-Mid Frequency",
-        "range": "2.0k to 16.0kHz",
-        "defaultVal": "2.0 kHz",
-        "description": "Selects high-mid band center frequency.",
-        "type": "select",
-        "options": [
-          "2.0 kHz",
-          "2.8 kHz",
-          "4.0 kHz",
-          "5.6 kHz",
-          "8.0 kHz",
-          "11.2 kHz",
-          "16.0 kHz"
-        ]
+        "name": "Low Band Gain",
+        "range": "-8dB to +8dB",
+        "defaultVal": "0 dB",
+        "description": "Sets boost or cut level on low band.",
+        "type": "knob"
+      },
+      {
+        "name": "Low-Mid Freq",
+        "range": "20 Hz to 4.0 kHz",
+        "defaultVal": "200 Hz",
+        "description": "Selects low-mid band center frequency.",
+        "type": "knob"
       },
       {
         "name": "Low-Mid Gain",
         "range": "-8dB to +8dB",
         "defaultVal": "0 dB",
         "description": "Sets boost or cut level on low-mid parametric band.",
+        "type": "knob"
+      },
+      {
+        "name": "High-Mid Freq",
+        "range": "1.0 kHz to 16.0 kHz",
+        "defaultVal": "2.0 kHz",
+        "description": "Selects high-mid band center frequency.",
+        "type": "knob"
+      },
+      {
+        "name": "High-Mid Gain",
+        "range": "-8dB to +8dB",
+        "defaultVal": "0 dB",
+        "description": "Sets boost or cut level on high-mid parametric band.",
+        "type": "knob"
+      },
+      {
+        "name": "High Band Freq",
+        "range": "2.0 kHz to 40.0 kHz",
+        "defaultVal": "10 kHz",
+        "description": "Selects high band center frequency.",
+        "type": "knob"
+      },
+      {
+        "name": "High Band Gain",
+        "range": "-8dB to +8dB",
+        "defaultVal": "0 dB",
+        "description": "Sets boost or cut level on high-shelf band.",
+        "type": "knob"
+      },
+      {
+        "name": "High-Cut Filter",
+        "range": "Off / 4 kHz to 40 kHz",
+        "defaultVal": "Off",
+        "description": "Enables sharp low-pass filter curve at selected step.",
         "type": "knob"
       }
     ],
@@ -7461,7 +9035,7 @@ export const UAD_DATABASE: UADPluginProfile[] = [
     ],
     "authorizationStatus": "Authorized for all devices"
   },
-  {
+    {
     "name": "uad emt 140 plate reverb",
     "displayName": "UAD EMT 140 Plate Reverb",
     "category": "Reverbs & Delays",
@@ -7470,35 +9044,50 @@ export const UAD_DATABASE: UADPluginProfile[] = [
     "parameters": [
       {
         "name": "Plate Select",
-        "range": "Plate A / Plate B / Plate C",
-        "defaultVal": "Plate A",
+        "range": "A / B / C",
+        "defaultVal": "A",
         "description": "Selects between three plates with different damping qualities.",
-        "type": "select",
+        "type": "switch",
         "options": [
-          "Plate A",
-          "Plate B",
-          "Plate C"
+          "A",
+          "B",
+          "C"
         ]
       },
       {
         "name": "Reverb Time",
-        "range": "0.5s to 5.0s",
+        "range": "0.5s to 5.5s",
         "defaultVal": "2.0s",
         "description": "Determines decay length of the virtual plate surface.",
         "type": "knob"
       },
       {
-        "name": "Pre-Delay",
+        "name": "Pre-delay",
         "range": "0ms to 250ms",
         "defaultVal": "0ms",
         "description": "Adjusts time gap before reverb onset.",
         "type": "knob"
       },
       {
-        "name": "High Pass Filter",
+        "name": "Input Filter",
+        "range": "Off / 90 / 250 Hz",
+        "defaultVal": "Off",
+        "description": "Reduces low-frequency buildup on input.",
+        "type": "switch",
+        "options": ["Off", "90 Hz", "250 Hz"]
+      },
+      {
+        "name": "Bass Cut Filter",
         "range": "Off to 500 Hz",
         "defaultVal": "Off",
-        "description": "Cuts low frequencies from input source before entering plate.",
+        "description": "Cuts low frequencies from the output signal.",
+        "type": "knob"
+      },
+      {
+        "name": "Wet/Dry Mix",
+        "range": "0% to 100%",
+        "defaultVal": "100%",
+        "description": "Blends dry and processed signals.",
         "type": "knob"
       }
     ],
@@ -7871,7 +9460,7 @@ export const UAD_DATABASE: UADPluginProfile[] = [
     ],
     "authorizationStatus": "Authorized for all devices"
   },
-  {
+    {
     "name": "uad cambridge eq",
     "displayName": "UAD Cambridge EQ",
     "category": "Equalizers",
@@ -7906,6 +9495,28 @@ export const UAD_DATABASE: UADPluginProfile[] = [
         "defaultVal": "1 kHz",
         "description": "Adjusts the center frequency for the middle parametric band.",
         "type": "knob"
+      },
+      {
+        "name": "LP Freq",
+        "range": "20 Hz to 20 kHz",
+        "defaultVal": "20 kHz",
+        "description": "Sets the low-pass filter cutoff frequency.",
+        "type": "knob"
+      },
+      {
+        "name": "LP Slope",
+        "range": "6 dB to 36 dB",
+        "defaultVal": "12 dB",
+        "description": "Toggles the attenuation slope steepness of the low-pass filter.",
+        "type": "select",
+        "options": [
+          "6 dB",
+          "12 dB",
+          "18 dB",
+          "24 dB",
+          "30 dB",
+          "36 dB"
+        ]
       }
     ],
     "proTips": [

@@ -45,6 +45,7 @@ export const DawSelectionModal: React.FC<DawSelectionModalProps> = ({
     { id: 'Bitwig Studio', name: t('daw_bitwig_studio'), desc: t('daw_bitwig_studio_desc') },
     { id: 'Mixcraft', name: t('daw_mixcraft'), desc: t('daw_mixcraft_desc') },
     { id: 'Garage Band', name: t('daw_garage_band'), desc: t('daw_garage_band_desc') },
+    { id: 'LUNA', name: 'Universal Audio LUNA', desc: 'LUNA Recording System' },
     { id: 'Reason', name: t('daw_reason'), desc: t('daw_reason_desc') },
     { id: 'BandLab', name: 'BandLab', desc: 'Free online DAW with built-in effects' },
     { id: 'Other', name: t('daw_other'), desc: t('daw_other_desc') }
