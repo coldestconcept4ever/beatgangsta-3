@@ -137,7 +137,7 @@ export const PluginCard: React.FC<PluginCardProps> = ({ id, plugin, onRemove, on
       )}
 
       <div className="mt-auto pt-4 border-t border-white/10 flex items-center justify-between text-[10px] font-black uppercase tracking-[0.15em] opacity-40">
-        <span>{plugin.tier ? `${plugin.tier} ` : ''}v{plugin.version.slice(0, 5)}</span>
+        <span>{plugin.tier ? `${plugin.tier} ` : ''}v{plugin.version ? plugin.version.slice(0, 5) : '1.0'}</span>
         <span>Est. {pluginInfo.year}</span>
       </div>
     </div>

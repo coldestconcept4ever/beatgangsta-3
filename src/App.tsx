@@ -599,7 +599,7 @@ const App: React.FC = () => {
   const [plugins, setPlugins] = useState<VSTPlugin[]>(() => {
     try {
       const saved = localStorage.getItem('bg_library');
-      return saved ? JSON.parse(saved) : [];
+      return saved ? (JSON.parse(saved) || []) : [];
     } catch (e) {
       return [];
     }
@@ -607,7 +607,7 @@ const App: React.FC = () => {
   const [starredPlugins, setStarredPlugins] = useState<string[]>(() => {
     try {
       const saved = localStorage.getItem('bg_starred_plugins');
-      return saved ? JSON.parse(saved) : [];
+      return saved ? (JSON.parse(saved) || []) : [];
     } catch (e) {
       return [];
     }
@@ -633,7 +633,7 @@ const App: React.FC = () => {
   const [deletedPlugins, setDeletedPlugins] = useState<VSTPlugin[]>(() => {
     try {
       const saved = localStorage.getItem('bg_deleted_plugins');
-      return saved ? JSON.parse(saved) : [];
+      return saved ? (JSON.parse(saved) || []) : [];
     } catch (e) {
       return [];
     }
@@ -1787,19 +1787,19 @@ The AI was unable to verify these parameters. Please investigate.`;
   const [analogInstruments, setAnalogInstruments] = useState<Hardware[]>(() => {
     try {
       const saved = localStorage.getItem('bg_analog_instruments_v2');
-      return saved ? JSON.parse(saved) : [];
+      return saved ? (JSON.parse(saved) || []) : [];
     } catch { return []; }
   });
   const [analogHardware, setAnalogHardware] = useState<Hardware[]>(() => {
     try {
       const saved = localStorage.getItem('bg_analog_hardware_v2');
-      return saved ? JSON.parse(saved) : [];
+      return saved ? (JSON.parse(saved) || []) : [];
     } catch { return []; }
   });
   const [drumKits, setDrumKits] = useState<Hardware[]>(() => {
     try {
       const saved = localStorage.getItem('bg_drum_kits');
-      return saved ? JSON.parse(saved) : [];
+      return saved ? (JSON.parse(saved) || []) : [];
     } catch { return []; }
   });
   const [showDrumKitModal, setShowDrumKitModal] = useState(false);
@@ -1807,13 +1807,13 @@ The AI was unable to verify these parameters. Please investigate.`;
   const [deletedInstruments, setDeletedInstruments] = useState<Hardware[]>(() => {
     try {
       const saved = localStorage.getItem('bg_deleted_instruments');
-      return saved ? JSON.parse(saved) : [];
+      return saved ? (JSON.parse(saved) || []) : [];
     } catch { return []; }
   });
   const [deletedHardware, setDeletedHardware] = useState<Hardware[]>(() => {
     try {
       const saved = localStorage.getItem('bg_deleted_hardware');
-      return saved ? JSON.parse(saved) : [];
+      return saved ? (JSON.parse(saved) || []) : [];
     } catch { return []; }
   });
 
@@ -1839,7 +1839,7 @@ The AI was unable to verify these parameters. Please investigate.`;
   const [starredHardware, setStarredHardware] = useState<string[]>(() => {
     try {
       const saved = localStorage.getItem('bg_starred_hardware');
-      return saved ? JSON.parse(saved) : [];
+      return saved ? (JSON.parse(saved) || []) : [];
     } catch (e) {
       return [];
     }
@@ -3077,7 +3077,7 @@ The AI was unable to verify these parameters. Please investigate.`;
   const [vault, setVault] = useState<SavedRecipe[]>(() => {
     try {
       const saved = localStorage.getItem('bg_vault');
-      return saved ? JSON.parse(saved) : [];
+      return saved ? (JSON.parse(saved) || []) : [];
     } catch (e) {
       return [];
     }
@@ -3086,7 +3086,7 @@ The AI was unable to verify these parameters. Please investigate.`;
   const [receipts, setReceipts] = useState<ReceiptItem[]>(() => {
     try {
       const saved = localStorage.getItem('bg_receipts');
-      return saved ? JSON.parse(saved) : [];
+      return saved ? (JSON.parse(saved) || []) : [];
     } catch (e) {
       return [];
     }
@@ -3148,7 +3148,7 @@ The AI was unable to verify these parameters. Please investigate.`;
   const [savedCritiques, setSavedCritiques] = useState<SavedCritique[]>(() => {
     try {
       const saved = localStorage.getItem('bg_saved_critiques');
-      return saved ? JSON.parse(saved) : [];
+      return saved ? (JSON.parse(saved) || []) : [];
     } catch (e) {
       return [];
     }
@@ -3157,7 +3157,7 @@ The AI was unable to verify these parameters. Please investigate.`;
   const [folders, setFolders] = useState<Folder[]>(() => {
     try {
       const saved = localStorage.getItem('bg_folders');
-      return saved ? JSON.parse(saved) : [];
+      return saved ? (JSON.parse(saved) || []) : [];
     } catch (e) {
       return [];
     }
@@ -3166,7 +3166,7 @@ The AI was unable to verify these parameters. Please investigate.`;
   const [history, setHistory] = useState<HistoryItem[]>(() => {
     try {
       const saved = localStorage.getItem('bg_history');
-      return saved ? JSON.parse(saved) : [];
+      return saved ? (JSON.parse(saved) || []) : [];
     } catch (e) {
       return [];
     }
@@ -7988,10 +7988,10 @@ Provide the exact JSFX plugin name and required sliders/parameters.`;
             <span className="text-[10px] font-bold opacity-50">{receipts.length} items</span>
           </div>
           <div className="space-y-2 max-h-32 overflow-y-auto no-scrollbar">
-            {receipts.length === 0 ? (
+            {(!receipts || receipts.length === 0) ? (
               <div className="text-xs opacity-50 italic">No transactions yet.</div>
             ) : (
-              receipts.slice(0, 10).map(receipt => (
+              (receipts || []).slice(0, 10).map(receipt => (
                 <div key={receipt.id} className="flex items-center justify-between text-xs">
                   <div className="flex items-center gap-2">
                     <span className="opacity-50 text-[10px]">{new Date(receipt.date).toLocaleTimeString()}</span>
