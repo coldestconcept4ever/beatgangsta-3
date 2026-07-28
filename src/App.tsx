@@ -2005,6 +2005,8 @@ The AI was unable to verify these parameters. Please investigate.`;
   }, []);
 
   const [excludeAnalog, setExcludeAnalog] = useState(false);
+  const [lunaSumming, setLunaSumming] = useState<'api' | 'neve' | 'off'>('off');
+  const [lunaTape, setLunaTape] = useState<'oxide' | 'studer' | 'off'>('off');
   const [dawType, setDawType] = useState<string | null>(() => {
     return localStorage.getItem('bg_daw_type') || null;
   });
@@ -5298,7 +5300,17 @@ The AI was unable to verify these parameters. Please investigate.`;
 
     try {
       if (!requireAuth()) return;
-      const response = await getBeatRecommendations(plugins, analogInstruments, analogHardware, drumKits, excludeAnalog, dawType, starredPlugins, isGangstaVox, i18n.language, isMultiBandMode, generationBPM, generationContext, isJsfxMode, installedJsfxPacks, xpandPresets);
+
+    let finalGenerationContext = generationContext;
+    if (dawType === 'LUNA') {
+      if (lunaSumming !== 'off') {
+        finalGenerationContext = finalGenerationContext + (finalGenerationContext ? "\n\n" : "") + `CRITICAL LUNA DIRECTIVE: The user has enabled ${lunaSumming.toUpperCase()} SUMMING. You MUST include specific settings for the ${lunaSumming === 'api' ? 'API Vision Console' : 'Neve Summing'} extension on the busses and master fader. Do not ignore this.`;
+      }
+      if (lunaTape !== 'off') {
+        finalGenerationContext = finalGenerationContext + (finalGenerationContext ? "\n\n" : "") + `CRITICAL LUNA DIRECTIVE: The user has enabled ${lunaTape.toUpperCase()} TAPE. You MUST include specific settings for the ${lunaTape === 'oxide' ? 'Oxide Tape' : 'Studer A800'} extension on the tracks and busses. Do not ignore this.`;
+      }
+    }
+      const response = await getBeatRecommendations(plugins, analogInstruments, analogHardware, drumKits, excludeAnalog, dawType, starredPlugins, isGangstaVox, i18n.language, isMultiBandMode, generationBPM, finalGenerationContext, isJsfxMode, installedJsfxPacks, xpandPresets);
       clearInterval(progressInterval);
       setGenerationProgress(100);
       clearTimeout(timeoutId);
@@ -5388,7 +5400,17 @@ The AI was unable to verify these parameters. Please investigate.`;
 
     try {
       if (!requireAuth()) return;
-      const response = await getCustomBeatRecommendations(plugins, typeBeatSearch.trim(), analogInstruments, analogHardware, drumKits, excludeAnalog, dawType, starredPlugins, isGangstaVox, i18n.language, isMultiBandMode, generationBPM, generationContext, isJsfxMode, installedJsfxPacks, xpandPresets);
+
+    let finalGenerationContext = generationContext;
+    if (dawType === 'LUNA') {
+      if (lunaSumming !== 'off') {
+        finalGenerationContext = finalGenerationContext + (finalGenerationContext ? "\n\n" : "") + `CRITICAL LUNA DIRECTIVE: The user has enabled ${lunaSumming.toUpperCase()} SUMMING. You MUST include specific settings for the ${lunaSumming === 'api' ? 'API Vision Console' : 'Neve Summing'} extension on the busses and master fader. Do not ignore this.`;
+      }
+      if (lunaTape !== 'off') {
+        finalGenerationContext = finalGenerationContext + (finalGenerationContext ? "\n\n" : "") + `CRITICAL LUNA DIRECTIVE: The user has enabled ${lunaTape.toUpperCase()} TAPE. You MUST include specific settings for the ${lunaTape === 'oxide' ? 'Oxide Tape' : 'Studer A800'} extension on the tracks and busses. Do not ignore this.`;
+      }
+    }
+      const response = await getCustomBeatRecommendations(plugins, typeBeatSearch.trim(), analogInstruments, analogHardware, drumKits, excludeAnalog, dawType, starredPlugins, isGangstaVox, i18n.language, isMultiBandMode, generationBPM, finalGenerationContext, isJsfxMode, installedJsfxPacks, xpandPresets);
       clearInterval(progressInterval);
       setGenerationProgress(100);
       clearTimeout(timeoutId);
@@ -5440,7 +5462,17 @@ The AI was unable to verify these parameters. Please investigate.`;
 
     try {
       if (!requireAuth()) return;
-      const response = await getSongBeatRecommendations(plugins, songSearch.trim(), analogInstruments, analogHardware, drumKits, excludeAnalog, dawType, starredPlugins, isGangstaVox, i18n.language, isMultiBandMode, generationBPM, generationContext, isJsfxMode, installedJsfxPacks, xpandPresets);
+
+    let finalGenerationContext = generationContext;
+    if (dawType === 'LUNA') {
+      if (lunaSumming !== 'off') {
+        finalGenerationContext = finalGenerationContext + (finalGenerationContext ? "\n\n" : "") + `CRITICAL LUNA DIRECTIVE: The user has enabled ${lunaSumming.toUpperCase()} SUMMING. You MUST include specific settings for the ${lunaSumming === 'api' ? 'API Vision Console' : 'Neve Summing'} extension on the busses and master fader. Do not ignore this.`;
+      }
+      if (lunaTape !== 'off') {
+        finalGenerationContext = finalGenerationContext + (finalGenerationContext ? "\n\n" : "") + `CRITICAL LUNA DIRECTIVE: The user has enabled ${lunaTape.toUpperCase()} TAPE. You MUST include specific settings for the ${lunaTape === 'oxide' ? 'Oxide Tape' : 'Studer A800'} extension on the tracks and busses. Do not ignore this.`;
+      }
+    }
+      const response = await getSongBeatRecommendations(plugins, songSearch.trim(), analogInstruments, analogHardware, drumKits, excludeAnalog, dawType, starredPlugins, isGangstaVox, i18n.language, isMultiBandMode, generationBPM, finalGenerationContext, isJsfxMode, installedJsfxPacks, xpandPresets);
       clearInterval(progressInterval);
       setGenerationProgress(100);
       clearTimeout(timeoutId);
@@ -5636,6 +5668,15 @@ The AI was unable to verify these parameters. Please investigate.`;
       // Format stems context for Gemini
       const stemsContext = uploadedStems.map(s => `Stem: ${s.file!.name} (Type: ${s.type === 'Other' && s.customType ? s.customType : s.type}) - URI: ${s.uri}`).join('\n');
       let fullContext = `The user has uploaded ${activeStems.length} stems for analysis.\n\n${stemsContext}\n\nUser Context: ${critiqueContext}`;
+
+      if (dawType === 'LUNA') {
+        if (lunaSumming !== 'off') {
+          fullContext += `\n\nCRITICAL LUNA DIRECTIVE: The user has enabled ${lunaSumming.toUpperCase()} SUMMING. You MUST include specific settings for the ${lunaSumming === 'api' ? 'API Vision Console' : 'Neve Summing'} extension on the busses and master fader. Do not ignore this.`;
+        }
+        if (lunaTape !== 'off') {
+          fullContext += `\n\nCRITICAL LUNA DIRECTIVE: The user has enabled ${lunaTape.toUpperCase()} TAPE. You MUST include specific settings for the ${lunaTape === 'oxide' ? 'Oxide Tape' : 'Studer A800'} extension on the tracks and busses. Do not ignore this.`;
+        }
+      }
       if (isJsfxMode) {
         fullContext += `\n\nCRITICAL DIRECTIVE: YOU MUST ONLY RECOMMEND JSFX PLUGINS FOR THIS MIX CRITIQUE. DO NOT RECOMMEND ANY VST/AU PLUGINS. 
 Only use valid, default REAPER JSFX (JS:). Here is a comprehensive list of actual standard JSFX categories and plugins to use as a reference:
@@ -5709,7 +5750,10 @@ Provide the exact JSFX plugin name and required sliders/parameters.`;
         starredPlugins,
         combinedPhysicalMetrics, // physicalMetrics representing the cumulative mix sum!
         referencePhysicalMetrics,
-        stemsPhysicalMetrics
+        stemsPhysicalMetrics,
+        dawType,
+        lunaSumming,
+        lunaTape
       );
       critique.id = Math.random().toString(36).substr(2, 9);
       critique.isMasterMode = isMasterMode;
@@ -6173,6 +6217,16 @@ Provide the exact JSFX plugin name and required sliders/parameters.`;
             finalContext = finalContext + (finalContext ? "\n\n" : "") + "CRITICAL SYSTEM INSTRUCTION: The user wants an EXACT REPLICA of this beat. Provide a precise, step-by-step recipe to completely recreate this specific song's beat exactly how it sounds in the provided link/audio. It MUST be an exact replica, do not just make something 'in the style of', make it an EXACT reproduction of the instruments, chords, drum patterns, and sound design of the source audio. YOU MUST NOT LEAVE ANY BLANK OR EMPTY PARAMETERS ON ANY VST OR FX PLUGIN. EVERY SINGLE DEEPDIVE PARAMETER ARRAY MUST BE EXHAUSTIVELY POPULATED TO ACHIEVE THIS LEVEL OF REALISM. IN ADDITION, ALL MIDI PATTERNS MUST BE HIGLY CREATIVE, SYNCATED, DYNAMIC, ENJOYABLE, AND EXACTLY MATCH THE MOVEMENT OF THE SOURCE AUDIO - STRICTLY FORBIDDEN FROM GENERATING PLAIN REPETITIVE NOTE SLOP.";
           }
 
+
+          if (dawType === 'LUNA') {
+            if (lunaSumming !== 'off') {
+              finalContext = finalContext + (finalContext ? "\n\n" : "") + `CRITICAL LUNA DIRECTIVE: The user has enabled ${lunaSumming.toUpperCase()} SUMMING. You MUST include specific settings for the ${lunaSumming === 'api' ? 'API Vision Console' : 'Neve Summing'} extension on the busses and master fader. Do not ignore this.`;
+            }
+            if (lunaTape !== 'off') {
+              finalContext = finalContext + (finalContext ? "\n\n" : "") + `CRITICAL LUNA DIRECTIVE: The user has enabled ${lunaTape.toUpperCase()} TAPE. You MUST include specific settings for the ${lunaTape === 'oxide' ? 'Oxide Tape' : 'Studer A800'} extension on the tracks and busses. Do not ignore this.`;
+            }
+          }
+
           response = await getAudioBeatRecommendations(
             plugins,
             audioBase64,
@@ -6205,6 +6259,16 @@ Provide the exact JSFX plugin name and required sliders/parameters.`;
             let finalContext = critiqueContext;
             if (audioUrl || audioBase64 || geminiFileUri) {
               finalContext = finalContext + (finalContext ? "\n\n" : "") + "CRITICAL SYSTEM INSTRUCTION: The user wants an EXACT REPLICA of this beat. Provide a precise, step-by-step recipe to completely recreate this specific song's beat exactly how it sounds in the provided link/audio. It MUST be an exact replica, do not just make something 'in the style of', make it an EXACT reproduction of the instruments, chords, drum patterns, and sound design of the source audio. YOU MUST NOT LEAVE ANY BLANK OR EMPTY PARAMETERS ON ANY VST OR FX PLUGIN. EVERY SINGLE DEEPDIVE PARAMETER ARRAY MUST BE EXHAUSTIVELY POPULATED TO ACHIEVE THIS LEVEL OF REALISM. IN ADDITION, ALL MIDI PATTERNS MUST BE HIGLY CREATIVE, SYNCATED, DYNAMIC, ENJOYABLE, AND EXACTLY MATCH THE MOVEMENT OF THE SOURCE AUDIO - STRICTLY FORBIDDEN FROM GENERATING PLAIN REPETITIVE NOTE SLOP.";
+            }
+
+
+            if (dawType === 'LUNA') {
+              if (lunaSumming !== 'off') {
+                finalContext = finalContext + (finalContext ? "\n\n" : "") + `CRITICAL LUNA DIRECTIVE: The user has enabled ${lunaSumming.toUpperCase()} SUMMING. You MUST include specific settings for the ${lunaSumming === 'api' ? 'API Vision Console' : 'Neve Summing'} extension on the busses and master fader. Do not ignore this.`;
+              }
+              if (lunaTape !== 'off') {
+                finalContext = finalContext + (finalContext ? "\n\n" : "") + `CRITICAL LUNA DIRECTIVE: The user has enabled ${lunaTape.toUpperCase()} TAPE. You MUST include specific settings for the ${lunaTape === 'oxide' ? 'Oxide Tape' : 'Studer A800'} extension on the tracks and busses. Do not ignore this.`;
+              }
             }
 
             response = await getAudioBeatRecommendations(
@@ -8550,10 +8614,40 @@ Provide the exact JSFX plugin name and required sliders/parameters.`;
                         >
                           <div className={`absolute top-0.5 left-0.5 w-4 h-4 rounded-full bg-white transition-transform ${isMultiBandMode ? 'translate-x-5' : 'translate-x-0'}`} />
                         </button>
-                      </div>
+                      
+                      {dawType === 'LUNA' && (
+                        <>
+                          <div className={`inline-flex items-center gap-3 rounded-full px-4 py-2 ${theme === 'coldest' ? 'bg-white/40' : 'bg-black/40'}`}>
+                            <span className={`text-[10px] font-black uppercase tracking-widest transition-colors ${lunaSumming === 'api' ? (theme === 'coldest' ? 'text-sky-600' : 'text-sky-400') : (theme === 'coldest' ? 'text-slate-500' : 'text-white/50')}`}>API SUMMING</span>
+                            
+                            <div className={`relative w-16 h-6 rounded-full flex items-center px-1 cursor-pointer transition-colors ${theme === 'coldest' ? 'bg-slate-300' : 'bg-slate-800'}`} onClick={() => setLunaSumming(lunaSumming === 'api' ? 'off' : (lunaSumming === 'off' ? 'neve' : 'api'))}>
+                               <div className={`absolute w-4 h-4 rounded-full bg-white shadow transition-all duration-300 ${lunaSumming === 'api' ? 'left-1 bg-sky-500' : lunaSumming === 'neve' ? 'left-[44px] bg-red-500' : 'left-6 bg-slate-400'}`} />
+                            </div>
+                            
+                            <span className={`text-[10px] font-black uppercase tracking-widest transition-colors ${lunaSumming === 'neve' ? (theme === 'coldest' ? 'text-red-600' : 'text-red-400') : (theme === 'coldest' ? 'text-slate-500' : 'text-white/50')}`}>NEVE SUMMING</span>
+                            
+                            <span className={`ml-2 text-[10px] font-black uppercase tracking-widest transition-colors ${lunaSumming === 'off' ? (theme === 'coldest' ? 'text-slate-900' : 'text-white') : (theme === 'coldest' ? 'text-slate-500' : 'text-white/50')}`}>
+                              {lunaSumming === 'off' ? 'OFF' : ''}
+                            </span>
+                          </div>
 
+                          <div className={`inline-flex items-center gap-3 rounded-full px-4 py-2 ${theme === 'coldest' ? 'bg-white/40' : 'bg-black/40'}`}>
+                            <span className={`text-[10px] font-black uppercase tracking-widest transition-colors ${lunaTape === 'oxide' ? (theme === 'coldest' ? 'text-orange-600' : 'text-orange-400') : (theme === 'coldest' ? 'text-slate-500' : 'text-white/50')}`}>OXIDE TAPE</span>
+                            
+                            <div className={`relative w-16 h-6 rounded-full flex items-center px-1 cursor-pointer transition-colors ${theme === 'coldest' ? 'bg-slate-300' : 'bg-slate-800'}`} onClick={() => setLunaTape(lunaTape === 'oxide' ? 'off' : (lunaTape === 'off' ? 'studer' : 'oxide'))}>
+                               <div className={`absolute w-4 h-4 rounded-full bg-white shadow transition-all duration-300 ${lunaTape === 'oxide' ? 'left-1 bg-orange-500' : lunaTape === 'studer' ? 'left-[44px] bg-emerald-500' : 'left-6 bg-slate-400'}`} />
+                            </div>
+                            
+                            <span className={`text-[10px] font-black uppercase tracking-widest transition-colors ${lunaTape === 'studer' ? (theme === 'coldest' ? 'text-emerald-600' : 'text-emerald-400') : (theme === 'coldest' ? 'text-slate-500' : 'text-white/50')}`}>STUDER A800</span>
+                            
+                            <span className={`ml-2 text-[10px] font-black uppercase tracking-widest transition-colors ${lunaTape === 'off' ? (theme === 'coldest' ? 'text-slate-900' : 'text-white') : (theme === 'coldest' ? 'text-slate-500' : 'text-white/50')}`}>
+                              {lunaTape === 'off' ? 'OFF' : ''}
+                            </span>
+                          </div>
+                        </>
+                      )}
 
-
+                    </div>
                     {(dawType === 'REAPER' || dawType === 'Reaper') && (
                         <div className="flex flex-col gap-3">
                           {critiques.length > 0 && (

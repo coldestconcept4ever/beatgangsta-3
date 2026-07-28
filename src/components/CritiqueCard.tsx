@@ -41,6 +41,7 @@ interface CritiqueCardProps {
   isMultiBandMode?: boolean;
   dawType?: string | null;
   lunaSumming?: 'api' | 'off' | 'neve';
+  lunaTape?: 'oxide' | 'studer' | 'off';
   reaperSyncPin?: string | null;
   reaperSyncEmail?: string | null;
   isJsfxMode?: boolean;
@@ -149,7 +150,7 @@ const getDawSpecificGuide = (daw: string | null) => {
   };
 };
 
-export const CritiqueCard: React.FC<CritiqueCardProps> = ({ critique, stems = [], theme, plugins, analogInstruments = [], analogHardware = [], audioBase64, audioUrl, geminiFileUri, mimeType, isSaved, onSave, onUpdateCritique, onReCritique, currentAudioInfo, onLogReceipt, onCorrectPlugin, onContactSupport, onMinimize, isMultiBandMode = false, dawType = null, lunaSumming = 'off', reaperSyncPin, reaperSyncEmail, isJsfxMode = false }) => {
+export const CritiqueCard: React.FC<CritiqueCardProps> = ({ critique, stems = [], theme, plugins, analogInstruments = [], analogHardware = [], audioBase64, audioUrl, geminiFileUri, mimeType, isSaved, onSave, onUpdateCritique, onReCritique, currentAudioInfo, onLogReceipt, onCorrectPlugin, onContactSupport, onMinimize, isMultiBandMode = false, dawType = null, lunaSumming = 'off', lunaTape = 'off', reaperSyncPin, reaperSyncEmail, isJsfxMode = false }) => {
   const { t, i18n } = useTranslation();
   const [specificHelpQuery, setSpecificHelpQuery] = useState('');
   const [isLoadingSpecificHelp, setIsLoadingSpecificHelp] = useState(false);
@@ -770,7 +771,8 @@ export const CritiqueCard: React.FC<CritiqueCardProps> = ({ critique, stems = []
         undefined, // 24 (referencePhysicalMetrics)
         undefined, // 25 (stemsPhysicalMetrics)
         dawType, // 26 (dawType)
-        lunaSumming // 27 (lunaSumming)
+        lunaSumming, // 27 (lunaSumming)
+        lunaTape // 28 (lunaTape)
       );
       const isWav = file.type.includes('audio/wav');
       if (onLogReceipt) onLogReceipt('Re-Critique Mix', isWav ? 25 : 10);

@@ -3762,7 +3762,10 @@ export const getMixCritique = async (
   starredPlugins: string[] = [],
   physicalMetrics?: { integratedLufs: number, truePeak: number, crestFactor: number, duration?: number },
   referencePhysicalMetrics?: { integratedLufs: number, truePeak: number, crestFactor: number, duration?: number },
-  stemsPhysicalMetrics?: Record<string, { integratedLufs: number, truePeak: number, crestFactor: number, duration?: number }>
+  stemsPhysicalMetrics?: Record<string, { integratedLufs: number, truePeak: number, crestFactor: number, duration?: number }>,
+  dawType: string | null = null,
+  lunaSumming: 'api' | 'neve' | 'off' = 'off',
+  lunaTape: 'oxide' | 'studer' | 'off' = 'off'
 ): Promise<any> => {
   const ai = getAI();
   const pluginListStr = plugins.map(p => {
