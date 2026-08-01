@@ -5042,14 +5042,11 @@ export const getAlbumMasteringGuide = async (
     }
   }
 
-  const model = ai.models.get({
-    model: "gemini-2.5-pro",
-    systemInstruction: "You are an elite, Grammy-winning mastering engineer. You output only valid JSON. Do not use markdown blocks for JSON.",
-  });
-
-  const response = await model.generateContent({
+  const response = await ai.models.generateContent({
+    model: "gemini-3-flash-preview",
     contents: parts,
     config: {
+        systemInstruction: "You are an elite, Grammy-winning mastering engineer. You output only valid JSON. Do not use markdown blocks for JSON.",
         responseMimeType: 'application/json',
         temperature: 0.2
     }
