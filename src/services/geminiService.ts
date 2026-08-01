@@ -3980,59 +3980,34 @@ export const getMixCritique = async (
 
 
     let prompt = `
-    You are an expert audio mastering engineer. 
-    The user has uploaded multiple full mixdowns of tracks intended for an album release.
-    Your goal is to analyze the differences between these tracks and provide a cohesive Album Mastering Guide.
+    You are an expert audio engineer and producer.
+    CRITICAL RULE FOR IMPROVEMENT: The end result MUST ALWAYS be a concrete improvement to the audio. You must apply proper gain staging and makeup gain on every step that involves compression, saturation, or equalization that reduces peak levels. NEVER reduce the overall volume unintentionally.
+    ${getLanguageInstruction(language)}
     
-    Here are the tracks provided:
-    ${stemsContext}
-    
-    User Context / Album Vibe: "${userContext}"
-    
-    You MUST provide an exhaustive, in-depth guide of what specific mastering plugins to add on EACH track's master bus so that they all sound good together like a fine-tuned album. Match the LUFS, dynamic range, and tonal balance.
-    
-    CRITICAL REQUIREMENTS:
-    1. You MUST include FabFilter Pro-Q 3 in EVERY SINGLE track's recommendedChain.
-    2. You MUST provide EXHAUSTIVE, deeply detailed parameters for EVERY SINGLE plugin suggested. Do not just suggest the plugin, tell them EXACTLY how to set every knob.
-    
+
     ${PRO_Q_3_LAYOUT_PROMPT}
+    ${JSFX_PRIORITY_SPEC_PROMPT}
+    ${GULLFOSS_SPEC_PROMPT}
+    ${OZONE_SPEC_PROMPT}
+    ${SONIBLE_SPEC_PROMPT}
+    ${RC20_SPEC_PROMPT}
+    ${ATR102_SPEC_PROMPT}
     ${GLOBAL_PARAMETER_STRICTNESS_PROMPT}
-    
-    ONLY use plugins from this list (the user owns these):
+
+    Analyze the attached audio file(s) and provide a detailed mix critique and action plan.
+    ${focusInstruction}
+
+    Only use mixing plugins from this list (for DAW processing):
     ${pluginListStr}
-    
-    Analog Hardware available:
-    ${hardwareListStr}
-    
+    ${hardwareListStr ? 'Analog Hardware available:\n' + hardwareListStr : ''}
     ${dawStr}
     ${starredStr}
-    
-    Respond with a JSON object exactly matching this interface:
-    {
-      "title": "Album Mastering Strategy",
-      "overallFeedback": "Your detailed analysis of the album's current cohesive state, the differences identified between the tracks, and the high-level strategy to unify them.",
-      "strengths": ["string"],
-      "weaknesses": ["string"],
-      "actionPlan": [
-        {
-          "targetStem": "Name of the Track (e.g., Track 1: name.wav)",
-          "issue": "What this specific track needs to match the album. Be highly detailed.",
-          "solution": "How to achieve this.",
-          "recommendedChain": [
-            {
-              "name": "Exact Plugin Name from list",
-              "purpose": "Why use this on this track",
-              "deepDive": [
-                {
-                  "parameter": "Exact parameter name",
-                  "value": "Exact value (e.g., -2dB)"
-                }
-              ]
-            }
-          ]
-        }
-      ]
-    }
+    ${lunaIntegrationStr}
+    ${contextStr}
+    ${previousCritiqueStr}
+    ${referenceTrackStr}
+    ${physicalAnalysisDiktat}
+    ${jsfxDiktat}
   `;
   const schemaObject = {
     type: "OBJECT",
@@ -5011,7 +4986,7 @@ export const getAlbumMasteringGuide = async (
   dawType: string | null = null,
   lunaSumming: string = 'off',
   lunaTape: string = 'off'
-): Promise<MixCritique> => {
+): Promise<any> => {
   const ai = getAI();
     const isStudioOne = dawType?.toLowerCase().includes('studio one');
   const filteredPlugins = plugins.filter(p => {
@@ -5029,7 +5004,7 @@ export const getAlbumMasteringGuide = async (
   let hardwareListStr = [...analogInstruments, ...analogHardware].map(h => h.name).join('\n');
 
   const dawStr = dawType ? `\nThe user is using ${dawType} as their DAW. Include specific instructions or tips for ${dawType} where relevant.` : '';
-  const starredStr = starredPlugins.length > 0 ? `\nCRITICAL: The user has STARRED (favorited) the following plugins. You ABSOLUTELY MUST prioritize using these plugins in EVERY SINGLE track's mastering chain:\n${starredPlugins.join(', ')}` : '';
+  const starredStr = starredPlugins.length > 0 ? `\nCRITICAL MANDATORY INSTRUCTION: The user has STARRED (favorited) the following plugins:\n${starredPlugins.join(', ')}\nYou ABSOLUTELY MUST include these starred plugins in EVERY SINGLE track's recommended chain. This is a non-negotiable hard requirement.` : '';
 
   let stemsContext = uploadedStems.map((stem, index) => {
     const metrics = stemsPhysicalMetrics?.[stem.id];
@@ -5050,8 +5025,8 @@ export const getAlbumMasteringGuide = async (
     You MUST provide an exhaustive, in-depth guide of what specific mastering plugins to add on EACH track's master bus so that they all sound good together like a fine-tuned album. Match the LUFS, dynamic range, and tonal balance.
     
     CRITICAL REQUIREMENTS:
-    1. You MUST include FabFilter Pro-Q 3 in EVERY SINGLE track's recommendedChain.
-    2. You MUST provide EXHAUSTIVE, deeply detailed parameters for EVERY SINGLE plugin suggested. Do not just suggest the plugin, tell them EXACTLY how to set every knob.
+    1. You MUST include FabFilter Pro-Q 3 in EVERY SINGLE track's recommendedChain. For Pro-Q 3, there MUST be exactly 6 adjustments and at least one dynamic EQ change.
+    2. You MUST provide EXHAUSTIVE, deeply detailed parameters for EVERY SINGLE plugin suggested. Do not just suggest the plugin, tell them EXACTLY how to set every single knob, switch, and fader.
     
     ${PRO_Q_3_LAYOUT_PROMPT}
     ${GLOBAL_PARAMETER_STRICTNESS_PROMPT}
@@ -5109,37 +5084,37 @@ export const getAlbumMasteringGuide = async (
   }
 
   const schema = {
-    type: 6, // Type.OBJECT
+    type: Type.OBJECT,
     properties: {
-      title: { type: 1 }, // Type.STRING
-      overallFeedback: { type: 1 },
-      strengths: { type: 4, items: { type: 1 } }, // Type.ARRAY
-      weaknesses: { type: 4, items: { type: 1 } },
+      title: { type: Type.STRING },
+      overallFeedback: { type: Type.STRING },
+      strengths: { type: Type.ARRAY, items: { type: Type.STRING } },
+      weaknesses: { type: Type.ARRAY, items: { type: Type.STRING } },
       actionPlan: {
-        type: 4,
+        type: Type.ARRAY,
         description: "CRITICAL: You MUST generate EXACTLY " + uploadedStems.length + " items in this array, one for each uploaded stem.",
         items: {
-          type: 6,
+          type: Type.OBJECT,
           properties: {
-            targetStem: { type: 1 },
-            issue: { type: 1 },
-            solution: { type: 1 },
+            targetStem: { type: Type.STRING },
+            issue: { type: Type.STRING },
+            solution: { type: Type.STRING },
             recommendedChain: {
-              type: 4,
+              type: Type.ARRAY,
               description: "CRITICAL: You MUST include FabFilter Pro-Q 3 in EVERY SINGLE track's recommendedChain.",
               items: {
-                type: 6,
+                type: Type.OBJECT,
                 properties: {
-                  name: { type: 1 },
-                  purpose: { type: 1 },
+                  name: { type: Type.STRING },
+                  purpose: { type: Type.STRING },
                   deepDive: {
-                    type: 4,
+                    type: Type.ARRAY,
                     description: "CRITICAL: You MUST provide EXHAUSTIVE, deeply detailed parameters. Do not just suggest the plugin, tell them EXACTLY how to set every single knob. For Pro-Q 3, there MUST be exactly 6 items.",
                     items: {
-                      type: 6,
+                      type: Type.OBJECT,
                       properties: {
-                        parameter: { type: 1 },
-                        value: { type: 1 }
+                        parameter: { type: Type.STRING },
+                        value: { type: Type.STRING }
                       },
                       required: ["parameter", "value"]
                     }
