@@ -1114,6 +1114,7 @@ const GLOBAL_PARAMETER_STRICTNESS_PROMPT = `
     CRITICAL - STRICT PARAMETER REALISM, UNITS, & O'CLOCK POSITIONING:
     1. ZERO HALLUCINATION (FIREABLE OFFENSE): You MUST ONLY suggest parameters that actually exist on the real-world interface of the specified plugin as documented in its official manual. NEVER invent, guess, hallucinate, or inject parameters that do not exist on that plugin.
     2. STRICT UNIT ACCURACY: You MUST use the exact, correct unit of measurement for every parameter (e.g. Hz, kHz, dB, ms, %, etc.).
+    - CRITICAL LURSSEN RULE: For "IK Multimedia - Lurssen Mastering Console", the "Push" parameter is measured in PERCENT (%) from 0% to 200%, NOT IN dB. If you suggest Push, NEVER use dB (e.g., say "110%", not "1.2dB").
     3. REAPER JSFX MASTER RESEARCH PROFILES (USE FOR COCKOS JSFX RECOMMENDATIONS):
        - "JS: 1175 Compressor" (1175 Compressor - Stock Cockos REAPER JSFX):
          - S1 (Threshold (dB)): -60 to 0 dB (Default: 0).
