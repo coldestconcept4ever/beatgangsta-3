@@ -4,7 +4,7 @@ import JSZip from 'jszip';
 import { VSTPlugin, BeatRecipe, AppTheme, User, SavedRecipe, HistoryItem, Folder, KnifeStyle, PendantStyle, ChainStyle, SharedSession, DuragStyle, Hardware, FullSaveFile, GrillStyle, MixCritique, SavedCritique, TutorialProgress, ReceiptItem } from './types';
 import { VIBE_EXAMPLES, SONG_EXAMPLES, BANDLAB_PLUGINS_LATEST, BANDLAB_FREE_PLUGINS_LATEST } from './constants';
 import { ARTIST_EXAMPLES } from './constants/artists';
-import { getBeatRecommendations, getCustomBeatRecommendations, getSongBeatRecommendations, getAudioBeatRecommendations, enrichPluginLibrary, validateApiKey, detectAPITier, replicateRecipeWithUserGear, getMixCritique, researchPluginParameters, verifyAndCorrectPlugin, ThinkingLevel } from './services/geminiService';
+import { getBeatRecommendations, getCustomBeatRecommendations, getSongBeatRecommendations, getAudioBeatRecommendations, enrichPluginLibrary, validateApiKey, detectAPITier, replicateRecipeWithUserGear, getMixCritique, researchPluginParameters, verifyAndCorrectPlugin, ThinkingLevel, getAlbumMasteringGuide } from './services/geminiService';
 import { processAudioForAnalysis } from './utils/audioUtils';
 import { uploadFileChunked, deleteFileFromDrive } from './services/uploadService';
 import { convertWavToMp3 } from './lib/audioConverter';
@@ -719,7 +719,7 @@ const App: React.FC = () => {
   const [recipes, setRecipes] = useState<BeatRecipe[]>([]);
   const [critiques, setCritiques] = useState<MixCritique[]>([]);
   const [latestErrorLog, setLatestErrorLog] = useState<string | null>(null);
-  const [audioMode, setAudioMode] = useState<'recipe' | 'critique'>('critique');
+  const [audioMode, setAudioMode] = useState<'recipe' | 'critique' | 'album'>('critique');
   const [critiqueContext, setCritiqueContext] = useState<string>('');
   const [referenceTrack, setReferenceTrack] = useState<string>('');
   const [referenceTrackFile, setReferenceTrackFile] = useState<File | null>(null);
@@ -5348,7 +5348,9 @@ The AI was unable to verify these parameters. Please investigate.`;
       const pluginToResearch: VSTPlugin = {
         name: manualPluginName.trim(),
         vendor: manualPluginBrand.trim(),
-        type: 'vst'
+        type: 'vst',
+        version: '',
+        lastModified: 0
       };
       // Use the geminiService function to get category & parameters
       const researchedPlugin = await researchPluginParameters(pluginToResearch, i18n.language);
@@ -5370,7 +5372,7 @@ The AI was unable to verify these parameters. Please investigate.`;
         if (prev.some(p => p.name === manualPluginName.trim() && p.vendor === manualPluginBrand.trim())) {
           return prev;
         }
-        return [...prev, { name: manualPluginName.trim(), vendor: manualPluginBrand.trim(), type: 'vst' }];
+        return [...prev, { name: manualPluginName.trim(), vendor: manualPluginBrand.trim(), type: 'vst', version: '', lastModified: 0 }];
       });
       setManualPluginName('');
       setManualPluginBrand('');
@@ -5725,36 +5727,53 @@ Provide the exact JSFX plugin name and required sliders/parameters.`;
         console.warn("Failed to compute combined stems physical metrics:", err);
       }
 
-      const critique = await getMixCritique(
-        activePlugins, 
-        null, 
-        null, 
-        'audio/mpeg', 
-        isGangstaVox, 
-        true, 
-        fullContext, 
-        null, 
-        finalReferenceTrack, 
-        referenceAudioBase64, 
-        null, 
-        referenceGeminiFileUri, 
-        i18n.language, 
-        uploadedStems, 
-        analogInstruments, 
-        analogHardware, 
-        isBusMode, 
-        isMultiBandMode, 
-        isMasterMode, 
-        isJsfxMode, 
-        installedJsfxPacks, 
-        starredPlugins,
-        combinedPhysicalMetrics, // physicalMetrics representing the cumulative mix sum!
-        referencePhysicalMetrics,
-        stemsPhysicalMetrics,
-        dawType,
-        lunaSumming,
-        lunaTape
-      );
+            let critique;
+      if (audioMode === 'album') {
+        critique = await getAlbumMasteringGuide(
+          activePlugins,
+          fullContext,
+          i18n.language,
+          uploadedStems,
+          analogInstruments,
+          analogHardware,
+          starredPlugins,
+          stemsPhysicalMetrics as any,
+          combinedPhysicalMetrics as any,
+          dawType,
+          lunaSumming,
+          lunaTape
+        );
+      } else {
+        critique = await getMixCritique(
+          activePlugins, 
+          null, 
+          null, 
+          'audio/mpeg', 
+          isGangstaVox, 
+          true, 
+          fullContext, 
+          null, 
+          finalReferenceTrack, 
+          referenceAudioBase64, 
+          null, 
+          referenceGeminiFileUri, 
+          i18n.language, 
+          uploadedStems, 
+          analogInstruments, 
+          analogHardware, 
+          isBusMode, 
+          isMultiBandMode, 
+          isMasterMode, 
+          isJsfxMode, 
+          installedJsfxPacks, 
+          starredPlugins,
+          stemsPhysicalMetrics as any,
+          combinedPhysicalMetrics as any,
+          dawType,
+          lunaSumming,
+          lunaTape
+        );
+      }
       critique.id = Math.random().toString(36).substr(2, 9);
       critique.isMasterMode = isMasterMode;
       critique.isJsfxMode = isJsfxMode;
@@ -5764,7 +5783,7 @@ Provide the exact JSFX plugin name and required sliders/parameters.`;
       // Charge user for stems (base cost + per file + per MB)
       const totalSizeMB = activeStems.reduce((acc, stem) => acc + (stem.file?.size || 0), 0) / (1024 * 1024);
       const stemCost = 10 + (activeStems.length * 2) + Math.ceil(totalSizeMB * 0.5);
-      logReceipt('Stems Mix Critique', stemCost);
+      logReceipt(audioMode === 'album' ? 'Album Mastering Analysis' : 'Stems Mix Critique', stemCost);
 
       setCritiques([critique]);
       setAudioMode('critique');
@@ -8536,15 +8555,13 @@ Provide the exact JSFX plugin name and required sliders/parameters.`;
                      <span className="text-4xl text-glow-pulse">📎</span>
                   </div>
                   <h3 className={`text-[12px] font-black uppercase tracking-[0.2em] opacity-80 ${theme === 'coldest' || theme === 'chef-mode' ? 'text-slate-800' : 'text-white'}`}>
-                    {audioMode === 'recipe' 
-                      ? 'Generate recipe by uploading music files' 
-                      : 'Upload music files for suggested improvements'}
+                    {audioMode === 'recipe' ? 'Generate recipe by uploading music files' : audioMode === 'album' ? 'Upload album tracks for cohesive mastering' : 'Upload music files for suggested improvements'}
                   </h3>
                 </div>
 
                 <div className="flex justify-center mb-2">
                   <div className={`inline-flex rounded-full p-1 ${theme === 'coldest' ? 'bg-white/40' : 'bg-black/40'}`}>
-                    <button
+                                        <button
                       id="btn-audio-recipe"
                       onClick={() => setAudioMode('recipe')}
                       className={`px-6 py-2 rounded-full text-xs font-black uppercase tracking-widest transition-all ${
@@ -8566,6 +8583,17 @@ Provide the exact JSFX plugin name and required sliders/parameters.`;
                     >
                       <span>{t('mix_critique')}</span>
                     </button>
+                    <button
+                      id="btn-album-mastering"
+                      onClick={() => { setAudioMode('album'); setHasStems(true); }}
+                      className={`px-6 py-2 rounded-full text-xs font-black uppercase tracking-widest transition-all flex items-center gap-2 ${
+                        audioMode === 'album' 
+                          ? (theme === 'coldest' ? 'bg-emerald-500 text-white shadow-md' : 'bg-emerald-500 text-white shadow-md')
+                          : (theme === 'coldest' ? 'text-slate-600 hover:text-slate-900' : 'text-white/60 hover:text-white')
+                      }`}
+                    >
+                      <span>Album Mastering</span>
+                    </button>
                   </div>
                 </div>
 
@@ -8582,7 +8610,7 @@ Provide the exact JSFX plugin name and required sliders/parameters.`;
                           <div className={`absolute top-0.5 left-0.5 w-4 h-4 rounded-full bg-white transition-transform ${hasStems ? 'translate-x-5' : 'translate-x-0'}`} />
                         </button>
                         
-                        <span className={`text-[10px] font-black uppercase tracking-widest transition-colors ${hasStems ? (theme === 'coldest' ? 'text-slate-900' : 'text-white') : (theme === 'coldest' ? 'text-slate-500' : 'text-white/50')}`}>{t('i_have_stems')}</span>
+                        <span className={`text-[10px] font-black uppercase tracking-widest transition-colors ${(hasStems || audioMode === 'album') ? (theme === 'coldest' ? 'text-slate-900' : 'text-white') : (theme === 'coldest' ? 'text-slate-500' : 'text-white/50')}`}>{t('i_have_stems')}</span>
                       </div>
 
                       <div className={`inline-flex items-center gap-3 rounded-full px-4 py-2 ${theme === 'coldest' ? 'bg-white/40' : 'bg-black/40'}`}>
@@ -8911,14 +8939,12 @@ Provide the exact JSFX plugin name and required sliders/parameters.`;
 
                 <div className="flex flex-col gap-2 mb-2">
                   <label className={`text-[10px] font-black uppercase tracking-widest opacity-60 ${theme === 'coldest' ? 'text-slate-900' : 'text-white'}`}>
-                    {audioMode === 'critique' ? t('critique_context') : t('vibe_context')}
+                    {audioMode === 'album' ? 'Album Theme / Context' : (audioMode === 'critique' ? t('critique_context') : t('vibe_context'))}
                   </label>
                   <textarea
                     value={critiqueContext}
                     onChange={(e) => setCritiqueContext(e.target.value)}
-                    placeholder={audioMode === 'critique' 
-                      ? t('critique_context_placeholder', { artist: placeholderArtist })
-                      : t('vibe_context_placeholder', { artist: placeholderArtist })}
+                    placeholder={audioMode === 'album' ? 'Describe the general vibe of the album...' : (audioMode === 'critique' ? t('critique_context_placeholder', { artist: placeholderArtist }) : t('vibe_context_placeholder', { artist: placeholderArtist }))}
                     className={`w-full p-4 rounded-2xl text-xs font-medium transition-all outline-none border-2 ${
                       theme === 'coldest' 
                         ? 'bg-white/60 border-purple-100 focus:border-purple-400 text-slate-900 placeholder:text-slate-400' 
@@ -8993,10 +9019,10 @@ Provide the exact JSFX plugin name and required sliders/parameters.`;
                   </div>
                 )}
                 
-                {hasStems ? (
+                {(hasStems || audioMode === 'album') ? (
                   <div className="flex flex-col gap-4">
                     <div className="flex justify-between items-center">
-                      <h3 className={`text-sm font-black uppercase tracking-widest ${theme === 'coldest' ? 'text-slate-900' : 'text-white'}`}>Stems ({stems.filter(s => s.file).length}/{stemsLimit})</h3>
+                      <h3 className={`text-sm font-black uppercase tracking-widest ${theme === 'coldest' ? 'text-slate-900' : 'text-white'}`}>{audioMode === 'album' ? 'Album Tracks' : 'Stems'} ({stems.filter(s => s.file).length}/{stemsLimit})</h3>
                     </div>
 
                     {((dawType === 'REAPER' || dawType === 'Reaper')) ? (
@@ -9300,7 +9326,7 @@ Provide the exact JSFX plugin name and required sliders/parameters.`;
                           <Upload className="w-6 h-6 text-purple-500 animate-pulse" />
                         </div>
                         <div className={`text-xs font-black uppercase tracking-widest ${theme === 'coldest' ? 'text-slate-800' : 'text-white'}`}>
-                          Drag & Drop All Your Stems Here
+                          {audioMode === 'album' ? 'Drag & Drop All Your Album Tracks Here' : 'Drag & Drop All Your Stems Here'}
                         </div>
                         <div className={`text-[10px] font-bold opacity-60 max-w-sm ${theme === 'coldest' ? 'text-slate-500' : 'text-white/70'}`}>
                           Drop multiple files to populate slots at once, or <span className="text-purple-500 underline">click to browse</span>. Max {stemsLimit} slots.
@@ -9662,7 +9688,7 @@ Provide the exact JSFX plugin name and required sliders/parameters.`;
               </div>
               )}
 
-              {!isVerified && hasStems && (
+              {!isVerified && (hasStems || audioMode === 'album') && (
                 <div className="flex justify-center mt-4">
                   <div className="flex items-center justify-center overflow-visible" style={{ width: '260px', height: '52px' }}>
                     <div className="cf-turnstile origin-center scale-[0.8]"></div>

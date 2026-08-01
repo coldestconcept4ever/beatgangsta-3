@@ -3786,6 +3786,19 @@ export const getMixCritique = async (
       : '';
     return `${h.vendor} - ${h.name}${pedalsStr}${ampsStr}`;
   }).join('\n');
+
+  let lunaIntegrationStr = "";
+  if (dawType && dawType.toUpperCase() === 'LUNA') {
+    lunaIntegrationStr += `\n\n==================================================\n🚨🚨 CRITICAL LUNA ARCHITECTURE DIRECTIVE 🚨🚨\nThe user is mixing in Universal Audio LUNA. `;
+    if (lunaSumming && lunaSumming !== 'off') {
+       lunaIntegrationStr += `LUNA has built-in analog summing (${lunaSumming.toUpperCase()}) natively integrated into its busses and master channel. You MUST suggest "Headroom" (HR) and "Trim" values for the ${lunaSumming.toUpperCase()} summing on any bus or master channels in your steps. `;
+    }
+    if (lunaTape && lunaTape !== 'off') {
+       lunaIntegrationStr += `LUNA has a dedicated Tape Extension slot (${lunaTape.toUpperCase()}) natively integrated into EVERY audio track and bus. This is NOT a standard insert plugin. When 'lunaTape' is toggled ON to ${lunaTape.toUpperCase()}, EVERY SINGLE track or stem you critique MUST explicitly include the ${lunaTape.toUpperCase()} Tape Extension settings (specifically the "Saturation" parameter, often in dB or o'clock values) as the VERY FIRST item in the 'recommendedChain'. Do not ignore this tape machine setting. Name it "${lunaTape.toUpperCase()} Tape Extension" and provide its specific Saturation parameter. `;
+    }
+    lunaIntegrationStr += `\n==================================================\n`;
+  }
+
   let focusInstruction = "";
   if (isMasterMode) {
     if (hasStems && uploadedStems && uploadedStems.length > 0) {
@@ -3945,6 +3958,7 @@ export const getMixCritique = async (
     ${hasApollo ? `
     CRITICAL: The user has an ${apolloInst} interface. When suggesting plugins for the action plan, you MUST ALWAYS prioritize UAD (Universal Audio) plugins from their library if they are suitable.
     ` : ''}
+    ${lunaIntegrationStr}
     CRITICAL: If a hardware instrument has connected pedals, you MUST provide specific settings for those pedals in your advice. Assume the pedal is connected directly to the instrument. Your research and logic MUST reflect the interaction between the specific instrument and the specific pedal(s) connected to it.
     ${audioUrl ? `The main audio file is available at this URL: ${audioUrl}. Please fetch and analyze it.` : "The main audio file is provided as inline data."}
     ${referenceAudioBase64 ? "The second inline audio file is the reference track. Please analyze both and compare them." : ""}
@@ -4934,5 +4948,126 @@ export const regenerateTrackingChain = async (
   } catch (error) {
     console.error("Error regenerating tracking chain:", error);
     throw error;
+  }
+};
+
+export const getAlbumMasteringGuide = async (
+  plugins: VSTPlugin[],
+  userContext: string = "",
+  language: string = 'en',
+  uploadedStems: any[] = [],
+  analogInstruments: Hardware[] = [],
+  analogHardware: Hardware[] = [],
+  starredPlugins: string[] = [],
+  stemsPhysicalMetrics?: Record<string, { integratedLufs: number, truePeak: number, crestFactor: number, duration?: number }>,
+  combinedPhysicalMetrics?: { integratedLufs: number, truePeak: number, crestFactor: number, duration?: number },
+  dawType: string | null = null,
+  lunaSumming: string = 'off',
+  lunaTape: string = 'off'
+): Promise<MixCritique> => {
+  const ai = getAI();
+  const limitedPlugins = plugins.slice(0, 50);
+  const pluginListStr = limitedPlugins.map(p => `${p.vendor} - ${p.name} (${p.type}) [Parameters: ${p.parameters?.join(', ') || 'N/A'}]`).join('\n');
+
+  let hardwareListStr = [...analogInstruments, ...analogHardware].map(h => h.name).join('\n');
+
+  const dawStr = dawType ? `\nThe user is using ${dawType} as their DAW. Include specific instructions or tips for ${dawType} where relevant.` : '';
+
+  let stemsContext = uploadedStems.map((stem, index) => {
+    const metrics = stemsPhysicalMetrics?.[stem.id];
+    let metricsStr = metrics ? `(LUFS: ${metrics.integratedLufs.toFixed(1)}, True Peak: ${metrics.truePeak.toFixed(1)}dB)` : '';
+    return `Track ${index + 1}: ${stem.file?.name || 'Unknown'} ${metricsStr}`;
+  }).join('\n');
+
+  let prompt = `
+    You are an expert audio mastering engineer. 
+    The user has uploaded multiple full mixdowns of tracks intended for an album release.
+    Your goal is to analyze the differences between these tracks and provide a cohesive Album Mastering Guide.
+    
+    Here are the tracks provided:
+    ${stemsContext}
+    
+    User Context / Album Vibe: "${userContext}"
+    
+    You MUST provide a guide of what specific mastering plugins to add on EACH track's master bus so that they all sound good together like a fine-tuned album. Match the LUFS, dynamic range, and tonal balance.
+    
+    ONLY use plugins from this list (the user owns these):
+    ${pluginListStr}
+    
+    Analog Hardware available:
+    ${hardwareListStr}
+    
+    ${dawStr}
+    
+    Respond with a JSON object exactly matching this interface:
+    {
+      "title": "Album Mastering Strategy",
+      "overallFeedback": "Your detailed analysis of the album's current cohesive state, the differences identified between the tracks, and the high-level strategy to unify them.",
+      "strengths": ["string"],
+      "weaknesses": ["string"],
+      "actionPlan": [
+        {
+          "targetStem": "Name of the Track (e.g., Track 1: name.wav)",
+          "issue": "What this specific track needs to match the album.",
+          "solution": "How to achieve this.",
+          "recommendedChain": [
+            {
+              "name": "Exact Plugin Name from list",
+              "reasoning": "Why use this on this track",
+              "deepDive": [
+                {
+                  "parameter": "Exact parameter name",
+                  "value": "Exact value (e.g., -2dB)"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  `;
+
+  let parts: any[] = [{ text: prompt }];
+
+  // Upload each stem file to Gemini and add to parts
+  for (const stem of uploadedStems) {
+    if (stem.file && stem.geminiFileUri) {
+      parts.push({
+        fileData: {
+          mimeType: stem.mimeType || 'audio/mpeg',
+          fileUri: stem.geminiFileUri
+        }
+      });
+      parts.push({ text: `Audio for ${stem.file.name}` });
+    }
+  }
+
+  const model = ai.models.get({
+    model: "gemini-2.5-pro",
+    systemInstruction: "You are an elite, Grammy-winning mastering engineer. You output only valid JSON. Do not use markdown blocks for JSON.",
+  });
+
+  const response = await model.generateContent({
+    contents: parts,
+    config: {
+        responseMimeType: 'application/json',
+        temperature: 0.2
+    }
+  });
+
+  const text = response.text || "";
+  try {
+    const data = JSON.parse(text);
+    return {
+      id: Date.now().toString(),
+      title: data.title || "Album Mastering Guide",
+      overallFeedback: data.overallFeedback || "",
+      strengths: data.strengths || [],
+      weaknesses: data.weaknesses || [],
+      actionPlan: data.actionPlan || []
+    };
+  } catch (err) {
+    console.error("Failed to parse Album Mastering JSON:", err);
+    throw new Error("Failed to generate album mastering guide. Please try again.");
   }
 };
