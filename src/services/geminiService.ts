@@ -2849,7 +2849,18 @@ export const generateStructuralBlueprint = async (searchQuery: string, language:
 };
 export const getBeatRecommendations = async (plugins: VSTPlugin[], analogInstruments: Hardware[] = [], analogHardware: Hardware[] = [], drumKits: Hardware[] = [], excludeAnalog: boolean = false, dawType: string | null = null, starredPlugins: string[] = [], isGangstaVox: boolean = false, language: string = 'en', isMultiBandMode: boolean = false, bpm?: string, context?: string, isJsfxMode: boolean = false, installedJsfxPacks: string[] = [], xpandPresets?: XpandPreset[]): Promise<RecommendationResponse> => {
   const ai = getAI();
-  const pluginListStr = plugins.map(p => {
+      const isStudioOne = dawType?.toLowerCase().includes('studio one');
+  const filteredPlugins = plugins.filter(p => {
+    if (!isStudioOne && (p.vendor.toLowerCase().includes('presonus') || p.name.toLowerCase().includes('presonus'))) {
+      return false;
+    }
+    return true;
+  });
+  const limitedPlugins = [
+    ...filteredPlugins.filter(p => starredPlugins.includes(p.name)),
+    ...filteredPlugins.filter(p => !starredPlugins.includes(p.name))
+  ].slice(0, 50);
+  const pluginListStr = limitedPlugins.map(p => {
     let str = `${p.vendor} - ${p.name} (${p.type})`;
     if (p.parameters && p.parameters.length > 0) {
       str += ` [Parameters: ${p.parameters.join(', ')}]`;
@@ -2858,7 +2869,7 @@ export const getBeatRecommendations = async (plugins: VSTPlugin[], analogInstrum
   }).join('\n');
   const analogStr = !excludeAnalog ? generateAnalogStr(analogInstruments, analogHardware, drumKits) : '';
   const dawStr = dawType ? `\nThe user is using ${dawType} as their DAW. Include specific instructions or tips for ${dawType} where relevant in the guides or recipes.` : '';
-  const starredStr = starredPlugins.length > 0 ? `\nCRITICAL: The user has STARRED (favorited) the following plugins. You MUST prioritize using these plugins in your recipes whenever possible:\n${starredPlugins.join(', ')}` : '';
+  const starredStr = starredPlugins.length > 0 ? `\nCRITICAL: The user has STARRED (favorited) the following plugins. You ABSOLUTELY MUST prioritize using these plugins in EVERY SINGLE track/step whenever possible:\n${starredPlugins.join(', ')}` : '';
   const hasSphereMic = analogHardware.some(h => ['Sphere DLX', 'Sphere LX', 'L22'].includes(h.name) || h.name.toLowerCase() === 'l22' || h.name.toLowerCase().includes('townsend'));
   const sphereMicStr = hasSphereMic ? `\nCRITICAL: The user owns a Universal Audio Sphere (DLX/LX) or Townsend Labs L22 microphone. If the recipe involves a vocal tracking chain, you MUST assign the 'UAD Sphere Mic Collection', 'Ocean Way Mic Collection', or 'Bill Putnam Mic Collection' plugin as the VERY FIRST insert plugin on the vocal channel tracking chain. You MUST specifically select a mic model inside it based on the vibe searched. After the mic collection plugin, you can add up to 3 more plugins.` : '';
   const languageInstruction = getLanguageInstruction(language);
@@ -3029,7 +3040,18 @@ export const getBeatRecommendations = async (plugins: VSTPlugin[], analogInstrum
 };
 export const getCustomBeatRecommendations = async (plugins: VSTPlugin[], query: string, analogInstruments: Hardware[] = [], analogHardware: Hardware[] = [], drumKits: Hardware[] = [], excludeAnalog: boolean = false, dawType: string | null = null, starredPlugins: string[] = [], isGangstaVox: boolean = false, language: string = 'en', isMultiBandMode: boolean = false, bpm?: string, context?: string, isJsfxMode: boolean = false, installedJsfxPacks: string[] = [], xpandPresets?: XpandPreset[]): Promise<RecommendationResponse> => {
   const ai = getAI();
-  const pluginListStr = plugins.map(p => {
+      const isStudioOne = dawType?.toLowerCase().includes('studio one');
+  const filteredPlugins = plugins.filter(p => {
+    if (!isStudioOne && (p.vendor.toLowerCase().includes('presonus') || p.name.toLowerCase().includes('presonus'))) {
+      return false;
+    }
+    return true;
+  });
+  const limitedPlugins = [
+    ...filteredPlugins.filter(p => starredPlugins.includes(p.name)),
+    ...filteredPlugins.filter(p => !starredPlugins.includes(p.name))
+  ].slice(0, 50);
+  const pluginListStr = limitedPlugins.map(p => {
     let str = `${p.vendor} - ${p.name} (${p.type})`;
     if (p.parameters && p.parameters.length > 0) {
       str += ` [Parameters: ${p.parameters.join(', ')}]`;
@@ -3038,7 +3060,7 @@ export const getCustomBeatRecommendations = async (plugins: VSTPlugin[], query: 
   }).join('\n');
   const analogStr = !excludeAnalog ? generateAnalogStr(analogInstruments, analogHardware, drumKits) : '';
   const dawStr = dawType ? `\nThe user is using ${dawType} as their DAW. Include specific instructions or tips for ${dawType} where relevant in the guides or recipes.` : '';
-  const starredStr = starredPlugins.length > 0 ? `\nCRITICAL: The user has STARRED (favorited) the following plugins. You MUST prioritize using these plugins in your recipes whenever possible:\n${starredPlugins.join(', ')}` : '';
+  const starredStr = starredPlugins.length > 0 ? `\nCRITICAL: The user has STARRED (favorited) the following plugins. You ABSOLUTELY MUST prioritize using these plugins in EVERY SINGLE track/step whenever possible:\n${starredPlugins.join(', ')}` : '';
   const hasSphereMic = analogHardware.some(h => ['Sphere DLX', 'Sphere LX', 'L22'].includes(h.name) || h.name.toLowerCase() === 'l22' || h.name.toLowerCase().includes('townsend'));
   const sphereMicStr = hasSphereMic ? `\nCRITICAL: The user owns a Universal Audio Sphere (DLX/LX) or Townsend Labs L22 microphone. If the recipe involves a vocal tracking chain, you MUST assign the 'UAD Sphere Mic Collection', 'Ocean Way Mic Collection', or 'Bill Putnam Mic Collection' plugin as the VERY FIRST insert plugin on the vocal channel tracking chain. You MUST specifically select a mic model inside it based on the vibe searched. After the mic collection plugin, you can add up to 3 more plugins.` : '';
   const isMarkRuhedra = query.toLowerCase().includes("mark ruhedra");
@@ -3213,7 +3235,18 @@ export const getCustomBeatRecommendations = async (plugins: VSTPlugin[], query: 
 export const getSongBeatRecommendations = async (plugins: VSTPlugin[], songQuery: string, analogInstruments: Hardware[] = [], analogHardware: Hardware[] = [], drumKits: Hardware[] = [], excludeAnalog: boolean = false, dawType: string | null = null, starredPlugins: string[] = [], isGangstaVox: boolean = false, language: string = 'en', isMultiBandMode: boolean = false, bpm?: string, context?: string, isJsfxMode: boolean = false, installedJsfxPacks: string[] = [], xpandPresets?: XpandPreset[]): Promise<RecommendationResponse> => {
   const blueprint = await generateStructuralBlueprint(songQuery, language);
   const ai = getAI();
-  const pluginListStr = plugins.map(p => {
+      const isStudioOne = dawType?.toLowerCase().includes('studio one');
+  const filteredPlugins = plugins.filter(p => {
+    if (!isStudioOne && (p.vendor.toLowerCase().includes('presonus') || p.name.toLowerCase().includes('presonus'))) {
+      return false;
+    }
+    return true;
+  });
+  const limitedPlugins = [
+    ...filteredPlugins.filter(p => starredPlugins.includes(p.name)),
+    ...filteredPlugins.filter(p => !starredPlugins.includes(p.name))
+  ].slice(0, 50);
+  const pluginListStr = limitedPlugins.map(p => {
     let str = `${p.vendor} - ${p.name} (${p.type})`;
     if (p.parameters && p.parameters.length > 0) {
       str += ` [Parameters: ${p.parameters.join(', ')}]`;
@@ -3222,7 +3255,7 @@ export const getSongBeatRecommendations = async (plugins: VSTPlugin[], songQuery
   }).join('\n');
   const analogStr = !excludeAnalog ? generateAnalogStr(analogInstruments, analogHardware, drumKits) : '';
   const dawStr = dawType ? `\nThe user is using ${dawType} as their DAW. Include specific instructions or tips for ${dawType} where relevant in the guides or recipes.` : '';
-  const starredStr = starredPlugins.length > 0 ? `\nCRITICAL: The user has STARRED (favorited) the following plugins. You MUST prioritize using these plugins in your recipes whenever possible:\n${starredPlugins.join(', ')}` : '';
+  const starredStr = starredPlugins.length > 0 ? `\nCRITICAL: The user has STARRED (favorited) the following plugins. You ABSOLUTELY MUST prioritize using these plugins in EVERY SINGLE track/step whenever possible:\n${starredPlugins.join(', ')}` : '';
   const hasSphereMic = analogHardware.some(h => ['Sphere DLX', 'Sphere LX', 'L22'].includes(h.name) || h.name.toLowerCase() === 'l22' || h.name.toLowerCase().includes('townsend'));
   const sphereMicStr = hasSphereMic ? `\nCRITICAL: The user owns a Universal Audio Sphere (DLX/LX) or Townsend Labs L22 microphone. If the recipe involves a vocal tracking chain, you MUST assign the 'UAD Sphere Mic Collection', 'Ocean Way Mic Collection', or 'Bill Putnam Mic Collection' plugin as the VERY FIRST insert plugin on the vocal channel tracking chain. You MUST specifically select a mic model inside it based on the vibe searched. After the mic collection plugin, you can add up to 3 more plugins.` : '';
   
@@ -3454,11 +3487,21 @@ export const generateContentViaBackend = async (model: string, prompt: string, c
 export const getAudioBeatRecommendations = async (plugins: VSTPlugin[], audioBase64: string | null, audioUrl: string | null, mimeType: string, analogInstruments: Hardware[] = [], analogHardware: Hardware[] = [], drumKits: Hardware[] = [], excludeAnalog: boolean = false, dawType: string | null = null, starredPlugins: string[] = [], isGangstaVox: boolean = false, userContext: string = "", geminiFileUri: string | null = null, language: string = 'en', isMultiBandMode: boolean = false, isJsfxMode: boolean = false, installedJsfxPacks: string[] = [], recreateBase64: string | null = null, recreateFileUri: string | null = null, recreateMimeType: string | null = null, xpandPresets?: XpandPreset[]): Promise<RecommendationResponse> => {
   const ai = getAI();
   // Limit plugin list to 50 most relevant to avoid context/complexity limits
-  const limitedPlugins = plugins.slice(0, 50);
+    const isStudioOne = dawType?.toLowerCase().includes('studio one');
+  const filteredPlugins = plugins.filter(p => {
+    if (!isStudioOne && (p.vendor.toLowerCase().includes('presonus') || p.name.toLowerCase().includes('presonus'))) {
+      return false;
+    }
+    return true;
+  });
+    const limitedPlugins = [
+    ...filteredPlugins.filter(p => starredPlugins.includes(p.name)),
+    ...filteredPlugins.filter(p => !starredPlugins.includes(p.name))
+  ].slice(0, 50);
   const pluginListStr = limitedPlugins.map(p => `${p.vendor} - ${p.name} (${p.type})`).join('\n');
   const analogStr = !excludeAnalog ? generateAnalogStr(analogInstruments, analogHardware, drumKits) : '';
   const dawStr = dawType ? `\nThe user is using ${dawType} as their DAW. Include specific instructions or tips for ${dawType} where relevant in the guides or recipes.` : '';
-  const starredStr = starredPlugins.length > 0 ? `\nCRITICAL: The user has STARRED (favorited) the following plugins. You MUST prioritize using these plugins in your recipes whenever possible:\n${starredPlugins.join(', ')}` : '';
+  const starredStr = starredPlugins.length > 0 ? `\nCRITICAL: The user has STARRED (favorited) the following plugins. You ABSOLUTELY MUST prioritize using these plugins in EVERY SINGLE track/step whenever possible:\n${starredPlugins.join(', ')}` : '';
   const hasSphereMic = analogHardware.some(h => ['Sphere DLX', 'Sphere LX', 'L22'].includes(h.name) || h.name.toLowerCase() === 'l22' || h.name.toLowerCase().includes('townsend'));
   const sphereMicStr = hasSphereMic ? `\nCRITICAL: The user owns a Universal Audio Sphere (DLX/LX) or Townsend Labs L22 microphone. If the recipe involves a vocal tracking chain, you MUST assign the 'UAD Sphere Mic Collection', 'Ocean Way Mic Collection', or 'Bill Putnam Mic Collection' plugin as the VERY FIRST insert plugin on the vocal channel tracking chain. You MUST specifically select a mic model inside it based on the vibe searched. After the mic collection plugin, you can add up to 3 more plugins.` : '';
   const contextStr = userContext ? `\nCRITICAL USER CONTEXT: The user has provided the following information about their track and goals. You MUST incorporate this into your analysis and advice ALWAYS, IT IS THE MOST IMPORTANT INSTRUCTION. Your suggestions MUST explicitly align with and aim to achieve these exact goals, and NOT ruin the mix/volume:\n"${userContext}"\n` : "";
@@ -3768,7 +3811,18 @@ export const getMixCritique = async (
   lunaTape: 'oxide' | 'studer' | 'off' = 'off'
 ): Promise<any> => {
   const ai = getAI();
-  const pluginListStr = plugins.map(p => {
+      const isStudioOne = dawType?.toLowerCase().includes('studio one');
+  const filteredPlugins = plugins.filter(p => {
+    if (!isStudioOne && (p.vendor.toLowerCase().includes('presonus') || p.name.toLowerCase().includes('presonus'))) {
+      return false;
+    }
+    return true;
+  });
+  const limitedPlugins = [
+    ...filteredPlugins.filter(p => starredPlugins.includes(p.name)),
+    ...filteredPlugins.filter(p => !starredPlugins.includes(p.name))
+  ].slice(0, 50);
+  const pluginListStr = limitedPlugins.map(p => {
     let str = `${p.vendor} - ${p.name} (${p.type})`;
     if (p.parameters && p.parameters.length > 0) {
       str += ` [Parameters: ${p.parameters.join(', ')}]`;
@@ -3925,67 +3979,60 @@ export const getMixCritique = async (
   }
 
 
-  let prompt = `
-    You are an expert audio engineer and producer.
-    ${jsfxDiktat}
-    CRITICAL RULE FOR IMPROVEMENT: The end result MUST ALWAYS be a concrete improvement to the audio. You must apply proper gain staging and makeup gain on every step that involves compression, saturation, or equalization that reduces peak levels. NEVER reduce the overall volume unintentionally.
-    I am uploading an MP3 of a full song project that needs work.
-    ${focusInstruction}
-    ${contextStr}
-    ${previousCritiqueStr}
-    ${referenceTrackStr}
-    ${languageInstruction}
-    ${physicalAnalysisDiktat}
+    let prompt = `
+    You are an expert audio mastering engineer. 
+    The user has uploaded multiple full mixdowns of tracks intended for an album release.
+    Your goal is to analyze the differences between these tracks and provide a cohesive Album Mastering Guide.
+    
+    Here are the tracks provided:
+    ${stemsContext}
+    
+    User Context / Album Vibe: "${userContext}"
+    
+    You MUST provide an exhaustive, in-depth guide of what specific mastering plugins to add on EACH track's master bus so that they all sound good together like a fine-tuned album. Match the LUFS, dynamic range, and tonal balance.
+    
+    CRITICAL REQUIREMENTS:
+    1. You MUST include FabFilter Pro-Q 3 in EVERY SINGLE track's recommendedChain.
+    2. You MUST provide EXHAUSTIVE, deeply detailed parameters for EVERY SINGLE plugin suggested. Do not just suggest the plugin, tell them EXACTLY how to set every knob.
+    
     ${PRO_Q_3_LAYOUT_PROMPT}
-    ${JSFX_PRIORITY_SPEC_PROMPT}
-    ${GULLFOSS_SPEC_PROMPT}
-    ${OZONE_SPEC_PROMPT}
-    ${SONIBLE_SPEC_PROMPT}
-    ${RC20_SPEC_PROMPT}
-    ${ATR102_SPEC_PROMPT}
     ${GLOBAL_PARAMETER_STRICTNESS_PROMPT}
-    ${LYRIC_AWARE_DELAY_AUTOMATION_PROMPT}
-    ${VOCAL_MATCHING_AND_COHESION_PROMPT}
-    ${ADLIB_PROCESSING_PROTOCOL_PROMPT}
-    ${BACKING_VOCAL_PROCESSING_PROTOCOL_PROMPT}
-    ${BEAT_INSTRUMENTAL_PROCESSING_PROTOCOL_PROMPT}
-    CRITICAL: If the user is asking about guitars, acoustic or electric, or if a stem appears to be a guitar, strongly consider recommending the use of a capo (e.g. on the 2nd to 5th fret) to achieve a brighter, more distinctive playing texture without breaking strings. Reference Johnny Marr, Jingle-Jangle styles, and The Smiths if it fits the genre.
-    Analyze the audio and provide a detailed mix critique. Since this is a full song, consider the dynamic changes, song structure (intro, verse, chorus, etc.), and how the mix evolves.
-    CRITICAL: You MUST ONLY recommend plugins that are present in this user-owned plugin list. You are STRICTLY FORBIDDEN from suggesting any plugin brand or model that the user does not own. If the list below is non-empty, use only EXACT names or clean substring matches found in the list. Do not recommend generic compressors or EQs (e.g. do not use "CLA-76", "1176", or "Pro-C 2" unless they appear below; instead, look through the list and recommend an actual compressor or EQ the user owns):
+    
+    ONLY use plugins from this list (the user owns these):
     ${pluginListStr}
-    The user also has the following hardware and instruments:
+    
+    Analog Hardware available:
     ${hardwareListStr}
-    ${hasApollo ? `
-    CRITICAL: The user has an ${apolloInst} interface. When suggesting plugins for the action plan, you MUST ALWAYS prioritize UAD (Universal Audio) plugins from their library if they are suitable.
-    ` : ''}
-    ${lunaIntegrationStr}
-    CRITICAL: If a hardware instrument has connected pedals, you MUST provide specific settings for those pedals in your advice. Assume the pedal is connected directly to the instrument. Your research and logic MUST reflect the interaction between the specific instrument and the specific pedal(s) connected to it.
-    ${audioUrl ? `The main audio file is available at this URL: ${audioUrl}. Please fetch and analyze it.` : "The main audio file is provided as inline data."}
-    ${referenceAudioBase64 ? "The second inline audio file is the reference track. Please analyze both and compare them." : ""}
-    Provide (CRITICAL: You MUST ALWAYS guarantee every single real parameter is provided exhaustively, even if it takes longer. You MUST ALWAYS perfectly align with the User Context string. You MUST ALWAYS ensure the resulting settings provide a concrete sonic improvement and NEVER reduce the overall volume unintentionally):
-    - 'title': A short title for this critique.
-    - 'overallFeedback': A detailed analysis summarizing the current state of the mix, the main areas for improvement, and the overall sonic character.
-    - 'strengths': An array of 4-6 specific things that sound good (e.g., specific frequency ranges, dynamic control, spatial imaging).
-    - 'weaknesses': An array of 4-6 specific issues that need fixing, categorized by their impact on the mix.
-    - 'deviationMetrics': (ONLY IF A REFERENCE TRACK IS PROVIDED): Generate 2-4 analytical deviation metrics comparing the mix analytically to the reference (e.g. Dynamic Range: 2dB narrower than reference, High-end Air: 15% darker).
-    - 'actionPlan': A comprehensive array of actionable steps to fix the issues. ${isMasterMode ? `CRITICAL: Since you are in MASTER mode, the action plan MUST focus exclusively on master bus fader / master fader processing elements. Provide 4 sequential mastering-chain steps to apply (e.g., Linear Phase EQ, Master Bus Saturation/Exciter, Vintage or Glue Compressor, Stereo Width/Imaging, and Final Brickwall Limiting/Maximizer). If stems are uploaded, explain stem leveling and routing in these steps, but target them for the collective mix ending on the Master Bus.
-    You MUST design and enforce the following three advanced mastering architecture features by default:
-    1. DUAL-STAGE MASTER LIMITER CHAIN:
-       - Instead of relying on a single limiter (which causes clipping/distortion on heavy transients), configure a two-stage master output chain:
-         * Stage A: Soft Clipper (JS: Saturation/Soft Clipper or equivalent third-party clipper like IK Multimedia Classic Clipper or FabFilter Pro-L 2 in clip mode) configured to catch and round off the fastest, heaviest transients (like kick and snare peaks) before they hit the limiter or compressor.
-         * Stage B: Peak Limiter (JS: LOSER/EventHorizon or JS: LOSER/MGA_JSLimiter or equivalent third-party limiter like FabFilter Pro-L 2 or Sonible smart:limit) to handle overall volume lifting smoothly and cleanly.
-    2. MULTI-BAND MASTER GLUE:
-       - Integrate a multi-band compressor (JS: Multi-Band Compressor or equivalent third-party like FabFilter Pro-MB or iZotope Ozone Dynamics) on the master output by default. Configure crossovers exactly as follows:
-         * Low Band (0 - 120Hz): Tight, fast compression to glue the kick drum and bass together.
-         * Mid Band (120Hz - 4kHz): Gentle, transparent, and musical compression to keep vocals and instruments forward, clear, and consistent.
-         * High Band (4kHz - 20kHz): Ultra-transparent, slow compression with low ratio to maintain open high-frequency "air" and brilliance without introducing harshness.
-    3. TRUE STEREO IMAGING AUTOMATION:
-       - Add a stereo enhancer/field processor (JS: LOSER/stereo_enhancer or JS: Auto-Wideness or equivalent third-party like iZotope Ozone Imager or Brainworx bx_control) to the master bus templates. Instruct and automate the width dynamically to make verses/intros slightly narrower (e.g., 90-95% width) and widen the chorus/drops by 5–10% (e.g., 105-115% width), creating a wide, explosive sense of dynamic energy that static mastering tools cannot replicate.
-    ` : (hasStems && uploadedStems && uploadedStems.length > 0 ? (isMultiBandMode ? `CRITICAL: Because the user uploaded ${uploadedStems.length} stems, you MUST provide EXACTLY one step per stem. For EACH stem's step, provide the multiBandDetails, then provide an adequate number of plugins to handle all the bands.` : `CRITICAL: Because the user uploaded ${uploadedStems.length} stems, you MUST provide EXACTLY one step per stem. For EACH stem's step, you MUST provide EXACTLY 6 plugins in the 'recommendedChain' to provide a complete, pristine, Grammy-award winning JSFX custom layout (1st: surgical subtraction EQ/high-pass, 2nd: vintage analogue FET compressor, 3rd: opto or levelling amplifier, 4th: precise mid-range tonal EQ, 5th: spatial widening/saturation/modulation, and 6th: dedicated high-headroom output volume staging via a tool like JS: Volume/Pan to gain-match completely). The 6th plugin MUST be explicitly dedicated to volume gain-staging, ensuring absolutely no volume loss or signal degradation, making the vocal sit with intense gravity and clarity directly in the face of the listener. Ensure that any compression peak levels reduction is offset by matching makeup gain inside the plugin settings.`) : "For each step, provide a robust chain of plugins (at least 6 plugins).")} For each step, provide:
-      - 'targetStem': The exact name of the stem this step applies to (if stems were uploaded).
-      - 'issue': The specific problem.
-      - 'solution': A detailed technical explanation of how to fix it.
-      - 'recommendedChain': A robust chain of plugins from the user's list to use for this fix, with 'name', 'purpose', and 'deepDive' (an array of parameter objects, each with 'parameter', 'value', and 'explanation'). You can also optionally include 'band' and 'routing' properties for multiband or parallel processing.
+    
+    ${dawStr}
+    ${starredStr}
+    
+    Respond with a JSON object exactly matching this interface:
+    {
+      "title": "Album Mastering Strategy",
+      "overallFeedback": "Your detailed analysis of the album's current cohesive state, the differences identified between the tracks, and the high-level strategy to unify them.",
+      "strengths": ["string"],
+      "weaknesses": ["string"],
+      "actionPlan": [
+        {
+          "targetStem": "Name of the Track (e.g., Track 1: name.wav)",
+          "issue": "What this specific track needs to match the album. Be highly detailed.",
+          "solution": "How to achieve this.",
+          "recommendedChain": [
+            {
+              "name": "Exact Plugin Name from list",
+              "purpose": "Why use this on this track",
+              "deepDive": [
+                {
+                  "parameter": "Exact parameter name",
+                  "value": "Exact value (e.g., -2dB)"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
   `;
   const schemaObject = {
     type: "OBJECT",
@@ -4966,12 +5013,23 @@ export const getAlbumMasteringGuide = async (
   lunaTape: string = 'off'
 ): Promise<MixCritique> => {
   const ai = getAI();
-  const limitedPlugins = plugins.slice(0, 50);
+    const isStudioOne = dawType?.toLowerCase().includes('studio one');
+  const filteredPlugins = plugins.filter(p => {
+    if (!isStudioOne && (p.vendor.toLowerCase().includes('presonus') || p.name.toLowerCase().includes('presonus'))) {
+      return false;
+    }
+    return true;
+  });
+    const limitedPlugins = [
+    ...filteredPlugins.filter(p => starredPlugins.includes(p.name)),
+    ...filteredPlugins.filter(p => !starredPlugins.includes(p.name))
+  ].slice(0, 50);
   const pluginListStr = limitedPlugins.map(p => `${p.vendor} - ${p.name} (${p.type}) [Parameters: ${p.parameters?.join(', ') || 'N/A'}]`).join('\n');
 
   let hardwareListStr = [...analogInstruments, ...analogHardware].map(h => h.name).join('\n');
 
   const dawStr = dawType ? `\nThe user is using ${dawType} as their DAW. Include specific instructions or tips for ${dawType} where relevant.` : '';
+  const starredStr = starredPlugins.length > 0 ? `\nCRITICAL: The user has STARRED (favorited) the following plugins. You ABSOLUTELY MUST prioritize using these plugins in EVERY SINGLE track's mastering chain:\n${starredPlugins.join(', ')}` : '';
 
   let stemsContext = uploadedStems.map((stem, index) => {
     const metrics = stemsPhysicalMetrics?.[stem.id];
@@ -4989,7 +5047,14 @@ export const getAlbumMasteringGuide = async (
     
     User Context / Album Vibe: "${userContext}"
     
-    You MUST provide a guide of what specific mastering plugins to add on EACH track's master bus so that they all sound good together like a fine-tuned album. Match the LUFS, dynamic range, and tonal balance.
+    You MUST provide an exhaustive, in-depth guide of what specific mastering plugins to add on EACH track's master bus so that they all sound good together like a fine-tuned album. Match the LUFS, dynamic range, and tonal balance.
+    
+    CRITICAL REQUIREMENTS:
+    1. You MUST include FabFilter Pro-Q 3 in EVERY SINGLE track's recommendedChain.
+    2. You MUST provide EXHAUSTIVE, deeply detailed parameters for EVERY SINGLE plugin suggested. Do not just suggest the plugin, tell them EXACTLY how to set every knob.
+    
+    ${PRO_Q_3_LAYOUT_PROMPT}
+    ${GLOBAL_PARAMETER_STRICTNESS_PROMPT}
     
     ONLY use plugins from this list (the user owns these):
     ${pluginListStr}
@@ -4998,6 +5063,7 @@ export const getAlbumMasteringGuide = async (
     ${hardwareListStr}
     
     ${dawStr}
+    ${starredStr}
     
     Respond with a JSON object exactly matching this interface:
     {
@@ -5008,12 +5074,12 @@ export const getAlbumMasteringGuide = async (
       "actionPlan": [
         {
           "targetStem": "Name of the Track (e.g., Track 1: name.wav)",
-          "issue": "What this specific track needs to match the album.",
+          "issue": "What this specific track needs to match the album. Be highly detailed.",
           "solution": "How to achieve this.",
           "recommendedChain": [
             {
               "name": "Exact Plugin Name from list",
-              "reasoning": "Why use this on this track",
+              "purpose": "Why use this on this track",
               "deepDive": [
                 {
                   "parameter": "Exact parameter name",
@@ -5042,12 +5108,61 @@ export const getAlbumMasteringGuide = async (
     }
   }
 
+  const schema = {
+    type: 6, // Type.OBJECT
+    properties: {
+      title: { type: 1 }, // Type.STRING
+      overallFeedback: { type: 1 },
+      strengths: { type: 4, items: { type: 1 } }, // Type.ARRAY
+      weaknesses: { type: 4, items: { type: 1 } },
+      actionPlan: {
+        type: 4,
+        description: "CRITICAL: You MUST generate EXACTLY " + uploadedStems.length + " items in this array, one for each uploaded stem.",
+        items: {
+          type: 6,
+          properties: {
+            targetStem: { type: 1 },
+            issue: { type: 1 },
+            solution: { type: 1 },
+            recommendedChain: {
+              type: 4,
+              description: "CRITICAL: You MUST include FabFilter Pro-Q 3 in EVERY SINGLE track's recommendedChain.",
+              items: {
+                type: 6,
+                properties: {
+                  name: { type: 1 },
+                  purpose: { type: 1 },
+                  deepDive: {
+                    type: 4,
+                    description: "CRITICAL: You MUST provide EXHAUSTIVE, deeply detailed parameters. Do not just suggest the plugin, tell them EXACTLY how to set every single knob. For Pro-Q 3, there MUST be exactly 6 items.",
+                    items: {
+                      type: 6,
+                      properties: {
+                        parameter: { type: 1 },
+                        value: { type: 1 }
+                      },
+                      required: ["parameter", "value"]
+                    }
+                  }
+                },
+                required: ["name", "purpose", "deepDive"]
+              }
+            }
+          },
+          required: ["targetStem", "issue", "solution", "recommendedChain"]
+        }
+      }
+    },
+    required: ["title", "overallFeedback", "strengths", "weaknesses", "actionPlan"]
+  };
+
   const response = await ai.models.generateContent({
     model: "gemini-3-flash-preview",
     contents: parts,
     config: {
         systemInstruction: "You are an elite, Grammy-winning mastering engineer. You output only valid JSON. Do not use markdown blocks for JSON.",
         responseMimeType: 'application/json',
+        responseSchema: schema as any,
         temperature: 0.2
     }
   });

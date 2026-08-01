@@ -8610,7 +8610,7 @@ Provide the exact JSFX plugin name and required sliders/parameters.`;
                           <div className={`absolute top-0.5 left-0.5 w-4 h-4 rounded-full bg-white transition-transform ${hasStems ? 'translate-x-5' : 'translate-x-0'}`} />
                         </button>
                         
-                        <span className={`text-[10px] font-black uppercase tracking-widest transition-colors ${(hasStems || audioMode === 'album') ? (theme === 'coldest' ? 'text-slate-900' : 'text-white') : (theme === 'coldest' ? 'text-slate-500' : 'text-white/50')}`}>{t('i_have_stems')}</span>
+                        <span className={`text-[10px] font-black uppercase tracking-widest transition-colors ${hasStems ? (theme === 'coldest' ? 'text-slate-900' : 'text-white') : (theme === 'coldest' ? 'text-slate-500' : 'text-white/50')}`}>{t('i_have_stems')}</span>
                       </div>
 
                       <div className={`inline-flex items-center gap-3 rounded-full px-4 py-2 ${theme === 'coldest' ? 'bg-white/40' : 'bg-black/40'}`}>
