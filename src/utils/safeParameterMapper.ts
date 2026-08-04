@@ -151,6 +151,24 @@ export const mapPluginParametersSafely = (
   const mappedSettings = plugin.deepDive.map((setting: ParameterSetting) => {
     const paramLower = setting.parameter.toLowerCase();
 
+    // Fix Lurssen parameters if they incorrectly use dB
+    if (pluginNameLower.includes('lurssen') || paramLower.includes('push') || paramLower.includes('input drive')) {
+      if (paramLower.includes('push') && setting.value.toLowerCase().includes('db')) {
+        setting.value = setting.value.replace(/([+-]?[\d.]+)\s*db/i, (match, p1) => {
+          const val = parseFloat(p1);
+          return (val > 0 && val < 5 ? val * 100 : val) + "%"; 
+        });
+        setting.value = setting.value.replace(/db/ig, "%");
+        setting.explanation = setting.explanation ? setting.explanation.replace(/([+-]?[\d.]+)\s*db/ig, (m, p1) => (parseFloat(p1) > 0 && parseFloat(p1) < 5 ? parseFloat(p1) * 100 : parseFloat(p1)) + "%") : "";
+      }
+      if (paramLower.includes('input drive') && setting.value.toLowerCase().includes('db')) {
+        setting.value = setting.value.replace(/([+-]?[\d.]+)\s*db/i, "$1");
+        setting.value = setting.value.replace(/db/ig, "");
+        setting.explanation = setting.explanation ? setting.explanation.replace(/db/ig, "") : "";
+      }
+    }
+
+
     // Track and enforce Linear Phase crossover mode for Multiband routing
     if (isMultiband) {
       const isPhaseModeParam = paramLower.includes('phase') || 

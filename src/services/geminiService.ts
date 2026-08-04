@@ -85,7 +85,7 @@ export const getXpandInstructions = (xpandPresets?: XpandPreset[]): string => {
   `;
   
   Object.entries(grouped).forEach(([category, presets]) => {
-    formatted += `    - Category "${category}": ${presets.map(p => `"${p}"`).join(", ")}\n`;
+    formatted += `    - Category "${category}": ${presets.map(p => `"${p}"`).join(", ")}n`;
   });
   
   formatted += `
@@ -1114,7 +1114,7 @@ const GLOBAL_PARAMETER_STRICTNESS_PROMPT = `
     CRITICAL - STRICT PARAMETER REALISM, UNITS, & O'CLOCK POSITIONING:
     1. ZERO HALLUCINATION (FIREABLE OFFENSE): You MUST ONLY suggest parameters that actually exist on the real-world interface of the specified plugin as documented in its official manual. NEVER invent, guess, hallucinate, or inject parameters that do not exist on that plugin.
     2. STRICT UNIT ACCURACY: You MUST use the exact, correct unit of measurement for every parameter (e.g. Hz, kHz, dB, ms, %, etc.).
-    - CRITICAL LURSSEN RULE: For "IK Multimedia - Lurssen Mastering Console", the "Push" parameter is measured in PERCENT (%) from 0% to 200%, NOT IN dB. If you suggest Push, NEVER use dB (e.g., say "110%", not "1.2dB").
+    - CRITICAL LURSSEN RULE: For "IK Multimedia - Lurssen Mastering Console", the "Push" parameter is measured in INTEGER PERCENTAGES (%) (use % symbol ONLY), NOT IN dB. If you suggest Push, YOU MUST NEVER EVER USE dB or decimals. (e.g. "110%", "120%"). NO FRACTIONS OR DECIMALS ALLOWED (e.g. NO 1.5%), ONLY WHOLE NUMBERS. The "Input Drive" parameter is also just a number, not dB. The exact controls available on Lurssen Mastering Console that you must provide settings for are: 1. Input Drive, 2. 5 Band EQ (60Hz, 120Hz, 3kHz, 6kHz, 10kHz - adjust these in dB), 3. Push (Integer Percentage), 4. Style / Genre Preset.
     3. REAPER JSFX MASTER RESEARCH PROFILES (USE FOR COCKOS JSFX RECOMMENDATIONS):
        - "JS: 1175 Compressor" (1175 Compressor - Stock Cockos REAPER JSFX):
          - S1 (Threshold (dB)): -60 to 0 dB (Default: 0).
@@ -1185,7 +1185,32 @@ const GLOBAL_PARAMETER_STRICTNESS_PROMPT = `
     CRITICAL WARNING: NEVER RETURN AN EMPTY RECIPES ARRAY. You MUST ALWAYS generate at least one complete recipe that fulfills the user's request, regardless of strictness constraints.
 `;
 function postProcessResult(result: any) {
+  const processChain = (chain: any[]) => {
+    if (!chain || !Array.isArray(chain)) return chain;
+    try {
+      return applySafeParameterMappingToChain(chain, undefined, false);
+    } catch (e) {
+      console.warn("Error applying safe param mapping:", e);
+      return chain;
+    }
+  };
+
   const processRecipe = (recipe: any) => {
+    if (recipe && recipe.instruments && Array.isArray(recipe.instruments)) {
+      recipe.instruments.forEach((inst: any) => {
+        if (inst && Array.isArray(inst.fxPlugins)) {
+          inst.fxPlugins = processChain(inst.fxPlugins);
+        }
+      });
+    }
+    if (recipe && recipe.busses && Array.isArray(recipe.busses)) {
+      recipe.busses.forEach((bus: any) => {
+        if (bus && Array.isArray(bus.fxPlugins)) {
+          bus.fxPlugins = processChain(bus.fxPlugins);
+        }
+      });
+    }
+
     if (recipe && typeof recipe.drumPatterns === 'object' && recipe.drumPatterns !== null && !Array.isArray(recipe.drumPatterns)) {
       Object.values(recipe.drumPatterns).forEach((section: any) => {
         if (section) {
@@ -1398,8 +1423,8 @@ export const regeneratePlugin = async (
   analogHardware: Hardware[] = []
 ) => {
   const ai = getAI();
-  const pluginContext = `Plugin: ${pluginName}\nParameters: ${(deepDive || []).map(d => `${d.parameter}: ${d.value}`).join(', ')}`;
-  const recipeContext = `Recipe Title: ${recipe.title || ''}\nStyle: ${recipe.style || 'N/A'}\nDescription: ${recipe.description || (recipe as any).overallFeedback || ''}`;
+  const pluginContext = `Plugin: ${pluginName}nParameters: ${(deepDive || []).map(d => `${d.parameter}: ${d.value}`).join(', ')}`;
+  const recipeContext = `Recipe Title: ${recipe.title || ''}nStyle: ${recipe.style || 'N/A'}nDescription: ${recipe.description || (recipe as any).overallFeedback || ''}`;
   const libraryContext = `Available Plugins: ${myPlugins.map(p => `${p.vendor} - ${p.name}`).join(', ')}`;
   const exclusionStr = excludedPlugins.length > 0 ? `\nCRITICAL: DO NOT suggest any of the following plugins (the user has already seen or rejected them): ${excludedPlugins.join(', ')}. You MUST choose a DIFFERENT plugin from the user's library.` : '';
   const hasApollo = analogHardware.some(h => h.name.toLowerCase().includes('apollo'));
@@ -1447,7 +1472,7 @@ export const regeneratePlugin = async (
   };
   const response = await ai.models.generateContent({
     model: "gemini-3-flash-preview",
-    contents: { parts: [{ text: prompt + "\\n\\nCRITICAL: You MUST return EXACTLY valid JSON matching this schema:\\n" + JSON.stringify(schemaObj, null, 2) }] },
+    contents: { parts: [{ text: prompt + "n\nCRITICAL: You MUST return EXACTLY valid JSON matching this schema:n" + JSON.stringify(schemaObj, null, 2) }] },
     config: {
       customAction: 'regenerate_plugin',
       responseMimeType: "application/json"
@@ -1569,10 +1594,10 @@ const generateAnalogStr = (analogInstruments: Hardware[], analogHardware: Hardwa
       desc += `: ${ANALOG_DESCRIPTIONS[instrument.name]}`;
     }
     if (instrument.connectedPedals && instrument.connectedPedals.length > 0) {
-      desc += `\n  - Connected Pedals: ${instrument.connectedPedals.map(p => p.name).join(', ')}`;
+      desc += `n  - Connected Pedals: ${instrument.connectedPedals.map(p => p.name).join(', ')}`;
     }
     if (instrument.connectedAmps && instrument.connectedAmps.length > 0) {
-      desc += `\n  - Connected Amps: ${instrument.connectedAmps.map(a => a.name).join(', ')}`;
+      desc += `n  - Connected Amps: ${instrument.connectedAmps.map(a => a.name).join(', ')}`;
     }
     selectedDescriptions.push(desc);
   });
@@ -1582,18 +1607,18 @@ const generateAnalogStr = (analogInstruments: Hardware[], analogHardware: Hardwa
       desc += `: ${ANALOG_DESCRIPTIONS[hardware.name]}`;
     }
     if (hardware.connectedPedals && hardware.connectedPedals.length > 0) {
-      desc += `\n  - Connected Pedals: ${hardware.connectedPedals.map(p => p.name).join(', ')}`;
+      desc += `n  - Connected Pedals: ${hardware.connectedPedals.map(p => p.name).join(', ')}`;
     }
     if (hardware.connectedAmps && hardware.connectedAmps.length > 0) {
-      desc += `\n  - Connected Amps: ${hardware.connectedAmps.map(a => a.name).join(', ')}`;
+      desc += `n  - Connected Amps: ${hardware.connectedAmps.map(a => a.name).join(', ')}`;
     }
     selectedDescriptions.push(desc);
   });
   let gearStr = '';
   if (selectedDescriptions.length > 0) {
-    gearStr = `\nCRITICAL: The user owns the following REAL ANALOG HARDWARE. You MUST prioritize using these in your recipes where appropriate:\n${selectedDescriptions.join('\n')}`;
+    gearStr = `\nCRITICAL: The user owns the following REAL ANALOG HARDWARE. You MUST prioritize using these in your recipes where appropriate:n${selectedDescriptions.join('\n')}`;
   } else {
-    gearStr = `\nThe user has the following analog equipment, but no specific sonic characteristics were provided:\nInstruments: ${analogInstruments.map(h => h.name).join(', ')}\nHardware: ${analogHardware.map(h => h.name).join(', ')}`;
+    gearStr = `nThe user has the following analog equipment, but no specific sonic characteristics were provided:nInstruments: ${analogInstruments.map(h => h.name).join(', ')}nHardware: ${analogHardware.map(h => h.name).join(', ')}`;
   }
   return gearStr + drumKitStr;
 };
@@ -2657,9 +2682,9 @@ const getUadGroundingPrompt = (vendor: string, name: string): string => {
       Description: ${matchedProfile.description}
       Hardware Emulated: ${matchedProfile.hardwareModel}
       Parameters (EXACT Names & Ranges):
-      ${matchedProfile.parameters.map(p => `- "${p.name}": Range [${p.range}], Default Value: ${p.defaultVal}. Control Description: ${p.description}`).join('\n      ')}
+      ${matchedProfile.parameters.map(p => `- "${p.name}": Range [${p.range}], Default Value: ${p.defaultVal}. Control Description: ${p.description}`).join('n      ')}
       Pro Tips & Application Rules:
-      ${matchedProfile.proTips.map(pt => `- ${pt}`).join('\n      ')}
+      ${matchedProfile.proTips.map(pt => `- ${pt}`).join('n      ')}
       
       You MUST strictly return exactly these parameters in your "parameters" output list. NEVER invent, hallucinate, or add fictional parameter names or incorrect values.
       `;
@@ -2703,7 +2728,7 @@ export const verifyAndCorrectPlugin = async (
     {
       "isVersionValid": boolean,
       "isParameterValid": boolean,
-      "message": "Detailed explanation of your findings (e.g., 'Yes, Ozone 11 Advanced exists and includes the Clarity module. The parameter \"Clarity\" is valid.')",
+      "message": "Detailed explanation of your findings (e.g., 'Yes, Ozone 11 Advanced exists and includes the Clarity module. The parameter "Clarity" is valid.')",
       "updatedPlugin": {
         "description": "Updated description for this specific version",
         "features": ["Updated features"],
@@ -2813,7 +2838,7 @@ export const researchPluginParameters = async (plugin: VSTPlugin, language: stri
     return plugin;
   }
 };
-export const getSchemaInstruction = (isGangstaVoxMode: boolean = false) => `\n\nCRITICAL: YOU MUST RETURN EXACTLY VALID JSON MATCHING THIS SCHEMA:\n${JSON.stringify({ type: "OBJECT", properties: { recipes: { type: "ARRAY", items: getUnifiedRecipeSchema(isGangstaVoxMode), minItems: 1 } }, required: ["recipes"] }, null, 2)}`;
+export const getSchemaInstruction = (isGangstaVoxMode: boolean = false) => `n\nCRITICAL: YOU MUST RETURN EXACTLY VALID JSON MATCHING THIS SCHEMA:n${JSON.stringify({ type: "OBJECT", properties: { recipes: { type: "ARRAY", items: getUnifiedRecipeSchema(isGangstaVoxMode), minItems: 1 } }, required: ["recipes"] }, null, 2)}`;
 
 export const generateStructuralBlueprint = async (searchQuery: string, language: string = 'en'): Promise<StructuralBlueprint> => {
   const ai = getAI();
@@ -2869,16 +2894,16 @@ export const getBeatRecommendations = async (plugins: VSTPlugin[], analogInstrum
     return str;
   }).join('\n');
   const analogStr = !excludeAnalog ? generateAnalogStr(analogInstruments, analogHardware, drumKits) : '';
-  const dawStr = dawType ? `\nThe user is using ${dawType} as their DAW. Include specific instructions or tips for ${dawType} where relevant in the guides or recipes.` : '';
-  const starredStr = starredPlugins.length > 0 ? `\nCRITICAL: The user has STARRED (favorited) the following plugins. You ABSOLUTELY MUST prioritize using these plugins in EVERY SINGLE track/step whenever possible:\n${starredPlugins.join(', ')}` : '';
+  const dawStr = dawType ? `nThe user is using ${dawType} as their DAW. Include specific instructions or tips for ${dawType} where relevant in the guides or recipes.` : '';
+  const starredStr = starredPlugins.length > 0 ? `\nCRITICAL: The user has STARRED (favorited) the following plugins. You ABSOLUTELY MUST prioritize using these plugins in EVERY SINGLE track/step whenever possible:n${starredPlugins.join(', ')}` : '';
   const hasSphereMic = analogHardware.some(h => ['Sphere DLX', 'Sphere LX', 'L22'].includes(h.name) || h.name.toLowerCase() === 'l22' || h.name.toLowerCase().includes('townsend'));
   const sphereMicStr = hasSphereMic ? `\nCRITICAL: The user owns a Universal Audio Sphere (DLX/LX) or Townsend Labs L22 microphone. If the recipe involves a vocal tracking chain, you MUST assign the 'UAD Sphere Mic Collection', 'Ocean Way Mic Collection', or 'Bill Putnam Mic Collection' plugin as the VERY FIRST insert plugin on the vocal channel tracking chain. You MUST specifically select a mic model inside it based on the vibe searched. After the mic collection plugin, you can add up to 3 more plugins.` : '';
   const languageInstruction = getLanguageInstruction(language);
   const multiBandInstruction = getMultiBandInstruction(isMultiBandMode);
   const xpandInstruction = getXpandInstructions(xpandPresets);
   
-  const additionalContextStr = context ? `\nUSER SPECIFIED CONTEXT: ${context}\nYou MUST incorporate these instructions or themes tightly into the generated recipe.` : '';
-  const bpmStr = bpm ? `\nUSER SPECIFIED EXACT BPM: ${bpm}\nYou MUST use this exact BPM in the recipe, and tailor the midi, drums, and time-based effects (delay, reverb pre-delay) to align perfectly with it.` : '';
+  const additionalContextStr = context ? `nUSER SPECIFIED CONTEXT: ${context}nYou MUST incorporate these instructions or themes tightly into the generated recipe.` : '';
+  const bpmStr = bpm ? `nUSER SPECIFIED EXACT BPM: ${bpm}nYou MUST use this exact BPM in the recipe, and tailor the midi, drums, and time-based effects (delay, reverb pre-delay) to align perfectly with it.` : '';
  
   const nonJsfxDiktat = (dawType === 'REAPER' || dawType === 'Reaper') ? '' : `
       ==================================================
@@ -3036,7 +3061,7 @@ export const getBeatRecommendations = async (plugins: VSTPlugin[], analogInstrum
   } catch (e: any) {
     console.error("Detailed Error in getBeatRecommendations:", e);
     console.error("Safety/Blocked:", JSON.stringify(response?.candidates?.[0] || {}));
-    throw new Error(`Format error in getBeatRecommendations. Details: ${e.message || e}\nRaw: ${typeof jsonStr !== 'undefined' ? jsonStr.substring(0, 500) : "empty"}\nSafety: ${JSON.stringify(response?.candidates?.[0]?.safetyRatings || "none")}`);
+    throw new Error(`Format error in getBeatRecommendations. Details: ${e.message || e}nRaw: ${typeof jsonStr !== 'undefined' ? jsonStr.substring(0, 500) : "empty"}nSafety: ${JSON.stringify(response?.candidates?.[0]?.safetyRatings || "none")}`);
   }
 };
 export const getCustomBeatRecommendations = async (plugins: VSTPlugin[], query: string, analogInstruments: Hardware[] = [], analogHardware: Hardware[] = [], drumKits: Hardware[] = [], excludeAnalog: boolean = false, dawType: string | null = null, starredPlugins: string[] = [], isGangstaVox: boolean = false, language: string = 'en', isMultiBandMode: boolean = false, bpm?: string, context?: string, isJsfxMode: boolean = false, installedJsfxPacks: string[] = [], xpandPresets?: XpandPreset[]): Promise<RecommendationResponse> => {
@@ -3060,8 +3085,8 @@ export const getCustomBeatRecommendations = async (plugins: VSTPlugin[], query: 
     return str;
   }).join('\n');
   const analogStr = !excludeAnalog ? generateAnalogStr(analogInstruments, analogHardware, drumKits) : '';
-  const dawStr = dawType ? `\nThe user is using ${dawType} as their DAW. Include specific instructions or tips for ${dawType} where relevant in the guides or recipes.` : '';
-  const starredStr = starredPlugins.length > 0 ? `\nCRITICAL: The user has STARRED (favorited) the following plugins. You ABSOLUTELY MUST prioritize using these plugins in EVERY SINGLE track/step whenever possible:\n${starredPlugins.join(', ')}` : '';
+  const dawStr = dawType ? `nThe user is using ${dawType} as their DAW. Include specific instructions or tips for ${dawType} where relevant in the guides or recipes.` : '';
+  const starredStr = starredPlugins.length > 0 ? `\nCRITICAL: The user has STARRED (favorited) the following plugins. You ABSOLUTELY MUST prioritize using these plugins in EVERY SINGLE track/step whenever possible:n${starredPlugins.join(', ')}` : '';
   const hasSphereMic = analogHardware.some(h => ['Sphere DLX', 'Sphere LX', 'L22'].includes(h.name) || h.name.toLowerCase() === 'l22' || h.name.toLowerCase().includes('townsend'));
   const sphereMicStr = hasSphereMic ? `\nCRITICAL: The user owns a Universal Audio Sphere (DLX/LX) or Townsend Labs L22 microphone. If the recipe involves a vocal tracking chain, you MUST assign the 'UAD Sphere Mic Collection', 'Ocean Way Mic Collection', or 'Bill Putnam Mic Collection' plugin as the VERY FIRST insert plugin on the vocal channel tracking chain. You MUST specifically select a mic model inside it based on the vibe searched. After the mic collection plugin, you can add up to 3 more plugins.` : '';
   const isMarkRuhedra = query.toLowerCase().includes("mark ruhedra");
@@ -3078,8 +3103,8 @@ export const getCustomBeatRecommendations = async (plugins: VSTPlugin[], query: 
     - Mixing Techniques: Use parallel compression, heavy saturation on drums and bass, and precise subtractive EQ on vocals to keep them crisp.
   ` : '';
 
-  const additionalContextStr = context ? `\nUSER SPECIFIED CONTEXT: ${context}\nYou MUST incorporate these instructions or themes tightly into the generated recipe.` : '';
-  const bpmStr = bpm ? `\nUSER SPECIFIED EXACT BPM: ${bpm}\nYou MUST use this exact BPM in the recipe, and tailor the midi, drums, and time-based effects (delay, reverb pre-delay) to align perfectly with it.` : '';
+  const additionalContextStr = context ? `nUSER SPECIFIED CONTEXT: ${context}nYou MUST incorporate these instructions or themes tightly into the generated recipe.` : '';
+  const bpmStr = bpm ? `nUSER SPECIFIED EXACT BPM: ${bpm}nYou MUST use this exact BPM in the recipe, and tailor the midi, drums, and time-based effects (delay, reverb pre-delay) to align perfectly with it.` : '';
   const xpandInstruction = getXpandInstructions(xpandPresets);
 
   const nonJsfxDiktat = (dawType === 'REAPER' || dawType === 'Reaper') ? '' : `
@@ -3226,7 +3251,7 @@ export const getCustomBeatRecommendations = async (plugins: VSTPlugin[], query: 
   } catch (e: any) {
     console.error("Detailed Error in getCustomBeatRecommendations:", e);
     console.error("Safety/Blocked:", JSON.stringify(response?.candidates?.[0] || {}));
-    throw new Error(`Format error in getCustomBeatRecommendations. Details: ${e.message || e}\nRaw: ${typeof jsonStr !== 'undefined' ? jsonStr.substring(0, 500) : "empty"}\nSafety: ${JSON.stringify(response?.candidates?.[0]?.safetyRatings || "none")}`);
+    throw new Error(`Format error in getCustomBeatRecommendations. Details: ${e.message || e}nRaw: ${typeof jsonStr !== 'undefined' ? jsonStr.substring(0, 500) : "empty"}nSafety: ${JSON.stringify(response?.candidates?.[0]?.safetyRatings || "none")}`);
   }
   if (isGangstaVox && result.recipes) {
     result.recipes = result.recipes.map((r: any) => ({ ...r, isGangstaVox: true }));
@@ -3255,13 +3280,13 @@ export const getSongBeatRecommendations = async (plugins: VSTPlugin[], songQuery
     return str;
   }).join('\n');
   const analogStr = !excludeAnalog ? generateAnalogStr(analogInstruments, analogHardware, drumKits) : '';
-  const dawStr = dawType ? `\nThe user is using ${dawType} as their DAW. Include specific instructions or tips for ${dawType} where relevant in the guides or recipes.` : '';
-  const starredStr = starredPlugins.length > 0 ? `\nCRITICAL: The user has STARRED (favorited) the following plugins. You ABSOLUTELY MUST prioritize using these plugins in EVERY SINGLE track/step whenever possible:\n${starredPlugins.join(', ')}` : '';
+  const dawStr = dawType ? `nThe user is using ${dawType} as their DAW. Include specific instructions or tips for ${dawType} where relevant in the guides or recipes.` : '';
+  const starredStr = starredPlugins.length > 0 ? `\nCRITICAL: The user has STARRED (favorited) the following plugins. You ABSOLUTELY MUST prioritize using these plugins in EVERY SINGLE track/step whenever possible:n${starredPlugins.join(', ')}` : '';
   const hasSphereMic = analogHardware.some(h => ['Sphere DLX', 'Sphere LX', 'L22'].includes(h.name) || h.name.toLowerCase() === 'l22' || h.name.toLowerCase().includes('townsend'));
   const sphereMicStr = hasSphereMic ? `\nCRITICAL: The user owns a Universal Audio Sphere (DLX/LX) or Townsend Labs L22 microphone. If the recipe involves a vocal tracking chain, you MUST assign the 'UAD Sphere Mic Collection', 'Ocean Way Mic Collection', or 'Bill Putnam Mic Collection' plugin as the VERY FIRST insert plugin on the vocal channel tracking chain. You MUST specifically select a mic model inside it based on the vibe searched. After the mic collection plugin, you can add up to 3 more plugins.` : '';
   
-  const additionalContextStr = context ? `\nUSER SPECIFIED CONTEXT: ${context}\nYou MUST incorporate these instructions or themes tightly into the generated recipe.` : '';
-  const bpmStr = bpm ? `\nUSER SPECIFIED EXACT BPM: ${bpm}\nYou MUST use this exact BPM in the recipe, and tailor the midi, drums, and time-based effects (delay, reverb pre-delay) to align perfectly with it.` : '';
+  const additionalContextStr = context ? `nUSER SPECIFIED CONTEXT: ${context}nYou MUST incorporate these instructions or themes tightly into the generated recipe.` : '';
+  const bpmStr = bpm ? `nUSER SPECIFIED EXACT BPM: ${bpm}nYou MUST use this exact BPM in the recipe, and tailor the midi, drums, and time-based effects (delay, reverb pre-delay) to align perfectly with it.` : '';
   const xpandInstruction = getXpandInstructions(xpandPresets);
 
   const nonJsfxDiktat = (dawType === 'REAPER' || dawType === 'Reaper') ? '' : `
@@ -3418,7 +3443,7 @@ export const getSongBeatRecommendations = async (plugins: VSTPlugin[], songQuery
   } catch (e: any) {
     console.error("Detailed Error in getSongBeatRecommendations:", e);
     console.error("Safety/Blocked:", JSON.stringify(response?.candidates?.[0] || {}));
-    throw new Error(`Format error in getSongBeatRecommendations. Details: ${e.message || e}\nRaw: ${typeof jsonStr !== 'undefined' ? jsonStr.substring(0, 500) : "empty"}\nSafety: ${JSON.stringify(response?.candidates?.[0]?.safetyRatings || "none")}`);
+    throw new Error(`Format error in getSongBeatRecommendations. Details: ${e.message || e}nRaw: ${typeof jsonStr !== 'undefined' ? jsonStr.substring(0, 500) : "empty"}nSafety: ${JSON.stringify(response?.candidates?.[0]?.safetyRatings || "none")}`);
   }
   if (isGangstaVox && result.recipes) {
     result.recipes = result.recipes.map((r: any) => ({ ...r, isGangstaVox: true }));
@@ -3428,7 +3453,7 @@ export const getSongBeatRecommendations = async (plugins: VSTPlugin[], songQuery
 export const generateVoiceover = async (text: string, bpm?: number | null): Promise<{ base64: string, mimeType: string }> => {
   const ai = getAI();
   const tempoInstructions = bpm ? `The instrumental beat is exactly ${bpm} BPM. You MUST time your syllables and rhythmic flow to land perfectly on tempo to this ${bpm} BPM beat at a NORMAL, standard playback speed.` : "Provide a natural Houston style cadence at a normal tempo.";
-  const prompt = `Say this text in a natural, smooth, melodic Houston rap cadence at a NORMAL TEMPO (like a professional studio recording by Z-Ro, but DO NOT say your name or mention Z-Ro). DO NOT slow it down, DO NOT chop and screw it. Keep it clear and at standard speed. \n${tempoInstructions}\n\n${text}`;
+  const prompt = `Say this text in a natural, smooth, melodic Houston rap cadence at a NORMAL TEMPO (like a professional studio recording by Z-Ro, but DO NOT say your name or mention Z-Ro). DO NOT slow it down, DO NOT chop and screw it. Keep it clear and at standard speed. n${tempoInstructions}nn${text}`;
   const response = await ai.models.generateContent({
     model: "gemini-3.1-flash-tts-preview",
     contents: [{ parts: [{ text: prompt }] }],
@@ -3501,11 +3526,11 @@ export const getAudioBeatRecommendations = async (plugins: VSTPlugin[], audioBas
   ].slice(0, 50);
   const pluginListStr = limitedPlugins.map(p => `${p.vendor} - ${p.name} (${p.type})`).join('\n');
   const analogStr = !excludeAnalog ? generateAnalogStr(analogInstruments, analogHardware, drumKits) : '';
-  const dawStr = dawType ? `\nThe user is using ${dawType} as their DAW. Include specific instructions or tips for ${dawType} where relevant in the guides or recipes.` : '';
-  const starredStr = starredPlugins.length > 0 ? `\nCRITICAL: The user has STARRED (favorited) the following plugins. You ABSOLUTELY MUST prioritize using these plugins in EVERY SINGLE track/step whenever possible:\n${starredPlugins.join(', ')}` : '';
+  const dawStr = dawType ? `nThe user is using ${dawType} as their DAW. Include specific instructions or tips for ${dawType} where relevant in the guides or recipes.` : '';
+  const starredStr = starredPlugins.length > 0 ? `\nCRITICAL: The user has STARRED (favorited) the following plugins. You ABSOLUTELY MUST prioritize using these plugins in EVERY SINGLE track/step whenever possible:n${starredPlugins.join(', ')}` : '';
   const hasSphereMic = analogHardware.some(h => ['Sphere DLX', 'Sphere LX', 'L22'].includes(h.name) || h.name.toLowerCase() === 'l22' || h.name.toLowerCase().includes('townsend'));
   const sphereMicStr = hasSphereMic ? `\nCRITICAL: The user owns a Universal Audio Sphere (DLX/LX) or Townsend Labs L22 microphone. If the recipe involves a vocal tracking chain, you MUST assign the 'UAD Sphere Mic Collection', 'Ocean Way Mic Collection', or 'Bill Putnam Mic Collection' plugin as the VERY FIRST insert plugin on the vocal channel tracking chain. You MUST specifically select a mic model inside it based on the vibe searched. After the mic collection plugin, you can add up to 3 more plugins.` : '';
-  const contextStr = userContext ? `\nCRITICAL USER CONTEXT: The user has provided the following information about their track and goals. You MUST incorporate this into your analysis and advice ALWAYS, IT IS THE MOST IMPORTANT INSTRUCTION. Your suggestions MUST explicitly align with and aim to achieve these exact goals, and NOT ruin the mix/volume:\n"${userContext}"\n` : "";
+  const contextStr = userContext ? `\nCRITICAL USER CONTEXT: The user has provided the following information about their track and goals. You MUST incorporate this into your analysis and advice ALWAYS, IT IS THE MOST IMPORTANT INSTRUCTION. Your suggestions MUST explicitly align with and aim to achieve these exact goals, and NOT ruin the mix/volume:n"${userContext}"n` : "";
   const uadPlugins = plugins.filter(p => 
     (p.vendor.toLowerCase().includes('universal audio') || p.name.toLowerCase().includes('uad')) && 
     !p.name.toLowerCase().includes('native') && 
@@ -3584,7 +3609,7 @@ export const getAudioBeatRecommendations = async (plugins: VSTPlugin[], audioBas
     ${ATR102_SPEC_PROMPT}
     ${GLOBAL_PARAMETER_STRICTNESS_PROMPT}
     ${audioUrl ? `The main audio file is available at this URL: ${audioUrl}. Please fetch and analyze it.` : "The main audio file is provided as inline data."}
-    ${recreateFileUri || recreateBase64 ? "\nThere is a second audio file attached. This is the target 'Recreate For' track. Analyze both and adapt the first song's elements to match the second track's BPM and Key." : ""}
+    ${recreateFileUri || recreateBase64 ? "nThere is a second audio file attached. This is the target 'Recreate For' track. Analyze both and adapt the first song's elements to match the second track's BPM and Key." : ""}
     Ensure the recipe captures the signature vocal sound of the audio.
     Identify 2-3 mainstream or commonly known artists who would typically use this specific vocal chain.
     Include a recommended BPM, 'recommendedScale', and 'chordProgression' that fits the vibe.
@@ -3641,7 +3666,7 @@ export const getAudioBeatRecommendations = async (plugins: VSTPlugin[], audioBas
     ${ATR102_SPEC_PROMPT}
     ${GLOBAL_PARAMETER_STRICTNESS_PROMPT}
     ${audioUrl ? `The main audio file is available at this URL: ${audioUrl}. Please fetch and analyze it.` : "The main audio file is provided as inline data."}
-    ${recreateFileUri || recreateBase64 ? "\nThere is a second audio file attached. This is the target 'Recreate For' track. Analyze both and adapt the first song's elements (such as chords, leads, sub-bass, 808s, arpeggios, and drums) to match the second track's BPM and Key perfectly." : ""}
+    ${recreateFileUri || recreateBase64 ? "nThere is a second audio file attached. This is the target 'Recreate For' track. Analyze both and adapt the first song's elements (such as chords, leads, sub-bass, 808s, arpeggios, and drums) to match the second track's BPM and Key perfectly." : ""}
     Ensure the recipe captures the signature sound, instrumentation, and mixing techniques heard in the audio.
     Identify 2-3 mainstream or commonly known artists who would typically use this specific beat type.
     Include a recommended BPM, 'recommendedScale', and 'chordProgression' that fits the vibe.
@@ -3705,7 +3730,7 @@ export const getAudioBeatRecommendations = async (plugins: VSTPlugin[], audioBas
     },
     required: ["recipes"]
   };
-  prompt += `\n\nCRITICAL: You MUST return a valid JSON object. Your JSON object MUST exactly adhere to the following JSON Schema structure (do NOT deviate):\n${JSON.stringify(schemaObject, null, 2)}`;
+  prompt += `n\nCRITICAL: You MUST return a valid JSON object. Your JSON object MUST exactly adhere to the following JSON Schema structure (do NOT deviate):n${JSON.stringify(schemaObject, null, 2)}`;
   const parts: any[] = [];
   if (geminiFileUri) {
     let uri = geminiFileUri;
@@ -3773,7 +3798,7 @@ export const getAudioBeatRecommendations = async (plugins: VSTPlugin[], audioBas
   } catch (e: any) {
     console.error("Detailed Error in getAudioBeatRecommendations:", e);
     console.error("Safety/Blocked:", JSON.stringify(response?.candidates?.[0] || {}));
-    throw new Error(`Format error in getAudioBeatRecommendations. Details: ${e.message || e}\nRaw: ${typeof jsonStr !== 'undefined' ? jsonStr.substring(0, 500) : "empty"}\nSafety: ${JSON.stringify(response?.candidates?.[0]?.safetyRatings || "none")}`);
+    throw new Error(`Format error in getAudioBeatRecommendations. Details: ${e.message || e}nRaw: ${typeof jsonStr !== 'undefined' ? jsonStr.substring(0, 500) : "empty"}nSafety: ${JSON.stringify(response?.candidates?.[0]?.safetyRatings || "none")}`);
   }
   console.log("Parsed result (Beat):", result);
   if (isGangstaVox && result.recipes) {
@@ -3844,14 +3869,14 @@ export const getMixCritique = async (
 
   let lunaIntegrationStr = "";
   if (dawType && dawType.toUpperCase() === 'LUNA') {
-    lunaIntegrationStr += `\n\n==================================================\n🚨🚨 CRITICAL LUNA ARCHITECTURE DIRECTIVE 🚨🚨\nThe user is mixing in Universal Audio LUNA. `;
+    lunaIntegrationStr += `nn==================================================n🚨🚨 CRITICAL LUNA ARCHITECTURE DIRECTIVE 🚨🚨nThe user is mixing in Universal Audio LUNA. `;
     if (lunaSumming && lunaSumming !== 'off') {
        lunaIntegrationStr += `LUNA has built-in analog summing (${lunaSumming.toUpperCase()}) natively integrated into its busses and master channel. You MUST suggest "Headroom" (HR) and "Trim" values for the ${lunaSumming.toUpperCase()} summing on any bus or master channels in your steps. `;
     }
     if (lunaTape && lunaTape !== 'off') {
        lunaIntegrationStr += `LUNA has a dedicated Tape Extension slot (${lunaTape.toUpperCase()}) natively integrated into EVERY audio track and bus. This is NOT a standard insert plugin. When 'lunaTape' is toggled ON to ${lunaTape.toUpperCase()}, EVERY SINGLE track or stem you critique MUST explicitly include the ${lunaTape.toUpperCase()} Tape Extension settings (specifically the "Saturation" parameter, often in dB or o'clock values) as the VERY FIRST item in the 'recommendedChain'. Do not ignore this tape machine setting. Name it "${lunaTape.toUpperCase()} Tape Extension" and provide its specific Saturation parameter. `;
     }
-    lunaIntegrationStr += `\n==================================================\n`;
+    lunaIntegrationStr += `n==================================================n`;
   }
 
   let focusInstruction = "";
@@ -3876,9 +3901,9 @@ export const getMixCritique = async (
       focusInstruction = "Focus specifically on the BEAT/INSTRUMENTAL in this mix. DO NOT focus on the vocals. The user ONLY HAS THIS MP3 (a single stereo file). Make sure to listen to the ENTIRE length of the song, including any intros, bridges, and outros. Provide advice on mastering and stereo bus processing (e.g., dynamic EQ, mid-side processing, stem separation tools, overall EQ balance, limiting) to improve the sound without access to individual tracks.";
     }
   }
-  const contextStr = userContext ? `\nCRITICAL USER CONTEXT: The user has provided the following information about their track and goals. You MUST incorporate this into your analysis and advice ALWAYS, IT IS THE MOST IMPORTANT INSTRUCTION. Your suggestions MUST explicitly align with and aim to achieve these exact goals, and NOT ruin the mix/volume:\n"${userContext}"\n` : "";
-  const previousCritiqueStr = previousCritique ? `\nPREVIOUS CRITIQUE CONTEXT: The user is uploading a new version of the track based on a previous critique. Here are the details of the previous critique:\nTitle: ${previousCritique.title}\nFeedback: ${previousCritique.overallFeedback}\nStrengths: ${JSON.stringify(previousCritique.strengths)}\nWeaknesses: ${JSON.stringify(previousCritique.weaknesses)}\nAction Plan: ${JSON.stringify(previousCritique.actionPlan)}\n\nPlease analyze the new audio, compare it with the previous critique, and provide further guidance to help the user achieve their desired sound. Focus on what has improved, what still needs work, and suggest further parameter adjustments or new plugins if necessary.\n` : "";
-  const referenceTrackStr = referenceTrack ? `\nREFERENCE TRACK: The user wants their mix to sound like this reference track: "${referenceTrack}". Please provide a guide for the critiqued MP3 to sound as accurately as possible like this reference track. If the reference track is a known song, use your knowledge to compare the sonic characteristics. If it's a URL, try to understand the context.\n` : "";
+  const contextStr = userContext ? `\nCRITICAL USER CONTEXT: The user has provided the following information about their track and goals. You MUST incorporate this into your analysis and advice ALWAYS, IT IS THE MOST IMPORTANT INSTRUCTION. Your suggestions MUST explicitly align with and aim to achieve these exact goals, and NOT ruin the mix/volume:n"${userContext}"n` : "";
+  const previousCritiqueStr = previousCritique ? `nPREVIOUS CRITIQUE CONTEXT: The user is uploading a new version of the track based on a previous critique. Here are the details of the previous critique:nTitle: ${previousCritique.title}nFeedback: ${previousCritique.overallFeedback}nStrengths: ${JSON.stringify(previousCritique.strengths)}nWeaknesses: ${JSON.stringify(previousCritique.weaknesses)}nAction Plan: ${JSON.stringify(previousCritique.actionPlan)}nnPlease analyze the new audio, compare it with the previous critique, and provide further guidance to help the user achieve their desired sound. Focus on what has improved, what still needs work, and suggest further parameter adjustments or new plugins if necessary.n` : "";
+  const referenceTrackStr = referenceTrack ? `nREFERENCE TRACK: The user wants their mix to sound like this reference track: "${referenceTrack}". Please provide a guide for the critiqued MP3 to sound as accurately as possible like this reference track. If the reference track is a known song, use your knowledge to compare the sonic characteristics. If it's a URL, try to understand the context.n` : "";
   const languageInstruction = getLanguageInstruction(language);
 
   let physicalAnalysisDiktat = "";
@@ -3980,7 +4005,11 @@ export const getMixCritique = async (
   }
 
 
-    let prompt = `
+    
+  const dawStr = dawType ? `\nThe user is using ${dawType} as their DAW. Include specific instructions or tips for ${dawType} where relevant in the guides or recipes.` : '';
+  const starredStr = starredPlugins.length > 0 ? `\nCRITICAL MANDATORY INSTRUCTION: The user has STARRED (favorited) the following plugins:\n${starredPlugins.join(', ')}\nYou ABSOLUTELY MUST include these starred plugins in EVERY SINGLE track's recommended chain. This is a non-negotiable hard requirement.` : '';
+
+  let prompt = `
     You are an expert audio engineer and producer.
     CRITICAL RULE FOR IMPROVEMENT: The end result MUST ALWAYS be a concrete improvement to the audio. You must apply proper gain staging and makeup gain on every step that involves compression, saturation, or equalization that reduces peak levels. NEVER reduce the overall volume unintentionally.
     ${getLanguageInstruction(language)}
@@ -4000,7 +4029,7 @@ export const getMixCritique = async (
 
     Only use mixing plugins from this list (for DAW processing):
     ${pluginListStr}
-    ${hardwareListStr ? 'Analog Hardware available:\n' + hardwareListStr : ''}
+    ${hardwareListStr ? 'Analog Hardware available:n' + hardwareListStr : ''}
     ${dawStr}
     ${starredStr}
     ${lunaIntegrationStr}
@@ -4229,12 +4258,12 @@ export const getMixCritique = async (
         let chunkPrompt = prompt + multiBandInstruction + FUNCTION_AUTOMATION_PROMPT;
         
         if (i > 0) {
-           chunkPrompt += `\n\nCRITICAL MULTI-PART REQUEST: You are analyzing part ${i+1} out of ${chunks.length}. For this phase, ONLY provide action plan steps for the following stems: ${stemNames}. Do NOT provide overall feedback or strengths/weaknesses again (just return simple dummy strings for those fields), but you MUST provide the exhaustive actionPlan array for these specific stems.`;
+           chunkPrompt += `n\nCRITICAL MULTI-PART REQUEST: You are analyzing part ${i+1} out of ${chunks.length}. For this phase, ONLY provide action plan steps for the following stems: ${stemNames}. Do NOT provide overall feedback or strengths/weaknesses again (just return simple dummy strings for those fields), but you MUST provide the exhaustive actionPlan array for these specific stems.`;
         } else {
-           chunkPrompt += `\n\nCRITICAL MULTI-PART REQUEST: You are analyzing part ${i+1} out of ${chunks.length}. For this phase, provide the comprehensive overall feedback, strengths, weaknesses, AND the exhaustive action plan steps ONLY for the following stems: ${stemNames}.`;
+           chunkPrompt += `n\nCRITICAL MULTI-PART REQUEST: You are analyzing part ${i+1} out of ${chunks.length}. For this phase, provide the comprehensive overall feedback, strengths, weaknesses, AND the exhaustive action plan steps ONLY for the following stems: ${stemNames}.`;
         }
         
-        chunkPrompt += `\n\nCRITICAL: You MUST return a valid JSON object EXCLUSIVELY formatted with this exact JSON Schema:\n${JSON.stringify(chunkSchema, null, 2)}`;
+        chunkPrompt += `n\nCRITICAL: You MUST return a valid JSON object EXCLUSIVELY formatted with this exact JSON Schema:n${JSON.stringify(chunkSchema, null, 2)}`;
         
         const chunkParts = [...parts.slice(0, parts.length - 1), { text: chunkPrompt }];
         
@@ -4281,7 +4310,7 @@ export const getMixCritique = async (
     if (hasStems && uploadedStems && uploadedStems.length > 0) {
       schema.properties.actionPlan.description = `CRITICAL: You MUST generate EXACTLY ${uploadedStems.length} items in this array, one for each uploaded stem.`;
     }
-    const finalPrompt = prompt + multiBandInstruction + `\n\nCRITICAL: You MUST return a valid JSON object EXCLUSIVELY formatted with this exact JSON Schema:\n${JSON.stringify(schema, null, 2)}`;
+    const finalPrompt = prompt + multiBandInstruction + `n\nCRITICAL: You MUST return a valid JSON object EXCLUSIVELY formatted with this exact JSON Schema:n${JSON.stringify(schema, null, 2)}`;
     const finalParts = [...parts.slice(0, parts.length - 1), { text: finalPrompt }];
     
     let response;
@@ -4316,7 +4345,7 @@ export const getMixCritique = async (
     } catch (e: any) {
       console.error("Detailed Error in getMixCritique:", e);
       console.error("Safety/Blocked:", JSON.stringify(response?.candidates?.[0] || {}));
-      throw new Error(`Format error in getMixCritique. Details: ${e.message || e}\nRaw: ${typeof jsonStr !== 'undefined' ? jsonStr.substring(0, 500) : "empty"}\nSafety: ${JSON.stringify(response?.candidates?.[0]?.safetyRatings || "none")}`);
+      throw new Error(`Format error in getMixCritique. Details: ${e.message || e}nRaw: ${typeof jsonStr !== 'undefined' ? jsonStr.substring(0, 500) : "empty"}nSafety: ${JSON.stringify(response?.candidates?.[0]?.safetyRatings || "none")}`);
     }
   }
   result.id = crypto.randomUUID();
@@ -4338,7 +4367,7 @@ export const compareMixDelta = async (plugins: VSTPlugin[], originalAudioBase64:
   const ai = getAI();
   const { GoogleGenAI } = await import("@google/genai");
   const model = "gemini-3.1-pro-preview";
-  const systemInstruction = `You are a world-class mastering engineer performing an A/B Mix Delta Analysis.\n\nYou will receive TWO audio files (if the platform supports it) or at least the processed audio, along with the recipe context that produced it.\n\nYour job is to:\n1. Listen to the PROCESSED audio and identify any artifacts, distortion, over-compression, pumping, or phase issues.\n2. Compare it to the original audio (if provided) to hear the delta.\n3. Identify exactly which plugins/parameters in the recipe caused the issue (e.g. "The second compressor on the bass has the threshold too low and ratio too high, causing distortion").\n4. Provide a detailed analysis and a corrective action plan.\n\nCRITICAL: You MUST return EXACTLY valid JSON matching this schema:\n${JSON.stringify({ type: "OBJECT", properties: { analysis: { type: "STRING" }, correctiveActions: { type: "ARRAY", items: { type: "OBJECT", properties: { targetStem: { type: "STRING" }, pluginName: { type: "STRING" }, paramChanges: { type: "ARRAY", items: { type: "OBJECT", properties: { paramName: { type: "STRING" }, newValue: { type: "NUMBER" }, reason: { type: "STRING" } } } } } } } }, required: ["analysis", "correctiveActions"] })}`; 
+  const systemInstruction = `You are a world-class mastering engineer performing an A/B Mix Delta Analysis.nnYou will receive TWO audio files (if the platform supports it) or at least the processed audio, along with the recipe context that produced it.nnYour job is to:n1. Listen to the PROCESSED audio and identify any artifacts, distortion, over-compression, pumping, or phase issues.n2. Compare it to the original audio (if provided) to hear the delta.n3. Identify exactly which plugins/parameters in the recipe caused the issue (e.g. "The second compressor on the bass has the threshold too low and ratio too high, causing distortion").n4. Provide a detailed analysis and a corrective action plan.n\nCRITICAL: You MUST return EXACTLY valid JSON matching this schema:n${JSON.stringify({ type: "OBJECT", properties: { analysis: { type: "STRING" }, correctiveActions: { type: "ARRAY", items: { type: "OBJECT", properties: { targetStem: { type: "STRING" }, pluginName: { type: "STRING" }, paramChanges: { type: "ARRAY", items: { type: "OBJECT", properties: { paramName: { type: "STRING" }, newValue: { type: "NUMBER" }, reason: { type: "STRING" } } } } } } } }, required: ["analysis", "correctiveActions"] })}`; 
   const contents = [];
   if (originalAudioBase64 && originalMimeType) {
     contents.push({ role: "user", parts: [{ text: "Here is the ORIGINAL unprocessed audio:" }] });
@@ -4346,7 +4375,7 @@ export const compareMixDelta = async (plugins: VSTPlugin[], originalAudioBase64:
   }
   contents.push({ role: "user", parts: [{ text: "Here is the PROCESSED audio (rendered from REAPER) that has distortion/issues:" }] });
   contents.push({ role: "user", parts: [{ inlineData: { data: processedAudioBase64, mimeType: processedMimeType } }] });
-  contents.push({ role: "user", parts: [{ text: `Here is the RECIPE CONTEXT that produced this processed audio:\n\n${recipeContext}\n\nPlease analyze the difference and tell me what went wrong, and give me the corrective JSFX parameter changes.` }] });
+  contents.push({ role: "user", parts: [{ text: `Here is the RECIPE CONTEXT that produced this processed audio:nn${recipeContext}nnPlease analyze the difference and tell me what went wrong, and give me the corrective JSFX parameter changes.` }] });
 
   const response = await ai.models.generateContent({
     model,
@@ -4387,7 +4416,7 @@ ${getLanguageInstruction(language)}
     ${apolloConstraint}
     ${audioBase64 || audioUrl ? "I am uploading an MP3 of a project that needs work." : "I am providing a recipe for a track."}
     ${isGangstaVox ? "Focus specifically on the VOCALS." : "Focus specifically on the BEAT/INSTRUMENTAL."}
-    ${recipeContext ? `Here is the recipe context:\n${recipeContext}\n` : ""}
+    ${recipeContext ? `Here is the recipe context:n${recipeContext}n` : ""}
     ${audioBase64 || audioUrl ? "Analyze the audio focusing ONLY on the user's requests, and provide targeted advice." : "Analyze the recipe details focusing ONLY on the user's requests, and provide targeted advice."}
 
     CRITICAL PLUGIN SELECTION RULE:
@@ -4633,7 +4662,7 @@ export const getLyricAnalysis = async (
     return {
       dubWords: parsed.dubWords || 'None recommended',
       cadenceAndDelivery: parsed.cadenceAndDelivery || 'No delivery specifications generated',
-      vocalChain: parsed.vocalChain || [],
+      vocalChain: parsed.vocalChain ? applySafeParameterMappingToChain(parsed.vocalChain, undefined, false) : [],
       additionalAdvice: parsed.additionalAdvice || 'No additional advice.',
       timeline: parsed.timeline || [],
       formattedLyrics: parsed.formattedLyrics || '',
@@ -4661,7 +4690,7 @@ export const getLyricAnalysis = async (
         return {
           dubWords: parsed.dubWords || 'None recommended',
           cadenceAndDelivery: parsed.cadenceAndDelivery || 'No delivery specifications generated',
-          vocalChain: parsed.vocalChain || [],
+          vocalChain: parsed.vocalChain ? applySafeParameterMappingToChain(parsed.vocalChain, undefined, false) : [],
           additionalAdvice: parsed.additionalAdvice || 'No additional advice.',
           timeline: parsed.timeline || [],
           formattedLyrics: parsed.formattedLyrics || '',
@@ -4780,7 +4809,7 @@ export const replicateRecipeWithUserGear = async (recipe: SavedRecipe, myPlugins
   try {
     const response = await ai.models.generateContent({
       model: "gemini-3-flash-preview",
-      contents: { parts: [{ text: prompt + "\\n\\nCRITICAL: You MUST return EXACTLY valid JSON matching this schema:\\n" + JSON.stringify(getUnifiedRecipeSchema(recipe.isGangstaVox), null, 2) }] },
+      contents: { parts: [{ text: prompt + "n\nCRITICAL: You MUST return EXACTLY valid JSON matching this schema:n" + JSON.stringify(getUnifiedRecipeSchema(recipe.isGangstaVox), null, 2) }] },
       config: {
         customAction: 'analog_save',
         responseMimeType: "application/json"
@@ -4792,7 +4821,7 @@ export const replicateRecipeWithUserGear = async (recipe: SavedRecipe, myPlugins
     }
     // Clean up potential markdown formatting
     if (jsonStr.startsWith('```')) {
-      jsonStr = jsonStr.replace(/^```json\n?/, '').replace(/\n?```$/, '');
+      jsonStr = jsonStr.replace(/^```jsonn?/, '').replace(/n?```$/, '');
     }
     let adapted;
     try {
@@ -4961,7 +4990,7 @@ export const regenerateTrackingChain = async (
     };
     const result = await ai.models.generateContent({
       model: "gemini-3-flash-preview",
-      contents: { parts: [{ text: prompt + "\\n\\nCRITICAL: You MUST return a valid JSON object matching this schema exactly:\\n" + JSON.stringify(schema, null, 2) }] },
+      contents: { parts: [{ text: prompt + "n\nCRITICAL: You MUST return a valid JSON object matching this schema exactly:n" + JSON.stringify(schema, null, 2) }] },
       config: {
         customAction: 'regenerate_tracking_chain',
         responseMimeType: "application/json"
@@ -4986,7 +5015,8 @@ export const getAlbumMasteringGuide = async (
   combinedPhysicalMetrics?: { integratedLufs: number, truePeak: number, crestFactor: number, duration?: number },
   dawType: string | null = null,
   lunaSumming: string = 'off',
-  lunaTape: string = 'off'
+  lunaTape: string = 'off',
+  userEmail: string | null | undefined = null
 ): Promise<any> => {
   const ai = getAI();
     const isStudioOne = dawType?.toLowerCase().includes('studio one');
@@ -5004,8 +5034,28 @@ export const getAlbumMasteringGuide = async (
 
   let hardwareListStr = [...analogInstruments, ...analogHardware].map(h => h.name).join('\n');
 
-  const dawStr = dawType ? `\nThe user is using ${dawType} as their DAW. Include specific instructions or tips for ${dawType} where relevant.` : '';
-  const starredStr = starredPlugins.length > 0 ? `\nCRITICAL MANDATORY INSTRUCTION: The user has STARRED (favorited) the following plugins:\n${starredPlugins.join(', ')}\nYou ABSOLUTELY MUST include these starred plugins in EVERY SINGLE track's recommended chain. This is a non-negotiable hard requirement.` : '';
+  const dawStr = dawType ? `nThe user is using ${dawType} as their DAW. Include specific instructions or tips for ${dawType} where relevant.` : '';
+  const starredStr = starredPlugins.length > 0 ? `\nCRITICAL MANDATORY INSTRUCTION: The user has STARRED (favorited) the following plugins:n${starredPlugins.join(', ')}nYou ABSOLUTELY MUST include these starred plugins in EVERY SINGLE track's recommended chain. This is a non-negotiable hard requirement.` : '';
+
+  const isSpecialUserAlbum = userEmail === 'coldestconcept@gmail.com' || userEmail === 'recognizemiracles@gmail.com';
+  let specialUserInstructions = '';
+  if (isSpecialUserAlbum) {
+    specialUserInstructions = `
+CRITICAL: The user will be using Lurssen Mastering Console and FabFilter Pro-Q 3 for every song on this album.
+Their goal is for all the songs on the album to sound like they are on the same project (highly cohesive).
+You MUST provide specific, actionable suggestions on how to use these two tools together effectively to achieve consistent, professional results across the entire album.
+Example Workflow:
+1. Use FabFilter Pro-Q 3 first for surgical EQ, track matching, and fixing resonances.
+2. Use Lurssen Mastering Console last as the final analog "glue" to impart a unified tone and dynamic control.
+Suggest consistent presets or workflows across the tracks.
+
+For Lurssen Mastering Console, you MUST provide explicit settings for ALL available controls for EACH track:
+1. Input Drive (number, e.g. 2.0)
+2. 5 Band EQ (60Hz, 120Hz, 3kHz, 6kHz, 10kHz - adjust these in dB)
+3. Push (measured in INTEGER PERCENTAGES ONLY, e.g. "110%", "120%". NO FRACTIONS OR DECIMALS like 1.5%, ONLY WHOLE NUMBERS)
+4. Style / Genre Preset
+`;
+  }
 
   let stemsContext = uploadedStems.map((stem, index) => {
     const metrics = stemsPhysicalMetrics?.[stem.id];
@@ -5022,6 +5072,7 @@ export const getAlbumMasteringGuide = async (
     ${stemsContext}
     
     User Context / Album Vibe: "${userContext}"
+    ${specialUserInstructions}
     
     You MUST provide an exhaustive, in-depth guide of what specific mastering plugins to add on EACH track's master bus so that they all sound good together like a fine-tuned album. Match the LUFS, dynamic range, and tonal balance.
     

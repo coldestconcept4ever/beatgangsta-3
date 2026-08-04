@@ -5350,7 +5350,7 @@ The AI was unable to verify these parameters. Please investigate.`;
         vendor: manualPluginBrand.trim(),
         type: 'vst',
         version: '',
-        lastModified: 0
+        lastModified: ''
       };
       // Use the geminiService function to get category & parameters
       const researchedPlugin = await researchPluginParameters(pluginToResearch, i18n.language);
@@ -5372,7 +5372,7 @@ The AI was unable to verify these parameters. Please investigate.`;
         if (prev.some(p => p.name === manualPluginName.trim() && p.vendor === manualPluginBrand.trim())) {
           return prev;
         }
-        return [...prev, { name: manualPluginName.trim(), vendor: manualPluginBrand.trim(), type: 'vst', version: '', lastModified: 0 }];
+        return [...prev, { name: manualPluginName.trim(), vendor: manualPluginBrand.trim(), type: 'vst', version: '', lastModified: '' }];
       });
       setManualPluginName('');
       setManualPluginBrand('');
@@ -5741,7 +5741,8 @@ Provide the exact JSFX plugin name and required sliders/parameters.`;
           combinedPhysicalMetrics as any,
           dawType,
           lunaSumming,
-          lunaTape
+          lunaTape,
+          user?.email
         );
       } else {
         critique = await getMixCritique(
@@ -5767,8 +5768,9 @@ Provide the exact JSFX plugin name and required sliders/parameters.`;
           isJsfxMode, 
           installedJsfxPacks, 
           starredPlugins,
+          undefined,
+          undefined,
           stemsPhysicalMetrics as any,
-          combinedPhysicalMetrics as any,
           dawType,
           lunaSumming,
           lunaTape

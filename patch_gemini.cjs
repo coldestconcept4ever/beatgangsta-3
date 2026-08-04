@@ -1,18 +1,42 @@
 const fs = require('fs');
-let code = fs.readFileSync('src/services/geminiService.ts', 'utf8');
+let content = fs.readFileSync('src/services/geminiService.ts', 'utf-8');
 
-const target = `      2. INTEGRATED LUFS & GAIN STAGING:
-         - Compare the Integrated LUFS of the main track to the reference track (if provided). Calculate the exact target headroom delta.
-         - If the main track is quiet (e.g. under -16 LUFS), specify precise output/makeup gain settings (+2dB to +8dB) on your compression/limiting steps to raise the level professionally to competitive industry standards (-14 to -9 LUFS depending on genre) while maintaining absolute headroom.`;
+const targetStr = `function postProcessResult(result: any) {`;
 
-const replacement = `      2. INTEGRATED LUFS & GAIN STAGING:
-         - Compare the Integrated LUFS of the main track to the reference track (if provided). Calculate the exact target headroom delta.
-\${hasStems ? \`         - CRITICAL: Because the user uploaded STEMS, you MUST NOT try to raise individual stems to master loudness targets like -14 LUFS. Stems are intentionally quiet because their energy sums together on the master bus. Your gain staging for stems MUST perfectly preserve their original volume levels. If you apply compression or EQ cuts/boosts, strictly apply exact make-up gain to perfectly match the input volume. DO NOT boost stem volumes!\` : \`         - If the main track is quiet (e.g. under -16 LUFS), specify precise output/makeup gain settings (+2dB to +8dB) on your compression/limiting steps to raise the level professionally to competitive industry standards (-14 to -9 LUFS depending on genre) while maintaining absolute headroom.\`}`;
+const newStr = `function postProcessResult(result: any) {
+  const processChain = (chain: any[]) => {
+    if (!chain || !Array.isArray(chain)) return chain;
+    try {
+      return applySafeParameterMappingToChain(chain, undefined, false);
+    } catch (e) {
+      console.warn("Error applying safe param mapping:", e);
+      return chain;
+    }
+  };
+`;
 
-if (code.includes(target)) {
-    code = code.replace(target, replacement);
-    fs.writeFileSync('src/services/geminiService.ts', code);
-    console.log("Patched successfully");
-} else {
-    console.log("Target string not found!");
-}
+content = content.replace(targetStr, newStr);
+
+const targetStr2 = `  const processRecipe = (recipe: any) => {`;
+
+const newStr2 = `  const processRecipe = (recipe: any) => {
+    if (recipe && recipe.instruments && Array.isArray(recipe.instruments)) {
+      recipe.instruments.forEach((inst: any) => {
+        if (inst && Array.isArray(inst.fxPlugins)) {
+          inst.fxPlugins = processChain(inst.fxPlugins);
+        }
+      });
+    }
+    if (recipe && recipe.busses && Array.isArray(recipe.busses)) {
+      recipe.busses.forEach((bus: any) => {
+        if (bus && Array.isArray(bus.fxPlugins)) {
+          bus.fxPlugins = processChain(bus.fxPlugins);
+        }
+      });
+    }
+`;
+
+content = content.replace(targetStr2, newStr2);
+
+fs.writeFileSync('src/services/geminiService.ts', content);
+console.log("Patched postProcessResult in geminiService.ts");
