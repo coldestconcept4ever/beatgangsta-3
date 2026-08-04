@@ -151,20 +151,38 @@ export const mapPluginParametersSafely = (
   const mappedSettings = plugin.deepDive.map((setting: ParameterSetting) => {
     const paramLower = setting.parameter.toLowerCase();
 
-    // Fix Lurssen parameters if they incorrectly use dB
-    if (pluginNameLower.includes('lurssen') || paramLower.includes('push') || paramLower.includes('input drive')) {
-      if (paramLower.includes('push') && setting.value.toLowerCase().includes('db')) {
-        setting.value = setting.value.replace(/([+-]?[\d.]+)\s*db/i, (match, p1) => {
-          const val = parseFloat(p1);
-          return (val > 0 && val < 5 ? val * 100 : val) + "%"; 
-        });
-        setting.value = setting.value.replace(/db/ig, "%");
-        setting.explanation = setting.explanation ? setting.explanation.replace(/([+-]?[\d.]+)\s*db/ig, (m, p1) => (parseFloat(p1) > 0 && parseFloat(p1) < 5 ? parseFloat(p1) * 100 : parseFloat(p1)) + "%") : "";
-      }
-      if (paramLower.includes('input drive') && setting.value.toLowerCase().includes('db')) {
-        setting.value = setting.value.replace(/([+-]?[\d.]+)\s*db/i, "$1");
-        setting.value = setting.value.replace(/db/ig, "");
-        setting.explanation = setting.explanation ? setting.explanation.replace(/db/ig, "") : "";
+    // Strict real-world mapping for IK Multimedia - Lurssen Mastering Console
+    if (pluginNameLower.includes('lurssen') || pluginNameLower.includes('mastering console')) {
+      if (paramLower.includes('push')) {
+        let valStr = setting.value;
+        const numVal = parseFloat(valStr.replace(/[^0-9.-]/g, ''));
+        if (!isNaN(numVal)) {
+          // Clamp value between -100% and +100%
+          const clamped = Math.max(-100, Math.min(100, Math.round(numVal)));
+          valStr = `${clamped >= 0 ? '+' : ''}${clamped}%`;
+        } else if (!valStr.includes('%')) {
+          valStr = `${valStr}%`;
+        }
+        setting.value = valStr;
+        if (!setting.explanation || !setting.explanation.includes('simultaneously')) {
+          setting.explanation = `${setting.explanation || ''} (Push master control shifts all 5 EQ band dials simultaneously from -100% to +100%)`.trim();
+        }
+      } else if (paramLower.includes('input drive') || (paramLower.includes('drive') && !paramLower.includes('style'))) {
+        const rawDrive = parseFloat(setting.value.replace(/[^0-9.-]/g, ''));
+        if (!isNaN(rawDrive)) {
+          setting.value = `${rawDrive >= 0 ? '+' : ''}${rawDrive.toFixed(1)} dB`;
+        } else if (!setting.value.toLowerCase().includes('db')) {
+          setting.value = `${setting.value} dB`;
+        }
+      } else if (!paramLower.includes('style') && !paramLower.includes('preset') && !paramLower.includes('genre')) {
+        const rawNum = parseFloat(setting.value.replace(/[^0-9.-]/g, ''));
+        if (!isNaN(rawNum)) {
+          const roundedInteger = Math.round(rawNum);
+          setting.value = `${roundedInteger >= 0 ? '+' : ''}${roundedInteger} dB`;
+        }
+        if (!setting.explanation || !setting.explanation.includes('1 dB integer step')) {
+          setting.explanation = `${setting.explanation || ''} (Stepped in 1 dB integer values on Lurssen EQ dials)`.trim();
+        }
       }
     }
 

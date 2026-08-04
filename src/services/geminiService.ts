@@ -1114,7 +1114,16 @@ const GLOBAL_PARAMETER_STRICTNESS_PROMPT = `
     CRITICAL - STRICT PARAMETER REALISM, UNITS, & O'CLOCK POSITIONING:
     1. ZERO HALLUCINATION (FIREABLE OFFENSE): You MUST ONLY suggest parameters that actually exist on the real-world interface of the specified plugin as documented in its official manual. NEVER invent, guess, hallucinate, or inject parameters that do not exist on that plugin.
     2. STRICT UNIT ACCURACY: You MUST use the exact, correct unit of measurement for every parameter (e.g. Hz, kHz, dB, ms, %, etc.).
-    - CRITICAL LURSSEN RULE: For "IK Multimedia - Lurssen Mastering Console", the "Push" parameter is measured in INTEGER PERCENTAGES (%) (use % symbol ONLY), NOT IN dB. If you suggest Push, YOU MUST NEVER EVER USE dB or decimals. (e.g. "110%", "120%"). NO FRACTIONS OR DECIMALS ALLOWED (e.g. NO 1.5%), ONLY WHOLE NUMBERS. The "Input Drive" parameter is also just a number, not dB. The exact controls available on Lurssen Mastering Console that you must provide settings for are: 1. Input Drive, 2. 5 Band EQ (60Hz, 120Hz, 3kHz, 6kHz, 10kHz - adjust these in dB), 3. Push (Integer Percentage), 4. Style / Genre Preset.
+    - CRITICAL LURSSEN MASTERING CONSOLE REAL-WORLD RULES: For "IK Multimedia - Lurssen Mastering Console", you MUST adhere strictly to its real physical/software GUI interface:
+      1. Input Drive: Measured in dB with decimal precision allowed (-15.0 dB to +15.0 dB, e.g. "2.8 dB", "1.5 dB", "-3.0 dB").
+      2. 5 Band EQ (60Hz, 120Hz, 3kHz, 6kHz, 10kHz):
+         - MUST BE WHOLE INTEGERS ONLY (e.g. "+1 dB", "-1 dB", "0 dB", "+2 dB", "-2 dB", "+8 dB", "+10 dB").
+         - ABSOLUTELY NO DECIMALS OR .5s ALLOWED FOR EQ (e.g. NO 0.5 dB, NO -0.5 dB, NO 1.5 dB). Step size is strictly 1 dB integers on the dials (0, 1, -1, 2, -2, etc.).
+      3. Push:
+         - Measured in PERCENTAGE (%) with range from -100% to +100% (default is "0%").
+         - Format strictly as percentage (e.g. "0%", "+5%", "+10%", "+50%", "+100%", "-100%"). Values above 100% do not exist on the GUI.
+         - MASTER BEHAVIOR: Push is a master EQ gain offset control — turning Push shifts and moves ALL 5 EQ BAND DIALS simultaneously in unison (+100% Push pushes all 5 dials up by +10 dB, -100% pulls all 5 dials down by -10 dB).
+      4. Style / Genre Preset: Must select one of the 40 built-in presets (e.g. "Pop Rock", "Hard Rock", "Hip Hop", "EDM", "Americana", "Jazz", "Country", "Pop", "Heavy Metal", etc.).
     3. REAPER JSFX MASTER RESEARCH PROFILES (USE FOR COCKOS JSFX RECOMMENDATIONS):
        - "JS: 1175 Compressor" (1175 Compressor - Stock Cockos REAPER JSFX):
          - S1 (Threshold (dB)): -60 to 0 dB (Default: 0).
@@ -5050,10 +5059,10 @@ Example Workflow:
 Suggest consistent presets or workflows across the tracks.
 
 For Lurssen Mastering Console, you MUST provide explicit settings for ALL available controls for EACH track:
-1. Input Drive (number, e.g. 2.0)
-2. 5 Band EQ (60Hz, 120Hz, 3kHz, 6kHz, 10kHz - adjust these in dB)
-3. Push (measured in INTEGER PERCENTAGES ONLY, e.g. "110%", "120%". NO FRACTIONS OR DECIMALS like 1.5%, ONLY WHOLE NUMBERS)
-4. Style / Genre Preset
+1. Input Drive: (measured in dB, e.g. "2.8 dB" — decimal precision allowed)
+2. 5 Band EQ (60Hz, 120Hz, 3kHz, 6kHz, 10kHz): MUST BE WHOLE INTEGER dB ONLY (e.g. "+1 dB", "-1 dB", "0 dB", "+2 dB"). NO DECIMALS OR .5s ALLOWED (e.g. NO 0.5 dB, NO -0.5 dB, NO 1.5 dB).
+3. Push: (measured in PERCENTAGE %, e.g. "0%", "+10%", "+50%", "+100%", "-100%". Maximum is +100% and minimum is -100%. Note: Push is a master control that shifts all 5 EQ band dials simultaneously).
+4. Style / Genre Preset: (e.g. "Pop Rock")
 `;
   }
 

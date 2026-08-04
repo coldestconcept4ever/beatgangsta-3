@@ -29,6 +29,7 @@ export const pluginDetails: Record<string, { description: string; year: number }
   "HalfTime": { description: "Instant half-speed effect for creating dark, down-tempo vibes.", year: 2017 },
   "Gross Beat": { description: "Time and volume manipulation effect.", year: 2008 },
   "Edison": { description: "Fully integrated audio editing and recording tool.", year: 2007 },
+  "Lurssen Mastering Console": { description: "Emulation of Gavin Lurssen's mastering console with 5-band 1dB stepped EQ, master Push control (moves all 5 dials simultaneously), continuous Input Drive, and 40 style presets.", year: 2016 },
 };
 
 export const getPluginInfo = (name: string, type: string) => {
