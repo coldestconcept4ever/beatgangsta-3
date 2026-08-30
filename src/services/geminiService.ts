@@ -1113,6 +1113,9 @@ const FUNCTION_AUTOMATION_PROMPT = `
 const GLOBAL_PARAMETER_STRICTNESS_PROMPT = `
     CRITICAL - STRICT PARAMETER REALISM, UNITS, & O'CLOCK POSITIONING:
     1. ZERO HALLUCINATION (FIREABLE OFFENSE): You MUST ONLY suggest parameters that actually exist on the real-world interface of the specified plugin as documented in its official manual. NEVER invent, guess, hallucinate, or inject parameters that do not exist on that plugin.
+    - ABSOLUTE BAN ON FAKE DAW-WRAPPER & GENERIC BUS PARAMETERS:
+      - NEVER suggest "Dry/Wet Mix", "Parallel Blend", "Highpass Sidechain / Crossover", "Sidechain HPF", "Crossover Frequency", or "Phase Mode" UNLESS that specific control is an actual physical/software GUI knob printed on that plugin's interface (e.g. Softube Saturation Knob ONLY has "Saturation Amount" and "Saturation Type" — NEVER tell the user to adjust Dry/Wet, HPF, or sidechains for it!).
+      - The user CANNOT change external DAW routing or wrapper sidechains inside the plugin GUI, so NEVER output wrapper instructions or fake knobs. Only output the exact controls that the engineer can adjust inside that specific plugin window.
     2. STRICT UNIT ACCURACY: You MUST use the exact, correct unit of measurement for every parameter (e.g. Hz, kHz, dB, ms, %, etc.).
     - CRITICAL LURSSEN MASTERING CONSOLE REAL-WORLD RULES: For "IK Multimedia - Lurssen Mastering Console", you MUST adhere strictly to its real physical/software GUI interface:
       1. Input Drive: Measured in dB with decimal precision allowed (-15.0 dB to +15.0 dB, e.g. "2.8 dB", "1.5 dB", "-3.0 dB").
@@ -3843,21 +3846,58 @@ export const getMixCritique = async (
   stemsPhysicalMetrics?: Record<string, { integratedLufs: number, truePeak: number, crestFactor: number, duration?: number }>,
   dawType: string | null = null,
   lunaSumming: 'api' | 'neve' | 'off' = 'off',
-  lunaTape: 'oxide' | 'studer' | 'off' = 'off'
+  lunaTape: 'oxide' | 'studer' | 'off' = 'off',
+  userEmail: string | null | undefined = null
 ): Promise<any> => {
   const ai = getAI();
-      const isStudioOne = dawType?.toLowerCase().includes('studio one');
+  const isSpecialUser = userEmail === 'coldestconcept@gmail.com' || userEmail === 'recognizemiracles@gmail.com';
+  const isStudioOne = dawType?.toLowerCase().includes('studio one');
   const filteredPlugins = plugins.filter(p => {
     if (!isStudioOne && (p.vendor.toLowerCase().includes('presonus') || p.name.toLowerCase().includes('presonus'))) {
       return false;
     }
     return true;
   });
-  const limitedPlugins = [
-    ...filteredPlugins.filter(p => starredPlugins.includes(p.name)),
-    ...filteredPlugins.filter(p => !starredPlugins.includes(p.name))
-  ].slice(0, 50);
-  const pluginListStr = limitedPlugins.map(p => {
+
+  // Ensure Gullfoss and Pro-Q 3 are ALWAYS included in the available plugins for special users
+  const mandatoryPlugins: VSTPlugin[] = [];
+  if (isSpecialUser) {
+    const proQ3 = filteredPlugins.find(p => p.name.toLowerCase().includes('pro-q 3') || p.name.toLowerCase().includes('pro-q3') || p.name.toLowerCase() === 'pro-q 3');
+    const gullfoss = filteredPlugins.find(p => p.name.toLowerCase().includes('gullfoss'));
+    if (proQ3) mandatoryPlugins.push(proQ3);
+    if (gullfoss) mandatoryPlugins.push(gullfoss);
+  }
+
+  // To prevent the AI from always picking the same 2-3 plugins from a static list,
+  // balance available plugins across diverse categories (EQ, Dynamics/Compressor, Saturation/Tape, Space/Modulation, Master/Limiter)
+  // and sample across categories so Gemini has access to a rich palette of ~100 distinct tools.
+  const starred = filteredPlugins.filter(p => starredPlugins.includes(p.name) && !mandatoryPlugins.some(m => m.name === p.name));
+  const remaining = filteredPlugins.filter(p => !starredPlugins.includes(p.name) && !mandatoryPlugins.some(m => m.name === p.name));
+
+  const eqList = remaining.filter(p => p.type === 'EQ' || p.name.toLowerCase().includes('eq') || p.name.toLowerCase().includes('pultec') || p.name.toLowerCase().includes('neve') || p.name.toLowerCase().includes('api'));
+  const compList = remaining.filter(p => p.type === 'Compressor' || p.name.toLowerCase().includes('comp') || p.name.toLowerCase().includes('1176') || p.name.toLowerCase().includes('la-2a') || p.name.toLowerCase().includes('cl 1b') || p.name.toLowerCase().includes('distressor') || p.name.toLowerCase().includes('fairchild') || p.name.toLowerCase().includes('ssl'));
+  const satList = remaining.filter(p => p.type === 'Saturation' || p.type === 'Distortion' || p.name.toLowerCase().includes('tape') || p.name.toLowerCase().includes('saturat') || p.name.toLowerCase().includes('decapitator') || p.name.toLowerCase().includes('saturn') || p.name.toLowerCase().includes('studer') || p.name.toLowerCase().includes('atr-102') || p.name.toLowerCase().includes('radiator') || p.name.toLowerCase().includes('tube') || p.name.toLowerCase().includes('knob'));
+  const spatialList = remaining.filter(p => p.type === 'Reverb' || p.type === 'Delay' || p.type === 'Modulation' || p.name.toLowerCase().includes('reverb') || p.name.toLowerCase().includes('delay') || p.name.toLowerCase().includes('echo') || p.name.toLowerCase().includes('plate') || p.name.toLowerCase().includes('chamber') || p.name.toLowerCase().includes('dimension') || p.name.toLowerCase().includes('chorus') || p.name.toLowerCase().includes('valhalla'));
+  const masterList = remaining.filter(p => p.type === 'Limiter' || p.type === 'Mastering' || p.name.toLowerCase().includes('limit') || p.name.toLowerCase().includes('maximizer') || p.name.toLowerCase().includes('clipper') || p.name.toLowerCase().includes('lurssen') || p.name.toLowerCase().includes('ozone') || p.name.toLowerCase().includes('inflator') || p.name.toLowerCase().includes('gullfoss') || p.name.toLowerCase().includes('soothe'));
+  const otherList = remaining.filter(p => !eqList.includes(p) && !compList.includes(p) && !satList.includes(p) && !spatialList.includes(p) && !masterList.includes(p));
+
+  const shuffleArray = <T>(arr: T[]): T[] => [...arr].sort(() => Math.random() - 0.5);
+
+  const balancedSelection: VSTPlugin[] = [
+    ...mandatoryPlugins,
+    ...starred,
+    ...shuffleArray(eqList).slice(0, 16),
+    ...shuffleArray(compList).slice(0, 16),
+    ...shuffleArray(satList).slice(0, 16),
+    ...shuffleArray(spatialList).slice(0, 16),
+    ...shuffleArray(masterList).slice(0, 14),
+    ...shuffleArray(otherList).slice(0, 12)
+  ];
+
+  // Remove duplicates while preserving insertion order
+  const uniquePlugins = Array.from(new Map(balancedSelection.map(p => [p.name, p])).values());
+
+  const pluginListStr = uniquePlugins.map(p => {
     let str = `${p.vendor} - ${p.name} (${p.type})`;
     if (p.parameters && p.parameters.length > 0) {
       str += ` [Parameters: ${p.parameters.join(', ')}]`;
@@ -4018,11 +4058,36 @@ export const getMixCritique = async (
   const dawStr = dawType ? `\nThe user is using ${dawType} as their DAW. Include specific instructions or tips for ${dawType} where relevant in the guides or recipes.` : '';
   const starredStr = starredPlugins.length > 0 ? `\nCRITICAL MANDATORY INSTRUCTION: The user has STARRED (favorited) the following plugins:\n${starredPlugins.join(', ')}\nYou ABSOLUTELY MUST include these starred plugins in EVERY SINGLE track's recommended chain. This is a non-negotiable hard requirement.` : '';
 
+  let specialUserDiktat = "";
+  if (isSpecialUser) {
+    specialUserDiktat = `
+==================================================
+🚨🚨 MANDATORY ENGINEER TOOLCHAIN DIRECTIVE 🚨🚨
+The user is verified VIP engineer: ${userEmail}.
+MANDATORY RULES FOR EVERY CRITIQUE AND STEM CHAIN:
+1. ALWAYS include "FabFilter - Pro-Q 3" (or "Pro-Q 3") in the recommended chain for every stem/mix. Provide surgical resonance cuts, dynamic bell nodes, low-cut filtering, or high-shelf air.
+2. ALWAYS include "Soundtheory - Gullfoss" (or "Gullfoss") in the recommended chain. Provide exact Recover, Tame, Bias, Brightness, and Boost settings to resolve spectral masking.
+3. FOR ALL OTHER PLUGINS IN THE CHAIN:
+   - Provide EXTREME VARIETY across diverse analog colors (vintage tube compressors like CL 1B / LA-2A, punchy FETs like 1176, tape machines like Studer A800 / ATR-102, analog EQs like Pultec EQP-1A / Neve 1073 / API 550A, character saturators like Decapitator / Radiator, lush reverbs like EMT 140 / Lexicon 224 / Capitol Chambers, dynamic processors).
+   - NEVER be repetitive, predictable, or suggest the same 2-3 generic plugins every time!
+==================================================
+`;
+  }
+
+  const varietyAndMusicalityPrompt = `
+CRITICAL DIRECTIVE ON MIX CRITIQUE DEPTH, VARIETY, & ZERO-BOILERPLATE:
+- CRITIQUE QUALITY: Analyze the audio like a multi-Grammy-winning mix & master engineer. Be sharp, vivid, acoustically perceptive, and deeply musical. Identify exact frequency collisions (e.g. 250Hz muddiness between kick and 808, 3.2kHz vocal harshness, 6-8kHz sibilance vs lack of 12kHz+ silky air), transient envelope punch, stereo field depth, and micro-dynamics.
+- CREATIVE PLUGIN VARIETY: Do NOT default to the exact same 2-3 stock recommendations on every turn. Select from the wide variety of available analog hardware emulations (optical, FET, VCA, Vari-Mu, passive tube EQs, console strips, tape saturation, plates, chambers). Choose tools with distinct color, weight, and harmonic texture specifically tailored to the song's energy.
+- ZERO DAW-WRAPPER / ZERO HALLUCINATED PARAMETERS: ONLY output parameter instructions that actually exist as adjustable knobs/buttons on that plugin's interface. NEVER suggest "Dry/Wet Mix", "Highpass Sidechain", or wrapper routing unless that specific plugin has that exact knob printed on its GUI.
+`;
+
   let prompt = `
     You are an expert audio engineer and producer.
     CRITICAL RULE FOR IMPROVEMENT: The end result MUST ALWAYS be a concrete improvement to the audio. You must apply proper gain staging and makeup gain on every step that involves compression, saturation, or equalization that reduces peak levels. NEVER reduce the overall volume unintentionally.
     ${getLanguageInstruction(language)}
     
+    ${specialUserDiktat}
+    ${varietyAndMusicalityPrompt}
 
     ${PRO_Q_3_LAYOUT_PROMPT}
     ${JSFX_PRIORITY_SPEC_PROMPT}

@@ -5773,7 +5773,8 @@ Provide the exact JSFX plugin name and required sliders/parameters.`;
           stemsPhysicalMetrics as any,
           dawType,
           lunaSumming,
-          lunaTape
+          lunaTape,
+          user?.email
         );
       }
       critique.id = Math.random().toString(36).substr(2, 9);
@@ -6201,7 +6202,12 @@ Provide the exact JSFX plugin name and required sliders/parameters.`;
           installedJsfxPacks, 
           starredPlugins,
           physicalMetrics,
-          referencePhysicalMetrics
+          referencePhysicalMetrics,
+          undefined,
+          dawType,
+          lunaSumming,
+          lunaTape,
+          user?.email
         );
         critique.id = Math.random().toString(36).substr(2, 9);
         critique.isMasterMode = isMasterMode;
@@ -9849,6 +9855,9 @@ Provide the exact JSFX plugin name and required sliders/parameters.`;
                           reaperSyncPin={reaperSyncPin}
                           reaperSyncEmail={user?.email || localStorage.getItem('beatgangsta_sync_email')}
                           isJsfxMode={isJsfxMode}
+                          lunaSumming={lunaSumming}
+                          lunaTape={lunaTape}
+                          userEmail={user?.email}
                         />
                       </ErrorBoundary>
                     </motion.div>
@@ -10393,1307 +10402,44 @@ Provide the exact JSFX plugin name and required sliders/parameters.`;
                         )}
                       </div>
                     </div>
-                  </>
-                ) : (
-                  <>
-                    {groupedPlugins && !selectedFolder ? (
-                      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-6">
-                        {(() => {
-                          const items: any[] = Object.entries(groupedPlugins).map(([groupName, groupPlugins]) => ({ type: 'folder', name: groupName, plugins: groupPlugins }));
-                        const placeholders = pendingPlaceholders.filter(p => p.type === 'folder').sort((a, b) => a.index - b.index);
-                        placeholders.forEach(p => {
-                          items.splice(p.index, 0, { type: 'folder', name: p.name, plugins: p.plugins, isPlaceholder: true, placeholderId: p.id });
-                        });
-                        
-                        return items.map((item, idx) => {
-                          if (item.isPlaceholder) {
-                            return (
-                              <div key={`placeholder-${item.placeholderId}`} className={`flex flex-col items-center justify-center p-6 rounded-[2rem] border border-dashed transition-all ${theme === 'coldest' ? 'border-sky-300 bg-sky-50' : theme === 'chef-mode' ? 'border-orange-300 bg-orange-50' : 'border-white/20 bg-white/5'} h-full min-h-[12rem]`}>
-                                <p className={`text-xs font-bold opacity-50 mb-4 text-center ${theme === 'coldest' ? 'text-sky-800' : theme === 'chef-mode' ? 'text-orange-800' : 'text-white'}`}>Removed {item.name}</p>
-                                <button 
-                                  onClick={(e) => { e.stopPropagation(); handleUndo(item.placeholderId); }}
-                                  className={`px-4 py-2 rounded-full text-xs font-black uppercase tracking-widest hover:scale-105 active:scale-95 transition-all ${theme === 'coldest' ? 'bg-sky-500 text-white' : theme === 'chef-mode' ? 'bg-orange-500 text-white' : 'bg-white text-black'}`}
-                                >
-                                  Undo
-                                </button>
-                              </div>
-                            );
-                          }
-                          
-                          const groupName = item.name;
-                          const groupPlugins = item.plugins;
-                          return (
-                            <div 
-                              key={groupName}
-                              onClick={() => setSelectedFolder(groupName)}
-                              className={`cursor-pointer group relative flex flex-col items-center justify-center p-6 rounded-[2rem] border transition-all hover:scale-105 active:scale-95 shadow-sm hover:shadow-xl ${theme === 'coldest' ? 'bg-white/60 border-sky-100 hover:bg-white/80' : theme === 'chef-mode' ? 'bg-white/60 border-orange-100 hover:bg-white/80' : 'bg-white/5 border-white/10 hover:bg-white/10'}`}
-                            >
-                              {/* Top Actions */}
-                              <div className="absolute top-3 right-3 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity z-10">
-                                <button 
-                                  onClick={(e) => { e.stopPropagation(); setFolderToRemove(groupName); }}
-                                  className="p-1.5 rounded-full bg-red-500/80 text-white hover:bg-red-600 backdrop-blur-md transition-all"
-                                  title={`Remove ${sortBy === 'vendor' ? 'Brand' : 'Type'}`}
-                                >
-                                  <X size={14} />
-                                </button>
-                              </div>
-
-                              {/* Confirmation Popup */}
-                              {folderToRemove === groupName && (
-                                <div className="absolute inset-0 z-20 flex items-center justify-center bg-black/80 backdrop-blur-md rounded-[2rem] p-4 animate-in fade-in zoom-in duration-200" onClick={(e) => e.stopPropagation()}>
-                                  <div className="text-center">
-                                    <p className="text-white text-xs font-bold mb-3">Remove all {groupName}?</p>
-                                    <div className="flex justify-center gap-2">
-                                      <button 
-                                        onClick={(e) => { e.stopPropagation(); setFolderToRemove(null); }}
-                                        className="px-3 py-1.5 rounded-full bg-white/20 text-white text-[10px] font-bold hover:bg-white/30 transition-colors"
-                                      >
-                                        Cancel
-                                      </button>
-                                      <button 
-                                        onClick={(e) => {
-                                          e.stopPropagation();
-                                          const pluginsInFolder = plugins.filter(p => (sortBy === 'vendor' ? p.vendor : p.type) === groupName);
-                                          const folderIndex = Object.keys(groupedPlugins).indexOf(groupName);
-                                          
-                                          setPlugins(prev => prev.filter(p => (sortBy === 'vendor' ? p.vendor : p.type) !== groupName));
-                                          setDeletedPlugins(prev => [...prev, ...pluginsInFolder]);
-                                          setStarredPlugins(prev => {
-                                            const names = pluginsInFolder.map(p => p.name);
-                                            return prev.filter(name => !names.includes(name));
-                                          });
-                                          
-                                          setPendingPlaceholders(prev => [
-                                            ...prev, 
-                                            { id: Date.now().toString() + Math.random(), type: 'folder', name: groupName, index: folderIndex, plugins: pluginsInFolder }
-                                          ]);
-                                          resetDeletionTimer();
-                                          setFolderToRemove(null);
-                                        }}
-                                        className="px-3 py-1.5 rounded-full bg-red-500 text-white text-[10px] font-bold hover:bg-red-600 transition-colors"
-                                      >
-                                        Remove
-                                      </button>
-                                    </div>
-                                  </div>
-                                </div>
-                              )}
-
-                              <div className={`w-16 h-16 mb-4 rounded-2xl flex items-center justify-center shadow-inner ${theme === 'coldest' ? 'bg-sky-100 text-sky-600' : theme === 'chef-mode' ? 'bg-orange-100 text-orange-600' : 'bg-black/40 text-white'}`}>
-                                <svg className="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" />
-                                </svg>
-                              </div>
-                              <h4 className="text-sm font-black text-center truncate w-full px-2">{groupName}</h4>
-                              <span className="text-[10px] font-bold opacity-50 mt-1 uppercase tracking-widest">{t('items_count', { count: groupPlugins.length })}</span>
-                            </div>
-                          );
-                        });
-                      })()}
-                    </div>
-                  ) : (
-                    <div className="space-y-6">
-                      {selectedFolder && (
-                        <button 
-                          onClick={() => setSelectedFolder(null)}
-                          className={`mb-4 px-4 py-2 rounded-full text-xs font-black uppercase tracking-widest hover:scale-105 active:scale-95 transition-all ${theme === 'coldest' ? 'bg-sky-500 text-white' : theme === 'chef-mode' ? 'bg-orange-500 text-white' : 'bg-white/10 text-white hover:bg-white/20'}`}
-                        >
-                          â† Back to Folders
-                        </button>
-                      )}
-                      <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                        {(() => {
-                          const items: any[] = filteredPlugins.map(p => ({ type: 'plugin', plugin: p }));
-                          const placeholders = pendingPlaceholders.filter(p => p.type === 'plugin').sort((a, b) => a.index - b.index);
-                          placeholders.forEach(p => {
-                            items.splice(p.index, 0, { type: 'plugin', plugin: p.plugins[0], isPlaceholder: true, placeholderId: p.id });
-                          });
-
-                          return items.map((item, idx) => {
-                            if (item.isPlaceholder) {
-                              return (
-                                <div key={`placeholder-${item.placeholderId}`} className={`flex flex-col items-center justify-center p-6 rounded-[2rem] border border-dashed transition-all ${theme === 'coldest' ? 'border-sky-300 bg-sky-50' : theme === 'chef-mode' ? 'border-orange-300 bg-orange-50' : 'border-white/20 bg-white/5'} h-full min-h-[12rem]`}>
-                                  <p className={`text-xs font-bold opacity-50 mb-4 text-center ${theme === 'coldest' ? 'text-sky-800' : theme === 'chef-mode' ? 'text-orange-800' : 'text-white'}`}>Removed {item.plugin.name}</p>
-                                  <button 
-                                    onClick={(e) => { e.stopPropagation(); handleUndo(item.placeholderId); }}
-                                    className={`px-4 py-2 rounded-full text-xs font-black uppercase tracking-widest hover:scale-105 active:scale-95 transition-all ${theme === 'coldest' ? 'bg-sky-500 text-white' : theme === 'chef-mode' ? 'bg-orange-500 text-white' : 'bg-white text-black'}`}
-                                  >
-                                    Undo
-                                  </button>
-                                </div>
-                              );
-                            }
-
-                            const plugin = item.plugin;
-                            if (!plugin || !plugin.name) return null;
-                            
-                            return (
-                              <PluginCard 
-                                id={`plugin-card-${plugin.name.replace(/[^\w\s-]/g, '').replace(/\s+/g, '-').toLowerCase()}`}
-                                key={`${plugin.vendor}-${plugin.name}-${idx}`} 
-                                plugin={plugin} 
-                                isFavorite={starredPlugins.includes(plugin.name)}
-                                onUpdatePlugin={handleUpdatePlugin}
-                                onToggleFavorite={(p) => toggleStar(p.name)}
-                                onRemove={(p) => {
-                                  const pluginIndex = filteredPlugins.findIndex(pl => pl.name === p.name && pl.vendor === p.vendor);
-                                  setPlugins(prev => prev.filter(pl => pl.name !== p.name || pl.vendor !== p.vendor));
-                                  setDeletedPlugins(prev => [...prev, p]);
-                                  setStarredPlugins(prev => prev.filter(n => n !== p.name));
-                                  
-                                  setPendingPlaceholders(prev => [
-                                    ...prev, 
-                                    { id: Date.now().toString() + Math.random(), type: 'plugin', index: pluginIndex, plugins: [p] }
-                                  ]);
-                                  resetDeletionTimer();
-                                }}
-                              />
-                            );
-                          });
-                        })()}
-                      </div>
-                    </div>
-                  )}
-                </>
-              )}
-              </div>
-            </section>
-          </div>
-        ) : null}
-      </main>
-      <footer className="py-16 text-center opacity-40 select-none">
-        <p className="text-[10px] font-black uppercase tracking-[0.8em] mb-4">{currentAppName} x ColdestConcept / 2026</p>
-        
-        <div className="flex justify-center gap-4 mb-6">
-          <a href="https://www.tiktok.com/@coldestconcept?_r=1&_t=ZP-94t4yW77agh" target="_blank" rel="noopener noreferrer" className="hover:opacity-100 transition-opacity cursor-pointer" title="TikTok">
-            <svg viewBox="0 0 24 24" fill="currentColor" className="w-4 h-4">
-              <path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-5.2 1.74 2.89 2.89 0 0 1 2.31-4.64 2.93 2.93 0 0 1 .88.13V9.4a6.84 6.84 0 0 0-1 .05A6.33 6.33 0 0 0 5 20.1a6.34 6.34 0 0 0 10.86-4.43v-7a8.16 8.16 0 0 0 4.77 1.52v-3.4a4.85 4.85 0 0 1-1.04-.1z"/>
-            </svg>
-          </a>
-          <a href="https://www.linkedin.com/in/coldestconcept" target="_blank" rel="noopener noreferrer" className="hover:opacity-100 transition-opacity cursor-pointer" title="LinkedIn">
-            <Linkedin className="w-4 h-4" />
-          </a>
-          <a href="https://www.facebook.com/share/1CUwe4hCKh/" target="_blank" rel="noopener noreferrer" className="hover:opacity-100 transition-opacity cursor-pointer" title="Facebook">
-            <Facebook className="w-4 h-4" />
-          </a>
-          <a href="https://www.instagram.com/coldestconcept?igsh=a2xyYmkyazV4NnZp" target="_blank" rel="noopener noreferrer" className="hover:opacity-100 transition-opacity cursor-pointer" title="Instagram">
-            <Instagram className="w-4 h-4" />
-          </a>
-          <a href="https://x.com/ConceptColdest" target="_blank" rel="noopener noreferrer" className="hover:opacity-100 transition-opacity cursor-pointer" title="X (Twitter)">
-            <Twitter className="w-4 h-4" />
-          </a>
-        </div>
-
-        <div className="flex justify-center gap-6 text-[10px] font-bold tracking-tight">
-          <button onClick={() => setShowCookiePolicy(true)} className="hover:opacity-100 transition-opacity cursor-pointer">{t('cookie_policy')}</button>
-          <a href="/privacy" className="hover:opacity-100 transition-opacity cursor-pointer">{t('privacy_policy')}</a>
-          <a href="/terms" className="hover:opacity-100 transition-opacity cursor-pointer">{t('terms_of_service')}</a>
-          <button onClick={() => setShowContactForm(true)} className="hover:opacity-100 transition-opacity cursor-pointer">{t('contact_us')}</button>
-        </div>
-      </footer>
-
-      {/* Cookie Consent Banner */}
-      <AnimatePresence>
-        {showCookieConsent && (
-          <motion.div 
-            initial={{ y: 100, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            exit={{ y: 100, opacity: 0 }}
-            className="fixed bottom-6 left-6 right-6 z-[399999] flex flex-col md:flex-row items-center justify-between gap-6 p-6 rounded-3xl bg-black/90 border border-white/10 backdrop-blur-xl shadow-2xl max-w-5xl mx-auto"
-          >
-            <div className="flex items-center gap-4">
-              <div className="w-12 h-12 rounded-2xl bg-orange-500/20 flex items-center justify-center text-2xl">
-                ğŸª
-              </div>
-              <div className="flex flex-col">
-                <h4 className="text-white font-black uppercase tracking-tighter">{t('cookie_consent_title')}</h4>
-                <p className="text-xs text-white/60 leading-relaxed max-w-md">
-                  {t('cookie_consent_desc')} <button onClick={() => setShowCookiePolicy(true)} className="text-orange-500 hover:underline">{t('cookie_policy')}</button>.
-                </p>
-              </div>
-            </div>
-            <div className="flex items-center gap-3 w-full md:w-auto">
-              <button 
-                onClick={() => {
-                  localStorage.setItem('bg_cookie_consent', 'false');
-                  setShowCookieConsent(false);
-                }}
-                className="flex-1 md:flex-none px-6 py-4 rounded-2xl bg-white/5 hover:bg-white/10 text-white font-black uppercase tracking-widest text-[10px] transition-all active:scale-95"
-              >
-                {t('decline')}
-              </button>
-              <button 
-                onClick={() => {
-                  localStorage.setItem('bg_cookie_consent', 'true');
-                  setShowCookieConsent(false);
-                }}
-                className="flex-1 md:flex-none px-8 py-4 rounded-2xl bg-orange-500 hover:bg-orange-400 text-white font-black uppercase tracking-widest text-[10px] transition-all active:scale-95 shadow-lg shadow-orange-500/20"
-              >
-                {t('accept_all')}
-              </button>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      {/* Contact Form Modal */}
-      <AnimatePresence>
-        {showContactForm && (
-          <div className="fixed inset-0 z-[210] flex items-center justify-center p-4 bg-black/90 backdrop-blur-md animate-in fade-in duration-300">
-            <motion.div 
-              initial={{ scale: 0.9, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.9, opacity: 0 }}
-              className={`w-full max-w-md overflow-hidden flex flex-col rounded-[2rem] shadow-2xl ${theme === 'coldest' ? 'bg-white text-slate-900' : 'bg-[#111] border border-white/10 text-white'}`}
-            >
-              <div className="p-6 border-b border-white/5 flex items-center justify-between">
-                <div>
-                  <h2 className="text-xl font-black uppercase tracking-tighter">{t('contact_us')}</h2>
-                  <p className="text-[9px] font-black uppercase tracking-[0.2em] opacity-40">{t('privacy_support_inquiries')}</p>
-                </div>
-                <button 
-                  onClick={() => setShowContactForm(false)}
-                  className="w-8 h-8 rounded-full flex items-center justify-center bg-white/5 hover:bg-white/10 transition-colors"
-                >
-                  <X className="w-4 h-4" />
-                </button>
-              </div>
-              
-              <form 
-                onSubmit={(e) => {
-                  e.preventDefault();
-                  alert(t('inquiry_submitted'));
-                  setShowContactForm(false);
-                }}
-                className="p-6 space-y-4"
-              >
-                <div className="space-y-1.5">
-                  <label className="text-[9px] font-black uppercase tracking-widest opacity-50 ml-1">{t('full_name')}</label>
-                  <input 
-                    required
-                    type="text" 
-                    placeholder="John Doe"
-                    className={`w-full px-4 py-3 rounded-xl border text-sm transition-all outline-none ${theme === 'coldest' ? 'bg-slate-50 border-slate-200 focus:border-sky-500' : 'bg-white/5 border-white/10 focus:border-orange-500'}`}
-                  />
-                </div>
-
-                <div className="space-y-1.5">
-                  <label className="text-[9px] font-black uppercase tracking-widest opacity-50 ml-1">{t('email_address')}</label>
-                  <input 
-                    required
-                    type="email" 
-                    placeholder="john@example.com"
-                    className={`w-full px-4 py-3 rounded-xl border text-sm transition-all outline-none ${theme === 'coldest' ? 'bg-slate-50 border-slate-200 focus:border-sky-500' : 'bg-white/5 border-white/10 focus:border-orange-500'}`}
-                  />
-                </div>
-
-                <div className="space-y-1.5">
-                  <label className="text-[9px] font-black uppercase tracking-widest opacity-50 ml-1">{t('subject')}</label>
-                  <select 
-                    value={contactFormSubject}
-                    onChange={(e) => setContactFormSubject(e.target.value)}
-                    className={`w-full px-4 py-3 rounded-xl border text-sm transition-all outline-none appearance-none ${theme === 'coldest' ? 'bg-slate-50 border-slate-200 focus:border-sky-500' : 'bg-white/5 border-white/10 focus:border-orange-500'}`}
-                  >
-                    <option value="Privacy Request">{t('privacy_request')}</option>
-                    <option value="Technical Support">{t('technical_support')}</option>
-                    <option value="General Inquiry">{t('general_inquiry')}</option>
-                    <option value="Business Opportunity">{t('business_opportunity')}</option>
-                  </select>
-                </div>
-
-                <div className="space-y-1.5">
-                  <label className="text-[9px] font-black uppercase tracking-widest opacity-50 ml-1">{t('message')}</label>
-                  <textarea 
-                    required
-                    rows={3}
-                    value={contactFormMessage}
-                    onChange={(e) => setContactFormMessage(e.target.value)}
-                    placeholder={t('how_can_we_help')}
-                    className={`w-full px-4 py-3 rounded-xl border text-sm transition-all outline-none resize-none ${theme === 'coldest' ? 'bg-slate-50 border-slate-200 focus:border-sky-500' : 'bg-white/5 border-white/10 focus:border-orange-500'}`}
-                  />
-                </div>
-
-                <button 
-                  type="submit"
-                  className="w-full py-4 rounded-xl bg-orange-500 hover:bg-orange-400 text-white font-black uppercase tracking-widest text-[10px] transition-all active:scale-95 shadow-lg shadow-orange-500/20"
-                >
-                  {t('send_inquiry')}
-                </button>
-                
-                <p className="text-[8px] text-center opacity-40 uppercase tracking-tighter">
-                  {t('email_us_at')} <span className="text-orange-500">coldestconcept@beatgangsta.com</span>
-                </p>
-              </form>
-            </motion.div>
-          </div>
-        )}
-      </AnimatePresence>
-      <AnimatePresence>
-        {showCookiePolicy && (
-          <div className="fixed inset-0 z-[210] flex items-center justify-center p-4 bg-black/90 backdrop-blur-md animate-in fade-in duration-300">
-            <motion.div 
-              initial={{ scale: 0.9, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.9, opacity: 0 }}
-              className={`w-full max-w-2xl max-h-[80vh] overflow-hidden flex flex-col rounded-[2.5rem] shadow-2xl ${theme === 'coldest' ? 'bg-white text-slate-900' : 'bg-[#111] border border-white/10 text-white'}`}
-            >
-              <div className="p-8 border-b border-white/5 flex items-center justify-between">
-                <div>
-                  <h2 className="text-2xl font-black uppercase tracking-tighter">{t('cookie_policy')}</h2>
-                  <p className="text-[10px] font-black uppercase tracking-[0.2em] opacity-40">Last Updated: March 2026</p>
-                </div>
-                <button 
-                  onClick={() => setShowCookiePolicy(false)}
-                  className="w-10 h-10 rounded-full flex items-center justify-center bg-white/5 hover:bg-white/10 transition-colors"
-                >
-                  <X className="w-5 h-5" />
-                </button>
-              </div>
-              
-              <div className="p-8 overflow-y-auto custom-scrollbar space-y-8">
-                <section>
-                  <h3 className="text-sm font-black uppercase tracking-widest mb-3 text-orange-500">{t('cookie_policy_q')}</h3>
-                  <p className="text-sm opacity-70 leading-relaxed">
-                    {t('cookie_policy_q_desc')}
-                  </p>
-                </section>
-
-                <section>
-                  <h3 className="text-sm font-black uppercase tracking-widest mb-3 text-orange-500">{t('cookie_policy_usage')}</h3>
-                  <p className="text-sm opacity-70 leading-relaxed mb-4">
-                    {t('cookie_policy_usage_desc')}
-                  </p>
-                  <ul className="space-y-4">
-                    <li className="flex gap-3">
-                      <div className="w-1.5 h-1.5 rounded-full bg-orange-500 mt-1.5 shrink-0" />
-                      <div>
-                        <strong className="block text-xs uppercase tracking-wider mb-1">{t('essential_cookies')}</strong>
-                        <p className="text-xs opacity-60">{t('essential_cookies_desc')}</p>
-                      </div>
-                    </li>
-                    <li className="flex gap-3">
-                      <div className="w-1.5 h-1.5 rounded-full bg-orange-500 mt-1.5 shrink-0" />
-                      <div>
-                        <strong className="block text-xs uppercase tracking-wider mb-1">{t('advertising_cookies')}</strong>
-                        <p className="text-xs opacity-60">{t('advertising_cookies_desc')}</p>
-                      </div>
-                    </li>
-                    <li className="flex gap-3">
-                      <div className="w-1.5 h-1.5 rounded-full bg-orange-500 mt-1.5 shrink-0" />
-                      <div>
-                        <strong className="block text-xs uppercase tracking-wider mb-1">{t('preference_cookies')}</strong>
-                        <p className="text-xs opacity-60">{t('preference_cookies_desc')}</p>
-                      </div>
-                    </li>
-                  </ul>
-                </section>
-
-                <section>
-                  <h3 className="text-sm font-black uppercase tracking-widest mb-3 text-orange-500">{t('managing_cookies')}</h3>
-                  <p className="text-sm opacity-70 leading-relaxed">
-                    {t('managing_cookies_desc')}
-                  </p>
-                </section>
-
-                <section className="p-6 rounded-2xl bg-orange-500/5 border border-orange-500/10">
-                  <h3 className="text-sm font-black uppercase tracking-widest mb-3 text-orange-500">{t('third_party_cookies')}</h3>
-                  <p className="text-sm opacity-70 leading-relaxed">
-                    {t('third_party_cookies_desc')}
-                  </p>
-                </section>
-              </div>
-
-              <div className="p-8 border-t border-white/5">
-                <button 
-                  onClick={() => setShowCookiePolicy(false)}
-                  className="w-full py-4 rounded-2xl bg-orange-500 hover:bg-orange-400 text-white font-black uppercase tracking-widest text-xs transition-all active:scale-95"
-                >
-                  {t('got_it')}
-                </button>
-              </div>
-            </motion.div>
-          </div>
-        )}
-      </AnimatePresence>
-      
-      {showImportDecisionModal && importedSaveFile && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in duration-200">
-          <div className={`w-full max-w-md p-6 rounded-3xl shadow-2xl ${theme === 'coldest' ? 'bg-white text-slate-900' : 'bg-[#111] border border-white/10 text-white'}`}>
-            <h3 className="text-xl font-black uppercase tracking-tighter mb-2">{t('import_save_file')}</h3>
-            <p className="text-sm opacity-70 mb-6">
-              {t('file_contains_gear')} <strong>{importedSaveFile.userProfile.name}</strong>.
-              {t('what_to_do')}
-            </p>
-            
-            <div className="space-y-3">
-              <button
-                onClick={handleRestoreSettings}
-                className="w-full py-4 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold uppercase tracking-wider transition-all flex items-center justify-center gap-2"
-              >
-                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                </svg>
-                {t('restore_my_settings')}
-              </button>
-              
-              <button
-                onClick={handleCompareWithFriend}
-                className="w-full py-4 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold uppercase tracking-wider transition-all flex items-center justify-center gap-2"
-              >
-                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
-                </svg>
-                {t('compare_with_friend')}
-              </button>
-
-              <button
-                onClick={() => {
-                  setImportedSaveFile(null);
-                  setShowImportDecisionModal(false);
-                }}
-                className={`w-full py-3 rounded-xl font-bold uppercase tracking-wider transition-colors ${theme === 'coldest' ? 'bg-slate-100 hover:bg-slate-200 text-slate-600' : 'bg-white/5 hover:bg-white/10 text-slate-400'}`}
-              >
-                {t('cancel')}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-
-
-      {showPromoPopup && (
-        <div className="fixed inset-0 z-[200] overflow-y-auto bg-black/80 backdrop-blur-md flex items-center justify-center p-4">
-          <motion.div 
-            initial={{ opacity: 0, scale: 0.9, y: 20 }}
-            animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.9, y: 20 }}
-            className={`border rounded-3xl p-6 sm:p-10 max-w-lg w-full shadow-2xl relative overflow-hidden transition-colors duration-500 text-center ${
-              theme === 'coldest' 
-                ? "bg-white border-sky-200 text-sky-950" 
-                : theme === 'chef-mode'
-                ? "bg-[#251000] border-orange-900/50 text-orange-50"
-                : "bg-black border-red-900/50 text-red-50"
-            }`}
-          >
-            <button 
-              onClick={() => setShowPromoPopup(false)}
-              className="absolute top-4 right-4 p-2 rounded-full hover:bg-black/10 hover:dark:bg-white/10 transition-colors"
-            >
-              <X size={20} />
-            </button>
-            <div className="flex justify-center mb-6">
-              <div className="w-16 h-16 rounded-full bg-gradient-to-br from-yellow-400 to-orange-500 flex items-center justify-center shadow-lg shadow-yellow-500/20">
-                <span className="text-2xl">ğŸ’°</span>
-              </div>
-            </div>
-            <h2 className="text-2xl sm:text-3xl font-black mb-4 uppercase tracking-tighter">Bonus Received!</h2>
-            <p className="text-base sm:text-lg opacity-80 font-medium leading-relaxed">
-              Thank you for trying BeatGangsta.com, you've been given <strong className="font-black">500 credits</strong> to test the app.
-            </p>
-          </motion.div>
-        </div>
-      )}
-
-      {/* Buy Credits Modal */}
-      <AnimatePresence>
-        {showBuyCreditsModal && (
-          <div className="fixed inset-0 z-[100] overflow-y-auto bg-black/80 backdrop-blur-sm">
-            <div className="min-h-[100dvh] flex items-center justify-center p-4">
-              <motion.div 
-                initial={{ opacity: 0, scale: 0.9, y: 20 }}
-                animate={{ opacity: 1, scale: 1, y: 0 }}
-                exit={{ opacity: 0, scale: 0.9, y: 20 }}
-                className={`border rounded-3xl p-6 max-w-md w-full shadow-2xl relative overflow-hidden transition-colors duration-500 ${
-                  theme === 'coldest' 
-                    ? "bg-white border-slate-200 text-slate-900" 
-                    : "bg-zinc-900 border-zinc-800 text-white"
-                }`}
-              >
-                <button 
-                  onClick={() => {
-                    setShowBuyCreditsModal(false);
-                    setCreditError(null);
-                  }}
-                  className="absolute top-4 right-4 p-2 rounded-full transition-all z-10 opacity-50 hover:opacity-100 hover:bg-black/5"
-                >
-                  <X size={20} />
-                </button>
-
-                <div className="text-center mb-6">
-                  <div className="w-16 h-16 bg-yellow-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <Zap className="w-8 h-8 text-yellow-500" />
-                  </div>
-                  <h2 className="text-2xl font-black mb-2 uppercase tracking-tight">{t('out_of_credits')}</h2>
-                  <div className="flex items-center justify-center gap-1 text-yellow-500 mb-2">
-                    <Zap size={14} className="fill-current" />
-                    <span className="text-sm font-black">{user?.credits !== undefined ? user.credits : '...'} {t('credits_remaining')}</span>
-                  </div>
-                  <p className="text-sm opacity-70">
-                    {creditError ? creditError.split(': ')[1] || creditError : t('need_more_credits')}
-                  </p>
-                </div>
-
-                <div className="space-y-3 mb-8">
-                  <button 
-                    disabled={loading}
-                    onClick={() => handleBuyCredits(40)}
-                    className={`w-full p-4 rounded-xl border-2 flex items-center justify-between transition-all ${loading ? 'opacity-50 cursor-not-allowed' : 'hover:border-yellow-500 hover:bg-yellow-500/5'} ${theme === 'coldest' ? 'border-slate-200' : 'border-zinc-800'}`}
-                  >
-                    <div className="text-left">
-                      <div className="font-bold text-lg">40 {t('credits')}</div>
-                    </div>
-                    <div className="font-black text-xl text-yellow-500">$5.00</div>
-                  </button>
-
-                  <button 
-                    disabled={loading}
-                    onClick={() => handleBuyCredits(100)}
-                    className={`w-full p-4 rounded-xl border-2 flex items-center justify-between transition-all ${loading ? 'opacity-50 cursor-not-allowed' : 'hover:border-yellow-500 hover:bg-yellow-500/5'} ${theme === 'coldest' ? 'border-slate-200' : 'border-zinc-800'}`}
-                  >
-                    <div className="text-left">
-                      <div className="font-bold text-lg">100 {t('credits')}</div>
-                      <div className="text-xs text-yellow-500 font-bold uppercase tracking-widest">{t('best_value')}</div>
-                    </div>
-                    <div className="font-black text-xl text-yellow-500">$10.00</div>
-                  </button>
-                </div>
-              </motion.div>
-            </div>
-          </div>
-        )}
-
-      </AnimatePresence>
-
-      {/* Buy Stems Modal */}
-      <AnimatePresence>
-        {showBuyStemsModal && (
-          <div className="fixed inset-0 z-[100] overflow-y-auto bg-black/80 backdrop-blur-sm">
-            <div className="min-h-[100dvh] flex items-center justify-center p-4">
-              <motion.div 
-                initial={{ opacity: 0, scale: 0.9, y: 20 }}
-                animate={{ opacity: 1, scale: 1, y: 0 }}
-                exit={{ opacity: 0, scale: 0.9, y: 20 }}
-                className={`border rounded-3xl p-6 max-w-md w-full shadow-2xl relative overflow-hidden transition-colors duration-500 ${
-                  theme === 'coldest' 
-                    ? "bg-white border-slate-200 text-slate-900" 
-                    : "bg-zinc-900 border-zinc-800 text-white"
-                }`}
-              >
-                <button 
-                  onClick={() => setShowBuyStemsModal(false)}
-                  className="absolute top-4 right-4 p-2 rounded-full transition-all z-10 opacity-50 hover:opacity-100 hover:bg-black/5"
-                >
-                  <X size={20} />
-                </button>
-
-                <div className="text-center mb-6">
-                  <div className="w-16 h-16 bg-purple-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <Music className="w-8 h-8 text-purple-500" />
-                  </div>
-                  <h2 className="text-2xl font-black mb-2 uppercase tracking-tight">Need More Upload Slots?</h2>
-                  <div className="flex items-center justify-center gap-1 text-purple-500 mb-2">
-                    <span className="text-sm font-black">{stemsLimit} / 30 Slots Unlocked</span>
-                  </div>
-                  <p className="text-sm opacity-70">
-                    Upload more stems forever for just $3 per slot
-                  </p>
-                </div>
-
-                <div className="space-y-6 mb-8">
-                  {30 - stemsLimit > 0 ? (
-                    <>
-                      <div className="px-2">
-                        <input
-                          type="range"
-                          min="1"
-                          max={30 - stemsLimit}
-                          value={stemSlotSliderValue}
-                          onChange={(e) => setStemSlotSliderValue(parseInt(e.target.value))}
-                          className={`w-full h-2 rounded-lg appearance-none cursor-pointer accent-purple-500 ${theme === 'coldest' ? 'bg-purple-100' : 'bg-purple-500/20'}`}
-                        />
-                        <div className="flex justify-between text-xs font-bold text-slate-500 mt-2 px-1">
-                          <span>1</span>
-                          <span>{30 - stemsLimit}</span>
-                        </div>
-                      </div>
-
-                      <div className="bg-purple-500/10 border-2 border-purple-500/30 rounded-2xl p-6 text-center">
-                        <div className="text-xs font-black text-purple-500 uppercase tracking-widest mb-2">Total Cost</div>
-                        <div className="text-5xl font-black text-purple-500">${stemSlotSliderValue * 3}</div>
-                        <div className={`text-xs font-bold mt-3 uppercase tracking-widest ${theme === 'coldest' ? 'text-slate-500' : 'text-slate-400'}`}>
-                          For {stemSlotSliderValue} permanent upload slot{stemSlotSliderValue > 1 ? 's' : ''}
-                        </div>
-                      </div>
-
-                      <button 
-                        disabled={loading}
-                        onClick={() => handleBuyStemSlots(stemSlotSliderValue)}
-                        className={`w-full p-4 rounded-xl font-black text-lg uppercase tracking-widest transition-all text-white bg-purple-600 hover:bg-purple-500 disabled:opacity-50`}
-                      >
-                        Buy Now
-                      </button>
-                    </>
-                  ) : (
-                    <div className="text-center text-lg font-bold text-emerald-500 p-6 bg-emerald-500/10 rounded-2xl border-2 border-emerald-500/20">
-                      You have unlocked the maximum amount of stem slots!
-                    </div>
-                  )}
-                </div>
-              </motion.div>
-            </div>
-          </div>
-        )}
-      </AnimatePresence>
-
-      
-      {/* JSFX Help Modal */}
-      <AnimatePresence>
-        {showJsfxHelpModal && (
-          <div className="fixed inset-0 z-[150] overflow-y-auto bg-black/80 backdrop-blur-sm">
-            <div className="min-h-[100dvh] flex items-center justify-center p-4">
-              <motion.div 
-                initial={{ opacity: 0, scale: 0.9, y: 20 }}
-                animate={{ opacity: 1, scale: 1, y: 0 }}
-                exit={{ opacity: 0, scale: 0.9, y: -20 }}
-                className={`max-w-2xl w-full rounded-3xl p-8 border ${
-                  theme === 'coldest'
-                    ? 'bg-white border-slate-200'
-                    : 'bg-zinc-950 border-zinc-800'
-                }`}
-              >
-                <div className="flex justify-between items-start mb-6">
-                  <div>
-                    <h2 className={`text-2xl font-black uppercase tracking-tighter ${
-                      theme === 'coldest' ? 'text-slate-900' : 'text-white'
-                    }`}>
-                      BeatGangsta Connect
-                    </h2>
-                    <p className={`text-sm mt-1 uppercase tracking-widest font-bold ${
-                      theme === 'coldest' ? 'text-[#10b981]' : 'text-[#10b981]'
-                    }`}>
-                      Direct REAPER Cloud Link
-                    </p>
-                  </div>
-                  <button 
-                    onClick={() => setShowJsfxHelpModal(false)}
-                    className={`p-2 rounded-full transition-colors ${
-                      theme === 'coldest' ? 'hover:bg-slate-100 text-slate-400' : 'hover:bg-zinc-800 text-zinc-500'
-                    }`}
-                  >
-                    <X className="w-5 h-5" />
-                  </button>
-                </div>
-
-                <div className={`space-y-6 ${theme === 'coldest' ? 'text-slate-700' : 'text-zinc-300'}`}>
-                  {/* Step 1 */}
-                  <div className={`p-4 rounded-xl border ${theme === 'coldest' ? 'bg-slate-50 border-slate-100' : 'bg-black/40 border-zinc-800'}`}>
-                    <div className="flex items-center gap-3 mb-2">
-                      <div className="w-6 h-6 rounded-full bg-[#10b981] flex items-center justify-center text-white font-black text-xs">1</div>
-                      <h3 className="font-bold">Download the ZIP bundle</h3>
-                    </div>
-                    <p className="text-sm pl-9 opacity-80">Click the "BeatGangsta Connect (.zip)" button to download the integration bundle. This contains the REAPER Lua script and required image assets.</p>
-                  </div>
-
-                  {/* Step 2 */}
-                  <div className={`p-4 rounded-xl border ${theme === 'coldest' ? 'bg-slate-50 border-slate-100' : 'bg-black/40 border-zinc-800'}`}>
-                    <div className="flex items-center gap-3 mb-2">
-                      <div className="w-6 h-6 rounded-full bg-[#10b981] flex items-center justify-center text-white font-black text-xs">2</div>
-                      <h3 className="font-bold">Install in REAPER</h3>
-                    </div>
-                    <div className="pl-9 space-y-4">
-                      <p className="text-sm opacity-80">Copy the correct path for your system, paste it into Explorer (Win) or Finder (Mac - Cmd+Shift+G), and move the files there:</p>
-                      
-                      <div className="space-y-3">
-                        <div className="space-y-1.5">
-                          <p className="text-[10px] font-black uppercase tracking-wider opacity-60">Windows Path</p>
-                          <div className={`flex items-center gap-2 p-2 rounded-xl border ${theme === 'coldest' ? 'bg-white border-slate-200' : 'bg-black/20 border-zinc-700'}`}>
-                            <code className="text-[10px] font-mono break-all opacity-80 flex-1">%AppData%REAPERScripts</code>
-                            <button 
-                              onClick={() => {
-                                navigator.clipboard.writeText("%AppData%\REAPER\Scripts");
-                              }}
-                              className={`p-1.5 rounded-lg hover:bg-black/5 transition-colors ${theme === 'coldest' ? 'text-slate-400' : 'text-zinc-500'}`}
-                            >
-                              <Copy size={14} />
-                            </button>
-                          </div>
-                        </div>
-
-                        <div className="space-y-1.5">
-                          <p className="text-[10px] font-black uppercase tracking-wider opacity-60">macOS Path</p>
-                          <div className={`flex items-center gap-2 p-2 rounded-xl border ${theme === 'coldest' ? 'bg-white border-slate-200' : 'bg-black/20 border-zinc-700'}`}>
-                            <code className="text-[10px] font-mono break-all opacity-80 flex-1">~/Library/Application Support/REAPER/Scripts</code>
-                            <button 
-                              onClick={() => {
-                                navigator.clipboard.writeText("~/Library/Application Support/REAPER/Scripts");
-                              }}
-                              className={`p-1.5 rounded-lg hover:bg-black/5 transition-colors ${theme === 'coldest' ? 'text-slate-400' : 'text-zinc-500'}`}
-                            >
-                              <Copy size={14} />
-                            </button>
-                          </div>
-                        </div>
-                      </div>
-
-                      <ul className="text-sm opacity-80 list-disc ml-4 space-y-1">
-                        <li>Extract the ZIP and move the <code>BeatGangsta_Connect.lua</code> and <code>beatgangsta_logo.png</code> files into this folder</li>
-                        <li>In REAPER, open the <strong>Actions List</strong> (Shortcut: '?') and click <strong>New action...</strong> &gt; <strong>Load ReaScript...</strong></li>
-                        <li>Select <code>BeatGangsta_Connect.lua</code> to add it to your actions.</li>
-                      </ul>
-                    </div>
-                  </div>
-
-                  {/* Step 3 */}
-                  <div className={`p-4 rounded-xl border ${theme === 'coldest' ? 'bg-slate-50 border-slate-100' : 'bg-black/40 border-zinc-800'}`}>
-                    <div className="flex items-center gap-3 mb-2">
-                      <div className="w-6 h-6 rounded-full bg-[#10b981] flex items-center justify-center text-white font-black text-xs">3</div>
-                      <h3 className="font-bold">Connect and Sync</h3>
-                    </div>
-                    <ul className="text-sm pl-9 opacity-80 list-disc ml-4 space-y-1">
-                      <li>Run the <strong>BeatGangsta Connect</strong> script from your Actions list</li>
-                      <li>Enter your Email and the 4-digit PIN generated when you click <strong>Push REAPER Sync</strong> in the web app</li>
-                      <li>The script will poll the cloud and automatically instantiate the recommended JSFX plugins with the exact parameters tailored to your mix!</li>
-                    </ul>
-                  </div>
-                </div>
-              </motion.div>
-            </div>
-          </div>
-        )}
-      </AnimatePresence>
-
-      {/* ReaPack Repos Modal */}
-      <AnimatePresence>
-        {showReapackReposModal && (
-          <div className="fixed inset-0 z-[150] overflow-y-auto bg-black/60 backdrop-blur-xl flex items-center justify-center p-4 sm:p-6">
-            <motion.div 
-              initial={{ opacity: 0, scale: 0.95, y: 20 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.95, y: -20 }}
-              transition={{ duration: 0.3, ease: [0.23, 1, 0.32, 1] }}
-              className={`max-w-5xl w-full rounded-[2rem] sm:rounded-[3rem] p-6 sm:p-10 border shadow-2xl backdrop-blur-2xl flex flex-col max-h-[90vh] ${
-                theme === 'coldest'
-                  ? 'bg-sky-50/80 border-sky-200 shadow-sky-500/10'
-                  : 'bg-zinc-950/80 border-zinc-800 shadow-black/50'
-              }`}
-            >
-              <div className="flex justify-between items-start mb-6 shrink-0">
-                <div>
-                  <h2 className={`text-2xl sm:text-3xl font-black uppercase tracking-tighter ${
-                    theme === 'coldest' ? 'text-slate-900' : 'text-white'
-                  }`}>
-                    ReaPack JSFX Repositories
-                  </h2>
-                  <p className={`text-sm mt-1 uppercase tracking-widest font-bold ${
-                    theme === 'coldest' ? 'text-sky-500' : 'text-[#10b981]'
-                  }`}>
-                    Community JSFX Packs
-                  </p>
-                </div>
-                <button 
-                  onClick={() => setShowReapackReposModal(false)}
-                  className={`p-3 rounded-full transition-colors ${
-                    theme === 'coldest' ? 'hover:bg-white/60 bg-white/40 text-slate-500' : 'hover:bg-zinc-800 bg-zinc-900/50 text-zinc-400'
-                  }`}
-                >
-                  <X className="w-6 h-6" />
-                </button>
-              </div>
-              
-              <div className="space-y-6 flex-1 overflow-y-auto pr-2 flex flex-col [&::-webkit-scrollbar]:w-2.5 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-sky-500 [&::-webkit-scrollbar-thumb]:rounded-full hover:[&::-webkit-scrollbar-thumb]:bg-sky-400">
-                <div className="flex flex-col gap-4">
-                  <div className={`p-5 rounded-2xl border text-sm leading-relaxed ${theme === 'coldest' ? 'bg-white/60 border-sky-100 text-slate-700' : 'bg-black/40 border-zinc-800/80 text-zinc-400'}`}>
-                    <p className={`font-semibold mb-2 ${theme === 'coldest' ? 'text-sky-600' : 'text-emerald-400'}`}>âš¡ Automated JSFX Library Expansion</p>
-                    BeatGangsta supports {COMMUNITY_JSFX_PACKS.length} free professional JSFX community plugin packs. 
-                    You can download them manually or manage them effortlessly via <strong>ReaPack</strong> (highly recommended for auto-updates). 
-                    <span className={`block mt-2 font-medium ${theme === 'coldest' ? 'text-slate-900' : 'text-white'}`}>To use these packs in your recipes, check them below or let BeatGangsta Connect auto-detect them in real-time!</span>
-                  </div>
-
-                  <div className={`p-5 rounded-2xl border flex flex-col sm:flex-row items-start sm:items-center gap-4 ${theme === 'coldest' ? 'bg-sky-50 border-sky-200' : 'bg-zinc-900/80 border-zinc-700/50'}`}>
-                    <div className={`w-12 h-12 rounded-full flex items-center justify-center shrink-0 hidden sm:flex ${theme === 'coldest' ? 'bg-sky-100 text-sky-600' : 'bg-zinc-800 text-emerald-400'}`}>
-                      <Download className="w-5 h-5" />
-                    </div>
-                    <div className="flex-1">
-                      <h4 className={`font-black text-sm uppercase tracking-widest mb-1 ${theme === 'coldest' ? 'text-slate-900' : 'text-white'}`}>Install ReaPack First</h4>
-                      <p className={`text-xs leading-relaxed opacity-80 ${theme === 'coldest' ? 'text-slate-700' : 'text-zinc-400'}`}>
-                        ReaPack is required to manage and install these community JSFX packs. Download the extension and place it in your REAPER <strong>UserPlugins</strong> folder to enable the Extensions menu.
-                      </p>
-                    </div>
-                    <a 
-                      href="https://reapack.com/" 
-                      target="_blank" 
-                      rel="noreferrer"
-                      className={`shrink-0 w-full sm:w-auto text-center justify-center px-6 py-3 rounded-xl font-black uppercase tracking-wider text-xs transition-colors flex items-center gap-2 ${
-                        theme === 'coldest' 
-                          ? 'bg-sky-500 hover:bg-sky-600 text-white shadow-md shadow-sky-500/20' 
-                          : 'bg-zinc-800 hover:bg-zinc-700 text-white border border-zinc-700/50'
-                      }`}
-                    >
-                      Get ReaPack <ExternalLink className="w-3.5 h-3.5" />
-                    </a>
-                  </div>
-                </div>
-
-                <div className="flex justify-end mb-4">
-                  <button
-                    onClick={() => {
-                      const allLinks = COMMUNITY_JSFX_PACKS.map(p => p.reapack).join('\n');
-                      navigator.clipboard.writeText(allLinks);
-                      setCopiedAllPacks(true);
-                      setTimeout(() => setCopiedAllPacks(false), 2000);
-                    }}
-                    className={`px-4 py-2.5 rounded-xl text-xs font-black uppercase tracking-widest transition-colors flex items-center gap-2 ${
-                      copiedAllPacks
-                        ? (theme === 'coldest' ? 'bg-sky-500 text-white shadow-md shadow-sky-500/20' : 'bg-[#10b981] text-white shadow-md shadow-[#10b981]/20')
-                        : (theme === 'coldest' ? 'bg-sky-100 hover:bg-sky-200 text-sky-700' : 'bg-zinc-800 hover:bg-zinc-700 text-zinc-300')
-                    }`}
-                  >
-                    <Copy className="w-4 h-4" />
-                    {copiedAllPacks ? 'Copied All Links!' : 'Copy All JSFX Repo Links'}
-                  </button>
-                </div>
-
-                <div className="space-y-4">
-                  {COMMUNITY_JSFX_PACKS.map((pack, index) => {
-                    const isInstalled = installedJsfxPacks.includes(pack.name);
-                    return (
-                      <div 
-                        key={pack.name} 
-                        className={`p-5 rounded-2xl border transition-all ${
-                          isInstalled 
-                            ? (theme === 'coldest' ? 'border-sky-400/50 bg-sky-100/50' : 'border-emerald-500/40 bg-emerald-500/[0.02]')
-                            : (theme === 'coldest' ? 'border-white/60 bg-white/40 hover:bg-white/60' : 'border-zinc-800 bg-zinc-900/30 hover:bg-zinc-800/50')
-                        }`}
-                      >
-                        <div className="flex items-start gap-3 justify-between">
-                          <div className="flex-1">
-                            <label className="flex items-center gap-4 cursor-pointer group">
-                              <input 
-                                type="checkbox" 
-                                className={`w-6 h-6 rounded border-2 transition-colors cursor-pointer ${
-                                  theme === 'coldest' 
-                                    ? 'bg-white border-sky-200 text-sky-500 focus:ring-sky-500' 
-                                    : 'bg-black/40 border-zinc-700 text-[#10b981] focus:ring-[#10b981] focus:ring-offset-zinc-900'
-                                }`}
-                                checked={isInstalled}
-                                onChange={(e) => {
-                                  const newInstalled = e.target.checked 
-                                    ? [...installedJsfxPacks, pack.name]
-                                    : installedJsfxPacks.filter(p => p !== pack.name);
-                                  setInstalledJsfxPacks(newInstalled);
-                                  localStorage.setItem('beatgangsta_installed_jsfx_packs', JSON.stringify(newInstalled));
-                                }}
-                              />
-                              <div>
-                                <h4 className={`font-bold text-lg transition-colors ${theme === 'coldest' ? 'text-slate-800 group-hover:text-sky-600' : 'text-zinc-100 group-hover:text-[#10b981]'}`}>
-                                  <span className={`opacity-40 mr-2 text-sm font-black ${theme === 'coldest' ? 'text-sky-600' : 'text-[#10b981]'}`}>{index + 1}.</span>
-                                  {pack.name}
-                                </h4>
-                                <p className={`text-sm mt-1 leading-relaxed ${theme === 'coldest' ? 'text-slate-600' : 'text-zinc-400 opacity-70'}`}>{pack.desc}</p>
-                              </div>
-                            </label>
-                          </div>
-                        </div>
-                        
-                        <div className="mt-5 flex flex-col gap-3 pl-10">
-                          <div className="flex items-center justify-between gap-4">
-                            <span className="text-[10px] font-black uppercase tracking-widest opacity-50">Source Forum / Git <ExternalLink className="w-3 h-3 inline ml-1" /></span>
-                            <a href={pack.source} target="_blank" rel="noreferrer" className="text-xs font-medium text-sky-500 hover:text-sky-400 truncate max-w-[250px] sm:max-w-none">
-                              {pack.source.replace('https://', '').replace('github.com/', '')}
-                            </a>
-                          </div>
-                          
-                          <div className={`flex items-center gap-3 p-3 rounded-xl border ${theme === 'coldest' ? 'bg-white/80 border-sky-100 shadow-inner' : 'bg-black/40 border-zinc-800'}`}>
-                            <code className="text-xs font-mono break-all opacity-80 flex-1 line-clamp-1">{pack.reapack}</code>
-                            <button 
-                              onClick={() => {
-                                navigator.clipboard.writeText(pack.reapack);
-                                setCopiedPackReapack(pack.reapack);
-                                setTimeout(() => setCopiedPackReapack(null), 2000);
-                              }}
-                              className={`shrink-0 px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-wider transition-colors ${
-                                copiedPackReapack === pack.reapack
-                                  ? (theme === 'coldest' ? 'bg-sky-500 text-white' : 'bg-[#10b981] text-white')
-                                  : (theme === 'coldest' ? 'bg-sky-100 hover:bg-sky-200 text-sky-700' : 'bg-zinc-800 hover:bg-zinc-700 text-zinc-300')
-                              }`}
-                            >
-                              {copiedPackReapack === pack.reapack ? 'Copied!' : 'Copy ReaPack Link'}
-                            </button>
-                          </div>
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-
-                <div className={`p-5 rounded-2xl border ${theme === 'coldest' ? 'bg-white/60 border-sky-200' : 'bg-zinc-900 border-zinc-800'}`}>
-                  <h4 className="font-black text-xs uppercase tracking-widest mb-3">How to import via ReaPack in REAPER:</h4>
-                  <ol className="text-sm space-y-2 opacity-80 list-decimal pl-5 font-medium">
-                    <li>In REAPER, click <strong>Extensions &gt; ReaPack &gt; Import repositories...</strong></li>
-                    <li>Paste the copied ReaPack link and click <strong>OK</strong></li>
-                    <li>Click <strong>Extensions &gt; ReaPack &gt; Synchronize packages</strong> to download and install!</li>
-                  </ol>
-                </div>
-              </div>
-
-              <div className="mt-8 flex justify-end shrink-0">
-                <button
-                  onClick={() => setShowReapackReposModal(false)}
-                  className={`px-10 py-4 rounded-full font-black uppercase tracking-widest text-sm transition-all hover:scale-105 active:scale-95 ${
-                    theme === 'coldest'
-                      ? 'bg-sky-500 text-white hover:bg-sky-600 shadow-lg shadow-sky-500/20'
-                      : 'bg-white text-black hover:bg-zinc-200'
-                  }`}
-                >
-                  Got It
-                </button>
-              </div>
-            </motion.div>
-          </div>
-        )}
-      </AnimatePresence>
-
-
-{/* Real-time JSFX Auto-Detection Notification Banner */}
-      <AnimatePresence>
-        {newJsfxNotification && (
-          <motion.div
-            initial={{ opacity: 0, y: 50, scale: 0.9 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: 20, scale: 0.9 }}
-            className="fixed bottom-6 right-6 z-[200] max-w-sm w-full p-4 rounded-2xl border shadow-2xl flex items-start gap-3 bg-zinc-900 border-emerald-500 text-white shadow-emerald-950/20"
-          >
-            <div className="p-2 bg-emerald-500/10 text-emerald-400 rounded-xl shrink-0">
-              <Zap className="w-5 h-5 animate-pulse" />
-            </div>
-            <div className="flex-1 min-w-0">
-              <p className="text-xs font-black uppercase tracking-wider text-emerald-400">Connection Synced</p>
-              <p className="text-sm font-medium mt-1 leading-relaxed">{newJsfxNotification}</p>
-            </div>
-            <button
-              onClick={() => setNewJsfxNotification(null)}
-              className="p-1 rounded-lg hover:bg-white/10 transition-colors text-zinc-400 hover:text-white shrink-0"
-            >
-              <X className="w-4 h-4" />
-            </button>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      <React.Suspense fallback={null}>
-        <PaymentMethodModal
-          isOpen={showPaymentMethodModal}
-          onClose={() => setShowPaymentMethodModal(false)}
-          theme={theme}
-          onSelect={handlePaymentMethodSelect}
-          amount={pendingAmount}
-          credits={pendingCredits}
-        />
-      </React.Suspense>
-
-
-
-      {/* Backup Restored Confirmation */}
-      <AnimatePresence>
-        {showBackupRestored && (
-          <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 pointer-events-none">
-            <motion.div 
-              initial={{ opacity: 0, scale: 0.9, y: 20 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.9, y: -20 }}
-              className={`px-8 py-6 rounded-2xl shadow-2xl flex items-center gap-4 border ${
-                theme === 'coldest' 
-                  ? 'bg-white border-sky-100 text-[#0c4a6e]' 
-                  : theme === 'hustle-time'
-                  ? 'bg-[#001a14] border-yellow-500/30 text-yellow-50'
-                  : theme === 'chef-mode'
-                  ? 'bg-orange-50 border-orange-200 text-orange-950'
-                  : 'bg-black border-red-900/50 text-red-50'
-              }`}
-            >
-              <div className={`w-12 h-12 rounded-full flex items-center justify-center ${
-                theme === 'coldest' ? 'bg-sky-500/10' : theme === 'hustle-time' ? 'bg-yellow-500/10' : theme === 'chef-mode' ? 'bg-orange-500/10' : 'bg-red-500/10'
-              }`}>
-                <ShieldCheck className={`w-6 h-6 ${
-                  theme === 'coldest' ? 'text-sky-500' : theme === 'hustle-time' ? 'text-yellow-500' : theme === 'chef-mode' ? 'text-orange-500' : 'text-red-600'
-                }`} />
-              </div>
-              <div>
-                <h3 className="text-lg font-black uppercase tracking-tight">System Restored</h3>
-                <p className="text-sm font-medium opacity-50">Welcome back to your studio.</p>
-              </div>
-            </motion.div>
-          </div>
-        )}
-      </AnimatePresence>
-
-      <React.Suspense fallback={null}>
-        {showBetaApplyModal && (
-          <BetaApplicationModal onClose={() => setShowBetaApplyModal(false)} theme={theme} />
-        )}
-        {showPdfSplitter && (
-          <PdfSplitter onClose={() => setShowPdfSplitter(false)} theme={theme} />
-        )}
-        <InternationalizationModal
-          isOpen={showInternationalizationModal}
-          onClose={() => setShowInternationalizationModal(false)}
-          theme={theme}
-          currentCountry={currentCountry}
-          onCountryChange={setCurrentCountry}
-        />
-        <DawSelectionModal
-          isOpen={showDawModal}
-          onClose={() => {
-            setShowDawModal(false);
-            if (dawModalSource === 'initial') {
-              setShowAnalogModal(true);
-            }
-          }}
-          onSelect={(daw) => {
-            setDawType(daw);
-            setShowDawModal(false);
-            if (dawModalSource === 'initial') {
-              setShowAnalogModal(true);
-            }
-          }}
-          initialDaw={dawType}
-          theme={theme}
-        />
-      </React.Suspense>
-
-      <React.Suspense fallback={null}>
-        <AnalogEquipmentModal 
-          isOpen={showAnalogModal} 
-          onClose={() => setShowAnalogModal(false)} 
-          theme={theme}
-          onSave={handleAnalogSave}
-          initialInstruments={analogInstruments}
-          initialHardware={analogHardware}
-        />
-      </React.Suspense>
-
-      {reaperSelectedPluginParams && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-in fade-in duration-200">
-          <div className={`relative w-full max-w-lg rounded-2xl shadow-2xl overflow-hidden ${
-            theme === 'coldest' 
-              ? 'bg-white border text-slate-800' 
-              : 'bg-zinc-900 border-zinc-800 text-white'
-          } border`}>
-            {/* Header */}
-            <div className={`px-6 py-4 border-b flex justify-between items-center ${
-              theme === 'coldest' ? 'bg-sky-50 border-slate-200' : 'bg-black/40 border-zinc-800'
-            }`}>
-              <h3 className="font-black text-sm uppercase tracking-widest flex items-center gap-2 text-purple-500">
-                <Settings2 className="w-4 h-4" />
-                {reaperSelectedPluginParams.name} Parameters
-              </h3>
-              <button 
-                onClick={() => setReaperSelectedPluginParams(null)}
-                className={`p-1.5 rounded-full transition-colors ${
-                  theme === 'coldest' ? 'hover:bg-slate-200 text-slate-500' : 'hover:bg-zinc-800 text-zinc-400'
-                }`}
-              >
-                <X className="w-4 h-4" />
-              </button>
-            </div>
-            
-            {/* Body */}
-            <div className="p-6 max-h-[60vh] overflow-y-auto custom-scrollbar">
-              <p className={`text-xs mb-3 italic ${theme === 'coldest' ? 'text-slate-500' : 'text-zinc-500'}`}>
-                Extracted readable state parameters from REAPER VST chunk:
-              </p>
-              <pre className={`text-[10px] p-4 rounded-xl overflow-x-auto ${
-                theme === 'coldest' ? 'bg-slate-50 text-slate-800 border border-slate-200' : 'bg-black text-zinc-300 border border-zinc-800'
-              }`}>
-                {reaperSelectedPluginParams.params || 'No parameters readable.'}
-              </pre>
-            </div>
-          </div>
-        </div>
-      )}
-
-      <React.Suspense fallback={null}>
-        <DrumKitModal
-          theme={theme}
-          isOpen={showDrumKitModal}
-          onClose={() => {
-            setShowDrumKitModal(false);
-            setEditingDrumKit(undefined);
-          }}
-          onSave={(kit) => {
-            if (editingDrumKit) {
-              setDrumKits(prev => prev.map(k => k.name === editingDrumKit.name ? kit : k));
-            } else {
-              setDrumKits(prev => [...prev, kit]);
-            }
-            setShowDrumKitModal(false);
-            setEditingDrumKit(undefined);
-          }}
-          initialKit={editingDrumKit}
-        />
-      </React.Suspense>
-      <React.Suspense fallback={null}>
-        <TrashModal
-          isOpen={showTrashModal}
-          onClose={() => setShowTrashModal(false)}
-          deletedPlugins={deletedPlugins}
-          deletedInstruments={deletedInstruments}
-          deletedHardware={deletedHardware}
-          onRestorePlugin={(plugin) => {
-            setDeletedPlugins(prev => prev.filter(p => p.name !== plugin.name || p.vendor !== plugin.vendor));
-            setPlugins(prev => [...prev, plugin]);
-          }}
-          onRestoreInstrument={(inst) => {
-            setDeletedInstruments(prev => prev.filter(i => i !== inst));
-            setAnalogInstruments(prev => [...prev, inst]);
-          }}
-          onRestoreHardware={(hw) => {
-            setDeletedHardware(prev => prev.filter(h => h !== hw));
-            setAnalogHardware(prev => [...prev, hw]);
-          }}
-          onEmptyTrash={() => {
-            setDeletedPlugins([]);
-            setDeletedInstruments([]);
-            setDeletedHardware([]);
-          }}
-          theme={theme}
-        />
-      </React.Suspense>
-      {showRigUI && (
-        <React.Suspense fallback={null}>
-          <RigManagerModal 
-            theme={theme}
-            vault={vault}
-            plugins={plugins}
-            analogInstruments={analogInstruments}
-            analogHardware={analogHardware}
-            drumKits={drumKits}
-            user={user}
-            activeSession={activeSession}
-            onImportRig={handleImportRig}
-            onImportGear={handleImportGear}
-            onReplicateRecipe={handleReplicateRecipe}
-            onExportFullSave={handleExportFullSave}
-            onImportFullSave={handleImportFullSave}
-            onCloudBackup={handleCloudBackup}
-            onCloudRestore={handleCloudRestore}
-            onCompareRigs={handleCompareRigs}
-            onResetLibrary={handleResetLibrary}
-            onUpdatePlugin={handleUpdatePlugin}
-            isCloudSyncing={isCloudSyncing}
-            cloudDriveUrl={cloudDriveUrl}
-            onClose={() => setShowRigUI(false)}
-          />
-        </React.Suspense>
-      )}
-
-      <AnimatePresence>
-      </AnimatePresence>
-
-      <React.Suspense fallback={null}>
-        <LegalConsentBanner
-          show={showConsentModal}
-          onAccept={handleAcceptTerms}
-          onClose={() => setShowConsentModal(false)}
-          isSaving={isSavingConsent}
-          error={error}
-        />
-      </React.Suspense>
-
-      {showTutorial && (
-        <React.Suspense fallback={null}>
-          <TutorialOverlay
-            theme={theme}
-            stepIndex={tutorialStep}
-            steps={activeTutorialSteps}
-            onNext={handleNextTutorialStep}
-            onSkip={handleCompleteTutorial}
-            isVerified={isVerified}
-          />
-        </React.Suspense>
-      )}
-      <React.Suspense fallback={null}>
-        <RestoreBackupModal
-          show={showRestoreModal}
-          backupDate={backupInfo?.backupDate || ''}
-          onRestore={() => {
-            setShowRestoreModal(false);
-            handleExecuteCloudSync('restore', { gear: true, settings: true, recipes: true, critiques: true });
-          }}
-          onClose={() => {
-            setShowRestoreModal(false);
-          }}
-        />
-      </React.Suspense>
-
-      {showcaseVideoBlob && (
-        <React.Suspense fallback={null}>
-          <ShowcaseEditorModal
-            videoBlob={showcaseVideoBlob}
-            theme={theme}
-            onClose={() => setShowcaseVideoBlob(null)}
-          />
-        </React.Suspense>
-      )}
-
-      {/* Minimized Items Tabs */}
-      <AnimatePresence>
-        {minimizedItems.length > 0 && (
-          <motion.div 
-            initial={{ opacity: 0, y: 50 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: 50 }}
-            className="fixed bottom-6 left-6 z-[60] flex flex-col gap-2 pointer-events-none"
-          >
-            {minimizedItems.map((item, idx) => (
-              <motion.button
-                key={`${item.type}-${item.id}`}
-                layout
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, scale: 0.8 }}
-                onClick={() => restoreMinimized(item.id, item.type)}
-                className={`pointer-events-auto px-4 py-3 rounded-2xl shadow-2xl border backdrop-blur-xl font-black text-xs uppercase tracking-widest flex items-center gap-3 hover:scale-105 active:scale-95 transition-all text-left flex-row overflow-hidden ${
-                  theme === 'coldest' 
-                    ? 'bg-sky-900/90 border-sky-400/50 text-white shadow-sky-900/50' 
-                    : theme === 'chef-mode'
-                      ? 'bg-orange-900/90 border-orange-500/50 text-white shadow-orange-900/50'
-                      : 'bg-black/90 border-yellow-500/50 text-white shadow-yellow-900/50'
-                }`}
-              >
-                {item.type === 'recipe' ? (
-                  <div className={`p-2 rounded-lg ${theme === 'coldest' ? 'bg-sky-500/20 text-sky-300' : 'bg-yellow-500/20 text-yellow-500'}`}>
-                    <Music className="w-5 h-5" />
-                  </div>
-                ) : (
-                  <div className={`p-2 rounded-lg ${theme === 'coldest' ? 'bg-indigo-500/20 text-indigo-300' : 'bg-purple-500/20 text-purple-500'}`}>
-                    <Activity className="w-5 h-5" />
-                  </div>
-                )}
-                <div className="flex flex-col min-w-[120px] max-w-[200px]">
-                  <span className="text-[9px] opacity-60 leading-tight">RESTORE {item.type}</span>
-                  <span className="truncate opacity-90">{item.title}</span>
-                </div>
-              </motion.button>
-            ))}
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      {/* Honey Pot for Bots - Hidden from humans */}
-      <a 
-        href="/api/trap" 
-        style={{ position: 'absolute', left: '-9999px', top: '-9999px' }} 
-        aria-hidden="true" 
-        tabIndex={-1}
-        rel="nofollow"
-      >
-        Support & Documentation
-      </a>
-    </div>
-  );
-};
-
-export default App;
+             xœì}ËrÜ8¶à¾¿V×-¥º•T>eI%ÉmËv•»Ë.…¥ª~¨4**‰Ìd‹I²I¦Vk–³›ˆ‰YÎæÆlg5ßt¿à~Âœ€$@|È’Ëã‡œIâƒó>„Àgwcÿ7¤ğY#;¤Sz
+eËEñs;‹‚eHCo9sı˜|ı5ySNê¼<‡Fä™¶=Ö¦ã^’‰gÇñ;{A÷Vf‘ëüÓ^Üx±“ÿ’…#ıo&ı“™v7WôÃdCítÖÈŞ>¹5– døqBÜ„.âbû7'§düpşw˜Eı$riÜQg¼f-ì°Ó9aOqë„}¯OY—[’Ü„t‡¬NÙš¬®Šî©VÈ+ì(ÕÉİÚÚ7ÆñòÑ†=¡sÖn£©ï¸şìPzjM]/¡Q'Ä±„…ìííe£Y³â J:{œ³ñÚ–ë;ôštÉ9ÿV1ˆPé(ˆ^Ù“9ï©j¡Ù[qè¹Ú	y'ë¤·NL+Z¾ºL¡%¾®7–f»C’hÉ
+fŞ8X`ë®bUïŒ/"š,#_Ì†~…9×µ°æN	+m)Ã_«¬“õh:Ré‡­z³wû‹´İ¯nYÊÚÜır'ÂÛ_¦ì<şÁƒÅ§Ö ğÃQşû2NÜéMúÎ`…½sº'ƒˆ.NÉyá™çÿu;S6Äöc7q¿k{ùê6™Ó… Á	"NVM¬ŠZñÅMwØë‘óû:î­N’«Ìé´»*W
+ Më‰_¼jZäj“Ù°üûxõÌ»Ó%jáúİy÷¤Ï¦ñËd+*«–Ğë¤{“ià'İs˜	B{â&8~²8tÅJˆ•3.+„³ŞêUO›Óeù36³UØÔı÷t\Âòó=Çãs·»6˜Ùù2Ißõù'ğà_ìİv(‡wB­8	ÂÃf?³qË;kß¹í;ıÑw‚Nşàıİ]ƒ¾äÕ¯aAÃ )ü±MT7:¹ Ë0¤ÑÄ)Báä0c÷ÊÅå&sXœh'Øíö{cbO÷’ŠÛãæP›‚iHP	²€+­¦ÀÉŸ³IànÖ.Pı¾‚;P¿ı|ÿëÜİ S]¨¥Â­xWK¢3Â	/ïªŞ¤j)m5©ªÜé2”[³f#gc¯ÛÔüt±ÃÓäHa­:YKkuMÉ‡g²Œ€ŞwÃÀe¸ˆ5Sôl„òè¿ptêNZ<·àª/Ò’ü÷uõ¡ã(|³G$²Ñ‡óÄÛÈ
+lÕrCâlÛÊëŒ‰BZú¥
+ı^íÙ­;f·¿#ÇAHOp=cò»º½.²ÕöyxKÄ(A\täÎæ	üÏ6™æAFªzº|éS\iGÅcò^T°ÛÙhœšÀ9àğp'ƒÖ´d%ìö­±JF`û"øÈv\ÂÏùîâëMd5 ;;0:ÀÓË¨»(²:+†’¸‰‡§’O yñ7V/™"¨/ e‡ß10ÈFvÿBb÷ ?º#y°T¾uh Ü?u£Û^r„€Œêaüvª@ [­œ&€ZÇ W 4³ğ¡¼";%UX i•8Ğc\‹í»0WÚu}2µöÿ‡ XàÿÎ2b« ıöVJ§As°©åyJ|hƒãËZKõ%EazÓ®Î“ î—¨İ³FÜ§nÈl
+ëÎ0WÃ	´ÂBüso\äiŠ†øGFF×€˜¯Õ¡¤L|)nÀI¿^ŸJ›P BC}¢¸	fÂOÓõ%äÀö'Ôkº±HVş£·¯qM¢İèÕS­ã*ßøB¶—>Q”1=²-şìuÍšŠàî1/ß0µN¦Òv´¬Ïbº˜¦ûõÖ¢(œÑi'Œè%SNÁÿ÷\ 'Êµ3ä%0ÖI¶ÙxN,ËÂïë¿¨[zÚ¶£Ä¢rm@3İM”vâ¦Ò!1”Ğòùmw.säMğ™ˆµO°6&Ş˜pö¼İ"Wé×ÊŸ–`TÖyæ[Øj	²ınUë–¸Îy	dİòƒ«Îš•GI#Áí÷ä­Ì-äŞ‚Egm½^Ìà|beµg¯4'3„´ƒØˆ¦çPà±» hhñZÒØ¸‰‡'¡‚«oAASFÿP¾HB@¨jZlTlí®û/°y·¿\uû›d˜Æ4İ¾ÁµWÏ‡¥ëûUúU¡¬ë§@€?6kT­¹º.«&~‹š«™0RÔywôÈñåL†ß«î,ÁÖ
+ìí­øOWÈ¥K¯^×{+=Ò#ƒü[!qPa²ªâ'–øáİ’¨ş½ëÓ‰î­°µ^‘ş=pıÂã?»N2ß»Ügoåí<½ì÷ìÀ˜z=øŞå?»ƒŸ¶³_]ø9ïnzøÿwcé1|Xi&vÂ2=€F
+ÍG%i&^È*cYQŸDKx\q$Ø„I¨Ùİ˜j»ŒCÛ/uZB:²Á éöÍªk@ÒYe‡ál”¬¢İŒ}SÍ‡–GıìõİŒQ=ÒÚõ»—ùìn­cPOû3¡Ë’!LjB»7†ßÛ‚9ºR7Ğ@Î¨UÊ2*WEºdŒÇğÜÿÖÔêi©P[©ÏªÉÿøoÿƒ¼`§6 |bóîÖMã®Õ:*(®Crí)
+æ™À™ôL¤ÈÙÿÜá€ó‹«)	dµOÁxˆ.?Ê«à¾~M<ÊK’Šv'½Óò&à±Ş¤t/Ïûú4öøâ?ğøşÿzü´p$h©·û”Î_Ü	j?ÍDËF.mäÕf²eµ¡Fò”5´ª@u³ˆuŸˆjÿü'y"ˆµµ"÷WİÊƒ¸wqŠ`GNıÙr†Å±Bw5 ‹K#·"ÊNPgãä¿ü|õsÜ=İ˜­“U ßÙ‹Ÿãß³gİUÔl}\Ñè  °õ ‰‘¬K®·½SÇ€?ğ!%©mWÛÕTpã×öeÁ.ïİÆŠ
+6WgÊ;Y?¥Àÿ1t@(<CIzÖ¤ã`6óh>¶NÈ°^Â£®¸6ÇÔY#MtÊò)HíE†r
+ì{+ÄØ<ÏâaÀB|t(OÁS¡çÏùFš¾:€Òë“¼W8~y¯Oä^›v[«ñ›©KÍŠ}E|iÍÆÙp?ZıİNí}uwÆtí¶w’vû$<m¤Ñn¶5÷Ó`×ò5êªZ©ÀüÎ¤(©¤Šf-J¹±²Ç©¦¹İ˜2ï#ùq¡ªlö¥Íín,l7«°;äZe=ıêye–6ewG=Âu6]¦üÌûĞø!(J4‡vÒ³¶P¸@&zeÿV(LŸ‡\ƒG®Éç¿BÃ„lAo°©°¸ùº&Œ°7UèßµÉ<¢Ó½•y’„ñÎÆÆÕÕ••¸IpaM‚ÅÆ8áÃxvíõ¿>KöşvØİ%£›??}jÏæ+°ÍŒ&{+g0aÿb]÷PO€ŒûôAa†ÑŠ<ÎF.]ªgàŠğMZ9v/ƒ‹‚ƒé­uzi®·V´Òª~{2Ó¨¤áZiT,÷·­ñ6Ù´6·í‘µ5$ìvĞï­§O»#k0şi0‡£ñehm>µÖÖ6ax¹±5 }ëéˆ^À×aØÄ7ÛCş‡¿±¶¶¬şğ§mkdoZ[#Âşà«^^öÆÏ7­á°?ì)”X}(<ÄÂCQ˜ôØ6¡‹Ñğ²ûÔ†67	ûÃß`0²ñà‡óö‡»oõF]«ÿae£tUõ÷î†]Zë_P ¸\C¯_¾gzã!é{1P˜¨Ø¶É´§@Ïq¦â¹ÑşÁWt4?øÓ|ãW˜ök1 â´Óç3m Ÿ‰=‹ì›w•¸³x¾g®oşº¸¸±?ü4zçÿ-ü–âM:ÈâZd/>~1®Ù\.0û¯0Õ¿Îñ•›À£µâdÅó–S-zT6¥D›wFtV)•PÛhlóàê `Ö¥‡¼ºé ztíîc´&¬İ³5¼Š&«²Î Ûí0r/íÉÍGïëZ4&÷­²¨²ˆ¦SÖÔY0=‹itéN¨¦Ûš}ğ{’¼¢ÅÃnkölk÷@áûv78c—%wèÅ}D¿Ş ¼°™I>÷éİ}Î]`‘?‡Sš·}gà•Ö.˜ëvNÀ*ÅZ¸>ÌÌöönoÉÍáŞzÊOî e-ğôÂW–‹ö‹Eéµ›4kT>Šî5uÈy +·€óçÑi‚ªnæx¿I>tO†Ûø9-[,œö=
+®ôzósš\Qê‹c-«Ï‡×^î‰¼İ+èÑ3œê u„×zX,ìëîUwŒß®»ö2	d—Ó¡eÄŒ.óx…zWİş ı=Š«‡¢ÏÜhâƒÍTÕØØşóßÿûÿ©—pSJwFÓ®Î€+Z«e†loÂaıŒQvèt>éç:–Ô½ÁâQ5]ŒæAä{ºp´ÆGÍ€VN` G dÃÂ8¢Áı€%¥5ÈŞÒ­%[ƒVH-?j¦ÃÔ·ßüRw&3Fa}tj7/˜ØŞQë1£,àè¿³z>;S—~u¬Nm/†ı×i”•¸±ÃÊkŠk4…U ‘&E6(c£Â&@FÅƒ˜Æ9•âšHcˆö™	)ØB
+¦’¢k]v€:AhZÕ(0ô¦†O´‰x~­=ÜÒîaé(æÏF½ÇÜÈ”ºx³ô›‚×›í³=A>şšoºÕ%L°»‘s’Æ*WU•…›aìA6‹¼ÛkÃÊdZ‰‘)â&Æ2ä¡G'ƒ~ï´ò¡¢I¡ûÅ$M¸Qf4ìøŒì•Â`±ıÈÚ®â‡6KTéW±Z9³Õ´Õw”#qAñBúÔ˜›»<“ÊjÜ$6¨6äT8z¸ªÛ¹èÉoûı~ÑAƒ-KÖ×:NÙ<ÑÜ¹Úî¸>«¨ã\êâİù Ì`xíØEr˜´İh”¸Ût¸Ü©\I¬Jn1Ô	¢äÌõÿ±t1O‚ÆIÁ .¯ğT¨—¾8×éîË½ª‹A“ğÂ
+\ï•®İ‚¿Ô«ÒÅ2ĞRİ"ËLíi¨íÑò|ç¼"4‹2s¬ÀK:µ—^¢·Û ’ˆ’ºÂ²MG À–ê¬êÍkÆ­kKñL¦®§£z:fòZí[c-g¾ëÙçÔ»×9DZvòº}~VâÎĞøÈÎëCÛ»ë‡ËDo
+Œ(®4u´/ÑÔÇ‡º¢¯-¹êì­ü1˜ûäe@õ‘Ôzé³#„üÈ8 Ü¸I°LIäR¥ËCçã<™ û= öhL–ñäZ6îÕfPêä<ÁñF{îôÑÓŸ	 Ñ…ízg¶ã Û?*0±š@Óßšş@¯íEèQT ª9¨ìQ©5ğÄMÃzˆ¸´½%lí$ÇïG¼M½YûW1#E@Ju;ÔâÆ‹5o0Ñ?dÙ°|v„aÕŸ7¤Ü‚età{²rÈù4òÎ|Â’2oÈvWkÔæ1Ì}drÄ¹¿T¯.§LaÛv¿E›´ú†³¼Õ(Ì›¶m¾XÆ°±qL~`CZ‚4%>oÎ‚üMMëè§à_îˆ/`ö¬ÿÀ®ìˆÚ÷ Qpïİõg´ŒŞòñÜ=ˆºÍĞƒL«p!€=›ØşÙ=›S/,«6øç°
+l÷ÃgQÚĞ.³ÜÆ9.èØEâk+kÏşµ”gz4ÌÈ*õ	k5–ñ4Ş‡:Ù}‹MEïÆU¥00Œ–³–ËøÌN˜!B:™¯ÄÊ¾êéğ‡sj'3x'6²¦°G­MÖ¢*Q§9,;¿U¨Å‹&6OnQù¢)ü”šÂÔò9Hî]ÎOë­ñ¿€æpëWÓÚª‹æÀæÚÃ†. %õá÷6 dîµïì·v4™—?³Lm(ÙNê1¯ şùü4‡ĞtwüğšCgÇò†™h	°è\O¢ÀóÎí(SÇmé Wã¿œ½›kò˜©9f;#%ŠT‚ç³pˆ6„hè>…Ó§%›¾!XÓijÍ×
+ZÏ–é³[Áe&6<Ì*
+_ğ†KÉzo»œğxééd.S¿»[òV`
+ÆĞq?…GR—ûFbd1»„…fäúİ^EÆo1-ˆ¯d/9÷‚4ƒÆulÚ÷W?U%ÆhvA˜Ò¹:‘7\Ñ³Ö&İîÍ¡ít+¢W+-<÷ËÎe;g;€’7†w°wšÖ¿ì^úöv/dÏ(Š<Âæ•œ½ÛİXj4HŸ[Ø¾=+‘GgŠ½>/P4ˆš}8ÇáFzeÈ!ı8{‘ÌİÈ9í(¹ù´Û¡éø#v¤øB§«“‚,¨c˜?…XSV¹=¢ÃºÊ¶ò:4+ÔfAræ&mTiZwÕÒ,‰ÿ˜éÍ-/éèfàsgµ¯¿&.{L#û’¾v½B~ì:ıÒ¸¶¢\*%Â†SS¥\”Kš´€ªkWÑñıë`
+©ÁTMuˆª"›Û£³¶èlêzzY§#•bNS˜Å&Ï˜á6ölFíˆkW9¹¿-BˆµŒitX-Mø"Êı³±õ«¹œ%Á™OE	•©oV©2ç%RéÄeØˆç`xÛDôˆ&	,s\éÃcÖù»¾ãÎ–÷3Ã?âÙX‡0šÊÈr°NíQâyÍ×©4Ši#….æÁÒF>PšÈ]çÖxk°è­áx“oY½^Ÿğ¿˜r„¯Éö¾·½è÷I¿ÙÏ»ğ¸m,:$ü/üîwYSO»¢Í§dğ]ß¤‡Ò&D¨8°œ-nÎb0Í½ÉïŸÁ˜ X¡dş:r©ïÜBÅE¶ç¨ š>ü£ma´ Ô›/»{H†<5)ƒU×¶ÆOùûï.€ô Ğ¤×µ6á¥Õ`‰ÁÖ°+feR[ıqámŞDŞB^„üØÂŒªü/6±e¶HïmLŠvûı.F•§À÷‹M2ÉUá-F¤‹L«}øşúÎòµj^·=>ËgW ÌgSÍUÇ§í1c`üE^™SKşTÃİÏõ3·ÃLğíWº70À+·å6x‰‹Ù,[ßÑ:¼üHkv7ì1»Ôá#/”ÊOLÅY ó
+ìÆ"à÷¿´âOO`=NKöÊkYšğ³*KÚ ì47?®+fIx2¨Š@ÍÍœë’ñSgÆL­z’AW°·2ïÌ<™;!Ú—8ƒíÍÒ€8‰¯Î®+šGË0ñõÊR Hû%0|FV2Ş]ò9ÉüØ÷4>¢†”y†N~;Ãaë”Û¨¿èô	eaq‡5Â~Ñ æ—kóìójUõ “^×àùé1ˆß¦ÁF".yDÂbşÃğ“”]oæØÑEkb‰™OïœôJwN0Kƒ\ZÙG£©æ‹zÚYd;@Ã’ntÏ#2…õìŞPA)Y-Ñ4}î¼#šÎ;:^IçèÂbšÿóßÿçÿÕû±4ƒ5˜çáØ³ïCU\e©F«ìõ/“÷tB!8OÊ¦z˜zM¥Âª¤2ëVw½ »\ÔjÔ¾ 7Áj!=½Âäµ“os—Ÿu|¿
+¨êœ…ÊÃ}Æ<ŸñÊ>né§›Ä™œ‹	¥¦>š3W\«°Ì¡JètÚœ½ãß0ªğÅò†ğÛBUQ3Sğ´rê·#—q)WK¡ƒ4óm¯ç ÿLkÚÊÚ4{İŸÆâç^t?÷¢µøi@o3EÖÃÑÙmÅO#úŠÕ±šÛ=Å'\‚…ÒFØï-E-SÎ&¼hs}´>ó¥ ’…£c” D^öU‘YÀĞ¦¼±-Èàx»¦ìC]NçR ÎØU´—½7	låƒ/óvZâ««”`¹B[º7‰$%U»³CµoÉ÷m°Ãí‘ÜİP¯k¤¡\á,Ìı#ÈN•Ë[mv¦_œ¤P5›×)¿T!×Z£¹ZÏº(Ö:˜2j”ŸYbº,*îöÔõ:=#ø6{	Â¬eY«w\åÏ"ôöaW«.31oZêÜd¼›ä8 †)ıbWÀø`°k'ıSÌH+—á£³êSêœ-PÇ˜oss{_»H!î°Îù­{â¸±}îQgïÖóe†Ñ,Wgæø´3êµa(è39±Ôû¤–“¨‹1£ÊDB–"­•$X,¸¢üâ\1ywÒÑÈ0©„0µíE)”o	Hi^»`)jÅ´Q]P¤¼nœÅ^ÙõäÄMû$²¦ò›’®½Bİÿ
+5—æ³h¦1ŸX|~ÖÏZ‘¥i®†1¤ù°¤ÕªUË¦±ˆçğíŒ…p}Ú“Òï5;*Æaò*¨×Íæâiu:\èï!¶²z_„Ö/Bë¡U«ÃUH3/ª/Ò¥Yº—QèÑÇ“.ß.cwb”/óŞ?½|ùäÀÏ%?†Ès#/Hâg!aæÓ¬”0‰ˆ1vù½»p 2ìña“}tn¦Î§“úÄª¡äFØ PİLá@0µ3.ùjHBÔóÃK¢Û4Kt·°8]’¯Ù‚ğÌtgfSŠ_nj(LD*ãë4àšYIª®G^ 7F¿²„}½WœbÕ­"°#Èyhnÿ	VÕÒÅ÷•›è„vÓ7~)HãK>ÅœKHÙ›•Ò{¨¹˜	æ=ô•óUå, Šõs_ ûU^ùUqŸI¥İ-sJ×IÔWÄ=0oA¿òzb†#öûõÕò‚%ø¨«X-NÎ¦~Ôåí÷r¡P|‘Ş{Š{s–£ÒªãfpŠR…!•>ñp´ƒxïƒ NjnYÓö=ViP‘Êí¥;€äwdX-Éi~Ë 4¬˜^Ímˆ)$æw*®0UÀö¾± ú_Ø>æ(_rr´@»û¤c‰Y÷«æƒø1ZwÑbCÍ	~LÚ“7ÆÍ$+a½N¥U€+ÜùUVVòtÌ¥â)tvrŞ×ˆÍP2ğ»àÊ¸QUW–o`ÂOó¯•ËÉÅZ¯ìÊ’‡*®¡}!Q—\Të©À?–  ó-wÆìä@¸İÅrAì^FN‚)CĞìdÄOÚ©S´á­òHŸ›4’âãG¯ÿB¾£^ØVññÇxzõî©øQ|<ˆâ£[¯ùÈ3‚4¥ê@Ò ªÆzƒÚbÕ¨¶Ğ×àüWSŒKjŠrFº‰&Œ‡¼33©Á¨N‘cUoœD¿Êø©'õÛåëŒµmUĞ~É©S€ût¢—|L25Ñ^ïÂ'WP·—ßkş'¿í÷Î··ú§ùüóGm×à¥aªÅ÷¯¾zO¼`é¼«Ë°úFÑ¼ŠcÑëÇLZ¡+\î\¡ËÜ°Û-uÁ!»ß+9XKœYA£È~M‡½•¦q6–†„:qûK®—hÂn?•Ï ›óĞÌm#ö2F9§«•ƒÑZåî‘ĞN’˜9I•1¬ñˆ4½`¤B3¦Óa¢
+³ì šã†÷á”"d…Tµ‚2v• ¡4fieÿepå3IY½¿½9$çKLñÓÕ¶2­f.ôºÛ’oèÊ>C¬¿F&ëƒ®­K€5rä1¢&eÆb¬9»1I#!Y)ß¾_ÚÀ3Dn˜ âdi&	°$3J`¨4‰­j,WÙƒ/ıø=¸'d³ëa0®/ á~0]Ô§"4×eı©SR³S„7T'AÄH2{C]ôM°ŒH|ƒRÖ:<…ÿaùîòê:âkÖù³ë¯(üï^†ßoí	é’ƒ…óû£¹;M~ÿíÚ:y¼Bœuƒa¿ìlDt§"cGÃm7GõÖ×1å§­X»Fùàx@–œ·	pGLai+æ¬ìí/úÓ1PÌpÍ²A.PÎñ@=ÇOë•X0äIàĞÊ¥Z>–µ/xÎXÉAŸ]6´²ÿoÏÃğ¥ØÿÆÈÃ•ñî6]Ó{vŠ¹òÊß¾tgvDÖÄsÃóÀë*‚<†ÙuV²ÿÌGü³òJí-àµw€«[ÎûãÍJ¶Ó6>Rå«4ùø©Ş	Ø†LroÏšÛÌ«µYi™jõn¥æòs8û{òÃÑ—“o<ùÿuã{÷<²£›8QpD9G%’®oğÃµñùãƒ6Óø‚#~QùÒôvYÎS¯ğOÄsã¤ë¸ñ3Ñ2¬Ê¹ë¹û¯®e$™´£°HìXíK2É™I,oi‹3Àjğ‚RZê3/˜VèÏÒRœÛb<[‚ÂÉ”¥‰7ç«KÇ÷&eV1õ1ÚaqX"zí9K“ï]´õ¥!m£9@úd™ Ä<[]cã›0	+­÷^±ÄHoYV^ñëYòMVæ{¯ŞS›Ÿ¹\ı˜øíVÖÃvägáctùÈP
+3÷£Ï	'‘ñE•ô6ü"½=¾ô6¼§ô–jœnüÉı„7=)h$Úã„ú÷KõtjTùY:@æPŸeå
+ÈGœÅÖ™U{…™ôÙš`×#ôÒá›w„_e’P‡\Ío`8­Š—ñ<U‹ğMçò‰\Ñsô_©Í1Ó¹rÑì úåX¦KÆ±¡=k„x¬Ç¾S¶&Ë‚°,áàBo9C½&a%èµÍäáv¦R+Ì:@½MŠ4îõ“ŠäŸtaÊ÷ıÉMˆ‚ ÙâIyOÃ µã5T ½`uÃ¹©¹V¼QÂ8–v¢hTjv¯€ŞÎ76šïiX¬6+ÍvÅœ™Ãê©Ó3Ö®
+ÒÈÁŒôğú†‡ørZ}kA~={Á8™^aºØÉÙ9µ‡ C’Ó¶ºgƒtÓòËèù¥ÛìR¤™½S8vI³V«<ÄxÄ%2}­QDµJ­dvÑŒ`¥K´½7¡‘14Oã«·®Ö{öJQC*†öÖÑ‡²Y‹1lÌpŠò–Kc-mp‰ÃÃYF+ç.]STo5Îş ¨» ‹ÏWB?ñG¼A¢„ÏE
+ g:¼§´Î
+ÊóÀ H¿zPƒAT
+¿ÈÒä°#½}T'ØâÊœë£ßS‘HÅıìEšfqƒš=ùzg§ìÔ…›ä—Yœî ¶Æú—]v0NqÙb6?1•/ç¬¬8Õå4éš´;*]¤[uâ(èm"™j¬qYËn;+^íP«ec š¢‚ùşi½ä…4H…U³(¦â:†Äbºp¹W+†qÔ¨y.n²oŠw_Úëü¯ÿMs&:e’…–-@xÂß¨Õ”qYbLn~xûöÇwoÿz†Í>?øÓ‘åQ–Ìï@.¡ 9˜Ò›v’õ9É0#gÑ	â¨ØÒ«øĞypbûŠ±ğ¿í/™D„å/§ü9Na\ôï.];S-’ôs PHĞJ†‡¯»d7ıÄk†1CTná9õ™óºœ£¨‰ZNCdq¯Lt€³‚¿lP bR
+Ùi¼N&sÊ-ŞrNwàjx4Ñ9$ñy9 ÷p-Õ[‹¨í—° Ojãe>âì©gØö=‚áÊ|</iFÕÊ†¥
+lâªÂöJ,àSF=«CĞ¹?À0±AË¨°”å#"¾QÌ»vF9†‘NsÉ1¨x²M‚uæ†ÑØù§•Õ:UúÕ0£2F“9€+Ãús€R;}Ê…¾v#Ô‰ÌGlëy`A‘dH
+ûù6ÕF¤#vãÜ³ã9CMˆ+æÆ±ÃDå46U<p sÊĞ;«ÎnåÆQ„ş&E–?bFo®=É&W5ã@¨ñ¬İWi»1º,&üÎAÊ@Tª`Íp§+!óˆN÷VæIÆ;çq1Û†!xØRŒµ·rĞç_‹Ác®av%ID#SÜ™âé–ó4Öyãàd÷û¢Jã?}VØjK¤æ~Á›¬‹FÅáÓü#c]9Ñ,ÇS²ÂVÈØ§(´z•=0*<UûPÓïË¸İĞÉĞe:‡ß!MOâ.Âyº´ª¸tÈnó¿øÔn¯5lÆ!§`EıŠ[ÊLé“ñÓĞl:,„Çæ“=¢eûvØ	±™Ğ‡rÍÂ|ÚÕŸıU£´Ú›öi¬Î.Z]ê<÷<&cw’hiJÔÆŠÃ,“N'¿¨Y©ÏEäuÜDÏĞÁ«0CâîådËM“z¨‘yÂ—î{Ê'ÊÜŒgïéÔ1ZÍOxvM†°õTÕËJaÍ5ãøvêÆ×/¢$%éïSeÀ.™û±~0­|®™i\Á#À##¦¸Uw§Ça“À#æN?aó`ã³LµÆßj?Ú»æ6B½ˆÈ ƒ8` +áu~áØÅÇÓİK9ê #?[6Æ[Â¾³VÙM#†ÓÑdù† 91;#¤]Ğ›½Û¬‡;sÁ&Z‡bR§
+Ú'O¿Òƒ¢â¨æ’Ğˆ+ÉòÃ„QÊå$GîzÅ°¿“ÕœVGüTIùJœ‚ª¯¤Ôe˜Rt}ÃâQİâ³1ÎìÒÒ2z]–O¹¼şâãê&kâÚÑjƒ(_os Ì şÂšÆ‰ÈËPçL•¦g`ú…óàÚÈ/çUdV¬ÿyØh™&QyB²±µc[óÎy®H)x°É2Ş‰g¶€FTh3ú"¹@äİhÓ)šUÓƒ`âkóO+~Ø–bh·„oêk•Ò_4Ù'Ö}z%ãõ,/†HÓ;±,«LÖI†©Oî†°L]€O°®,İh…Q?xÉH©Õ<ñFÍxÁÄö€)ßÂ6áÌc®¹Ü,ûÙß¡›3&è¯®ğÃ;Ät ÀMjÇz®uN¬qé«ŠëTJiµARb¿{ú5"Á`Ø¯Ëé„^ÎQ_W47ïÕ:ÈŠ‰”Ô¿ùUñdÁ])eQ[Õ½:¨[ÆB‘ß“şUŸô$ıHlLıæT(Æ¤RÖØÆ¦Í}4ŠrLÊ¹Ä'Ï¦W`V]	›O¤w7‘},Tc°‹&Â>Æ±lë¢+™á¶SSSõ)FÍV4©Umò­Æ®ò€ïól+ûGÁ2šPÌ‹²\ò­›TjRPøÙs}Šs}”“š@û®ÍU‚PbÖé]IåWÔíóåÛÂ0»å#Zút>ãŞ6'ƒ1[¤x±Ã°+Ëê U²Q¦˜í¬¦ªMÀí««kùó™›Ì—çLÓÉ_UŸkƒâ)]sRšCŸ)¸ YÕq6n(øÿôsÇ×÷itw×lÚP‡jÂÂhj/BvI6ÛE¡óºû|£äa6`2ÕØ!ó!aÕîÑ†Aß&7ÊnL¨Ô¸åŸV±™v>¼F`¼)†V´j‘@Pq¾îå…l@Ì[jèª´p5‚=ÿ|6·üó±¡*·õ‘«Ü$E[j@’U‘’?Ÿ(¼E÷Jãˆ95RÖÏ¨Õjë3£±Ê7Å×ªÈPN’×\í¾²ÿ]p…&K~i1óÉ¬«iHÌ‰÷İ´nş©6tPöõ§wa{È½e^Â”éTÌQıê%Ë*‹¨I‡Í~ğ+*¥É}*›ÅÖ`—‡,ô›‡ˆ3årÚ´‡,Y9Îç‡?5lø ù0R`ÅÜÜ¹D^õ:­ÌİG2w]ów77oğ¿×¿†/ß"%[•¯ÑÆöÀ™×è¡­ÜòËİQ_n \PKs´Ìï¶ï÷ÆÅËî[xz–ÑŠT²!—®Â“ÌJ†Æ¥ÛLyÓ|TZcÈ—ÕÔEôÛ !oÊ9ZøƒšÂ>ÚÄxüF„wp—-núAo¾îKæÕ…Îï “i¬úÂFV¹Yğ‡OYÆ$¥~1ô#Ÿ25C¨ü+!¯5U"'úM®5eqU=•âUÎØ¶j¨YôÍìfX.¹ÁÑä”( a°hháÊmÑVú£ÊÅŸ@*æÁlŒ¥¤E1Y3b±òXÌO,İ¨n¸U²]ê€]køÀ\Î°¸š~Ë±ùäQišYx‹Õƒ‰ÀK#}Yô×é³@ÊÓ’²FJ·ZâP&ïÊísÉ¨â~VL®®7ß·ªz#Ëš |(–ñ/MÛ:©G…¢Ûv÷Mëh‡ÀXPÓÃÈ¤½[\$‰Ü=´oÔOŞÒd8Œ¼Jı»ñPß#]*(/5îPÓâí¹¥:ÚÍˆãg”Õ&yTóŞ-O•«4Æ_ÉÅynÔ½[0ÂâsöS. nÀÉJˆ[‹ò"Ù†ìn¨Ë·/]©wµÀB.C /qÂ""á MİhÁ)Aó‹[X+Y#mƒn(†]z	Ïb®íc‚?ml 94°Àùm!ã·©$=%RìÄæD¤©³i?·hö&#{“jk+7kÏa'©DşÅíõúv”İ®-]^5ì®EÒ6»Ì;í0»¬¹pw¦ĞH¯÷6u—©"«¯óşÈXÃûû¢7Ü{…OÇ Kóæ‰²ÒÎ”Šç_\æ´0>ä+£çÔªvæ.õœø ó9h|O&Ú¯b®*ĞUOU%çºiÈÂ[6²êÅW½Ï¨šî@Íõ]º²ÄÂeˆ_Ÿ¡e’Í>¦Ş$€µ9gŠZ'KÇtII\oš2œ~ÑÄÆ|?7úà÷ôµ`Îx!=— ¶”r*_ ï¹Ä=pÎÄ™á¥¡x|‹Ãßx”¼D«®wßøÌ:—°h-÷C>Me,_ÏG«¶`§Äu³ÈE7{·êïÂøÃÔ‘í†ÒÒÚì¾´¯8[V³P®nŞ*f«ÖÓŞ/íNIÇ„-•áÁÀ¬®•,B¢Õç°¤ÁŒ7¬q‡–y§gO±_ı¨aÄÇ7!e¾ùü§$†Aíİ:|èõUÅ5‹…>ğWÿXº!cõÒ0@‘4IÅóT‚ä%IOy3Ä¾¤©ÂÁ'šUC?¢h‰ÃÃf%¥Gš
+ßÙ‘seG4-şn³´·h‹¡‡Dêğ@¤CÌÚ«¨°N÷š	yfµò	™öÃõaöv1á Ë\bØ²Û…>‰ë—€4xøâ¥ˆn¦Ã^fÖåxå-+cµeF6ÊGL”+òh(J~GmGÑ;'‚JE”î9©È¦abeÇ‡êÓ$j|T¼RæBµÉ¥5šâ7J$i8_š$ĞR<h¢xa{a>GÂ·ı0K…TbÉÊ\ Ñe¡¬ÈzoìX¯ÏªÊØ&ıD³ü…;?Í'jRL4º;£‘šÌdJĞpÆ¥Óö"pnêÎÚJz)ë¼{²É’ô³MLàÌ‹<iCµ’6E#+À30p“ökÉ9(ËK'R*RL¯n;,â4NĞßJJàÅŸ‰àÕŸÉd¾ô/vJk«QG´<áRHË—-•¸æ³0&ì+ø«ªÑ‹zÜ¤zGè5Wºh—²
+„œ°şóŸdõ] ¯mºêVÉå4¢5Zx ü”înÌE½ãOnRdÁM<ÂšKU[³çR]-?å^9."fQ´ƒ€3uı‚Ów‘ÍfXçÂM4}#L•Fµ\±xw`7.™ï:üÏâ®.ğ÷üeP©6ÆŸ?#Ğ9€ÛEÑEüP˜f£Ñ)¿¯c[§ù#¯§`>ÿ„ZVu®øNñ¼1,Gv<¯óõbp^V#÷:pb³,¸ú[SRaØËÏ45r½ğ@ºĞña
+<s‹ABTF©‚§kÁ!‘\°²ü7 ¢Ğº¤¾Dò;ş¤­Ğ]±Ÿ*yÍÓªƒ(æ•¯ÌİM*g&­¨vv.>pÙàY[å1?/ÊRšÑcÕ&cÏw°37ÉìêÖj=g8²AC3¦!—šÈÇ;¿ªí«E˜Ü0h7bÜàœQŠ~*Še£=©Zk Îfº³ß¤Ò¦x‹º³·,«GTR˜iŞa¼ô PÙê›0ÅaE ùª u5B}Z£^ªÇ#È`ñM}¿Œi´w‹}0£##
+ºª%Ÿ;¾Á²¥ê‹ì¾ä·ÔÔ¢ø¤Xö=å:]úeVJ+k½ºÆö^Ã¦Êúõ©~TÅ:êÓbv™·¬¦¤GÚÒ3(ÅÅ³Rù`Yá`ã¬xş¨¼Rp¸DÎ°|™ògÅò?²DZ)Õàåågjy7f#EÏ á£(ÿ.:õÀ›—€Ê‘·w«üÔ¬I‰î²“«!¹²ò×pò%şÕ`'†ïéÌö(ä'Ü•K%âÎkˆnãùdBÃÌÓ€ÿ:¦Ñ"®gJäF5käÆ §b‡ø7QA.D£(€³Çşk¥şcÔ½Z‹&˜6¨5máß<û¦!f¾ÁX;x+ÀœîåBqŠ¨¥b¥ãò$¸tğû±±M	.ÜP>HÀÒòÅcòÜ©ËÃxÓïí¸å¢î
+ÂñN‘ÿÍ!R+Aä9«÷’ùOğïoüiğÌÊŸ3)tUÏ•UHirZ©"EÍt²Lh†S:«¯¸ºNnÉÃFuÑul—éÚÒß"ã^úsŒñeú€ÜUñ=õBfÍğïZŸT=şä:4xáç÷?BG¢)È‚¨¸áÀ†¤]ì•{½kxàôøGiª¬3l…£QIö$Ä…û:ƒªcrlŸÇÍ¼šiMVQd¶$û¤Wá«²qUş±-|bzÂ–Û4{¿zt*œ_7S¿+%u u³’/èşkÅ2À¸ì¶9×áù_Š)YÒE3xÏ³\,¿|u‹X˜’â®+~¸Îwğ|°,ûivàÚxÑ³a®ïs£ô–®FAe.ĞP¥1Çu’Í¼Ng®nÏ ,2PMÖ¦T£XÊÈß&ÌÆøYUPBà>+ $ËZcãŸÆÉ@r›:fm+J#ÉUKñÊN‹M@š»šåcH½É”aHÎQÚ‘H•Ì)îdÃVŞ´ä¤¥mZ¼75İÄÌ‘ŸP¾œ^¢\—„Ih6˜ë“¾¢|k8ÌçÒ\EWÁª¬¯o—±;isC²Ök£&xÂ®ï¸³@™‘x$M;·f…òGÓÆëb.1qèGÏ\fX™Ò›œôÌä’†Ğ÷ğ—>‰¡>1Á6ÖÎ¯çËœö…sÛûWGÇ?¼%Áç]E¦ãRi„ÚÁvoe_4å&¹­ê›_t–¾5eïí"ÏÌï@¤oÈa°tÖ/‚$&]òG¡Ì^6_. õÊì”i•çVİ°Cw0t(e~Š“‘DsÈ®(Y6*ğ€¥q7<énÃ'¼†IJ¿
+æMÙ Ó¬ÎV™Jİ$ö¹Àºı|MDò†i€g9eAò¥÷ò‘¯ÉË`ÂôXÌA#[/‘!Ûà¯ï¾ùÍo(ÓÕ‡NQ“F‡á7¿ù   ÿÿ aFZo

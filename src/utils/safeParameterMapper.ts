@@ -479,52 +479,23 @@ export const mapPluginParametersSafely = (
     return setting;
   });
 
-  // Inject True Peak and Oversampling parameters if missing from limiter recommendations
-  if (isLimiter) {
-    if (!hasTruePeakParam) {
-      mappedSettings.push({
-        parameter: "True Peak Limiting",
-        value: "Enabled",
-        explanation: "Auto-enforced True Peak Limiting to prevent reconstructive clipping on playback devices."
-      });
+  // Filter out any hallucinated DAW-wrapper parameters (e.g. Dry/Wet Mix, Highpass Sidechain / Crossover) 
+  // on simple plugins like Saturation Knob or analog gear that do not have these internal controls
+  const filteredSettings = mappedSettings.filter((setting: ParameterSetting) => {
+    const pLower = setting.parameter.toLowerCase();
+    if (pluginNameLower.includes('saturation knob')) {
+      if (pLower.includes('dry/wet') || pLower.includes('mix') || pLower.includes('crossover') || pLower.includes('highpass') || pLower.includes('sidechain') || pLower.includes('hpf')) {
+        return false;
+      }
     }
-    if (!hasOversamplingParam) {
-      mappedSettings.push({
-        parameter: "Oversampling",
-        value: "4x",
-        explanation: "Auto-enforced 4x Oversampling to eliminate aliasing and preserve pristine high-frequency transients."
-      });
+    // Also filter out any auto-configured fake wrappers if they were somehow present
+    if (pLower === 'highpass sidechain / crossover' || pLower === 'crossover phase mode') {
+      if (!pluginNameLower.includes('multiband') && !pluginNameLower.includes('pro-mb') && !pluginNameLower.includes('crossover')) {
+        return false;
+      }
     }
-  }
-
-  // Inject Linear Phase Crossover parameter if missing from multiband recommendations
-  if (isMultiband) {
-    if (!hasLinearPhaseParam) {
-      mappedSettings.push({
-        parameter: "Crossover Phase Mode",
-        value: "Linear Phase",
-        explanation: "Auto-configured Linear Phase crossover mode to eliminate phase distortion and preserve transience punch."
-      });
-    }
-  }
-
-  // Inject Parallel Mix and High-Pass crossover if missing from saturator/exciter recommendations
-  if (isSaturatorOrExciter) {
-    if (!hasSaturatorMixParam) {
-      mappedSettings.push({
-        parameter: "Dry/Wet Mix",
-        value: "10%",
-        explanation: "Auto-configured 10% Parallel Dry/Wet blend to ensure the core transient structure remains intact."
-      });
-    }
-    if (!hasSaturatorHpfParam) {
-      mappedSettings.push({
-        parameter: "Highpass Sidechain / Crossover",
-        value: "5000 Hz",
-        explanation: "Auto-configured 5000 Hz High-pass filter to isolate the saturation purely to high-frequency air/shimmer."
-      });
-    }
-  }
+    return true;
+  });
 
   // Stage-by-Stage Gain Matching (Gain Staging)
   // If the plugin has boosted EQ significantly, we should auto-trim the output.
@@ -539,18 +510,18 @@ export const mapPluginParametersSafely = (
 
   if (autoTrimValue < -0.5 && hasTrimParameter) {
       // Find and adjust the existing trim/output
-      for (let i = 0; i < mappedSettings.length; i++) {
-          const pLower = mappedSettings[i].parameter.toLowerCase();
+      for (let i = 0; i < filteredSettings.length; i++) {
+          const pLower = filteredSettings[i].parameter.toLowerCase();
           const isEqGainOut = isEq && pLower.includes('gain') && pLower.includes('out');
-          const isCompressorGainOut = isCompressor && (pLower.includes('gain') || pLower.includes('output') || pLower.includes('makeup')) && parseNumericValue(mappedSettings[i].value)?.suffix.toLowerCase() === 'db';
+          const isCompressorGainOut = isCompressor && (pLower.includes('gain') || pLower.includes('output') || pLower.includes('makeup')) && parseNumericValue(filteredSettings[i].value)?.suffix.toLowerCase() === 'db';
           
           if (pLower.includes('output') || pLower.includes('trim') || isEqGainOut || isCompressorGainOut) {
-              const parsedTrim = parseNumericValue(mappedSettings[i].value);
+              const parsedTrim = parseNumericValue(filteredSettings[i].value);
               if (parsedTrim) {
                   const newTrim = parseFloat((parsedTrim.value + autoTrimValue).toFixed(1));
-                  mappedSettings[i].value = `${newTrim} dB`;
-                  mappedSettings[i].explanation = mappedSettings[i].explanation 
-                    ? `${mappedSettings[i].explanation} (Gain matched: added ${autoTrimValue}dB)`
+                  filteredSettings[i].value = `${newTrim} dB`;
+                  filteredSettings[i].explanation = filteredSettings[i].explanation 
+                    ? `${filteredSettings[i].explanation} (Gain matched: added ${autoTrimValue}dB)`
                     : `Auto-Gain Matching: Adjusted to prevent gain creep.`;
                   break;
               }
@@ -560,7 +531,7 @@ export const mapPluginParametersSafely = (
 
   return {
     ...plugin,
-    deepDive: mappedSettings
+    deepDive: filteredSettings
   };
 };
 
