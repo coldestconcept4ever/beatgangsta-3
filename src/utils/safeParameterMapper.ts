@@ -675,16 +675,84 @@ export const applySafeParameterMappingToCritique = (
   critique: MixCritique,
   physicalMetrics?: PhysicalMetrics,
   referencePhysicalMetrics?: PhysicalMetrics,
-  stemsPhysicalMetrics?: Record<string, PhysicalMetrics>
+  stemsPhysicalMetrics?: Record<string, PhysicalMetrics>,
+  userEmail?: string | null
 ): MixCritique => {
   if (!critique.actionPlan || critique.actionPlan.length === 0) return critique;
 
   console.log('[HEADROOM_ALLOCATION] Starting Safe Parameter Mapping post-process for critique...');
 
   const isJsfxMode = critique.isJsfxMode !== false;
+  const isSpecialUser = Boolean(
+    (userEmail && (userEmail.toLowerCase().includes('coldestconcept@gmail.com') || userEmail.toLowerCase().includes('recognizemiracles@gmail.com'))) ||
+    (typeof window !== 'undefined' && (
+      localStorage.getItem('beatgangsta_sync_email')?.toLowerCase().includes('coldestconcept@gmail.com') ||
+      localStorage.getItem('beatgangsta_sync_email')?.toLowerCase().includes('recognizemiracles@gmail.com') ||
+      localStorage.getItem('userEmail')?.toLowerCase().includes('coldestconcept@gmail.com') ||
+      localStorage.getItem('userEmail')?.toLowerCase().includes('recognizemiracles@gmail.com')
+    ))
+  );
 
   const mappedActionPlan = critique.actionPlan.map((plan) => {
     if (!plan.recommendedChain || plan.recommendedChain.length === 0) return plan;
+
+    // Filter out redundant PreSonus Mixtool spam if there are other plugins
+    let cleanChain = plan.recommendedChain.filter((p: any) => {
+      const pNameLower = (p.name || '').toLowerCase();
+      if (pNameLower.includes('mixtool') && plan.recommendedChain.length > 2) {
+        return false;
+      }
+      return true;
+    });
+
+    // For special VIP users, guarantee both Pro-Q 3 and Gullfoss are in the chain
+    if (isSpecialUser) {
+      const hasProQ3 = cleanChain.some((p: any) => {
+        const nameLower = (p.name || '').toLowerCase();
+        return nameLower.includes('pro-q 3') || nameLower.includes('pro-q3') || nameLower === 'pro-q 3' || nameLower === 'pro q 3';
+      });
+      const hasGullfoss = cleanChain.some((p: any) => (p.name || '').toLowerCase().includes('gullfoss'));
+
+      const stemName = (plan.targetStem || plan.issue || '').toLowerCase();
+      const isBassOrKick = stemName.includes('kick') || stemName.includes('808') || stemName.includes('sub') || stemName.includes('bass') || stemName.includes('low');
+      const isVocal = stemName.includes('vox') || stemName.includes('vocal') || stemName.includes('lead') || stemName.includes('hook') || stemName.includes('adlib');
+      const isDrum = stemName.includes('snare') || stemName.includes('clap') || stemName.includes('hat') || stemName.includes('cymbal') || stemName.includes('drum') || stemName.includes('perc');
+
+      if (!hasProQ3) {
+        const proQ3Plugin: DeepDivePlugin = {
+          name: "FabFilter - Pro-Q 3",
+          purpose: "Surgical resonance control, low-cut cleanup, and dynamic acoustic balancing",
+          deepDive: [
+            { parameter: "Low End Band", value: isBassOrKick ? "30Hz Low Cut (24dB/oct)" : isVocal ? "85Hz Low Cut (18dB/oct)" : isDrum ? "50Hz Low Cut (18dB/oct)" : "45Hz Low Cut (18dB/oct)", explanation: "High-pass filtering inaudible low-frequency rumble." },
+            { parameter: "Band 1", value: isBassOrKick ? "55Hz Bell (+2.5dB, Dynamic On)" : isVocal ? "220Hz Bell (-2.5dB, Dynamic On)" : isDrum ? "450Hz Bell (-3.0dB, Dynamic On)" : "300Hz Bell (-2.0dB, Dynamic On)", explanation: "Taming problematic boxy resonance dynamically." },
+            { parameter: "Band 2", value: isBassOrKick ? "350Hz Bell (-4.0dB)" : isVocal ? "3.2kHz Bell (-1.5dB, Dynamic On)" : isDrum ? "2.5kHz Bell (+2.0dB)" : "1.8kHz Bell (-1.5dB)", explanation: "Carving clean spectral separation." },
+            { parameter: "Band 3", value: isVocal ? "10kHz High Shelf (+3.0dB, Dynamic On)" : isDrum ? "8kHz High Shelf (+2.0dB)" : "12kHz High Shelf (+1.5dB)", explanation: "Adding open high-end clarity and sheen." },
+            { parameter: "Band 4", value: isBassOrKick ? "1.2kHz Bell (+1.5dB, Q: 1.4)" : "6.5kHz Bell (-1.0dB, Dynamic On)", explanation: "Enhancing transient bite." },
+            { parameter: "Band 5", value: "Output Gain: 0.0 dB", explanation: "Balanced output stage." }
+          ]
+        };
+        cleanChain.unshift(proQ3Plugin);
+      }
+
+      if (!hasGullfoss) {
+        const gullfossPlugin: DeepDivePlugin = {
+          name: "Soundtheory - Gullfoss",
+          purpose: "Real-time intelligent spectral demasking and acoustic clarity",
+          deepDive: [
+            { parameter: "Recover", value: isVocal ? "24%" : isBassOrKick ? "14%" : isDrum ? "18%" : "20%", explanation: "Unmasking buried micro-details and harmonics." },
+            { parameter: "Tame", value: isVocal ? "16%" : isBassOrKick ? "10%" : isDrum ? "12%" : "14%", explanation: "Suppressing competing resonance buildups dynamically." },
+            { parameter: "Bias", value: isVocal ? "+4%" : "0%", explanation: "Bias offset for optimal presence balance." },
+            { parameter: "Brightness", value: isVocal ? "+0.5 dB" : "0 dB", explanation: "Preserving natural high-frequency sheen." },
+            { parameter: "Boost", value: isBassOrKick ? "+0.5 dB" : "0 dB", explanation: "Enhancing body and transient weight." }
+          ]
+        };
+        if (cleanChain.length > 1) {
+          cleanChain.splice(1, 0, gullfossPlugin);
+        } else {
+          cleanChain.push(gullfossPlugin);
+        }
+      }
+    }
 
     // Determine which physical metrics apply to this specific plan/stem
     let targetMetrics = physicalMetrics;
@@ -704,7 +772,7 @@ export const applySafeParameterMappingToCritique = (
 
     const isMasterMode = critique.isMasterMode || false;
 
-    const mappedChain = plan.recommendedChain.map((plugin) => {
+    const mappedChain = cleanChain.map((plugin) => {
       return mapPluginParametersSafely(plugin, targetMetrics, isMasterMode);
     });
 

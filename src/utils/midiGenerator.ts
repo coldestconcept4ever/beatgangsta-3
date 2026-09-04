@@ -23,7 +23,7 @@ export const generateDrumMidiBaseData = (
     skakaHumanizeAmount?: number;
     flShiftAmount?: number;
   },
-  drumsOnlyType?: 'full' | 'kick' | 'snare' | 'hat'
+  drumsOnlyType?: 'full' | 'kick' | 'snare' | 'hat' | 'openHat' | 'perc'
 ): Uint8Array => {
   if (!currentPattern) return new Uint8Array();
   
@@ -38,6 +38,14 @@ export const generateDrumMidiBaseData = (
   const hatTrack = new MidiWriter.Track();
   hatTrack.addTrackName(`${recipeTitle} - ${activeSection} HiHat`);
   hatTrack.setTempo(bpm);
+
+  const openHatTrack = new MidiWriter.Track();
+  openHatTrack.addTrackName(`${recipeTitle} - ${activeSection} OpenHat`);
+  openHatTrack.setTempo(bpm);
+
+  const percTrack = new MidiWriter.Track();
+  percTrack.addTrackName(`${recipeTitle} - ${activeSection} Perc`);
+  percTrack.setTempo(bpm);
 
   const getNormalizedSwing = (val: any) => {
     if (typeof val !== 'number') return 0;
@@ -236,7 +244,7 @@ export const generateDrumMidiBaseData = (
     }
   };
 
-  // General MIDI Drum Map: Kick = 36 (C1), Snare = 38 (D1), Clap = 39 (D#1), Hi-Hat = 42 (F#1)
+  // General MIDI Drum Map: Kick = 36 (C1), Snare = 38 (D1), Clap = 39 (D#1), Hi-Hat = 42 (F#1), Open Hat = 46 (A#1), Perc = 37 (C#1)
   let tracksToInclude: MidiWriter.Track[] = [];
   if (drumsOnlyType === 'kick') {
     addDrumEvents(kickTrack, currentPattern.kick?.steps || [], 'C1', currentPattern.kick?.isDoubleTime || false, currentPattern.swing?.kick);
@@ -248,12 +256,30 @@ export const generateDrumMidiBaseData = (
   } else if (drumsOnlyType === 'hat') {
     addDrumEvents(hatTrack, currentPattern.hiHat?.steps || [], 'F#1', currentPattern.hiHat?.isDoubleTime || false, currentPattern.swing?.hiHat);
     tracksToInclude.push(hatTrack);
+  } else if (drumsOnlyType === 'openHat') {
+    addDrumEvents(openHatTrack, currentPattern.openHat?.steps || [], 'A#1', false, 0);
+    tracksToInclude.push(openHatTrack);
+  } else if (drumsOnlyType === 'perc') {
+    addDrumEvents(percTrack, currentPattern.perc?.steps || [], 'C#1', false, 0);
+    tracksToInclude.push(percTrack);
   } else {
     addDrumEvents(kickTrack, currentPattern.kick?.steps || [], 'C1', currentPattern.kick?.isDoubleTime || false, currentPattern.swing?.kick);
     const snareNote = currentPattern.snare?.isClap ? 'D#1' : 'D1';
     addDrumEvents(snareTrack, currentPattern.snare?.steps || [], snareNote, currentPattern.snare?.isDoubleTime || false, currentPattern.swing?.snare);
     addDrumEvents(hatTrack, currentPattern.hiHat?.steps || [], 'F#1', currentPattern.hiHat?.isDoubleTime || false, currentPattern.swing?.hiHat);
-    tracksToInclude = [kickTrack, snareTrack, hatTrack];
+    if (currentPattern.openHat?.steps && currentPattern.openHat.steps.length > 0) {
+      addDrumEvents(openHatTrack, currentPattern.openHat.steps, 'A#1', false, 0);
+      tracksToInclude.push(openHatTrack);
+    }
+    if (currentPattern.perc?.steps && currentPattern.perc.steps.length > 0) {
+      addDrumEvents(percTrack, currentPattern.perc.steps, 'C#1', false, 0);
+      tracksToInclude.push(percTrack);
+    }
+    if (tracksToInclude.length === 0) {
+      tracksToInclude = [kickTrack, snareTrack, hatTrack];
+    } else {
+      tracksToInclude = [kickTrack, snareTrack, hatTrack, ...(currentPattern.openHat?.steps?.length ? [openHatTrack] : []), ...(currentPattern.perc?.steps?.length ? [percTrack] : [])];
+    }
   }
 
   const write = new MidiWriter.Writer(tracksToInclude);

@@ -1,5 +1,5 @@
 export const ARTIST_EXAMPLES = [
-  "Travis Scott", "Drake", "The Weeknd", "Kendrick Lamar", "Kanye West",
+  "Alice Deejay", "Travis Scott", "Drake", "The Weeknd", "Kendrick Lamar", "Kanye West",
   "Taylor Swift", "Bad Bunny", "Billie Eilish", "Post Malone", "Dua Lipa",
   "Ariana Grande", "Ed Sheeran", "Justin Bieber", "Bruno Mars", "Eminem",
   "J. Cole", "Future", "Playboi Carti", "Lil Uzi Vert", "Tyler, The Creator",

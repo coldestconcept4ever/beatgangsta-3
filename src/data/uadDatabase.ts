@@ -10,7 +10,7 @@ export interface UADParameter {
 export interface UADPluginProfile {
   name: string;
   displayName: string;
-  category: 'Dynamics' | 'Equalizers' | 'Channel Strips' | 'Reverbs & Delays' | 'Tape & Saturation' | 'Guitar & Bass' | 'Preamps & Microphones';
+  category: 'Dynamics' | 'Equalizers' | 'Channel Strips' | 'Reverbs & Delays' | 'Tape & Saturation' | 'Guitar & Bass' | 'Preamps & Microphones' | 'Virtual Instruments';
   description: string;
   hardwareModel: string;
   parameters: UADParameter[];
@@ -19,6 +19,322 @@ export interface UADPluginProfile {
 }
 
 export const UAD_DATABASE: UADPluginProfile[] = [
+  {
+    "name": "uad moog minimoog",
+    "displayName": "UAD Moog Minimoog",
+    "category": "Virtual Instruments",
+    "description": "The definitive software recreation of Bob Moog's iconic 1970 analog synthesizer. Developed in partnership with Moog Music, it delivers every nuanced circuit behavior including the famous 24dB ladder filter self-oscillation, rich dual/triple oscillator detuning, and snappy discrete transistor envelopes.",
+    "hardwareModel": "Moog Minimoog Model D Synthesizer",
+    "parameters": [
+      {
+        "name": "Tune",
+        "range": "-7 to +7 semitones",
+        "defaultVal": "0",
+        "type": "knob",
+        "description": "Master fine tuning control across all three oscillators."
+      },
+      {
+        "name": "Glide",
+        "range": "0 to 10",
+        "defaultVal": "0",
+        "type": "knob",
+        "description": "Portamento glide rate between consecutively played legato notes."
+      },
+      {
+        "name": "Modulation Mix",
+        "range": "0 to 10",
+        "defaultVal": "0",
+        "type": "knob",
+        "description": "Controls the blend between Oscillator 3 and the Noise generator as modulation sources."
+      },
+      {
+        "name": "Oscillator Modulation",
+        "range": "Off / On",
+        "defaultVal": "Off",
+        "type": "switch",
+        "options": ["Off", "On"],
+        "description": "Enables pitch modulation of Oscillators 1 and 2 from the modulation mix source."
+      },
+      {
+        "name": "Oscillator 1 Range",
+        "range": "LO / 32' / 16' / 8' / 4' / 2'",
+        "defaultVal": "8'",
+        "type": "select",
+        "options": ["LO", "32'", "16'", "8'", "4'", "2'"],
+        "description": "Selects the octave footing range for Oscillator 1."
+      },
+      {
+        "name": "Oscillator 1 Waveform",
+        "range": "Triangle / Triangle-Sawtooth / Sawtooth / Square / Wide Rectangular / Narrow Rectangular",
+        "defaultVal": "Sawtooth",
+        "type": "select",
+        "options": ["Triangle", "Triangle-Sawtooth", "Sawtooth", "Square", "Wide Rectangular", "Narrow Rectangular"],
+        "description": "Selects the waveform for Oscillator 1."
+      },
+      {
+        "name": "Oscillator 2 Range",
+        "range": "LO / 32' / 16' / 8' / 4' / 2'",
+        "defaultVal": "8'",
+        "type": "select",
+        "options": ["LO", "32'", "16'", "8'", "4'", "2'"],
+        "description": "Selects the octave footing range for Oscillator 2."
+      },
+      {
+        "name": "Oscillator 2 Frequency",
+        "range": "-7 to +7 semitones",
+        "defaultVal": "0",
+        "type": "knob",
+        "description": "Fine tuning offset for Oscillator 2. Detuning by +3 to +6 cents creates the iconic fat Eurodance chorus spread."
+      },
+      {
+        "name": "Oscillator 2 Waveform",
+        "range": "Triangle / Triangle-Sawtooth / Sawtooth / Square / Wide Rectangular / Narrow Rectangular",
+        "defaultVal": "Sawtooth",
+        "type": "select",
+        "options": ["Triangle", "Triangle-Sawtooth", "Sawtooth", "Square", "Wide Rectangular", "Narrow Rectangular"],
+        "description": "Selects the waveform for Oscillator 2."
+      },
+      {
+        "name": "Oscillator 3 Range",
+        "range": "LO / 32' / 16' / 8' / 4' / 2'",
+        "defaultVal": "8'",
+        "type": "select",
+        "options": ["LO", "32'", "16'", "8'", "4'", "2'"],
+        "description": "Selects the octave footing range for Oscillator 3 (or LFO rate in LO range)."
+      },
+      {
+        "name": "Oscillator 3 Frequency",
+        "range": "-7 to +7 semitones",
+        "defaultVal": "0",
+        "type": "knob",
+        "description": "Fine tuning offset for Oscillator 3."
+      },
+      {
+        "name": "Oscillator 3 Waveform",
+        "range": "Triangle / Triangle-Sawtooth / Sawtooth / Square / Wide Rectangular / Narrow Rectangular",
+        "defaultVal": "Triangle",
+        "type": "select",
+        "options": ["Triangle", "Triangle-Sawtooth", "Sawtooth", "Square", "Wide Rectangular", "Narrow Rectangular"],
+        "description": "Selects the waveform for Oscillator 3."
+      },
+      {
+        "name": "Oscillator 3 Control",
+        "range": "Off / On",
+        "defaultVal": "On",
+        "type": "switch",
+        "options": ["Off", "On"],
+        "description": "Enables keyboard tracking for Oscillator 3 pitch. Turn Off when using Osc 3 as an LFO."
+      },
+      {
+        "name": "Oscillator 1 Volume",
+        "range": "0 to 10",
+        "defaultVal": "8",
+        "type": "knob",
+        "description": "Sets the mixer level of Oscillator 1. Values above 5 gently overdrive the ladder filter input."
+      },
+      {
+        "name": "Oscillator 1 Switch",
+        "range": "Off / On",
+        "defaultVal": "On",
+        "type": "switch",
+        "options": ["Off", "On"],
+        "description": "Mutes or engages Oscillator 1 into the mixer."
+      },
+      {
+        "name": "Oscillator 2 Volume",
+        "range": "0 to 10",
+        "defaultVal": "8",
+        "type": "knob",
+        "description": "Sets the mixer level of Oscillator 2."
+      },
+      {
+        "name": "Oscillator 2 Switch",
+        "range": "Off / On",
+        "defaultVal": "On",
+        "type": "switch",
+        "options": ["Off", "On"],
+        "description": "Mutes or engages Oscillator 2 into the mixer."
+      },
+      {
+        "name": "Oscillator 3 Volume",
+        "range": "0 to 10",
+        "defaultVal": "0",
+        "type": "knob",
+        "description": "Sets the mixer level of Oscillator 3."
+      },
+      {
+        "name": "Oscillator 3 Switch",
+        "range": "Off / On",
+        "defaultVal": "Off",
+        "type": "switch",
+        "options": ["Off", "On"],
+        "description": "Mutes or engages Oscillator 3 into the mixer."
+      },
+      {
+        "name": "External Input Volume",
+        "range": "0 to 10",
+        "defaultVal": "0",
+        "type": "knob",
+        "description": "Sets external audio level through the filter."
+      },
+      {
+        "name": "External Input Switch",
+        "range": "Off / On",
+        "defaultVal": "Off",
+        "type": "switch",
+        "options": ["Off", "On"],
+        "description": "Mutes or engages external audio input."
+      },
+      {
+        "name": "Noise Volume",
+        "range": "0 to 10",
+        "defaultVal": "0",
+        "type": "knob",
+        "description": "Sets the mixer level of the noise generator."
+      },
+      {
+        "name": "Noise Switch",
+        "range": "Off / On",
+        "defaultVal": "Off",
+        "type": "switch",
+        "options": ["Off", "On"],
+        "description": "Mutes or engages the noise generator."
+      },
+      {
+        "name": "Noise Type",
+        "range": "Pink / White",
+        "defaultVal": "White",
+        "type": "switch",
+        "options": ["Pink", "White"],
+        "description": "Selects between Pink Noise (equal energy per octave) and White Noise (equal energy per frequency)."
+      },
+      {
+        "name": "Filter Cutoff Frequency",
+        "range": "-4 to +4",
+        "defaultVal": "1",
+        "type": "knob",
+        "description": "Controls the corner frequency of the legendary 24dB/octave Moog transistor ladder filter."
+      },
+      {
+        "name": "Filter Emphasis",
+        "range": "0 to 10",
+        "defaultVal": "3",
+        "type": "knob",
+        "description": "Controls filter resonance. Pushing past 7 triggers self-oscillation for pure sine ringing."
+      },
+      {
+        "name": "Amount of Contour",
+        "range": "0 to 10",
+        "defaultVal": "6",
+        "type": "knob",
+        "description": "Determines how much the filter envelope opens the cutoff frequency on key trigger."
+      },
+      {
+        "name": "Filter Attack Time",
+        "range": "1 ms to 10 s",
+        "defaultVal": "1 ms",
+        "type": "knob",
+        "description": "Attack duration for the filter envelope contour. Minimum 1ms delivers snappy Eurodance transient punch."
+      },
+      {
+        "name": "Filter Decay Time",
+        "range": "4 ms to 35 s",
+        "defaultVal": "400 ms",
+        "type": "knob",
+        "description": "Decay duration for the filter envelope contour down to the sustain level."
+      },
+      {
+        "name": "Filter Sustain Level",
+        "range": "0 to 10",
+        "defaultVal": "4",
+        "type": "knob",
+        "description": "Filter cutoff sustain height maintained while key remains depressed."
+      },
+      {
+        "name": "Filter Modulation",
+        "range": "Off / On",
+        "defaultVal": "Off",
+        "type": "switch",
+        "options": ["Off", "On"],
+        "description": "Routes the modulation mix source into the filter cutoff frequency."
+      },
+      {
+        "name": "Filter Keyboard Control 1",
+        "range": "Off / On",
+        "defaultVal": "On",
+        "type": "switch",
+        "options": ["Off", "On"],
+        "description": "Enables 1/3 keyboard tracking for filter cutoff."
+      },
+      {
+        "name": "Filter Keyboard Control 2",
+        "range": "Off / On",
+        "defaultVal": "On",
+        "type": "switch",
+        "options": ["Off", "On"],
+        "description": "Enables 2/3 keyboard tracking for filter cutoff (engaging both 1 and 2 gives 1:1 100% key tracking)."
+      },
+      {
+        "name": "Loudness Attack Time",
+        "range": "1 ms to 10 s",
+        "defaultVal": "1 ms",
+        "type": "knob",
+        "description": "VCA amplitude envelope attack time."
+      },
+      {
+        "name": "Loudness Decay Time",
+        "range": "4 ms to 35 s",
+        "defaultVal": "500 ms",
+        "type": "knob",
+        "description": "VCA amplitude envelope decay time down to sustain level."
+      },
+      {
+        "name": "Loudness Sustain Level",
+        "range": "0 to 10",
+        "defaultVal": "8",
+        "type": "knob",
+        "description": "VCA amplitude level held while key is pressed."
+      },
+      {
+        "name": "Decay Switch",
+        "range": "Off / On",
+        "defaultVal": "On",
+        "type": "switch",
+        "options": ["Off", "On"],
+        "description": "Enables note release decay after key release using the decay knob settings."
+      },
+      {
+        "name": "Master Volume",
+        "range": "0 to 10",
+        "defaultVal": "8",
+        "type": "knob",
+        "description": "Master audio output volume control."
+      },
+      {
+        "name": "Output Switch",
+        "range": "Off / On",
+        "defaultVal": "On",
+        "type": "switch",
+        "options": ["Off", "On"],
+        "description": "Main audio output mute/unmute switch."
+      },
+      {
+        "name": "A-440 Tuning",
+        "range": "Off / On",
+        "defaultVal": "Off",
+        "type": "switch",
+        "options": ["Off", "On"],
+        "description": "Generates a reference 440 Hz tone for calibration."
+      }
+    ],
+    "proTips": [
+      "For signature 90s Eurodance / Trance saw leads (like Alice Deejay 'Better Off Alone'), use Oscillators 1 & 2 set to 8' Sawtooth, detuning Osc 2 by +3 to +5 cents for a massive chorus spread.",
+      "Set Filter Attack to minimum (1ms) and Decay to ~350-450ms with Amount of Contour at 6 to 7 to make rapid 16th-note arpeggiated riffs punch with razor-sharp definition.",
+      "Engage both Filter Keyboard Control 1 and 2 for 1:1 key tracking so the lead timbre stays consistently bright across higher octaves.",
+      "Add a light touch of Glide (value 1.0 to 1.5) to achieve smooth transition sweeps on interval jumps without losing transient speed."
+    ],
+    "authorizationStatus": "Native & UAD-2 DSP (UADx Supported)"
+  },
   {
     "name": "uad la-6176 signature channel strip",
     "displayName": "UAD LA-6176 Signature Channel Strip",

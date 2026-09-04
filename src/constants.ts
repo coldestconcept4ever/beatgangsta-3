@@ -1,4 +1,5 @@
 export const VIBE_EXAMPLES = [
+  "90s Eurodance Trance, Catchy Saw Hook",
   "Cyberpunk Phonk, Ethereal Cloud Rap",
   "Lil Wayne Type, Southern Trap",
   "Lo-fi Hip Hop, Chill Boom Bap",
@@ -8,16 +9,20 @@ export const VIBE_EXAMPLES = [
   "Melodic Trap, Emotional R&B",
   "Boom Bap, 90s Golden Era",
   "Experimental Jazz Rap, Abstract Beats",
-  "Dancehall Fusion, Island Vibe"
+  "Dancehall Fusion, Island Vibe",
+  "Euphoric Club Anthem, Big Room Lead"
 ];
 
 export const SONG_EXAMPLES = [
+  "Better Off Alone by Alice Deejay",
   "Sicko Mode by Travis Scott",
+  "One More Time by Daft Punk",
   "Killa Cam by Cam'ron",
   "N.Y. State of Mind by Nas",
   "A Milli by Lil Wayne",
   "Money Trees by Kendrick Lamar",
   "Still D.R.E. by Dr. Dre",
+  "Sandstorm by Darude",
   "Life's a Bitch by Nas",
   "Bound 2 by Kanye West",
   "Shook Ones, Pt. II by Mobb Deep",

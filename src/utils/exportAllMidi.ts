@@ -197,7 +197,9 @@ export const generateAllMidiZip = async (recipe: BeatRecipe, dawType?: string | 
     const fullDrumsFolder = zip.folder('Drums/Full_Mix');
     const kicksFolder = zip.folder('Drums/Kicks');
     const hatsFolder = zip.folder('Drums/HiHats');
+    const openHatsFolder = zip.folder('Drums/OpenHats');
     const snaresFolder = zip.folder('Drums/Snares_Claps');
+    const percsFolder = zip.folder('Drums/Percussion');
     
     for (const section of sections) {
       const pattern = recipe.drumPatterns[section];
@@ -206,7 +208,9 @@ export const generateAllMidiZip = async (recipe: BeatRecipe, dawType?: string | 
         const subFolderFull = fullDrumsFolder?.folder(sectionName);
         const subFolderKicks = kicksFolder?.folder(sectionName);
         const subFolderHats = hatsFolder?.folder(sectionName);
+        const subFolderOpenHats = openHatsFolder?.folder(sectionName);
         const subFolderSnares = snaresFolder?.folder(sectionName);
+        const subFolderPercs = percsFolder?.folder(sectionName);
         
         // Generate both humanized and non-humanized versions
         
@@ -225,6 +229,8 @@ export const generateAllMidiZip = async (recipe: BeatRecipe, dawType?: string | 
         checkMaxBars(pattern.kick);
         checkMaxBars(pattern.snare);
         checkMaxBars(pattern.hiHat);
+        checkMaxBars(pattern.openHat);
+        checkMaxBars(pattern.perc);
         const lengths: PatternLength[] = recipe.detectedSectionLengths?.[section] !== undefined
           ? [recipe.detectedSectionLengths[section]!]
           : ((naturalBars > 8 ? [naturalBars] : [4, 8]) as PatternLength[]);
@@ -254,12 +260,30 @@ export const generateAllMidiZip = async (recipe: BeatRecipe, dawType?: string | 
               subFolderHats?.file(fileName, midiBytesHat);
             }
 
-            // 4) Snares Only
+            // 4) Open Hats Only (if present)
+            if (pattern.openHat?.steps && pattern.openHat.steps.length > 0) {
+              const midiBytesOpenHat = generateDrumMidiBaseData(pattern, recipe.title, section, bpm, humanized, bars, undefined, 'openHat');
+              if (midiBytesOpenHat && midiBytesOpenHat.length > 0) {
+                const fileName = `${safeTitle}_${section}_OpenHat${humanizedSuffix}_${bars}Bar_${bpm}BPM.${extension}`;
+                subFolderOpenHats?.file(fileName, midiBytesOpenHat);
+              }
+            }
+
+            // 5) Snares / Claps Only
             const midiBytesSnare = generateDrumMidiBaseData(pattern, recipe.title, section, bpm, humanized, bars, undefined, 'snare');
             if (midiBytesSnare && midiBytesSnare.length > 0) {
               const snareType = pattern.snare?.isClap ? 'Clap' : 'Snare';
               const fileName = `${safeTitle}_${section}_${snareType}${humanizedSuffix}_${bars}Bar_${bpm}BPM.${extension}`;
               subFolderSnares?.file(fileName, midiBytesSnare);
+            }
+
+            // 6) Percussion Only (if present)
+            if (pattern.perc?.steps && pattern.perc.steps.length > 0) {
+              const midiBytesPerc = generateDrumMidiBaseData(pattern, recipe.title, section, bpm, humanized, bars, undefined, 'perc');
+              if (midiBytesPerc && midiBytesPerc.length > 0) {
+                const fileName = `${safeTitle}_${section}_Perc${humanizedSuffix}_${bars}Bar_${bpm}BPM.${extension}`;
+                subFolderPercs?.file(fileName, midiBytesPerc);
+              }
             }
           }
         }

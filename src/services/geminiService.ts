@@ -1099,16 +1099,15 @@ const BEAT_INSTRUMENTAL_PROCESSING_PROTOCOL_PROMPT = `
        - **Aphex Twin "IDM" Random Filter Sweeps**: Assign a fast, chaotic LFO to the cutoff frequency of a bandpass filter ('JS: RBJ Highpass/Lowpass Filters') applied to hi-hats or synths, automating the LFO depth to twitch and squelch aggressively, creating unpredictable, glitchy IDM textures.
 `;
 const FUNCTION_AUTOMATION_PROMPT = `
-    CRITICAL - STUDIO ONE PROFESSIONAL FUNCTIONS & AUTOMATION:
-    The user can perform several "Silent Functions" via automation commands in their DAW. You MUST recommend using these in the 'actionPlan' when applicable:
-    1. "Quantize": Use this for fixing timing issues on MIDI or Audio events (e.g., "Automation Command: Quantize").
-    2. "Transpose": Use for pitching tracks up/down (e.g., "Automation Command: Transpose [-12 semitones]").
-    3. "Silence Detection / Strip Silence": Use for cleaning up noise floor on recordings (e.g., "Automation Command: Detect Silence").
+    CRITICAL - STUDIO ONE PROFESSIONAL DAW ARRANGEMENT COMMANDS:
+    The user can perform several "Silent DAW Functions" via track automation/event commands in Studio One. You may recommend these in the 'solution' description when applicable as workflow advice (NOT as insert audio plugins):
+    1. "Quantize": Use this for fixing timing issues on MIDI or Audio events (e.g., "DAW Action: Quantize").
+    2. "Transpose": Use for pitching tracks up/down (e.g., "DAW Action: Transpose [-12 semitones]").
+    3. "Silence Detection / Strip Silence": Use for cleaning up noise floor on recordings (e.g., "DAW Action: Detect Silence").
     4. "Audio Bend / transient Detection": Use for surgical rhythmic correction on audio stems.
     5. "Chord Detection": Use for harmonic analysis to extract chords to the global Chord Track.
     6. "Bounce Selection": Use for printing heavy processing chains into new audio files to save CPU.
     7. "Merge Events": Use for combining track segments for cleaner project organization.
-    8. "Mixtool": A native PreSonus utility. Recommend it for phase inversion or gain staging without using a dedicated saturation/compression plugin.
 `;
 const GLOBAL_PARAMETER_STRICTNESS_PROMPT = `
     CRITICAL - STRICT PARAMETER REALISM, UNITS, & O'CLOCK POSITIONING:
@@ -3850,9 +3849,26 @@ export const getMixCritique = async (
   userEmail: string | null | undefined = null
 ): Promise<any> => {
   const ai = getAI();
-  const isSpecialUser = userEmail === 'coldestconcept@gmail.com' || userEmail === 'recognizemiracles@gmail.com';
+  const isSpecialUser = Boolean(
+    (userEmail && (userEmail.toLowerCase().includes('coldestconcept@gmail.com') || userEmail.toLowerCase().includes('recognizemiracles@gmail.com'))) ||
+    (typeof window !== 'undefined' && (
+      localStorage.getItem('beatgangsta_sync_email')?.toLowerCase().includes('coldestconcept@gmail.com') ||
+      localStorage.getItem('beatgangsta_sync_email')?.toLowerCase().includes('recognizemiracles@gmail.com') ||
+      localStorage.getItem('userEmail')?.toLowerCase().includes('coldestconcept@gmail.com') ||
+      localStorage.getItem('userEmail')?.toLowerCase().includes('recognizemiracles@gmail.com')
+    ))
+  );
   const isStudioOne = dawType?.toLowerCase().includes('studio one');
+  const isReaper = dawType?.toLowerCase().includes('reaper');
+
+  // Filter plugins:
+  // 1. JSFX is ONLY allowed if DAW is REAPER (or isJsfxMode is true). Otherwise, strictly omit all JSFX.
+  // 2. PreSonus stock plugins should be de-prioritized so they never crowd out Gear Rack plugins.
   const filteredPlugins = plugins.filter(p => {
+    const isJsfx = p.vendor?.toLowerCase().includes('cockos') || p.name?.toLowerCase().startsWith('js:') || p.type?.toLowerCase().includes('jsfx');
+    if (isJsfx && !isReaper && !isJsfxMode) {
+      return false;
+    }
     if (!isStudioOne && (p.vendor.toLowerCase().includes('presonus') || p.name.toLowerCase().includes('presonus'))) {
       return false;
     }
@@ -3862,35 +3878,54 @@ export const getMixCritique = async (
   // Ensure Gullfoss and Pro-Q 3 are ALWAYS included in the available plugins for special users
   const mandatoryPlugins: VSTPlugin[] = [];
   if (isSpecialUser) {
-    const proQ3 = filteredPlugins.find(p => p.name.toLowerCase().includes('pro-q 3') || p.name.toLowerCase().includes('pro-q3') || p.name.toLowerCase() === 'pro-q 3');
-    const gullfoss = filteredPlugins.find(p => p.name.toLowerCase().includes('gullfoss'));
-    if (proQ3) mandatoryPlugins.push(proQ3);
-    if (gullfoss) mandatoryPlugins.push(gullfoss);
+    const proQ3: VSTPlugin = filteredPlugins.find(p => p.name.toLowerCase().includes('pro-q 3') || p.name.toLowerCase().includes('pro-q3') || p.name.toLowerCase() === 'pro-q 3') || {
+      name: "FabFilter - Pro-Q 3",
+      vendor: "FabFilter",
+      type: "EQ",
+      version: "3.x",
+      lastModified: new Date().toISOString(),
+      parameters: ["Low End Band", "Band 1", "Band 2", "Band 3", "Band 4", "Band 5", "Band 6"]
+    };
+    const gullfoss: VSTPlugin = filteredPlugins.find(p => p.name.toLowerCase().includes('gullfoss')) || {
+      name: "Soundtheory - Gullfoss",
+      vendor: "Soundtheory",
+      type: "Mastering",
+      version: "1.x",
+      lastModified: new Date().toISOString(),
+      parameters: ["Recover", "Tame", "Bias", "Brightness", "Boost"]
+    };
+    mandatoryPlugins.push(proQ3);
+    mandatoryPlugins.push(gullfoss);
   }
 
   // To prevent the AI from always picking the same 2-3 plugins from a static list,
   // balance available plugins across diverse categories (EQ, Dynamics/Compressor, Saturation/Tape, Space/Modulation, Master/Limiter)
-  // and sample across categories so Gemini has access to a rich palette of ~100 distinct tools.
+  // and prioritize the user's high-end Gear Rack (UAD, FabFilter, Soundtoys, Soundtheory, Waves, Softube, etc.) over stock DAW utilities.
   const starred = filteredPlugins.filter(p => starredPlugins.includes(p.name) && !mandatoryPlugins.some(m => m.name === p.name));
   const remaining = filteredPlugins.filter(p => !starredPlugins.includes(p.name) && !mandatoryPlugins.some(m => m.name === p.name));
 
-  const eqList = remaining.filter(p => p.type === 'EQ' || p.name.toLowerCase().includes('eq') || p.name.toLowerCase().includes('pultec') || p.name.toLowerCase().includes('neve') || p.name.toLowerCase().includes('api'));
-  const compList = remaining.filter(p => p.type === 'Compressor' || p.name.toLowerCase().includes('comp') || p.name.toLowerCase().includes('1176') || p.name.toLowerCase().includes('la-2a') || p.name.toLowerCase().includes('cl 1b') || p.name.toLowerCase().includes('distressor') || p.name.toLowerCase().includes('fairchild') || p.name.toLowerCase().includes('ssl'));
-  const satList = remaining.filter(p => p.type === 'Saturation' || p.type === 'Distortion' || p.name.toLowerCase().includes('tape') || p.name.toLowerCase().includes('saturat') || p.name.toLowerCase().includes('decapitator') || p.name.toLowerCase().includes('saturn') || p.name.toLowerCase().includes('studer') || p.name.toLowerCase().includes('atr-102') || p.name.toLowerCase().includes('radiator') || p.name.toLowerCase().includes('tube') || p.name.toLowerCase().includes('knob'));
-  const spatialList = remaining.filter(p => p.type === 'Reverb' || p.type === 'Delay' || p.type === 'Modulation' || p.name.toLowerCase().includes('reverb') || p.name.toLowerCase().includes('delay') || p.name.toLowerCase().includes('echo') || p.name.toLowerCase().includes('plate') || p.name.toLowerCase().includes('chamber') || p.name.toLowerCase().includes('dimension') || p.name.toLowerCase().includes('chorus') || p.name.toLowerCase().includes('valhalla'));
-  const masterList = remaining.filter(p => p.type === 'Limiter' || p.type === 'Mastering' || p.name.toLowerCase().includes('limit') || p.name.toLowerCase().includes('maximizer') || p.name.toLowerCase().includes('clipper') || p.name.toLowerCase().includes('lurssen') || p.name.toLowerCase().includes('ozone') || p.name.toLowerCase().includes('inflator') || p.name.toLowerCase().includes('gullfoss') || p.name.toLowerCase().includes('soothe'));
-  const otherList = remaining.filter(p => !eqList.includes(p) && !compList.includes(p) && !satList.includes(p) && !spatialList.includes(p) && !masterList.includes(p));
+  // Cap stock PreSonus plugins so they don't dominate when Studio One is selected
+  const gearRackOnly = remaining.filter(p => !p.vendor.toLowerCase().includes('presonus') && !p.name.toLowerCase().includes('presonus'));
+  const presonusCapped = remaining.filter(p => p.vendor.toLowerCase().includes('presonus') || p.name.toLowerCase().includes('presonus')).slice(0, 2);
+  const prioritizedPool = [...gearRackOnly, ...presonusCapped];
+
+  const eqList = prioritizedPool.filter(p => p.type === 'EQ' || p.name.toLowerCase().includes('eq') || p.name.toLowerCase().includes('pultec') || p.name.toLowerCase().includes('neve') || p.name.toLowerCase().includes('api') || p.name.toLowerCase().includes('helios'));
+  const compList = prioritizedPool.filter(p => p.type === 'Compressor' || p.name.toLowerCase().includes('comp') || p.name.toLowerCase().includes('1176') || p.name.toLowerCase().includes('la-2a') || p.name.toLowerCase().includes('cl 1b') || p.name.toLowerCase().includes('distressor') || p.name.toLowerCase().includes('fairchild') || p.name.toLowerCase().includes('ssl') || p.name.toLowerCase().includes('vca'));
+  const satList = prioritizedPool.filter(p => p.type === 'Saturation' || p.type === 'Distortion' || p.name.toLowerCase().includes('tape') || p.name.toLowerCase().includes('saturat') || p.name.toLowerCase().includes('decapitator') || p.name.toLowerCase().includes('saturn') || p.name.toLowerCase().includes('studer') || p.name.toLowerCase().includes('atr-102') || p.name.toLowerCase().includes('radiator') || p.name.toLowerCase().includes('tube') || p.name.toLowerCase().includes('knob') || p.name.toLowerCase().includes('ampex'));
+  const spatialList = prioritizedPool.filter(p => p.type === 'Reverb' || p.type === 'Delay' || p.type === 'Modulation' || p.name.toLowerCase().includes('reverb') || p.name.toLowerCase().includes('delay') || p.name.toLowerCase().includes('echo') || p.name.toLowerCase().includes('plate') || p.name.toLowerCase().includes('chamber') || p.name.toLowerCase().includes('dimension') || p.name.toLowerCase().includes('chorus') || p.name.toLowerCase().includes('valhalla') || p.name.toLowerCase().includes('lexicon') || p.name.toLowerCase().includes('emt'));
+  const masterList = prioritizedPool.filter(p => p.type === 'Limiter' || p.type === 'Mastering' || p.name.toLowerCase().includes('limit') || p.name.toLowerCase().includes('maximizer') || p.name.toLowerCase().includes('clipper') || p.name.toLowerCase().includes('lurssen') || p.name.toLowerCase().includes('ozone') || p.name.toLowerCase().includes('inflator') || p.name.toLowerCase().includes('gullfoss') || p.name.toLowerCase().includes('soothe') || p.name.toLowerCase().includes('shadow hills') || p.name.toLowerCase().includes('precision'));
+  const otherList = prioritizedPool.filter(p => !eqList.includes(p) && !compList.includes(p) && !satList.includes(p) && !spatialList.includes(p) && !masterList.includes(p));
 
   const shuffleArray = <T>(arr: T[]): T[] => [...arr].sort(() => Math.random() - 0.5);
 
   const balancedSelection: VSTPlugin[] = [
     ...mandatoryPlugins,
     ...starred,
-    ...shuffleArray(eqList).slice(0, 16),
-    ...shuffleArray(compList).slice(0, 16),
-    ...shuffleArray(satList).slice(0, 16),
-    ...shuffleArray(spatialList).slice(0, 16),
-    ...shuffleArray(masterList).slice(0, 14),
+    ...shuffleArray(eqList).slice(0, 18),
+    ...shuffleArray(compList).slice(0, 18),
+    ...shuffleArray(satList).slice(0, 18),
+    ...shuffleArray(spatialList).slice(0, 18),
+    ...shuffleArray(masterList).slice(0, 16),
     ...shuffleArray(otherList).slice(0, 12)
   ];
 
@@ -4058,18 +4093,28 @@ export const getMixCritique = async (
   const dawStr = dawType ? `\nThe user is using ${dawType} as their DAW. Include specific instructions or tips for ${dawType} where relevant in the guides or recipes.` : '';
   const starredStr = starredPlugins.length > 0 ? `\nCRITICAL MANDATORY INSTRUCTION: The user has STARRED (favorited) the following plugins:\n${starredPlugins.join(', ')}\nYou ABSOLUTELY MUST include these starred plugins in EVERY SINGLE track's recommended chain. This is a non-negotiable hard requirement.` : '';
 
+  const studioOneGearRackDirective = isStudioOne ? `
+==================================================
+🚨 CRITICAL STUDIO ONE & GEAR RACK PRIORITY DIRECTIVE 🚨
+The user's DAW is Studio One.
+DO NOT fill track chains with basic PreSonus stock plugins (e.g. Mixtool, Fat Channel, Bitcrusher, Analog Delay, Expander, Chorus, Binaural Pan).
+You MUST prioritize the user's high-end Gear Rack analog-modeled plugins (UAD, FabFilter, Soundtheory Gullfoss, Soundtoys, Waves, Softube, Slate Digital, Lexicon, Pultec, Teletronix LA-2A, 1176, Neve, SSL, API, Fairchild, Tape Emulations) from the database!
+Use PreSonus stock utilities only if specifically requested or if no 3rd-party gear exists for that specific task.
+==================================================
+` : '';
+
   let specialUserDiktat = "";
   if (isSpecialUser) {
     specialUserDiktat = `
 ==================================================
 🚨🚨 MANDATORY ENGINEER TOOLCHAIN DIRECTIVE 🚨🚨
-The user is verified VIP engineer: ${userEmail}.
+The user is verified VIP engineer: ${userEmail || 'coldestconcept@gmail.com'}.
 MANDATORY RULES FOR EVERY CRITIQUE AND STEM CHAIN:
 1. ALWAYS include "FabFilter - Pro-Q 3" (or "Pro-Q 3") in the recommended chain for every stem/mix. Provide surgical resonance cuts, dynamic bell nodes, low-cut filtering, or high-shelf air.
-2. ALWAYS include "Soundtheory - Gullfoss" (or "Gullfoss") in the recommended chain. Provide exact Recover, Tame, Bias, Brightness, and Boost settings to resolve spectral masking.
+2. ALWAYS include "Soundtheory - Gullfoss" (or "Gullfoss") in the recommended chain for every single stem/mix. Provide exact Recover, Tame, Bias, Brightness, and Boost settings to resolve spectral masking.
 3. FOR ALL OTHER PLUGINS IN THE CHAIN:
    - Provide EXTREME VARIETY across diverse analog colors (vintage tube compressors like CL 1B / LA-2A, punchy FETs like 1176, tape machines like Studer A800 / ATR-102, analog EQs like Pultec EQP-1A / Neve 1073 / API 550A, character saturators like Decapitator / Radiator, lush reverbs like EMT 140 / Lexicon 224 / Capitol Chambers, dynamic processors).
-   - NEVER be repetitive, predictable, or suggest the same 2-3 generic plugins every time!
+   - NEVER be repetitive, predictable, or suggest the same 2-3 generic stock plugins every time!
 ==================================================
 `;
   }
@@ -4087,6 +4132,7 @@ CRITICAL DIRECTIVE ON MIX CRITIQUE DEPTH, VARIETY, & ZERO-BOILERPLATE:
     ${getLanguageInstruction(language)}
     
     ${specialUserDiktat}
+    ${studioOneGearRackDirective}
     ${varietyAndMusicalityPrompt}
 
     ${PRO_Q_3_LAYOUT_PROMPT}
@@ -4306,7 +4352,8 @@ CRITICAL DIRECTIVE ON MIX CRITIQUE DEPTH, VARIETY, & ZERO-BOILERPLATE:
     parts.push({ inlineData: { data: referenceAudioBase64, mimeType: mimeType } });
   }
   const multiBandInstruction = getMultiBandInstruction(isMultiBandMode);
-  parts.push({ text: prompt + multiBandInstruction + FUNCTION_AUTOMATION_PROMPT });
+  const dawAutomationSection = isStudioOne ? FUNCTION_AUTOMATION_PROMPT : '';
+  parts.push({ text: prompt + multiBandInstruction + dawAutomationSection });
   const tools: any[] = [];
   if (referenceTrack && !referenceAudioBase64) {
     tools.push({ googleSearch: {} });
@@ -4329,15 +4376,15 @@ CRITICAL DIRECTIVE ON MIX CRITIQUE DEPTH, VARIETY, & ZERO-BOILERPLATE:
         let chunkSchema = JSON.parse(JSON.stringify(schemaObject));
         chunkSchema.properties.actionPlan.description = `CRITICAL: You MUST generate EXACTLY ${currentStems.length} items in this array, one for each specific stem assigned to this phase.`;
         
-        let chunkPrompt = prompt + multiBandInstruction + FUNCTION_AUTOMATION_PROMPT;
+        let chunkPrompt = prompt + multiBandInstruction + dawAutomationSection;
         
         if (i > 0) {
-           chunkPrompt += `n\nCRITICAL MULTI-PART REQUEST: You are analyzing part ${i+1} out of ${chunks.length}. For this phase, ONLY provide action plan steps for the following stems: ${stemNames}. Do NOT provide overall feedback or strengths/weaknesses again (just return simple dummy strings for those fields), but you MUST provide the exhaustive actionPlan array for these specific stems.`;
+           chunkPrompt += `\n\nCRITICAL MULTI-PART REQUEST: You are analyzing part ${i+1} out of ${chunks.length}. For this phase, ONLY provide action plan steps for the following stems: ${stemNames}. Do NOT provide overall feedback or strengths/weaknesses again (just return simple dummy strings for those fields), but you MUST provide the exhaustive actionPlan array for these specific stems.`;
         } else {
-           chunkPrompt += `n\nCRITICAL MULTI-PART REQUEST: You are analyzing part ${i+1} out of ${chunks.length}. For this phase, provide the comprehensive overall feedback, strengths, weaknesses, AND the exhaustive action plan steps ONLY for the following stems: ${stemNames}.`;
+           chunkPrompt += `\n\nCRITICAL MULTI-PART REQUEST: You are analyzing part ${i+1} out of ${chunks.length}. For this phase, provide the comprehensive overall feedback, strengths, weaknesses, AND the exhaustive action plan steps ONLY for the following stems: ${stemNames}.`;
         }
         
-        chunkPrompt += `n\nCRITICAL: You MUST return a valid JSON object EXCLUSIVELY formatted with this exact JSON Schema:n${JSON.stringify(chunkSchema, null, 2)}`;
+        chunkPrompt += `\n\nCRITICAL: You MUST return a valid JSON object EXCLUSIVELY formatted with this exact JSON Schema:\n${JSON.stringify(chunkSchema, null, 2)}`;
         
         const chunkParts = [...parts.slice(0, parts.length - 1), { text: chunkPrompt }];
         
@@ -4384,7 +4431,7 @@ CRITICAL DIRECTIVE ON MIX CRITIQUE DEPTH, VARIETY, & ZERO-BOILERPLATE:
     if (hasStems && uploadedStems && uploadedStems.length > 0) {
       schema.properties.actionPlan.description = `CRITICAL: You MUST generate EXACTLY ${uploadedStems.length} items in this array, one for each uploaded stem.`;
     }
-    const finalPrompt = prompt + multiBandInstruction + `n\nCRITICAL: You MUST return a valid JSON object EXCLUSIVELY formatted with this exact JSON Schema:n${JSON.stringify(schema, null, 2)}`;
+    const finalPrompt = prompt + multiBandInstruction + `\n\nCRITICAL: You MUST return a valid JSON object EXCLUSIVELY formatted with this exact JSON Schema:\n${JSON.stringify(schema, null, 2)}`;
     const finalParts = [...parts.slice(0, parts.length - 1), { text: finalPrompt }];
     
     let response;
@@ -4419,7 +4466,7 @@ CRITICAL DIRECTIVE ON MIX CRITIQUE DEPTH, VARIETY, & ZERO-BOILERPLATE:
     } catch (e: any) {
       console.error("Detailed Error in getMixCritique:", e);
       console.error("Safety/Blocked:", JSON.stringify(response?.candidates?.[0] || {}));
-      throw new Error(`Format error in getMixCritique. Details: ${e.message || e}nRaw: ${typeof jsonStr !== 'undefined' ? jsonStr.substring(0, 500) : "empty"}nSafety: ${JSON.stringify(response?.candidates?.[0]?.safetyRatings || "none")}`);
+      throw new Error(`Format error in getMixCritique. Details: ${e.message || e}\nRaw: ${typeof jsonStr !== 'undefined' ? jsonStr.substring(0, 500) : "empty"}\nSafety: ${JSON.stringify(response?.candidates?.[0]?.safetyRatings || "none")}`);
     }
   }
   result.id = crypto.randomUUID();
@@ -4430,7 +4477,7 @@ CRITICAL DIRECTIVE ON MIX CRITIQUE DEPTH, VARIETY, & ZERO-BOILERPLATE:
 
   // Apply Auto-Adaptive Headroom Allocation & Safe Parameter Mapping
   try {
-    result = applySafeParameterMappingToCritique(result, physicalMetrics, referencePhysicalMetrics, stemsPhysicalMetrics);
+    result = applySafeParameterMappingToCritique(result, physicalMetrics, referencePhysicalMetrics, stemsPhysicalMetrics, userEmail);
   } catch (err) {
     console.warn("[HEADROOM_ALLOCATION] Safe Parameter Mapping post-process failed:", err);
   }

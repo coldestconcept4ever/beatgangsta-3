@@ -58,7 +58,8 @@ import { BetaApplicationModal } from './components/BetaApplicationModal';
 import { PdfSplitter } from './components/PdfSplitter';
 import { AnimatePresence, motion } from 'motion/react';
 import { useTranslation } from 'react-i18next';
-import { Download, Globe, Languages, Star, X, Upload, Cpu, Folder as FolderIcon, ShieldCheck, Check, Zap, Rocket, Eye, EyeOff, AlertTriangle, Lock, Shield, Loader2, Gem, Sword, User as UserIcon, Link, Layers, Link2, Palette, Sparkles, Drum, Image as ImageIcon, Crown, CheckCircle2, ExternalLink, Facebook, Instagram, Linkedin, Twitter, Activity, Database, Trash2, Music, Video, Cloud, Settings2, HelpCircle, Copy, Scissors } from 'lucide-react';
+import { Download, Globe, Languages, Star, X, Upload, Cpu, Folder as FolderIcon, ShieldCheck, Check, Zap, Rocket, Eye, EyeOff, AlertTriangle, Lock, Shield, Loader2, Gem, Sword, User as UserIcon, Link, Layers, Link2, Palette, Sparkles, Drum, Image as ImageIcon, Crown, CheckCircle2, ExternalLink, Facebook, Instagram, Linkedin, Twitter, Activity, Database, Trash2, Music, Video, Cloud, Settings2, HelpCircle, Copy, Scissors, Search, Mic, Radio } from 'lucide-react';
+import { getEffectivePlugins, QUICK_SEARCH_CHIPS, buildRecreationDirective } from './utils/searchHelpers';
 import { saveAs } from 'file-saver';
 import tinycolor from 'tinycolor2';
 import Turnstile from 'react-turnstile';
@@ -1737,6 +1738,9 @@ The AI was unable to verify these parameters. Please investigate.`;
   const [isResearching, setIsResearching] = useState<boolean>(false);
   const [typeBeatSearch, setTypeBeatSearch] = useState<string>('');
   const [songSearch, setSongSearch] = useState<string>('');
+  const [artistSearch, setArtistSearch] = useState<string>('');
+  const [searchSubMode, setSearchSubMode] = useState<'song' | 'vibe' | 'artist'>('song');
+  const [includeMinimoog, setIncludeMinimoog] = useState<boolean>(true);
   const [audioAnalysisLoading, setAudioAnalysisLoading] = useState(false);
   const [generationProgress, setGenerationProgress] = useState(0);
   const [generationEta, setGenerationEta] = useState(0);
@@ -5384,7 +5388,8 @@ The AI was unable to verify these parameters. Please investigate.`;
   const handleTypeBeatSearch = async () => {
     if (!requireAuth()) return;
     
-    if ((plugins.length === 0 && !isJsfxMode) || !typeBeatSearch.trim()) return;
+    const targetQuery = typeBeatSearch.trim();
+    if (!targetQuery) return;
     if (!isVerified) {
       window.scrollTo({ top: 0, behavior: 'smooth' });
       setError("Please complete the security verification first.");
@@ -5403,16 +5408,28 @@ The AI was unable to verify these parameters. Please investigate.`;
     try {
       if (!requireAuth()) return;
 
-    let finalGenerationContext = generationContext;
-    if (dawType === 'LUNA') {
-      if (lunaSumming !== 'off') {
-        finalGenerationContext = finalGenerationContext + (finalGenerationContext ? "\n\n" : "") + `CRITICAL LUNA DIRECTIVE: The user has enabled ${lunaSumming.toUpperCase()} SUMMING. You MUST include specific settings for the ${lunaSumming === 'api' ? 'API Vision Console' : 'Neve Summing'} extension on the busses and master fader. Do not ignore this.`;
+      let finalGenerationContext = generationContext;
+      if (dawType === 'LUNA') {
+        if (lunaSumming !== 'off') {
+          finalGenerationContext = finalGenerationContext + (finalGenerationContext ? "\n\n" : "") + `CRITICAL LUNA DIRECTIVE: The user has enabled ${lunaSumming.toUpperCase()} SUMMING. You MUST include specific settings for the ${lunaSumming === 'api' ? 'API Vision Console' : 'Neve Summing'} extension on the busses and master fader. Do not ignore this.`;
+        }
+        if (lunaTape !== 'off') {
+          finalGenerationContext = finalGenerationContext + (finalGenerationContext ? "\n\n" : "") + `CRITICAL LUNA DIRECTIVE: The user has enabled ${lunaTape.toUpperCase()} TAPE. You MUST include specific settings for the ${lunaTape === 'oxide' ? 'Oxide Tape' : 'Studer A800'} extension on the tracks and busses. Do not ignore this.`;
+        }
       }
-      if (lunaTape !== 'off') {
-        finalGenerationContext = finalGenerationContext + (finalGenerationContext ? "\n\n" : "") + `CRITICAL LUNA DIRECTIVE: The user has enabled ${lunaTape.toUpperCase()} TAPE. You MUST include specific settings for the ${lunaTape === 'oxide' ? 'Oxide Tape' : 'Studer A800'} extension on the tracks and busses. Do not ignore this.`;
+
+      const recreationDirective = buildRecreationDirective(targetQuery, 'vibe', includeMinimoog);
+      if (recreationDirective) {
+        finalGenerationContext = (finalGenerationContext ? finalGenerationContext + "\n\n" : "") + recreationDirective;
       }
-    }
-      const response = await getCustomBeatRecommendations(plugins, typeBeatSearch.trim(), analogInstruments, analogHardware, drumKits, excludeAnalog, dawType, starredPlugins, isGangstaVox, i18n.language, isMultiBandMode, generationBPM, finalGenerationContext, isJsfxMode, installedJsfxPacks, xpandPresets);
+
+      const pluginsToUse = getEffectivePlugins(plugins, includeMinimoog, targetQuery);
+      const starredToUse = [...starredPlugins];
+      if (includeMinimoog && !starredToUse.includes('UADx Minimoog')) {
+        starredToUse.unshift('UADx Minimoog');
+      }
+
+      const response = await getCustomBeatRecommendations(pluginsToUse, targetQuery, analogInstruments, analogHardware, drumKits, excludeAnalog, dawType, starredToUse, isGangstaVox, i18n.language, isMultiBandMode, generationBPM, finalGenerationContext, isJsfxMode, installedJsfxPacks, xpandPresets);
       clearInterval(progressInterval);
       setGenerationProgress(100);
       clearTimeout(timeoutId);
@@ -5443,10 +5460,90 @@ The AI was unable to verify these parameters. Please investigate.`;
     }
   };
 
+  const handleArtistSearch = async () => {
+    if (!requireAuth()) return;
+    
+    const targetQuery = artistSearch.trim();
+    if (!targetQuery) return;
+    if (!isVerified) {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      setError("Please complete the security verification first.");
+      return;
+    }
+    setLoading(true);
+    setError(null);
+
+    const timeoutId = setTimeout(() => {
+      setLoading(false);
+      setError("Artist search timed out. Try a different artist!");
+    }, 300000);
+
+    const progressInterval = simulateGenerationProgress(getEstimatedSeconds('type-beat'));
+
+    try {
+      if (!requireAuth()) return;
+
+      let finalGenerationContext = generationContext;
+      if (dawType === 'LUNA') {
+        if (lunaSumming !== 'off') {
+          finalGenerationContext = finalGenerationContext + (finalGenerationContext ? "\n\n" : "") + `CRITICAL LUNA DIRECTIVE: The user has enabled ${lunaSumming.toUpperCase()} SUMMING. You MUST include specific settings for the ${lunaSumming === 'api' ? 'API Vision Console' : 'Neve Summing'} extension on the busses and master fader. Do not ignore this.`;
+        }
+        if (lunaTape !== 'off') {
+          finalGenerationContext = finalGenerationContext + (finalGenerationContext ? "\n\n" : "") + `CRITICAL LUNA DIRECTIVE: The user has enabled ${lunaTape.toUpperCase()} TAPE. You MUST include specific settings for the ${lunaTape === 'oxide' ? 'Oxide Tape' : 'Studer A800'} extension on the tracks and busses. Do not ignore this.`;
+        }
+      }
+
+      const recreationDirective = buildRecreationDirective(targetQuery, 'artist', includeMinimoog);
+      if (recreationDirective) {
+        finalGenerationContext = (finalGenerationContext ? finalGenerationContext + "\n\n" : "") + recreationDirective;
+      }
+
+      const pluginsToUse = getEffectivePlugins(plugins, includeMinimoog, targetQuery);
+      const starredToUse = [...starredPlugins];
+      if (includeMinimoog && !starredToUse.includes('UADx Minimoog')) {
+        starredToUse.unshift('UADx Minimoog');
+      }
+
+      const isAlice = targetQuery.toLowerCase().includes('alice deejay');
+      const effectiveBPM = generationBPM || (isAlice ? '138' : undefined);
+      const queryPrompt = `${targetQuery} signature production style, bounce, instrumentation, and iconic sound selection`;
+
+      const response = await getCustomBeatRecommendations(pluginsToUse, queryPrompt, analogInstruments, analogHardware, drumKits, excludeAnalog, dawType, starredToUse, isGangstaVox, i18n.language, isMultiBandMode, effectiveBPM, finalGenerationContext, isJsfxMode, installedJsfxPacks, xpandPresets);
+      clearInterval(progressInterval);
+      setGenerationProgress(100);
+      clearTimeout(timeoutId);
+      setRecipes(response.recipes || []);
+      const newHistory: HistoryItem[] = (response.recipes || []).map(r => ({
+        ...r,
+        generatedAt: new Date().toISOString()
+      }));
+      setHistory(prev => [...newHistory, ...prev].slice(0, 50));
+      logReceipt('Artist Search', 10);
+      setArtistSearch('');
+      setShowFairy(true);
+    } catch (err: any) {
+      clearInterval(progressInterval);
+      clearTimeout(timeoutId);
+      if (err?.message?.includes("INSUFFICIENT_CREDITS") || err?.message?.includes("402")) {
+        setCreditError(err.message);
+        setShowBuyCreditsModal(true);
+      } else if (err?.message?.includes("API_KEY_MISSING") || err?.message?.includes("401") || err?.message?.includes("403")) {
+        setError("Access error. Please contact support or try again later.");
+      } else {
+        const errorMessage = err?.message || "Couldn't find any recipes for that artist. Try a different search!";
+        setError(errorMessage);
+        console.error("Artist search error:", err);
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleSongSearch = async () => {
     if (!requireAuth()) return;
     
-    if ((plugins.length === 0 && !isJsfxMode) || !songSearch.trim()) return;
+    const targetQuery = songSearch.trim();
+    if (!targetQuery) return;
     if (!isVerified) {
       window.scrollTo({ top: 0, behavior: 'smooth' });
       setError("Please complete the security verification first.");
@@ -5465,16 +5562,31 @@ The AI was unable to verify these parameters. Please investigate.`;
     try {
       if (!requireAuth()) return;
 
-    let finalGenerationContext = generationContext;
-    if (dawType === 'LUNA') {
-      if (lunaSumming !== 'off') {
-        finalGenerationContext = finalGenerationContext + (finalGenerationContext ? "\n\n" : "") + `CRITICAL LUNA DIRECTIVE: The user has enabled ${lunaSumming.toUpperCase()} SUMMING. You MUST include specific settings for the ${lunaSumming === 'api' ? 'API Vision Console' : 'Neve Summing'} extension on the busses and master fader. Do not ignore this.`;
+      let finalGenerationContext = generationContext;
+      if (dawType === 'LUNA') {
+        if (lunaSumming !== 'off') {
+          finalGenerationContext = finalGenerationContext + (finalGenerationContext ? "\n\n" : "") + `CRITICAL LUNA DIRECTIVE: The user has enabled ${lunaSumming.toUpperCase()} SUMMING. You MUST include specific settings for the ${lunaSumming === 'api' ? 'API Vision Console' : 'Neve Summing'} extension on the busses and master fader. Do not ignore this.`;
+        }
+        if (lunaTape !== 'off') {
+          finalGenerationContext = finalGenerationContext + (finalGenerationContext ? "\n\n" : "") + `CRITICAL LUNA DIRECTIVE: The user has enabled ${lunaTape.toUpperCase()} TAPE. You MUST include specific settings for the ${lunaTape === 'oxide' ? 'Oxide Tape' : 'Studer A800'} extension on the tracks and busses. Do not ignore this.`;
+        }
       }
-      if (lunaTape !== 'off') {
-        finalGenerationContext = finalGenerationContext + (finalGenerationContext ? "\n\n" : "") + `CRITICAL LUNA DIRECTIVE: The user has enabled ${lunaTape.toUpperCase()} TAPE. You MUST include specific settings for the ${lunaTape === 'oxide' ? 'Oxide Tape' : 'Studer A800'} extension on the tracks and busses. Do not ignore this.`;
+
+      const recreationDirective = buildRecreationDirective(targetQuery, 'song', includeMinimoog);
+      if (recreationDirective) {
+        finalGenerationContext = (finalGenerationContext ? finalGenerationContext + "\n\n" : "") + recreationDirective;
       }
-    }
-      const response = await getSongBeatRecommendations(plugins, songSearch.trim(), analogInstruments, analogHardware, drumKits, excludeAnalog, dawType, starredPlugins, isGangstaVox, i18n.language, isMultiBandMode, generationBPM, finalGenerationContext, isJsfxMode, installedJsfxPacks, xpandPresets);
+
+      const pluginsToUse = getEffectivePlugins(plugins, includeMinimoog, targetQuery);
+      const starredToUse = [...starredPlugins];
+      if ((includeMinimoog || targetQuery.toLowerCase().includes('better off alone') || targetQuery.toLowerCase().includes('alice deejay')) && !starredToUse.includes('UADx Minimoog')) {
+        starredToUse.unshift('UADx Minimoog');
+      }
+
+      const isBetterOffAlone = targetQuery.toLowerCase().includes('better off alone') || targetQuery.toLowerCase().includes('alice deejay');
+      const effectiveBPM = generationBPM || (isBetterOffAlone ? '138' : undefined);
+
+      const response = await getSongBeatRecommendations(pluginsToUse, targetQuery, analogInstruments, analogHardware, drumKits, excludeAnalog, dawType, starredToUse, isGangstaVox, i18n.language, isMultiBandMode, effectiveBPM, finalGenerationContext, isJsfxMode, installedJsfxPacks, xpandPresets);
       clearInterval(progressInterval);
       setGenerationProgress(100);
       clearTimeout(timeoutId);
@@ -8484,7 +8596,7 @@ Provide the exact JSFX plugin name and required sliders/parameters.`;
                 </div>
               </div>
 
-              {(inputMode === 'random' || inputMode === 'search') && (
+              {inputMode === 'random' && (
                 <div className={`transition-all duration-700 flex flex-col items-center gap-1.5 max-w-[110px] mx-auto mt-3 mb-5 ${mainTab === null ? 'blur-[8px] pointer-events-none opacity-40' : 'animate-in fade-in slide-in-from-bottom-4 duration-300'}`}>
                   <div className="flex flex-col gap-1 w-full text-center">
                     <label className={`text-[9px] font-black uppercase tracking-widest opacity-50 ${theme === 'coldest' ? 'text-slate-900' : 'text-white'}`}>
@@ -8505,6 +8617,251 @@ Provide the exact JSFX plugin name and required sliders/parameters.`;
                           : 'bg-black/60 border-white/10 focus:border-white/30 text-white placeholder:text-gray-500'
                       }`}
                     />
+                  </div>
+                </div>
+              )}
+
+              {inputMode === 'search' && (
+                <div className={`transition-all duration-500 max-w-3xl mx-auto w-full px-4 mb-8 ${mainTab === null ? 'blur-[8px] pointer-events-none opacity-40' : 'animate-in fade-in slide-in-from-bottom-4 duration-300'}`}>
+                  <div className="flex flex-col items-center gap-4">
+                    {/* Search Submode Selector: Song / Vibe / Artist */}
+                    <div className={`p-1.5 rounded-2xl flex flex-wrap justify-center items-center gap-1 border shadow-inner backdrop-blur-md ${
+                      theme === 'coldest' ? 'bg-white/70 border-sky-200' :
+                      theme === 'crazy-bird' ? 'bg-red-950/40 border-red-900/50' :
+                      theme === 'chef-mode' ? 'bg-orange-100/60 border-orange-300' :
+                      'bg-white/5 border-white/10'
+                    }`}>
+                      <button
+                        type="button"
+                        onClick={() => setSearchSubMode('song')}
+                        className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-xs font-black uppercase tracking-wider transition-all ${
+                          searchSubMode === 'song'
+                            ? (theme === 'coldest' ? 'bg-sky-500 text-white shadow-md' :
+                               theme === 'crazy-bird' ? 'bg-red-600 text-white shadow-md' :
+                               theme === 'chef-mode' ? 'bg-orange-500 text-white shadow-md' :
+                               'bg-white text-black shadow-md')
+                            : (theme === 'coldest' ? 'text-slate-600 hover:text-slate-900 hover:bg-sky-50' :
+                               'text-white/60 hover:text-white hover:bg-white/10')
+                        }`}
+                      >
+                        <Music className="w-4 h-4" />
+                        <span>Song Search</span>
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => setSearchSubMode('vibe')}
+                        className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-xs font-black uppercase tracking-wider transition-all ${
+                          searchSubMode === 'vibe'
+                            ? (theme === 'coldest' ? 'bg-sky-500 text-white shadow-md' :
+                               theme === 'crazy-bird' ? 'bg-red-600 text-white shadow-md' :
+                               theme === 'chef-mode' ? 'bg-orange-500 text-white shadow-md' :
+                               'bg-white text-black shadow-md')
+                            : (theme === 'coldest' ? 'text-slate-600 hover:text-slate-900 hover:bg-sky-50' :
+                               'text-white/60 hover:text-white hover:bg-white/10')
+                        }`}
+                      >
+                        <Radio className="w-4 h-4" />
+                        <span>Vibe Search</span>
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => setSearchSubMode('artist')}
+                        className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-xs font-black uppercase tracking-wider transition-all ${
+                          searchSubMode === 'artist'
+                            ? (theme === 'coldest' ? 'bg-sky-500 text-white shadow-md' :
+                               theme === 'crazy-bird' ? 'bg-red-600 text-white shadow-md' :
+                               theme === 'chef-mode' ? 'bg-orange-500 text-white shadow-md' :
+                               'bg-white text-black shadow-md')
+                            : (theme === 'coldest' ? 'text-slate-600 hover:text-slate-900 hover:bg-sky-50' :
+                               'text-white/60 hover:text-white hover:bg-white/10')
+                        }`}
+                      >
+                        <Mic className="w-4 h-4" />
+                        <span>Artist Search</span>
+                      </button>
+                    </div>
+
+                    {/* Submode Description & Guide */}
+                    <p className={`text-xs text-center max-w-lg font-medium opacity-80 ${theme === 'coldest' ? 'text-slate-600' : 'text-slate-300'}`}>
+                      {searchSubMode === 'song' && "Search any iconic track (e.g. 'Alice Deejay - Better Off Alone') to extract its structural DNA, synth melody MIDI, and production recipe."}
+                      {searchSubMode === 'vibe' && "Search by production vibe, genre, or mood (e.g. '90s Eurodance Trance', 'Euphoric Club Anthem') for customized bounce and energy."}
+                      {searchSubMode === 'artist' && "Search by artist or producer name (e.g. 'Alice Deejay', 'Avicii', 'Metro Boomin') to capture their signature sound selection and groove."}
+                    </p>
+
+                    {/* Search Input Bar + BPM & Options */}
+                    <div className="w-full flex flex-col gap-3">
+                      <div className={`p-2 rounded-2xl flex flex-col sm:flex-row items-center gap-2 border shadow-lg backdrop-blur-md ${
+                        theme === 'coldest' ? 'bg-white/80 border-sky-200' :
+                        theme === 'crazy-bird' ? 'bg-red-950/60 border-red-900/60' :
+                        theme === 'chef-mode' ? 'bg-orange-50/90 border-orange-300' :
+                        'bg-black/50 border-white/15'
+                      }`}>
+                        {/* Main Search Input */}
+                        <div className="relative flex-1 w-full flex items-center">
+                          <div className="absolute left-3.5 pointer-events-none opacity-50">
+                            {searchSubMode === 'song' ? <Music className="w-4 h-4" /> :
+                             searchSubMode === 'vibe' ? <Radio className="w-4 h-4" /> :
+                             <Mic className="w-4 h-4" />}
+                          </div>
+                          <input
+                            type="text"
+                            value={
+                              searchSubMode === 'song' ? songSearch :
+                              searchSubMode === 'vibe' ? typeBeatSearch :
+                              artistSearch
+                            }
+                            onChange={(e) => {
+                              if (searchSubMode === 'song') setSongSearch(e.target.value);
+                              else if (searchSubMode === 'vibe') setTypeBeatSearch(e.target.value);
+                              else setArtistSearch(e.target.value);
+                            }}
+                            onKeyDown={(e) => {
+                              if (e.key === 'Enter') {
+                                if (searchSubMode === 'song') handleSongSearch();
+                                else if (searchSubMode === 'vibe') handleTypeBeatSearch();
+                                else handleArtistSearch();
+                              }
+                            }}
+                            placeholder={
+                              searchSubMode === 'song' ? "e.g. Alice Deejay - Better Off Alone" :
+                              searchSubMode === 'vibe' ? "e.g. 90s Eurodance Trance, Catchy Saw Hook" :
+                              "e.g. Alice Deejay, Avicii, Metro Boomin"
+                            }
+                            className={`w-full pl-10 pr-10 py-3 rounded-xl text-sm font-semibold outline-none transition-all ${
+                              theme === 'coldest' ? 'bg-sky-50/60 focus:bg-white text-slate-900 placeholder:text-slate-400 border border-transparent focus:border-sky-400' :
+                              theme === 'crazy-bird' ? 'bg-red-900/30 focus:bg-red-900/50 text-white placeholder:text-red-300/40 border border-transparent focus:border-red-500' :
+                              theme === 'chef-mode' ? 'bg-orange-100/40 focus:bg-white text-slate-900 placeholder:text-orange-900/40 border border-transparent focus:border-orange-400' :
+                              'bg-white/5 focus:bg-white/10 text-white placeholder:text-white/40 border border-transparent focus:border-white/20'
+                            }`}
+                          />
+                          {((searchSubMode === 'song' && songSearch) || (searchSubMode === 'vibe' && typeBeatSearch) || (searchSubMode === 'artist' && artistSearch)) && (
+                            <button
+                              type="button"
+                              onClick={() => {
+                                if (searchSubMode === 'song') setSongSearch('');
+                                else if (searchSubMode === 'vibe') setTypeBeatSearch('');
+                                else setArtistSearch('');
+                              }}
+                              className="absolute right-3 p-1 rounded-full opacity-50 hover:opacity-100 hover:bg-black/10 transition-all"
+                            >
+                              <X className="w-3.5 h-3.5" />
+                            </button>
+                          )}
+                        </div>
+
+                        {/* Integrated BPM Input */}
+                        <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-dashed border-slate-300/50 bg-black/5 dark:bg-white/5 w-full sm:w-auto justify-between sm:justify-start">
+                          <span className={`text-[10px] font-black uppercase tracking-wider opacity-60 whitespace-nowrap ${theme === 'coldest' ? 'text-slate-700' : 'text-slate-300'}`}>
+                            BPM
+                          </span>
+                          <input
+                            type="number"
+                            placeholder="Auto"
+                            value={generationBPM}
+                            onChange={(e) => setGenerationBPM(e.target.value)}
+                            className={`w-16 py-1 px-2 text-center text-xs font-bold rounded-lg outline-none ${
+                              theme === 'coldest' ? 'bg-white text-slate-900 border border-sky-200' :
+                              'bg-black/40 text-white border border-white/10'
+                            }`}
+                          />
+                        </div>
+
+                        {/* Action Button */}
+                        <button
+                          type="button"
+                          disabled={
+                            loading ||
+                            (searchSubMode === 'song' && !songSearch.trim()) ||
+                            (searchSubMode === 'vibe' && !typeBeatSearch.trim()) ||
+                            (searchSubMode === 'artist' && !artistSearch.trim())
+                          }
+                          onClick={() => {
+                            if (searchSubMode === 'song') handleSongSearch();
+                            else if (searchSubMode === 'vibe') handleTypeBeatSearch();
+                            else handleArtistSearch();
+                          }}
+                          className={`w-full sm:w-auto px-7 py-3 rounded-xl font-black text-xs uppercase tracking-wider flex items-center justify-center gap-2 shadow-md transition-all active:scale-95 disabled:opacity-40 disabled:pointer-events-none ${
+                            theme === 'coldest' || theme === 'chef-mode'
+                              ? 'bg-sky-500 hover:bg-sky-400 text-white'
+                              : 'bg-white hover:bg-slate-100 text-black'
+                          }`}
+                        >
+                          {loading ? (
+                            <>
+                              <Loader2 className="w-4 h-4 animate-spin" />
+                              <span>Architecting...</span>
+                            </>
+                          ) : (
+                            <>
+                              <Sparkles className="w-4 h-4" />
+                              <span>Search & Architect</span>
+                            </>
+                          )}
+                        </button>
+                      </div>
+
+                      {/* Hardware & Plugin Enhancer Badge: UADx Minimoog */}
+                      <div className="flex flex-wrap items-center justify-between gap-2 px-1">
+                        <button
+                          type="button"
+                          onClick={() => setIncludeMinimoog(!includeMinimoog)}
+                          className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-[11px] font-bold transition-all border ${
+                            includeMinimoog
+                              ? (theme === 'coldest' ? 'bg-sky-500/15 border-sky-400 text-sky-900' : 'bg-emerald-500/20 border-emerald-400 text-emerald-300')
+                              : 'bg-black/10 border-transparent text-slate-400'
+                          }`}
+                          title="When active, instructs the AI engine to assign Universal Audio UADx Minimoog with software-accurate parameters for lead synth recreation"
+                        >
+                          <span className={`w-2 h-2 rounded-full ${includeMinimoog ? 'bg-emerald-400 animate-pulse' : 'bg-slate-400'}`} />
+                          <span>ğŸ¹ UADx Minimoog Synth: <strong className="uppercase">{includeMinimoog ? 'Active' : 'Off'}</strong></span>
+                        </button>
+
+                        <span className={`text-[10px] opacity-60 ${theme === 'coldest' ? 'text-slate-600' : 'text-slate-400'}`}>
+                          Generates full melodic MIDI + UADx Minimoog synth patch + separated drum loops (Kick, Sub Bass, Hats, Snares) in ZIP!
+                        </span>
+                      </div>
+
+                      {/* Inspiration Chips */}
+                      <div className="flex flex-col gap-2 pt-2">
+                        <div className="flex items-center justify-between">
+                          <span className={`text-[10px] font-black uppercase tracking-widest opacity-60 ${theme === 'coldest' ? 'text-slate-700' : 'text-slate-300'}`}>
+                            âš¡ Quick Inspiration ({searchSubMode === 'song' ? 'Songs' : searchSubMode === 'vibe' ? 'Vibes' : 'Artists'}):
+                          </span>
+                        </div>
+
+                        <div className="flex flex-wrap gap-1.5">
+                          {QUICK_SEARCH_CHIPS[searchSubMode].map((chip, idx) => (
+                            <button
+                              key={idx}
+                              type="button"
+                              onClick={() => {
+                                if (searchSubMode === 'song') {
+                                  setSongSearch(chip.query);
+                                } else if (searchSubMode === 'vibe') {
+                                  setTypeBeatSearch(chip.query);
+                                } else {
+                                  setArtistSearch(chip.query);
+                                }
+                                if (chip.bpm) setGenerationBPM(chip.bpm);
+                                setIncludeMinimoog(true);
+                              }}
+                              className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all border flex items-center gap-1.5 ${
+                                (searchSubMode === 'song' && songSearch === chip.query) ||
+                                (searchSubMode === 'vibe' && typeBeatSearch === chip.query) ||
+                                (searchSubMode === 'artist' && artistSearch === chip.query)
+                                  ? (theme === 'coldest' ? 'bg-sky-500 text-white border-sky-600 shadow-sm' : 'bg-white text-black border-white shadow-sm')
+                                  : (theme === 'coldest' ? 'bg-white/60 hover:bg-white text-slate-700 border-sky-100 hover:border-sky-300' : 'bg-white/5 hover:bg-white/10 text-slate-200 border-white/10 hover:border-white/20')
+                              }`}
+                            >
+                              <span>{chip.label}</span>
+                              <span className="text-[10px] opacity-60 font-mono">({chip.bpm} BPM)</span>
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
                   </div>
                 </div>
               )}
@@ -10183,263 +10540,213 @@ Provide the exact JSFX plugin name and required sliders/parameters.`;
                       </div>
                     )}
                   </>
-                ) : false ? (
+                ) : (
                   <>
-                    <div className="space-y-8">
-                      {/* Header and Controls */}
-                      <div className={`flex flex-col md:flex-row md:items-center justify-between gap-6 p-6 rounded-[2rem] border ${theme === 'coldest' ? 'bg-sky-500/5 border-sky-100' : theme === 'chef-mode' ? 'bg-orange-500/5 border-orange-100' : 'bg-white/5 border-white/10'}`}>
-                        <div>
-                          <h3 className="text-lg font-black uppercase tracking-widest flex items-center gap-2">
-                            <Database className={`w-5 h-5 ${theme === 'coldest' ? 'text-sky-500' : theme === 'chef-mode' ? 'text-orange-500' : 'text-purple-400'}`} /> Xpand!2 Preset Inventory
-                          </h3>
-                          <p className="text-xs opacity-60 mt-1 max-w-2xl leading-relaxed">
-                            Your active inventory of Xpand!2 presets. When recommending sounds using Xpand!2, BeatGangsta will ONLY select from presets marked as **owned** (Green).
-                          </p>
-                        </div>
-                        <div className="flex gap-4">
-                          <button
-                            onClick={() => {
-                              const filteredIds = filteredXpandPresets.map(p => `${p.category}-${p.preset_name}`);
-                              const anyUnowned = filteredXpandPresets.some(p => !p.is_owned);
-                              setXpandPresets(prev => prev.map(p => {
-                                if (filteredIds.includes(`${p.category}-${p.preset_name}`)) {
-                                  return { ...p, is_owned: anyUnowned };
-                                }
-                                return p;
-                              }));
-                            }}
-                            className={`px-4 py-2 rounded-full text-xs font-black uppercase tracking-widest border transition-all hover:scale-105 active:scale-95 ${theme === 'coldest' ? 'bg-sky-50 border-sky-200 text-sky-800' : theme === 'chef-mode' ? 'bg-orange-50 border-orange-200 text-orange-800' : 'bg-white/5 border-white/10 hover:bg-white/10 text-white'}`}
+                    {groupedPlugins && !selectedFolder ? (
+                      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-6">
+                        {Object.entries(groupedPlugins).map(([groupName, groupPlugins]) => (
+                          <div 
+                            key={groupName}
+                            onClick={() => setSelectedFolder(groupName)}
+                            className={`cursor-pointer group relative flex flex-col items-center justify-center p-6 rounded-[2rem] border transition-all hover:scale-105 active:scale-95 shadow-sm hover:shadow-xl ${theme === 'coldest' ? 'bg-white/60 border-sky-100 hover:bg-white/80' : theme === 'chef-mode' ? 'bg-white/60 border-orange-100 hover:bg-white/80' : 'bg-white/5 border-white/10 hover:bg-white/10'}`}
                           >
-                            Toggle Page All
-                          </button>
-                          <button
-                            onClick={() => setShowBulkImport(!showBulkImport)}
-                            className={`px-4 py-2 rounded-full text-xs font-black uppercase tracking-widest transition-all hover:scale-105 active:scale-95 flex items-center gap-1.5 ${theme === 'coldest' ? 'bg-sky-500 text-white' : theme === 'chef-mode' ? 'bg-orange-500 text-white' : 'bg-purple-600 hover:bg-purple-700 text-white'}`}
-                          >
-                            <Upload size={14} /> Bulk Add / Paste
-                          </button>
-                        </div>
-                      </div>
-
-                      {/* Bulk Import section */}
-                      {showBulkImport && (
-                        <div className={`p-6 rounded-[2rem] border ${theme === 'coldest' ? 'bg-sky-500/5 border-sky-100' : theme === 'chef-mode' ? 'bg-orange-500/5 border-orange-100' : 'bg-white/5 border-white/10'} space-y-4`}>
-                          <div className="flex items-center justify-between">
-                            <h4 className="text-sm font-black uppercase tracking-widest flex items-center gap-2">
-                              <Upload className={`w-4 h-4 ${theme === 'coldest' ? 'text-sky-500' : theme === 'chef-mode' ? 'text-orange-500' : 'text-purple-400'}`} /> Bulk Add Presets
-                            </h4>
-                            <button onClick={() => setShowBulkImport(false)} className="opacity-50 hover:opacity-100">
-                              <X size={18} />
-                            </button>
-                          </div>
-                          <p className="text-xs opacity-60 leading-relaxed">
-                            Paste a list of preset names (one per line). They will be added to the selected category and marked as **owned**.
-                          </p>
-                          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                            <div>
-                              <label className="block text-[10px] font-black uppercase tracking-wider mb-1.5 opacity-70">Category</label>
-                              <select
-                                value={newPresetCategory}
-                                onChange={(e) => setNewPresetCategory(e.target.value)}
-                                className={`w-full px-4 py-2 rounded-xl text-xs font-bold outline-none bg-black/40 border border-white/10 focus:border-purple-500 text-white h-10`}
-                              >
-                                {XPAND_CATEGORIES.map(cat => (
-                                  <option key={cat} value={cat}>{cat}</option>
-                                ))}
-                              </select>
+                            <div className={`w-16 h-16 mb-4 rounded-2xl flex items-center justify-center shadow-inner ${theme === 'coldest' ? 'bg-sky-100 text-sky-600' : theme === 'chef-mode' ? 'bg-orange-100 text-orange-600' : 'bg-black/40 text-white'}`}>
+                              <svg className="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" />
+                              </svg>
                             </div>
-                            <div className="md:col-span-2">
-                              <label className="block text-[10px] font-black uppercase tracking-wider mb-1.5 opacity-70">Preset Names (one per line)</label>
-                              <textarea
-                                value={bulkInputText}
-                                onChange={(e) => setBulkInputText(e.target.value)}
-                                placeholder="e.g.&#10;My Sweet Lead&#10;Dynamic Pad 4&#10;Heavy 808 Synth"
-                                rows={5}
-                                className="w-full p-4 rounded-xl text-xs font-mono bg-black/40 border border-white/10 focus:border-purple-500 text-white focus:outline-none"
-                              />
-                            </div>
-                          </div>
-                          <div className="flex justify-end gap-3">
-                            <button
-                              onClick={() => {
-                                if (!bulkInputText.trim()) return;
-                                const lines = bulkInputText.split('\n').map(l => l.trim()).filter(Boolean);
-                                const newItems = lines.map(name => ({
-                                  category: newPresetCategory,
-                                  preset_name: name,
-                                  is_owned: true
-                                }));
-                                setXpandPresets(prev => {
-                                  const map = new Map(prev.map(p => [`${p.category}-${p.preset_name}`, p]));
-                                  newItems.forEach(item => {
-                                    map.set(`${item.category}-${item.preset_name}`, item);
-                                  });
-                                  return Array.from(map.values());
-                                });
-                                setBulkInputText('');
-                                setShowBulkImport(false);
-                              }}
-                              className={`px-5 py-2.5 rounded-full text-xs font-black uppercase tracking-widest ${theme === 'coldest' ? 'bg-sky-500 text-white' : theme === 'chef-mode' ? 'bg-orange-500 text-white' : 'bg-purple-600 hover:bg-purple-700 text-white'} transition-all hover:scale-105 active:scale-95`}
-                            >
-                              Add {bulkInputText.split('\n').map(l => l.trim()).filter(Boolean).length} Presets
-                            </button>
-                          </div>
-                        </div>
-                      )}
-
-                      {/* Quick Add Form */}
-                      <div className={`grid grid-cols-1 md:grid-cols-4 gap-4 p-6 rounded-[2rem] border ${theme === 'coldest' ? 'bg-sky-500/5 border-sky-100' : theme === 'chef-mode' ? 'bg-orange-500/5 border-orange-100' : 'bg-white/5 border-white/10'} items-end`}>
-                        <div className="md:col-span-2">
-                          <label className="block text-[10px] font-black uppercase tracking-wider mb-1.5 opacity-70">Category</label>
-                          <select
-                            value={newPresetCategory}
-                            onChange={(e) => setNewPresetCategory(e.target.value)}
-                            className={`w-full px-4 py-2.5 rounded-xl text-xs font-bold outline-none bg-black/40 border border-white/10 text-white h-11`}
-                          >
-                            {XPAND_CATEGORIES.map(cat => (
-                              <option key={cat} value={cat}>{cat}</option>
-                            ))}
-                          </select>
-                        </div>
-                        <div>
-                          <label className="block text-[10px] font-black uppercase tracking-wider mb-1.5 opacity-70">New Preset Name</label>
-                          <input
-                            type="text"
-                            value={newPresetName}
-                            onChange={(e) => setNewPresetName(e.target.value)}
-                            placeholder="Preset name..."
-                            className="w-full px-4 py-2.5 rounded-xl text-xs font-bold bg-black/40 border border-white/10 text-white focus:border-purple-500 focus:outline-none h-11"
-                          />
-                        </div>
-                        <button
-                          onClick={() => {
-                            if (!newPresetName.trim()) return;
-                            setXpandPresets(prev => {
-                              const exists = prev.some(p => p.category === newPresetCategory && p.preset_name.toLowerCase() === newPresetName.trim().toLowerCase());
-                              if (exists) return prev;
-                              return [...prev, { category: newPresetCategory, preset_name: newPresetName.trim(), is_owned: true }];
-                            });
-                            setNewPresetName('');
-                          }}
-                          className={`w-full py-3 rounded-xl text-xs font-black uppercase tracking-widest ${theme === 'coldest' ? 'bg-sky-500 text-white' : theme === 'chef-mode' ? 'bg-orange-500 text-white' : 'bg-white text-black hover:bg-opacity-95'} transition-all hover:scale-105 active:scale-95 h-11`}
-                        >
-                          + Add Preset
-                        </button>
-                      </div>
-
-                      {/* Filter and Search Bar */}
-                      <div className="flex flex-col md:flex-row gap-4">
-                        <div className="relative flex-1">
-                          <input
-                            type="text"
-                            value={xpandSearch}
-                            onChange={(e) => setXpandSearch(e.target.value)}
-                            placeholder="Search presets..."
-                            className="w-full pl-10 pr-4 py-3 rounded-full text-xs font-bold bg-black/40 border border-white/10 text-white focus:outline-none focus:border-purple-500"
-                          />
-                          <svg className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 opacity-50" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                          </svg>
-                          {xpandSearch && (
-                            <button onClick={() => setXpandSearch('')} className="absolute right-4 top-1/2 -translate-y-1/2 opacity-50 hover:opacity-100">
-                              <X size={14} />
-                            </button>
-                          )}
-                        </div>
-                        <div className="w-full md:w-64">
-                          <select
-                            value={xpandCategoryFilter}
-                            onChange={(e) => setXpandCategoryFilter(e.target.value)}
-                            className="w-full px-4 py-3 rounded-full text-xs font-bold bg-black/40 border border-white/10 text-white focus:outline-none"
-                          >
-                            <option value="All">All Categories</option>
-                            <option value="Owned">Show Owned Only</option>
-                            <option value="Unowned">Show Unowned Only</option>
-                            {XPAND_CATEGORIES.map(cat => (
-                              <option key={cat} value={cat}>{cat}</option>
-                            ))}
-                          </select>
-                        </div>
-                      </div>
-
-                      {/* Presets Grid */}
-                      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
-                        {filteredXpandPresets.map((preset, idx) => (
-                          <div
-                            key={`${preset.category}-${preset.preset_name}-${idx}`}
-                            onClick={() => {
-                              setXpandPresets(prev => prev.map(p => {
-                                if (p.category === preset.category && p.preset_name === preset.preset_name) {
-                                  return { ...p, is_owned: !p.is_owned };
-                                }
-                                return p;
-                              }));
-                            }}
-                            className={`cursor-pointer p-4 rounded-2xl border transition-all flex flex-col justify-between hover:scale-[1.02] active:scale-[0.98] ${
-                              preset.is_owned 
-                                ? 'bg-emerald-500/10 border-emerald-500 text-emerald-400'
-                                : 'bg-white/5 border-white/10 opacity-60 text-white/80'
-                            }`}
-                          >
-                            <div>
-                              <span className="text-[9px] font-black uppercase tracking-wider block opacity-50 truncate mb-1">
-                                {preset.category}
-                              </span>
-                              <h4 className="text-xs font-black leading-tight break-words">{preset.preset_name}</h4>
-                            </div>
-                            <div className="mt-3 flex items-center justify-between">
-                              <span className={`text-[9px] font-black uppercase px-2 py-0.5 rounded-full ${preset.is_owned ? 'bg-emerald-500/20 text-emerald-400' : 'bg-white/10 text-white/50'}`}>
-                                {preset.is_owned ? 'Owned' : 'No'}
-                              </span>
-                              <div className={`w-3 h-3 rounded-full ${preset.is_owned ? 'bg-emerald-500 shadow-lg shadow-emerald-500/50' : 'bg-white/20'}`} />
-                            </div>
+                            <h4 className="text-sm font-black text-center truncate w-full px-2">{groupName}</h4>
+                            <span className="text-[10px] font-bold opacity-50 mt-1 uppercase tracking-widest">{t('items_count', { count: groupPlugins.length })}</span>
                           </div>
                         ))}
-                        {filteredXpandPresets.length === 0 && (
+                        {Object.keys(groupedPlugins).length === 0 && (
                           <div className="col-span-full text-center py-12 opacity-50 text-sm font-bold">
-                            No presets found matching search or category filters.
+                            {t('no_plugins_found')}
                           </div>
                         )}
                       </div>
-                    </div>
-             xœì}ËrÜ8¶à¾¿V×-¥º•T>eI%ÉmËv•»Ë.…¥ª~¨4**‰Ìd‹I²I¦Vk–³›ˆ‰YÎæÆlg5ßt¿à~Âœ€$@|È’Ëã‡œIâƒó>„Àgwcÿ7¤ğY#;¤Sz
-eËEñs;‹‚eHCo9sı˜|ı5ySNê¼<‡Fä™¶=Ö¦ã^’‰gÇñ;{A÷Vf‘ëüÓ^Üx±“ÿ’…#ıo&ı“™v7WôÃdCítÖÈŞ>¹5– døqBÜ„.âbû7'§düpşw˜Eı$riÜQg¼f-ì°Ó9aOqë„}¯OY—[’Ü„t‡¬NÙš¬®Šî©VÈ+ì(ÕÉİÚÚ7ÆñòÑ†=¡sÖn£©ï¸şìPzjM]/¡Q'Ä±„…ìííe£Y³â J:{œ³ñÚ–ë;ôštÉ9ÿV1ˆPé(ˆ^Ù“9ï©j¡Ù[qè¹Ú	y'ë¤·NL+Z¾ºL¡%¾®7–f»C’hÉ
-fŞ8X`ë®bUïŒ/"š,#_Ì†~…9×µ°æN	+m)Ã_«¬“õh:Ré‡­z³wû‹´İ¯nYÊÚÜır'ÂÛ_¦ì<şÁƒÅ§Ö ğÃQşû2NÜéMúÎ`…½sº'ƒˆ.NÉyá™çÿu;S6Äöc7q¿k{ùê6™Ó… Á	"NVM¬ŠZñÅMwØë‘óû:î­N’«Ìé´»*W
- Më‰_¼jZäj“Ù°üûxõÌ»Ó%jáúİy÷¤Ï¦ñËd+*«–Ğë¤{“ià'İs˜	B{â&8~²8tÅJˆ•3.+„³ŞêUO›Óeù36³UØÔı÷t\Âòó=Çãs·»6˜Ùù2Ißõù'ğà_ìİv(‡wB­8	ÂÃf?³qË;kß¹í;ıÑw‚Nşàıİ]ƒ¾äÕ¯aAÃ )ü±MT7:¹ Ë0¤ÑÄ)Báä0c÷ÊÅå&sXœh'Øíö{cbO÷’ŠÛãæP›‚iHP	²€+­¦ÀÉŸ³IànÖ.Pı¾‚;P¿ı|ÿëÜİ S]¨¥Â­xWK¢3Â	/ïªŞ¤j)m5©ªÜé2”[³f#gc¯ÛÔüt±ÃÓäHa­:YKkuMÉ‡g²Œ€ŞwÃÀe¸ˆ5Sôl„òè¿ptêNZ<·àª/Ò’ü÷uõ¡ã(|³G$²Ñ‡óÄÛÈ
-lÕrCâlÛÊëŒ‰BZú¥
-ı^íÙ­;f·¿#ÇAHOp=cò»º½.²ÕöyxKÄ(A\täÎæ	üÏ6™æAFªzº|éS\iGÅcò^T°ÛÙhœšÀ9àğp'ƒÖ´d%ìö­±JF`û"øÈv\ÂÏùîâëMd5 ;;0:ÀÓË¨»(²:+†’¸‰‡§’O yñ7V/™"¨/ e‡ß10ÈFvÿBb÷ ?º#y°T¾uh Ü?u£Û^r„€Œêaüvª@ [­œ&€ZÇ W 4³ğ¡¼";%UX i•8Ğc\‹í»0WÚu}2µöÿ‡ XàÿÎ2b« ıöVJ§As°©åyJ|hƒãËZKõ%EazÓ®Î“ î—¨İ³FÜ§nÈl
-ëÎ0WÃ	´ÂBüso\äiŠ†øGFF×€˜¯Õ¡¤L|)nÀI¿^ŸJ›P BC}¢¸	fÂOÓõ%äÀö'Ôkº±HVş£·¯qM¢İèÕS­ã*ßøB¶—>Q”1=²-şìuÍšŠàî1/ß0µN¦Òv´¬Ïbº˜¦ûõÖ¢(œÑi'Œè%SNÁÿ÷\ 'Êµ3ä%0ÖI¶ÙxN,ËÂïë¿¨[zÚ¶£Ä¢rm@3İM”vâ¦Ò!1”Ğòùmw.säMğ™ˆµO°6&Ş˜pö¼İ"Wé×ÊŸ–`TÖyæ[Øj	²ınUë–¸Îy	dİòƒ«Îš•GI#Áí÷ä­Ì-äŞ‚Egm½^Ìà|beµg¯4'3„´ƒØˆ¦çPà±» hhñZÒØ¸‰‡'¡‚«oAASFÿP¾HB@¨jZlTlí®û/°y·¿\uû›d˜Æ4İ¾ÁµWÏ‡¥ëûUúU¡¬ë§@€?6kT­¹º.«&~‹š«™0RÔywôÈñåL†ß«î,ÁÖ
-ìí­øOWÈ¥K¯^×{+=Ò#ƒü[!qPa²ªâ'–øáİ’¨ş½ëÓ‰î­°µ^‘ş=pıÂã?»N2ß»Ügoåí<½ì÷ìÀ˜z=øŞå?»ƒŸ¶³_]ø9ïnzøÿwcé1|Xi&vÂ2=€F
-ÍG%i&^È*cYQŸDKx\q$Ø„I¨Ùİ˜j»ŒCÛ/uZB:²Á éöÍªk@ÒYe‡ál”¬¢İŒ}SÍ‡–GıìõİŒQ=ÒÚõ»—ùìn­cPOû3¡Ë’!LjB»7†ßÛ‚9ºR7Ğ@Î¨UÊ2*WEºdŒÇğÜÿÖÔêi©P[©ÏªÉÿøoÿƒ¼`§6 |bóîÖMã®Õ:*(®Crí)
-æ™À™ôL¤ÈÙÿÜá€ó‹«)	dµOÁxˆ.?Ê«à¾~M<ÊK’Šv'½Óò&à±Ş¤t/Ïûú4öøâ?ğøşÿzü´p$h©·û”Î_Ü	j?ÍDËF.mäÕf²eµ¡Fò”5´ª@u³ˆuŸˆjÿü'y"ˆµµ"÷WİÊƒ¸wqŠ`GNıÙr†Å±Bw5 ‹K#·"ÊNPgãä¿ü|õsÜ=İ˜­“U ßÙ‹Ÿãß³gİUÔl}\Ñè  °õ ‰‘¬K®·½SÇ€?ğ!%©mWÛÕTpã×öeÁ.ïİÆŠ
-6WgÊ;Y?¥Àÿ1t@(<CIzÖ¤ã`6óh>¶NÈ°^Â£®¸6ÇÔY#MtÊò)HíE†r
-ì{+ÄØ<ÏâaÀB|t(OÁS¡çÏùFš¾:€Òë“¼W8~y¯Oä^›v[«ñ›©KÍŠ}E|iÍÆÙp?ZıİNí}uwÆtí¶w’vû$<m¤Ñn¶5÷Ó`×ò5êªZ©ÀüÎ¤(©¤Šf-J¹±²Ç©¦¹İ˜2ï#ùq¡ªlö¥Íín,l7«°;äZe=ıêye–6ewG=Âu6]¦üÌûĞø!(J4‡vÒ³¶P¸@&zeÿV(LŸ‡\ƒG®Éç¿BÃ„lAo°©°¸ùº&Œ°7UèßµÉ<¢Ó½•y’„ñÎÆÆÕÕ••¸IpaM‚ÅÆ8áÃxvíõ¿>KöşvØİ%£›??}jÏæ+°ÍŒ&{+g0aÿb]÷PO€ŒûôAa†ÑŠ<ÎF.]ªgàŠğMZ9v/ƒ‹‚ƒé­uzi®·V´Òª~{2Ó¨¤áZiT,÷·­ñ6Ù´6·í‘µ5$ìvĞï­§O»#k0şi0‡£ñehm>µÖÖ6ax¹±5 }ëéˆ^À×aØÄ7ÛCş‡¿±¶¶¬şğ§mkdoZ[#Âşà«^^öÆÏ7­á°?ì)”X}(<ÄÂCQ˜ôØ6¡‹Ñğ²ûÔ†67	ûÃß`0²ñà‡óö‡»oõF]«ÿae£tUõ÷î†]Zë_P ¸\C¯_¾gzã!é{1P˜¨Ø¶É´§@Ïq¦â¹ÑşÁWt4?øÓ|ãW˜ök1 â´Óç3m Ÿ‰=‹ì›w•¸³x¾g®oşº¸¸±?ü4zçÿ-ü–âM:ÈâZd/>~1®Ù\.0û¯0Õ¿Îñ•›À£µâdÅó–S-zT6¥D›wFtV)•PÛhlóàê `Ö¥‡¼ºé ztíîc´&¬İ³5¼Š&«²Î Ûí0r/íÉÍGïëZ4&÷­²¨²ˆ¦SÖÔY0=‹itéN¨¦Ûš}ğ{’¼¢ÅÃnkölk÷@áûv78c—%wèÅ}D¿Ş ¼°™I>÷éİ}Î]`‘?‡Sš·}gà•Ö.˜ëvNÀ*ÅZ¸>ÌÌöönoÉÍáŞzÊOî e-ğôÂW–‹ö‹Eéµ›4kT>Šî5uÈy +·€óçÑi‚ªnæx¿I>tO†Ûø9-[,œö=
-®ôzósš\Qê‹c-«Ï‡×^î‰¼İ+èÑ3œê u„×zX,ìëîUwŒß®»ö2	d—Ó¡eÄŒ.óx…zWİş ı=Š«‡¢ÏÜhâƒÍTÕØØşóßÿûÿ©—pSJwFÓ®Î€+Z«e†loÂaıŒQvèt>éç:–Ô½ÁâQ5]ŒæAä{ºp´ÆGÍ€VN` G dÃÂ8¢Áı€%¥5ÈŞÒ­%[ƒVH-?j¦ÃÔ·ßüRw&3Fa}tj7/˜ØŞQë1£,àè¿³z>;S—~u¬Nm/†ı×i”•¸±ÃÊkŠk4…U ‘&E6(c£Â&@FÅƒ˜Æ9•âšHcˆö™	)ØB
-¦’¢k]v€:AhZÕ(0ô¦†O´‰x~­=ÜÒîaé(æÏF½ÇÜÈ”ºx³ô›‚×›í³=A>şšoºÕ%L°»‘s’Æ*WU•…›aìA6‹¼ÛkÃÊdZ‰‘)â&Æ2ä¡G'ƒ~ï´ò¡¢I¡ûÅ$M¸Qf4ìøŒì•Â`±ıÈÚ®â‡6KTéW±Z9³Õ´Õw”#qAñBúÔ˜›»<“ÊjÜ$6¨6äT8z¸ªÛ¹èÉoûı~ÑAƒ-KÖ×:NÙ<ÑÜ¹Úî¸>«¨ã\êâİù Ì`xíØEr˜´İh”¸Ût¸Ü©\I¬Jn1Ô	¢äÌõÿ±t1O‚ÆIÁ .¯ğT¨—¾8×éîË½ª‹A“ğÂ
-\ï•®İ‚¿Ô«ÒÅ2ĞRİ"ËLíi¨íÑò|ç¼"4‹2s¬ÀK:µ—^¢·Û ’ˆ’ºÂ²MG À–ê¬êÍkÆ­kKñL¦®§£z:fòZí[c-g¾ëÙçÔ»×9DZvòº}~VâÎĞøÈÎëCÛ»ë‡ËDo
-Œ(®4u´/ÑÔÇ‡º¢¯-¹êì­ü1˜ûäe@õ‘Ôzé³#„üÈ8 Ü¸I°LIäR¥ËCçã<™ û= öhL–ñäZ6îÕfPêä<ÁñF{îôÑÓŸ	 Ñ…ízg¶ã Û?*0±š@Óßšş@¯íEèQT ª9¨ìQ©5ğÄMÃzˆ¸´½%lí$ÇïG¼M½YûW1#E@Ju;ÔâÆ‹5o0Ñ?dÙ°|v„aÕŸ7¤Ü‚età{²rÈù4òÎ|Â’2oÈvWkÔæ1Ì}drÄ¹¿T¯.§LaÛv¿E›´ú†³¼Õ(Ì›¶m¾XÆ°±qL~`CZ‚4%>oÎ‚üMMëè§à_îˆ/`ö¬ÿÀ®ìˆÚ÷ Qpïİõg´ŒŞòñÜ=ˆºÍĞƒL«p!€=›ØşÙ=›S/,«6øç°
-l÷ÃgQÚĞ.³ÜÆ9.èØEâk+kÏşµ”gz4ÌÈ*õ	k5–ñ4Ş‡:Ù}‹MEïÆU¥00Œ–³–ËøÌN˜!B:™¯ÄÊ¾êéğ‡sj'3x'6²¦°G­MÖ¢*Q§9,;¿U¨Å‹&6OnQù¢)ü”šÂÔò9Hî]ÎOë­ñ¿€æpëWÓÚª‹æÀæÚÃ†. %õá÷6 dîµïì·v4™—?³Lm(ÙNê1¯ şùü4‡ĞtwüğšCgÇò†™h	°è\O¢ÀóÎí(SÇmé Wã¿œ½›kò˜©9f;#%ŠT‚ç³pˆ6„hè>…Ó§%›¾!XÓijÍ×
-ZÏ–é³[Áe&6<Ì*
-_ğ†KÉzo»œğxééd.S¿»[òV`
-ÆĞq?…GR—ûFbd1»„…fäúİ^EÆo1-ˆ¯d/9÷‚4ƒÆulÚ÷W?U%ÆhvA˜Ò¹:‘7\Ñ³Ö&İîÍ¡ít+¢W+-<÷ËÎe;g;€’7†w°wšÖ¿ì^úöv/dÏ(Š<Âæ•œ½ÛİXj4HŸ[Ø¾=+‘GgŠ½>/P4ˆš}8ÇáFzeÈ!ı8{‘ÌİÈ9í(¹ù´Û¡éø#v¤øB§«“‚,¨c˜?…XSV¹=¢ÃºÊ¶ò:4+ÔfAræ&mTiZwÕÒ,‰ÿ˜éÍ-/éèfàsgµ¯¿&.{L#û’¾v½B~ì:ıÒ¸¶¢\*%Â†SS¥\”Kš´€ªkWÑñıë`
-©ÁTMuˆª"›Û£³¶èlêzzY§#•bNS˜Å&Ï˜á6ölFíˆkW9¹¿-BˆµŒitX-Mø"Êı³±õ«¹œ%Á™OE	•©oV©2ç%RéÄeØˆç`xÛDôˆ&	,s\éÃcÖù»¾ãÎ–÷3Ã?âÙX‡0šÊÈr°NíQâyÍ×©4Ši#….æÁÒF>PšÈ]çÖxk°è­áx“oY½^Ÿğ¿˜r„¯Éö¾·½è÷I¿ÙÏ»ğ¸m,:$ü/üîwYSO»¢Í§dğ]ß¤‡Ò&D¨8°œ-nÎb0Í½ÉïŸÁ˜ X¡dş:r©ïÜBÅE¶ç¨ š>ü£ma´ Ô›/»{H†<5)ƒU×¶ÆOùûï.€ô Ğ¤×µ6á¥Õ`‰ÁÖ°+feR[ıqámŞDŞB^„üØÂŒªü/6±e¶HïmLŠvûı.F•§À÷‹M2ÉUá-F¤‹L«}øşúÎòµj^·=>ËgW ÌgSÍUÇ§í1c`üE^™SKşTÃİÏõ3·ÃLğíWº70À+·å6x‰‹Ù,[ßÑ:¼üHkv7ì1»Ôá#/”ÊOLÅY ó
-ìÆ"à÷¿´âOO`=NKöÊkYšğ³*KÚ ì47?®+fIx2¨Š@ÍÍœë’ñSgÆL­z’AW°·2ïÌ<™;!Ú—8ƒíÍÒ€8‰¯Î®+šGË0ñõÊR Hû%0|FV2Ş]ò9ÉüØ÷4>¢†”y†N~;Ãaë”Û¨¿èô	eaq‡5Â~Ñ æ—kóìójUõ “^×àùé1ˆß¦ÁF".yDÂbşÃğ“”]oæØÑEkb‰™OïœôJwN0Kƒ\ZÙG£©æ‹zÚYd;@Ã’ntÏ#2…õìŞPA)Y-Ñ4}î¼#šÎ;:^IçèÂbšÿóßÿçÿÕû±4ƒ5˜çáØ³ïCU\e©F«ìõ/“÷tB!8OÊ¦z˜zM¥Âª¤2ëVw½ »\ÔjÔ¾ 7Áj!=½Âäµ“os—Ÿu|¿
-¨êœ…ÊÃ}Æ<ŸñÊ>né§›Ä™œ‹	¥¦>š3W\«°Ì¡JètÚœ½ãß0ªğÅò†ğÛBUQ3Sğ´rê·#—q)WK¡ƒ4óm¯ç ÿLkÚÊÚ4{İŸÆâç^t?÷¢µøi@o3EÖÃÑÙmÅO#úŠÕ±šÛ=Å'\‚…ÒFØï-E-SÎ&¼hs}´>ó¥ ’…£c” D^öU‘YÀĞ¦¼±-Èàx»¦ìC]NçR ÎØU´—½7	låƒ/óvZâ««”`¹B[º7‰$%U»³CµoÉ÷m°Ãí‘ÜİP¯k¤¡\á,Ìı#ÈN•Ë[mv¦_œ¤P5›×)¿T!×Z£¹ZÏº(Ö:˜2j”ŸYbº,*îöÔõ:=#ø6{	Â¬eY«w\åÏ"ôöaW«.31oZêÜd¼›ä8 †)ıbWÀø`°k'ıSÌH+—á£³êSêœ-PÇ˜oss{_»H!î°Îù­{â¸±}îQgïÖóe†Ñ,Wgæø´3êµa(è39±Ôû¤–“¨‹1£ÊDB–"­•$X,¸¢üâ\1ywÒÑÈ0©„0µíE)”o	Hi^»`)jÅ´Q]P¤¼nœÅ^ÙõäÄMû$²¦ò›’®½Bİÿ
-5—æ³h¦1ŸX|~ÖÏZ‘¥i®†1¤ù°¤ÕªUË¦±ˆçğíŒ…p}Ú“Òï5;*Æaò*¨×Íæâiu:\èï!¶²z_„Ö/Bë¡U«ÃUH3/ª/Ò¥Yº—QèÑÇ“.ß.cwb”/óŞ?½|ùäÀÏ%?†Ès#/Hâg!aæÓ¬”0‰ˆ1vù½»p 2ìña“}tn¦Î§“úÄª¡äFØ PİLá@0µ3.ùjHBÔóÃK¢Û4Kt·°8]’¯Ù‚ğÌtgfSŠ_nj(LD*ãë4àšYIª®G^ 7F¿²„}½WœbÕ­"°#Èyhnÿ	VÕÒÅ÷•›è„vÓ7~)HãK>ÅœKHÙ›•Ò{¨¹˜	æ=ô•óUå, Šõs_ ûU^ùUqŸI¥İ-sJ×IÔWÄ=0oA¿òzb†#öûõÕò‚%ø¨«X-NÎ¦~Ôåí÷r¡P|‘Ş{Š{s–£ÒªãfpŠR…!•>ñp´ƒxïƒ NjnYÓö=ViP‘Êí¥;€äwdX-Éi~Ë 4¬˜^Ímˆ)$æw*®0UÀö¾± ú_Ø>æ(_rr´@»û¤c‰Y÷«æƒø1ZwÑbCÍ	~LÚ“7ÆÍ$+a½N¥U€+ÜùUVVòtÌ¥â)tvrŞ×ˆÍP2ğ»àÊ¸QUW–o`ÂOó¯•ËÉÅZ¯ìÊ’‡*®¡}!Q—\Të©À?–  ó-wÆìä@¸İÅrAì^FN‚)CĞìdÄOÚ©S´á­òHŸ›4’âãG¯ÿB¾£^ØVññÇxzõî©øQ|<ˆâ£[¯ùÈ3‚4¥ê@Ò ªÆzƒÚbÕ¨¶Ğ×àüWSŒKjŠrFº‰&Œ‡¼33©Á¨N‘cUoœD¿Êø©'õÛåëŒµmUĞ~É©S€ût¢—|L25Ñ^ïÂ'WP·—ßkş'¿í÷Î··ú§ùüóGm×à¥aªÅ÷¯¾zO¼`é¼«Ë°úFÑ¼ŠcÑëÇLZ¡+\î\¡ËÜ°Û-uÁ!»ß+9XKœYA£È~M‡½•¦q6–†„:qûK®—hÂn?•Ï ›óĞÌm#ö2F9§«•ƒÑZåî‘ĞN’˜9I•1¬ñˆ4½`¤B3¦Óa¢
-³ì šã†÷á”"d…Tµ‚2v• ¡4fieÿepå3IY½¿½9$çKLñÓÕ¶2­f.ôºÛ’oèÊ>C¬¿F&ëƒ®­K€5rä1¢&eÆb¬9»1I#!Y)ß¾_ÚÀ3Dn˜ âdi&	°$3J`¨4‰­j,WÙƒ/ıø=¸'d³ëa0®/ á~0]Ô§"4×eı©SR³S„7T'AÄH2{C]ôM°ŒH|ƒRÖ:<…ÿaùîòê:âkÖù³ë¯(üï^†ßoí	é’ƒ…óû£¹;M~ÿíÚ:y¼Bœuƒa¿ìlDt§"cGÃm7GõÖ×1å§­X»Fùàx@–œ·	pGLai+æ¬ìí/úÓ1PÌpÍ²A.PÎñ@=ÇOë•X0äIàĞÊ¥Z>–µ/xÎXÉAŸ]6´²ÿoÏÃğ¥ØÿÆÈÃ•ñî6]Ó{vŠ¹òÊß¾tgvDÖÄsÃóÀë*‚<†ÙuV²ÿÌGü³òJí-àµw€«[ÎûãÍJ¶Ó6>Rå«4ùø©Ş	Ø†LroÏšÛÌ«µYi™jõn¥æòs8û{òÃÑ—“o<ùÿuã{÷<²£›8QpD9G%’®oğÃµñùãƒ6Óø‚#~QùÒôvYÎS¯ğOÄsã¤ë¸ñ3Ñ2¬Ê¹ë¹û¯®e$™´£°HìXíK2É™I,oi‹3Àjğ‚RZê3/˜VèÏÒRœÛb<[‚ÂÉ”¥‰7ç«KÇ÷&eV1õ1ÚaqX"zí9K“ï]´õ¥!m£9@úd™ Ä<[]cã›0	+­÷^±ÄHoYV^ñëYòMVæ{¯ŞS›Ÿ¹\ı˜øíVÖÃvägáctùÈP
-3÷£Ï	'‘ñE•ô6ü"½=¾ô6¼§ô–jœnüÉı„7=)h$Úã„ú÷KõtjTùY:@æPŸeå
-ÈGœÅÖ™U{…™ôÙš`×#ôÒá›w„_e’P‡\Ío`8­Š—ñ<U‹ğMçò‰\Ñsô_©Í1Ó¹rÑì úåX¦KÆ±¡=k„x¬Ç¾S¶&Ë‚°,áàBo9C½&a%èµÍäáv¦R+Ì:@½MŠ4îõ“ŠäŸtaÊ÷ıÉMˆ‚ ÙâIyOÃ µã5T ½`uÃ¹©¹V¼QÂ8–v¢hTjv¯€ŞÎ76šïiX¬6+ÍvÅœ™Ãê©Ó3Ö®
-ÒÈÁŒôğú†‡ørZ}kA~={Á8™^aºØÉÙ9µ‡ C’Ó¶ºgƒtÓòËèù¥ÛìR¤™½S8vI³V«<ÄxÄ%2}­QDµJ­dvÑŒ`¥K´½7¡‘14Oã«·®Ö{öJQC*†öÖÑ‡²Y‹1lÌpŠò–Kc-mp‰ÃÃYF+ç.]STo5Îş ¨» ‹ÏWB?ñG¼A¢„ÏE
- g:¼§´Î
-ÊóÀ H¿zPƒAT
-¿ÈÒä°#½}T'ØâÊœë£ßS‘HÅıìEšfqƒš=ùzg§ìÔ…›ä—Yœî ¶Æú—]v0NqÙb6?1•/ç¬¬8Õå4éš´;*]¤[uâ(èm"™j¬qYËn;+^íP«ec š¢‚ùşi½ä…4H…U³(¦â:†Äbºp¹W+†qÔ¨y.n²oŠw_Úëü¯ÿMs&:e’…–-@xÂß¨Õ”qYbLn~xûöÇwoÿz†Í>?øÓ‘åQ–Ìï@.¡ 9˜Ò›v’õ9É0#gÑ	â¨ØÒ«øĞypbûŠ±ğ¿í/™D„å/§ü9Na\ôï.];S-’ôs PHĞJ†‡¯»d7ıÄk†1CTná9õ™óºœ£¨‰ZNCdq¯Lt€³‚¿lP bR
-Ùi¼N&sÊ-ŞrNwàjx4Ñ9$ñy9 ÷p-Õ[‹¨í—° Ojãe>âì©gØö=‚áÊ|</iFÕÊ†¥
-lâªÂöJ,àSF=«CĞ¹?À0±AË¨°”å#"¾QÌ»vF9†‘NsÉ1¨x²M‚uæ†ÑØù§•Õ:UúÕ0£2F“9€+Ãús€R;}Ê…¾v#Ô‰ÌGlëy`A‘dH
-ûù6ÕF¤#vãÜ³ã9CMˆ+æÆ±ÃDå46U<p sÊĞ;«ÎnåÆQ„ş&E–?bFo®=É&W5ã@¨ñ¬İWi»1º,&üÎAÊ@Tª`Íp§+!óˆN÷VæIÆ;çq1Û†!xØRŒµ·rĞç_‹Ác®av%ID#SÜ™âé–ó4Öyãàd÷û¢Jã?}VØjK¤æ~Á›¬‹FÅáÓü#c]9Ñ,ÇS²ÂVÈØ§(´z•=0*<UûPÓïË¸İĞÉĞe:‡ß!MOâ.Âyº´ª¸tÈnó¿øÔn¯5lÆ!§`EıŠ[ÊLé“ñÓĞl:,„Çæ“=¢eûvØ	±™Ğ‡rÍÂ|ÚÕŸıU£´Ú›öi¬Î.Z]ê<÷<&cw’hiJÔÆŠÃ,“N'¿¨Y©ÏEäuÜDÏĞÁ«0CâîådËM“z¨‘yÂ—î{Ê'ÊÜŒgïéÔ1ZÍOxvM†°õTÕËJaÍ5ãøvêÆ×/¢$%éïSeÀ.™û±~0­|®™i\Á#À##¦¸Uw§Ça“À#æN?aó`ã³LµÆßj?Ú»æ6B½ˆÈ ƒ8` +áu~áØÅÇÓİK9ê #?[6Æ[Â¾³VÙM#†ÓÑdù† 91;#¤]Ğ›½Û¬‡;sÁ&Z‡bR§
-Ú'O¿Òƒ¢â¨æ’Ğˆ+ÉòÃ„QÊå$GîzÅ°¿“ÕœVGüTIùJœ‚ª¯¤Ôe˜Rt}ÃâQİâ³1ÎìÒÒ2z]–O¹¼şâãê&kâÚÑjƒ(_os Ì şÂšÆ‰ÈËPçL•¦g`ú…óàÚÈ/çUdV¬ÿyØh™&QyB²±µc[óÎy®H)x°É2Ş‰g¶€FTh3ú"¹@äİhÓ)šUÓƒ`âkóO+~Ø–bh·„oêk•Ò_4Ù'Ö}z%ãõ,/†HÓ;±,«LÖI†©Oî†°L]€O°®,İh…Q?xÉH©Õ<ñFÍxÁÄö€)ßÂ6áÌc®¹Ü,ûÙß¡›3&è¯®ğÃ;Ät ÀMjÇz®uN¬qé«ŠëTJiµARb¿{ú5"Á`Ø¯Ëé„^ÎQ_W47ïÕ:ÈŠ‰”Ô¿ùUñdÁ])eQ[Õ½:¨[ÆB‘ß“şUŸô$ıHlLıæT(Æ¤RÖØÆ¦Í}4ŠrLÊ¹Ä'Ï¦W`V]	›O¤w7‘},Tc°‹&Â>Æ±lë¢+™á¶SSSõ)FÍV4©Umò­Æ®ò€ïól+ûGÁ2šPÌ‹²\ò­›TjRPøÙs}Šs}”“š@û®ÍU‚PbÖé]IåWÔíóåÛÂ0»å#Zút>ãŞ6'ƒ1[¤x±Ã°+Ëê U²Q¦˜í¬¦ªMÀí««kùó™›Ì—çLÓÉ_UŸkƒâ)]sRšCŸ)¸ YÕq6n(øÿôsÇ×÷itw×lÚP‡jÂÂhj/BvI6ÛE¡óºû|£äa6`2ÕØ!ó!aÕîÑ†Aß&7ÊnL¨Ô¸åŸV±™v>¼F`¼)†V´j‘@Pq¾îå…l@Ì[jèª´p5‚=ÿ|6·üó±¡*·õ‘«Ü$E[j@’U‘’?Ÿ(¼E÷Jãˆ95RÖÏ¨Õjë3£±Ê7Å×ªÈPN’×\í¾²ÿ]p…&K~i1óÉ¬«iHÌ‰÷İ´nş©6tPöõ§wa{È½e^Â”éTÌQıê%Ë*‹¨I‡Í~ğ+*¥É}*›ÅÖ`—‡,ô›‡ˆ3årÚ´‡,Y9Îç‡?5lø ù0R`ÅÜÜ¹D^õ:­ÌİG2w]ów77oğ¿×¿†/ß"%[•¯ÑÆöÀ™×è¡­ÜòËİQ_n \PKs´Ìï¶ï÷ÆÅËî[xz–ÑŠT²!—®Â“ÌJ†Æ¥ÛLyÓ|TZcÈ—ÕÔEôÛ !oÊ9ZøƒšÂ>ÚÄxüF„wp—-núAo¾îKæÕ…Îï “i¬úÂFV¹Yğ‡OYÆ$¥~1ô#Ÿ25C¨ü+!¯5U"'úM®5eqU=•âUÎØ¶j¨YôÍìfX.¹ÁÑä”( a°hháÊmÑVú£ÊÅŸ@*æÁlŒ¥¤E1Y3b±òXÌO,İ¨n¸U²]ê€]køÀ\Î°¸š~Ë±ùäQišYx‹Õƒ‰ÀK#}Yô×é³@ÊÓ’²FJ·ZâP&ïÊísÉ¨â~VL®®7ß·ªz#Ëš |(–ñ/MÛ:©G…¢Ûv÷Mëh‡ÀXPÓÃÈ¤½[\$‰Ü=´oÔOŞÒd8Œ¼Jı»ñPß#]*(/5îPÓâí¹¥:ÚÍˆãg”Õ&yTóŞ-O•«4Æ_ÉÅynÔ½[0ÂâsöS. nÀÉJˆ[‹ò"Ù†ìn¨Ë·/]©wµÀB.C /qÂ""á MİhÁ)Aó‹[X+Y#mƒn(†]z	Ïb®íc‚?ml 94°Àùm!ã·©$=%RìÄæD¤©³i?·hö&#{“jk+7kÏa'©DşÅíõúv”İ®-]^5ì®EÒ6»Ì;í0»¬¹pw¦ĞH¯÷6u—©"«¯óşÈXÃûû¢7Ü{…OÇ Kóæ‰²ÒÎ”Šç_\æ´0>ä+£çÔªvæ.õœø ó9h|O&Ú¯b®*ĞUOU%çºiÈÂ[6²êÅW½Ï¨šî@Íõ]º²ÄÂeˆ_Ÿ¡e’Í>¦Ş$€µ9gŠZ'KÇtII\oš2œ~ÑÄÆ|?7úà÷ôµ`Îx!=— ¶”r*_ ï¹Ä=pÎÄ™á¥¡x|‹Ãßx”¼D«®wßøÌ:—°h-÷C>Me,_ÏG«¶`§Äu³ÈE7{·êïÂøÃÔ‘í†ÒÒÚì¾´¯8[V³P®nŞ*f«ÖÓŞ/íNIÇ„-•áÁÀ¬®•,B¢Õç°¤ÁŒ7¬q‡–y§gO±_ı¨aÄÇ7!e¾ùü§$†Aíİ:|èõUÅ5‹…>ğWÿXº!cõÒ0@‘4IÅóT‚ä%IOy3Ä¾¤©ÂÁ'šUC?¢h‰ÃÃf%¥Gš
-ßÙ‘seG4-şn³´·h‹¡‡Dêğ@¤CÌÚ«¨°N÷š	yfµò	™öÃõaöv1á Ë\bØ²Û…>‰ë—€4xøâ¥ˆn¦Ã^fÖåxå-+cµeF6ÊGL”+òh(J~GmGÑ;'‚JE”î9©È¦abeÇ‡êÓ$j|T¼RæBµÉ¥5šâ7J$i8_š$ĞR<h¢xa{a>GÂ·ı0K…TbÉÊ\ Ñe¡¬ÈzoìX¯ÏªÊØ&ıD³ü…;?Í'jRL4º;£‘šÌdJĞpÆ¥Óö"pnêÎÚJz)ë¼{²É’ô³MLàÌ‹<iCµ’6E#+À30p“ökÉ9(ËK'R*RL¯n;,â4NĞßJJàÅŸ‰àÕŸÉd¾ô/vJk«QG´<áRHË—-•¸æ³0&ì+ø«ªÑ‹zÜ¤zGè5Wºh—²
-„œ°şóŸdõ] ¯mºêVÉå4¢5Zx ü”înÌE½ãOnRdÁM<ÂšKU[³çR]-?å^9."fQ´ƒ€3uı‚Ów‘ÍfXçÂM4}#L•Fµ\±xw`7.™ï:üÏâ®.ğ÷üeP©6ÆŸ?#Ğ9€ÛEÑEüP˜f£Ñ)¿¯c[§ù#¯§`>ÿ„ZVu®øNñ¼1,Gv<¯óõbp^V#÷:pb³,¸ú[SRaØËÏ45r½ğ@ºĞña
-<s‹ABTF©‚§kÁ!‘\°²ü7 ¢Ğº¤¾Dò;ş¤­Ğ]±Ÿ*yÍÓªƒ(æ•¯ÌİM*g&­¨vv.>pÙàY[å1?/ÊRšÑcÕ&cÏw°37ÉìêÖj=g8²AC3¦!—šÈÇ;¿ªí«E˜Ü0h7bÜàœQŠ~*Še£=©Zk Îfº³ß¤Ò¦x‹º³·,«GTR˜iŞa¼ô PÙê›0ÅaE ùª u5B}Z£^ªÇ#È`ñM}¿Œi´w‹}0£##
-ºª%Ÿ;¾Á²¥ê‹ì¾ä·ÔÔ¢ø¤Xö=å:]úeVJ+k½ºÆö^Ã¦Êúõ©~TÅ:êÓbv™·¬¦¤GÚÒ3(ÅÅ³Rù`Yá`ã¬xş¨¼Rp¸DÎ°|™ògÅò?²DZ)Õàåågjy7f#EÏ á£(ÿ.:õÀ›—€Ê‘·w«üÔ¬I‰î²“«!¹²ò×pò%şÕ`'†ïéÌö(ä'Ü•K%âÎkˆnãùdBÃÌÓ€ÿ:¦Ñ"®gJäF5käÆ §b‡ø7QA.D£(€³Çşk¥şcÔ½Z‹&˜6¨5máß<û¦!f¾ÁX;x+ÀœîåBqŠ¨¥b¥ãò$¸tğû±±M	.ÜP>HÀÒòÅcòÜ©ËÃxÓïí¸å¢î
-ÂñN‘ÿÍ!R+Aä9«÷’ùOğïoüiğÌÊŸ3)tUÏ•UHirZ©"EÍt²Lh†S:«¯¸ºNnÉÃFuÑul—éÚÒß"ã^úsŒñeú€ÜUñ=õBfÍğïZŸT=şä:4xáç÷?BG¢)È‚¨¸áÀ†¤]ì•{½kxàôøGiª¬3l…£QIö$Ä…û:ƒªcrlŸÇÍ¼šiMVQd¶$û¤Wá«²qUş±-|bzÂ–Û4{¿zt*œ_7S¿+%u u³’/èşkÅ2À¸ì¶9×áù_Š)YÒE3xÏ³\,¿|u‹X˜’â®+~¸Îwğ|°,ûivàÚxÑ³a®ïs£ô–®FAe.ĞP¥1Çu’Í¼Ng®nÏ ,2PMÖ¦T£XÊÈß&ÌÆøYUPBà>+ $ËZcãŸÆÉ@r›:fm+J#ÉUKñÊN‹M@š»šåcH½É”aHÎQÚ‘H•Ì)îdÃVŞ´ä¤¥mZ¼75İÄÌ‘ŸP¾œ^¢\—„Ih6˜ë“¾¢|k8ÌçÒ\EWÁª¬¯o—±;isC²Ök£&xÂ®ï¸³@™‘x$M;·f…òGÓÆëb.1qèGÏ\fX™Ò›œôÌä’†Ğ÷ğ—>‰¡>1Á6ÖÎ¯çËœö…sÛûWGÇ?¼%Áç]E¦ãRi„ÚÁvoe_4å&¹­ê›_t–¾5eïí"ÏÌï@¤oÈa°tÖ/‚$&]òG¡Ì^6_. õÊì”i•çVİ°Cw0t(e~Š“‘DsÈ®(Y6*ğ€¥q7<énÃ'¼†IJ¿
-æMÙ Ó¬ÎV™Jİ$ö¹Àºı|MDò†i€g9eAò¥÷ò‘¯ÉË`ÂôXÌA#[/‘!Ûà¯ï¾ùÍo(ÓÕ‡NQ“F‡á7¿ù   ÿÿ aFZo
+                    ) : (
+                      <div className="space-y-6">
+                        {selectedFolder && (
+                          <button 
+                            onClick={() => setSelectedFolder(null)}
+                            className={`mb-4 px-4 py-2 rounded-full text-xs font-black uppercase tracking-widest hover:scale-105 active:scale-95 transition-all ${theme === 'coldest' ? 'bg-sky-500 text-white' : theme === 'chef-mode' ? 'bg-orange-500 text-white' : 'bg-white/10 text-white hover:bg-white/20'}`}
+                          >
+                            â† Back to Folders
+                          </button>
+                        )}
+                        <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                          {filteredPlugins.map((plugin, idx) => (
+                            <PluginCard 
+                              key={`${plugin.name}-${idx}`}
+                              id={`plugin-card-${plugin.name.replace(/[^\w\s-]/g, '').replace(/\s+/g, '-').toLowerCase()}`}
+                              plugin={plugin}
+                              isFavorite={starredPlugins.includes(plugin.name)}
+                              onToggleFavorite={(p) => toggleStar(p.name)}
+                              onRemove={(pluginToRemove) => {
+                                setPlugins(prev => prev.filter(p => p.name !== pluginToRemove.name));
+                                setStarredPlugins(prev => prev.filter(n => n !== pluginToRemove.name));
+                              }}
+                              onUpdatePlugin={handleUpdatePlugin}
+                            />
+                          ))}
+                          {filteredPlugins.length === 0 && (
+                            <div className="col-span-full text-center py-12 opacity-50 text-sm font-bold">
+                              {t('no_plugins_found')}
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    )}
+                  </>
+                )}
+              </div>
+            </section>
+          </div>
+        ) : null}
+      </main>
+
+      {/* Additional Modals & Overlays */}
+      {showDawModal && (
+        <React.Suspense fallback={null}>
+          <DawSelectionModal
+            isOpen={showDawModal}
+            onClose={() => setShowDawModal(false)}
+            onSelect={(daw) => {
+              setDawType(daw);
+              setShowDawModal(false);
+            }}
+            initialDaw={dawType}
+            theme={theme}
+          />
+        </React.Suspense>
+      )}
+
+      {showAnalogModal && (
+        <React.Suspense fallback={null}>
+          <AnalogEquipmentModal
+            isOpen={showAnalogModal}
+            onClose={() => setShowAnalogModal(false)}
+            theme={theme}
+            onSave={async (instruments, hardware) => {
+              setAnalogInstruments(instruments);
+              setAnalogHardware(hardware);
+              return true;
+            }}
+            initialInstruments={analogInstruments}
+            initialHardware={analogHardware}
+          />
+        </React.Suspense>
+      )}
+
+      {showDrumKitModal && (
+        <React.Suspense fallback={null}>
+          <DrumKitModal
+            isOpen={showDrumKitModal}
+            onClose={() => setShowDrumKitModal(false)}
+            onSave={(kit) => {
+              setDrumKits(prev => editingDrumKit ? prev.map(k => k.name === editingDrumKit.name ? kit : k) : [...prev, kit]);
+              setEditingDrumKit(null);
+              setShowDrumKitModal(false);
+            }}
+            initialKit={editingDrumKit || undefined}
+            theme={theme}
+          />
+        </React.Suspense>
+      )}
+
+      {showTrashModal && (
+        <React.Suspense fallback={null}>
+          <TrashModal
+            isOpen={showTrashModal}
+            onClose={() => setShowTrashModal(false)}
+            deletedPlugins={deletedPlugins}
+            deletedInstruments={deletedInstruments}
+            deletedHardware={deletedHardware}
+            onRestorePlugin={(p) => {
+              setDeletedPlugins(prev => prev.filter(x => x.name !== p.name));
+              setPlugins(prev => [...prev, p]);
+            }}
+            onRestoreInstrument={(i) => {
+              setDeletedInstruments(prev => prev.filter(x => x.name !== i.name));
+              setAnalogInstruments(prev => [...prev, i]);
+            }}
+            onRestoreHardware={(h) => {
+              setDeletedHardware(prev => prev.filter(x => x.name !== h.name));
+              setAnalogHardware(prev => [...prev, h]);
+            }}
+            onEmptyTrash={() => {
+              setDeletedPlugins([]);
+              setDeletedInstruments([]);
+              setDeletedHardware([]);
+            }}
+            theme={theme}
+          />
+        </React.Suspense>
+      )}
+
+      {showRestoreModal && (
+        <React.Suspense fallback={null}>
+          <RestoreBackupModal
+            show={showRestoreModal}
+            backupDate={backupInfo?.backupDate || ''}
+            onRestore={handleCloudRestore}
+            onClose={() => setShowRestoreModal(false)}
+          />
+        </React.Suspense>
+      )}
+
+      {showBetaApplyModal && (
+        <BetaApplicationModal
+          onClose={() => setShowBetaApplyModal(false)}
+          theme={theme}
+        />
+      )}
+
+      {showInternationalizationModal && (
+        <React.Suspense fallback={null}>
+          <InternationalizationModal
+            isOpen={showInternationalizationModal}
+            onClose={() => setShowInternationalizationModal(false)}
+            theme={theme}
+            currentCountry={currentCountry}
+            onCountryChange={(c) => setCurrentCountry(c)}
+          />
+        </React.Suspense>
+      )}
+
+      {showPdfSplitter && (
+        <PdfSplitter
+          onClose={() => setShowPdfSplitter(false)}
+          theme={theme}
+        />
+      )}
+
+      {showTutorial && (
+        <TutorialOverlay
+          theme={theme}
+          stepIndex={tutorialStep}
+          steps={activeTutorialSteps}
+          onNext={handleNextTutorialStep}
+          onSkip={handleCompleteTutorial}
+          isVerified={isVerified}
+        />
+      )}
+
+      {showCookieConsent && (
+        <React.Suspense fallback={null}>
+          <LegalConsentBanner
+            show={showCookieConsent}
+            onAccept={() => {
+              localStorage.setItem('bg_cookie_consent', 'accepted');
+              setShowCookieConsent(false);
+            }}
+            onClose={() => setShowCookieConsent(false)}
+          />
+        </React.Suspense>
+      )}
+    </div>
+  );
+}
+
+export default App;
