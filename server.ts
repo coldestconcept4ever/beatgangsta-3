@@ -43,21 +43,72 @@ function generateUUID(): string {
   });
 }
 
-let dbInstance: any = null;
+let rawDbInstance: any = null;
+
+function createRawDbClient() {
+  const url = process.env.TURSO_URL || "file:local.db";
+  const authToken = process.env.TURSO_AUTH_TOKEN || "";
+  
+  console.log(`[DB DEBUG] CWD: ${process.cwd()}`);
+  console.log(`[DB DEBUG] Connecting to database at: ${url.includes("file:") ? "local file" : url.substring(0, 15) + "..."}`);
+  
+  return createClient({
+    url,
+    authToken,
+  });
+}
+
+function isTransientNetworkError(err: any): boolean {
+  if (!err) return false;
+  const msg = String(err.message || err.code || err).toLowerCase();
+  return (
+    msg.includes("socket hang up") ||
+    msg.includes("econnreset") ||
+    msg.includes("etimedout") ||
+    msg.includes("epipe") ||
+    msg.includes("fetch failed") ||
+    msg.includes("und_err_socket") ||
+    msg.includes("network error") ||
+    msg.includes("pipeline failed") ||
+    msg.includes("connection closed")
+  );
+}
+
+let resilientDbWrapper: any = null;
 function getDb() {
-  if (!dbInstance) {
-    const url = process.env.TURSO_URL || "file:local.db";
-    const authToken = process.env.TURSO_AUTH_TOKEN || "";
-    
-    console.log(`[DB DEBUG] CWD: ${process.cwd()}`);
-    console.log(`[DB DEBUG] Connecting to database at: ${url.includes("file:") ? "local file" : url.substring(0, 15) + "..."}`);
-    
-    dbInstance = createClient({
-      url,
-      authToken,
-    });
+  if (!resilientDbWrapper) {
+    const executeWithRetry = async (fnName: 'execute' | 'batch', args: any[]) => {
+      let lastError: any = null;
+      for (let attempt = 1; attempt <= 3; attempt++) {
+        try {
+          if (!rawDbInstance) {
+            rawDbInstance = createRawDbClient();
+          }
+          return await rawDbInstance[fnName](...args);
+        } catch (err: any) {
+          lastError = err;
+          if (isTransientNetworkError(err) && attempt < 3) {
+            console.warn(`[DB-RETRY] Database ${fnName} encountered transient error (${err.message || err}), renewing connection & retrying attempt ${attempt + 1}/3...`);
+            rawDbInstance = null; // Force fresh connection
+            await new Promise((resolve) => setTimeout(resolve, attempt * 150));
+            continue;
+          }
+          throw err;
+        }
+      }
+      throw lastError;
+    };
+
+    resilientDbWrapper = {
+      execute: async (...args: any[]) => executeWithRetry('execute', args),
+      batch: async (...args: any[]) => executeWithRetry('batch', args),
+      transaction: async (mode?: any) => {
+        if (!rawDbInstance) rawDbInstance = createRawDbClient();
+        return rawDbInstance.transaction(mode);
+      }
+    };
   }
-  return dbInstance;
+  return resilientDbWrapper;
 }
 
 // Initialize database tables
@@ -3937,7 +3988,7 @@ if (process.env.NODE_ENV !== 'production') {
   };
 
   const runHealthChecks = async () => {
-    const client = await getDb();
+    const client = getDb();
     const now = Date.now();
     const today = new Date().toISOString().split('T')[0];
     
@@ -4035,8 +4086,8 @@ if (process.env.NODE_ENV !== 'production') {
         
         // Cleanup old health records (keep last 24 hours = 288 records per service)
         await client.execute("DELETE FROM system_health WHERE timestamp < ?", [now - (24 * 60 * 60 * 1000)]);
-      } catch (e) {
-        console.error("Failed to save health metrics:", e);
+      } catch (e: any) {
+        console.warn("Non-critical warning saving health metrics:", e?.message || e);
       }
     }
   };
@@ -4066,18 +4117,26 @@ if (process.env.NODE_ENV !== 'production') {
     }
 
     try {
-      const client = await getDb();
-      let history = [];
-      let daily = [];
+      const client = getDb();
+      let history: any[] = [];
+      let daily: any[] = [];
       
       if (client) {
         // Get latency history for the last 24 hours
-        const historyRes = await client.execute("SELECT timestamp, service, latency FROM system_health ORDER BY timestamp ASC");
-        history = historyRes.rows;
+        try {
+          const historyRes = await client.execute("SELECT timestamp, service, latency FROM system_health ORDER BY timestamp ASC");
+          history = historyRes.rows;
+        } catch (e: any) {
+          console.warn("[STATUS] Non-critical warning fetching system_health history:", e?.message || e);
+        }
         
         // Get 90-day daily uptime
-        const dailyRes = await client.execute("SELECT date, service, uptime_percentage FROM system_health_daily ORDER BY date ASC LIMIT 90");
-        daily = dailyRes.rows;
+        try {
+          const dailyRes = await client.execute("SELECT date, service, uptime_percentage FROM system_health_daily ORDER BY date ASC LIMIT 90");
+          daily = dailyRes.rows;
+        } catch (e: any) {
+          console.warn("[STATUS] Non-critical warning fetching system_health_daily:", e?.message || e);
+        }
       }
 
       res.json({
@@ -4085,8 +4144,8 @@ if (process.env.NODE_ENV !== 'production') {
         history,
         daily
       });
-    } catch (error) {
-      console.error("Error fetching status:", error);
+    } catch (error: any) {
+      console.warn("Status fetch fallback to cached status:", error?.message || error);
       // Fallback to cached status if DB fails
       res.json({
         current: cachedStatus,
