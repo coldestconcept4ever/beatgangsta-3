@@ -58,8 +58,7 @@ import { BetaApplicationModal } from './components/BetaApplicationModal';
 import { PdfSplitter } from './components/PdfSplitter';
 import { AnimatePresence, motion } from 'motion/react';
 import { useTranslation } from 'react-i18next';
-import { Download, Globe, Languages, Star, X, Upload, Cpu, Folder as FolderIcon, ShieldCheck, Check, Zap, Rocket, Eye, EyeOff, AlertTriangle, Lock, Shield, Loader2, Gem, Sword, User as UserIcon, Link, Layers, Link2, Palette, Sparkles, Drum, Image as ImageIcon, Crown, CheckCircle2, ExternalLink, Facebook, Instagram, Linkedin, Twitter, Activity, Database, Trash2, Music, Video, Cloud, Settings2, HelpCircle, Copy, Scissors, Search, Mic, Radio } from 'lucide-react';
-import { getEffectivePlugins, QUICK_SEARCH_CHIPS, buildRecreationDirective } from './utils/searchHelpers';
+import { Download, Globe, Languages, Star, X, Upload, Cpu, Folder as FolderIcon, ShieldCheck, Check, Zap, Rocket, Eye, EyeOff, AlertTriangle, Lock, Shield, Loader2, Gem, Sword, User as UserIcon, Link, Layers, Link2, Palette, Sparkles, Drum, Image as ImageIcon, Crown, CheckCircle2, ExternalLink, Facebook, Instagram, Linkedin, Twitter, Activity, Database, Trash2, Music, Video, Cloud, Settings2, HelpCircle, Copy, Scissors } from 'lucide-react';
 import { saveAs } from 'file-saver';
 import tinycolor from 'tinycolor2';
 import Turnstile from 'react-turnstile';
@@ -720,7 +719,10 @@ const App: React.FC = () => {
   const [recipes, setRecipes] = useState<BeatRecipe[]>([]);
   const [critiques, setCritiques] = useState<MixCritique[]>([]);
   const [latestErrorLog, setLatestErrorLog] = useState<string | null>(null);
-  const [audioMode, setAudioMode] = useState<'recipe' | 'critique' | 'album'>('critique');
+  const [audioMode, setAudioMode] = useState<'recipe' | 'critique' | 'album' | 'full-midi'>('critique');
+  const [fullMidiDuration, setFullMidiDuration] = useState<string>('2:30');
+  const [fullMidiKey, setFullMidiKey] = useState<string>('C# Minor');
+  const [fullMidiBpm, setFullMidiBpm] = useState<string>('140');
   const [critiqueContext, setCritiqueContext] = useState<string>('');
   const [referenceTrack, setReferenceTrack] = useState<string>('');
   const [referenceTrackFile, setReferenceTrackFile] = useState<File | null>(null);
@@ -1738,9 +1740,6 @@ The AI was unable to verify these parameters. Please investigate.`;
   const [isResearching, setIsResearching] = useState<boolean>(false);
   const [typeBeatSearch, setTypeBeatSearch] = useState<string>('');
   const [songSearch, setSongSearch] = useState<string>('');
-  const [artistSearch, setArtistSearch] = useState<string>('');
-  const [searchSubMode, setSearchSubMode] = useState<'song' | 'vibe' | 'artist'>('song');
-  const [includeMinimoog, setIncludeMinimoog] = useState<boolean>(true);
   const [audioAnalysisLoading, setAudioAnalysisLoading] = useState(false);
   const [generationProgress, setGenerationProgress] = useState(0);
   const [generationEta, setGenerationEta] = useState(0);
@@ -5388,8 +5387,7 @@ The AI was unable to verify these parameters. Please investigate.`;
   const handleTypeBeatSearch = async () => {
     if (!requireAuth()) return;
     
-    const targetQuery = typeBeatSearch.trim();
-    if (!targetQuery) return;
+    if ((plugins.length === 0 && !isJsfxMode) || !typeBeatSearch.trim()) return;
     if (!isVerified) {
       window.scrollTo({ top: 0, behavior: 'smooth' });
       setError("Please complete the security verification first.");
@@ -5408,28 +5406,16 @@ The AI was unable to verify these parameters. Please investigate.`;
     try {
       if (!requireAuth()) return;
 
-      let finalGenerationContext = generationContext;
-      if (dawType === 'LUNA') {
-        if (lunaSumming !== 'off') {
-          finalGenerationContext = finalGenerationContext + (finalGenerationContext ? "\n\n" : "") + `CRITICAL LUNA DIRECTIVE: The user has enabled ${lunaSumming.toUpperCase()} SUMMING. You MUST include specific settings for the ${lunaSumming === 'api' ? 'API Vision Console' : 'Neve Summing'} extension on the busses and master fader. Do not ignore this.`;
-        }
-        if (lunaTape !== 'off') {
-          finalGenerationContext = finalGenerationContext + (finalGenerationContext ? "\n\n" : "") + `CRITICAL LUNA DIRECTIVE: The user has enabled ${lunaTape.toUpperCase()} TAPE. You MUST include specific settings for the ${lunaTape === 'oxide' ? 'Oxide Tape' : 'Studer A800'} extension on the tracks and busses. Do not ignore this.`;
-        }
+    let finalGenerationContext = generationContext;
+    if (dawType === 'LUNA') {
+      if (lunaSumming !== 'off') {
+        finalGenerationContext = finalGenerationContext + (finalGenerationContext ? "\n\n" : "") + `CRITICAL LUNA DIRECTIVE: The user has enabled ${lunaSumming.toUpperCase()} SUMMING. You MUST include specific settings for the ${lunaSumming === 'api' ? 'API Vision Console' : 'Neve Summing'} extension on the busses and master fader. Do not ignore this.`;
       }
-
-      const recreationDirective = buildRecreationDirective(targetQuery, 'vibe', includeMinimoog);
-      if (recreationDirective) {
-        finalGenerationContext = (finalGenerationContext ? finalGenerationContext + "\n\n" : "") + recreationDirective;
+      if (lunaTape !== 'off') {
+        finalGenerationContext = finalGenerationContext + (finalGenerationContext ? "\n\n" : "") + `CRITICAL LUNA DIRECTIVE: The user has enabled ${lunaTape.toUpperCase()} TAPE. You MUST include specific settings for the ${lunaTape === 'oxide' ? 'Oxide Tape' : 'Studer A800'} extension on the tracks and busses. Do not ignore this.`;
       }
-
-      const pluginsToUse = getEffectivePlugins(plugins, includeMinimoog, targetQuery);
-      const starredToUse = [...starredPlugins];
-      if (includeMinimoog && !starredToUse.includes('UADx Minimoog')) {
-        starredToUse.unshift('UADx Minimoog');
-      }
-
-      const response = await getCustomBeatRecommendations(pluginsToUse, targetQuery, analogInstruments, analogHardware, drumKits, excludeAnalog, dawType, starredToUse, isGangstaVox, i18n.language, isMultiBandMode, generationBPM, finalGenerationContext, isJsfxMode, installedJsfxPacks, xpandPresets);
+    }
+      const response = await getCustomBeatRecommendations(plugins, typeBeatSearch.trim(), analogInstruments, analogHardware, drumKits, excludeAnalog, dawType, starredPlugins, isGangstaVox, i18n.language, isMultiBandMode, generationBPM, finalGenerationContext, isJsfxMode, installedJsfxPacks, xpandPresets);
       clearInterval(progressInterval);
       setGenerationProgress(100);
       clearTimeout(timeoutId);
@@ -5460,90 +5446,10 @@ The AI was unable to verify these parameters. Please investigate.`;
     }
   };
 
-  const handleArtistSearch = async () => {
-    if (!requireAuth()) return;
-    
-    const targetQuery = artistSearch.trim();
-    if (!targetQuery) return;
-    if (!isVerified) {
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-      setError("Please complete the security verification first.");
-      return;
-    }
-    setLoading(true);
-    setError(null);
-
-    const timeoutId = setTimeout(() => {
-      setLoading(false);
-      setError("Artist search timed out. Try a different artist!");
-    }, 300000);
-
-    const progressInterval = simulateGenerationProgress(getEstimatedSeconds('type-beat'));
-
-    try {
-      if (!requireAuth()) return;
-
-      let finalGenerationContext = generationContext;
-      if (dawType === 'LUNA') {
-        if (lunaSumming !== 'off') {
-          finalGenerationContext = finalGenerationContext + (finalGenerationContext ? "\n\n" : "") + `CRITICAL LUNA DIRECTIVE: The user has enabled ${lunaSumming.toUpperCase()} SUMMING. You MUST include specific settings for the ${lunaSumming === 'api' ? 'API Vision Console' : 'Neve Summing'} extension on the busses and master fader. Do not ignore this.`;
-        }
-        if (lunaTape !== 'off') {
-          finalGenerationContext = finalGenerationContext + (finalGenerationContext ? "\n\n" : "") + `CRITICAL LUNA DIRECTIVE: The user has enabled ${lunaTape.toUpperCase()} TAPE. You MUST include specific settings for the ${lunaTape === 'oxide' ? 'Oxide Tape' : 'Studer A800'} extension on the tracks and busses. Do not ignore this.`;
-        }
-      }
-
-      const recreationDirective = buildRecreationDirective(targetQuery, 'artist', includeMinimoog);
-      if (recreationDirective) {
-        finalGenerationContext = (finalGenerationContext ? finalGenerationContext + "\n\n" : "") + recreationDirective;
-      }
-
-      const pluginsToUse = getEffectivePlugins(plugins, includeMinimoog, targetQuery);
-      const starredToUse = [...starredPlugins];
-      if (includeMinimoog && !starredToUse.includes('UADx Minimoog')) {
-        starredToUse.unshift('UADx Minimoog');
-      }
-
-      const isAlice = targetQuery.toLowerCase().includes('alice deejay');
-      const effectiveBPM = generationBPM || (isAlice ? '138' : undefined);
-      const queryPrompt = `${targetQuery} signature production style, bounce, instrumentation, and iconic sound selection`;
-
-      const response = await getCustomBeatRecommendations(pluginsToUse, queryPrompt, analogInstruments, analogHardware, drumKits, excludeAnalog, dawType, starredToUse, isGangstaVox, i18n.language, isMultiBandMode, effectiveBPM, finalGenerationContext, isJsfxMode, installedJsfxPacks, xpandPresets);
-      clearInterval(progressInterval);
-      setGenerationProgress(100);
-      clearTimeout(timeoutId);
-      setRecipes(response.recipes || []);
-      const newHistory: HistoryItem[] = (response.recipes || []).map(r => ({
-        ...r,
-        generatedAt: new Date().toISOString()
-      }));
-      setHistory(prev => [...newHistory, ...prev].slice(0, 50));
-      logReceipt('Artist Search', 10);
-      setArtistSearch('');
-      setShowFairy(true);
-    } catch (err: any) {
-      clearInterval(progressInterval);
-      clearTimeout(timeoutId);
-      if (err?.message?.includes("INSUFFICIENT_CREDITS") || err?.message?.includes("402")) {
-        setCreditError(err.message);
-        setShowBuyCreditsModal(true);
-      } else if (err?.message?.includes("API_KEY_MISSING") || err?.message?.includes("401") || err?.message?.includes("403")) {
-        setError("Access error. Please contact support or try again later.");
-      } else {
-        const errorMessage = err?.message || "Couldn't find any recipes for that artist. Try a different search!";
-        setError(errorMessage);
-        console.error("Artist search error:", err);
-      }
-    } finally {
-      setLoading(false);
-    }
-  };
-
   const handleSongSearch = async () => {
     if (!requireAuth()) return;
     
-    const targetQuery = songSearch.trim();
-    if (!targetQuery) return;
+    if ((plugins.length === 0 && !isJsfxMode) || !songSearch.trim()) return;
     if (!isVerified) {
       window.scrollTo({ top: 0, behavior: 'smooth' });
       setError("Please complete the security verification first.");
@@ -5562,31 +5468,16 @@ The AI was unable to verify these parameters. Please investigate.`;
     try {
       if (!requireAuth()) return;
 
-      let finalGenerationContext = generationContext;
-      if (dawType === 'LUNA') {
-        if (lunaSumming !== 'off') {
-          finalGenerationContext = finalGenerationContext + (finalGenerationContext ? "\n\n" : "") + `CRITICAL LUNA DIRECTIVE: The user has enabled ${lunaSumming.toUpperCase()} SUMMING. You MUST include specific settings for the ${lunaSumming === 'api' ? 'API Vision Console' : 'Neve Summing'} extension on the busses and master fader. Do not ignore this.`;
-        }
-        if (lunaTape !== 'off') {
-          finalGenerationContext = finalGenerationContext + (finalGenerationContext ? "\n\n" : "") + `CRITICAL LUNA DIRECTIVE: The user has enabled ${lunaTape.toUpperCase()} TAPE. You MUST include specific settings for the ${lunaTape === 'oxide' ? 'Oxide Tape' : 'Studer A800'} extension on the tracks and busses. Do not ignore this.`;
-        }
+    let finalGenerationContext = generationContext;
+    if (dawType === 'LUNA') {
+      if (lunaSumming !== 'off') {
+        finalGenerationContext = finalGenerationContext + (finalGenerationContext ? "\n\n" : "") + `CRITICAL LUNA DIRECTIVE: The user has enabled ${lunaSumming.toUpperCase()} SUMMING. You MUST include specific settings for the ${lunaSumming === 'api' ? 'API Vision Console' : 'Neve Summing'} extension on the busses and master fader. Do not ignore this.`;
       }
-
-      const recreationDirective = buildRecreationDirective(targetQuery, 'song', includeMinimoog);
-      if (recreationDirective) {
-        finalGenerationContext = (finalGenerationContext ? finalGenerationContext + "\n\n" : "") + recreationDirective;
+      if (lunaTape !== 'off') {
+        finalGenerationContext = finalGenerationContext + (finalGenerationContext ? "\n\n" : "") + `CRITICAL LUNA DIRECTIVE: The user has enabled ${lunaTape.toUpperCase()} TAPE. You MUST include specific settings for the ${lunaTape === 'oxide' ? 'Oxide Tape' : 'Studer A800'} extension on the tracks and busses. Do not ignore this.`;
       }
-
-      const pluginsToUse = getEffectivePlugins(plugins, includeMinimoog, targetQuery);
-      const starredToUse = [...starredPlugins];
-      if ((includeMinimoog || targetQuery.toLowerCase().includes('better off alone') || targetQuery.toLowerCase().includes('alice deejay')) && !starredToUse.includes('UADx Minimoog')) {
-        starredToUse.unshift('UADx Minimoog');
-      }
-
-      const isBetterOffAlone = targetQuery.toLowerCase().includes('better off alone') || targetQuery.toLowerCase().includes('alice deejay');
-      const effectiveBPM = generationBPM || (isBetterOffAlone ? '138' : undefined);
-
-      const response = await getSongBeatRecommendations(pluginsToUse, targetQuery, analogInstruments, analogHardware, drumKits, excludeAnalog, dawType, starredToUse, isGangstaVox, i18n.language, isMultiBandMode, effectiveBPM, finalGenerationContext, isJsfxMode, installedJsfxPacks, xpandPresets);
+    }
+      const response = await getSongBeatRecommendations(plugins, songSearch.trim(), analogInstruments, analogHardware, drumKits, excludeAnalog, dawType, starredPlugins, isGangstaVox, i18n.language, isMultiBandMode, generationBPM, finalGenerationContext, isJsfxMode, installedJsfxPacks, xpandPresets);
       clearInterval(progressInterval);
       setGenerationProgress(100);
       clearTimeout(timeoutId);
@@ -5972,11 +5863,11 @@ Provide the exact JSFX plugin name and required sliders/parameters.`;
     let processFile: File | null = null;
     let processRecreateFile: File | null = null;
 
-    if (audioMode === 'recipe') {
+    if (audioMode === 'recipe' || audioMode === 'full-midi') {
       processFile = vibeFile;
       processRecreateFile = recreateForFile;
       if (!processFile) {
-        setError("Please upload at least the Vibe Audio file to analyze.");
+        setError("Please upload the mixed audio file to generate Full MIDI Stems.");
         return;
       }
     } else {
@@ -6352,7 +6243,9 @@ Provide the exact JSFX plugin name and required sliders/parameters.`;
           if (!requireAuth()) return;
 
           let finalContext = critiqueContext;
-          if (audioUrl || audioBase64 || geminiFileUri) {
+          if (audioMode === 'full-midi') {
+            finalContext = finalContext + (finalContext ? "\n\n" : "") + `CRITICAL FULL MIDI STEMS MODE DIRECTIVE: The user requested Full-Song MIDI Stems for song duration ${fullMidiDuration}, musical key ${fullMidiKey}, BPM ${fullMidiBpm}. You MUST generate an ultra-high quality, intricate beat recipe where every instrument has full-length MIDI note arrays spanning Intro, Verse, Hook, Bridge, and Outro. Include exact silent rests for sections where instruments do not play so that every MIDI file spans the full song duration and locks into DAW bar 1 with zero trimming. NO prerendered audio / no WAVs. Provide comprehensive VST instrument sound design recipes and exact mixing plugin chain parameters for every stem.`;
+          } else if (audioUrl || audioBase64 || geminiFileUri) {
             finalContext = finalContext + (finalContext ? "\n\n" : "") + "CRITICAL SYSTEM INSTRUCTION: The user wants an EXACT REPLICA of this beat. Provide a precise, step-by-step recipe to completely recreate this specific song's beat exactly how it sounds in the provided link/audio. It MUST be an exact replica, do not just make something 'in the style of', make it an EXACT reproduction of the instruments, chords, drum patterns, and sound design of the source audio. YOU MUST NOT LEAVE ANY BLANK OR EMPTY PARAMETERS ON ANY VST OR FX PLUGIN. EVERY SINGLE DEEPDIVE PARAMETER ARRAY MUST BE EXHAUSTIVELY POPULATED TO ACHIEVE THIS LEVEL OF REALISM. IN ADDITION, ALL MIDI PATTERNS MUST BE HIGLY CREATIVE, SYNCATED, DYNAMIC, ENJOYABLE, AND EXACTLY MATCH THE MOVEMENT OF THE SOURCE AUDIO - STRICTLY FORBIDDEN FROM GENERATING PLAIN REPETITIVE NOTE SLOP.";
           }
 
@@ -8596,7 +8489,7 @@ Provide the exact JSFX plugin name and required sliders/parameters.`;
                 </div>
               </div>
 
-              {inputMode === 'random' && (
+              {(inputMode === 'random' || inputMode === 'search') && (
                 <div className={`transition-all duration-700 flex flex-col items-center gap-1.5 max-w-[110px] mx-auto mt-3 mb-5 ${mainTab === null ? 'blur-[8px] pointer-events-none opacity-40' : 'animate-in fade-in slide-in-from-bottom-4 duration-300'}`}>
                   <div className="flex flex-col gap-1 w-full text-center">
                     <label className={`text-[9px] font-black uppercase tracking-widest opacity-50 ${theme === 'coldest' ? 'text-slate-900' : 'text-white'}`}>
@@ -8617,251 +8510,6 @@ Provide the exact JSFX plugin name and required sliders/parameters.`;
                           : 'bg-black/60 border-white/10 focus:border-white/30 text-white placeholder:text-gray-500'
                       }`}
                     />
-                  </div>
-                </div>
-              )}
-
-              {inputMode === 'search' && (
-                <div className={`transition-all duration-500 max-w-3xl mx-auto w-full px-4 mb-8 ${mainTab === null ? 'blur-[8px] pointer-events-none opacity-40' : 'animate-in fade-in slide-in-from-bottom-4 duration-300'}`}>
-                  <div className="flex flex-col items-center gap-4">
-                    {/* Search Submode Selector: Song / Vibe / Artist */}
-                    <div className={`p-1.5 rounded-2xl flex flex-wrap justify-center items-center gap-1 border shadow-inner backdrop-blur-md ${
-                      theme === 'coldest' ? 'bg-white/70 border-sky-200' :
-                      theme === 'crazy-bird' ? 'bg-red-950/40 border-red-900/50' :
-                      theme === 'chef-mode' ? 'bg-orange-100/60 border-orange-300' :
-                      'bg-white/5 border-white/10'
-                    }`}>
-                      <button
-                        type="button"
-                        onClick={() => setSearchSubMode('song')}
-                        className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-xs font-black uppercase tracking-wider transition-all ${
-                          searchSubMode === 'song'
-                            ? (theme === 'coldest' ? 'bg-sky-500 text-white shadow-md' :
-                               theme === 'crazy-bird' ? 'bg-red-600 text-white shadow-md' :
-                               theme === 'chef-mode' ? 'bg-orange-500 text-white shadow-md' :
-                               'bg-white text-black shadow-md')
-                            : (theme === 'coldest' ? 'text-slate-600 hover:text-slate-900 hover:bg-sky-50' :
-                               'text-white/60 hover:text-white hover:bg-white/10')
-                        }`}
-                      >
-                        <Music className="w-4 h-4" />
-                        <span>Song Search</span>
-                      </button>
-
-                      <button
-                        type="button"
-                        onClick={() => setSearchSubMode('vibe')}
-                        className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-xs font-black uppercase tracking-wider transition-all ${
-                          searchSubMode === 'vibe'
-                            ? (theme === 'coldest' ? 'bg-sky-500 text-white shadow-md' :
-                               theme === 'crazy-bird' ? 'bg-red-600 text-white shadow-md' :
-                               theme === 'chef-mode' ? 'bg-orange-500 text-white shadow-md' :
-                               'bg-white text-black shadow-md')
-                            : (theme === 'coldest' ? 'text-slate-600 hover:text-slate-900 hover:bg-sky-50' :
-                               'text-white/60 hover:text-white hover:bg-white/10')
-                        }`}
-                      >
-                        <Radio className="w-4 h-4" />
-                        <span>Vibe Search</span>
-                      </button>
-
-                      <button
-                        type="button"
-                        onClick={() => setSearchSubMode('artist')}
-                        className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-xs font-black uppercase tracking-wider transition-all ${
-                          searchSubMode === 'artist'
-                            ? (theme === 'coldest' ? 'bg-sky-500 text-white shadow-md' :
-                               theme === 'crazy-bird' ? 'bg-red-600 text-white shadow-md' :
-                               theme === 'chef-mode' ? 'bg-orange-500 text-white shadow-md' :
-                               'bg-white text-black shadow-md')
-                            : (theme === 'coldest' ? 'text-slate-600 hover:text-slate-900 hover:bg-sky-50' :
-                               'text-white/60 hover:text-white hover:bg-white/10')
-                        }`}
-                      >
-                        <Mic className="w-4 h-4" />
-                        <span>Artist Search</span>
-                      </button>
-                    </div>
-
-                    {/* Submode Description & Guide */}
-                    <p className={`text-xs text-center max-w-lg font-medium opacity-80 ${theme === 'coldest' ? 'text-slate-600' : 'text-slate-300'}`}>
-                      {searchSubMode === 'song' && "Search any iconic track (e.g. 'Alice Deejay - Better Off Alone') to extract its structural DNA, synth melody MIDI, and production recipe."}
-                      {searchSubMode === 'vibe' && "Search by production vibe, genre, or mood (e.g. '90s Eurodance Trance', 'Euphoric Club Anthem') for customized bounce and energy."}
-                      {searchSubMode === 'artist' && "Search by artist or producer name (e.g. 'Alice Deejay', 'Avicii', 'Metro Boomin') to capture their signature sound selection and groove."}
-                    </p>
-
-                    {/* Search Input Bar + BPM & Options */}
-                    <div className="w-full flex flex-col gap-3">
-                      <div className={`p-2 rounded-2xl flex flex-col sm:flex-row items-center gap-2 border shadow-lg backdrop-blur-md ${
-                        theme === 'coldest' ? 'bg-white/80 border-sky-200' :
-                        theme === 'crazy-bird' ? 'bg-red-950/60 border-red-900/60' :
-                        theme === 'chef-mode' ? 'bg-orange-50/90 border-orange-300' :
-                        'bg-black/50 border-white/15'
-                      }`}>
-                        {/* Main Search Input */}
-                        <div className="relative flex-1 w-full flex items-center">
-                          <div className="absolute left-3.5 pointer-events-none opacity-50">
-                            {searchSubMode === 'song' ? <Music className="w-4 h-4" /> :
-                             searchSubMode === 'vibe' ? <Radio className="w-4 h-4" /> :
-                             <Mic className="w-4 h-4" />}
-                          </div>
-                          <input
-                            type="text"
-                            value={
-                              searchSubMode === 'song' ? songSearch :
-                              searchSubMode === 'vibe' ? typeBeatSearch :
-                              artistSearch
-                            }
-                            onChange={(e) => {
-                              if (searchSubMode === 'song') setSongSearch(e.target.value);
-                              else if (searchSubMode === 'vibe') setTypeBeatSearch(e.target.value);
-                              else setArtistSearch(e.target.value);
-                            }}
-                            onKeyDown={(e) => {
-                              if (e.key === 'Enter') {
-                                if (searchSubMode === 'song') handleSongSearch();
-                                else if (searchSubMode === 'vibe') handleTypeBeatSearch();
-                                else handleArtistSearch();
-                              }
-                            }}
-                            placeholder={
-                              searchSubMode === 'song' ? "e.g. Alice Deejay - Better Off Alone" :
-                              searchSubMode === 'vibe' ? "e.g. 90s Eurodance Trance, Catchy Saw Hook" :
-                              "e.g. Alice Deejay, Avicii, Metro Boomin"
-                            }
-                            className={`w-full pl-10 pr-10 py-3 rounded-xl text-sm font-semibold outline-none transition-all ${
-                              theme === 'coldest' ? 'bg-sky-50/60 focus:bg-white text-slate-900 placeholder:text-slate-400 border border-transparent focus:border-sky-400' :
-                              theme === 'crazy-bird' ? 'bg-red-900/30 focus:bg-red-900/50 text-white placeholder:text-red-300/40 border border-transparent focus:border-red-500' :
-                              theme === 'chef-mode' ? 'bg-orange-100/40 focus:bg-white text-slate-900 placeholder:text-orange-900/40 border border-transparent focus:border-orange-400' :
-                              'bg-white/5 focus:bg-white/10 text-white placeholder:text-white/40 border border-transparent focus:border-white/20'
-                            }`}
-                          />
-                          {((searchSubMode === 'song' && songSearch) || (searchSubMode === 'vibe' && typeBeatSearch) || (searchSubMode === 'artist' && artistSearch)) && (
-                            <button
-                              type="button"
-                              onClick={() => {
-                                if (searchSubMode === 'song') setSongSearch('');
-                                else if (searchSubMode === 'vibe') setTypeBeatSearch('');
-                                else setArtistSearch('');
-                              }}
-                              className="absolute right-3 p-1 rounded-full opacity-50 hover:opacity-100 hover:bg-black/10 transition-all"
-                            >
-                              <X className="w-3.5 h-3.5" />
-                            </button>
-                          )}
-                        </div>
-
-                        {/* Integrated BPM Input */}
-                        <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-dashed border-slate-300/50 bg-black/5 dark:bg-white/5 w-full sm:w-auto justify-between sm:justify-start">
-                          <span className={`text-[10px] font-black uppercase tracking-wider opacity-60 whitespace-nowrap ${theme === 'coldest' ? 'text-slate-700' : 'text-slate-300'}`}>
-                            BPM
-                          </span>
-                          <input
-                            type="number"
-                            placeholder="Auto"
-                            value={generationBPM}
-                            onChange={(e) => setGenerationBPM(e.target.value)}
-                            className={`w-16 py-1 px-2 text-center text-xs font-bold rounded-lg outline-none ${
-                              theme === 'coldest' ? 'bg-white text-slate-900 border border-sky-200' :
-                              'bg-black/40 text-white border border-white/10'
-                            }`}
-                          />
-                        </div>
-
-                        {/* Action Button */}
-                        <button
-                          type="button"
-                          disabled={
-                            loading ||
-                            (searchSubMode === 'song' && !songSearch.trim()) ||
-                            (searchSubMode === 'vibe' && !typeBeatSearch.trim()) ||
-                            (searchSubMode === 'artist' && !artistSearch.trim())
-                          }
-                          onClick={() => {
-                            if (searchSubMode === 'song') handleSongSearch();
-                            else if (searchSubMode === 'vibe') handleTypeBeatSearch();
-                            else handleArtistSearch();
-                          }}
-                          className={`w-full sm:w-auto px-7 py-3 rounded-xl font-black text-xs uppercase tracking-wider flex items-center justify-center gap-2 shadow-md transition-all active:scale-95 disabled:opacity-40 disabled:pointer-events-none ${
-                            theme === 'coldest' || theme === 'chef-mode'
-                              ? 'bg-sky-500 hover:bg-sky-400 text-white'
-                              : 'bg-white hover:bg-slate-100 text-black'
-                          }`}
-                        >
-                          {loading ? (
-                            <>
-                              <Loader2 className="w-4 h-4 animate-spin" />
-                              <span>Architecting...</span>
-                            </>
-                          ) : (
-                            <>
-                              <Sparkles className="w-4 h-4" />
-                              <span>Search & Architect</span>
-                            </>
-                          )}
-                        </button>
-                      </div>
-
-                      {/* Hardware & Plugin Enhancer Badge: UADx Minimoog */}
-                      <div className="flex flex-wrap items-center justify-between gap-2 px-1">
-                        <button
-                          type="button"
-                          onClick={() => setIncludeMinimoog(!includeMinimoog)}
-                          className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-[11px] font-bold transition-all border ${
-                            includeMinimoog
-                              ? (theme === 'coldest' ? 'bg-sky-500/15 border-sky-400 text-sky-900' : 'bg-emerald-500/20 border-emerald-400 text-emerald-300')
-                              : 'bg-black/10 border-transparent text-slate-400'
-                          }`}
-                          title="When active, instructs the AI engine to assign Universal Audio UADx Minimoog with software-accurate parameters for lead synth recreation"
-                        >
-                          <span className={`w-2 h-2 rounded-full ${includeMinimoog ? 'bg-emerald-400 animate-pulse' : 'bg-slate-400'}`} />
-                          <span>🎹 UADx Minimoog Synth: <strong className="uppercase">{includeMinimoog ? 'Active' : 'Off'}</strong></span>
-                        </button>
-
-                        <span className={`text-[10px] opacity-60 ${theme === 'coldest' ? 'text-slate-600' : 'text-slate-400'}`}>
-                          Generates full melodic MIDI + UADx Minimoog synth patch + separated drum loops (Kick, Sub Bass, Hats, Snares) in ZIP!
-                        </span>
-                      </div>
-
-                      {/* Inspiration Chips */}
-                      <div className="flex flex-col gap-2 pt-2">
-                        <div className="flex items-center justify-between">
-                          <span className={`text-[10px] font-black uppercase tracking-widest opacity-60 ${theme === 'coldest' ? 'text-slate-700' : 'text-slate-300'}`}>
-                            ⚡ Quick Inspiration ({searchSubMode === 'song' ? 'Songs' : searchSubMode === 'vibe' ? 'Vibes' : 'Artists'}):
-                          </span>
-                        </div>
-
-                        <div className="flex flex-wrap gap-1.5">
-                          {QUICK_SEARCH_CHIPS[searchSubMode].map((chip, idx) => (
-                            <button
-                              key={idx}
-                              type="button"
-                              onClick={() => {
-                                if (searchSubMode === 'song') {
-                                  setSongSearch(chip.query);
-                                } else if (searchSubMode === 'vibe') {
-                                  setTypeBeatSearch(chip.query);
-                                } else {
-                                  setArtistSearch(chip.query);
-                                }
-                                if (chip.bpm) setGenerationBPM(chip.bpm);
-                                setIncludeMinimoog(true);
-                              }}
-                              className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all border flex items-center gap-1.5 ${
-                                (searchSubMode === 'song' && songSearch === chip.query) ||
-                                (searchSubMode === 'vibe' && typeBeatSearch === chip.query) ||
-                                (searchSubMode === 'artist' && artistSearch === chip.query)
-                                  ? (theme === 'coldest' ? 'bg-sky-500 text-white border-sky-600 shadow-sm' : 'bg-white text-black border-white shadow-sm')
-                                  : (theme === 'coldest' ? 'bg-white/60 hover:bg-white text-slate-700 border-sky-100 hover:border-sky-300' : 'bg-white/5 hover:bg-white/10 text-slate-200 border-white/10 hover:border-white/20')
-                              }`}
-                            >
-                              <span>{chip.label}</span>
-                              <span className="text-[10px] opacity-60 font-mono">({chip.bpm} BPM)</span>
-                            </button>
-                          ))}
-                        </div>
-                      </div>
-                    </div>
                   </div>
                 </div>
               )}
@@ -8920,13 +8568,13 @@ Provide the exact JSFX plugin name and required sliders/parameters.`;
                      <span className="text-4xl text-glow-pulse">📎</span>
                   </div>
                   <h3 className={`text-[12px] font-black uppercase tracking-[0.2em] opacity-80 ${theme === 'coldest' || theme === 'chef-mode' ? 'text-slate-800' : 'text-white'}`}>
-                    {audioMode === 'recipe' ? 'Generate recipe by uploading music files' : audioMode === 'album' ? 'Upload album tracks for cohesive mastering' : 'Upload music files for suggested improvements'}
+                    {audioMode === 'recipe' ? 'Generate recipe by uploading music files' : audioMode === 'album' ? 'Upload album tracks for cohesive mastering' : audioMode === 'full-midi' ? 'Upload audio to generate full-length MIDI stems & mix guide' : 'Upload music files for suggested improvements'}
                   </h3>
                 </div>
 
                 <div className="flex justify-center mb-2">
                   <div className={`inline-flex rounded-full p-1 ${theme === 'coldest' ? 'bg-white/40' : 'bg-black/40'}`}>
-                                        <button
+                    <button
                       id="btn-audio-recipe"
                       onClick={() => setAudioMode('recipe')}
                       className={`px-6 py-2 rounded-full text-xs font-black uppercase tracking-widest transition-all ${
@@ -8947,6 +8595,17 @@ Provide the exact JSFX plugin name and required sliders/parameters.`;
                       }`}
                     >
                       <span>{t('mix_critique')}</span>
+                    </button>
+                    <button
+                      id="btn-full-midi"
+                      onClick={() => setAudioMode('full-midi')}
+                      className={`px-6 py-2 rounded-full text-xs font-black uppercase tracking-widest transition-all flex items-center gap-2 ${
+                        audioMode === 'full-midi' 
+                          ? (theme === 'coldest' ? 'bg-amber-500 text-white shadow-md' : 'bg-amber-500 text-white shadow-md')
+                          : (theme === 'coldest' ? 'text-slate-600 hover:text-slate-900' : 'text-white/60 hover:text-white')
+                      }`}
+                    >
+                      <span>Full MIDI Stems</span>
                     </button>
                     <button
                       id="btn-album-mastering"
@@ -9298,6 +8957,53 @@ Provide the exact JSFX plugin name and required sliders/parameters.`;
                         </div>
                       </div>
                       )}
+                    </div>
+                  </div>
+                )}
+
+                {audioMode === 'full-midi' && (
+                  <div className="grid grid-cols-3 gap-3 mb-3">
+                    <div>
+                      <label className={`text-[10px] font-black uppercase tracking-widest opacity-60 block mb-1 ${theme === 'coldest' ? 'text-slate-900' : 'text-white'}`}>
+                        Song Duration
+                      </label>
+                      <input
+                        type="text"
+                        value={fullMidiDuration}
+                        onChange={(e) => setFullMidiDuration(e.target.value)}
+                        placeholder="e.g. 2:30"
+                        className={`w-full p-3 rounded-xl text-xs font-medium outline-none border-2 ${
+                          theme === 'coldest' ? 'bg-white/60 border-amber-200 text-slate-900' : 'bg-black/40 border-amber-500/30 text-white'
+                        }`}
+                      />
+                    </div>
+                    <div>
+                      <label className={`text-[10px] font-black uppercase tracking-widest opacity-60 block mb-1 ${theme === 'coldest' ? 'text-slate-900' : 'text-white'}`}>
+                        Musical Key
+                      </label>
+                      <input
+                        type="text"
+                        value={fullMidiKey}
+                        onChange={(e) => setFullMidiKey(e.target.value)}
+                        placeholder="e.g. C# Minor"
+                        className={`w-full p-3 rounded-xl text-xs font-medium outline-none border-2 ${
+                          theme === 'coldest' ? 'bg-white/60 border-amber-200 text-slate-900' : 'bg-black/40 border-amber-500/30 text-white'
+                        }`}
+                      />
+                    </div>
+                    <div>
+                      <label className={`text-[10px] font-black uppercase tracking-widest opacity-60 block mb-1 ${theme === 'coldest' ? 'text-slate-900' : 'text-white'}`}>
+                        BPM
+                      </label>
+                      <input
+                        type="text"
+                        value={fullMidiBpm}
+                        onChange={(e) => setFullMidiBpm(e.target.value)}
+                        placeholder="e.g. 140"
+                        className={`w-full p-3 rounded-xl text-xs font-medium outline-none border-2 ${
+                          theme === 'coldest' ? 'bg-white/60 border-amber-200 text-slate-900' : 'bg-black/40 border-amber-500/30 text-white'
+                        }`}
+                      />
                     </div>
                   </div>
                 )}
@@ -9827,7 +9533,7 @@ Provide the exact JSFX plugin name and required sliders/parameters.`;
                   </div>
                 ) : (
                   <div className="flex flex-col w-full gap-4">
-                    {audioMode === 'recipe' ? (
+                    {audioMode === 'recipe' || audioMode === 'full-midi' ? (
                       <div className="flex flex-col w-full gap-4">
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                           {/* Slot 1: Vibe File */}
