@@ -1,5 +1,5 @@
 import MidiWriter from 'midi-writer-js';
-import { generateMidiTrack, generateAudioLoop, generateDrumMidiBaseData, isMidiCapable, getBeats, PatternLength, PatternVariation } from './midiGenerator';
+import { generateMidiTrack, generateAudioLoop, generateDrumMidiBaseData, generateFullSongMidiTrack, generateFullSongDrumPartMidi, isMidiCapable, getBeats, PatternLength, PatternVariation } from './midiGenerator';
 import { BeatRecipe, MidiNote } from '../types';
 
 // Dynamic import for JSZip
@@ -10,123 +10,48 @@ export const generateIndividualMidiFiles = async (recipe: BeatRecipe): Promise<{
   const bpm = recipe.bpm || 120;
   const safeTitle = recipe.title.replace(/[^a-z0-9]/gi, '_').toLowerCase();
 
-  const arrayBufferToBase64 = (buffer: ArrayBuffer) => {
-    let binary = '';
-    const bytes = new Uint8Array(buffer);
-    const len = bytes.byteLength;
-    for (let i = 0; i < len; i++) {
-        binary += String.fromCharCode(bytes[i]);
-    }
-    return window.btoa(binary);
-  };
+  let fileIndex = 1;
 
-  // Instruments
-  const tracks = recipe.instruments || [];
-  for (const ing of tracks) {
-    if (isMidiCapable(ing.name, ing.loopGuide)) {
-      const sections = ['intro', 'verse', 'hook', 'bridge', 'outro'] as const;
-      for (const section of sections) {
-        let sectionMidiNotes: MidiNote[] | undefined;
-        if (Array.isArray(ing.midiNotes)) {
-          if (section !== 'hook') continue;
-          sectionMidiNotes = ing.midiNotes;
-        } else if (ing.midiNotes && typeof ing.midiNotes === 'object') {
-          sectionMidiNotes = (ing.midiNotes as any)[section];
-        }
+  // Separate Full Song Drums (Kicks, Snares, Hi-Hats, Open Hats, Percussion)
+  if (recipe.drumPatterns) {
+    const drumParts: { key: 'kick' | 'snare' | 'hiHat' | 'openHat' | 'perc'; name: string }[] = [
+      { key: 'kick', name: 'Kick' },
+      { key: 'snare', name: 'Snare' },
+      { key: 'hiHat', name: 'HiHats' },
+      { key: 'openHat', name: 'OpenHat' },
+      { key: 'perc', name: 'Percussion' }
+    ];
 
-        if (!sectionMidiNotes || sectionMidiNotes.length === 0) continue;
-
-        let originalTotalBeats = 0;
-        for (const note of sectionMidiNotes) {
-          originalTotalBeats += getBeats(note.wait) + getBeats(note.duration);
-        }
-
-        const naturalBars = Math.max(4, Math.round(originalTotalBeats / 4)) as PatternLength;
-        const lengths: PatternLength[] = recipe.detectedSectionLengths?.[section] !== undefined
-          ? [recipe.detectedSectionLengths[section]!]
-          : (naturalBars > 8 ? [naturalBars] : [4, 8]);
-        const variations: PatternVariation[] = ['A', 'B'];
-
-        for (const bars of lengths) {
-          for (const variation of variations) {
-            const track = generateMidiTrack(ing.name, ing.loopGuide || '', bpm, bars, variation, recipe.title, sectionMidiNotes);
-            const write = new MidiWriter.Writer([track]);
-            const midiBytes = write.buildFile();
-
-            const baseName = `${safeTitle}_${section}_${ing.name.replace(/[^a-z0-9]/gi, '_')}_${bars}Bar_${variation}_${bpm}BPM`;
-
-            // Add MIDI
-            files.push({
-              name: `${baseName}.mid`,
-              data: window.btoa(String.fromCharCode.apply(null, Array.from(midiBytes))),
-              type: 'midi'
-            });
-
-            // Add Audioloop
-            const loopBlob = await generateAudioLoop(midiBytes, bpm);
-            const loopBuffer = await loopBlob.arrayBuffer();
-            files.push({
-              name: `${baseName}.audioloop`,
-              data: arrayBufferToBase64(loopBuffer),
-              type: 'loop'
-            });
-          }
-        }
+    for (const dp of drumParts) {
+      const drumBytes = generateFullSongDrumPartMidi(recipe.drumPatterns, dp.key, recipe.title, bpm, recipe.detectedSectionLengths);
+      if (drumBytes && drumBytes.length > 0) {
+        const trackNum = String(fileIndex++).padStart(2, '0');
+        files.push({
+          name: `${trackNum}_${safeTitle}_${dp.name}_FullSong.mid`,
+          data: window.btoa(String.fromCharCode.apply(null, Array.from(drumBytes))),
+          type: 'midi'
+        });
       }
     }
   }
 
-  // Drums
-  if (recipe.drumPatterns) {
-    const sections = ['intro', 'verse', 'hook', 'bridge', 'outro'] as const;
-    for (const section of sections) {
-      const pattern = recipe.drumPatterns[section];
-      if (pattern) {
-        
-        let maxStep = 0;
-        const getStepsPerBar = (isDT?: boolean) => isDT ? 32 : 16;
-        let naturalBars = 4;
-        const checkMaxBars = (part: any) => {
-          if (!part || !Array.isArray(part.steps)) return;
-          const stepsPerBar = getStepsPerBar(part.isDoubleTime);
-          part.steps.forEach((s: any) => {
-            const stepNum = typeof s === 'number' ? s : s.step;
-            const b = Math.ceil(stepNum / stepsPerBar);
-            if (b > naturalBars) naturalBars = b;
-          });
-        };
-        checkMaxBars(pattern.kick);
-        checkMaxBars(pattern.snare);
-        checkMaxBars(pattern.hiHat);
-        const lengths: PatternLength[] = recipe.detectedSectionLengths?.[section] !== undefined
-          ? [recipe.detectedSectionLengths[section]!]
-          : ((naturalBars > 8 ? [naturalBars] : [4, 8]) as PatternLength[]);
+  // Full Song Melodic & Harmonic Instruments
+  const tracks = recipe.instruments || [];
+  for (let idx = 0; idx < tracks.length; idx++) {
+    const ing = tracks[idx];
+    if (isMidiCapable(ing.name, ing.loopGuide)) {
+      const track = generateFullSongMidiTrack(ing.name, bpm, recipe.title, ing.midiNotes, recipe.detectedSectionLengths, ing.loopGuide);
+      const write = new MidiWriter.Writer([track]);
+      const midiBytes = write.buildFile();
+      const safeInstName = ing.name.replace(/[^a-z0-9]/gi, '_');
+      const trackNum = String(fileIndex++).padStart(2, '0');
+      const baseName = `${trackNum}_${safeTitle}_${safeInstName}_FullSong`;
 
-        for (const humanized of [true, false]) {
-          for (const bars of lengths) {
-
-            const midiBytes = generateDrumMidiBaseData(pattern, recipe.title, section, bpm, humanized, bars);
-            if (midiBytes && midiBytes.length > 0) {
-              const humanizedSuffix = humanized ? '_Humanized' : '';
-              const baseName = `${safeTitle}_${section}_Drums${humanizedSuffix}_${bars}Bar_${bpm}BPM`;
-              
-              files.push({
-                name: `${baseName}.mid`,
-                data: window.btoa(String.fromCharCode.apply(null, Array.from(midiBytes))),
-                type: 'midi'
-              });
-
-              const loopBlob = await generateAudioLoop(midiBytes, bpm);
-              const loopBuffer = await loopBlob.arrayBuffer();
-              files.push({
-                name: `${baseName}.audioloop`,
-                data: arrayBufferToBase64(loopBuffer),
-                type: 'loop'
-              });
-            }
-          }
-        }
-      }
+      files.push({
+        name: `${baseName}.mid`,
+        data: window.btoa(String.fromCharCode.apply(null, Array.from(midiBytes))),
+        type: 'midi'
+      });
     }
   }
 
@@ -136,160 +61,157 @@ export const generateIndividualMidiFiles = async (recipe: BeatRecipe): Promise<{
 export const generateAllMidiZip = async (recipe: BeatRecipe, dawType?: string | null): Promise<Blob> => {
   const JSZip = await getJSZip();
   const zip = new JSZip();
-  const extension = 'mid';
   const bpm = recipe.bpm || 120;
-  
   const safeTitle = recipe.title.replace(/[^a-z0-9]/gi, '_').toLowerCase();
-  
-  // 1. Generate Instrument MIDI files
-  const instrumentsFolder = zip.folder('Instruments');
-  if (instrumentsFolder) {
-    const tracks = recipe.instruments || [];
-    const sections = ['intro', 'verse', 'hook', 'bridge', 'outro'] as const;
 
-    for (const section of sections) {
-      const sectionName = section.charAt(0).toUpperCase() + section.slice(1);
-      const subFolder = instrumentsFolder.folder(sectionName);
+  let fileIndex = 1;
 
-      for (const ing of tracks) {
-        if (isMidiCapable(ing.name, ing.loopGuide)) {
-          let sectionMidiNotes: MidiNote[] | undefined;
-          if (Array.isArray(ing.midiNotes)) {
-            if (section !== 'hook') continue;
-            sectionMidiNotes = ing.midiNotes;
-          } else if (ing.midiNotes && typeof ing.midiNotes === 'object') {
-            sectionMidiNotes = (ing.midiNotes as any)[section];
-          }
-
-          if (!sectionMidiNotes || sectionMidiNotes.length === 0) continue;
-
-          let originalTotalBeats = 0;
-          for (const note of sectionMidiNotes) {
-            originalTotalBeats += getBeats(note.wait) + getBeats(note.duration);
-          }
-
-          const naturalBars = Math.max(4, Math.round(originalTotalBeats / 4)) as PatternLength;
-          const lengths: PatternLength[] = recipe.detectedSectionLengths?.[section] !== undefined
-            ? [recipe.detectedSectionLengths[section]!]
-            : (naturalBars > 8 ? [naturalBars] : [4, 8]);
-          const variations: PatternVariation[] = ['A', 'B'];
-
-          for (const bars of lengths) {
-            for (const variation of variations) {
-              const track = generateMidiTrack(ing.name, ing.loopGuide || '', bpm, bars, variation, recipe.title, sectionMidiNotes);
-              const write = new MidiWriter.Writer([track]);
-              const midiBytes = write.buildFile();
-
-              const fileName = `${safeTitle}_${ing.name.replace(/[^a-z0-9]/gi, '_')}_${bars}Bar_${variation}_${bpm}BPM.${extension}`;
-
-              const barFolder = subFolder?.folder(`${bars} Bar ${variation}`);
-              barFolder?.file(fileName, midiBytes);
-            }
-          }
-        }
-      }
-    }
-  }
-
-  // 2. Generate Drum MIDI files
+  // 1. Separate Full Song Drum MIDIs (Kick, Snare, HiHats, OpenHat, Percussion)
   if (recipe.drumPatterns) {
-    const sections = ['intro', 'verse', 'hook', 'bridge', 'outro'] as const;
-    const fullDrumsFolder = zip.folder('Drums/Full_Mix');
-    const kicksFolder = zip.folder('Drums/Kicks');
-    const hatsFolder = zip.folder('Drums/HiHats');
-    const openHatsFolder = zip.folder('Drums/OpenHats');
-    const snaresFolder = zip.folder('Drums/Snares_Claps');
-    const percsFolder = zip.folder('Drums/Percussion');
-    
-    for (const section of sections) {
-      const pattern = recipe.drumPatterns[section];
-      if (pattern) {
-        const sectionName = section.charAt(0).toUpperCase() + section.slice(1);
-        const subFolderFull = fullDrumsFolder?.folder(sectionName);
-        const subFolderKicks = kicksFolder?.folder(sectionName);
-        const subFolderHats = hatsFolder?.folder(sectionName);
-        const subFolderOpenHats = openHatsFolder?.folder(sectionName);
-        const subFolderSnares = snaresFolder?.folder(sectionName);
-        const subFolderPercs = percsFolder?.folder(sectionName);
-        
-        // Generate both humanized and non-humanized versions
-        
-        let maxStep = 0;
-        const getStepsPerBar = (isDT?: boolean) => isDT ? 32 : 16;
-        let naturalBars = 4;
-        const checkMaxBars = (part: any) => {
-          if (!part || !Array.isArray(part.steps)) return;
-          const stepsPerBar = getStepsPerBar(part.isDoubleTime);
-          part.steps.forEach((s: any) => {
-            const stepNum = typeof s === 'number' ? s : s.step;
-            const b = Math.ceil(stepNum / stepsPerBar);
-            if (b > naturalBars) naturalBars = b;
-          });
-        };
-        checkMaxBars(pattern.kick);
-        checkMaxBars(pattern.snare);
-        checkMaxBars(pattern.hiHat);
-        checkMaxBars(pattern.openHat);
-        checkMaxBars(pattern.perc);
-        const lengths: PatternLength[] = recipe.detectedSectionLengths?.[section] !== undefined
-          ? [recipe.detectedSectionLengths[section]!]
-          : ((naturalBars > 8 ? [naturalBars] : [4, 8]) as PatternLength[]);
+    const drumParts: { key: 'kick' | 'snare' | 'hiHat' | 'openHat' | 'perc'; name: string }[] = [
+      { key: 'kick', name: 'Kick' },
+      { key: 'snare', name: 'Snare' },
+      { key: 'hiHat', name: 'HiHats' },
+      { key: 'openHat', name: 'OpenHat' },
+      { key: 'perc', name: 'Percussion' }
+    ];
 
-        for (const humanized of [true, false]) {
-          for (const bars of lengths) {
-            const humanizedSuffix = humanized ? '_Humanized' : '';
-
-            // 1) Full Mix
-            const midiBytesFull = generateDrumMidiBaseData(pattern, recipe.title, section, bpm, humanized, bars, undefined, 'full');
-            if (midiBytesFull && midiBytesFull.length > 0) {
-              const fileName = `${safeTitle}_${section}_FullDrums${humanizedSuffix}_${bars}Bar_${bpm}BPM.${extension}`;
-              subFolderFull?.file(fileName, midiBytesFull);
-            }
-
-            // 2) Kicks Only
-            const midiBytesKick = generateDrumMidiBaseData(pattern, recipe.title, section, bpm, humanized, bars, undefined, 'kick');
-            if (midiBytesKick && midiBytesKick.length > 0) {
-              const fileName = `${safeTitle}_${section}_Kick${humanizedSuffix}_${bars}Bar_${bpm}BPM.${extension}`;
-              subFolderKicks?.file(fileName, midiBytesKick);
-            }
-
-            // 3) Hats Only
-            const midiBytesHat = generateDrumMidiBaseData(pattern, recipe.title, section, bpm, humanized, bars, undefined, 'hat');
-            if (midiBytesHat && midiBytesHat.length > 0) {
-              const fileName = `${safeTitle}_${section}_Hat${humanizedSuffix}_${bars}Bar_${bpm}BPM.${extension}`;
-              subFolderHats?.file(fileName, midiBytesHat);
-            }
-
-            // 4) Open Hats Only (if present)
-            if (pattern.openHat?.steps && pattern.openHat.steps.length > 0) {
-              const midiBytesOpenHat = generateDrumMidiBaseData(pattern, recipe.title, section, bpm, humanized, bars, undefined, 'openHat');
-              if (midiBytesOpenHat && midiBytesOpenHat.length > 0) {
-                const fileName = `${safeTitle}_${section}_OpenHat${humanizedSuffix}_${bars}Bar_${bpm}BPM.${extension}`;
-                subFolderOpenHats?.file(fileName, midiBytesOpenHat);
-              }
-            }
-
-            // 5) Snares / Claps Only
-            const midiBytesSnare = generateDrumMidiBaseData(pattern, recipe.title, section, bpm, humanized, bars, undefined, 'snare');
-            if (midiBytesSnare && midiBytesSnare.length > 0) {
-              const snareType = pattern.snare?.isClap ? 'Clap' : 'Snare';
-              const fileName = `${safeTitle}_${section}_${snareType}${humanizedSuffix}_${bars}Bar_${bpm}BPM.${extension}`;
-              subFolderSnares?.file(fileName, midiBytesSnare);
-            }
-
-            // 6) Percussion Only (if present)
-            if (pattern.perc?.steps && pattern.perc.steps.length > 0) {
-              const midiBytesPerc = generateDrumMidiBaseData(pattern, recipe.title, section, bpm, humanized, bars, undefined, 'perc');
-              if (midiBytesPerc && midiBytesPerc.length > 0) {
-                const fileName = `${safeTitle}_${section}_Perc${humanizedSuffix}_${bars}Bar_${bpm}BPM.${extension}`;
-                subFolderPercs?.file(fileName, midiBytesPerc);
-              }
-            }
-          }
-        }
+    for (const dp of drumParts) {
+      const drumBytes = generateFullSongDrumPartMidi(recipe.drumPatterns, dp.key, recipe.title, bpm, recipe.detectedSectionLengths);
+      if (drumBytes && drumBytes.length > 0) {
+        const trackNum = String(fileIndex++).padStart(2, '0');
+        zip.file(`${trackNum}_${safeTitle}_${dp.name}_FullSong.mid`, drumBytes);
       }
     }
   }
+
+  // 2. Full Song Melodic/Harmonic Instruments
+  const tracks = recipe.instruments || [];
+  tracks.forEach((ing) => {
+    if (isMidiCapable(ing.name, ing.loopGuide)) {
+      const track = generateFullSongMidiTrack(ing.name, bpm, recipe.title, ing.midiNotes, recipe.detectedSectionLengths, ing.loopGuide);
+      const write = new MidiWriter.Writer([track]);
+      const midiBytes = write.buildFile();
+      const safeInstName = ing.name.replace(/[^a-z0-9]/gi, '_');
+      const trackNum = String(fileIndex++).padStart(2, '0');
+      zip.file(`${trackNum}_${safeTitle}_${safeInstName}_FullSong.mid`, midiBytes);
+    }
+  });
+
+  // 3. Comprehensive Sound Design & Mixing Guide text file
+  let guideText = `========================================================================\n`;
+  guideText += ` BEATGANGSTA STUDIO ARRANGEMENT & MIXING GUIDE\n`;
+  guideText += `========================================================================\n\n`;
+  guideText += `Song Title: ${recipe.title}\n`;
+  guideText += `Style / Aesthetic: ${recipe.style}\n`;
+  guideText += `Tempo: ${bpm} BPM\n`;
+  if (recipe.detectedSectionLengths) {
+    guideText += `\nARRANGEMENT MAP (Section Bar Counts):\n`;
+    Object.entries(recipe.detectedSectionLengths).forEach(([sec, bars]) => {
+      guideText += ` - ${sec.toUpperCase()}: ${bars} bars\n`;
+    });
+  }
+  guideText += `\nDAW DRAG-AND-DROP INSTRUCTION:\n`;
+  guideText += `All included MIDI files span the ENTIRE duration of the song from Bar 1 (0:00:00) to the end.\n`;
+  guideText += `Simply drag all .mid files directly onto separate tracks in your DAW starting at Bar 1 Beat 1.\n`;
+  guideText += `All musical rests and section entrances/exits are already automated and locked into place!\n\n`;
+
+  guideText += `========================================================================\n`;
+  guideText += ` DRUM INSTRUMENTS & ENHANCEMENT FX (KICKS, SNARES, HATS, 808)\n`;
+  guideText += `========================================================================\n\n`;
+
+  if (recipe.drumKitAdvice) {
+    const drumAdviceList = [
+      { name: 'Kick Drum', advice: recipe.drumKitAdvice.kick, vObj: recipe.drumKitAdvice.kickVirtualInstrumentObj, vStr: recipe.drumKitAdvice.kickVirtualInstrument, fx: recipe.drumKitAdvice.kickFXPlugins },
+      { name: 'Snare Drum', advice: recipe.drumKitAdvice.snare, vObj: recipe.drumKitAdvice.snareVirtualInstrumentObj, vStr: recipe.drumKitAdvice.snareVirtualInstrument, fx: recipe.drumKitAdvice.snareFXPlugins },
+      { name: 'Hi-Hats', advice: recipe.drumKitAdvice.hiHat, vObj: recipe.drumKitAdvice.hiHatVirtualInstrumentObj, vStr: recipe.drumKitAdvice.hiHatVirtualInstrument, fx: recipe.drumKitAdvice.hiHatFXPlugins },
+      { name: 'Clap', advice: recipe.drumKitAdvice.clap, vObj: recipe.drumKitAdvice.clapVirtualInstrumentObj, vStr: recipe.drumKitAdvice.clapVirtualInstrument, fx: recipe.drumKitAdvice.clapFXPlugins },
+      { name: 'Sub Bass / 808', advice: recipe.drumKitAdvice.bass, vObj: recipe.drumKitAdvice.bassVirtualInstrumentObj, vStr: recipe.drumKitAdvice.bassVirtualInstrument, fx: recipe.drumKitAdvice.bassFXPlugins }
+    ];
+
+    drumAdviceList.forEach((item) => {
+      if (item.advice || item.vObj || item.vStr || (item.fx && item.fx.length > 0)) {
+        guideText += `------------------------------------------------------------------------\n`;
+        guideText += `DRUM STEM: ${item.name}\n`;
+        if (item.advice) {
+          guideText += `Tuning & Tone Character: ${item.advice}\n`;
+        }
+        if (item.vObj?.name || item.vStr) {
+          guideText += `Recommended VST/Sampler: ${item.vObj?.name || item.vStr}\n`;
+        }
+        if (item.vObj?.deepDive && item.vObj.deepDive.length > 0) {
+          guideText += `\nSound Design Settings:\n`;
+          item.vObj.deepDive.forEach(param => {
+            guideText += `  * ${param.parameter}: ${param.value} (${param.explanation || ''})\n`;
+          });
+        }
+        if (item.fx && item.fx.length > 0) {
+          guideText += `\nInsert FX Chain:\n`;
+          item.fx.forEach((fx, fIdx) => {
+            guideText += `  ${fIdx + 1}. ${fx.name} (${fx.purpose})\n`;
+            if (fx.deepDive && fx.deepDive.length > 0) {
+              fx.deepDive.forEach(p => {
+                guideText += `     - ${p.parameter}: ${p.value} (${p.explanation || ''})\n`;
+              });
+            } else if (fx.settings) {
+              guideText += `     - Settings: ${fx.settings}\n`;
+            }
+          });
+        }
+        guideText += `\n`;
+      }
+    });
+  }
+
+  guideText += `========================================================================\n`;
+  guideText += ` MELODIC & HARMONIC INSTRUMENTS & FX CHAINS\n`;
+  guideText += `========================================================================\n\n`;
+
+  tracks.forEach((track, idx) => {
+    const trackNum = String(idx + 1).padStart(2, '0');
+    const safeInst = track.name.replace(/[^a-z0-9]/gi, '_');
+    guideText += `------------------------------------------------------------------------\n`;
+    guideText += `TRACK ${trackNum}: ${track.name}\n`;
+    guideText += `MIDI File: ${safeInst}_FullSong.mid\n`;
+    guideText += `Musical Role: ${track.loopGuide || 'Main harmonic / melodic layer'}\n`;
+    if (track.plugin) {
+      guideText += `Recommended VST: ${track.plugin}\n`;
+    }
+    if (track.deepDive && track.deepDive.length > 0) {
+      guideText += `\nSound Design & Plugin Settings:\n`;
+      track.deepDive.forEach(param => {
+        guideText += `  * ${param.parameter}: ${param.value} (${param.explanation || ''})\n`;
+      });
+    }
+    if (track.fxPlugins && track.fxPlugins.length > 0) {
+      guideText += `\nInsert FX Chain:\n`;
+      track.fxPlugins.forEach((fx, fxIdx) => {
+        guideText += `  ${fxIdx + 1}. ${fx.name} (${fx.purpose})\n`;
+        if (fx.deepDive && fx.deepDive.length > 0) {
+          fx.deepDive.forEach(p => {
+            guideText += `     - ${p.parameter}: ${p.value}\n`;
+          });
+        }
+      });
+    }
+    guideText += `\n`;
+  });
+
+  if (recipe.masterPlugins && recipe.masterPlugins.length > 0) {
+    guideText += `========================================================================\n`;
+    guideText += ` MASTER BUS SIGNAL CHAIN\n`;
+    guideText += `========================================================================\n`;
+    recipe.masterPlugins.forEach((mp, mIdx) => {
+      guideText += `${mIdx + 1}. ${mp.name} (${mp.purpose})\n`;
+      if (mp.deepDive && mp.deepDive.length > 0) {
+        mp.deepDive.forEach(p => {
+          guideText += `   * ${p.parameter}: ${p.value}\n`;
+        });
+      }
+    });
+  }
+
+  zip.file(`INSTRUMENT_SOUND_DESIGN_AND_MIX_GUIDE.txt`, guideText);
 
   return await zip.generateAsync({ type: 'blob' });
 };

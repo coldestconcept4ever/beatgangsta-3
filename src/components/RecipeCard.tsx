@@ -1057,41 +1057,24 @@ export const RecipeCard: React.FC<RecipeCardProps> = ({ recipe: initialRecipe, i
               
               {isMidiCapable(track.name, track.loopGuide) && (
                 <div className="mb-4">
-                  <h5 className="text-[8px] font-black uppercase tracking-widest opacity-60 mb-2">{t('drag_midi')}</h5>
-                  <div className="flex flex-wrap gap-2">
-                    {recipe.detectedSectionLengths ? (
-                      Object.entries(recipe.detectedSectionLengths).map(([section, bars]) => {
-                        let hasNotes = false;
-                        if (Array.isArray(track.midiNotes)) {
-                          hasNotes = section === 'hook';
-                        } else if (track.midiNotes && typeof track.midiNotes === 'object') {
-                          hasNotes = !!(track.midiNotes as any)[section];
-                        }
-                        if (!hasNotes) return null;
-                        return (
-                          <MidiDraggableButton 
-                            key={section}
-                            instrument={track.name} 
-                            loopGuide={track.loopGuide || ''} 
-                            bpm={recipe.bpm} 
-                            bars={bars as any} 
-                            variation="A" 
-                            activeSection={section}
-                            recipeTitle={recipe.title} 
-                            theme={theme} 
-                            dawType={dawType} 
-                            midiNotes={track.midiNotes} 
-                          />
-                        );
-                      })
-                    ) : (
-                      <>
-                        <MidiDraggableButton instrument={track.name} loopGuide={track.loopGuide || ''} bpm={recipe.bpm} bars={4} variation="A" recipeTitle={recipe.title} theme={theme} dawType={dawType} midiNotes={track.midiNotes} />
-                        <MidiDraggableButton instrument={track.name} loopGuide={track.loopGuide || ''} bpm={recipe.bpm} bars={4} variation="B" recipeTitle={recipe.title} theme={theme} dawType={dawType} midiNotes={track.midiNotes} />
-                        <MidiDraggableButton instrument={track.name} loopGuide={track.loopGuide || ''} bpm={recipe.bpm} bars={8} variation="A" recipeTitle={recipe.title} theme={theme} dawType={dawType} midiNotes={track.midiNotes} />
-                        <MidiDraggableButton instrument={track.name} loopGuide={track.loopGuide || ''} bpm={recipe.bpm} bars={8} variation="B" recipeTitle={recipe.title} theme={theme} dawType={dawType} midiNotes={track.midiNotes} />
-                      </>
-                    )}
+                  <div className="flex items-center justify-between mb-2">
+                    <h5 className="text-[8px] font-black uppercase tracking-widest opacity-60">Full Song MIDI Stem (Drag to DAW Bar 1)</h5>
+                  </div>
+                  <div className="flex flex-col gap-2">
+                    {/* Primary Hero Action: Single continuous full-song MIDI */}
+                    <div>
+                      <MidiDraggableButton 
+                        instrument={track.name} 
+                        loopGuide={track.loopGuide || ''} 
+                        bpm={recipe.bpm} 
+                        recipeTitle={recipe.title} 
+                        theme={theme} 
+                        dawType={dawType} 
+                        isFullSong={true}
+                        detectedSectionLengths={recipe.detectedSectionLengths}
+                        midiNotes={track.midiNotes} 
+                      />
+                    </div>
                   </div>
                 </div>
               )}
@@ -1468,7 +1451,22 @@ export const RecipeCard: React.FC<RecipeCardProps> = ({ recipe: initialRecipe, i
           }`}>
             {/* KICK DRUM */}
             <div className="space-y-3 p-4 rounded-3xl bg-black/30 border border-orange-500/10">
-              <h5 className={`font-black text-lg ${theme === 'coldest' ? 'text-orange-300' : 'text-orange-600 dark:text-orange-400'}`}>{t('kick')}</h5>
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                <h5 className={`font-black text-lg ${theme === 'coldest' ? 'text-orange-300' : 'text-orange-600 dark:text-orange-400'}`}>{t('kick')}</h5>
+                {recipe.drumPatterns && (
+                  <MidiDraggableButton
+                    instrument="Kick"
+                    bpm={recipe.bpm}
+                    recipeTitle={recipe.title}
+                    theme={theme}
+                    dawType={dawType}
+                    isFullSong={true}
+                    drumPart="kick"
+                    drumPatterns={recipe.drumPatterns}
+                    detectedSectionLengths={recipe.detectedSectionLengths}
+                  />
+                )}
+              </div>
               
               {/* Muffling/Physical */}
               {drumKits?.length > 0 && recipe.drumKitAdvice.kick && (
@@ -1532,7 +1530,22 @@ export const RecipeCard: React.FC<RecipeCardProps> = ({ recipe: initialRecipe, i
 
             {/* SNARE DRUM */}
             <div className="space-y-3 p-4 rounded-3xl bg-black/30 border border-orange-500/10">
-              <h5 className={`font-black text-lg ${theme === 'coldest' ? 'text-orange-300' : 'text-orange-600 dark:text-orange-400'}`}>{t('snare')}</h5>
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                <h5 className={`font-black text-lg ${theme === 'coldest' ? 'text-orange-300' : 'text-orange-600 dark:text-orange-400'}`}>{t('snare')}</h5>
+                {recipe.drumPatterns && (
+                  <MidiDraggableButton
+                    instrument="Snare"
+                    bpm={recipe.bpm}
+                    recipeTitle={recipe.title}
+                    theme={theme}
+                    dawType={dawType}
+                    isFullSong={true}
+                    drumPart="snare"
+                    drumPatterns={recipe.drumPatterns}
+                    detectedSectionLengths={recipe.detectedSectionLengths}
+                  />
+                )}
+              </div>
               
               {/* Muffling/Physical */}
               {drumKits?.length > 0 && recipe.drumKitAdvice.snare && (
@@ -1596,7 +1609,22 @@ export const RecipeCard: React.FC<RecipeCardProps> = ({ recipe: initialRecipe, i
 
             {/* HI-HATS */}
             <div className="space-y-3 p-4 rounded-3xl bg-black/30 border border-orange-500/10">
-              <h5 className={`font-black text-lg ${theme === 'coldest' ? 'text-orange-300' : 'text-orange-600 dark:text-orange-400'}`}>{t('hiHat', 'Hi-Hats')}</h5>
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                <h5 className={`font-black text-lg ${theme === 'coldest' ? 'text-orange-300' : 'text-orange-600 dark:text-orange-400'}`}>{t('hiHat', 'Hi-Hats')}</h5>
+                {recipe.drumPatterns && (
+                  <MidiDraggableButton
+                    instrument="Hi-Hats"
+                    bpm={recipe.bpm}
+                    recipeTitle={recipe.title}
+                    theme={theme}
+                    dawType={dawType}
+                    isFullSong={true}
+                    drumPart="hiHat"
+                    drumPatterns={recipe.drumPatterns}
+                    detectedSectionLengths={recipe.detectedSectionLengths}
+                  />
+                )}
+              </div>
               
               {/* Muffling/Physical */}
               {recipe.drumKitAdvice.hiHat && (
@@ -1669,7 +1697,22 @@ export const RecipeCard: React.FC<RecipeCardProps> = ({ recipe: initialRecipe, i
             {/* CLAPS & PERCUSSION */}
             {(recipe.drumKitAdvice.clap || recipe.drumKitAdvice.clapVirtualInstrument || recipe.drumKitAdvice.clapVirtualInstrumentObj || (recipe.drumKitAdvice.clapFXPlugins && recipe.drumKitAdvice.clapFXPlugins.length > 0)) && (
               <div className="space-y-3 p-4 rounded-3xl bg-black/30 border border-orange-500/10">
-                <h5 className={`font-black text-lg ${theme === 'coldest' ? 'text-orange-300' : 'text-orange-600 dark:text-orange-400'}`}>{t('clap', 'Claps & Percussion')}</h5>
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                  <h5 className={`font-black text-lg ${theme === 'coldest' ? 'text-orange-300' : 'text-orange-600 dark:text-orange-400'}`}>{t('clap', 'Claps & Percussion')}</h5>
+                  {recipe.drumPatterns && (
+                    <MidiDraggableButton
+                      instrument="Clap"
+                      bpm={recipe.bpm}
+                      recipeTitle={recipe.title}
+                      theme={theme}
+                      dawType={dawType}
+                      isFullSong={true}
+                      drumPart="clap"
+                      drumPatterns={recipe.drumPatterns}
+                      detectedSectionLengths={recipe.detectedSectionLengths}
+                    />
+                  )}
+                </div>
                 
                 {/* Acoustic / Style Advice */}
                 {recipe.drumKitAdvice.clap && (
@@ -1735,7 +1778,27 @@ export const RecipeCard: React.FC<RecipeCardProps> = ({ recipe: initialRecipe, i
             {/* BASS / 808 */}
             {(recipe.drumKitAdvice.bass || recipe.drumKitAdvice.bassVirtualInstrument || recipe.drumKitAdvice.bassVirtualInstrumentObj || (recipe.drumKitAdvice.bassFXPlugins && recipe.drumKitAdvice.bassFXPlugins.length > 0)) && (
               <div className="space-y-3 p-4 rounded-3xl bg-black/30 border border-orange-500/10">
-                <h5 className={`font-black text-lg ${theme === 'coldest' ? 'text-orange-300' : 'text-orange-600 dark:text-orange-400'}`}>{t('bass', 'Bass & Sub/808')}</h5>
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                  <h5 className={`font-black text-lg ${theme === 'coldest' ? 'text-orange-300' : 'text-orange-600 dark:text-orange-400'}`}>{t('bass', 'Bass & Sub/808')}</h5>
+                  {(() => {
+                    const bassTrack = recipe.instruments?.find(i => i.name.toLowerCase().includes('bass') || i.name.toLowerCase().includes('808') || i.name.toLowerCase().includes('sub'));
+                    if (bassTrack) {
+                      return (
+                        <MidiDraggableButton
+                          instrument={bassTrack.name}
+                          bpm={recipe.bpm}
+                          recipeTitle={recipe.title}
+                          theme={theme}
+                          dawType={dawType}
+                          isFullSong={true}
+                          detectedSectionLengths={recipe.detectedSectionLengths}
+                          midiNotes={bassTrack.midiNotes}
+                        />
+                      );
+                    }
+                    return null;
+                  })()}
+                </div>
                 
                 {/* Acoustic / Style Advice */}
                 {recipe.drumKitAdvice.bass && (

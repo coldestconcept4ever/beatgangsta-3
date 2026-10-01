@@ -1,22 +1,32 @@
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Music, Play, Square } from 'lucide-react';
+import { Music, Play, Square, Sparkles } from 'lucide-react';
 import MidiWriter from 'midi-writer-js';
-import { generateMidiTrack, PatternLength, PatternVariation, generateAudioLoop } from '../utils/midiGenerator';
-import { AppTheme, MidiNote } from '../types';
+import { generateMidiTrack, generateFullSongMidiTrack, generateFullSongDrumPartMidi, PatternLength, PatternVariation, generateAudioLoop } from '../utils/midiGenerator';
+import { AppTheme, MidiNote, DrumPattern } from '../types';
 import { playMidiPreview, stopMidiPreview, initAudio, resumeAudio } from '../utils/midiPlayer';
 import { ErrorModal } from './ErrorModal';
 
 interface MidiDraggableButtonProps {
   instrument: string;
-  loopGuide: string;
+  loopGuide?: string;
   bpm: number;
-  bars: PatternLength;
-  variation: PatternVariation;
+  bars?: PatternLength;
+  variation?: PatternVariation;
   recipeTitle: string;
   theme: AppTheme;
   dawType?: string | null;
   activeSection?: string;
+  isFullSong?: boolean;
+  drumPart?: 'kick' | 'snare' | 'hiHat' | 'openHat' | 'perc' | 'clap' | 'cymbal';
+  drumPatterns?: {
+    intro?: DrumPattern;
+    verse?: DrumPattern;
+    hook?: DrumPattern;
+    bridge?: DrumPattern;
+    outro?: DrumPattern;
+  };
+  detectedSectionLengths?: Record<string, number>;
   midiNotes?: {
     intro?: MidiNote[];
     verse?: MidiNote[];
@@ -28,14 +38,18 @@ interface MidiDraggableButtonProps {
 
 export const MidiDraggableButton: React.FC<MidiDraggableButtonProps> = ({
   instrument,
-  loopGuide,
+  loopGuide = '',
   bpm,
-  bars,
-  variation,
+  bars = 4,
+  variation = 'A',
   recipeTitle,
   theme,
   dawType,
   activeSection = 'hook',
+  isFullSong = false,
+  drumPart,
+  drumPatterns,
+  detectedSectionLengths,
   midiNotes
 }) => {
   const { t } = useTranslation();
@@ -48,29 +62,48 @@ export const MidiDraggableButton: React.FC<MidiDraggableButtonProps> = ({
     stack: ''
   });
 
+  const totalBars = detectedSectionLengths 
+    ? Object.values(detectedSectionLengths).reduce((acc, b) => acc + (b || 0), 0) 
+    : 48;
+
   const prepareMidiData = async () => {
     try {
-      let sectionMidiNotes: MidiNote[] | undefined = undefined;
-      if (Array.isArray(midiNotes)) {
-        sectionMidiNotes = midiNotes;
-      } else if (midiNotes) {
-        sectionMidiNotes = (midiNotes as any)[activeSection] || midiNotes.hook || midiNotes.verse || [];
+      if (drumPart && drumPatterns) {
+        const midiBytes = generateFullSongDrumPartMidi(drumPatterns, drumPart, recipeTitle, bpm, detectedSectionLengths);
+        const fileName = `${recipeTitle.replace(/\s+/g, '_')}_${drumPart.toUpperCase()}_FullSong_${bpm}BPM.mid`;
+        const blob = new Blob([midiBytes], { type: 'audio/midi' });
+        const downloadUrl = URL.createObjectURL(blob);
+        const mimeType = 'audio/midi';
+        const newData = { url: downloadUrl, fileName, mimeType, midiBytes };
+        setPreparedData(newData);
+        return newData;
       }
 
-      const track = generateMidiTrack(instrument, loopGuide, bpm, bars, variation, recipeTitle, sectionMidiNotes);
+      let track: MidiWriter.Track;
+      let fileName: string;
+
+      if (isFullSong) {
+        track = generateFullSongMidiTrack(instrument, bpm, recipeTitle, midiNotes, detectedSectionLengths, loopGuide);
+        fileName = `${recipeTitle.replace(/\s+/g, '_')}_${instrument.replace(/\s+/g, '_')}_FullSong_${bpm}BPM.mid`;
+      } else {
+        let sectionMidiNotes: MidiNote[] | undefined = undefined;
+        if (Array.isArray(midiNotes)) {
+          sectionMidiNotes = midiNotes;
+        } else if (midiNotes) {
+          sectionMidiNotes = (midiNotes as any)[activeSection] || midiNotes.hook || midiNotes.verse || [];
+        }
+
+        track = generateMidiTrack(instrument, loopGuide, bpm, bars, variation, recipeTitle, sectionMidiNotes);
+        const sectionSuffix = activeSection ? `${activeSection.charAt(0).toUpperCase() + activeSection.slice(1)}_` : '';
+        fileName = `${recipeTitle.replace(/\s+/g, '_')}_${instrument.replace(/\s+/g, '_')}_${sectionSuffix}${bars}Bar_${variation}_${bpm}BPM.mid`;
+      }
+
       const write = new MidiWriter.Writer([track]);
       const midiBytes = write.buildFile();
       
-      const extension = 'mid';
-      const sectionSuffix = activeSection ? `${activeSection.charAt(0).toUpperCase() + activeSection.slice(1)}_` : '';
-      const fileName = `${recipeTitle.replace(/\s+/g, '_')}_${instrument.replace(/\s+/g, '_')}_${sectionSuffix}${bars}Bar_${variation}_${bpm}BPM.${extension}`;
-      
-      let downloadUrl: string;
-      let mimeType: string;
-      
       const blob = new Blob([midiBytes], { type: 'audio/midi' });
-      downloadUrl = URL.createObjectURL(blob);
-      mimeType = 'audio/midi';
+      const downloadUrl = URL.createObjectURL(blob);
+      const mimeType = 'audio/midi';
 
       const newData = { url: downloadUrl, fileName, mimeType, midiBytes };
       setPreparedData(newData);
@@ -162,10 +195,12 @@ export const MidiDraggableButton: React.FC<MidiDraggableButtonProps> = ({
   return (
     <>
       <div className={`flex items-center rounded-full overflow-hidden transition-all hover:scale-105 active:scale-95 shadow-lg border ${
-        theme === 'coldest' ? 'bg-sky-500 border-sky-400 text-white' : 
-        theme === 'crazy-bird' ? 'bg-red-600 border-red-500 text-white' :
-        theme === 'hustle-time' ? 'bg-emerald-600 border-emerald-500 text-white' :
-        'bg-orange-500 border-orange-400 text-white'
+        isFullSong
+          ? (theme === 'coldest' ? 'bg-gradient-to-r from-sky-500 to-indigo-600 border-sky-300 text-white ring-2 ring-sky-400/40' : 'bg-gradient-to-r from-amber-500 to-orange-600 border-amber-300 text-white ring-2 ring-amber-400/40')
+          : (theme === 'coldest' ? 'bg-sky-500 border-sky-400 text-white' : 
+             theme === 'crazy-bird' ? 'bg-red-600 border-red-500 text-white' :
+             theme === 'hustle-time' ? 'bg-emerald-600 border-emerald-500 text-white' :
+             'bg-orange-500 border-orange-400 text-white')
       }`}>
       <button
         onClick={handlePlay}
@@ -180,11 +215,11 @@ export const MidiDraggableButton: React.FC<MidiDraggableButtonProps> = ({
         onMouseEnter={prepareMidiData}
         draggable={!!preparedData}
         onDragStart={handleDragStart}
-        className="flex items-center gap-1.5 px-4 sm:px-3 py-2 sm:py-1 hover:bg-black/10 transition-colors cursor-grab active:cursor-grabbing text-[10px] font-black uppercase tracking-widest"
-        title={t('download_midi_title', { bars, variation, instrument })}
+        className={`flex items-center gap-1.5 px-4 sm:px-3 py-2 sm:py-1 hover:bg-black/10 transition-colors cursor-grab active:cursor-grabbing text-[10px] font-black uppercase tracking-widest ${isFullSong ? 'py-2.5 px-5 text-xs' : ''}`}
+        title={isFullSong ? `Drag or Download Full Song MIDI for ${instrument} (${totalBars} Bars)` : t('download_midi_title', { bars, variation, instrument })}
       >
-        <Music className="w-3 h-3" />
-        <span>{activeSection ? `${activeSection.toUpperCase()} (${bars}B)` : `${bars} ${t('bar_label')} ${variation}`}</span>
+        {isFullSong ? <Sparkles className="w-3.5 h-3.5 animate-pulse" /> : <Music className="w-3 h-3" />}
+        <span>{isFullSong ? (drumPart ? `⚡ FULL SONG ${drumPart.toUpperCase()} MIDI` : `⚡ FULL SONG MIDI (${totalBars} BARS)`) : (activeSection ? `${activeSection.toUpperCase()} (${bars}B)` : `${bars} ${t('bar_label')} ${variation}`)}</span>
       </button>
     </div>
       <ErrorModal

@@ -23,7 +23,7 @@ export const generateDrumMidiBaseData = (
     skakaHumanizeAmount?: number;
     flShiftAmount?: number;
   },
-  drumsOnlyType?: 'full' | 'kick' | 'snare' | 'hat' | 'openHat' | 'perc'
+  drumsOnlyType?: 'full' | 'kick' | 'snare' | 'hat'
 ): Uint8Array => {
   if (!currentPattern) return new Uint8Array();
   
@@ -38,14 +38,6 @@ export const generateDrumMidiBaseData = (
   const hatTrack = new MidiWriter.Track();
   hatTrack.addTrackName(`${recipeTitle} - ${activeSection} HiHat`);
   hatTrack.setTempo(bpm);
-
-  const openHatTrack = new MidiWriter.Track();
-  openHatTrack.addTrackName(`${recipeTitle} - ${activeSection} OpenHat`);
-  openHatTrack.setTempo(bpm);
-
-  const percTrack = new MidiWriter.Track();
-  percTrack.addTrackName(`${recipeTitle} - ${activeSection} Perc`);
-  percTrack.setTempo(bpm);
 
   const getNormalizedSwing = (val: any) => {
     if (typeof val !== 'number') return 0;
@@ -244,7 +236,7 @@ export const generateDrumMidiBaseData = (
     }
   };
 
-  // General MIDI Drum Map: Kick = 36 (C1), Snare = 38 (D1), Clap = 39 (D#1), Hi-Hat = 42 (F#1), Open Hat = 46 (A#1), Perc = 37 (C#1)
+  // General MIDI Drum Map: Kick = 36 (C1), Snare = 38 (D1), Clap = 39 (D#1), Hi-Hat = 42 (F#1)
   let tracksToInclude: MidiWriter.Track[] = [];
   if (drumsOnlyType === 'kick') {
     addDrumEvents(kickTrack, currentPattern.kick?.steps || [], 'C1', currentPattern.kick?.isDoubleTime || false, currentPattern.swing?.kick);
@@ -256,30 +248,12 @@ export const generateDrumMidiBaseData = (
   } else if (drumsOnlyType === 'hat') {
     addDrumEvents(hatTrack, currentPattern.hiHat?.steps || [], 'F#1', currentPattern.hiHat?.isDoubleTime || false, currentPattern.swing?.hiHat);
     tracksToInclude.push(hatTrack);
-  } else if (drumsOnlyType === 'openHat') {
-    addDrumEvents(openHatTrack, currentPattern.openHat?.steps || [], 'A#1', false, 0);
-    tracksToInclude.push(openHatTrack);
-  } else if (drumsOnlyType === 'perc') {
-    addDrumEvents(percTrack, currentPattern.perc?.steps || [], 'C#1', false, 0);
-    tracksToInclude.push(percTrack);
   } else {
     addDrumEvents(kickTrack, currentPattern.kick?.steps || [], 'C1', currentPattern.kick?.isDoubleTime || false, currentPattern.swing?.kick);
     const snareNote = currentPattern.snare?.isClap ? 'D#1' : 'D1';
     addDrumEvents(snareTrack, currentPattern.snare?.steps || [], snareNote, currentPattern.snare?.isDoubleTime || false, currentPattern.swing?.snare);
     addDrumEvents(hatTrack, currentPattern.hiHat?.steps || [], 'F#1', currentPattern.hiHat?.isDoubleTime || false, currentPattern.swing?.hiHat);
-    if (currentPattern.openHat?.steps && currentPattern.openHat.steps.length > 0) {
-      addDrumEvents(openHatTrack, currentPattern.openHat.steps, 'A#1', false, 0);
-      tracksToInclude.push(openHatTrack);
-    }
-    if (currentPattern.perc?.steps && currentPattern.perc.steps.length > 0) {
-      addDrumEvents(percTrack, currentPattern.perc.steps, 'C#1', false, 0);
-      tracksToInclude.push(percTrack);
-    }
-    if (tracksToInclude.length === 0) {
-      tracksToInclude = [kickTrack, snareTrack, hatTrack];
-    } else {
-      tracksToInclude = [kickTrack, snareTrack, hatTrack, ...(currentPattern.openHat?.steps?.length ? [openHatTrack] : []), ...(currentPattern.perc?.steps?.length ? [percTrack] : [])];
-    }
+    tracksToInclude = [kickTrack, snareTrack, hatTrack];
   }
 
   const write = new MidiWriter.Writer(tracksToInclude);
@@ -719,4 +693,405 @@ export const generateMidiTrack = (
 
     track.addEvent(events);
     return track;
+};
+
+export const generateFullSongMidiTrack = (
+  instrument: string,
+  bpm: number,
+  recipeTitle: string,
+  midiNotes?: {
+    intro?: MidiNote[];
+    verse?: MidiNote[];
+    hook?: MidiNote[];
+    bridge?: MidiNote[];
+    outro?: MidiNote[];
+  } | MidiNote[],
+  detectedSectionLengths?: Record<string, number>,
+  loopGuide?: string
+): MidiWriter.Track => {
+  const track = new MidiWriter.Track();
+  track.addTrackName(`${instrument} (Full Song)`);
+  track.setTempo(bpm);
+
+  const sections = ['intro', 'verse', 'hook', 'bridge', 'outro'] as const;
+  const sectionLengths: Record<string, number> = {
+    intro: detectedSectionLengths?.intro || 8,
+    verse: detectedSectionLengths?.verse || 16,
+    hook: detectedSectionLengths?.hook || 8,
+    bridge: detectedSectionLengths?.bridge || 8,
+    outro: detectedSectionLengths?.outro || 8,
+  };
+
+  const text = (instrument + ' ' + (loopGuide || '')).toLowerCase();
+  const isDrums = text.includes('drum') || text.includes('perc') || text.includes('kick') || text.includes('snare') || text.includes('hat') || text.includes('clap');
+
+  let currentTimelineBeat = 0;
+  let previousStretchedTicks = 0;
+  const customEvents: MidiWriter.NoteEvent[] = [];
+
+  for (const section of sections) {
+    const bars = sectionLengths[section] || 8;
+    const sectionStartBeat = currentTimelineBeat;
+    const sectionDurationBeats = bars * 4;
+    const sectionEndBeat = sectionStartBeat + sectionDurationBeats;
+
+    let sectionNotes: MidiNote[] | undefined;
+    if (Array.isArray(midiNotes)) {
+      if (section === 'hook' || section === 'verse') {
+        sectionNotes = midiNotes;
+      }
+    } else if (midiNotes && typeof midiNotes === 'object') {
+      sectionNotes = (midiNotes as any)[section];
+      if (!sectionNotes && (section === 'hook' || section === 'verse')) {
+        sectionNotes = (midiNotes as any).hook || (midiNotes as any).verse;
+      }
+    }
+
+    if (sectionNotes && sectionNotes.length > 0) {
+      let origBeats = 0;
+      for (const n of sectionNotes) {
+        origBeats += getBeats(n.wait) + getBeats(n.duration);
+      }
+      if (origBeats <= 0) origBeats = 4;
+
+      let placedBeats = 0;
+      while (placedBeats < sectionDurationBeats) {
+        const loopStartBeat = sectionStartBeat + placedBeats;
+        let cumulativeNoteBeats = 0;
+
+        for (const note of sectionNotes) {
+          const nWait = getBeats(note.wait);
+          const nDur = getBeats(note.duration);
+          const noteStartBeat = loopStartBeat + cumulativeNoteBeats + nWait;
+          const noteEndBeat = noteStartBeat + nDur;
+          cumulativeNoteBeats += nWait + nDur;
+
+          if (noteStartBeat >= sectionEndBeat) break;
+
+          const startTick = Math.round(noteStartBeat * 128);
+          const endTick = Math.round(Math.min(noteEndBeat, sectionEndBeat) * 128);
+          const waitTicks = Math.max(0, startTick - previousStretchedTicks);
+          const durationTicks = Math.max(1, endTick - startTick);
+
+          previousStretchedTicks = startTick + durationTicks;
+
+          let pitches = Array.isArray(note.pitch) ? note.pitch : String(note.pitch).split(',').map(p => p.trim());
+          const transposedPitches = pitches.map(p => isDrums ? p : transposePitch(p, 0));
+          const velocity = Math.min(127, Math.max(1, note.velocity || 100));
+
+          customEvents.push(new MidiWriter.NoteEvent({
+            pitch: transposedPitches,
+            duration: `T${durationTicks}`,
+            wait: `T${waitTicks}`,
+            velocity: velocity
+          }));
+        }
+
+        placedBeats += origBeats;
+      }
+    }
+
+    currentTimelineBeat = sectionEndBeat;
+  }
+
+  const totalSongTicks = Math.round(currentTimelineBeat * 128);
+  if (previousStretchedTicks < totalSongTicks) {
+    const trailingWait = totalSongTicks - previousStretchedTicks;
+    customEvents.push(new MidiWriter.NoteEvent({
+      pitch: ['C1'],
+      duration: 'T1',
+      wait: `T${trailingWait}`,
+      velocity: 0
+    }));
+  }
+
+  if (customEvents.length > 0) {
+    track.addEvent(customEvents);
+  }
+
+  return track;
+};
+
+export const generateFullSongDrumMidi = (
+  drumPatterns: {
+    intro?: DrumPattern;
+    verse?: DrumPattern;
+    hook?: DrumPattern;
+    bridge?: DrumPattern;
+    outro?: DrumPattern;
+  },
+  recipeTitle: string,
+  bpm: number,
+  detectedSectionLengths?: Record<string, number>
+): Uint8Array => {
+  if (!drumPatterns) return new Uint8Array();
+
+  const sections = ['intro', 'verse', 'hook', 'bridge', 'outro'] as const;
+  const sectionLengths: Record<string, number> = {
+    intro: detectedSectionLengths?.intro || 8,
+    verse: detectedSectionLengths?.verse || 16,
+    hook: detectedSectionLengths?.hook || 8,
+    bridge: detectedSectionLengths?.bridge || 8,
+    outro: detectedSectionLengths?.outro || 8,
+  };
+
+  const track = new MidiWriter.Track();
+  track.addTrackName(`${recipeTitle} - Full Drums Arrangement`);
+  track.setTempo(bpm);
+
+  let currentTimelineBeat = 0;
+  let previousStretchedTicks = 0;
+  const customEvents: MidiWriter.NoteEvent[] = [];
+
+  for (const section of sections) {
+    const pattern = (drumPatterns as any)[section];
+    const bars = sectionLengths[section] || 8;
+    const sectionStartBeat = currentTimelineBeat;
+    const sectionDurationBeats = bars * 4;
+
+    if (pattern) {
+      const drumParts = [
+        { part: pattern.kick, pitch: 'C1', isDT: pattern.kick?.isDoubleTime },
+        { part: pattern.snare, pitch: pattern.snare?.isClap ? 'D#1' : 'D1', isDT: pattern.snare?.isDoubleTime },
+        { part: pattern.hiHat, pitch: 'F#1', isDT: pattern.hiHat?.isDoubleTime },
+        { part: pattern.openHat, pitch: 'A#1', isDT: false },
+        { part: pattern.perc, pitch: 'G#1', isDT: false },
+        { part: pattern.cymbal, pitch: 'C#2', isDT: false },
+      ];
+
+      interface DrumNoteHit {
+        beat: number;
+        pitch: string;
+        velocity: number;
+      }
+      const sectionHits: DrumNoteHit[] = [];
+
+      for (const { part, pitch, isDT } of drumParts) {
+        if (!part || !Array.isArray(part.steps) || part.steps.length === 0) continue;
+        const stepsPerBar = isDT ? 32 : 16;
+        const beatsPerStep = isDT ? 0.125 : 0.25;
+
+        let maxStepInPart = 16;
+        part.steps.forEach((s: any) => {
+          const stepNum = typeof s === 'number' ? s : s.step;
+          if (stepNum > maxStepInPart) maxStepInPart = stepNum;
+        });
+        const patternBars = Math.max(4, Math.ceil(maxStepInPart / stepsPerBar));
+        const patternDurationBeats = patternBars * 4;
+
+        let placedBeats = 0;
+        while (placedBeats < sectionDurationBeats) {
+          part.steps.forEach((s: any) => {
+            const stepNum = typeof s === 'number' ? s : s.step;
+            let velocity = 100;
+            if (typeof s === 'object' && s.velocity !== undefined) {
+              velocity = s.velocity;
+            } else if (pattern.velocityHumanized) {
+              velocity = Math.floor(75 + (Math.sin(stepNum * 12.5) * 15));
+            }
+            const hitBeat = sectionStartBeat + placedBeats + ((stepNum - 1) * beatsPerStep);
+            if (hitBeat < sectionStartBeat + sectionDurationBeats) {
+              sectionHits.push({ beat: hitBeat, pitch, velocity });
+            }
+          });
+          placedBeats += patternDurationBeats;
+        }
+      }
+
+      sectionHits.sort((a, b) => a.beat - b.beat);
+
+      const groupedHits: { beat: number; pitches: string[]; velocity: number }[] = [];
+      for (const hit of sectionHits) {
+        const lastGroup = groupedHits[groupedHits.length - 1];
+        if (lastGroup && Math.abs(lastGroup.beat - hit.beat) < 0.001) {
+          if (!lastGroup.pitches.includes(hit.pitch)) {
+            lastGroup.pitches.push(hit.pitch);
+          }
+        } else {
+          groupedHits.push({ beat: hit.beat, pitches: [hit.pitch], velocity: hit.velocity });
+        }
+      }
+
+      for (const group of groupedHits) {
+        const startTick = Math.round(group.beat * 128);
+        const waitTicks = Math.max(0, startTick - previousStretchedTicks);
+        const durationTicks = 16;
+        previousStretchedTicks = startTick + durationTicks;
+
+        customEvents.push(new MidiWriter.NoteEvent({
+          pitch: group.pitches,
+          duration: `T${durationTicks}`,
+          wait: `T${waitTicks}`,
+          velocity: group.velocity
+        }));
+      }
+    }
+
+    currentTimelineBeat = sectionStartBeat + sectionDurationBeats;
+  }
+
+  const totalSongTicks = Math.round(currentTimelineBeat * 128);
+  if (previousStretchedTicks < totalSongTicks) {
+    const trailingWait = totalSongTicks - previousStretchedTicks;
+    customEvents.push(new MidiWriter.NoteEvent({
+      pitch: ['C1'],
+      duration: 'T1',
+      wait: `T${trailingWait}`,
+      velocity: 0
+    }));
+  }
+
+  if (customEvents.length > 0) {
+    track.addEvent(customEvents);
+  }
+
+  const write = new MidiWriter.Writer([track]);
+  return write.buildFile();
+};
+
+export const generateFullSongDrumPartMidi = (
+  drumPatterns: {
+    intro?: DrumPattern;
+    verse?: DrumPattern;
+    hook?: DrumPattern;
+    bridge?: DrumPattern;
+    outro?: DrumPattern;
+  },
+  partType: 'kick' | 'snare' | 'hiHat' | 'openHat' | 'perc' | 'clap' | 'cymbal',
+  recipeTitle: string,
+  bpm: number,
+  detectedSectionLengths?: Record<string, number>
+): Uint8Array => {
+  if (!drumPatterns) return new Uint8Array();
+
+  const sections = ['intro', 'verse', 'hook', 'bridge', 'outro'] as const;
+  const sectionLengths: Record<string, number> = {
+    intro: detectedSectionLengths?.intro || 8,
+    verse: detectedSectionLengths?.verse || 16,
+    hook: detectedSectionLengths?.hook || 8,
+    bridge: detectedSectionLengths?.bridge || 8,
+    outro: detectedSectionLengths?.outro || 8,
+  };
+
+  const partNameMap: Record<string, string> = {
+    kick: 'Kick',
+    snare: 'Snare',
+    clap: 'Clap',
+    hiHat: 'Hi-Hats',
+    openHat: 'Open Hat',
+    perc: 'Percussion',
+    cymbal: 'Cymbal'
+  };
+
+  const pitchMap: Record<string, string> = {
+    kick: 'C1',
+    snare: 'D1',
+    clap: 'D#1',
+    hiHat: 'F#1',
+    openHat: 'A#1',
+    perc: 'G#1',
+    cymbal: 'C#2'
+  };
+
+  const track = new MidiWriter.Track();
+  track.addTrackName(`${recipeTitle} - ${partNameMap[partType] || partType} (Full Song)`);
+  track.setTempo(bpm);
+
+  let currentTimelineBeat = 0;
+  let previousStretchedTicks = 0;
+  const customEvents: MidiWriter.NoteEvent[] = [];
+
+  for (const section of sections) {
+    const pattern = (drumPatterns as any)[section];
+    const bars = sectionLengths[section] || 8;
+    const sectionStartBeat = currentTimelineBeat;
+    const sectionDurationBeats = bars * 4;
+
+    if (pattern) {
+      let part: any = undefined;
+      let isDT = false;
+      const pitch = pitchMap[partType] || 'C1';
+
+      if (partType === 'kick') {
+        part = pattern.kick;
+        isDT = !!pattern.kick?.isDoubleTime;
+      } else if (partType === 'snare') {
+        part = pattern.snare;
+        isDT = !!pattern.snare?.isDoubleTime;
+      } else if (partType === 'clap') {
+        part = pattern.snare?.isClap ? pattern.snare : pattern.perc;
+        isDT = false;
+      } else if (partType === 'hiHat') {
+        part = pattern.hiHat;
+        isDT = !!pattern.hiHat?.isDoubleTime;
+      } else if (partType === 'openHat') {
+        part = pattern.openHat;
+      } else if (partType === 'perc') {
+        part = pattern.perc;
+      } else if (partType === 'cymbal') {
+        part = pattern.cymbal;
+      }
+
+      if (part && Array.isArray(part.steps) && part.steps.length > 0) {
+        const stepsPerBar = isDT ? 32 : 16;
+        const beatsPerStep = isDT ? 0.125 : 0.25;
+
+        let maxStepInPart = 16;
+        part.steps.forEach((s: any) => {
+          const stepNum = typeof s === 'number' ? s : s.step;
+          if (stepNum > maxStepInPart) maxStepInPart = stepNum;
+        });
+        const patternBars = Math.max(4, Math.ceil(maxStepInPart / stepsPerBar));
+        const patternDurationBeats = patternBars * 4;
+
+        let placedBeats = 0;
+        while (placedBeats < sectionDurationBeats) {
+          part.steps.forEach((s: any) => {
+            const stepNum = typeof s === 'number' ? s : s.step;
+            let velocity = 100;
+            if (typeof s === 'object' && s.velocity !== undefined) {
+              velocity = s.velocity;
+            } else if (pattern.velocityHumanized) {
+              velocity = Math.floor(80 + (Math.sin(stepNum * 12.5) * 15));
+            }
+            const hitBeat = sectionStartBeat + placedBeats + ((stepNum - 1) * beatsPerStep);
+            if (hitBeat < sectionStartBeat + sectionDurationBeats) {
+              const startTick = Math.round(hitBeat * 128);
+              const waitTicks = Math.max(0, startTick - previousStretchedTicks);
+              const durationTicks = 16;
+              previousStretchedTicks = startTick + durationTicks;
+
+              customEvents.push(new MidiWriter.NoteEvent({
+                pitch: [pitch],
+                duration: `T${durationTicks}`,
+                wait: `T${waitTicks}`,
+                velocity: velocity
+              }));
+            }
+          });
+          placedBeats += patternDurationBeats;
+        }
+      }
+    }
+
+    currentTimelineBeat = sectionStartBeat + sectionDurationBeats;
+  }
+
+  const totalSongTicks = Math.round(currentTimelineBeat * 128);
+  if (previousStretchedTicks < totalSongTicks) {
+    const trailingWait = totalSongTicks - previousStretchedTicks;
+    customEvents.push(new MidiWriter.NoteEvent({
+      pitch: ['C1'],
+      duration: 'T1',
+      wait: `T${trailingWait}`,
+      velocity: 0
+    }));
+  }
+
+  if (customEvents.length > 0) {
+    track.addEvent(customEvents);
+  }
+
+  const write = new MidiWriter.Writer([track]);
+  return write.buildFile();
 };
