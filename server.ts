@@ -1072,10 +1072,10 @@ app.post("/api/upload/init-gemini", async (req, res) => {
 });
 
 const getR2Client = () => {
-  const accessKeyId = process.env.R2_ACCESS_KEY_ID;
-  const secretAccessKey = process.env.R2_SECRET_ACCESS_KEY;
-  const endpoint = process.env.R2_ENDPOINT;
-  const bucketName = process.env.R2_BUCKET_NAME;
+  const accessKeyId = (process.env.R2_ACCESS_KEY_ID || "").trim();
+  const secretAccessKey = (process.env.R2_SECRET_ACCESS_KEY || "").trim();
+  const endpoint = (process.env.R2_ENDPOINT || "").trim();
+  const bucketName = (process.env.R2_BUCKET_NAME || "").trim();
 
   if (!accessKeyId || !secretAccessKey || !endpoint || !bucketName) {
     return null;
@@ -4599,8 +4599,12 @@ if (process.env.NODE_ENV !== 'production') {
           delete finalConfig.customAction;
         }
 
+        const effectiveModel = (model === "gemini-3.1-pro-preview" || model === "gemini-3-flash-preview" || !model)
+          ? "gemini-3.8-flash"
+          : model;
+
         const response = await genAI.models.generateContent({
-          model: model || "gemini-3-flash-preview",
+          model: effectiveModel,
           contents,
           config: finalConfig
         });

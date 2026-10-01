@@ -1321,7 +1321,18 @@ export const getAI = () => {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(payload)
           });
-          const data = await response.json();
+          const rawText = await response.text();
+          const cleanText = rawText.trim();
+          if (!cleanText) {
+            throw new Error(`Empty response from Gemini server proxy (HTTP ${response.status} ${response.statusText}).`);
+          }
+          let data;
+          try {
+            data = JSON.parse(cleanText);
+          } catch (jsonErr: any) {
+            console.error("Failed to parse Gemini response as JSON. Raw text:", rawText);
+            throw new Error(`Failed to parse Gemini response: ${jsonErr.message}. Response: ${cleanText.substring(0, 300)}`);
+          }
           if (data && data.error) {
             const errorStr = typeof data.error === 'string' ? data.error : JSON.stringify(data.error);
             if (errorStr.includes('429') || errorStr.includes('RESOURCE_EXHAUSTED') || errorStr.includes('credits are depleted') || errorStr.includes('quota')) {
@@ -3053,7 +3064,7 @@ export const getBeatRecommendations = async (plugins: VSTPlugin[], analogInstrum
     ${ADVANCED_MIDI_PROMPT}
   `;
   const response = await ai.models.generateContent({
-    model: 'gemini-3.1-pro-preview',
+    model: 'gemini-3.8-flash',
     contents: { parts: [{ text: prompt + getSchemaInstruction(isGangstaVox) }] },
     config: {
       customAction: 'recipe',
@@ -3245,7 +3256,7 @@ export const getCustomBeatRecommendations = async (plugins: VSTPlugin[], query: 
   `;
   const multiBandInstruction = getMultiBandInstruction(isMultiBandMode);
   const response = await ai.models.generateContent({
-    model: 'gemini-3.1-pro-preview',
+    model: 'gemini-3.8-flash',
     contents: { parts: [{ text: prompt + multiBandInstruction + getSchemaInstruction(isGangstaVox) }] },
     config: {
       customAction: 'type_beat_search',
@@ -3437,7 +3448,7 @@ export const getSongBeatRecommendations = async (plugins: VSTPlugin[], songQuery
   `;
   const multiBandInstruction = getMultiBandInstruction(isMultiBandMode);
   const response = await ai.models.generateContent({
-    model: 'gemini-3.1-pro-preview',
+    model: 'gemini-3.8-flash',
     contents: { parts: [{ text: prompt + multiBandInstruction + getSchemaInstruction(isGangstaVox) }] },
     config: {
       customAction: 'song_search',
@@ -3837,7 +3848,7 @@ export const getAudioBeatRecommendations = async (plugins: VSTPlugin[], audioBas
   let response;
   try {
     response = await ai.models.generateContent({
-      model: "gemini-3.1-pro-preview",
+      model: "gemini-3.8-flash",
       contents: {
         parts: parts
       },
@@ -4544,7 +4555,7 @@ CRITICAL DIRECTIVE ON MIX CRITIQUE DEPTH, VARIETY, & ZERO-BOILERPLATE:
 export const compareMixDelta = async (plugins: VSTPlugin[], originalAudioBase64: string | undefined, originalMimeType: string | undefined, processedAudioBase64: string, processedMimeType: string, recipeContext: string, isJsfxMode: boolean, installedJsfxPacks: string[]): Promise<{analysis: string, correctiveActions: any[]}> => {
   const ai = getAI();
   const { GoogleGenAI } = await import("@google/genai");
-  const model = "gemini-3.1-pro-preview";
+  const model = "gemini-3.8-flash";
   const systemInstruction = `You are a world-class mastering engineer performing an A/B Mix Delta Analysis.nnYou will receive TWO audio files (if the platform supports it) or at least the processed audio, along with the recipe context that produced it.nnYour job is to:n1. Listen to the PROCESSED audio and identify any artifacts, distortion, over-compression, pumping, or phase issues.n2. Compare it to the original audio (if provided) to hear the delta.n3. Identify exactly which plugins/parameters in the recipe caused the issue (e.g. "The second compressor on the bass has the threshold too low and ratio too high, causing distortion").n4. Provide a detailed analysis and a corrective action plan.n\nCRITICAL: You MUST return EXACTLY valid JSON matching this schema:n${JSON.stringify({ type: "OBJECT", properties: { analysis: { type: "STRING" }, correctiveActions: { type: "ARRAY", items: { type: "OBJECT", properties: { targetStem: { type: "STRING" }, pluginName: { type: "STRING" }, paramChanges: { type: "ARRAY", items: { type: "OBJECT", properties: { paramName: { type: "STRING" }, newValue: { type: "NUMBER" }, reason: { type: "STRING" } } } } } } } }, required: ["analysis", "correctiveActions"] })}`; 
   const contents = [];
   if (originalAudioBase64 && originalMimeType) {
