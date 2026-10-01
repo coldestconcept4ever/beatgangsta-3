@@ -3556,8 +3556,50 @@ export const getAudioBeatRecommendations = async (plugins: VSTPlugin[], audioBas
   const hasOceanWayMic = plugins?.some(p => p.name.toLowerCase().includes('ocean way mic')) || false;
   const xpandInstruction = getXpandInstructions(xpandPresets);
   
-  const hasRecreate = !!(recreateFileUri || recreateBase64);
-  const doubleAudioDiktat = hasRecreate ? `
+  const hasSourceAudio = !!(geminiFileUri || audioBase64 || audioUrl);
+  const hasRecreateAudio = !!(recreateFileUri || recreateBase64);
+  const isTargetOnly = !hasSourceAudio && hasRecreateAudio;
+  const isDoubleAudio = hasSourceAudio && hasRecreateAudio;
+
+  const targetOnlyDiktat = `
+      ==================================================
+      🚨🚨 TOTAL BEAT REPLACEMENT & VOCAL POCKET LOCK DIRECTIVE 🚨🚨
+      The user has provided a SINGLE audio track (their own track / project demo / vocal take) in the "Target / Recreate-For" slot, with NO reference track.
+
+      CRITICAL OBJECTIVE:
+      The user's goal is to COMPLETELY SCRAP AND REPLACE the original beat/instrumental in their uploaded track with the full MIDI stems you generate, while keeping their vocals/vocal performance 100% UNTOUCHED.
+
+      1. ZERO VOCAL RE-ARRANGING (DAW SNAP AT BAR 1):
+         - Every single generated MIDI stem must start at Bar 1 and stay locked on the song timeline.
+         - The user must be able to mute/delete their original instrumental track, drag these full MIDI stems onto their DAW timeline starting at Bar 1, and have them SNAP AND SYNC 100% PERFECTLY with their existing vocal track.
+         - The user will NOT have to cut, trim, nudge, time-stretch, or rearrange their vocals, and will NOT have to cut or move any MIDI notes.
+
+      2. HARMONIC & VOCAL POCKET FIT:
+         - Precisely detect the exact Root Key, Scale, and vocal pitch centers of the uploaded track.
+         - Build chords, counter-melodies, and basslines that strictly harmonize with the vocal notes (avoiding half-step clashes, dissonant 4ths/b9ths against vocal melody tones).
+         - Frequency Pocketing: Ensure melodic and harmonic instruments stay out of the vocal core frequency range (200Hz - 4kHz presence pocket). The bass and 808 must lock beneath the vocal chest frequencies (sub 120Hz).
+
+      3. DYNAMIC ARRANGEMENT & VOCAL CADENCE SYNCHRONIZATION:
+         - Detect the precise arrangement sections of the uploaded track: Intro, Verse(s), Hook/Chorus, Bridge, and Outro.
+         - Detect exactly where the vocals breathe, where the vocalist speeds up their flow/cadence, and where the vocal hooks land.
+         - Hook Impact: Build explosive drum drops, reinforcing counter-rhythms, and wider stereo textures right when the vocal hook drops.
+         - Verse Pocket: Strip back instruments during dense vocal verses to give the vocalist breathing room and dynamic bounce.
+         - Tension & Transitions: Add snare rolls, velocity builds, and bass dropouts during vocal pre-hook risers.
+
+      4. VIBE MATCHING LOGIC:
+         ${userContext && userContext.trim().length > 0 ? 
+           `- The user typed the following Vibe Context: "${userContext}". You MUST shape the new beat and MIDI stems to match this exact requested vibe, while ensuring every single note and drum hit locks flawlessly around the vocal track in the uploaded audio.` : 
+           `- The user did NOT type any vibe context. Listen deeply to the uploaded track's original vibe, emotion, rhythm, bounce, and aesthetic. Create full-song MIDI stems that capture and elevate that original vibe to an elite, major-label standard, vastly outperforming the original instrumental.`
+         }
+
+      5. OUTPERFORMING THE ORIGINAL BEAT:
+         - Provide richer chord voicings (9ths, 11ths, passing tones, emotional inversions) instead of basic triads.
+         - Provide highly expressive, humanized velocity curves and syncopated grooves on hi-hats, kicks, and claps/snares instead of stiff, quantized loops.
+         - Deliver full-length continuous MIDI note arrays for EVERY instrument across all detected sections (Intro, Verse, Hook, Bridge, Outro) with exact silent rests preserved when an instrument is out, so every single MIDI file spans the entire song duration.
+      ==================================================
+  `;
+
+  const doubleAudioDiktat = isDoubleAudio ? `
       ==================================================
       🚨🚨 DOUBLE-AUDIO RECREATION & ALIGNMENT DIRECTIVE 🚨🚨
       The user has provided TWO audio files:
@@ -3610,7 +3652,7 @@ export const getAudioBeatRecommendations = async (plugins: VSTPlugin[], audioBas
     ${starredStr}
     ${sphereMicStr}
     ${contextStr}
-    ${doubleAudioDiktat}
+    ${isTargetOnly ? targetOnlyDiktat : (isDoubleAudio ? doubleAudioDiktat : "")}
     ${xpandInstruction}
     ${getLanguageInstruction(language)}
     ${GULLFOSS_SPEC_PROMPT}
@@ -3619,8 +3661,8 @@ export const getAudioBeatRecommendations = async (plugins: VSTPlugin[], audioBas
     ${RC20_SPEC_PROMPT}
     ${ATR102_SPEC_PROMPT}
     ${GLOBAL_PARAMETER_STRICTNESS_PROMPT}
-    ${audioUrl ? `The main audio file is available at this URL: ${audioUrl}. Please fetch and analyze it.` : "The main audio file is provided as inline data."}
-    ${recreateFileUri || recreateBase64 ? "nThere is a second audio file attached. This is the target 'Recreate For' track. Analyze both and adapt the first song's elements to match the second track's BPM and Key." : ""}
+    ${isTargetOnly ? "The user's project/vocal track is provided as audio. Analyze this track to detect its BPM, Key, vocal pocket, and section arrangement, and generate full-song MIDI stems and sound design recipes to completely replace the original beat." : (audioUrl ? `The main audio file is available at this URL: ${audioUrl}. Please fetch and analyze it.` : "The main audio file is provided as inline data.")}
+    ${isDoubleAudio ? "\nThere is a second audio file attached. This is the target 'Recreate For' track. Analyze both and adapt the first song's elements to match the second track's BPM and Key." : ""}
     Ensure the recipe captures the signature vocal sound of the audio.
     Identify 2-3 mainstream or commonly known artists who would typically use this specific vocal chain.
     Include a recommended BPM, 'recommendedScale', and 'chordProgression' that fits the vibe.
@@ -3667,7 +3709,7 @@ export const getAudioBeatRecommendations = async (plugins: VSTPlugin[], audioBas
     ${starredStr}
     ${sphereMicStr}
     ${contextStr}
-    ${doubleAudioDiktat}
+    ${isTargetOnly ? targetOnlyDiktat : (isDoubleAudio ? doubleAudioDiktat : "")}
     ${xpandInstruction}
     ${getLanguageInstruction(language)}
     ${GULLFOSS_SPEC_PROMPT}
@@ -3676,8 +3718,8 @@ export const getAudioBeatRecommendations = async (plugins: VSTPlugin[], audioBas
     ${RC20_SPEC_PROMPT}
     ${ATR102_SPEC_PROMPT}
     ${GLOBAL_PARAMETER_STRICTNESS_PROMPT}
-    ${audioUrl ? `The main audio file is available at this URL: ${audioUrl}. Please fetch and analyze it.` : "The main audio file is provided as inline data."}
-    ${recreateFileUri || recreateBase64 ? "nThere is a second audio file attached. This is the target 'Recreate For' track. Analyze both and adapt the first song's elements (such as chords, leads, sub-bass, 808s, arpeggios, and drums) to match the second track's BPM and Key perfectly." : ""}
+    ${isTargetOnly ? "The user's project/vocal track is provided as audio. Analyze this track to detect its BPM, Key, vocal pocket, and section arrangement, and generate full-song MIDI stems and sound design recipes to completely replace the original beat." : (audioUrl ? `The main audio file is available at this URL: ${audioUrl}. Please fetch and analyze it.` : "The main audio file is provided as inline data.")}
+    ${isDoubleAudio ? "\nThere is a second audio file attached. This is the target 'Recreate For' track. Analyze both and adapt the first song's elements (such as chords, leads, sub-bass, 808s, arpeggios, and drums) to match the second track's BPM and Key perfectly." : ""}
     Ensure the recipe captures the signature sound, instrumentation, and mixing techniques heard in the audio.
     Identify 2-3 mainstream or commonly known artists who would typically use this specific beat type.
     Include a recommended BPM, 'recommendedScale', and 'chordProgression' that fits the vibe.
@@ -3758,22 +3800,37 @@ export const getAudioBeatRecommendations = async (plugins: VSTPlugin[], audioBas
     parts.push({ inlineData: { data: audioBase64, mimeType: finalMimeType } });
   } else if (audioUrl) {
     console.log("Analyzing web link textually:", audioUrl);
+  } else if (isTargetOnly) {
+    if (recreateFileUri) {
+      let recUri = recreateFileUri;
+      if (recUri.includes('/files/')) {
+         const recUriParts = recUri.split('/files/');
+         recUri = 'https://generativelanguage.googleapis.com/v1beta/files/' + recUriParts[1];
+      } else if (!recUri.startsWith('https://')) {
+         recUri = 'https://generativelanguage.googleapis.com/v1beta/' + (recUri.startsWith('files/') ? recUri : 'files/' + recUri);
+      }
+      parts.push({ fileData: { fileUri: recUri, mimeType: recreateMimeType || 'audio/mpeg' } });
+    } else if (recreateBase64) {
+      parts.push({ inlineData: { data: recreateBase64, mimeType: recreateMimeType || 'audio/mpeg' } });
+    }
   } else {
     throw new Error("No audio file or link provided for analysis (Beat).");
   }
 
-  // Push second recreation file if present
-  if (recreateFileUri) {
-    let recUri = recreateFileUri;
-    if (recUri.includes('/files/')) {
-       const recUriParts = recUri.split('/files/');
-       recUri = 'https://generativelanguage.googleapis.com/v1beta/files/' + recUriParts[1];
-    } else if (!recUri.startsWith('https://')) {
-       recUri = 'https://generativelanguage.googleapis.com/v1beta/' + (recUri.startsWith('files/') ? recUri : 'files/' + recUri);
+  // Push second recreation file if double audio
+  if (isDoubleAudio) {
+    if (recreateFileUri) {
+      let recUri = recreateFileUri;
+      if (recUri.includes('/files/')) {
+         const recUriParts = recUri.split('/files/');
+         recUri = 'https://generativelanguage.googleapis.com/v1beta/files/' + recUriParts[1];
+      } else if (!recUri.startsWith('https://')) {
+         recUri = 'https://generativelanguage.googleapis.com/v1beta/' + (recUri.startsWith('files/') ? recUri : 'files/' + recUri);
+      }
+      parts.push({ fileData: { fileUri: recUri, mimeType: recreateMimeType || 'audio/mpeg' } });
+    } else if (recreateBase64) {
+      parts.push({ inlineData: { data: recreateBase64, mimeType: recreateMimeType || 'audio/mpeg' } });
     }
-    parts.push({ fileData: { fileUri: recUri, mimeType: recreateMimeType || 'audio/mpeg' } });
-  } else if (recreateBase64) {
-    parts.push({ inlineData: { data: recreateBase64, mimeType: recreateMimeType || 'audio/mpeg' } });
   }
   const multiBandInstruction = getMultiBandInstruction(isMultiBandMode);
   parts.push({ text: prompt + multiBandInstruction });

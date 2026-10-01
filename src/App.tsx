@@ -5866,8 +5866,10 @@ Provide the exact JSFX plugin name and required sliders/parameters.`;
     if (audioMode === 'recipe' || audioMode === 'full-midi') {
       processFile = vibeFile;
       processRecreateFile = recreateForFile;
-      if (!processFile) {
-        setError("Please upload the mixed audio file to generate Full MIDI Stems.");
+      if (!processFile && !processRecreateFile) {
+        setError(audioMode === 'full-midi' 
+          ? "Please upload an audio file (either drop a reference track or drop your own track to replace the beat)." 
+          : "Please upload at least one audio file to analyze.");
         return;
       }
     } else {
@@ -5900,7 +5902,7 @@ Provide the exact JSFX plugin name and required sliders/parameters.`;
       }
     }
 
-    if (!processFile && !linkUrl && audioMode !== 'recipe') {
+    if (!processFile && !processRecreateFile && !linkUrl && audioMode !== 'recipe' && audioMode !== 'full-midi') {
       setError("Please provide an audio file or a link.");
       return;
     }
@@ -6243,8 +6245,14 @@ Provide the exact JSFX plugin name and required sliders/parameters.`;
           if (!requireAuth()) return;
 
           let finalContext = critiqueContext;
+          const isTargetOnly = !processFile && !!processRecreateFile;
           if (audioMode === 'full-midi') {
-            finalContext = finalContext + (finalContext ? "\n\n" : "") + `CRITICAL FULL MIDI STEMS MODE DIRECTIVE: The user requested Full-Song MIDI Stems for song duration ${fullMidiDuration}, musical key ${fullMidiKey}, BPM ${fullMidiBpm}. You MUST generate an ultra-high quality, intricate beat recipe where every instrument has full-length MIDI note arrays spanning Intro, Verse, Hook, Bridge, and Outro. Include exact silent rests for sections where instruments do not play so that every MIDI file spans the full song duration and locks into DAW bar 1 with zero trimming. NO prerendered audio / no WAVs. Provide comprehensive VST instrument sound design recipes and exact mixing plugin chain parameters for every stem.`;
+            finalContext = finalContext + (finalContext ? "\n\n" : "") + `CRITICAL FULL MIDI STEMS MODE DIRECTIVE: The user requested Full-Song MIDI Stems for song duration ${fullMidiDuration || 'auto-detected from track'}, musical key ${fullMidiKey || 'auto-detected from track'}, BPM ${fullMidiBpm || 'auto-detected from track'}. You MUST generate an ultra-high quality, intricate beat recipe where every instrument has full-length MIDI note arrays spanning Intro, Verse, Hook, Bridge, and Outro. Include exact silent rests for sections where instruments do not play so that every MIDI file spans the full song duration and locks into DAW bar 1 with zero trimming. NO prerendered audio / no WAVs. Provide comprehensive VST instrument sound design recipes and exact mixing plugin chain parameters for every stem.`;
+            if (isTargetOnly) {
+              finalContext = finalContext + "\n\n" + `TOTAL BEAT REPLACEMENT GOAL: The user uploaded ONLY their target project/vocal track (with ${critiqueContext ? 'vibe context: "' + critiqueContext + '"' : 'no vibe context'}). The goal is to scrap and replace the original beat with these new full MIDIs. Lock all chords, bass, and drums tightly around the vocal pocket and cadence so it snaps into their DAW at Bar 1 with ZERO user re-arranging.`;
+            }
+          } else if (isTargetOnly) {
+            finalContext = finalContext + (finalContext ? "\n\n" : "") + `TOTAL BEAT REPLACEMENT GOAL: The user uploaded ONLY their target project/vocal track (with ${critiqueContext ? 'vibe context: "' + critiqueContext + '"' : 'no vibe context'}). The goal is to scrap and replace the original beat with these new full MIDIs. Lock all chords, bass, and drums tightly around the vocal pocket and cadence so it snaps into their DAW at Bar 1 with ZERO user re-arranging.`;
           } else if (audioUrl || audioBase64 || geminiFileUri) {
             finalContext = finalContext + (finalContext ? "\n\n" : "") + "CRITICAL SYSTEM INSTRUCTION: The user wants an EXACT REPLICA of this beat. Provide a precise, step-by-step recipe to completely recreate this specific song's beat exactly how it sounds in the provided link/audio. It MUST be an exact replica, do not just make something 'in the style of', make it an EXACT reproduction of the instruments, chords, drum patterns, and sound design of the source audio. YOU MUST NOT LEAVE ANY BLANK OR EMPTY PARAMETERS ON ANY VST OR FX PLUGIN. EVERY SINGLE DEEPDIVE PARAMETER ARRAY MUST BE EXHAUSTIVELY POPULATED TO ACHIEVE THIS LEVEL OF REALISM. IN ADDITION, ALL MIDI PATTERNS MUST BE HIGLY CREATIVE, SYNCATED, DYNAMIC, ENJOYABLE, AND EXACTLY MATCH THE MOVEMENT OF THE SOURCE AUDIO - STRICTLY FORBIDDEN FROM GENERATING PLAIN REPETITIVE NOTE SLOP.";
           }
@@ -6342,9 +6350,9 @@ Provide the exact JSFX plugin name and required sliders/parameters.`;
 
         const recipesWithAudio = response.recipes.map(r => ({
           ...r,
-          audioBase64,
-          geminiFileUri,
-          mimeType
+          audioBase64: audioBase64 || recreateBase64,
+          geminiFileUri: geminiFileUri || recreateFileUri,
+          mimeType: mimeType || recreateMimeType || 'audio/mpeg'
         }));
         
         setRecipes(recipesWithAudio);
@@ -9015,7 +9023,13 @@ Provide the exact JSFX plugin name and required sliders/parameters.`;
                   <textarea
                     value={critiqueContext}
                     onChange={(e) => setCritiqueContext(e.target.value)}
-                    placeholder={audioMode === 'album' ? 'Describe the general vibe of the album...' : (audioMode === 'critique' ? t('critique_context_placeholder', { artist: placeholderArtist }) : t('vibe_context_placeholder', { artist: placeholderArtist }))}
+                    placeholder={
+                      audioMode === 'album' 
+                        ? 'Describe the general vibe of the album...' 
+                        : audioMode === 'full-midi'
+                          ? "Optional vibe context (e.g. 'dark emotional trap, heavy 808s, haunting piano, crisp rolling hats'). If uploading your track without a reference, MIDIs will match this vibe and fit your vocals. Leave blank to elevate your track's original vibe."
+                          : (audioMode === 'critique' ? t('critique_context_placeholder', { artist: placeholderArtist }) : t('vibe_context_placeholder', { artist: placeholderArtist }))
+                    }
                     className={`w-full p-4 rounded-2xl text-xs font-medium transition-all outline-none border-2 ${
                       theme === 'coldest' 
                         ? 'bg-white/60 border-purple-100 focus:border-purple-400 text-slate-900 placeholder:text-slate-400' 
@@ -9558,7 +9572,7 @@ Provide the exact JSFX plugin name and required sliders/parameters.`;
                                 <span className="text-2xl">🎵</span>
                               </div>
                               <span className="text-base font-black tracking-tight">
-                                {vibeFile ? 'Vibe File Selected ✓' : 'Drop Audio to Analyze Vibe'}
+                                {vibeFile ? 'Vibe File Selected ✓' : 'Drop Audio to Analyze Vibe (Optional)'}
                               </span>
                               {vibeFile ? (
                                 <span className="text-xs font-bold text-emerald-400 break-all px-4 max-w-full bg-emerald-500/10 py-1.5 rounded-full">
@@ -9566,7 +9580,7 @@ Provide the exact JSFX plugin name and required sliders/parameters.`;
                                 </span>
                               ) : (
                                 <span className="text-xs font-medium opacity-60 max-w-[240px]">
-                                  Analyze your beat's sonic signature to find the perfect plugins. MP3 or WAV (Max 50MB)
+                                  Optional reference track. If you only upload your own track in Slot 2, the AI will build MIDIs to replace your beat directly! MP3 or WAV (Max 50MB)
                                 </span>
                               )}
                             </div>
@@ -9629,7 +9643,7 @@ Provide the exact JSFX plugin name and required sliders/parameters.`;
                                 <span className="text-2xl">⚡</span>
                               </div>
                               <span className="text-base font-black tracking-tight">
-                                {recreateForFile ? 'Recreate For Track Selected ✓' : 'Recreate for'}
+                                {recreateForFile ? 'Your Track Selected ✓' : 'Drop your own track here (Recreate / Replace Beat)'}
                               </span>
                               {recreateForFile ? (
                                 <span className="text-xs font-bold text-emerald-400 break-all px-4 max-w-full bg-emerald-500/10 py-1.5 rounded-full">
@@ -9637,7 +9651,7 @@ Provide the exact JSFX plugin name and required sliders/parameters.`;
                                 </span>
                               ) : (
                                 <span className="text-xs font-medium opacity-60 max-w-[240px]">
-                                  Drop your own track here to recreate the first song's vibe matching your target key & BPM
+                                  Drop your track here to match target BPM & Key, or drop solo to completely replace your beat with full MIDIs locked to your vocals. MP3 or WAV (Max 50MB)
                                 </span>
                               )}
                             </div>
@@ -9683,13 +9697,35 @@ Provide the exact JSFX plugin name and required sliders/parameters.`;
                         <div className="flex justify-center mt-2 w-full">
                           <button
                             onClick={() => handleAudioSearch(null)}
-                            disabled={loading || !vibeFile}
-                            className={`w-full max-w-md py-5 px-6 rounded-3xl font-black text-xs select-none shadow-xl hover:scale-105 active:scale-95 transition-all disabled:opacity-50 disabled:scale-100 flex flex-col items-center justify-center gap-2 ${
+                            disabled={loading || (!vibeFile && !recreateForFile)}
+                            className={`w-full max-w-md py-4 px-6 rounded-3xl font-black text-xs select-none shadow-xl hover:scale-105 active:scale-95 transition-all disabled:opacity-50 disabled:scale-100 flex flex-col items-center justify-center gap-1 ${
                               theme === 'coldest' || theme === 'chef-mode' ? 'bg-emerald-600 text-white hover:bg-emerald-500' : 'bg-purple-600 text-white hover:bg-purple-500'
                             }`}
                           >
-                            <span className="text-xl">🎛️</span>
-                            {audioAnalysisLoading ? t('analyzing') : 'Extract & Recreate Recipe'}
+                            {audioAnalysisLoading ? (
+                              <div className="flex items-center gap-2">
+                                <span className="animate-spin text-xl">⏳</span>
+                                <span className="text-sm font-black uppercase tracking-wider">{t('analyzing')}</span>
+                              </div>
+                            ) : (
+                              <div className="flex flex-col items-center">
+                                <span className="text-xl">🎛️</span>
+                                <span className="text-sm font-black uppercase tracking-wider text-center">
+                                  {!vibeFile && recreateForFile
+                                    ? (audioMode === 'full-midi' ? 'Replace Beat with Full MIDIs (Fit Vocals)' : 'Replace Beat & Extract Recipe (Fit Vocals)')
+                                    : vibeFile && recreateForFile
+                                    ? (audioMode === 'full-midi' ? 'Recreate Vibe as Full MIDIs for Target' : 'Extract & Recreate Recipe for Target')
+                                    : (audioMode === 'full-midi' ? 'Generate Full MIDI Stems & Mix Guide' : 'Extract Beat Recipe')}
+                                </span>
+                                <span className="text-[10px] font-medium opacity-80 mt-0.5 text-center">
+                                  {!vibeFile && recreateForFile
+                                    ? 'Snaps to Bar 1 • Outperforms Original Beat • Zero Vocal Trimming'
+                                    : vibeFile && recreateForFile
+                                    ? 'Converts Reference Vibe to Target BPM & Key • Full Song DAW Stems'
+                                    : 'Continuous Full Song MIDIs • Complete VST Sound Design & FX Guides'}
+                                </span>
+                              </div>
+                            )}
                           </button>
                         </div>
                       </div>
