@@ -956,6 +956,162 @@ const LYRIC_AWARE_DELAY_AUTOMATION_PROMPT = `
        - **Bob Ezrin Epic Opera Reverb Explosion**: Automate the wet mix of 'Tukan Lexikan 2' hall reverb from 5% to 60% with a 6-second decay on the final dramatic note of a rock ballad, instantly expanding the dry, intimate vocal into an enormous, cavernous stadium-rock arena space.
 
 `;
+
+export const getStarredPluginsPrompt = (starredPlugins: string[]): string => {
+  if (!starredPlugins || starredPlugins.length === 0) return '';
+
+  return `
+================================================================================
+⭐ CRITICAL MANDATORY DIRECTIVE: USER'S UP TO 5 STARRED PLUGINS TAKE ABSOLUTE SPOTLIGHT ⭐
+================================================================================
+The user has STARRED (favorited) up to 5 priority plugins in their Gear Rack:
+${starredPlugins.map((p, idx) => `  ${idx + 1}. ${p}`).join('\n')}
+
+MANDATORY SPOTLIGHT OVERRIDE RULES (NO MATTER WHAT MODE IS USED):
+1. **ABSOLUTE PRIORITY OVER AI SUGGESTIONS**:
+   No matter what mode is active (Beat Generation, Custom Beat Search, Song Search, Audio Analysis, Vocal FX Chain, Mastering, JSFX mode, or VST mode), the user's starred plugins take ABSOLUTE SPOTLIGHT PRIORITY over generic AI suggestions.
+   You ABSOLUTELY MUST prioritize and use these starred plugins across EVERY SINGLE TRACK, stem, and bus!
+
+2. **HARMONIOUS MULTI-TRACK INTEGRATION**:
+   Weave these starred plugins into each track (Vocals, 808/Bass, Kick, Snare, Melodic Loops/Instruments, and Busses/Master) assigning each its natural, optimal sonic duty so they work together in seamless, world-class synergy:
+   - Analog Preamp & Grit/Saturation -> Neve 1073 (Red knob input drive for radio-ready crunch & presence).
+   - Surgical Frequency Carving & M/S Space -> Parametric EQs (NoiseAsh NEED 533 EQ: 5 parametric bands with Q, Mid punch for kick/vocal vs Side width sparkle, NDS 20 console channel depth).
+   - Console VCA Dynamics & Channel Strip Glue -> SSL 9000 J / SSL 4000 E (VCA compression, punchy attack/release, TMT channel tolerance, V-Gain, THD).
+   - Explosive Density & Transient Punch -> Empirical Labs Distressor (MANDATORY PARALLEL COMPRESSION: 6:1/10:1/Nuke ratio, fast attack/release, Dist 2/3, blended wet/dry in parallel to inflate body & sustain without sacrificing dry punch).
+   - Intelligent Perceptual Clarity -> Soundtheory Gullfoss (Dynamic auditory perception EQ to unmask buried details, tame harshness, and polish mix buses).
+
+3. **SIGNATURE 5-STAR RAP & HIP-HOP WORKFLOW STRATEGY**:
+   If the starred plugins include Neve 1073, NoiseAsh NEED 533, SSL 9000 J / SSL E, Distressor, and/or Gullfoss, you MUST adhere strictly to this professional hip-hop workflow:
+   • **Neve 1073 (For Rap Vocals & Melodic Foundations)**:
+     - The "In-Your-Face" Factor: Push the input gain (Red knob to +45 dB - +60 dB) backed off with output fader trim to introduce rich Class-A harmonic saturation. Gives vocals grit, attitude, and thickness, placing rap vocals firmly at the front of a chaotic beat.
+     - Vocal EQ Shortcuts: Use the famous 12 kHz high-shelf for smooth, expensive-sounding "air" without introducing harshness or sibilance. Use HPF (50Hz-80Hz) to clear sub mud.
+   • **NoiseAsh NEED 533 EQ (For Rap Beats, Instrument Stems & Beat Bus)**:
+     - Carving room for the rapper: Use 5 fully parametric bands with adjustable Q to surgically cut boxy mud (300-500Hz) or harsh build-up (2.5-4kHz) in melody loops and samples without losing overall vibe.
+     - Mid/Side Processing: EQ Mid (center) independently to keep it clean and hard-hitting for kick, 808 sub pocket, and vocal; EQ Side (stereo width) to push high-end sparkle (10kHz+) and wide textures outward.
+     - Stereo Depth: Utilize Nuance Deviation System (NDS) simulating 20 distinct console channels to add true analog depth and widening across different stems.
+     - Insertion: Insert right after the 1073 on vocal/lead tracks, or on the overall beat bus to surgically manage the 808 pocket and stereo layout.
+   • **Brainworx bx_console SSL 9000 J or SSL 4000 E**:
+     - Insert on stems and busses using its legendary VCA compressor for tight, musical console glue.
+     - Fast attack switch for transient clamping or slow attack for punchy transient snap, ratio 2:1 to 4:1.
+     - Dial in TMT channel and analog THD saturation control.
+   • **Empirical Labs EL8 Distressor (ALWAYS PARALLEL COMPRESSION)**:
+     - You MUST ALWAYS configure the Distressor for PARALLEL COMPRESSION!
+     - Set high ratio (6:1, 10:1, or 20:1 / Nuke mode), Fast Attack (2-3), Fast Release (2-3), with Audio Dist 2 (tube warmth) or Dist 3 (tape bite) and Detector HP enabled.
+     - Instruct exact parallel blend: either via the plugin's parallel mix knob (30%-40% wet) or on a dedicated parallel compression aux track, smashing low-level detail into explosive density while preserving 100% of the dry transient punch!
+   • **Soundtheory Gullfoss (5th Starred Plugin - Perceptual De-masking & Master/Bus Polish)**:
+     - Positioned at the end of the stem chain, on instrument/vocal busses, or on the master bus.
+     - Computational auditory perception: Recover (10-30%) to bring out buried textures, Tame (10-25%) to dynamically control harsh resonance spikes, Brightness (-5% to +10%) and Boost (-50dB to +50dB) to enhance perceived low-end body without distortion.
+   • **HARMONIOUS SYNERGY CHAIN**:
+     Neve 1073 (Preamp Saturation & Character) -> NEED 533 EQ (Surgical M/S Carving & NDS Stereo Depth) -> SSL 9000 J / E (Console VCA Dynamics & Glue) -> Distressor (Explosive Parallel Compression Punch) -> Gullfoss (Perceptual Clarity & Frequency De-masking).
+
+4. **USER CAN CHANGE STARRED PLUGINS AT ANY TIME**:
+   When the user stars any other plugins in their gear rack (up to 5), ALWAYS give those newly starred plugins the exact same spotlight priority across every track, adapting deep dive parameters to their specific exposed GUI parameters!
+================================================================================
+`;
+};
+
+export const THD_HEADSPACE_DIRECTIVE = `
+================================================================================
+⚡ CRITICAL MANDATORY REQUIREMENT: ALWAYS GIVE THD SETTINGS IN dB FOR HEADSPACE FOR ALL STEMS SEPARATELY ⚡
+================================================================================
+You MUST ALWAYS calculate and provide explicit THD (Total Harmonic Distortion) settings in dB for headspace for EVERY SINGLE STEM SEPARATELY.
+Never omit this or use generic words. Every instrument stem, drum part stem, vocal stem, and bus MUST contain its designated 'thdHeadspaceDb' (and in 'stemThdSettings'):
+
+Specific THD Headspace in dB calibration guidelines:
+- **Lead Vocals Stem**: e.g. "-18 dB THD (headspace: +6 dB clean peak headroom for Neve 1073 Class-A saturation drive)"
+- **808 / Sub Bass Stem**: e.g. "-12 dB THD (controlled 2nd & 3rd harmonic saturation, -3 dB peak headspace for low-end translation)"
+- **Kick Drum Stem**: e.g. "-16 dB THD (punchy transient clarity, +5 dB transient crest headspace without clipping)"
+- **Snare / Clap Stem**: e.g. "-14 dB THD (crack and bite saturation, +4 dB peak headroom)"
+- **Hi-Hats / Cymbals Stem**: e.g. "-24 dB THD (ultra-clean, pristine high-end air, zero intermodulation distortion, +8 dB headspace)"
+- **Melodic Loops / Keys / Guitars Stem**: e.g. "-18 dB THD (warm console glue, +5 dB dynamic headspace)"
+- **Drum Bus (Parallel Distressor)**: e.g. "-10 dB THD (aggressive parallel squash, blended at 35% wet into +6 dB master headroom)"
+- **Mix Bus / Master**: e.g. "-20 dB THD (subtle analog warmth, transparent glue with +4 dB headroom before final ceiling)"
+
+In the JSON response:
+1. Include 'thdHeadspaceDb' on EVERY item in 'instruments' and 'busses'.
+2. Include 'stemThdSettings' at the root of the recipe mapping every stem name to its exact THD in dB and headspace explanation!
+================================================================================
+`;
+
+export const resolveStarredPlugins = (starredPlugins: string[], availablePlugins: VSTPlugin[]): VSTPlugin[] => {
+  if (!starredPlugins || starredPlugins.length === 0) return [];
+  return starredPlugins.map(name => {
+    const existing = availablePlugins.find(p => p.name.toLowerCase() === name.toLowerCase() || p.displayName?.toLowerCase() === name.toLowerCase());
+    if (existing) return existing;
+    const inVst = VST_DATABASE.find(v => v.name.toLowerCase() === name.toLowerCase() || v.displayName.toLowerCase() === name.toLowerCase());
+    if (inVst) {
+      return {
+        name: inVst.name,
+        displayName: inVst.displayName,
+        vendor: inVst.vendor,
+        type: (inVst.category.includes('EQ') ? 'EQ' : inVst.category.includes('Comp') ? 'Compressor' : 'Channel Strip') as any,
+        category: inVst.category,
+        description: inVst.description,
+        version: '1.0',
+        lastModified: new Date().toISOString(),
+        parameters: inVst.parameters.map(p => p.name)
+      };
+    }
+    return {
+      name,
+      displayName: name,
+      vendor: 'User Gear Rack',
+      type: 'Effect' as any,
+      parameters: [],
+      version: '1.0',
+      lastModified: new Date().toISOString()
+    };
+  });
+};
+
+export const sanitizeAndEnrichRecipe = (recipe: BeatRecipe): BeatRecipe => {
+  if (!recipe) return recipe;
+  
+  if (!recipe.stemThdSettings) {
+    recipe.stemThdSettings = {
+      "Vocals": "-18 dB THD (headspace: +6 dB clean peak headroom for Neve 1073 saturation)",
+      "808 / Bass": "-12 dB THD (controlled 2nd & 3rd harmonic saturation, -3 dB peak headspace)",
+      "Kick": "-16 dB THD (punchy transient clarity, +5 dB transient crest headspace)",
+      "Snare / Clap": "-14 dB THD (crack and bite saturation, +4 dB peak headroom)",
+      "Hi-Hats / Cymbals": "-24 dB THD (ultra-clean, pristine high-end air, +8 dB headspace)",
+      "Melodic Instruments": "-18 dB THD (warm console glue, +5 dB dynamic headspace)",
+      "Mix Bus / Master": "-20 dB THD (subtle analog warmth, +4 dB headroom before final ceiling)"
+    };
+  }
+
+  if (Array.isArray(recipe.instruments)) {
+    recipe.instruments.forEach(inst => {
+      if (!inst.thdHeadspaceDb) {
+        const lower = inst.name.toLowerCase();
+        if (lower.includes('vocal')) inst.thdHeadspaceDb = "-18 dB THD (headspace: +6 dB clean peak headroom)";
+        else if (lower.includes('808') || lower.includes('bass') || lower.includes('sub')) inst.thdHeadspaceDb = "-12 dB THD (controlled harmonic saturation, -3 dB headspace)";
+        else if (lower.includes('kick')) inst.thdHeadspaceDb = "-16 dB THD (transient clarity, +5 dB headspace)";
+        else if (lower.includes('snare') || lower.includes('clap')) inst.thdHeadspaceDb = "-14 dB THD (crack & punch, +4 dB headspace)";
+        else if (lower.includes('hat') || lower.includes('cymbal')) inst.thdHeadspaceDb = "-24 dB THD (pristine air, +8 dB headspace)";
+        else inst.thdHeadspaceDb = "-18 dB THD (analog warmth, +5 dB dynamic headspace)";
+      }
+    });
+  }
+
+  if (Array.isArray(recipe.busses)) {
+    recipe.busses.forEach(bus => {
+      if (!bus.thdHeadspaceDb) {
+        bus.thdHeadspaceDb = "-16 dB THD (dynamic glue headroom: +4 dB)";
+      }
+    });
+  }
+
+  if (recipe.gangstaVox?.vocalTracks && Array.isArray(recipe.gangstaVox.vocalTracks)) {
+    recipe.gangstaVox.vocalTracks.forEach(vt => {
+      if (!vt.thdHeadspaceDb) {
+        vt.thdHeadspaceDb = "-18 dB THD (headspace: +6 dB clean peak headroom for Neve 1073 saturation)";
+      }
+    });
+  }
+
+  return recipe;
+};
+
 const VOCAL_MATCHING_AND_COHESION_PROMPT = `
     CRITICAL - MANDATORY VOCAL MATCHING & TIMBRE/LOUDNESS COHESION:
     When multiple vocal stems are present (e.g., a lead vocal on track A taking up one part of the song and another lead/main vocal on track B taking up another part of the song, or any vocal tracks identified as main vocals), you MUST ALWAYS treat them with extreme cohesive care.
@@ -1207,6 +1363,9 @@ function postProcessResult(result: any) {
   };
 
   const processRecipe = (recipe: any) => {
+    if (recipe) {
+      sanitizeAndEnrichRecipe(recipe);
+    }
     if (recipe && recipe.instruments && Array.isArray(recipe.instruments)) {
       recipe.instruments.forEach((inst: any) => {
         if (inst && Array.isArray(inst.fxPlugins)) {
@@ -1965,9 +2124,26 @@ export const getUnifiedRecipeSchema = (isGangstaVoxMode: boolean = false) => {
                 splitFrequencies: { type: Type.ARRAY, items: { type: Type.STRING }, description: "e.g., ['150Hz', '2.5kHz']" },
                 reasoning: { type: Type.STRING }
               }
+            },
+            thdHeadspaceDb: {
+              type: Type.STRING,
+              description: "MANDATORY. Headspace THD setting in dB for this stem/track (e.g. '-18 dB THD (headspace: +6 dB clean peak headroom)'). Must give THD settings in dB for headspace for all stems separately."
             }
           },
           required: ["name", "plugin", "type", "sourceSoundGoal", "deepDive", "fxPlugins", "midiNotes"]
+        }
+      },
+      stemThdSettings: {
+        type: Type.OBJECT,
+        description: "MANDATORY. Headspace THD settings in dB for ALL stems separately (Vocals, 808/Bass, Kick, Snare, Hi-Hats, Melodic Instruments, Mix Bus).",
+        properties: {
+          vocals: { type: Type.STRING },
+          bass: { type: Type.STRING },
+          kick: { type: Type.STRING },
+          snare: { type: Type.STRING },
+          hiHat: { type: Type.STRING },
+          melodic: { type: Type.STRING },
+          mixBus: { type: Type.STRING }
         }
       },
       busses: {
@@ -2904,10 +3080,12 @@ export const getBeatRecommendations = async (plugins: VSTPlugin[], analogInstrum
     }
     return true;
   });
+  const resolvedStarred = resolveStarredPlugins(starredPlugins, filteredPlugins);
+  const remainingPlugins = filteredPlugins.filter(p => !starredPlugins.some(s => s.toLowerCase() === p.name.toLowerCase()));
   const limitedPlugins = [
-    ...filteredPlugins.filter(p => starredPlugins.includes(p.name)),
-    ...filteredPlugins.filter(p => !starredPlugins.includes(p.name))
-  ].slice(0, 50);
+    ...resolvedStarred,
+    ...remainingPlugins.slice(0, Math.max(20, 50 - resolvedStarred.length))
+  ];
   const pluginListStr = limitedPlugins.map(p => {
     let str = `${p.vendor} - ${p.name} (${p.type})`;
     if (p.parameters && p.parameters.length > 0) {
@@ -2916,8 +3094,8 @@ export const getBeatRecommendations = async (plugins: VSTPlugin[], analogInstrum
     return str;
   }).join('\n');
   const analogStr = !excludeAnalog ? generateAnalogStr(analogInstruments, analogHardware, drumKits) : '';
-  const dawStr = dawType ? `nThe user is using ${dawType} as their DAW. Include specific instructions or tips for ${dawType} where relevant in the guides or recipes.` : '';
-  const starredStr = starredPlugins.length > 0 ? `\nCRITICAL: The user has STARRED (favorited) the following plugins. You ABSOLUTELY MUST prioritize using these plugins in EVERY SINGLE track/step whenever possible:n${starredPlugins.join(', ')}` : '';
+  const dawStr = dawType ? `\nThe user is using ${dawType} as their DAW. Include specific instructions or tips for ${dawType} where relevant in the guides or recipes.` : '';
+  const starredStr = getStarredPluginsPrompt(starredPlugins);
   const hasSphereMic = analogHardware.some(h => ['Sphere DLX', 'Sphere LX', 'L22'].includes(h.name) || h.name.toLowerCase() === 'l22' || h.name.toLowerCase().includes('townsend'));
   const sphereMicStr = hasSphereMic ? `\nCRITICAL: The user owns a Universal Audio Sphere (DLX/LX) or Townsend Labs L22 microphone. If the recipe involves a vocal tracking chain, you MUST assign the 'UAD Sphere Mic Collection', 'Ocean Way Mic Collection', or 'Bill Putnam Mic Collection' plugin as the VERY FIRST insert plugin on the vocal channel tracking chain. You MUST specifically select a mic model inside it based on the vibe searched. After the mic collection plugin, you can add up to 3 more plugins.` : '';
   const languageInstruction = getLanguageInstruction(language);
@@ -2979,6 +3157,7 @@ export const getBeatRecommendations = async (plugins: VSTPlugin[], analogInstrum
     ${ATR102_SPEC_PROMPT}
     ${NI_RAUM_SPEC_PROMPT}
     ${GLOBAL_PARAMETER_STRICTNESS_PROMPT}
+    ${THD_HEADSPACE_DIRECTIVE}
     Focus on modern vocal sub-genres: Melodic Trap, Dark Drill, High-Energy Rage, Ethereal Cloud Rap.
     Identify 2-3 mainstream or commonly known artists who would typically use this specific vocal chain (e.g., "Travis Scott type", "Playboi Carti type").
     Include a recommended BPM, 'recommendedScale', and 'chordProgression' that fits the vibe.
@@ -3022,6 +3201,7 @@ export const getBeatRecommendations = async (plugins: VSTPlugin[], analogInstrum
     ${SONIBLE_SPEC_PROMPT}
     ${RC20_SPEC_PROMPT}
     ${ATR102_SPEC_PROMPT}
+    ${THD_HEADSPACE_DIRECTIVE}
     Focus on modern sub-genres: Melodic Trap, Dark Drill, High-Energy Rage.
     Identify 2-3 mainstream or commonly known artists who would typically use this specific beat type (e.g., "Lil Wayne type", "Travis Scott type").
     Include a recommended BPM, 'recommendedScale', and 'chordProgression'.
@@ -3095,10 +3275,12 @@ export const getCustomBeatRecommendations = async (plugins: VSTPlugin[], query: 
     }
     return true;
   });
+  const resolvedStarred = resolveStarredPlugins(starredPlugins, filteredPlugins);
+  const remainingPlugins = filteredPlugins.filter(p => !starredPlugins.some(s => s.toLowerCase() === p.name.toLowerCase()));
   const limitedPlugins = [
-    ...filteredPlugins.filter(p => starredPlugins.includes(p.name)),
-    ...filteredPlugins.filter(p => !starredPlugins.includes(p.name))
-  ].slice(0, 50);
+    ...resolvedStarred,
+    ...remainingPlugins.slice(0, Math.max(20, 50 - resolvedStarred.length))
+  ];
   const pluginListStr = limitedPlugins.map(p => {
     let str = `${p.vendor} - ${p.name} (${p.type})`;
     if (p.parameters && p.parameters.length > 0) {
@@ -3107,8 +3289,8 @@ export const getCustomBeatRecommendations = async (plugins: VSTPlugin[], query: 
     return str;
   }).join('\n');
   const analogStr = !excludeAnalog ? generateAnalogStr(analogInstruments, analogHardware, drumKits) : '';
-  const dawStr = dawType ? `nThe user is using ${dawType} as their DAW. Include specific instructions or tips for ${dawType} where relevant in the guides or recipes.` : '';
-  const starredStr = starredPlugins.length > 0 ? `\nCRITICAL: The user has STARRED (favorited) the following plugins. You ABSOLUTELY MUST prioritize using these plugins in EVERY SINGLE track/step whenever possible:n${starredPlugins.join(', ')}` : '';
+  const dawStr = dawType ? `\nThe user is using ${dawType} as their DAW. Include specific instructions or tips for ${dawType} where relevant in the guides or recipes.` : '';
+  const starredStr = getStarredPluginsPrompt(starredPlugins);
   const hasSphereMic = analogHardware.some(h => ['Sphere DLX', 'Sphere LX', 'L22'].includes(h.name) || h.name.toLowerCase() === 'l22' || h.name.toLowerCase().includes('townsend'));
   const sphereMicStr = hasSphereMic ? `\nCRITICAL: The user owns a Universal Audio Sphere (DLX/LX) or Townsend Labs L22 microphone. If the recipe involves a vocal tracking chain, you MUST assign the 'UAD Sphere Mic Collection', 'Ocean Way Mic Collection', or 'Bill Putnam Mic Collection' plugin as the VERY FIRST insert plugin on the vocal channel tracking chain. You MUST specifically select a mic model inside it based on the vibe searched. After the mic collection plugin, you can add up to 3 more plugins.` : '';
   const isMarkRuhedra = query.toLowerCase().includes("mark ruhedra");
@@ -3179,6 +3361,7 @@ export const getCustomBeatRecommendations = async (plugins: VSTPlugin[], query: 
     ${RC20_SPEC_PROMPT}
     ${ATR102_SPEC_PROMPT}
     ${GLOBAL_PARAMETER_STRICTNESS_PROMPT}
+    ${THD_HEADSPACE_DIRECTIVE}
     Ensure the recipe captures the signature vocal sound, effects, and mixing techniques associated with ${query}.
     Identify 2-3 mainstream or commonly known artists who would typically use this specific vocal chain.
     Include a recommended BPM, 'recommendedScale', and 'chordProgression' that fits the vibe.
@@ -3213,6 +3396,7 @@ export const getCustomBeatRecommendations = async (plugins: VSTPlugin[], query: 
     ${starredStr}
     ${sphereMicStr}
     ${getLanguageInstruction(language)}
+    ${THD_HEADSPACE_DIRECTIVE}
     Ensure the recipe captures the signature sound, bounce, and atmospheric elements associated with ${query}.
     Identify 2-3 mainstream or commonly known artists who would typically use this specific beat type.
     Include a recommended BPM, 'recommendedScale', and 'chordProgression' that fits the vibe.
@@ -3290,10 +3474,12 @@ export const getSongBeatRecommendations = async (plugins: VSTPlugin[], songQuery
     }
     return true;
   });
+  const resolvedStarred = resolveStarredPlugins(starredPlugins, filteredPlugins);
+  const remainingPlugins = filteredPlugins.filter(p => !starredPlugins.some(s => s.toLowerCase() === p.name.toLowerCase()));
   const limitedPlugins = [
-    ...filteredPlugins.filter(p => starredPlugins.includes(p.name)),
-    ...filteredPlugins.filter(p => !starredPlugins.includes(p.name))
-  ].slice(0, 50);
+    ...resolvedStarred,
+    ...remainingPlugins.slice(0, Math.max(20, 50 - resolvedStarred.length))
+  ];
   const pluginListStr = limitedPlugins.map(p => {
     let str = `${p.vendor} - ${p.name} (${p.type})`;
     if (p.parameters && p.parameters.length > 0) {
@@ -3302,8 +3488,8 @@ export const getSongBeatRecommendations = async (plugins: VSTPlugin[], songQuery
     return str;
   }).join('\n');
   const analogStr = !excludeAnalog ? generateAnalogStr(analogInstruments, analogHardware, drumKits) : '';
-  const dawStr = dawType ? `nThe user is using ${dawType} as their DAW. Include specific instructions or tips for ${dawType} where relevant in the guides or recipes.` : '';
-  const starredStr = starredPlugins.length > 0 ? `\nCRITICAL: The user has STARRED (favorited) the following plugins. You ABSOLUTELY MUST prioritize using these plugins in EVERY SINGLE track/step whenever possible:n${starredPlugins.join(', ')}` : '';
+  const dawStr = dawType ? `\nThe user is using ${dawType} as their DAW. Include specific instructions or tips for ${dawType} where relevant in the guides or recipes.` : '';
+  const starredStr = getStarredPluginsPrompt(starredPlugins);
   const hasSphereMic = analogHardware.some(h => ['Sphere DLX', 'Sphere LX', 'L22'].includes(h.name) || h.name.toLowerCase() === 'l22' || h.name.toLowerCase().includes('townsend'));
   const sphereMicStr = hasSphereMic ? `\nCRITICAL: The user owns a Universal Audio Sphere (DLX/LX) or Townsend Labs L22 microphone. If the recipe involves a vocal tracking chain, you MUST assign the 'UAD Sphere Mic Collection', 'Ocean Way Mic Collection', or 'Bill Putnam Mic Collection' plugin as the VERY FIRST insert plugin on the vocal channel tracking chain. You MUST specifically select a mic model inside it based on the vibe searched. After the mic collection plugin, you can add up to 3 more plugins.` : '';
   
@@ -3360,6 +3546,7 @@ export const getSongBeatRecommendations = async (plugins: VSTPlugin[], songQuery
     ${RC20_SPEC_PROMPT}
     ${ATR102_SPEC_PROMPT}
     ${GLOBAL_PARAMETER_STRICTNESS_PROMPT}
+    ${THD_HEADSPACE_DIRECTIVE}
     Ensure the recipe captures the signature vocal sound of that specific song.
     Identify 2-3 mainstream or commonly known artists who would typically use this specific vocal chain.
     Include a recommended BPM, 'recommendedScale', and 'chordProgression' that fits the vibe.
@@ -3402,6 +3589,7 @@ export const getSongBeatRecommendations = async (plugins: VSTPlugin[], songQuery
     ${RC20_SPEC_PROMPT}
     ${ATR102_SPEC_PROMPT}
     ${GLOBAL_PARAMETER_STRICTNESS_PROMPT}
+    ${THD_HEADSPACE_DIRECTIVE}
     FOLLOW THIS STRUCTURAL BLUEPRINT:
     ${JSON.stringify(blueprint)}
     Ensure the recipe captures the signature sound, instrumentation, and mixing techniques of that specific song, while strictly adhering to the structural blueprint provided above.
@@ -3542,14 +3730,16 @@ export const getAudioBeatRecommendations = async (plugins: VSTPlugin[], audioBas
     }
     return true;
   });
-    const limitedPlugins = [
-    ...filteredPlugins.filter(p => starredPlugins.includes(p.name)),
-    ...filteredPlugins.filter(p => !starredPlugins.includes(p.name))
-  ].slice(0, 50);
+  const resolvedStarred = resolveStarredPlugins(starredPlugins, filteredPlugins);
+  const remainingPlugins = filteredPlugins.filter(p => !starredPlugins.some(s => s.toLowerCase() === p.name.toLowerCase()));
+  const limitedPlugins = [
+    ...resolvedStarred,
+    ...remainingPlugins.slice(0, Math.max(20, 50 - resolvedStarred.length))
+  ];
   const pluginListStr = limitedPlugins.map(p => `${p.vendor} - ${p.name} (${p.type})`).join('\n');
   const analogStr = !excludeAnalog ? generateAnalogStr(analogInstruments, analogHardware, drumKits) : '';
-  const dawStr = dawType ? `nThe user is using ${dawType} as their DAW. Include specific instructions or tips for ${dawType} where relevant in the guides or recipes.` : '';
-  const starredStr = starredPlugins.length > 0 ? `\nCRITICAL: The user has STARRED (favorited) the following plugins. You ABSOLUTELY MUST prioritize using these plugins in EVERY SINGLE track/step whenever possible:n${starredPlugins.join(', ')}` : '';
+  const dawStr = dawType ? `\nThe user is using ${dawType} as their DAW. Include specific instructions or tips for ${dawType} where relevant in the guides or recipes.` : '';
+  const starredStr = getStarredPluginsPrompt(starredPlugins);
   const hasSphereMic = analogHardware.some(h => ['Sphere DLX', 'Sphere LX', 'L22'].includes(h.name) || h.name.toLowerCase() === 'l22' || h.name.toLowerCase().includes('townsend'));
   const sphereMicStr = hasSphereMic ? `\nCRITICAL: The user owns a Universal Audio Sphere (DLX/LX) or Townsend Labs L22 microphone. If the recipe involves a vocal tracking chain, you MUST assign the 'UAD Sphere Mic Collection', 'Ocean Way Mic Collection', or 'Bill Putnam Mic Collection' plugin as the VERY FIRST insert plugin on the vocal channel tracking chain. You MUST specifically select a mic model inside it based on the vibe searched. After the mic collection plugin, you can add up to 3 more plugins.` : '';
   const contextStr = userContext ? `\nCRITICAL USER CONTEXT: The user has provided the following information about their track and goals. You MUST incorporate this into your analysis and advice ALWAYS, IT IS THE MOST IMPORTANT INSTRUCTION. Your suggestions MUST explicitly align with and aim to achieve these exact goals, and NOT ruin the mix/volume:n"${userContext}"n` : "";
@@ -3672,6 +3862,7 @@ export const getAudioBeatRecommendations = async (plugins: VSTPlugin[], audioBas
     ${RC20_SPEC_PROMPT}
     ${ATR102_SPEC_PROMPT}
     ${GLOBAL_PARAMETER_STRICTNESS_PROMPT}
+    ${THD_HEADSPACE_DIRECTIVE}
     ${isTargetOnly ? "The user's project/vocal track is provided as audio. Analyze this track to detect its BPM, Key, vocal pocket, and section arrangement, and generate full-song MIDI stems and sound design recipes to completely replace the original beat." : (audioUrl ? `The main audio file is available at this URL: ${audioUrl}. Please fetch and analyze it.` : "The main audio file is provided as inline data.")}
     ${isDoubleAudio ? "\nThere is a second audio file attached. This is the target 'Recreate For' track. Analyze both and adapt the first song's elements to match the second track's BPM and Key." : ""}
     Ensure the recipe captures the signature vocal sound of the audio.
@@ -3729,6 +3920,7 @@ export const getAudioBeatRecommendations = async (plugins: VSTPlugin[], audioBas
     ${RC20_SPEC_PROMPT}
     ${ATR102_SPEC_PROMPT}
     ${GLOBAL_PARAMETER_STRICTNESS_PROMPT}
+    ${THD_HEADSPACE_DIRECTIVE}
     ${isTargetOnly ? "The user's project/vocal track is provided as audio. Analyze this track to detect its BPM, Key, vocal pocket, and section arrangement, and generate full-song MIDI stems and sound design recipes to completely replace the original beat." : (audioUrl ? `The main audio file is available at this URL: ${audioUrl}. Please fetch and analyze it.` : "The main audio file is provided as inline data.")}
     ${isDoubleAudio ? "\nThere is a second audio file attached. This is the target 'Recreate For' track. Analyze both and adapt the first song's elements (such as chords, leads, sub-bass, 808s, arpeggios, and drums) to match the second track's BPM and Key perfectly." : ""}
     Ensure the recipe captures the signature sound, instrumentation, and mixing techniques heard in the audio.
@@ -5215,16 +5407,18 @@ export const getAlbumMasteringGuide = async (
     }
     return true;
   });
-    const limitedPlugins = [
-    ...filteredPlugins.filter(p => starredPlugins.includes(p.name)),
-    ...filteredPlugins.filter(p => !starredPlugins.includes(p.name))
-  ].slice(0, 50);
+  const resolvedStarred = resolveStarredPlugins(starredPlugins, filteredPlugins);
+  const remainingPlugins = filteredPlugins.filter(p => !starredPlugins.some(s => s.toLowerCase() === p.name.toLowerCase()));
+  const limitedPlugins = [
+    ...resolvedStarred,
+    ...remainingPlugins.slice(0, Math.max(20, 50 - resolvedStarred.length))
+  ];
   const pluginListStr = limitedPlugins.map(p => `${p.vendor} - ${p.name} (${p.type}) [Parameters: ${p.parameters?.join(', ') || 'N/A'}]`).join('\n');
 
   let hardwareListStr = [...analogInstruments, ...analogHardware].map(h => h.name).join('\n');
 
-  const dawStr = dawType ? `nThe user is using ${dawType} as their DAW. Include specific instructions or tips for ${dawType} where relevant.` : '';
-  const starredStr = starredPlugins.length > 0 ? `\nCRITICAL MANDATORY INSTRUCTION: The user has STARRED (favorited) the following plugins:n${starredPlugins.join(', ')}nYou ABSOLUTELY MUST include these starred plugins in EVERY SINGLE track's recommended chain. This is a non-negotiable hard requirement.` : '';
+  const dawStr = dawType ? `\nThe user is using ${dawType} as their DAW. Include specific instructions or tips for ${dawType} where relevant.` : '';
+  const starredStr = getStarredPluginsPrompt(starredPlugins);
 
   const isSpecialUserAlbum = userEmail === 'coldestconcept@gmail.com' || userEmail === 'recognizemiracles@gmail.com';
   let specialUserInstructions = '';

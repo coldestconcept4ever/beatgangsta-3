@@ -1,5 +1,5 @@
 import MidiWriter from 'midi-writer-js';
-import { generateMidiTrack, generateAudioLoop, generateDrumMidiBaseData, generateFullSongMidiTrack, generateFullSongDrumPartMidi, isMidiCapable, getBeats, PatternLength, PatternVariation } from './midiGenerator';
+import { generateMidiTrack, generateAudioLoop, generateDrumMidiBaseData, generateFullSongMidiTrack, generateFullSongDrumPartMidi, getFullSongArrangement, isMidiCapable, getBeats, PatternLength, PatternVariation } from './midiGenerator';
 import { BeatRecipe, MidiNote } from '../types';
 
 // Dynamic import for JSZip
@@ -9,6 +9,9 @@ export const generateIndividualMidiFiles = async (recipe: BeatRecipe): Promise<{
   const files: { name: string; data: string; type: 'midi' | 'loop' }[] = [];
   const bpm = recipe.bpm || 120;
   const safeTitle = recipe.title.replace(/[^a-z0-9]/gi, '_').toLowerCase();
+  const calculatedBars = recipe.totalBars || (recipe.audioDuration && recipe.bpm ? Math.ceil((recipe.audioDuration * recipe.bpm) / 240) : undefined);
+  const fullArrangement = getFullSongArrangement(recipe.detectedSectionLengths, calculatedBars);
+  const targetTotalBars = calculatedBars || fullArrangement.reduce((sum, p) => sum + p.bars, 0);
 
   let fileIndex = 1;
 
@@ -23,7 +26,7 @@ export const generateIndividualMidiFiles = async (recipe: BeatRecipe): Promise<{
     ];
 
     for (const dp of drumParts) {
-      const drumBytes = generateFullSongDrumPartMidi(recipe.drumPatterns, dp.key, recipe.title, bpm, recipe.detectedSectionLengths);
+      const drumBytes = generateFullSongDrumPartMidi(recipe.drumPatterns, dp.key, recipe.title, bpm, recipe.detectedSectionLengths, targetTotalBars);
       if (drumBytes && drumBytes.length > 0) {
         const trackNum = String(fileIndex++).padStart(2, '0');
         files.push({
@@ -40,7 +43,7 @@ export const generateIndividualMidiFiles = async (recipe: BeatRecipe): Promise<{
   for (let idx = 0; idx < tracks.length; idx++) {
     const ing = tracks[idx];
     if (isMidiCapable(ing.name, ing.loopGuide)) {
-      const track = generateFullSongMidiTrack(ing.name, bpm, recipe.title, ing.midiNotes, recipe.detectedSectionLengths, ing.loopGuide);
+      const track = generateFullSongMidiTrack(ing.name, bpm, recipe.title, ing.midiNotes, recipe.detectedSectionLengths, ing.loopGuide, targetTotalBars);
       const write = new MidiWriter.Writer([track]);
       const midiBytes = write.buildFile();
       const safeInstName = ing.name.replace(/[^a-z0-9]/gi, '_');
@@ -63,6 +66,10 @@ export const generateAllMidiZip = async (recipe: BeatRecipe, dawType?: string | 
   const zip = new JSZip();
   const bpm = recipe.bpm || 120;
   const safeTitle = recipe.title.replace(/[^a-z0-9]/gi, '_').toLowerCase();
+  const calculatedBars = recipe.totalBars || (recipe.audioDuration && recipe.bpm ? Math.ceil((recipe.audioDuration * recipe.bpm) / 240) : undefined);
+  const fullArrangement = getFullSongArrangement(recipe.detectedSectionLengths, calculatedBars);
+  const totalArrangementBars = calculatedBars || fullArrangement.reduce((sum, p) => sum + p.bars, 0);
+  const targetTotalBars = totalArrangementBars;
 
   let fileIndex = 1;
 
@@ -77,7 +84,7 @@ export const generateAllMidiZip = async (recipe: BeatRecipe, dawType?: string | 
     ];
 
     for (const dp of drumParts) {
-      const drumBytes = generateFullSongDrumPartMidi(recipe.drumPatterns, dp.key, recipe.title, bpm, recipe.detectedSectionLengths);
+      const drumBytes = generateFullSongDrumPartMidi(recipe.drumPatterns, dp.key, recipe.title, bpm, recipe.detectedSectionLengths, targetTotalBars);
       if (drumBytes && drumBytes.length > 0) {
         const trackNum = String(fileIndex++).padStart(2, '0');
         zip.file(`${trackNum}_${safeTitle}_${dp.name}_FullSong.mid`, drumBytes);
@@ -89,7 +96,7 @@ export const generateAllMidiZip = async (recipe: BeatRecipe, dawType?: string | 
   const tracks = recipe.instruments || [];
   tracks.forEach((ing) => {
     if (isMidiCapable(ing.name, ing.loopGuide)) {
-      const track = generateFullSongMidiTrack(ing.name, bpm, recipe.title, ing.midiNotes, recipe.detectedSectionLengths, ing.loopGuide);
+      const track = generateFullSongMidiTrack(ing.name, bpm, recipe.title, ing.midiNotes, recipe.detectedSectionLengths, ing.loopGuide, targetTotalBars);
       const write = new MidiWriter.Writer([track]);
       const midiBytes = write.buildFile();
       const safeInstName = ing.name.replace(/[^a-z0-9]/gi, '_');
@@ -105,14 +112,18 @@ export const generateAllMidiZip = async (recipe: BeatRecipe, dawType?: string | 
   guideText += `Song Title: ${recipe.title}\n`;
   guideText += `Style / Aesthetic: ${recipe.style}\n`;
   guideText += `Tempo: ${bpm} BPM\n`;
-  if (recipe.detectedSectionLengths) {
-    guideText += `\nARRANGEMENT MAP (Section Bar Counts):\n`;
-    Object.entries(recipe.detectedSectionLengths).forEach(([sec, bars]) => {
-      guideText += ` - ${sec.toUpperCase()}: ${bars} bars\n`;
-    });
-  }
+  guideText += `Total Full Song Duration: ${totalArrangementBars} bars (${((totalArrangementBars * 240) / bpm).toFixed(1)} seconds)\n`;
+  
+  guideText += `\nARRANGEMENT TIMELINE & SECTION MAP (${totalArrangementBars} Total Bars):\n`;
+  let runningBar = 1;
+  fullArrangement.forEach((p) => {
+    const endBar = runningBar + p.bars - 1;
+    guideText += ` - Bar ${runningBar} to Bar ${endBar} (${p.bars} bars): ${p.label.toUpperCase()} [${p.section.toUpperCase()}]\n`;
+    runningBar += p.bars;
+  });
+
   guideText += `\nDAW DRAG-AND-DROP INSTRUCTION:\n`;
-  guideText += `All included MIDI files span the ENTIRE duration of the song from Bar 1 (0:00:00) to the end.\n`;
+  guideText += `All included MIDI files span the ENTIRE duration of the song from Bar 1 (0:00:00) to Bar ${totalArrangementBars}.\n`;
   guideText += `Simply drag all .mid files directly onto separate tracks in your DAW starting at Bar 1 Beat 1.\n`;
   guideText += `All musical rests and section entrances/exits are already automated and locked into place!\n\n`;
 

@@ -373,6 +373,40 @@ export const RecipeHTMLTemplate: React.FC<{ recipe: BeatRecipe, drumKits?: any[]
         </section>
       )}
 
+      {/* Stem THD & Headspace Calibration Matrix */}
+      {(recipe.stemThdSettings || (recipe.instruments && recipe.instruments.some(i => i.thdHeadspaceDb))) && (
+        <section className="space-y-8 print-break">
+          <h2 className="text-2xl font-black uppercase tracking-widest text-[#38bdf8] border-b border-[#0369a1] pb-4 print:border-slate-300">
+            ⚡ Stem Headspace & THD Calibration Matrix (dB Limits)
+          </h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {recipe.stemThdSettings ? (
+              Object.entries(recipe.stemThdSettings).map(([stemName, thdVal], sIdx) => (
+                <div key={sIdx} className="p-6 webos-card border-[#0369a1] print:bg-white print:border-slate-300 flex flex-col justify-between">
+                  <div className="flex justify-between items-center mb-2">
+                    <span className="text-sm font-black uppercase tracking-wider text-[#38bdf8] print:text-sky-700">{stemName}</span>
+                    <span className="text-[10px] px-2 py-0.5 rounded-full font-bold bg-amber-500/20 text-amber-300 border border-amber-500/30 print:bg-amber-100 print:text-amber-800">THD Headspace</span>
+                  </div>
+                  <span className="text-sm font-mono font-bold text-slate-200 print:text-slate-800 leading-relaxed">{thdVal}</span>
+                </div>
+              ))
+            ) : (
+              recipe.instruments?.map((inst, iIdx) => (
+                inst.thdHeadspaceDb && (
+                  <div key={iIdx} className="p-6 webos-card border-[#0369a1] print:bg-white print:border-slate-300 flex flex-col justify-between">
+                    <div className="flex justify-between items-center mb-2">
+                      <span className="text-sm font-black uppercase tracking-wider text-[#38bdf8] print:text-sky-700">{inst.name}</span>
+                      <span className="text-[10px] px-2 py-0.5 rounded-full font-bold bg-amber-500/20 text-amber-300 border border-amber-500/30 print:bg-amber-100 print:text-amber-800">THD Headspace</span>
+                    </div>
+                    <span className="text-sm font-mono font-bold text-slate-200 print:text-slate-800 leading-relaxed">{inst.thdHeadspaceDb}</span>
+                  </div>
+                )
+              ))
+            )}
+          </div>
+        </section>
+      )}
+
       {/* Verdict */}
       {recipe.mixingAdvice && (
         <section className="text-center space-y-8 py-16 border-t border-[#0369a1] print-break print:border-slate-300">

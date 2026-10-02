@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Music, Play, Square, Sparkles } from 'lucide-react';
 import MidiWriter from 'midi-writer-js';
-import { generateMidiTrack, generateFullSongMidiTrack, generateFullSongDrumPartMidi, PatternLength, PatternVariation, generateAudioLoop } from '../utils/midiGenerator';
+import { generateMidiTrack, generateFullSongMidiTrack, generateFullSongDrumPartMidi, getFullSongArrangement, PatternLength, PatternVariation, generateAudioLoop } from '../utils/midiGenerator';
 import { AppTheme, MidiNote, DrumPattern } from '../types';
 import { playMidiPreview, stopMidiPreview, initAudio, resumeAudio } from '../utils/midiPlayer';
 import { ErrorModal } from './ErrorModal';
@@ -18,6 +18,7 @@ interface MidiDraggableButtonProps {
   dawType?: string | null;
   activeSection?: string;
   isFullSong?: boolean;
+  targetTotalBars?: number;
   drumPart?: 'kick' | 'snare' | 'hiHat' | 'openHat' | 'perc' | 'clap' | 'cymbal';
   drumPatterns?: {
     intro?: DrumPattern;
@@ -47,6 +48,7 @@ export const MidiDraggableButton: React.FC<MidiDraggableButtonProps> = ({
   dawType,
   activeSection = 'hook',
   isFullSong = false,
+  targetTotalBars,
   drumPart,
   drumPatterns,
   detectedSectionLengths,
@@ -62,14 +64,13 @@ export const MidiDraggableButton: React.FC<MidiDraggableButtonProps> = ({
     stack: ''
   });
 
-  const totalBars = detectedSectionLengths 
-    ? Object.values(detectedSectionLengths).reduce((acc, b) => acc + (b || 0), 0) 
-    : 48;
+  const fullArrangement = getFullSongArrangement(detectedSectionLengths, targetTotalBars);
+  const totalBars = targetTotalBars || fullArrangement.reduce((sum, p) => sum + p.bars, 0);
 
   const prepareMidiData = async () => {
     try {
       if (drumPart && drumPatterns) {
-        const midiBytes = generateFullSongDrumPartMidi(drumPatterns, drumPart, recipeTitle, bpm, detectedSectionLengths);
+        const midiBytes = generateFullSongDrumPartMidi(drumPatterns, drumPart, recipeTitle, bpm, detectedSectionLengths, totalBars);
         const fileName = `${recipeTitle.replace(/\s+/g, '_')}_${drumPart.toUpperCase()}_FullSong_${bpm}BPM.mid`;
         const blob = new Blob([midiBytes], { type: 'audio/midi' });
         const downloadUrl = URL.createObjectURL(blob);
@@ -83,7 +84,7 @@ export const MidiDraggableButton: React.FC<MidiDraggableButtonProps> = ({
       let fileName: string;
 
       if (isFullSong) {
-        track = generateFullSongMidiTrack(instrument, bpm, recipeTitle, midiNotes, detectedSectionLengths, loopGuide);
+        track = generateFullSongMidiTrack(instrument, bpm, recipeTitle, midiNotes, detectedSectionLengths, loopGuide, totalBars);
         fileName = `${recipeTitle.replace(/\s+/g, '_')}_${instrument.replace(/\s+/g, '_')}_FullSong_${bpm}BPM.mid`;
       } else {
         let sectionMidiNotes: MidiNote[] | undefined = undefined;

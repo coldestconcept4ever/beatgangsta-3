@@ -11,7 +11,7 @@ import { motion } from 'motion/react';
 import { Loader2, Download, Music, Save, Cloud, Search, FileCode, RefreshCw, Layers, Activity } from 'lucide-react';
 import { getSpecificMixHelp, getGangstaVoxRecipe } from '../services/geminiService';
 import { MidiDraggableButton } from './MidiDraggableButton';
-import { isMidiCapable, getBeats, generateDrumMidiBaseData, generateMidiTrack } from '../utils/midiGenerator';
+import { isMidiCapable, getBeats, generateDrumMidiBaseData, generateMidiTrack, getFullSongArrangement } from '../utils/midiGenerator';
 import MidiWriter from 'midi-writer-js';
 import { generateAllMidiZip } from '../utils/exportAllMidi';
 import { generateDawProjectFromBeatRecipe } from '../utils/dawprojectUtils';
@@ -53,6 +53,8 @@ export const RecipeCard: React.FC<RecipeCardProps> = ({ recipe: initialRecipe, i
   useEffect(() => {
     setRecipe(initialRecipe);
   }, [initialRecipe]);
+
+  const targetTotalBars = recipe.totalBars || (recipe.audioDuration && recipe.bpm ? Math.ceil((recipe.audioDuration * recipe.bpm) / 240) : undefined);
 
   const handleRegenerate = async (plugin: any, trackIdx: number, pluginIdx: number, type: 'track' | 'bus' | 'layer' | 'master' | 'instrument' | 'instrument-params' | 'vocal-track' | 'vocal-track-params' | 'vocal-track-fx' | 'tracking-unison' | 'tracking-insert') => {
     const pluginId = `${type}-${trackIdx}-${pluginIdx}`;
@@ -287,22 +289,12 @@ export const RecipeCard: React.FC<RecipeCardProps> = ({ recipe: initialRecipe, i
       }
 
       let currentBeatAcc = 0;
-      const songStructure = [
-        { section: 'intro', bars: 4 },
-        { section: 'hook', bars: 8 },
-        { section: 'verse', bars: 16 },
-        { section: 'hook', bars: 8 },
-        { section: 'verse', bars: 16 },
-        { section: 'hook', bars: 8 },
-        { section: 'bridge', bars: 8 },
-        { section: 'hook', bars: 8 },
-        { section: 'outro', bars: 8 },
-      ];
+      const songStructure = getFullSongArrangement(recipe.detectedSectionLengths, targetTotalBars);
       
       for (const part of songStructure) {
         if (recipe.drumPatterns || recipe.arrangement) {
-          txtContent += `MARKER|${currentBeatAcc/4 + 1}|${part.section.toUpperCase()}\n`;
-          txtContent += `REGION|${currentBeatAcc}|${currentBeatAcc + (part.bars * 4)}|${part.section.toUpperCase()}\n`;
+          txtContent += `MARKER|${currentBeatAcc/4 + 1}|${part.label.toUpperCase()}\n`;
+          txtContent += `REGION|${currentBeatAcc}|${currentBeatAcc + (part.bars * 4)}|${part.label.toUpperCase()}\n`;
         }
         currentBeatAcc += part.bars * 4;
       }
@@ -350,24 +342,13 @@ export const RecipeCard: React.FC<RecipeCardProps> = ({ recipe: initialRecipe, i
         
         if (isDrumsRole && recipe.drumPatterns) {
            try {
-             const songStructure = [
-               { section: 'intro', bars: 4 },
-               { section: 'hook', bars: 8 },
-               { section: 'verse', bars: 16 },
-               { section: 'hook', bars: 8 },
-               { section: 'verse', bars: 16 },
-               { section: 'hook', bars: 8 },
-               { section: 'bridge', bars: 8 },
-               { section: 'hook', bars: 8 },
-               { section: 'outro', bars: 8 },
-             ];
              let currentBeat = 0;
              for (const part of songStructure) {
                const pattern = (recipe.drumPatterns as any)[part.section] || recipe.drumPatterns.hook || recipe.drumPatterns.verse;
                if (pattern) {
-                 const midiBytes = generateDrumMidiBaseData(pattern, recipe.title, part.section, recipe.bpm || 120, true, (part.bars === 16 ? 8 : part.bars) as any);
+                 const midiBytes = generateDrumMidiBaseData(pattern, recipe.title, part.section, recipe.bpm || 120, true, part.bars as any);
                  const base64Midi = window.btoa(String.fromCharCode.apply(null, Array.from(midiBytes)));
-                 txtContent += `MIDI_FILE|${inst.name}|${currentBeat}|${part.bars} Bar ${part.section.toUpperCase()}|${base64Midi}\n`;
+                 txtContent += `MIDI_FILE|${inst.name}|${currentBeat}|${part.bars} Bar ${part.label.toUpperCase()}|${base64Midi}\n`;
                }
                currentBeat += part.bars * 4;
              }
@@ -376,26 +357,30 @@ export const RecipeCard: React.FC<RecipeCardProps> = ({ recipe: initialRecipe, i
            }
         } else if (isMidiCapable(inst.name, inst.loopGuide || '')) {
            try {
-             let sectionMidiNotes: any = [];
-             if (Array.isArray(inst.midiNotes)) {
-               sectionMidiNotes = inst.midiNotes;
-             } else if (inst.midiNotes) {
-               sectionMidiNotes = inst.midiNotes.hook || inst.midiNotes.verse || [];
-             }
-             
-             const options = [
-               { bars: 4, variation: 'A', startBeat: 0 },
-               { bars: 4, variation: 'B', startBeat: 16 },
-               { bars: 8, variation: 'A', startBeat: 32 },
-               { bars: 8, variation: 'B', startBeat: 64 }
-             ];
-             
-             for (const opt of options) {
-               const track = generateMidiTrack(inst.name, inst.loopGuide || '', recipe.bpm || 120, opt.bars as any, opt.variation as any, recipe.title, sectionMidiNotes);
-               const write = new MidiWriter.Writer([track]);
-               const midiBytes = write.buildFile();
-               const base64Midi = window.btoa(String.fromCharCode.apply(null, Array.from(midiBytes)));
-               txtContent += `MIDI_FILE|${inst.name}|${opt.startBeat}|${opt.bars} Bar ${opt.variation}|${base64Midi}\n`;
+             let currentBeat = 0;
+             for (const part of songStructure) {
+               let sectionMidiNotes: any = [];
+               if (Array.isArray(inst.midiNotes)) {
+                 sectionMidiNotes = inst.midiNotes;
+               } else if (inst.midiNotes && typeof inst.midiNotes === 'object') {
+                 sectionMidiNotes = (inst.midiNotes as any)[part.section] || (inst.midiNotes as any).hook || (inst.midiNotes as any).verse || [];
+               }
+               
+               if (sectionMidiNotes && sectionMidiNotes.length > 0) {
+                 const track = generateMidiTrack(inst.name, inst.loopGuide || '', recipe.bpm || 120, part.bars as any, 'A', recipe.title, sectionMidiNotes);
+                 const write = new MidiWriter.Writer([track]);
+                 const midiBytes = write.buildFile();
+                 const base64Midi = window.btoa(String.fromCharCode.apply(null, Array.from(midiBytes)));
+                 txtContent += `MIDI_FILE|${inst.name}|${currentBeat}|${part.bars} Bar ${part.label.toUpperCase()}|${base64Midi}\n`;
+               } else {
+                 const variation = (part.label.includes('2') || part.label.includes('4')) ? 'B' : 'A';
+                 const track = generateMidiTrack(inst.name, inst.loopGuide || '', recipe.bpm || 120, Math.min(8, part.bars) as any, variation, recipe.title);
+                 const write = new MidiWriter.Writer([track]);
+                 const midiBytes = write.buildFile();
+                 const base64Midi = window.btoa(String.fromCharCode.apply(null, Array.from(midiBytes)));
+                 txtContent += `MIDI_FILE|${inst.name}|${currentBeat}|${part.bars} Bar ${part.label.toUpperCase()}|${base64Midi}\n`;
+               }
+               currentBeat += part.bars * 4;
              }
            } catch (e) {
              console.error("Failed to generate MIDI_FILE for inst", inst.name, e);
@@ -1071,6 +1056,7 @@ export const RecipeCard: React.FC<RecipeCardProps> = ({ recipe: initialRecipe, i
                         theme={theme} 
                         dawType={dawType} 
                         isFullSong={true}
+                        targetTotalBars={targetTotalBars}
                         detectedSectionLengths={recipe.detectedSectionLengths}
                         midiNotes={track.midiNotes} 
                       />
@@ -1108,6 +1094,17 @@ export const RecipeCard: React.FC<RecipeCardProps> = ({ recipe: initialRecipe, i
                   <span className={`text-[10px] font-bold px-2 py-1 rounded-md ${
                     theme === 'coldest' ? 'bg-orange-500 text-white border border-orange-400' : 'bg-orange-500/30 text-orange-300 border border-orange-500/40'
                   }`}>{track.busSend}</span>
+                </div>
+              )}
+
+              {(track.thdHeadspaceDb || recipe.stemThdSettings?.[track.name]) && (
+                <div className="mt-3 p-3 rounded-2xl bg-amber-500/10 border border-amber-500/30 flex items-center justify-between text-xs">
+                  <div className="flex items-center gap-2">
+                    <span className="font-black uppercase tracking-wider text-[10px] text-amber-400">⚡ THD Headspace:</span>
+                    <span className="font-mono font-bold text-amber-200">
+                      {track.thdHeadspaceDb || recipe.stemThdSettings?.[track.name]}
+                    </span>
+                  </div>
                 </div>
               )}
 
@@ -1461,6 +1458,7 @@ export const RecipeCard: React.FC<RecipeCardProps> = ({ recipe: initialRecipe, i
                     theme={theme}
                     dawType={dawType}
                     isFullSong={true}
+                    targetTotalBars={targetTotalBars}
                     drumPart="kick"
                     drumPatterns={recipe.drumPatterns}
                     detectedSectionLengths={recipe.detectedSectionLengths}
@@ -1540,6 +1538,7 @@ export const RecipeCard: React.FC<RecipeCardProps> = ({ recipe: initialRecipe, i
                     theme={theme}
                     dawType={dawType}
                     isFullSong={true}
+                    targetTotalBars={targetTotalBars}
                     drumPart="snare"
                     drumPatterns={recipe.drumPatterns}
                     detectedSectionLengths={recipe.detectedSectionLengths}
@@ -1619,6 +1618,7 @@ export const RecipeCard: React.FC<RecipeCardProps> = ({ recipe: initialRecipe, i
                     theme={theme}
                     dawType={dawType}
                     isFullSong={true}
+                    targetTotalBars={targetTotalBars}
                     drumPart="hiHat"
                     drumPatterns={recipe.drumPatterns}
                     detectedSectionLengths={recipe.detectedSectionLengths}
@@ -1707,6 +1707,7 @@ export const RecipeCard: React.FC<RecipeCardProps> = ({ recipe: initialRecipe, i
                       theme={theme}
                       dawType={dawType}
                       isFullSong={true}
+                      targetTotalBars={targetTotalBars}
                       drumPart="clap"
                       drumPatterns={recipe.drumPatterns}
                       detectedSectionLengths={recipe.detectedSectionLengths}
@@ -1791,6 +1792,7 @@ export const RecipeCard: React.FC<RecipeCardProps> = ({ recipe: initialRecipe, i
                           theme={theme}
                           dawType={dawType}
                           isFullSong={true}
+                          targetTotalBars={targetTotalBars}
                           detectedSectionLengths={recipe.detectedSectionLengths}
                           midiNotes={bassTrack.midiNotes}
                         />
@@ -1930,6 +1932,54 @@ export const RecipeCard: React.FC<RecipeCardProps> = ({ recipe: initialRecipe, i
               <p className="text-sm font-bold leading-relaxed">{recipe.mixingAdvice}</p>
             </div>
           </div>
+
+          {/* Stem Headspace & THD Calibration Matrix */}
+          {(recipe.stemThdSettings || (recipe.instruments && recipe.instruments.some(i => i.thdHeadspaceDb))) && (
+            <div className="mb-6">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="w-8 h-8 rounded-xl bg-amber-500/20 border border-amber-500/40 flex items-center justify-center text-amber-400 font-black text-sm">
+                  ⚡
+                </div>
+                <div>
+                  <h4 className={`text-sm font-black uppercase tracking-widest ${theme === 'coldest' ? 'text-amber-400' : 'text-amber-500 dark:text-amber-400'}`}>
+                    Stem Headspace & THD Calibration Matrix (Separate Stem Limits in dB)
+                  </h4>
+                  <p className="text-[11px] font-bold opacity-70">
+                    Individual Total Harmonic Distortion (THD) limits in dB for analog drive headspace, transients & master ceiling
+                  </p>
+                </div>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                {recipe.stemThdSettings ? (
+                  Object.entries(recipe.stemThdSettings).map(([stemName, thdVal], sIdx) => (
+                    <div key={sIdx} className={`p-4 rounded-2xl border flex flex-col justify-between ${
+                      theme === 'coldest' ? 'bg-amber-950/20 border-amber-500/30 text-amber-100' : 'bg-black/30 border-amber-500/20 text-white'
+                    }`}>
+                      <div className="flex justify-between items-center mb-1">
+                        <span className="text-xs font-black uppercase tracking-wider text-amber-400">{stemName}</span>
+                        <span className="text-[10px] px-2 py-0.5 rounded-full font-bold bg-amber-500/20 text-amber-300 border border-amber-500/30">THD Headspace</span>
+                      </div>
+                      <span className="text-xs font-mono font-bold leading-relaxed">{thdVal}</span>
+                    </div>
+                  ))
+                ) : (
+                  recipe.instruments?.map((inst, iIdx) => (
+                    inst.thdHeadspaceDb && (
+                      <div key={iIdx} className={`p-4 rounded-2xl border flex flex-col justify-between ${
+                        theme === 'coldest' ? 'bg-amber-950/20 border-amber-500/30 text-amber-100' : 'bg-black/30 border-amber-500/20 text-white'
+                      }`}>
+                        <div className="flex justify-between items-center mb-1">
+                          <span className="text-xs font-black uppercase tracking-wider text-amber-400">{inst.name}</span>
+                          <span className="text-[10px] px-2 py-0.5 rounded-full font-bold bg-amber-500/20 text-amber-300 border border-amber-500/30">THD Headspace</span>
+                        </div>
+                        <span className="text-xs font-mono font-bold leading-relaxed">{inst.thdHeadspaceDb}</span>
+                      </div>
+                    )
+                  ))
+                )}
+              </div>
+            </div>
+          )}
         </motion.div>
       )}
 

@@ -181,6 +181,7 @@ export interface InstrumentTrack {
   plugin?: string;
   type: 'vst' | 'analog' | 'other';
   sourceSoundGoal: string;
+  thdHeadspaceDb?: string;
   deepDive: ParameterSetting[];
   fxPlugins: DeepDivePlugin[];
   busSend?: string;
@@ -204,6 +205,7 @@ export interface BusTrack {
   name: string;
   tracksUsingBus: string[];
   fxPlugins: DeepDivePlugin[];
+  thdHeadspaceDb?: string;
   multiBandDetails?: {
     isEnabled: boolean;
     bandCount: number;
@@ -296,6 +298,8 @@ export interface BeatRecipe {
     bridge?: number;
     outro?: number;
   };
+  totalBars?: number;
+  audioDuration?: number;
   
   instruments: InstrumentTrack[];
   busses: BusTrack[];
@@ -343,6 +347,7 @@ export interface BeatRecipe {
     bassVirtualInstrumentObj?: { name: string; deepDive: ParameterSetting[] };
     bassFXPlugins?: { name: string; purpose: string; settings?: string; deepDive?: ParameterSetting[] }[];
   };
+  stemThdSettings?: Record<string, string>;
   audioBase64?: string;
   geminiFileUri?: string;
   mimeType?: string;

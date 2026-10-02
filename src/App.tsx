@@ -15,6 +15,7 @@ import { fetchWithDetailedError } from './lib/api';
 import { parseRpp } from './utils/reaperUtils';
 import { getReaperLua } from './lib/reaperLua';
 import { JSFX_DATABASE } from './data/jsfxResearch';
+import { VST_DATABASE } from './data/vstDatabase';
 import { DEFAULT_OWNED_XPAND_PRESETS, XPAND_CATEGORIES, XpandPreset } from './data/xpandPresets';
 
 import { AvianField } from './components/RavenField';
@@ -1744,6 +1745,7 @@ The AI was unable to verify these parameters. Please investigate.`;
   const [generationProgress, setGenerationProgress] = useState(0);
   const [generationEta, setGenerationEta] = useState(0);
   const [error, setError] = useState<string | null>(null);
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [creditError, setCreditError] = useState<string | null>(null);
   const [grillStyle, setGrillStyle] = useState<GrillStyle>(activeUI?.grillStyle || 'diamond');
   const [knifeStyle, setKnifeStyle] = useState<KnifeStyle>(activeUI?.knifeStyle || 'standard');
@@ -2463,21 +2465,62 @@ The AI was unable to verify these parameters. Please investigate.`;
     } else {
       const isJsfx = JSFX_DATABASE.some(j => j.name === itemName || j.shortName === itemName);
       if (plugins.some(p => p.name === itemName) || isJsfx) {
-        if (starredPlugins.length < 10) {
+        if (starredPlugins.length < 5) {
           setStarredPlugins([...starredPlugins, itemName]);
         } else {
-          setError("You can only star up to 10 plugins.");
-          setTimeout(() => setError(null), 3000);
+          setError("You can star up to 5 spotlight plugins that take top priority across all tracks. Un-star one first to add another.");
+          setTimeout(() => setError(null), 3500);
         }
       } else {
-        if (starredHardware.length < 10) {
+        if (starredHardware.length < 5) {
           setStarredHardware([...starredHardware, itemName]);
         } else {
-          setError("You can only star up to 10 hardware items.");
-          setTimeout(() => setError(null), 3000);
+          setError("You can star up to 5 spotlight hardware items.");
+          setTimeout(() => setError(null), 3500);
         }
       }
     }
+  };
+
+  const handleLoadUltimateRapChain = () => {
+    const rapFiveDbNames = [
+      "neve 1073 preamp and eq",
+      "noiseash need 533 eq",
+      "bx_console ssl 9000 j",
+      "empirical labs el8 distressor",
+      "soundtheory gullfoss"
+    ];
+
+    const newPluginsToAdd: VSTPlugin[] = [];
+    rapFiveDbNames.forEach(name => {
+      const exists = plugins.some(p => p.name.toLowerCase() === name.toLowerCase());
+      if (!exists) {
+        const dbEntry = VST_DATABASE.find(v => v.name.toLowerCase() === name.toLowerCase());
+        if (dbEntry) {
+          newPluginsToAdd.push({
+            name: dbEntry.displayName,
+            vendor: dbEntry.vendor,
+            type: dbEntry.category,
+            parameters: dbEntry.parameters.map((p: any) => p.name),
+            version: '1.0',
+            lastModified: new Date().toISOString()
+          });
+        }
+      }
+    });
+
+    if (newPluginsToAdd.length > 0) {
+      setPlugins(prev => {
+        const updated = [...prev, ...newPluginsToAdd];
+        localStorage.setItem('bg_library', JSON.stringify(updated));
+        return updated;
+      });
+    }
+
+    setStarredPlugins(rapFiveDbNames);
+    localStorage.setItem('bg_starred_plugins', JSON.stringify(rapFiveDbNames));
+    setSuccessMessage("⭐ 5 Spotlight Rap Plugins active! Neve 1073, NEED 533, SSL 9000 J, Distressor & Gullfoss now take absolute spotlight across all tracks.");
+    setTimeout(() => setSuccessMessage(null), 4500);
   };
 
 
@@ -5919,6 +5962,8 @@ Provide the exact JSFX plugin name and required sliders/parameters.`;
     const activeFilesForETA = [processFile, processRecreateFile].filter((f): f is File => f !== null);
     const progressInterval = simulateGenerationProgress(getEstimatedSeconds('audio-search', activeFilesForETA.length > 0 ? activeFilesForETA : undefined));
     const filesToDelete: string[] = [];
+    let physicalMetrics: any = undefined;
+    let referencePhysicalMetrics: any = undefined;
 
     try {
       const fileToBase64 = (file: File): Promise<string> => {
@@ -6150,7 +6195,6 @@ Provide the exact JSFX plugin name and required sliders/parameters.`;
         }
         
         // Perform browser-side physical pre-analysis for multi-pass evaluation
-        let physicalMetrics: any = undefined;
         if (processFile) {
           try {
             physicalMetrics = await analyzePhysicalCharacteristics(processFile);
@@ -6159,7 +6203,6 @@ Provide the exact JSFX plugin name and required sliders/parameters.`;
           }
         }
 
-        let referencePhysicalMetrics: any = undefined;
         if (processRefFile) {
           try {
             referencePhysicalMetrics = await analyzePhysicalCharacteristics(processRefFile);
@@ -6243,6 +6286,17 @@ Provide the exact JSFX plugin name and required sliders/parameters.`;
         let response;
         try {
           if (!requireAuth()) return;
+
+          if (!physicalMetrics && (processFile || processRecreateFile)) {
+            try {
+              const targetAudio = processFile || processRecreateFile;
+              if (targetAudio) {
+                physicalMetrics = await analyzePhysicalCharacteristics(targetAudio);
+              }
+            } catch (preErr) {
+              console.warn("Failed to pre-analyze audio for recipe generation:", preErr);
+            }
+          }
 
           let finalContext = critiqueContext;
           const isTargetOnly = !processFile && !!processRecreateFile;
@@ -6348,12 +6402,20 @@ Provide the exact JSFX plugin name and required sliders/parameters.`;
           response.recipes = response.recipes.map(r => ({ ...r, isJsfxMode }));
         }
 
-        const recipesWithAudio = response.recipes.map(r => ({
-          ...r,
-          audioBase64: audioBase64 || recreateBase64,
-          geminiFileUri: geminiFileUri || recreateFileUri,
-          mimeType: mimeType || recreateMimeType || 'audio/mpeg'
-        }));
+        const audioDur = physicalMetrics?.duration || referencePhysicalMetrics?.duration;
+        const recipesWithAudio = response.recipes.map(r => {
+          const totalBars = audioDur && r.bpm 
+            ? Math.ceil((audioDur * r.bpm) / 240) 
+            : undefined;
+          return {
+            ...r,
+            audioDuration: audioDur,
+            totalBars: totalBars,
+            audioBase64: audioBase64 || recreateBase64,
+            geminiFileUri: geminiFileUri || recreateFileUri,
+            mimeType: mimeType || recreateMimeType || 'audio/mpeg'
+          };
+        });
         
         setRecipes(recipesWithAudio);
         setCritiques([]);
@@ -8130,6 +8192,18 @@ Provide the exact JSFX plugin name and required sliders/parameters.`;
                <span className="text-[10px] font-black uppercase tracking-[0.2em]">{t('gear_rack')}</span>
             </button>
         </div>
+
+        {successMessage && (
+          <div className="mb-8 p-6 bg-emerald-950/40 border border-emerald-500/50 rounded-[2rem] text-emerald-200 text-sm font-bold relative overflow-hidden group shadow-xl">
+            <div className="absolute top-0 left-0 w-1.5 h-full bg-emerald-400"></div>
+            <div className="flex items-center gap-4">
+              <span className="text-2xl animate-pulse">⭐</span>
+              <div className="flex-1 text-left leading-relaxed">
+                <p className="whitespace-pre-wrap">{successMessage}</p>
+              </div>
+            </div>
+          </div>
+        )}
 
         {error && (
           <div className="mb-8 p-6 bg-red-900/20 border border-red-500/50 rounded-[2rem] text-red-400 text-sm font-bold relative overflow-hidden group">
@@ -10063,9 +10137,34 @@ Provide the exact JSFX plugin name and required sliders/parameters.`;
                 </div>
                 
 
+                {/* 5-Spotlight Starred Gear Priority Bar */}
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pt-4 pb-2 border-t border-white/10 -mt-2">
+                  <div className="flex items-center gap-3">
+                    <span className="px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider bg-amber-500/20 text-amber-300 border border-amber-500/30 flex items-center gap-1.5 shrink-0">
+                      <Star size={12} className="fill-current text-amber-400" />
+                      Spotlight Priority ({starredPlugins.length}/5 Slots)
+                    </span>
+                    <span className="text-[11px] font-bold opacity-60 hidden md:inline">
+                      Up to 5 starred plugins take spotlight across EVERY track no matter what mode is used
+                    </span>
+                  </div>
+                  {(user?.email === 'coldestconcept@gmail.com' || user?.email === 'recognizemiracles@gmail.com') && (
+                    <button
+                      onClick={handleLoadUltimateRapChain}
+                      className={`px-4 py-2 rounded-full font-black text-xs uppercase tracking-wider transition-all shadow-lg hover:scale-105 active:scale-95 flex items-center gap-2 shrink-0 ${
+                        theme === 'coldest' ? 'bg-amber-500 text-slate-950 hover:bg-amber-400' : 'bg-amber-500/30 text-amber-300 hover:bg-amber-500/40 border border-amber-500/50'
+                      }`}
+                      title="Load Neve 1073, NoiseAsh NEED 533 EQ, bx_console SSL 9000 J, EL8 Distressor (Parallel), and Gullfoss"
+                    >
+                      <span>⭐</span>
+                      <span>Load 5-Star Rap Chain</span>
+                    </button>
+                  )}
+                </div>
+
                 {/* Starred Items Bar */}
                 {true && (
-                  <div id="priority-bar" className="flex items-center gap-3 overflow-x-auto pt-4 pb-2 scrollbar-hide -mt-2">
+                  <div id="priority-bar" className="flex items-center gap-3 overflow-x-auto pt-2 pb-2 scrollbar-hide">
                     <span className="text-[10px] font-black uppercase tracking-widest opacity-50 shrink-0">{t('starred_count', { count: starredPlugins.length + starredHardware.length })}</span>
                     {[...starredPlugins, ...starredHardware].map((name, index) => {
                       const themeStyles = {
