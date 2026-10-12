@@ -2472,13 +2472,14 @@ The AI was unable to verify these parameters. Please investigate.`;
 
   const isPluginStarred = useCallback((name: string): boolean => {
     if (!name) return false;
-    return starredPlugins.some(p => pluginsMatch(p, name));
+    const norm = name.toLowerCase().trim();
+    return starredPlugins.some(p => p === name || p.toLowerCase().trim() === norm || pluginsMatch(p, name));
   }, [starredPlugins]);
 
   const isHardwareStarred = useCallback((name: string): boolean => {
     if (!name) return false;
     const norm = name.toLowerCase().trim();
-    return starredHardware.some(h => h.toLowerCase().trim() === norm);
+    return starredHardware.some(h => h === name || h.toLowerCase().trim() === norm);
   }, [starredHardware]);
 
   const toggleStar = (itemName: string) => {
@@ -2487,13 +2488,13 @@ The AI was unable to verify these parameters. Please investigate.`;
 
     // 1. If it's already starred as a plugin, unstar it!
     if (isPluginStarred(itemName)) {
-      setStarredPlugins(prev => prev.filter(p => !pluginsMatch(p, itemName)));
+      setStarredPlugins(prev => prev.filter(p => p !== itemName && p.toLowerCase().trim() !== itemNorm && !pluginsMatch(p, itemName)));
       return;
     }
 
     // 2. If it's already starred as hardware, unstar it!
     if (isHardwareStarred(itemName)) {
-      setStarredHardware(prev => prev.filter(h => h.toLowerCase().trim() !== itemNorm));
+      setStarredHardware(prev => prev.filter(h => h !== itemName && h.toLowerCase().trim() !== itemNorm));
       return;
     }
 
@@ -2508,14 +2509,14 @@ The AI was unable to verify these parameters. Please investigate.`;
         const dbMatch = VST_DATABASE.find(v => pluginsMatch(v.name, itemName) || pluginsMatch(v.displayName, itemName));
         const uadMatch = UAD_DATABASE.find(u => pluginsMatch(u.name, itemName) || pluginsMatch(u.displayName, itemName));
         const nameToAdd = dbMatch ? dbMatch.displayName : (uadMatch ? uadMatch.displayName : itemName);
-        setStarredPlugins(prev => [...prev.filter(p => !pluginsMatch(p, itemName)), nameToAdd]);
+        setStarredPlugins(prev => [...prev.filter(p => p !== itemName && p.toLowerCase().trim() !== itemNorm && !pluginsMatch(p, itemName)), nameToAdd]);
       } else {
         setError("You can star up to 5 spotlight plugins that take top priority across all tracks. Un-star one first to add another.");
         setTimeout(() => setError(null), 3500);
       }
     } else {
       if (starredHardware.length < 5) {
-        setStarredHardware(prev => [...prev.filter(h => h.toLowerCase().trim() !== itemNorm), itemName]);
+        setStarredHardware(prev => [...prev.filter(h => h !== itemName && h.toLowerCase().trim() !== itemNorm), itemName]);
       } else {
         setError("You can star up to 5 spotlight hardware items.");
         setTimeout(() => setError(null), 3500);
@@ -10258,13 +10259,14 @@ Provide the exact JSFX plugin name and required sliders/parameters.`;
                           </button>
                           <button
                             onClick={(e) => {
+                              e.preventDefault();
                               e.stopPropagation();
-                              setStarredPlugins(prev => prev.filter(p => p !== name && !pluginsMatch(p, name)));
+                              setStarredPlugins(prev => prev.filter(p => p !== name && p.toLowerCase().trim() !== name.toLowerCase().trim() && !pluginsMatch(p, name)));
                               setStarredHardware(prev => prev.filter(h => h !== name && h.toLowerCase().trim() !== name.toLowerCase().trim()));
                             }}
-                            className="absolute -top-1.5 -right-1.5 w-5 h-5 flex items-center justify-center bg-red-500 hover:bg-red-600 text-white rounded-full p-1 opacity-80 group-hover:opacity-100 transition-all hover:scale-110 active:scale-95 shadow-lg border-2 border-white/60 z-10"
+                            className="absolute -top-1.5 -right-1.5 w-6 h-6 flex items-center justify-center bg-red-500 hover:bg-red-600 text-white rounded-full p-1 opacity-90 group-hover:opacity-100 transition-all hover:scale-110 active:scale-95 shadow-lg border-2 border-white/60 z-20 cursor-pointer"
                             title={`Remove ${name}`}>
-                            <X size={10} />
+                            <X size={12} />
                           </button>
                         </div>
                       );
@@ -10286,12 +10288,8 @@ Provide the exact JSFX plugin name and required sliders/parameters.`;
                         key={kit.name} 
                         item={kit} 
                         theme={theme}
-                        isStarred={starredHardware.includes(kit.name)}
-                        onToggleStar={() => {
-                          setStarredHardware(prev => 
-                            prev.includes(kit.name) ? prev.filter(n => n !== kit.name) : [...prev, kit.name]
-                          );
-                        }}
+                        isStarred={isHardwareStarred(kit.name)}
+                        onToggleStar={() => toggleStar(kit.name)}
                         onRemove={() => setDrumKits(prev => prev.filter(k => k.name !== kit.name))}
                         onEdit={(item) => {
                           setEditingDrumKit(item);
@@ -10313,7 +10311,7 @@ Provide the exact JSFX plugin name and required sliders/parameters.`;
                         key={`hw-${idx}`}
                         item={item}
                         theme={theme}
-                        isStarred={starredHardware.includes(item.name)}
+                        isStarred={isHardwareStarred(item.name)}
                         onToggleStar={(itemName) => toggleStar(itemName)}
                         onRemove={(itemToRemove) => {
                           if (itemToRemove.type === 'instrument') {

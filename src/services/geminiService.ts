@@ -4176,8 +4176,9 @@ export const getMixCritique = async (
   // To prevent the AI from always picking the same 2-3 plugins from a static list,
   // balance available plugins across diverse categories (EQ, Dynamics/Compressor, Saturation/Tape, Space/Modulation, Master/Limiter)
   // and prioritize the user's high-end Gear Rack (UAD, FabFilter, Soundtoys, Soundtheory, Waves, Softube, etc.) over stock DAW utilities.
-  const starred = filteredPlugins.filter(p => starredPlugins.includes(p.name) && !mandatoryPlugins.some(m => m.name === p.name));
-  const remaining = filteredPlugins.filter(p => !starredPlugins.includes(p.name) && !mandatoryPlugins.some(m => m.name === p.name));
+  const isStarredMatch = (p: VSTPlugin) => starredPlugins.some(s => s === p.name || s.toLowerCase().trim() === p.name.toLowerCase().trim() || pluginsMatch(s, p.name));
+  const starred = filteredPlugins.filter(p => isStarredMatch(p) && !mandatoryPlugins.some(m => m.name === p.name));
+  const remaining = filteredPlugins.filter(p => !isStarredMatch(p) && !mandatoryPlugins.some(m => m.name === p.name));
 
   // Cap stock PreSonus plugins so they don't dominate when Studio One is selected
   const gearRackOnly = remaining.filter(p => !p.vendor.toLowerCase().includes('presonus') && !p.name.toLowerCase().includes('presonus'));
