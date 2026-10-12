@@ -1,6 +1,7 @@
 import { JSFX_DATABASE } from "../data/jsfxResearch";
 import { UAD_DATABASE } from "../data/uadDatabase";
 import { VST_DATABASE } from "../data/vstDatabase";
+import { pluginsMatch } from "../utils/pluginUtils";
 
 export enum Type {
   TYPE_UNSPECIFIED = "TYPE_UNSPECIFIED",
@@ -1036,9 +1037,9 @@ In the JSON response:
 export const resolveStarredPlugins = (starredPlugins: string[], availablePlugins: VSTPlugin[]): VSTPlugin[] => {
   if (!starredPlugins || starredPlugins.length === 0) return [];
   return starredPlugins.map(name => {
-    const existing = availablePlugins.find(p => p.name.toLowerCase() === name.toLowerCase() || p.displayName?.toLowerCase() === name.toLowerCase());
+    const existing = availablePlugins.find(p => pluginsMatch(p.name, name) || (p.displayName && pluginsMatch(p.displayName, name)));
     if (existing) return existing;
-    const inVst = VST_DATABASE.find(v => v.name.toLowerCase() === name.toLowerCase() || v.displayName.toLowerCase() === name.toLowerCase());
+    const inVst = VST_DATABASE.find(v => pluginsMatch(v.name, name) || pluginsMatch(v.displayName, name));
     if (inVst) {
       return {
         name: inVst.name,
@@ -1050,6 +1051,20 @@ export const resolveStarredPlugins = (starredPlugins: string[], availablePlugins
         version: '1.0',
         lastModified: new Date().toISOString(),
         parameters: inVst.parameters.map(p => p.name)
+      };
+    }
+    const inUad = UAD_DATABASE.find(u => pluginsMatch(u.name, name) || pluginsMatch(u.displayName, name));
+    if (inUad) {
+      return {
+        name: inUad.name,
+        displayName: inUad.displayName,
+        vendor: 'Universal Audio',
+        type: 'Effect' as any,
+        category: 'UAD',
+        description: inUad.description,
+        version: '1.0',
+        lastModified: new Date().toISOString(),
+        parameters: inUad.parameters.map(p => p.name)
       };
     }
     return {

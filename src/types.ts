@@ -67,6 +67,7 @@ export interface StructuralBlueprint {
 export interface VSTPlugin {
   vendor: string;
   name: string;
+  displayName?: string;
   type: string;
   version: string;
   lastModified: string;

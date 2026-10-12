@@ -16,6 +16,8 @@ import { parseRpp } from './utils/reaperUtils';
 import { getReaperLua } from './lib/reaperLua';
 import { JSFX_DATABASE } from './data/jsfxResearch';
 import { VST_DATABASE } from './data/vstDatabase';
+import { UAD_DATABASE } from './data/uadDatabase';
+import { pluginsMatch } from './utils/pluginUtils';
 import { DEFAULT_OWNED_XPAND_PRESETS, XPAND_CATEGORIES, XpandPreset } from './data/xpandPresets';
 
 import { AvianField } from './components/RavenField';
@@ -608,7 +610,14 @@ const App: React.FC = () => {
   const [starredPlugins, setStarredPlugins] = useState<string[]>(() => {
     try {
       const saved = localStorage.getItem('bg_starred_plugins');
-      return saved ? (JSON.parse(saved) || []) : [];
+      const raw: string[] = saved ? (JSON.parse(saved) || []) : [];
+      return raw.map((item: string) => {
+        const match = VST_DATABASE.find(v => v.name.toLowerCase() === item.toLowerCase() || v.displayName.toLowerCase() === item.toLowerCase());
+        if (match) return match.displayName;
+        const uadMatch = UAD_DATABASE.find(u => u.name.toLowerCase() === item.toLowerCase() || u.displayName.toLowerCase() === item.toLowerCase());
+        if (uadMatch) return uadMatch.displayName;
+        return item;
+      });
     } catch (e) {
       return [];
     }
@@ -1509,7 +1518,7 @@ The AI was unable to verify these parameters. Please investigate.`;
           placement: 'bottom' as const,
           isHighlighted: true,
           onEnter: () => {
-            if (tutorialPlugin && !starredPlugins.includes(tutorialPlugin.name)) {
+            if (tutorialPlugin && !isPluginStarred(tutorialPlugin.name)) {
               setStarredPlugins(prev => [...prev, tutorialPlugin.name]);
             }
           }
@@ -1965,6 +1974,10 @@ The AI was unable to verify these parameters. Please investigate.`;
   useEffect(() => {
     localStorage.setItem('bg_starred_hardware', JSON.stringify(starredHardware));
   }, [starredHardware]);
+
+  useEffect(() => {
+    localStorage.setItem('bg_starred_plugins', JSON.stringify(starredPlugins));
+  }, [starredPlugins]);
 
   useEffect(() => {
     const migrateAndEnrichHardware = async () => {
@@ -2457,45 +2470,73 @@ The AI was unable to verify these parameters. Please investigate.`;
     }
   }, [m_act, duragStyle]);
 
+  const isPluginStarred = useCallback((name: string): boolean => {
+    if (!name) return false;
+    return starredPlugins.some(p => pluginsMatch(p, name));
+  }, [starredPlugins]);
+
+  const isHardwareStarred = useCallback((name: string): boolean => {
+    if (!name) return false;
+    const norm = name.toLowerCase().trim();
+    return starredHardware.some(h => h.toLowerCase().trim() === norm);
+  }, [starredHardware]);
+
   const toggleStar = (itemName: string) => {
-    if (starredPlugins.includes(itemName)) {
-      setStarredPlugins(starredPlugins.filter(p => p !== itemName));
-    } else if (starredHardware.includes(itemName)) {
-      setStarredHardware(starredHardware.filter(h => h !== itemName));
-    } else {
-      const isJsfx = JSFX_DATABASE.some(j => j.name === itemName || j.shortName === itemName);
-      if (plugins.some(p => p.name === itemName) || isJsfx) {
-        if (starredPlugins.length < 5) {
-          setStarredPlugins([...starredPlugins, itemName]);
-        } else {
-          setError("You can star up to 5 spotlight plugins that take top priority across all tracks. Un-star one first to add another.");
-          setTimeout(() => setError(null), 3500);
-        }
+    if (!itemName) return;
+    const itemNorm = itemName.toLowerCase().trim();
+
+    // 1. If it's already starred as a plugin, unstar it!
+    if (isPluginStarred(itemName)) {
+      setStarredPlugins(prev => prev.filter(p => !pluginsMatch(p, itemName)));
+      return;
+    }
+
+    // 2. If it's already starred as hardware, unstar it!
+    if (isHardwareStarred(itemName)) {
+      setStarredHardware(prev => prev.filter(h => h.toLowerCase().trim() !== itemNorm));
+      return;
+    }
+
+    // 3. Otherwise, check if it's a plugin/JSFX or hardware to add
+    const isJsfx = JSFX_DATABASE.some(j => j.name.toLowerCase().trim() === itemNorm || j.shortName?.toLowerCase().trim() === itemNorm);
+    const isVst = plugins.some(p => pluginsMatch(p.name, itemName)) || 
+                  VST_DATABASE.some(v => pluginsMatch(v.name, itemName) || pluginsMatch(v.displayName, itemName)) ||
+                  UAD_DATABASE.some(u => pluginsMatch(u.name, itemName) || pluginsMatch(u.displayName, itemName));
+
+    if (isVst || isJsfx) {
+      if (starredPlugins.length < 5) {
+        const dbMatch = VST_DATABASE.find(v => pluginsMatch(v.name, itemName) || pluginsMatch(v.displayName, itemName));
+        const uadMatch = UAD_DATABASE.find(u => pluginsMatch(u.name, itemName) || pluginsMatch(u.displayName, itemName));
+        const nameToAdd = dbMatch ? dbMatch.displayName : (uadMatch ? uadMatch.displayName : itemName);
+        setStarredPlugins(prev => [...prev.filter(p => !pluginsMatch(p, itemName)), nameToAdd]);
       } else {
-        if (starredHardware.length < 5) {
-          setStarredHardware([...starredHardware, itemName]);
-        } else {
-          setError("You can star up to 5 spotlight hardware items.");
-          setTimeout(() => setError(null), 3500);
-        }
+        setError("You can star up to 5 spotlight plugins that take top priority across all tracks. Un-star one first to add another.");
+        setTimeout(() => setError(null), 3500);
+      }
+    } else {
+      if (starredHardware.length < 5) {
+        setStarredHardware(prev => [...prev.filter(h => h.toLowerCase().trim() !== itemNorm), itemName]);
+      } else {
+        setError("You can star up to 5 spotlight hardware items.");
+        setTimeout(() => setError(null), 3500);
       }
     }
   };
 
   const handleLoadUltimateRapChain = () => {
-    const rapFiveDbNames = [
-      "neve 1073 preamp and eq",
-      "noiseash need 533 eq",
-      "bx_console ssl 9000 j",
-      "empirical labs el8 distressor",
-      "soundtheory gullfoss"
+    const rapFiveDisplayNames = [
+      "Neve 1073 Preamp & EQ",
+      "NoiseAsh NEED 533 EQ",
+      "bx_console SSL 9000 J",
+      "Empirical Labs EL8 Distressor",
+      "Soundtheory Gullfoss"
     ];
 
     const newPluginsToAdd: VSTPlugin[] = [];
-    rapFiveDbNames.forEach(name => {
-      const exists = plugins.some(p => p.name.toLowerCase() === name.toLowerCase());
+    rapFiveDisplayNames.forEach(displayName => {
+      const exists = plugins.some(p => pluginsMatch(p.name, displayName));
       if (!exists) {
-        const dbEntry = VST_DATABASE.find(v => v.name.toLowerCase() === name.toLowerCase());
+        const dbEntry = VST_DATABASE.find(v => pluginsMatch(v.displayName, displayName) || pluginsMatch(v.name, displayName));
         if (dbEntry) {
           newPluginsToAdd.push({
             name: dbEntry.displayName,
@@ -2517,8 +2558,7 @@ The AI was unable to verify these parameters. Please investigate.`;
       });
     }
 
-    setStarredPlugins(rapFiveDbNames);
-    localStorage.setItem('bg_starred_plugins', JSON.stringify(rapFiveDbNames));
+    setStarredPlugins(rapFiveDisplayNames);
     setSuccessMessage("⭐ 5 Spotlight Rap Plugins active! Neve 1073, NEED 533, SSL 9000 J, Distressor & Gullfoss now take absolute spotlight across all tracks.");
     setTimeout(() => setSuccessMessage(null), 4500);
   };
@@ -3731,8 +3771,8 @@ The AI was unable to verify these parameters. Please investigate.`;
     }
 
     filtered.sort((a, b) => {
-      const aFav = starredPlugins.includes(a.name);
-      const bFav = starredPlugins.includes(b.name);
+      const aFav = isPluginStarred(a.name);
+      const bFav = isPluginStarred(b.name);
       if (aFav && !bFav) return -1;
       if (!aFav && bFav) return 1;
 
@@ -3745,7 +3785,7 @@ The AI was unable to verify these parameters. Please investigate.`;
     });
 
     return filtered;
-  }, [plugins, searchTerm, sortBy, starredPlugins, selectedFolder]);
+  }, [plugins, searchTerm, sortBy, starredPlugins, isPluginStarred, selectedFolder]);
 
   const groupedPlugins = useMemo(() => {
     if (sortBy === 'name') return null;
@@ -3800,8 +3840,8 @@ The AI was unable to verify these parameters. Please investigate.`;
 
     // Sort by: Favorite first, then alphabetical
     filtered = [...filtered].sort((a, b) => {
-      const aFav = starredPlugins.includes(a.name);
-      const bFav = starredPlugins.includes(b.name);
+      const aFav = isPluginStarred(a.name);
+      const bFav = isPluginStarred(b.name);
       if (aFav && !bFav) return -1;
       if (!aFav && bFav) return 1;
 
@@ -3809,7 +3849,7 @@ The AI was unable to verify these parameters. Please investigate.`;
     });
 
     return filtered;
-  }, [userOwnedJsfx, searchTerm, sortBy, starredPlugins, selectedFolder]);
+  }, [userOwnedJsfx, searchTerm, sortBy, starredPlugins, isPluginStarred, selectedFolder]);
 
   const groupedJsfx = useMemo(() => {
     if (sortBy === 'name') return null;
@@ -10148,7 +10188,7 @@ Provide the exact JSFX plugin name and required sliders/parameters.`;
                       Up to 5 starred plugins take spotlight across EVERY track no matter what mode is used
                     </span>
                   </div>
-                  {(user?.email === 'coldestconcept@gmail.com' || user?.email === 'recognizemiracles@gmail.com') && (
+                  {(user?.email?.toLowerCase() === 'coldestconcept@gmail.com' || user?.email?.toLowerCase() === 'recognizemiracles@gmail.com') && (
                     <button
                       onClick={handleLoadUltimateRapChain}
                       className={`px-4 py-2 rounded-full font-black text-xs uppercase tracking-wider transition-all shadow-lg hover:scale-105 active:scale-95 flex items-center gap-2 shrink-0 ${
@@ -10217,15 +10257,12 @@ Provide the exact JSFX plugin name and required sliders/parameters.`;
                             {name}
                           </button>
                           <button
-                            onClick={() => {
-                            const isJsfx = JSFX_DATABASE.some(j => j.name === name || j.shortName === name);
-                            if (plugins.some(p => p.name === name) || isJsfx) {
-                              toggleStar(name);
-                            } else {
-                              setStarredHardware(prev => prev.filter(n => n !== name));
-                            }
-                          }}
-                            className="absolute -top-1 -right-1 w-5 h-5 flex items-center justify-center bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-all hover:scale-110 active:scale-95 shadow-lg border-2 border-white/50"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setStarredPlugins(prev => prev.filter(p => p !== name && !pluginsMatch(p, name)));
+                              setStarredHardware(prev => prev.filter(h => h !== name && h.toLowerCase().trim() !== name.toLowerCase().trim()));
+                            }}
+                            className="absolute -top-1.5 -right-1.5 w-5 h-5 flex items-center justify-center bg-red-500 hover:bg-red-600 text-white rounded-full p-1 opacity-80 group-hover:opacity-100 transition-all hover:scale-110 active:scale-95 shadow-lg border-2 border-white/60 z-10"
                             title={`Remove ${name}`}>
                             <X size={10} />
                           </button>
@@ -10367,7 +10404,7 @@ Provide the exact JSFX plugin name and required sliders/parameters.`;
                               key={`${jsfx.name}-${idx}`}
                               id={`jsfx-card-${jsfx.name.replace(/[^\w\s-]/g, '').replace(/\s+/g, '-').toLowerCase()}`}
                               jsfx={jsfx}
-                              isFavorite={starredPlugins.includes(jsfx.name)}
+                              isFavorite={isPluginStarred(jsfx.name)}
                               onToggleFavorite={(j) => toggleStar(j.name)}
                               theme={theme}
                             />
@@ -10422,11 +10459,11 @@ Provide the exact JSFX plugin name and required sliders/parameters.`;
                               key={`${plugin.name}-${idx}`}
                               id={`plugin-card-${plugin.name.replace(/[^\w\s-]/g, '').replace(/\s+/g, '-').toLowerCase()}`}
                               plugin={plugin}
-                              isFavorite={starredPlugins.includes(plugin.name)}
+                              isFavorite={isPluginStarred(plugin.name)}
                               onToggleFavorite={(p) => toggleStar(p.name)}
                               onRemove={(pluginToRemove) => {
                                 setPlugins(prev => prev.filter(p => p.name !== pluginToRemove.name));
-                                setStarredPlugins(prev => prev.filter(n => n !== pluginToRemove.name));
+                                setStarredPlugins(prev => prev.filter(n => !pluginsMatch(n, pluginToRemove.name)));
                               }}
                               onUpdatePlugin={handleUpdatePlugin}
                             />

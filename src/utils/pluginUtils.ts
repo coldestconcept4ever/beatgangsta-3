@@ -1,5 +1,7 @@
 import { VSTPlugin } from '../types';
 import { UAD_DATABASE } from '../data/uadDatabase';
+import { VST_DATABASE } from '../data/vstDatabase';
+import { JSFX_DATABASE } from '../data/jsfxResearch';
 
 /**
  * Maps vendor-specific parameter names to standardized ones or vice versa
@@ -612,4 +614,91 @@ export const getVendorSpecificParameters = (vendor: string, name: string): strin
   }
 
   return [];
+};
+
+/**
+ * Universal matcher for comparing plugin names across different sources
+ * (user libraries, UAD database, VST database, JSFX, and presets).
+ * Accurately pairs equivalent plugins (e.g. Neve 1073, Distressor, Gullfoss, SSL 9000, NEED 533)
+ * regardless of capitalization, punctuation, brand prefixes, or collection suffixes.
+ */
+export const pluginsMatch = (a: string, b: string): boolean => {
+  if (!a || !b) return false;
+  if (a === b) return true;
+
+  const normA = a.toLowerCase().trim();
+  const normB = b.toLowerCase().trim();
+  if (normA === normB) return true;
+
+  const cleanA = normA.replace(/&/g, 'and').replace(/[^a-z0-9]/g, ' ').replace(/\s+/g, ' ').trim();
+  const cleanB = normB.replace(/&/g, 'and').replace(/[^a-z0-9]/g, ' ').replace(/\s+/g, ' ').trim();
+  if (cleanA === cleanB) return true;
+
+  // 1. Neve 1073 (matches "Neve 1073 Preamp & EQ", "UAD Neve 1073 Preamp and EQ Collection", "Neve 1073 Legacy EQ", etc.)
+  const is1073A = cleanA.includes('1073') && (cleanA.includes('neve') || cleanA.includes('ams'));
+  const is1073B = cleanB.includes('1073') && (cleanB.includes('neve') || cleanB.includes('ams'));
+  if (is1073A && is1073B) return true;
+
+  // 2. NEED 533 EQ (matches "NoiseAsh NEED 533 EQ", "NEED 533 EQ", etc.)
+  const is533A = cleanA.includes('533') && (cleanA.includes('need') || cleanA.includes('noiseash'));
+  const is533B = cleanB.includes('533') && (cleanB.includes('need') || cleanB.includes('noiseash'));
+  if (is533A && is533B) return true;
+
+  // 3. SSL 9000 J (matches "bx_console SSL 9000 J", "SSL 9000 J", etc.)
+  const isSSL9000A = cleanA.includes('9000') && (cleanA.includes('ssl') || cleanA.includes('bx') || cleanA.includes('console'));
+  const isSSL9000B = cleanB.includes('9000') && (cleanB.includes('ssl') || cleanB.includes('bx') || cleanB.includes('console'));
+  if (isSSL9000A && isSSL9000B) return true;
+
+  // 4. Distressor (matches "Empirical Labs EL8 Distressor", "UAD Empirical Labs EL8 Distressor Compressor", "Distressor", etc.)
+  const isDistressorA = cleanA.includes('distressor');
+  const isDistressorB = cleanB.includes('distressor');
+  if (isDistressorA && isDistressorB) return true;
+
+  // 5. Gullfoss (matches "Soundtheory Gullfoss", "Soundtheory - Gullfoss", "Gullfoss", etc.)
+  const isGullfossA = cleanA.includes('gullfoss');
+  const isGullfossB = cleanB.includes('gullfoss');
+  if (isGullfossA && isGullfossB) return true;
+
+  // VST Database match
+  const vstA = VST_DATABASE.find(v => 
+    v.name.toLowerCase() === normA || 
+    v.displayName.toLowerCase() === normA ||
+    v.name.toLowerCase().replace(/&/g, 'and').replace(/[^a-z0-9]/g, ' ').replace(/\s+/g, ' ').trim() === cleanA
+  );
+  const vstB = VST_DATABASE.find(v => 
+    v.name.toLowerCase() === normB || 
+    v.displayName.toLowerCase() === normB ||
+    v.name.toLowerCase().replace(/&/g, 'and').replace(/[^a-z0-9]/g, ' ').replace(/\s+/g, ' ').trim() === cleanB
+  );
+  if (vstA && vstB && (vstA.name === vstB.name || vstA.displayName === vstB.displayName)) return true;
+  if (vstA && (vstA.name.toLowerCase() === normB || vstA.displayName.toLowerCase() === normB)) return true;
+  if (vstB && (vstB.name.toLowerCase() === normA || vstB.displayName.toLowerCase() === normA)) return true;
+
+  // UAD Database match
+  const uadA = UAD_DATABASE.find(u => 
+    u.name.toLowerCase() === normA || 
+    u.displayName.toLowerCase() === normA ||
+    u.name.toLowerCase().replace(/&/g, 'and').replace(/[^a-z0-9]/g, ' ').replace(/\s+/g, ' ').trim() === cleanA
+  );
+  const uadB = UAD_DATABASE.find(u => 
+    u.name.toLowerCase() === normB || 
+    u.displayName.toLowerCase() === normB ||
+    u.name.toLowerCase().replace(/&/g, 'and').replace(/[^a-z0-9]/g, ' ').replace(/\s+/g, ' ').trim() === cleanB
+  );
+  if (uadA && uadB && (uadA.name === uadB.name || uadA.displayName === uadB.displayName)) return true;
+  if (uadA && (uadA.name.toLowerCase() === normB || uadA.displayName.toLowerCase() === normB)) return true;
+  if (uadB && (uadB.name.toLowerCase() === normA || uadB.displayName.toLowerCase() === normA)) return true;
+
+  // Cross VST/UAD match via hardwareModel
+  if (vstA && uadB && uadB.hardwareModel && cleanA.includes(uadB.hardwareModel.toLowerCase())) return true;
+  if (vstB && uadA && uadA.hardwareModel && cleanB.includes(uadA.hardwareModel.toLowerCase())) return true;
+
+  // JSFX Database match
+  const jsfxA = JSFX_DATABASE.find(j => j.name.toLowerCase() === normA || j.shortName?.toLowerCase() === normA);
+  const jsfxB = JSFX_DATABASE.find(j => j.name.toLowerCase() === normB || j.shortName?.toLowerCase() === normB);
+  if (jsfxA && jsfxB && jsfxA.name === jsfxB.name) return true;
+  if (jsfxA && (jsfxA.name.toLowerCase() === normB || jsfxA.shortName?.toLowerCase() === normB)) return true;
+  if (jsfxB && (jsfxB.name.toLowerCase() === normA || jsfxB.shortName?.toLowerCase() === normA)) return true;
+
+  return false;
 };
