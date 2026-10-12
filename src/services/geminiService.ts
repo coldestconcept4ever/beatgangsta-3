@@ -4242,7 +4242,21 @@ export const getMixCritique = async (
   let focusInstruction = "";
   if (isMasterMode) {
     if (hasStems && uploadedStems && uploadedStems.length > 0) {
-      focusInstruction = `Focus specifically on STEM MASTERING / MASTER BUS options to achieve a highly polished, cohesive final master. The user HAS UPLOADED STEMS. Provide suggestions on how to pre-process these stems (such as EQ carving, group compression, and gentle transient balancing) AND how to configure the final central MASTER BUS chain (Master EQ, glue compression, tape saturation, limiting, and stereo width) to achieve a supreme master with maximum weight, punch, and clarity, while avoiding muddy overlaps. Listen to the ENTIRE duration of the files to understand the dynamic peaks and make the overall mix cohesive.`;
+      focusInstruction = `CRITICAL MASTER MODE + STEMS OVERRIDE:
+The user is in MASTER MODE and HAS UPLOADED STEMS.
+IMPORTANT USER REQUIREMENT: When stems mode is on in Master Mode, provide ONE CENTRAL MASTER BUS GUIDE / CHAIN, NOT individual chains for each stem!
+1. PRE-MASTER STEM BALANCING:
+   - Provide precise pre-master fader trim adjustments (in dB) and gain-staging recommendations for each individual stem ('vox 2.mp3', 'beat 2.mp3', etc.) inside 'preMasterBalancing'. Calculate the exact fader trim needed based on each stem's measured LUFS and Crest Factor so they sum cleanly with safe headroom (-18 dBFS RMS / -6 dB True Peak) before hitting the master bus.
+2. ONE SINGLE CENTRAL MASTER BUS ACTION PLAN:
+   - The 'actionPlan' array MUST contain EXACTLY ONE main comprehensive mastering protocol where 'targetStem' is "Master Bus" (or "[Master Bus]").
+   - Do NOT generate separate plugin chains for each individual stem track.
+   - The entire 'recommendedChain' (with all deepDive parameter settings) belongs to the unified [Master Bus], working together in cohesive mastering signal flow:
+     * Surgical Linear-Phase / Mid-Side EQ (e.g. FabFilter Pro-Q 3)
+     * Dynamic Spectral De-Masking (e.g. Soundtheory Gullfoss)
+     * Master VCA / Analog Glue Compression (e.g. SSL 4000 G, API 2500, or Neve 33609)
+     * Master Tape / Console Saturation & Harmonic Depth (e.g. Ampex ATR-102, Studer A800, or Oxide Tape)
+     * Stereo Imaging & High-End Polish (e.g. Pultec EQP-1A, Chandler Curve Bender)
+     * Mastering Console / Brickwall True-Peak Limiter (e.g. Precision Limiter) set to safe streaming ceiling (-1.0 dBTP or -0.3 dBTP).`;
     } else {
       focusInstruction = `Focus specifically on MASTERING the single stereo mixdown on the MASTER BUS. Provide advice and explicit technical setups for the final MASTER BUS chain (including linear phase EQ, master bus compression, tape saturation, dynamic EQ, stereo imaging, and final limiting) to achieve maximum punch, loudness, warmth, and depth, while preserving transient response. Listen to the ENTIRE duration of the track.`;
     }
@@ -4455,14 +4469,37 @@ CRITICAL DIRECTIVE ON MIX CRITIQUE DEPTH, VARIETY, & ZERO-BOILERPLATE:
           required: ["metric", "deviation", "description"]
         }
       },
+      preMasterBalancing: {
+        type: "OBJECT",
+        description: "CRITICAL FOR MASTER MODE WITH STEMS: Pre-Master Stem Fader Trim and Gain-Staging recommendations for every uploaded stem before entering the master bus.",
+        properties: {
+          stems: {
+            type: "ARRAY",
+            items: {
+              type: "OBJECT",
+              properties: {
+                stemName: { type: "STRING", description: "Exact stem filename or label (e.g. 'vox 2.mp3', 'beat 2.mp3')" },
+                measuredLufs: { type: "NUMBER", description: "Measured or estimated integrated LUFS" },
+                measuredCrestFactor: { type: "NUMBER", description: "Measured or estimated crest factor in dB" },
+                recommendedGainTrimDb: { type: "STRING", description: "Exact fader trim in dB, e.g. '+5.5 dB' or '-1.8 dB'" },
+                rationale: { type: "STRING", description: "Why this gain adjustment is necessary for clean pre-master summing" }
+              },
+              required: ["stemName", "recommendedGainTrimDb", "rationale"]
+            }
+          },
+          targetSumHeadroom: { type: "STRING", description: "Target summed headroom hitting the master bus, e.g. '-18 dBFS RMS / -6 dB True Peak'" },
+          instructions: { type: "STRING", description: "Step-by-step guidance on setting up the stem fader trims in the DAW" }
+        },
+        required: ["stems", "targetSumHeadroom", "instructions"]
+      },
       actionPlan: {
         type: "ARRAY",
-        description: "Array of actionable steps.",
+        description: isMasterMode && hasStems ? "CRITICAL FOR MASTER MODE: Exactly ONE item in this array for the central [Master Bus] chain." : "Array of actionable steps.",
         minItems: 1,
         items: {
           type: "OBJECT",
           properties: {
-            targetStem: { type: "STRING", description: "The exact name of the stem this step applies to (if stems were uploaded)." },
+            targetStem: { type: "STRING", description: "The exact name of the stem this step applies to (or 'Master Bus' if in Master Mode)." },
             issue: { type: "STRING" },
             solution: { type: "STRING" },
             lyricAutomation: {
@@ -4532,7 +4569,7 @@ CRITICAL DIRECTIVE ON MIX CRITIQUE DEPTH, VARIETY, & ZERO-BOILERPLATE:
             },
             recommendedChain: {
               type: "ARRAY",
-              description: hasStems && uploadedStems && uploadedStems.length > 0 ? (isMultiBandMode ? "CRITICAL: You MUST provide an adequate number of plugins to handle the multi-band split across all bands. Do NOT limit to 6 plugins." : "CRITICAL: You MUST provide EXACTLY 6 plugins for this stem to provide detailed JSFX guidance, with the 6th dedicated to level normalization and output gain matching.") : "Chain of plugins (at least 6 plugins).",
+              description: hasStems && uploadedStems && uploadedStems.length > 0 && !isMasterMode ? (isMultiBandMode ? "CRITICAL: You MUST provide an adequate number of plugins to handle the multi-band split across all bands. Do NOT limit to 6 plugins." : "CRITICAL: You MUST provide EXACTLY 6 plugins for this stem to provide detailed JSFX guidance, with the 6th dedicated to level normalization and output gain matching.") : "Chain of plugins for the master bus (at least 6 plugins).",
               minItems: 1,
               items: {
                 type: "OBJECT",
@@ -4566,7 +4603,7 @@ CRITICAL DIRECTIVE ON MIX CRITIQUE DEPTH, VARIETY, & ZERO-BOILERPLATE:
               }
             }
           },
-          required: hasStems && uploadedStems && uploadedStems.length > 0 ? ["targetStem", "issue", "solution", "recommendedChain"] : ["issue", "solution", "recommendedChain"]
+          required: (hasStems && uploadedStems && uploadedStems.length > 0 && !isMasterMode) ? ["targetStem", "issue", "solution", "recommendedChain"] : ["issue", "solution", "recommendedChain"]
         }
       }
     },
@@ -4636,7 +4673,7 @@ CRITICAL DIRECTIVE ON MIX CRITIQUE DEPTH, VARIETY, & ZERO-BOILERPLATE:
   }
   
   let result: any = null;
-  const chunkingEnabled = hasStems && uploadedStems && uploadedStems.length > 5;
+  const chunkingEnabled = !isMasterMode && hasStems && uploadedStems && uploadedStems.length > 5;
   const chunkSize = 5;
 
   if (chunkingEnabled) {
@@ -4705,7 +4742,11 @@ CRITICAL DIRECTIVE ON MIX CRITIQUE DEPTH, VARIETY, & ZERO-BOILERPLATE:
   } else {
     let schema = JSON.parse(JSON.stringify(schemaObject));
     if (hasStems && uploadedStems && uploadedStems.length > 0) {
-      schema.properties.actionPlan.description = `CRITICAL: You MUST generate EXACTLY ${uploadedStems.length} items in this array, one for each uploaded stem.`;
+      if (isMasterMode) {
+        schema.properties.actionPlan.description = `CRITICAL FOR MASTER MODE: You MUST provide EXACTLY ONE unified Master Bus chain item in actionPlan for the entire track sum.`;
+      } else {
+        schema.properties.actionPlan.description = `CRITICAL: You MUST generate EXACTLY ${uploadedStems.length} items in this array, one for each uploaded stem.`;
+      }
     }
     const finalPrompt = prompt + multiBandInstruction + `\n\nCRITICAL: You MUST return a valid JSON object EXCLUSIVELY formatted with this exact JSON Schema:\n${JSON.stringify(schema, null, 2)}`;
     const finalParts = [...parts.slice(0, parts.length - 1), { text: finalPrompt }];

@@ -92,9 +92,51 @@ export const CritiqueHTMLTemplate: React.FC<CritiqueHTMLTemplateProps> = ({ crit
         </section>
       )}
 
+      {/* Pre-Master Stem Balancing Stage (Master Mode with Stems) */}
+      {critique.preMasterBalancing && (
+        <section className="space-y-6 print-break">
+          <div className="p-8 webos-card border-emerald-500 bg-[#064e3b]/30">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 pb-4 border-b border-emerald-500/30">
+              <div>
+                <h3 className="text-xl font-black uppercase tracking-widest text-emerald-400">Pre-Master Stem Fader Balance & Gain Staging</h3>
+                <p className="text-xs font-bold text-emerald-200/80">DAW Stem Trims calibrated before entering the unified Master Bus chain</p>
+              </div>
+              <span className="text-xs font-mono font-black px-3 py-1 bg-emerald-500/20 text-emerald-300 rounded-full border border-emerald-500/30">
+                Target Headroom: {critique.preMasterBalancing.targetSumHeadroom}
+              </span>
+            </div>
+            {critique.preMasterBalancing.instructions && (
+              <p className="text-sm font-bold text-slate-200 mb-6">{critique.preMasterBalancing.instructions}</p>
+            )}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {critique.preMasterBalancing.stems.map((stem, sIdx) => (
+                <div key={sIdx} className="p-4 rounded-xl bg-black/40 border border-emerald-500/20">
+                  <div className="flex items-center justify-between gap-2 mb-2">
+                    <span className="font-black text-sm text-white">{stem.stemName}</span>
+                    <span className="font-mono text-xs font-black px-2 py-0.5 rounded bg-amber-500/20 text-amber-300 border border-amber-500/30">
+                      Trim: {stem.recommendedGainTrimDb}
+                    </span>
+                  </div>
+                  <p className="text-xs text-slate-300">{stem.rationale}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
+
       {/* Action Plan */}
       <section className="space-y-8 print-break">
-        <h2 className="text-2xl font-black uppercase tracking-widest text-[#38bdf8] border-b border-[#0369a1] pb-4 print:border-slate-300">{t('action_plan_protocols')}</h2>
+        <div className="flex items-center justify-between border-b border-[#0369a1] pb-4">
+          <h2 className="text-2xl font-black uppercase tracking-widest text-[#38bdf8] print:border-slate-300">
+            {critique.isMasterMode ? 'Unified Master Bus Protocol' : t('action_plan_protocols')}
+          </h2>
+          {critique.isMasterMode && (
+            <span className="text-xs font-black uppercase tracking-widest px-3 py-1 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
+              Master Bus Chain (All Stems Summed)
+            </span>
+          )}
+        </div>
         <div className="space-y-8">
           {Array.isArray(critique.actionPlan) && critique.actionPlan.map((action, idx) => (
             <div key={idx} className="p-8 webos-card border-[#0369a1]">
@@ -102,7 +144,18 @@ export const CritiqueHTMLTemplate: React.FC<CritiqueHTMLTemplateProps> = ({ crit
                 <div className="w-10 h-10 bg-[#38bdf8] text-white rounded-full flex items-center justify-center font-black text-lg">
                   {idx + 1}
                 </div>
-                <h3 className="text-2xl font-black uppercase tracking-tight text-white">{action.issue}</h3>
+                <div>
+                  {action.targetStem && (
+                    <span className={`text-[10px] font-black uppercase tracking-widest px-2.5 py-0.5 rounded-full inline-block mb-1 ${
+                      action.targetStem.toLowerCase().includes('master')
+                        ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30'
+                        : 'bg-sky-500/20 text-sky-300 border border-sky-500/30'
+                    }`}>
+                      {action.targetStem.toLowerCase().includes('master') ? 'Master Bus' : `Stem: ${action.targetStem}`}
+                    </span>
+                  )}
+                  <h3 className="text-2xl font-black uppercase tracking-tight text-white">{action.issue}</h3>
+                </div>
               </div>
               <p className="text-lg font-bold text-slate-300 mb-8 pl-14">{action.solution}</p>
               

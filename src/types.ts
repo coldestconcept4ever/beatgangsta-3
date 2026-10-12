@@ -450,6 +450,17 @@ export interface MixCritique {
       reasoning: string;
     };
   }[];
+  preMasterBalancing?: {
+    stems: {
+      stemName: string;
+      measuredLufs?: number;
+      measuredCrestFactor?: number;
+      recommendedGainTrimDb: string;
+      rationale: string;
+    }[];
+    targetSumHeadroom: string;
+    instructions: string;
+  };
   specificHelp?: {
     query?: string;
     advice?: string;

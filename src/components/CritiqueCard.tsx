@@ -2090,16 +2090,92 @@ export const CritiqueCard: React.FC<CritiqueCardProps> = ({ critique, stems = []
             </div>
           )}
 
+          {/* Pre-Master Stem Balancing Stage (Master Mode with Stems) */}
+          {critique.preMasterBalancing && (
+            <div className={`p-6 sm:p-8 rounded-3xl border mb-12 relative overflow-hidden ${
+              theme === 'coldest' ? 'bg-gradient-to-br from-emerald-50 to-teal-50/50 border-emerald-200 shadow-md' : 'bg-gradient-to-br from-emerald-950/20 via-teal-950/10 to-transparent border-emerald-500/30'
+            }`}>
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 pb-4 border-b border-emerald-500/20">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-2xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center font-black">
+                    <Sliders className="w-5 h-5 text-emerald-400" />
+                  </div>
+                  <div>
+                    <h4 className="text-sm sm:text-base font-black uppercase tracking-wider text-emerald-500 dark:text-emerald-300">
+                      Pre-Master Stem Fader Balance & Gain Staging
+                    </h4>
+                    <p className="text-xs font-bold opacity-70">
+                      DAW Stem Trims calibrated before entering the unified Master Bus chain
+                    </p>
+                  </div>
+                </div>
+                <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-emerald-500/20 border border-emerald-500/30 text-emerald-300 text-xs font-black">
+                  <span>Target Headroom:</span>
+                  <span className="font-mono text-emerald-200">{critique.preMasterBalancing.targetSumHeadroom}</span>
+                </div>
+              </div>
+
+              {critique.preMasterBalancing.instructions && (
+                <p className="text-xs sm:text-sm font-semibold opacity-80 leading-relaxed mb-6">
+                  {critique.preMasterBalancing.instructions}
+                </p>
+              )}
+
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {critique.preMasterBalancing.stems.map((stem, sIdx) => (
+                  <div key={sIdx} className={`p-4 rounded-2xl border transition-all ${
+                    theme === 'coldest' ? 'bg-white border-emerald-100 shadow-sm' : 'bg-black/30 border-emerald-500/20'
+                  }`}>
+                    <div className="flex items-start justify-between gap-2 mb-2">
+                      <div className="font-black text-sm truncate" title={stem.stemName}>
+                        {stem.stemName}
+                      </div>
+                      <span className={`px-2 py-0.5 rounded-lg text-xs font-mono font-black shrink-0 ${
+                        stem.recommendedGainTrimDb.startsWith('+') ? 'bg-amber-500/20 text-amber-300 border border-amber-500/30' : 'bg-sky-500/20 text-sky-300 border border-sky-500/30'
+                      }`}>
+                        Trim: {stem.recommendedGainTrimDb}
+                      </span>
+                    </div>
+
+                    {(stem.measuredLufs !== undefined || stem.measuredCrestFactor !== undefined) && (
+                      <div className="flex items-center gap-3 text-[10px] font-mono opacity-60 mb-2">
+                        {stem.measuredLufs !== undefined && <span>LUFS: {stem.measuredLufs}</span>}
+                        {stem.measuredCrestFactor !== undefined && <span>Crest: {stem.measuredCrestFactor} dB</span>}
+                      </div>
+                    )}
+
+                    <p className="text-xs font-medium opacity-75 leading-relaxed">
+                      {stem.rationale}
+                    </p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
           <div className="space-y-6 mb-12">
-            <h4 className="text-sm font-black uppercase tracking-widest opacity-40">{t('action_plan')}</h4>
+            <div className="flex items-center justify-between">
+              <h4 className="text-sm font-black uppercase tracking-widest opacity-40">
+                {critique.isMasterMode ? 'Master Bus Protocol' : t('action_plan')}
+              </h4>
+              {critique.isMasterMode && (
+                <span className="px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
+                  Unified Master Bus Guide (All Stems Summed)
+                </span>
+              )}
+            </div>
             <div className="space-y-4">
               {Array.isArray(critique.actionPlan) && critique.actionPlan.map((action, idx) => (
                 <div key={idx} className={`p-6 rounded-3xl border ${
                   theme === 'coldest' ? 'bg-white/50 border-sky-100 shadow-inner' : 'bg-sky-900/10 border-sky-500/20'
                 }`}>
                   {action.targetStem && (
-                    <div className="mb-3 inline-block px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest bg-sky-500/20 text-sky-600 dark:text-sky-400">
-                      Stem: {action.targetStem}
+                    <div className={`mb-3 inline-block px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest ${
+                      action.targetStem.toLowerCase().includes('master')
+                        ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 font-black'
+                        : 'bg-sky-500/20 text-sky-600 dark:text-sky-400'
+                    }`}>
+                      {action.targetStem.toLowerCase().includes('master') ? 'Master Bus Processing' : `Stem: ${action.targetStem}`}
                     </div>
                   )}
                   <h5 className="font-black text-lg mb-2">{action.issue}</h5>
