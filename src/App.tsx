@@ -50,6 +50,7 @@ const CloudSyncModal = React.lazy(() => import('./components/CloudSyncModal').th
 const RestoreBackupModal = React.lazy(() => import('./components/RestoreBackupModal').then(m => ({ default: m.RestoreBackupModal })));
 const LegalConsentBanner = React.lazy(() => import('./components/LegalConsentBanner').then(m => ({ default: m.LegalConsentBanner })));
 const RecipeViewerModal = React.lazy(() => import('./components/RecipeViewerModal').then(m => ({ default: m.RecipeViewerModal })));
+const SampleVaultModal = React.lazy(() => import('./components/SampleVaultModal').then(m => ({ default: m.SampleVaultModal })));
 import { TutorialOverlay } from './components/TutorialOverlay';
 import { StatusPage } from './components/StatusPage';
 import { JSFXDatabaseViewer } from './components/JSFXDatabaseViewer';
@@ -61,7 +62,7 @@ import { BetaApplicationModal } from './components/BetaApplicationModal';
 import { PdfSplitter } from './components/PdfSplitter';
 import { AnimatePresence, motion } from 'motion/react';
 import { useTranslation } from 'react-i18next';
-import { Download, Globe, Languages, Star, X, Upload, Cpu, Folder as FolderIcon, ShieldCheck, Check, Zap, Rocket, Eye, EyeOff, AlertTriangle, Lock, Shield, Loader2, Gem, Sword, User as UserIcon, Link, Layers, Link2, Palette, Sparkles, Drum, Image as ImageIcon, Crown, CheckCircle2, ExternalLink, Facebook, Instagram, Linkedin, Twitter, Activity, Database, Trash2, Music, Video, Cloud, Settings2, HelpCircle, Copy, Scissors } from 'lucide-react';
+import { Download, Globe, Languages, Star, X, Upload, Cpu, Folder as FolderIcon, ShieldCheck, Check, Zap, Rocket, Eye, EyeOff, AlertTriangle, Lock, Shield, Loader2, Gem, Sword, User as UserIcon, Link, Layers, Link2, Palette, Sparkles, Drum, Disc, Image as ImageIcon, Crown, CheckCircle2, ExternalLink, Facebook, Instagram, Linkedin, Twitter, Activity, Database, Trash2, Music, Video, Cloud, Settings2, HelpCircle, Copy, Scissors } from 'lucide-react';
 import { saveAs } from 'file-saver';
 import tinycolor from 'tinycolor2';
 import Turnstile from 'react-turnstile';
@@ -2042,6 +2043,7 @@ The AI was unable to verify these parameters. Please investigate.`;
 
   const [showGuide, setShowGuide] = useState(false);
   const [showVault, setShowVault] = useState(false);
+  const [showSampleVault, setShowSampleVault] = useState(false);
   const [viewingRecipe, setViewingRecipe] = useState<SavedRecipe | null>(null);
   const [currentHash, setCurrentHash] = useState(window.location.hash);
 
@@ -6920,6 +6922,31 @@ Provide the exact JSFX plugin name and required sliders/parameters.`;
                   </div>
                 </button>
                 <div className={`h-px w-full my-1 ${getDropdownTheme(theme).divider}`} />
+
+                {(user?.email === 'recognizemiracles@gmail.com' || user?.email === 'coldestconcept@gmail.com' || user?.email === 'ruhedramarkprod@gmail.com') && (
+                  <>
+                    <button 
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setShowSampleVault(true);
+                        setShowBrandMenu(false);
+                      }}
+                      className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-left transition-all group bg-amber-500/15 hover:bg-amber-500/25 border border-amber-500/40 ${getDropdownTheme(theme).itemHover}`}
+                    >
+                      <div className="w-7 h-7 rounded-full flex items-center justify-center bg-amber-500 text-black shadow-md shadow-amber-500/30">
+                        <Disc size={14} className="animate-spin-slow" />
+                      </div>
+                      <div className="flex-1">
+                        <div className="text-xs font-black uppercase tracking-wider text-amber-400 flex items-center gap-1.5">
+                          Drum Vault <span className="px-1.5 py-0.5 rounded text-[8px] bg-amber-400 text-black font-extrabold tracking-widest shadow">VIP</span>
+                        </div>
+                        <div className="text-[9px] opacity-75 mt-0.5 text-zinc-300">Intelligent One-Shot Library & AI Matcher</div>
+                      </div>
+                    </button>
+                    <div className={`h-px w-full my-1 ${getDropdownTheme(theme).divider}`} />
+                  </>
+                )}
+
                 <button 
                   disabled={showTutorial}
                   onClick={(e) => {
@@ -7224,6 +7251,26 @@ Provide the exact JSFX plugin name and required sliders/parameters.`;
                       </>
                     )}
 
+                    {(user?.email === 'recognizemiracles@gmail.com' || user?.email === 'coldestconcept@gmail.com' || user?.email === 'ruhedramarkprod@gmail.com') && (
+                      <button 
+                        onClick={() => {
+                          setShowSampleVault(true);
+                          setIsUserMenuOpen(false);
+                        }}
+                        className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-left transition-all group bg-amber-500/15 hover:bg-amber-500/25 border border-amber-500/40 my-1 ${getDropdownTheme(theme).itemHover}`}
+                      >
+                        <div className="w-7 h-7 rounded-full flex items-center justify-center bg-amber-500 text-black shadow-md shadow-amber-500/30">
+                          <Disc size={14} className="animate-spin-slow" />
+                        </div>
+                        <div className="flex-1">
+                          <div className="text-xs font-black uppercase tracking-wider text-amber-400 flex items-center gap-1.5">
+                            DRUM VAULT <span className="px-1.5 py-0.5 rounded text-[8px] bg-amber-400 text-black font-extrabold tracking-widest shadow">VIP</span>
+                          </div>
+                          <div className="text-[9px] opacity-75 mt-0.5 text-zinc-300">Intelligent One-Shot Library & AI Matcher</div>
+                        </div>
+                      </button>
+                    )}
+
                     {(user?.email === 'recognizemiracles@gmail.com' || user?.email === 'coldestconcept@gmail.com') && (
                       <button 
                         onClick={() => {
@@ -7501,6 +7548,30 @@ Provide the exact JSFX plugin name and required sliders/parameters.`;
       </AnimatePresence>
 
       <AnimatePresence>
+        {showSampleVault && (
+          <motion.div
+            key="sample-vault-modal"
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.95 }}
+            className="fixed inset-0 z-[200] flex items-center justify-center p-6 bg-black/60 backdrop-blur-xl"
+          >
+            <React.Suspense fallback={null}>
+              <SampleVaultModal
+                theme={theme}
+                user={user}
+                onClose={() => setShowSampleVault(false)}
+                onUpdateUser={(updated) => {
+                  setUser(updated);
+                  localStorage.setItem('bg_user', JSON.stringify(updated));
+                }}
+              />
+            </React.Suspense>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      <AnimatePresence>
         {showVault && (
           <motion.div
             key="vault-modal"
@@ -7519,6 +7590,7 @@ Provide the exact JSFX plugin name and required sliders/parameters.`;
                   setFriendMode(false);
                   setImportedSaveFile(null);
                 }} 
+                onOpenSampleVault={() => setShowSampleVault(true)}
                 onRemove={removeFromVault} 
                 onRemoveCritique={removeFromSavedCritique}
                 onUpdateColor={updateVaultColor}
@@ -8059,6 +8131,17 @@ Provide the exact JSFX plugin name and required sliders/parameters.`;
             {user && (
               <button onClick={() => setShowBetaApplyModal(true)} className="px-3 py-1 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded text-sm font-medium hover:from-blue-500 hover:to-indigo-500 transition-all shadow border border-blue-400/20">Beta Tester</button>
             )}
+            {(user?.email === 'recognizemiracles@gmail.com' || user?.email === 'coldestconcept@gmail.com' || user?.email === 'ruhedramarkprod@gmail.com') && (
+              <button 
+                onClick={() => setShowSampleVault(true)} 
+                className="flex items-center gap-2 px-3.5 py-1.5 bg-gradient-to-r from-amber-500 via-orange-500 to-amber-500 hover:from-amber-400 hover:to-orange-400 text-black rounded-xl text-xs font-black uppercase tracking-wider transition-all shadow-lg shadow-amber-500/25 border border-amber-300/50 hover:scale-105 active:scale-95 group"
+                title="Open BeatGangsta Drum Vault (VIP One-Shot Library & AI Matcher)"
+              >
+                <Disc size={15} className="text-black group-hover:rotate-180 transition-transform duration-500" />
+                <span>Drum Vault</span>
+                <span className="px-1.5 py-0.5 rounded bg-black text-amber-300 text-[8px] font-black tracking-widest shadow">VIP</span>
+              </button>
+            )}
           </div>
           
           <div className="hidden sm:flex flex-wrap items-center justify-end gap-2">
@@ -8231,6 +8314,17 @@ Provide the exact JSFX plugin name and required sliders/parameters.`;
             >
                <Cpu size={16} />
                <span className="text-[10px] font-black uppercase tracking-[0.2em]">{t('gear_rack')}</span>
+            </button>
+
+            <button 
+              id="btn-sample-vault"
+              onClick={() => setShowSampleVault(true)}
+              className={`pointer-events-auto relative flex items-center gap-2 px-4 py-2 sm:px-5 sm:py-2.5 rounded-full border shadow-xl transition-all hover:scale-105 active:scale-95 group ${mainBlurClass} ${theme === 'coldest' ? 'bg-amber-400/20 border-amber-500/60 text-amber-900 shadow-amber-500/20' : 'bg-amber-500/20 border-amber-400/60 text-amber-300 shadow-amber-500/20'}`}
+              title="BeatGangsta Drum Vault (Google Drive Synced - One-Shots Only)"
+            >
+               <Disc size={16} className="text-amber-500 animate-spin-slow group-hover:rotate-180 transition-transform" />
+               <span className="text-[10px] font-black uppercase tracking-[0.2em]">Drum Vault</span>
+               <span className="px-1.5 py-0.5 rounded-full bg-amber-500 text-black text-[8px] font-black tracking-widest shadow">VIP</span>
             </button>
         </div>
 

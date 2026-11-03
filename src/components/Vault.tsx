@@ -29,6 +29,7 @@ interface VaultProps {
   onReplicateRecipe?: (recipe: SavedRecipe) => void;
   isReplicating?: boolean;
   onImportGear?: (gear: { analogInstruments: Hardware[]; analogHardware: Hardware[]; drumKits: Hardware[] }) => void;
+  onOpenSampleVault?: () => void;
 }
 
 const getContrastColor = (hexcolor: string) => {
@@ -64,7 +65,8 @@ export const Vault: React.FC<VaultProps> = ({
   importedSaveFile,
   onReplicateRecipe,
   isReplicating,
-  onImportGear
+  onImportGear,
+  onOpenSampleVault
 }) => {
   const { t } = useTranslation();
   const [activeTab, setActiveTab] = useState<'recipes' | 'critiques'>('recipes');
@@ -132,6 +134,29 @@ export const Vault: React.FC<VaultProps> = ({
                 <span>{t('critiques_tab')}</span>
                 <span className="opacity-40">{critiques.length}</span>
               </button>
+
+              {onOpenSampleVault && (
+                <div className="pt-2 border-t border-black/10 dark:border-white/10 mt-1">
+                  <button
+                    onClick={() => {
+                      onClose();
+                      onOpenSampleVault();
+                    }}
+                    className="w-full p-4 rounded-2xl text-left transition-all flex items-center gap-3 bg-gradient-to-r from-amber-500/20 via-orange-500/15 to-amber-500/20 hover:from-amber-500/30 hover:to-orange-500/30 border border-amber-500/40 shadow-lg group hover:scale-[1.02] active:scale-[0.98]"
+                  >
+                    <div className="w-8 h-8 rounded-full bg-amber-500 text-black flex items-center justify-center font-bold text-sm shadow">
+                      🥁
+                    </div>
+                    <div className="flex-1">
+                      <div className="flex items-center gap-1.5">
+                        <span className="text-xs font-black uppercase tracking-wider text-amber-400">Drum Vault</span>
+                        <span className="px-1.5 py-0.5 rounded bg-amber-400 text-black text-[8px] font-black tracking-widest">VIP</span>
+                      </div>
+                      <div className="text-[9px] opacity-75 font-semibold text-zinc-300">Intelligent One-Shot Matcher</div>
+                    </div>
+                  </button>
+                </div>
+              )}
             </div>
           </aside>
 

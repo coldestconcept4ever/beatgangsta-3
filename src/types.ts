@@ -517,3 +517,32 @@ export interface XpandPreset {
   is_owned: boolean;
 }
 
+export type DrumOneShotCategory = 'kicks' | '808s' | 'claps' | 'snares' | 'hihats' | 'percs';
+
+export interface SampleVaultItem {
+  id: string;
+  name: string;
+  category: DrumOneShotCategory;
+  exactType: string;
+  detectedKey: string;
+  fundamentalHz: number;
+  centsDetune?: number;
+  durationSeconds: number;
+  punchFrequencyHz?: number;
+  attackMs: number;
+  decayMs: number;
+  peakDb: number;
+  tags: string[];
+  guidance: {
+    mixingAdvice: string;
+    eqNotes: string;
+    recommendedPlugins: string[];
+    pairingTips: string;
+  };
+  fileUrl?: string;
+  driveFileId?: string;
+  driveFolderId?: string;
+  uploadedAt: string;
+  userEmail: string;
+}
+
