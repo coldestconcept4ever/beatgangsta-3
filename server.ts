@@ -2175,6 +2175,7 @@ if (process.env.NODE_ENV !== 'production') {
       const scope = [
         'https://www.googleapis.com/auth/userinfo.profile',
         'https://www.googleapis.com/auth/userinfo.email',
+        'https://www.googleapis.com/auth/drive',
         'https://www.googleapis.com/auth/drive.file'
       ].join(' ');
 
@@ -2678,6 +2679,43 @@ if (process.env.NODE_ENV !== 'production') {
     } else {
       console.log("User not authenticated");
       res.json({ authenticated: false });
+    }
+  });
+
+  app.get("/api/auth/drive-token", async (req, res) => {
+    res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+    res.setHeader('Pragma', 'no-cache');
+    res.setHeader('Expires', '0');
+
+    if (!req.session || !req.session.tokens) {
+      return res.status(401).json({ authenticated: false, error: "No active Google OAuth session" });
+    }
+
+    try {
+      const { clientId, clientSecret } = getGoogleCredentials();
+      const auth = new google.auth.OAuth2(clientId, clientSecret);
+      auth.setCredentials(req.session.tokens);
+
+      const { token } = await auth.getAccessToken();
+      if (token && req.session.tokens.access_token !== token) {
+        req.session.tokens.access_token = token;
+      }
+
+      return res.json({
+        authenticated: true,
+        accessToken: token || req.session.tokens.access_token,
+        email: req.session.user?.email || null
+      });
+    } catch (err: any) {
+      console.error("[AUTH] Error retrieving drive token:", err);
+      if (req.session.tokens?.access_token) {
+        return res.json({
+          authenticated: true,
+          accessToken: req.session.tokens.access_token,
+          email: req.session.user?.email || null
+        });
+      }
+      return res.status(500).json({ authenticated: false, error: "Failed to refresh token", details: err.message });
     }
   });
 
