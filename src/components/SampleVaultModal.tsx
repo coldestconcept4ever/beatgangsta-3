@@ -2,7 +2,6 @@ import React, { useState, useEffect, useRef } from 'react';
 import { 
   Folder, 
   Disc, 
-  Volume2, 
   Play, 
   Square, 
   UploadCloud, 
@@ -11,10 +10,8 @@ import {
   CheckCircle2, 
   AlertTriangle, 
   ShieldCheck, 
-  Cloud, 
   RefreshCw, 
   Copy, 
-  Info, 
   Lock,
   ChevronDown,
   ChevronUp,
@@ -22,10 +19,7 @@ import {
   Zap,
   FolderInput,
   Layers,
-  Sliders,
-  VolumeX,
-  ArrowRight,
-  ExternalLink
+  Sliders
 } from 'lucide-react';
 import { AppTheme, SampleVaultItem, DrumOneShotCategory } from '../types';
 import { 
@@ -49,7 +43,6 @@ import {
 } from '../services/sampleVaultService';
 import {
   findTopComplementaryMatches,
-  evaluateSamplePairing,
   PairingSynergy
 } from '../utils/intelligentDrumPairing';
 
@@ -60,12 +53,301 @@ interface SampleVaultModalProps {
   onUpdateUser?: (updated: any) => void;
 }
 
+// Comprehensive theme definitions matching BeatGangsta themes
+const vaultThemeStyles: Record<string, {
+  container: string;
+  headerBg: string;
+  discBg: string;
+  titleGradient: string;
+  vipBadge: string;
+  subtitle: string;
+  exportBtn: string;
+  closeBtn: string;
+  navBg: string;
+  tabVaultActive: string;
+  tabVaultInactive: string;
+  tabPairingActive: string;
+  tabPairingInactive: string;
+  tabDriveActive: string;
+  tabDriveInactive: string;
+  accentText: string;
+  uploadBg: string;
+  uploadDashed: string;
+  uploadIcon: string;
+  uploadHighlight: string;
+  catActive: string;
+  catInactive: string;
+  catCountActive: string;
+  catCountInactive: string;
+  card: string;
+  cardPlayActive: string;
+  cardPlayInactive: string;
+  badgeType: string;
+  badgeKey: string;
+  badgePunch: string;
+  pairBtn: string;
+  guidanceBtn: string;
+  tag: string;
+  guidanceDrawer: string;
+  guidanceCard: string;
+  pairingSideBg: string;
+  pairingAnchorCard: string;
+  pairingChosenCard: string;
+  pairingUnchosenCard: string;
+  auditionPlayer: string;
+  auditionBtnPlay: string;
+  soloBox: string;
+  soloActiveBoth: string;
+  soloActiveA: string;
+  soloActiveB: string;
+  soloInactive: string;
+  sliderAccent: string;
+  boxCard: string;
+  uadBox: string;
+  uadCarve: string;
+  driveContainer: string;
+  driveInput: string;
+  driveBtn: string;
+  driveBtnMove: string;
+  progressBar: string;
+}> = {
+  'coldest': {
+    container: 'bg-[#030d1c]/95 border-sky-400/40 text-sky-100 shadow-[0_0_60px_rgba(56,189,248,0.22)]',
+    headerBg: 'border-b border-sky-500/30 bg-gradient-to-r from-sky-950/70 via-[#04162e] to-slate-950/80',
+    discBg: 'bg-sky-500/15 border-sky-400/40 text-sky-300',
+    titleGradient: 'bg-gradient-to-r from-white via-sky-200 to-sky-400 bg-clip-text text-transparent',
+    vipBadge: 'bg-sky-500/20 text-sky-300 border-sky-400/40',
+    subtitle: 'text-sky-300/70 font-mono',
+    exportBtn: 'bg-sky-500/20 hover:bg-sky-500/30 border-sky-400/40 text-sky-200',
+    closeBtn: 'hover:bg-sky-900/40 text-sky-400',
+    navBg: 'bg-sky-950/40 border-b border-sky-900/40',
+    tabVaultActive: 'bg-sky-500 text-white shadow-lg shadow-sky-500/30 font-bold',
+    tabVaultInactive: 'bg-sky-950/50 hover:bg-sky-900/50 text-sky-300 border-sky-800/40',
+    tabPairingActive: 'bg-gradient-to-r from-sky-400 to-blue-500 text-white shadow-lg shadow-sky-500/30 font-black',
+    tabPairingInactive: 'bg-sky-950/40 hover:bg-sky-900/40 text-sky-300 border-sky-800/40',
+    tabDriveActive: 'bg-blue-600 text-white shadow-lg shadow-blue-500/30 font-bold',
+    tabDriveInactive: 'bg-blue-950/40 hover:bg-blue-900/40 text-blue-300 border-blue-800/40',
+    accentText: 'text-sky-400',
+    uploadBg: 'bg-gradient-to-b from-sky-950/20 to-transparent border-b border-sky-900/40',
+    uploadDashed: 'border-sky-500/40 hover:border-sky-400 bg-sky-950/20 hover:bg-sky-950/35',
+    uploadIcon: 'bg-sky-500/15 group-hover:bg-sky-500/25 text-sky-300',
+    uploadHighlight: 'text-sky-300',
+    catActive: 'bg-sky-500 text-white shadow-md shadow-sky-500/30 scale-105',
+    catInactive: 'bg-sky-950/40 hover:bg-sky-900/50 text-sky-300/80 border-sky-800/40',
+    catCountActive: 'bg-black/25 text-white',
+    catCountInactive: 'bg-sky-900/60 text-sky-300',
+    card: 'bg-sky-950/25 hover:bg-sky-950/40 border-sky-900/50 hover:border-sky-500/40',
+    cardPlayActive: 'bg-sky-400 text-black border-sky-300 shadow-md scale-105',
+    cardPlayInactive: 'bg-sky-950/70 text-sky-300 border-sky-800/50 hover:bg-sky-900',
+    badgeType: 'bg-sky-500/15 text-sky-300 border-sky-500/30',
+    badgeKey: 'bg-sky-900/40 border-sky-500/30 text-sky-200',
+    badgePunch: 'bg-blue-900/40 border-blue-500/30 text-blue-200',
+    pairBtn: 'bg-sky-500/20 hover:bg-sky-500/30 border-sky-400/40 text-sky-200',
+    guidanceBtn: 'bg-sky-500/15 hover:bg-sky-500/25 text-sky-300 border-sky-500/30',
+    tag: 'bg-sky-950/60 text-sky-300/80 border-sky-800/40',
+    guidanceDrawer: 'border-t border-sky-900/50 bg-black/50',
+    guidanceCard: 'bg-sky-950/40 border-sky-900/60',
+    pairingSideBg: 'border-r border-sky-900/40 bg-sky-950/15',
+    pairingAnchorCard: 'bg-sky-950/50 border-sky-500/40',
+    pairingChosenCard: 'bg-sky-950/60 border-sky-400 shadow-md shadow-sky-500/15',
+    pairingUnchosenCard: 'bg-sky-950/25 border-sky-900/40 hover:bg-sky-950/45 hover:border-sky-700/60',
+    auditionPlayer: 'bg-gradient-to-r from-sky-950/60 via-black to-blue-950/50 border-sky-500/40',
+    auditionBtnPlay: 'bg-gradient-to-r from-sky-400 to-blue-500 text-white font-bold',
+    soloBox: 'bg-sky-950/60 border-sky-800/40',
+    soloActiveBoth: 'bg-sky-400 text-black font-bold',
+    soloActiveA: 'bg-sky-500 text-white font-bold',
+    soloActiveB: 'bg-blue-500 text-white font-bold',
+    soloInactive: 'text-sky-300 hover:text-white',
+    sliderAccent: 'accent-sky-400',
+    boxCard: 'bg-sky-950/30 border-sky-900/50',
+    uadBox: 'bg-sky-950/40 border-sky-500/40',
+    uadCarve: 'bg-black/40 border-sky-900/50 text-sky-200/90',
+    driveContainer: 'bg-sky-950/25 border-sky-500/30',
+    driveInput: 'bg-black/60 border-sky-500/40 text-white placeholder:text-sky-700 focus:border-sky-300',
+    driveBtn: 'bg-sky-500 hover:bg-sky-400 text-black font-bold',
+    driveBtnMove: 'bg-gradient-to-r from-blue-600 to-sky-500 text-white shadow-blue-500/30 font-black',
+    progressBar: 'bg-gradient-to-r from-sky-400 to-blue-500',
+  },
+  'crazy-bird': {
+    container: 'bg-[#0c0000]/95 border-red-900/60 text-red-50 shadow-[0_0_60px_rgba(220,38,38,0.25)]',
+    headerBg: 'border-b border-red-900/40 bg-gradient-to-r from-red-950/70 via-black to-zinc-950/80',
+    discBg: 'bg-red-500/15 border-red-500/40 text-red-400',
+    titleGradient: 'bg-gradient-to-r from-red-300 via-rose-300 to-red-500 bg-clip-text text-transparent',
+    vipBadge: 'bg-red-500/20 text-red-300 border-red-500/40',
+    subtitle: 'text-red-300/70 font-mono',
+    exportBtn: 'bg-red-500/20 hover:bg-red-500/30 border-red-400/40 text-red-200',
+    closeBtn: 'hover:bg-red-900/40 text-red-400',
+    navBg: 'bg-red-950/40 border-b border-red-900/40',
+    tabVaultActive: 'bg-red-600 text-white shadow-lg shadow-red-600/30 font-bold',
+    tabVaultInactive: 'bg-red-950/50 hover:bg-red-900/50 text-red-300 border-red-900/40',
+    tabPairingActive: 'bg-gradient-to-r from-red-600 to-amber-600 text-white shadow-lg shadow-red-600/30 font-black',
+    tabPairingInactive: 'bg-red-950/40 hover:bg-red-900/40 text-red-300 border-red-900/40',
+    tabDriveActive: 'bg-rose-700 text-white shadow-lg shadow-rose-700/30 font-bold',
+    tabDriveInactive: 'bg-rose-950/40 hover:bg-rose-900/40 text-rose-300 border-rose-900/40',
+    accentText: 'text-red-400',
+    uploadBg: 'bg-gradient-to-b from-red-950/20 to-transparent border-b border-red-900/40',
+    uploadDashed: 'border-red-500/40 hover:border-red-400 bg-red-950/20 hover:bg-red-950/35',
+    uploadIcon: 'bg-red-500/15 group-hover:bg-red-500/25 text-red-400',
+    uploadHighlight: 'text-red-300',
+    catActive: 'bg-red-600 text-white shadow-md shadow-red-600/30 scale-105',
+    catInactive: 'bg-red-950/40 hover:bg-red-900/50 text-red-300/80 border-red-900/40',
+    catCountActive: 'bg-black/30 text-white',
+    catCountInactive: 'bg-red-900/60 text-red-300',
+    card: 'bg-red-950/25 hover:bg-red-950/40 border-red-900/50 hover:border-red-500/40',
+    cardPlayActive: 'bg-red-500 text-white border-red-400 shadow-md scale-105',
+    cardPlayInactive: 'bg-red-950/70 text-red-300 border-red-900/50 hover:bg-red-900',
+    badgeType: 'bg-red-500/15 text-red-300 border-red-500/30',
+    badgeKey: 'bg-red-900/40 border-red-500/30 text-red-200',
+    badgePunch: 'bg-amber-900/40 border-amber-500/30 text-amber-200',
+    pairBtn: 'bg-red-500/20 hover:bg-red-500/30 border-red-400/40 text-red-200',
+    guidanceBtn: 'bg-red-500/15 hover:bg-red-500/25 text-red-300 border-red-500/30',
+    tag: 'bg-red-950/60 text-red-300/80 border-red-900/40',
+    guidanceDrawer: 'border-t border-red-900/50 bg-black/50',
+    guidanceCard: 'bg-red-950/40 border-red-900/60',
+    pairingSideBg: 'border-r border-red-900/40 bg-red-950/15',
+    pairingAnchorCard: 'bg-red-950/50 border-red-500/40',
+    pairingChosenCard: 'bg-red-950/60 border-red-400 shadow-md shadow-red-500/15',
+    pairingUnchosenCard: 'bg-red-950/25 border-red-900/40 hover:bg-red-950/45 hover:border-red-700/60',
+    auditionPlayer: 'bg-gradient-to-r from-red-950/60 via-black to-zinc-950 border-red-500/40',
+    auditionBtnPlay: 'bg-gradient-to-r from-red-500 to-amber-600 text-white font-bold',
+    soloBox: 'bg-red-950/60 border-red-800/40',
+    soloActiveBoth: 'bg-red-500 text-white font-bold',
+    soloActiveA: 'bg-red-600 text-white font-bold',
+    soloActiveB: 'bg-amber-600 text-white font-bold',
+    soloInactive: 'text-red-300 hover:text-white',
+    sliderAccent: 'accent-red-500',
+    boxCard: 'bg-red-950/30 border-red-900/50',
+    uadBox: 'bg-red-950/40 border-red-500/40',
+    uadCarve: 'bg-black/40 border-red-900/50 text-red-200/90',
+    driveContainer: 'bg-red-950/25 border-red-500/30',
+    driveInput: 'bg-black/60 border-red-500/40 text-white placeholder:text-red-700 focus:border-red-400',
+    driveBtn: 'bg-red-600 hover:bg-red-500 text-white font-bold',
+    driveBtnMove: 'bg-gradient-to-r from-red-600 to-amber-600 text-white shadow-red-600/30 font-black',
+    progressBar: 'bg-gradient-to-r from-red-500 to-amber-500',
+  },
+  'chef-mode': {
+    container: 'bg-[#18110b]/95 border-orange-500/40 text-orange-50 shadow-[0_0_60px_rgba(249,115,22,0.2)]',
+    headerBg: 'border-b border-orange-900/40 bg-gradient-to-r from-orange-950/70 via-stone-950 to-amber-950/70',
+    discBg: 'bg-orange-500/15 border-orange-400/40 text-orange-400',
+    titleGradient: 'bg-gradient-to-r from-amber-200 via-orange-300 to-amber-500 bg-clip-text text-transparent',
+    vipBadge: 'bg-orange-500/20 text-orange-300 border-orange-400/40',
+    subtitle: 'text-orange-300/70 font-mono',
+    exportBtn: 'bg-orange-500/20 hover:bg-orange-500/30 border-orange-400/40 text-orange-200',
+    closeBtn: 'hover:bg-orange-900/40 text-orange-400',
+    navBg: 'bg-orange-950/40 border-b border-orange-900/40',
+    tabVaultActive: 'bg-orange-500 text-black font-black shadow-lg shadow-orange-500/30',
+    tabVaultInactive: 'bg-orange-950/50 hover:bg-orange-900/50 text-orange-300 border-orange-800/40',
+    tabPairingActive: 'bg-gradient-to-r from-amber-400 to-orange-500 text-black shadow-lg shadow-amber-500/30 font-black',
+    tabPairingInactive: 'bg-orange-950/40 hover:bg-orange-900/40 text-orange-300 border-orange-800/40',
+    tabDriveActive: 'bg-amber-600 text-black font-black shadow-lg shadow-amber-500/30',
+    tabDriveInactive: 'bg-amber-950/40 hover:bg-amber-900/40 text-amber-300 border-amber-800/40',
+    accentText: 'text-orange-400',
+    uploadBg: 'bg-gradient-to-b from-orange-950/20 to-transparent border-b border-orange-900/40',
+    uploadDashed: 'border-orange-500/40 hover:border-orange-400 bg-orange-950/20 hover:bg-orange-950/35',
+    uploadIcon: 'bg-orange-500/15 group-hover:bg-orange-500/25 text-orange-400',
+    uploadHighlight: 'text-orange-300',
+    catActive: 'bg-orange-500 text-black font-black shadow-md shadow-orange-500/30 scale-105',
+    catInactive: 'bg-orange-950/40 hover:bg-orange-900/50 text-orange-300/80 border-orange-800/40',
+    catCountActive: 'bg-black/25 text-black',
+    catCountInactive: 'bg-orange-900/60 text-orange-300',
+    card: 'bg-orange-950/25 hover:bg-orange-950/40 border-orange-900/50 hover:border-orange-500/40',
+    cardPlayActive: 'bg-orange-400 text-black border-orange-300 shadow-md scale-105',
+    cardPlayInactive: 'bg-orange-950/70 text-orange-300 border-orange-800/50 hover:bg-orange-900',
+    badgeType: 'bg-orange-500/15 text-orange-300 border-orange-500/30',
+    badgeKey: 'bg-orange-900/40 border-orange-500/30 text-orange-200',
+    badgePunch: 'bg-amber-900/40 border-amber-500/30 text-amber-200',
+    pairBtn: 'bg-orange-500/20 hover:bg-orange-500/30 border-orange-400/40 text-orange-200',
+    guidanceBtn: 'bg-orange-500/15 hover:bg-orange-500/25 text-orange-300 border-orange-500/30',
+    tag: 'bg-orange-950/60 text-orange-300/80 border-orange-800/40',
+    guidanceDrawer: 'border-t border-orange-900/50 bg-black/50',
+    guidanceCard: 'bg-orange-950/40 border-orange-900/60',
+    pairingSideBg: 'border-r border-orange-900/40 bg-orange-950/15',
+    pairingAnchorCard: 'bg-orange-950/50 border-orange-500/40',
+    pairingChosenCard: 'bg-orange-950/60 border-orange-400 shadow-md shadow-orange-500/15',
+    pairingUnchosenCard: 'bg-orange-950/25 border-orange-900/40 hover:bg-orange-950/45 hover:border-orange-700/60',
+    auditionPlayer: 'bg-gradient-to-r from-orange-950/60 via-black to-stone-950 border-orange-500/40',
+    auditionBtnPlay: 'bg-gradient-to-r from-amber-400 to-orange-500 text-black font-black',
+    soloBox: 'bg-orange-950/60 border-orange-800/40',
+    soloActiveBoth: 'bg-orange-500 text-black font-black',
+    soloActiveA: 'bg-orange-400 text-black font-bold',
+    soloActiveB: 'bg-amber-500 text-black font-bold',
+    soloInactive: 'text-orange-300 hover:text-white',
+    sliderAccent: 'accent-orange-400',
+    boxCard: 'bg-orange-950/30 border-orange-900/50',
+    uadBox: 'bg-orange-950/40 border-orange-500/40',
+    uadCarve: 'bg-black/40 border-orange-900/50 text-orange-200/90',
+    driveContainer: 'bg-orange-950/25 border-orange-500/30',
+    driveInput: 'bg-black/60 border-orange-500/40 text-white placeholder:text-orange-700 focus:border-orange-400',
+    driveBtn: 'bg-orange-500 hover:bg-orange-400 text-black font-black',
+    driveBtnMove: 'bg-gradient-to-r from-orange-500 to-amber-500 text-black font-black shadow-orange-500/30',
+    progressBar: 'bg-gradient-to-r from-amber-400 to-orange-500',
+  },
+  'hustle-time': {
+    container: 'bg-[#09090b]/95 border-amber-500/40 text-amber-50 shadow-[0_0_60px_rgba(245,158,11,0.2)]',
+    headerBg: 'border-b border-amber-900/40 bg-gradient-to-r from-amber-950/70 via-zinc-950 to-yellow-950/70',
+    discBg: 'bg-amber-500/15 border-amber-400/40 text-amber-400',
+    titleGradient: 'bg-gradient-to-r from-amber-200 via-yellow-300 to-amber-500 bg-clip-text text-transparent',
+    vipBadge: 'bg-amber-500/20 text-amber-300 border-amber-400/40',
+    subtitle: 'text-amber-300/70 font-mono',
+    exportBtn: 'bg-amber-500/20 hover:bg-amber-500/30 border-amber-400/40 text-amber-200',
+    closeBtn: 'hover:bg-amber-900/40 text-amber-400',
+    navBg: 'bg-amber-950/40 border-b border-amber-900/40',
+    tabVaultActive: 'bg-amber-500 text-black font-black shadow-lg shadow-amber-500/30',
+    tabVaultInactive: 'bg-amber-950/50 hover:bg-amber-900/50 text-amber-300 border-amber-800/40',
+    tabPairingActive: 'bg-gradient-to-r from-amber-400 to-yellow-500 text-black shadow-lg shadow-amber-500/30 font-black',
+    tabPairingInactive: 'bg-amber-950/40 hover:bg-amber-900/40 text-amber-300 border-amber-800/40',
+    tabDriveActive: 'bg-yellow-500 text-black font-black shadow-lg shadow-yellow-500/30',
+    tabDriveInactive: 'bg-yellow-950/40 hover:bg-yellow-900/40 text-yellow-300 border-yellow-800/40',
+    accentText: 'text-amber-400',
+    uploadBg: 'bg-gradient-to-b from-amber-950/20 to-transparent border-b border-amber-900/40',
+    uploadDashed: 'border-amber-500/40 hover:border-amber-400 bg-amber-950/20 hover:bg-amber-950/35',
+    uploadIcon: 'bg-amber-500/15 group-hover:bg-amber-500/25 text-amber-400',
+    uploadHighlight: 'text-amber-300',
+    catActive: 'bg-amber-500 text-black font-black shadow-md shadow-amber-500/30 scale-105',
+    catInactive: 'bg-amber-950/40 hover:bg-amber-900/50 text-amber-300/80 border-amber-800/40',
+    catCountActive: 'bg-black/25 text-black',
+    catCountInactive: 'bg-amber-900/60 text-amber-300',
+    card: 'bg-amber-950/25 hover:bg-amber-950/40 border-amber-900/50 hover:border-amber-500/40',
+    cardPlayActive: 'bg-amber-400 text-black border-amber-300 shadow-md scale-105',
+    cardPlayInactive: 'bg-amber-950/70 text-amber-300 border-amber-800/50 hover:bg-amber-900',
+    badgeType: 'bg-amber-500/15 text-amber-300 border-amber-500/30',
+    badgeKey: 'bg-amber-900/40 border-amber-500/30 text-amber-200',
+    badgePunch: 'bg-yellow-900/40 border-yellow-500/30 text-yellow-200',
+    pairBtn: 'bg-amber-500/20 hover:bg-amber-500/30 border-amber-400/40 text-amber-200',
+    guidanceBtn: 'bg-amber-500/15 hover:bg-amber-500/25 text-amber-300 border-amber-500/30',
+    tag: 'bg-amber-950/60 text-amber-300/80 border-amber-800/40',
+    guidanceDrawer: 'border-t border-amber-900/50 bg-black/50',
+    guidanceCard: 'bg-amber-950/40 border-amber-900/60',
+    pairingSideBg: 'border-r border-amber-900/40 bg-amber-950/15',
+    pairingAnchorCard: 'bg-amber-950/50 border-amber-500/40',
+    pairingChosenCard: 'bg-amber-950/60 border-amber-400 shadow-md shadow-amber-500/15',
+    pairingUnchosenCard: 'bg-amber-950/25 border-amber-900/40 hover:bg-amber-950/45 hover:border-amber-700/60',
+    auditionPlayer: 'bg-gradient-to-r from-amber-950/60 via-black to-zinc-950 border-amber-500/40',
+    auditionBtnPlay: 'bg-gradient-to-r from-amber-400 to-yellow-500 text-black font-black',
+    soloBox: 'bg-amber-950/60 border-amber-800/40',
+    soloActiveBoth: 'bg-amber-500 text-black font-black',
+    soloActiveA: 'bg-amber-400 text-black font-bold',
+    soloActiveB: 'bg-yellow-500 text-black font-bold',
+    soloInactive: 'text-amber-300 hover:text-white',
+    sliderAccent: 'accent-amber-400',
+    boxCard: 'bg-amber-950/30 border-amber-900/50',
+    uadBox: 'bg-amber-950/40 border-amber-500/40',
+    uadCarve: 'bg-black/40 border-amber-900/50 text-amber-200/90',
+    driveContainer: 'bg-amber-950/25 border-amber-500/30',
+    driveInput: 'bg-black/60 border-amber-500/40 text-white placeholder:text-amber-700 focus:border-amber-400',
+    driveBtn: 'bg-amber-500 hover:bg-amber-400 text-black font-black',
+    driveBtnMove: 'bg-gradient-to-r from-amber-400 to-yellow-500 text-black font-black shadow-amber-500/30',
+    progressBar: 'bg-gradient-to-r from-amber-400 to-yellow-400',
+  }
+};
+
 export const SampleVaultModal: React.FC<SampleVaultModalProps> = ({
   theme,
   user,
   onClose,
   onUpdateUser
 }) => {
+  const currentTheme = vaultThemeStyles[theme] || vaultThemeStyles['hustle-time'];
   const [currentUser, setCurrentUser] = useState<any>(user);
   const [accessToken, setAccessToken] = useState<string | null>(null);
   const [isAuthenticating, setIsAuthenticating] = useState(false);
@@ -94,7 +376,7 @@ export const SampleVaultModal: React.FC<SampleVaultModalProps> = ({
 
   // File input
   const fileInputRef = useRef<HTMLInputElement | null>(null);
-  const [targetCategory, setTargetCategory] = useState<DrumOneShotCategory>('kicks');
+  const [targetCategory] = useState<DrumOneShotCategory>('kicks');
 
   // Google Drive Folder Import State
   const [driveFolderInput, setDriveFolderInput] = useState<string>('');
@@ -119,130 +401,115 @@ export const SampleVaultModal: React.FC<SampleVaultModalProps> = ({
   const webAudioCtxRef = useRef<AudioContext | null>(null);
   const activeSourcesRef = useRef<AudioBufferSourceNode[]>([]);
 
-  const isAuthorized = isAuthorizedForVault(currentUser?.email);
-
-  // Sync token & Drive on mount
+  // Auto-recalculate top matches when pairing focus sample changes or samples change
   useEffect(() => {
-    getAccessToken().then(tok => {
-      if (tok) {
-        setAccessToken(tok);
-        loadFromDrive(tok);
+    if (pairingFocusSample && samples.length > 1) {
+      const matches = findTopComplementaryMatches(pairingFocusSample, samples, 10);
+      setTopMatches(matches);
+      if (matches.length > 0) {
+        setSelectedMatch(matches[0]);
+        setMicroOffsetMs(matches[0].suggestedOffsetMs || 0);
+      } else {
+        setSelectedMatch(null);
       }
-    });
-  }, [currentUser]);
+    } else {
+      setTopMatches([]);
+      setSelectedMatch(null);
+    }
+  }, [pairingFocusSample, samples]);
 
-  // Save to local cache as backup
+  // Sync state to local storage
   useEffect(() => {
     try {
       localStorage.setItem('bg_sample_vault_items', JSON.stringify(samples));
     } catch (e) {
-      console.warn('Could not cache samples to localStorage:', e);
+      console.warn('Could not cache vault items locally:', e);
     }
   }, [samples]);
 
-  // Update pairing matches when focus sample or samples change
+  // Check auth and tokens
   useEffect(() => {
-    if (pairingFocusSample) {
-      const matches = findTopComplementaryMatches(pairingFocusSample, samples, 8);
-      setTopMatches(matches);
-      if (matches.length > 0 && (!selectedMatch || selectedMatch.sampleA.id !== pairingFocusSample.id)) {
-        setSelectedMatch(matches[0]);
-        setMicroOffsetMs(matches[0].suggestedOffsetMs || 0);
-      }
-    }
-  }, [pairingFocusSample, samples]);
+    getAccessToken().then(token => {
+      if (token) setAccessToken(token);
+    });
+  }, []);
 
-  const loadFromDrive = async (token: string) => {
-    if (!token) return;
-    setIsSyncingDrive(true);
-    try {
-      const driveItems = await fetchVaultIndexFromDrive(token);
-      if (driveItems && driveItems.length > 0) {
-        setSamples(driveItems);
-        setSuccessNotice(`Synced ${driveItems.length} one-shots from Google Drive vault.`);
-      }
-    } catch (err: any) {
-      console.warn('Failed loading from Drive:', err);
-    } finally {
-      setIsSyncingDrive(false);
-    }
-  };
+  const isAuthorized = isAuthorizedForVault(currentUser?.email);
 
   const handleGoogleAuth = async () => {
     setIsAuthenticating(true);
     setErrorMessage(null);
     try {
-      const result = await googleSignIn();
-      if (result) {
-        setAccessToken(result.accessToken);
-        const newUser = {
-          uid: result.user.uid,
-          name: result.user.displayName || 'Producer',
-          email: result.user.email || '',
-          photo: result.user.photoURL || ''
-        };
-        setCurrentUser(newUser);
-        if (onUpdateUser) onUpdateUser(newUser);
-        
-        if (isAuthorizedForVault(result.user.email)) {
-          setSuccessNotice(`Welcome to the Vault, ${result.user.email}!`);
-          await loadFromDrive(result.accessToken);
-        } else {
-          setErrorMessage(`Access restricted. "${result.user.email}" is not authorized for this private feature.`);
-        }
+      const res = await googleSignIn();
+      if (!res) throw new Error('Sign in was cancelled or failed.');
+      const authedUser = res.user;
+      setCurrentUser(authedUser);
+      if (onUpdateUser) {
+        onUpdateUser(authedUser);
+      }
+      const token = res.accessToken;
+      if (token) {
+        setAccessToken(token);
+        await loadFromDrive(token);
       }
     } catch (err: any) {
-      setErrorMessage(err.message || 'Google Sign-In failed.');
+      setErrorMessage(err.message || 'Authentication with Google failed.');
     } finally {
       setIsAuthenticating(false);
     }
   };
 
-  // Drag & drop or file upload
-  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = e.target.files;
+  const loadFromDrive = async (token: string) => {
+    setIsSyncingDrive(true);
+    setErrorMessage(null);
+    try {
+      const remoteItems = await fetchVaultIndexFromDrive(token);
+      if (remoteItems && remoteItems.length > 0) {
+        setSamples(remoteItems);
+        setSuccessNotice(`Synced ${remoteItems.length} samples from Google Drive.`);
+      }
+    } catch (err: any) {
+      console.warn('Could not sync from drive index:', err);
+    } finally {
+      setIsSyncingDrive(false);
+    }
+  };
+
+  // Upload and analyze individual local files
+  const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const files = event.target.files;
     if (!files || files.length === 0) return;
+
+    setIsAnalyzing(true);
     setErrorMessage(null);
     setSuccessNotice(null);
 
     const fileList = Array.from(files);
-    setIsAnalyzing(true);
-
     let addedCount = 0;
     const currentSamples = [...samples];
 
     for (let i = 0; i < fileList.length; i++) {
       const file = fileList[i];
-      setAnalyzeStatus(`[${i + 1}/${fileList.length}] Analyzing "${file.name}" (Transients & Key)...`);
+      setAnalyzeStatus(`[${i + 1}/${fileList.length}] Analyzing "${file.name}"...`);
 
       try {
-        // Step 1: Client Web Audio Analysis & Loop Guard (Strictly < 3.0s, no repetitive loops)
+        // Step 1: Acoustic DSP Analysis & Guardrail Check (ONE-SHOTS ONLY)
         const { acoustic } = await analyzeOneShotAudio(file);
 
-        // Step 2: Auto-detect category from file name if not forced
-        let category: DrumOneShotCategory = targetCategory;
-        const lowerName = file.name.toLowerCase();
-        if (lowerName.includes('808') || lowerName.includes('sub')) category = '808s';
-        else if (lowerName.includes('kick')) category = 'kicks';
-        else if (lowerName.includes('clap') || lowerName.includes('snap')) category = 'claps';
-        else if (lowerName.includes('snare') || lowerName.includes('rim')) category = 'snares';
-        else if (lowerName.includes('hat') || lowerName.includes('hh')) category = 'hihats';
-        else if (lowerName.includes('perc') || lowerName.includes('shaker') || lowerName.includes('open')) category = 'percs';
+        // Step 2: Categorization & AI Harmonic Reasoning
+        const localBlobUrl = URL.createObjectURL(file);
+        const category = targetCategory || 'kicks';
 
-        setAnalyzeStatus(`[${i + 1}/${fileList.length}] AI classifying "${file.name}" & generating UAD guidance...`);
-
-        // Step 3: Server-side AI Enrichment (Gemini)
+        setAnalyzeStatus(`[${i + 1}/${fileList.length}] Generating AI key & pocket guidance for "${file.name}"...`);
         const aiAnalysis = await getAiOneShotGuidance({
           fileName: file.name,
           category,
           acoustic
         });
 
-        const newId = `vault-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`;
-        const localBlobUrl = URL.createObjectURL(file);
-
+        // Step 3: Build Vault Record
         const newItem: SampleVaultItem = {
-          id: newId,
+          id: `sample_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`,
           name: file.name.replace(/\.[^/.]+$/, ''),
           category,
           exactType: aiAnalysis.exactType,
@@ -353,54 +620,59 @@ export const SampleVaultModal: React.FC<SampleVaultModalProps> = ({
       percs: await getOrCreateDriveFolder('06_Percs', rootFolderId, accessToken)
     };
 
-    let movedCount = 0;
+    const newSamples = [...samples];
     const rejections: Array<{ name: string; reason: string }> = [];
-    const updatedVault = [...samples];
+    let movedCount = 0;
 
     for (let i = 0; i < scannedFiles.length; i++) {
-      const driveFile = scannedFiles[i];
+      const fileMeta = scannedFiles[i];
       setMigrationProgress({
         current: i + 1,
         total: scannedFiles.length,
-        fileName: driveFile.name
+        fileName: fileMeta.name
       });
 
       try {
-        // 1. Download file blob into memory for acoustic analysis
-        const blob = await downloadDriveFileAsBlob(driveFile.id, accessToken);
-        const virtualFile = new File([blob], driveFile.name, { type: driveFile.mimeType || 'audio/wav' });
+        // Download blob into memory for acoustic analysis
+        const blob = await downloadDriveFileAsBlob(fileMeta.id, accessToken);
+        const audioFile = new File([blob], fileMeta.name, { type: fileMeta.mimeType });
 
-        // 2. Strict One-Shot Loop Guard & Pitch/Transient Analysis
-        const { acoustic } = await analyzeOneShotAudio(virtualFile);
+        // DSP analysis
+        const { acoustic } = await analyzeOneShotAudio(audioFile);
 
-        // 3. Category Detection
-        let category: DrumOneShotCategory = 'percs';
-        const lowerName = driveFile.name.toLowerCase();
-        if (lowerName.includes('808') || lowerName.includes('sub')) category = '808s';
-        else if (lowerName.includes('kick')) category = 'kicks';
-        else if (lowerName.includes('clap') || lowerName.includes('snap')) category = 'claps';
-        else if (lowerName.includes('snare') || lowerName.includes('rim')) category = 'snares';
-        else if (lowerName.includes('hat') || lowerName.includes('hh')) category = 'hihats';
-        else if (lowerName.includes('perc') || lowerName.includes('shaker') || lowerName.includes('open')) category = 'percs';
+        // Infer category from name or pitch
+        const lowerName = fileMeta.name.toLowerCase();
+        let targetCat: DrumOneShotCategory = 'kicks';
+        if (lowerName.includes('808') || lowerName.includes('sub')) {
+          targetCat = '808s';
+        } else if (lowerName.includes('clap')) {
+          targetCat = 'claps';
+        } else if (lowerName.includes('snare') || lowerName.includes('rim')) {
+          targetCat = 'snares';
+        } else if (lowerName.includes('hat') || lowerName.includes('hh')) {
+          targetCat = 'hihats';
+        } else if (lowerName.includes('perc') || lowerName.includes('shaker') || lowerName.includes('tamb') || lowerName.includes('conga')) {
+          targetCat = 'percs';
+        }
 
-        // 4. AI Acoustic Classifier & UAD Mixing Enrichment
+        const destinationFolderId = categoryFolderMap[targetCat];
+
+        // Native Move via Google Drive API: add destination folder, remove original source folder
+        await moveDriveFile(fileMeta.id, destinationFolderId, detectedFolderId, accessToken);
+
+        // AI Harmonic Guidance
         const aiAnalysis = await getAiOneShotGuidance({
-          fileName: driveFile.name,
-          category,
+          fileName: fileMeta.name,
+          category: targetCat,
           acoustic
         });
 
-        // 5. ZERO-DUPLICATION NATIVE MOVE in Google Drive:
-        // Updates parent pointer from source folder to target category folder
-        // CONSUMES 0 BYTES OF EXTRA STORAGE!
-        const targetCategoryFolderId = categoryFolderMap[category];
-        await moveDriveFile(driveFile.id, detectedFolderId, targetCategoryFolderId, accessToken);
+        const localBlobUrl = URL.createObjectURL(blob);
 
-        // 6. Generate Vault record
-        const newItem: SampleVaultItem = {
-          id: `vault-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`,
-          name: driveFile.name.replace(/\.[^/.]+$/, ''),
-          category,
+        const newVaultItem: SampleVaultItem = {
+          id: `sample_drive_${fileMeta.id}`,
+          name: fileMeta.name.replace(/\.[^/.]+$/, ''),
+          category: targetCat,
           exactType: aiAnalysis.exactType,
           detectedKey: acoustic.detectedKey,
           fundamentalHz: acoustic.fundamentalHz,
@@ -412,44 +684,43 @@ export const SampleVaultModal: React.FC<SampleVaultModalProps> = ({
           peakDb: acoustic.peakDb,
           tags: aiAnalysis.tags,
           guidance: aiAnalysis.guidance,
-          fileUrl: URL.createObjectURL(blob),
-          driveFileId: driveFile.id,
-          driveFolderId: targetCategoryFolderId,
+          fileUrl: localBlobUrl,
+          driveFileId: fileMeta.id,
+          driveFolderId: destinationFolderId,
           uploadedAt: new Date().toISOString(),
           userEmail: currentUser?.email || 'coldestconcept@gmail.com'
         };
 
-        updatedVault.unshift(newItem);
+        newSamples.unshift(newVaultItem);
         movedCount++;
-      } catch (err: any) {
-        console.warn(`File ${driveFile.name} was rejected or failed:`, err);
+      } catch (itemErr: any) {
+        console.error(`Error migrating ${fileMeta.name}:`, itemErr);
         rejections.push({
-          name: driveFile.name,
-          reason: err.message || 'Analysis rejected (loop or unreadable format)'
+          name: fileMeta.name,
+          reason: itemErr.message || 'Migration error'
         });
       }
     }
 
-    setSamples(updatedVault);
+    setSamples(newSamples);
     setMigrationRejections(rejections);
     setIsMigratingDriveFolder(false);
 
+    // Sync updated vault inventory back to Drive
     if (movedCount > 0) {
-      await syncVaultIndexToDrive(updatedVault, accessToken);
-      setSuccessNotice(
-        `🚀 Zero-Duplication Migration Complete! Moved and cataloged ${movedCount} one-shot(s) without using any extra Google Drive storage quota.`
-      );
+      await syncVaultIndexToDrive(newSamples, accessToken);
+      setSuccessNotice(`Successfully moved and cataloged ${movedCount} one-shot(s) into your Drum Vault without taking extra space!`);
+      // Clear scanned list
+      setScannedFiles([]);
+      setActiveTab('vault');
     }
   };
 
   const handleDeleteSample = async (sample: SampleVaultItem) => {
-    const confirmed = window.confirm(
-      `Are you sure you want to delete "${sample.name}" from your BeatGangsta Vault and Google Drive? This cannot be undone.`
-    );
-    if (!confirmed) return;
+    if (!window.confirm(`Delete "${sample.name}" from your vault?`)) return;
 
     try {
-      if (sample.driveFileId && accessToken) {
+      if (accessToken && sample.driveFileId) {
         await deleteSampleFromDrive(sample.driveFileId, accessToken);
       }
       const updated = samples.filter(s => s.id !== sample.id);
@@ -487,7 +758,6 @@ export const SampleVaultModal: React.FC<SampleVaultModalProps> = ({
 
   // Simultaneous Dual Audition Player (Web Audio Engine)
   const handleDualAuditionPlay = async (pair: PairingSynergy) => {
-    // Stop any active dual playback
     if (isDualPlaying) {
       activeSourcesRef.current.forEach(src => {
         try { src.stop(); } catch {}
@@ -506,7 +776,6 @@ export const SampleVaultModal: React.FC<SampleVaultModalProps> = ({
         await ctx.resume();
       }
 
-      // Fetch or decode audio buffers
       const decodeUrlToBuffer = async (url?: string): Promise<AudioBuffer | null> => {
         if (!url) return null;
         const res = await fetch(url);
@@ -599,24 +868,27 @@ Pairing Tips: ${sample.guidance.pairingTips}`;
 
   const handleExportFullVaultForChat = () => {
     if (samples.length === 0) {
-      setErrorMessage('Your Vault is currently empty. Add drum one-shots first!');
+      setErrorMessage('Vault is empty. Add samples first before exporting.');
       return;
     }
 
-    const summary = samples.map(s => 
-      `- ${s.name} (${s.category.toUpperCase()}): ${s.exactType} | Key: ${s.detectedKey} (${s.fundamentalHz}Hz) | Punch: ${s.punchFrequencyHz}Hz | Tags: [${s.tags.slice(0, 3).join(', ')}]`
-    ).join('\n');
+    const lines = [
+      `=== BEATGANGSTA USER VAULT INVENTORY (${samples.length} Samples) ===`,
+      `User: ${currentUser?.email || 'coldestconcept@gmail.com'}`,
+      `Exported: ${new Date().toLocaleString()}`,
+      ''
+    ];
 
-    const fullExport = `=== BEATGANGSTA DRUM VAULT INVENTORY ===
-Total One-Shots: ${samples.length}
-Owner: ${currentUser?.email || 'coldestconcept@gmail.com'}
-Google Drive Synced: ${accessToken ? 'YES' : 'LOCAL'}
+    samples.forEach((s, idx) => {
+      lines.push(`${idx + 1}. [${s.category.toUpperCase()}] "${s.name}"`);
+      lines.push(`   Type: ${s.exactType} | Key: ${s.detectedKey} (${s.fundamentalHz}Hz) | Punch: ${s.punchFrequencyHz || s.fundamentalHz}Hz | Duration: ${s.durationSeconds}s`);
+      lines.push(`   Tags: ${s.tags.join(', ')}`);
+      lines.push(`   EQ Carve: ${s.guidance.eqNotes}`);
+      lines.push(`   Plugins: ${s.guidance.recommendedPlugins.join(', ')}`);
+      lines.push('');
+    });
 
-SAMPLES:
-${summary}
-
-Mixer Note: These are verified one-shots (no loops). Please reference these exact samples and their fundamentals when designing drum bus processing and vocal EQ pockets.`;
-
+    const fullExport = lines.join('\n');
     navigator.clipboard.writeText(fullExport);
     setSuccessNotice('Copied entire Vault inventory to clipboard! You can paste this right into our chat for personalized mix guidance.');
   };
@@ -641,25 +913,25 @@ Mixer Note: These are verified one-shots (no loops). Please reference these exac
       onClick={onClose}
     >
       <div 
-        className="w-full max-w-6xl h-[94vh] flex flex-col rounded-[2.5rem] bg-[#030712] border border-cyan-500/30 text-cyan-50 shadow-[0_0_60px_rgba(6,182,212,0.18)] overflow-hidden relative"
+        className={`w-full max-w-6xl h-[94vh] flex flex-col rounded-[2.5rem] border backdrop-blur-2xl overflow-hidden relative ${currentTheme.container}`}
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header Bar */}
-        <div className="p-5 sm:p-6 border-b border-cyan-900/40 bg-gradient-to-r from-cyan-950/40 via-black to-blue-950/30 flex flex-wrap items-center justify-between gap-4">
+        <div className={`p-5 sm:p-6 flex flex-wrap items-center justify-between gap-4 ${currentTheme.headerBg}`}>
           <div className="flex items-center gap-3">
-            <div className="p-2.5 rounded-2xl bg-cyan-500/10 border border-cyan-500/30 text-cyan-400">
+            <div className={`p-2.5 rounded-2xl border ${currentTheme.discBg}`}>
               <Disc className="w-6 h-6 animate-spin-slow" />
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <h2 className="text-xl font-black tracking-wider uppercase bg-gradient-to-r from-cyan-300 via-sky-200 to-blue-400 bg-clip-text text-transparent">
+                <h2 className={`text-xl font-black tracking-wider uppercase ${currentTheme.titleGradient}`}>
                   BeatGangsta Drum Vault
                 </h2>
-                <span className="text-[10px] font-black tracking-widest px-2.5 py-0.5 rounded-full bg-cyan-500/20 text-cyan-300 border border-cyan-500/40">
+                <span className={`text-[10px] font-black tracking-widest px-2.5 py-0.5 rounded-full ${currentTheme.vipBadge}`}>
                   EXCLUSIVE VIP
                 </span>
               </div>
-              <p className="text-xs text-cyan-400/70 font-mono">
+              <p className={`text-xs ${currentTheme.subtitle}`}>
                 AI Acoustic Classifier • Zero-Duplication Drive Mover • Intelligent Harmonic Matching • One-Shots Only
               </p>
             </div>
@@ -669,7 +941,7 @@ Mixer Note: These are verified one-shots (no loops). Please reference these exac
             {isAuthorized && (
               <button
                 onClick={handleExportFullVaultForChat}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-cyan-500/20 hover:bg-cyan-500/30 border border-cyan-400/40 text-cyan-200 text-xs font-bold transition-all shadow-md active:scale-95"
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full border text-xs font-bold transition-all shadow-md active:scale-95 ${currentTheme.exportBtn}`}
                 title="Copy vault inventory so the assistant can guide you with your exact samples"
               >
                 <Copy className="w-3.5 h-3.5" />
@@ -679,7 +951,7 @@ Mixer Note: These are verified one-shots (no loops). Please reference these exac
 
             <button
               onClick={onClose}
-              className="p-2 rounded-full hover:bg-cyan-900/40 text-cyan-400 transition-colors"
+              className={`p-2 rounded-full transition-colors ${currentTheme.closeBtn}`}
             >
               <X className="w-5 h-5" />
             </button>
@@ -689,14 +961,14 @@ Mixer Note: These are verified one-shots (no loops). Please reference these exac
         {/* Security / VIP Gate Check */}
         {!isAuthorized ? (
           <div className="flex-1 flex flex-col items-center justify-center p-8 text-center max-w-lg mx-auto">
-            <div className="w-20 h-20 rounded-3xl bg-cyan-950/50 border border-cyan-500/40 flex items-center justify-center text-cyan-400 mb-6 shadow-xl">
+            <div className={`w-20 h-20 rounded-3xl border flex items-center justify-center mb-6 shadow-xl ${currentTheme.discBg}`}>
               <Lock className="w-10 h-10" />
             </div>
             <h3 className="text-2xl font-black uppercase tracking-wider mb-2 text-white">
               Private Sound Vault
             </h3>
-            <p className="text-sm text-cyan-200/70 mb-6 leading-relaxed">
-              This feature is strictly reserved for <span className="text-cyan-300 font-bold">coldestconcept@gmail.com</span> and <span className="text-cyan-300 font-bold">recognizemiracles@gmail.com</span>. Please authenticate with your authorized Google Account to unlock your cloud-synced one-shot database.
+            <p className="text-sm opacity-80 mb-6 leading-relaxed">
+              This feature is strictly reserved for <span className={`font-bold ${currentTheme.accentText}`}>coldestconcept@gmail.com</span> and <span className={`font-bold ${currentTheme.accentText}`}>recognizemiracles@gmail.com</span>. Please authenticate with your authorized Google Account to unlock your cloud-synced one-shot database.
             </p>
 
             <button
@@ -723,14 +995,14 @@ Mixer Note: These are verified one-shots (no loops). Please reference these exac
           /* Main Authorized Vault Dashboard */
           <div className="flex-1 flex flex-col overflow-hidden">
             {/* Top Navigation Mode Tabs */}
-            <div className="px-6 py-2.5 bg-cyan-950/30 border-b border-cyan-900/40 flex flex-wrap items-center justify-between gap-3">
+            <div className={`px-6 py-2.5 flex flex-wrap items-center justify-between gap-3 ${currentTheme.navBg}`}>
               <div className="flex items-center gap-2">
                 <button
                   onClick={() => setActiveTab('vault')}
                   className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all ${
                     activeTab === 'vault'
-                      ? 'bg-cyan-500 text-black shadow-lg shadow-cyan-500/25'
-                      : 'bg-cyan-950/40 hover:bg-cyan-900/40 text-cyan-300 border border-cyan-800/40'
+                      ? currentTheme.tabVaultActive
+                      : currentTheme.tabVaultInactive
                   }`}
                 >
                   <Folder className="w-4 h-4" />
@@ -746,8 +1018,8 @@ Mixer Note: These are verified one-shots (no loops). Please reference these exac
                   }}
                   className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all ${
                     activeTab === 'pairing'
-                      ? 'bg-gradient-to-r from-amber-400 to-orange-500 text-black shadow-lg shadow-amber-500/30 font-black'
-                      : 'bg-amber-950/30 hover:bg-amber-900/40 text-amber-300 border border-amber-800/40'
+                      ? currentTheme.tabPairingActive
+                      : currentTheme.tabPairingInactive
                   }`}
                 >
                   <Zap className="w-4 h-4 fill-current" />
@@ -758,8 +1030,8 @@ Mixer Note: These are verified one-shots (no loops). Please reference these exac
                   onClick={() => setActiveTab('drive-import')}
                   className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all ${
                     activeTab === 'drive-import'
-                      ? 'bg-blue-500 text-white shadow-lg shadow-blue-500/25'
-                      : 'bg-blue-950/30 hover:bg-blue-900/40 text-blue-300 border border-blue-800/40'
+                      ? currentTheme.tabDriveActive
+                      : currentTheme.tabDriveInactive
                   }`}
                 >
                   <FolderInput className="w-4 h-4" />
@@ -775,7 +1047,7 @@ Mixer Note: These are verified one-shots (no loops). Please reference these exac
                 <button
                   onClick={() => accessToken && loadFromDrive(accessToken)}
                   disabled={isSyncingDrive}
-                  className="flex items-center gap-1 text-[11px] text-cyan-400 hover:text-cyan-200 font-bold transition-colors"
+                  className={`flex items-center gap-1 text-[11px] font-bold transition-colors ${currentTheme.accentText} hover:opacity-80`}
                 >
                   <RefreshCw className={`w-3.5 h-3.5 ${isSyncingDrive ? 'animate-spin' : ''}`} />
                   <span>Sync</span>
@@ -808,8 +1080,9 @@ Mixer Note: These are verified one-shots (no loops). Please reference these exac
             {activeTab === 'vault' && (
               <div className="flex-1 flex flex-col overflow-hidden">
                 {/* Drag & Drop Upload Zone */}
-                <div className="p-5 border-b border-cyan-900/40 bg-gradient-to-b from-cyan-950/10 to-transparent">
-                  <div className="relative border-2 border-dashed border-cyan-500/40 hover:border-cyan-400 rounded-3xl p-5 bg-cyan-950/20 hover:bg-cyan-950/30 transition-all text-center group cursor-pointer"
+                <div className={`p-5 ${currentTheme.uploadBg}`}>
+                  <div 
+                    className={`relative border-2 border-dashed rounded-3xl p-5 transition-all text-center group cursor-pointer ${currentTheme.uploadDashed}`}
                     onClick={() => fileInputRef.current?.click()}
                   >
                     <input
@@ -822,22 +1095,22 @@ Mixer Note: These are verified one-shots (no loops). Please reference these exac
                     />
 
                     <div className="flex flex-col items-center justify-center gap-1.5">
-                      <div className="p-2.5 rounded-2xl bg-cyan-500/10 group-hover:bg-cyan-500/20 text-cyan-400 transition-colors">
+                      <div className={`p-2.5 rounded-2xl transition-colors ${currentTheme.uploadIcon}`}>
                         <UploadCloud className="w-6 h-6" />
                       </div>
                       <div>
-                        <p className="text-sm font-bold text-white group-hover:text-cyan-200 transition-colors">
+                        <p className="text-sm font-bold text-white group-hover:opacity-90 transition-colors">
                           Drop drum one-shots here or click to browse (.wav, .mp3, .aif)
                         </p>
-                        <p className="text-xs text-cyan-400/80 font-mono mt-0.5">
-                          🚨 <strong className="text-cyan-300">ONE-SHOTS ONLY:</strong> Max 3.0s duration • Automatic loop rejection & transient filtering.
+                        <p className={`text-xs font-mono mt-0.5 opacity-80 ${currentTheme.subtitle}`}>
+                          🚨 <strong className={currentTheme.uploadHighlight}>ONE-SHOTS ONLY:</strong> Max 3.0s duration • Automatic loop rejection & transient filtering.
                         </p>
                       </div>
                     </div>
 
                     {isAnalyzing && (
-                      <div className="mt-3 p-2.5 rounded-2xl bg-black/80 border border-cyan-500/40 text-cyan-300 text-xs flex items-center justify-center gap-2 animate-pulse">
-                        <Sparkles className="w-4 h-4 text-cyan-400 animate-spin" />
+                      <div className="mt-3 p-2.5 rounded-2xl bg-black/80 border border-amber-500/40 text-amber-300 text-xs flex items-center justify-center gap-2 animate-pulse">
+                        <Sparkles className="w-4 h-4 text-amber-400 animate-spin" />
                         <span className="font-mono">{analyzeStatus || 'Analyzing sample transients & tuning...'}</span>
                       </div>
                     )}
@@ -845,7 +1118,7 @@ Mixer Note: These are verified one-shots (no loops). Please reference these exac
                 </div>
 
                 {/* Category Filter Pills */}
-                <div className="px-6 py-2.5 border-b border-cyan-900/30 flex items-center gap-2 overflow-x-auto scrollbar-none">
+                <div className={`px-6 py-2.5 border-b border-black/20 flex items-center gap-2 overflow-x-auto scrollbar-none`}>
                   {(['all', 'kicks', '808s', 'claps', 'snares', 'hihats', 'percs'] as const).map((cat) => {
                     const count = categoryCounts[cat];
                     const isActive = activeCategory === cat;
@@ -855,12 +1128,12 @@ Mixer Note: These are verified one-shots (no loops). Please reference these exac
                         onClick={() => setActiveCategory(cat)}
                         className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider transition-all flex-shrink-0 ${
                           isActive
-                            ? 'bg-cyan-500 text-black shadow-md shadow-cyan-500/30 scale-105'
-                            : 'bg-cyan-950/40 hover:bg-cyan-900/50 text-cyan-300/80 border border-cyan-800/40'
+                            ? currentTheme.catActive
+                            : currentTheme.catInactive
                         }`}
                       >
                         <span>{cat}</span>
-                        <span className={`text-[10px] px-1.5 py-0.2 rounded-full font-black ${isActive ? 'bg-black/20 text-black' : 'bg-cyan-900/60 text-cyan-300'}`}>
+                        <span className={`text-[10px] px-1.5 py-0.2 rounded-full font-black ${isActive ? currentTheme.catCountActive : currentTheme.catCountInactive}`}>
                           {count}
                         </span>
                       </button>
@@ -871,10 +1144,10 @@ Mixer Note: These are verified one-shots (no loops). Please reference these exac
                 {/* Samples List */}
                 <div className="flex-1 overflow-y-auto p-5 space-y-3">
                   {filteredSamples.length === 0 ? (
-                    <div className="h-64 flex flex-col items-center justify-center text-center text-cyan-400/50">
+                    <div className="h-64 flex flex-col items-center justify-center text-center opacity-50">
                       <Disc className="w-12 h-12 mb-3 opacity-30" />
                       <p className="text-sm font-bold">No one-shots in this category yet.</p>
-                      <p className="text-xs font-mono mt-1 text-cyan-500/50">
+                      <p className="text-xs font-mono mt-1 opacity-60">
                         Drop your one-shots or use "Move from Drive Folder" to catalog your collection.
                       </p>
                     </div>
@@ -886,7 +1159,7 @@ Mixer Note: These are verified one-shots (no loops). Please reference these exac
                       return (
                         <div
                           key={sample.id}
-                          className="rounded-2xl bg-cyan-950/20 hover:bg-cyan-950/30 border border-cyan-900/40 hover:border-cyan-500/40 transition-all p-3.5"
+                          className={`rounded-2xl border transition-all p-3.5 ${currentTheme.card}`}
                         >
                           <div className="flex flex-wrap items-center justify-between gap-3">
                             {/* Play & Title */}
@@ -895,8 +1168,8 @@ Mixer Note: These are verified one-shots (no loops). Please reference these exac
                                 onClick={() => handlePlaySample(sample)}
                                 className={`p-2.5 rounded-xl border transition-all ${
                                   isPlaying
-                                    ? 'bg-cyan-400 text-black border-cyan-300 shadow-md scale-105'
-                                    : 'bg-cyan-950/60 text-cyan-300 border-cyan-800/50 hover:bg-cyan-900'
+                                    ? currentTheme.cardPlayActive
+                                    : currentTheme.cardPlayInactive
                                 }`}
                               >
                                 {isPlaying ? <Square className="w-4 h-4 fill-current" /> : <Play className="w-4 h-4 fill-current ml-0.5" />}
@@ -905,11 +1178,11 @@ Mixer Note: These are verified one-shots (no loops). Please reference these exac
                               <div>
                                 <div className="flex items-center gap-2">
                                   <h4 className="text-sm font-bold text-white tracking-wide">{sample.name}</h4>
-                                  <span className="text-[10px] font-mono uppercase px-2 py-0.5 rounded bg-cyan-500/10 text-cyan-300 border border-cyan-500/30">
+                                  <span className={`text-[10px] font-mono uppercase px-2 py-0.5 rounded border ${currentTheme.badgeType}`}>
                                     {sample.exactType}
                                   </span>
                                 </div>
-                                <div className="flex items-center gap-2 text-[11px] text-cyan-400/70 font-mono mt-0.5">
+                                <div className="flex items-center gap-2 text-[11px] opacity-70 font-mono mt-0.5">
                                   <span>{sample.durationSeconds}s</span>
                                   <span>•</span>
                                   <span>Attack: {sample.attackMs}ms</span>
@@ -923,17 +1196,17 @@ Mixer Note: These are verified one-shots (no loops). Please reference these exac
 
                             {/* Pitch & Acoustic Badges */}
                             <div className="flex items-center gap-2">
-                              <div className="px-3 py-1 rounded-xl bg-cyan-900/30 border border-cyan-500/30 text-center">
-                                <span className="text-[9px] uppercase tracking-wider block text-cyan-400/70">Key / Pitch</span>
-                                <span className="text-xs font-black text-cyan-200">
+                              <div className={`px-3 py-1 rounded-xl border text-center ${currentTheme.badgeKey}`}>
+                                <span className="text-[9px] uppercase tracking-wider block opacity-70">Key / Pitch</span>
+                                <span className="text-xs font-black">
                                   {sample.detectedKey} {sample.fundamentalHz > 0 ? `(${sample.fundamentalHz} Hz)` : ''}
                                 </span>
                               </div>
 
                               {sample.punchFrequencyHz && (
-                                <div className="px-3 py-1 rounded-xl bg-blue-900/30 border border-blue-500/30 text-center">
-                                  <span className="text-[9px] uppercase tracking-wider block text-blue-400/70">Punch Peak</span>
-                                  <span className="text-xs font-black text-blue-200">
+                                <div className={`px-3 py-1 rounded-xl border text-center ${currentTheme.badgePunch}`}>
+                                  <span className="text-[9px] uppercase tracking-wider block opacity-70">Punch Peak</span>
+                                  <span className="text-xs font-black">
                                     {sample.punchFrequencyHz} Hz
                                   </span>
                                 </div>
@@ -948,7 +1221,7 @@ Mixer Note: These are verified one-shots (no loops). Please reference these exac
                                   setPairingFocusSample(sample);
                                   setActiveTab('pairing');
                                 }}
-                                className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-gradient-to-r from-amber-500/20 to-orange-500/20 hover:from-amber-500/30 hover:to-orange-500/30 border border-amber-500/40 text-amber-300 text-xs font-bold transition-all shadow-sm active:scale-95"
+                                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-xs font-bold transition-all shadow-sm active:scale-95 ${currentTheme.pairBtn}`}
                                 title="Open Intelligent Pairing Matrix to find complementary 808/Kick/Clap stacks"
                               >
                                 <Zap className="w-3.5 h-3.5 fill-current" />
@@ -957,7 +1230,7 @@ Mixer Note: These are verified one-shots (no loops). Please reference these exac
 
                               <button
                                 onClick={() => handleCopySampleProfile(sample)}
-                                className="p-2 rounded-xl bg-cyan-950/60 hover:bg-cyan-900 text-cyan-300 border border-cyan-800/40 text-xs transition-colors"
+                                className={`p-2 rounded-xl border text-xs transition-colors ${currentTheme.guidanceBtn}`}
                                 title="Copy sample profile to clipboard for chat guidance"
                               >
                                 <Copy className="w-4 h-4" />
@@ -965,7 +1238,7 @@ Mixer Note: These are verified one-shots (no loops). Please reference these exac
 
                               <button
                                 onClick={() => setExpandedSampleId(isExpanded ? null : sample.id)}
-                                className="flex items-center gap-1 px-3 py-1.5 rounded-xl bg-cyan-500/10 hover:bg-cyan-500/20 text-cyan-300 text-xs font-bold border border-cyan-500/30 transition-colors"
+                                className={`flex items-center gap-1 px-3 py-1.5 rounded-xl text-xs font-bold border transition-colors ${currentTheme.guidanceBtn}`}
                               >
                                 <span>Guidance</span>
                                 {isExpanded ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
@@ -986,7 +1259,7 @@ Mixer Note: These are verified one-shots (no loops). Please reference these exac
                             {sample.tags.map((tag, tIdx) => (
                               <span
                                 key={tIdx}
-                                className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-cyan-950/60 text-cyan-300/80 border border-cyan-800/40"
+                                className={`text-[10px] font-mono px-2 py-0.5 rounded-full border ${currentTheme.tag}`}
                               >
                                 #{tag}
                               </span>
@@ -995,45 +1268,45 @@ Mixer Note: These are verified one-shots (no loops). Please reference these exac
 
                           {/* Expandable AI Guidance Drawer */}
                           {isExpanded && (
-                            <div className="mt-3 pt-3 border-t border-cyan-900/40 bg-black/40 rounded-xl p-3.5 space-y-2.5 animate-in fade-in duration-200">
+                            <div className={`mt-3 pt-3 rounded-xl p-3.5 space-y-2.5 animate-in fade-in duration-200 ${currentTheme.guidanceDrawer}`}>
                               <div>
-                                <span className="text-xs font-bold uppercase tracking-wider text-cyan-400 flex items-center gap-1.5 mb-1">
+                                <span className={`text-xs font-bold uppercase tracking-wider flex items-center gap-1.5 mb-1 ${currentTheme.accentText}`}>
                                   <Sparkles className="w-3.5 h-3.5" />
                                   <span>Mixing Advice & Plugin Recommendations</span>
                                 </span>
-                                <p className="text-xs text-cyan-100/90 leading-relaxed font-sans">
+                                <p className="text-xs opacity-90 leading-relaxed font-sans">
                                   {sample.guidance.mixingAdvice}
                                 </p>
                               </div>
 
                               <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 text-xs">
-                                <div className="p-2.5 rounded-lg bg-cyan-950/30 border border-cyan-900/50">
-                                  <span className="text-[10px] font-bold uppercase text-cyan-400 block mb-1">
+                                <div className={`p-2.5 rounded-lg border ${currentTheme.guidanceCard}`}>
+                                  <span className={`text-[10px] font-bold uppercase block mb-1 ${currentTheme.accentText}`}>
                                     EQ Strategy (Rap / Trap Pocket)
                                   </span>
-                                  <p className="text-cyan-200/90 text-[11px] font-mono">
+                                  <p className="opacity-90 text-[11px] font-mono">
                                     {sample.guidance.eqNotes}
                                   </p>
                                 </div>
 
-                                <div className="p-2.5 rounded-lg bg-cyan-950/30 border border-cyan-900/50">
-                                  <span className="text-[10px] font-bold uppercase text-cyan-400 block mb-1">
+                                <div className={`p-2.5 rounded-lg border ${currentTheme.guidanceCard}`}>
+                                  <span className={`text-[10px] font-bold uppercase block mb-1 ${currentTheme.accentText}`}>
                                     Drum Bus Pairing Tips
                                   </span>
-                                  <p className="text-cyan-200/90 text-[11px] font-mono">
+                                  <p className="opacity-90 text-[11px] font-mono">
                                     {sample.guidance.pairingTips}
                                   </p>
                                 </div>
                               </div>
 
                               <div className="flex flex-wrap items-center gap-1.5 pt-1">
-                                <span className="text-[10px] font-bold uppercase text-cyan-400/80">
+                                <span className={`text-[10px] font-bold uppercase opacity-80 ${currentTheme.accentText}`}>
                                   Recommended Chain:
                                 </span>
                                 {sample.guidance.recommendedPlugins.map((plug, pIdx) => (
                                   <span
                                     key={pIdx}
-                                    className="text-[10px] font-mono px-2 py-0.5 rounded bg-blue-950/60 text-blue-300 border border-blue-800/40"
+                                    className={`text-[10px] font-mono px-2 py-0.5 rounded border ${currentTheme.tag}`}
                                   >
                                     {plug}
                                   </span>
@@ -1053,9 +1326,9 @@ Mixer Note: These are verified one-shots (no loops). Please reference these exac
             {activeTab === 'pairing' && (
               <div className="flex-1 flex flex-col md:flex-row overflow-hidden">
                 {/* Left Column: Focus Sample Selector & Matches List */}
-                <div className="w-full md:w-5/12 border-r border-cyan-900/40 flex flex-col overflow-hidden bg-cyan-950/10">
-                  <div className="p-4 border-b border-cyan-900/40 bg-black/40">
-                    <label className="text-[11px] font-bold uppercase tracking-wider text-amber-400 block mb-1.5">
+                <div className={`w-full md:w-5/12 border-r flex flex-col overflow-hidden ${currentTheme.pairingSideBg}`}>
+                  <div className="p-4 border-b border-black/20 bg-black/40">
+                    <label className={`text-[11px] font-bold uppercase tracking-wider block mb-1.5 ${currentTheme.accentText}`}>
                       1. Select Anchor Sample
                     </label>
                     <select
@@ -1064,7 +1337,7 @@ Mixer Note: These are verified one-shots (no loops). Please reference these exac
                         const target = samples.find(s => s.id === e.target.value);
                         if (target) setPairingFocusSample(target);
                       }}
-                      className="w-full bg-cyan-950/80 border border-cyan-500/40 rounded-xl px-3 py-2 text-xs font-bold text-white focus:outline-none focus:border-amber-400"
+                      className={`w-full border rounded-xl px-3 py-2 text-xs font-bold text-white focus:outline-none ${currentTheme.driveInput}`}
                     >
                       {samples.map((s) => (
                         <option key={s.id} value={s.id} className="bg-gray-900 text-white">
@@ -1074,17 +1347,17 @@ Mixer Note: These are verified one-shots (no loops). Please reference these exac
                     </select>
 
                     {pairingFocusSample && (
-                      <div className="mt-3 p-3 rounded-xl bg-amber-950/30 border border-amber-500/30 flex items-center justify-between">
+                      <div className={`mt-3 p-3 rounded-xl border flex items-center justify-between ${currentTheme.pairingAnchorCard}`}>
                         <div>
-                          <span className="text-[10px] font-bold uppercase tracking-widest text-amber-400/80 block">Active Anchor</span>
+                          <span className={`text-[10px] font-bold uppercase tracking-widest block opacity-80 ${currentTheme.accentText}`}>Active Anchor</span>
                           <h4 className="text-xs font-bold text-white">{pairingFocusSample.name}</h4>
-                          <span className="text-[11px] font-mono text-amber-200">
+                          <span className="text-[11px] font-mono opacity-90">
                             Key: {pairingFocusSample.detectedKey} | Punch: {pairingFocusSample.punchFrequencyHz || pairingFocusSample.fundamentalHz}Hz
                           </span>
                         </div>
                         <button
                           onClick={() => handlePlaySample(pairingFocusSample)}
-                          className="p-2 rounded-lg bg-amber-500/20 text-amber-300 hover:bg-amber-500/30 border border-amber-500/40"
+                          className={`p-2 rounded-lg border ${currentTheme.pairBtn}`}
                         >
                           <Play className="w-3.5 h-3.5 fill-current" />
                         </button>
@@ -1093,16 +1366,16 @@ Mixer Note: These are verified one-shots (no loops). Please reference these exac
                   </div>
 
                   {/* Scored Complementary Matches */}
-                  <div className="p-3 border-b border-cyan-900/40 bg-cyan-950/20 flex items-center justify-between">
-                    <span className="text-xs font-bold text-cyan-300">
+                  <div className="p-3 border-b border-black/20 flex items-center justify-between">
+                    <span className={`text-xs font-bold ${currentTheme.accentText}`}>
                       ⚡ AI Ranked Stack Candidates ({topMatches.length})
                     </span>
-                    <span className="text-[10px] font-mono text-cyan-400/60">Harmonic & Frequency Sorted</span>
+                    <span className="text-[10px] font-mono opacity-60">Harmonic & Frequency Sorted</span>
                   </div>
 
                   <div className="flex-1 overflow-y-auto p-3 space-y-2">
                     {topMatches.length === 0 ? (
-                      <div className="p-8 text-center text-cyan-400/50 text-xs">
+                      <div className="p-8 text-center opacity-50 text-xs">
                         Add more samples to your vault to generate intelligent pairs (e.g. Kick + 808, Snare + Clap).
                       </div>
                     ) : (
@@ -1120,8 +1393,8 @@ Mixer Note: These are verified one-shots (no loops). Please reference these exac
                             }}
                             className={`p-3 rounded-xl border transition-all cursor-pointer ${
                               isChosen
-                                ? 'bg-amber-950/40 border-amber-400 shadow-md shadow-amber-500/10'
-                                : 'bg-cyan-950/20 border-cyan-900/40 hover:bg-cyan-950/40 hover:border-cyan-700/60'
+                                ? currentTheme.pairingChosenCard
+                                : currentTheme.pairingUnchosenCard
                             }`}
                           >
                             <div className="flex items-center justify-between gap-2 mb-1">
@@ -1141,11 +1414,11 @@ Mixer Note: These are verified one-shots (no loops). Please reference these exac
                               </span>
                             </div>
 
-                            <div className="flex items-center justify-between text-[11px] font-mono text-cyan-300/80">
+                            <div className="flex items-center justify-between text-[11px] font-mono opacity-80">
                               <span>
                                 [{pair.sampleB.category.toUpperCase()}] {pair.sampleB.detectedKey}
                               </span>
-                              <span className="text-amber-300/90 font-bold">{pair.harmonicRelationship}</span>
+                              <span className={`font-bold ${currentTheme.accentText}`}>{pair.harmonicRelationship}</span>
                             </div>
                           </div>
                         );
@@ -1155,21 +1428,21 @@ Mixer Note: These are verified one-shots (no loops). Please reference these exac
                 </div>
 
                 {/* Right Column: Deep Synergy Matrix & Live Dual Audition Player */}
-                <div className="w-full md:w-7/12 flex flex-col overflow-y-auto p-5 space-y-4 bg-gradient-to-br from-black via-cyan-950/10 to-blue-950/20">
+                <div className="w-full md:w-7/12 flex flex-col overflow-y-auto p-5 space-y-4">
                   {selectedMatch ? (
                     <>
                       {/* Live Simultaneous Audition Player */}
-                      <div className="p-4 rounded-2xl bg-gradient-to-r from-amber-950/40 via-black to-orange-950/30 border border-amber-500/40 shadow-xl">
+                      <div className={`p-4 rounded-2xl border shadow-xl ${currentTheme.auditionPlayer}`}>
                         <div className="flex items-center justify-between mb-3">
                           <div className="flex items-center gap-2">
-                            <Sparkles className="w-4 h-4 text-amber-400" />
-                            <h3 className="text-sm font-black uppercase tracking-wider text-amber-300">
+                            <Sparkles className={`w-4 h-4 ${currentTheme.accentText}`} />
+                            <h3 className={`text-sm font-black uppercase tracking-wider ${currentTheme.accentText}`}>
                               Simultaneous Dual Audition Engine
                             </h3>
                           </div>
                           <button
                             onClick={() => handleCopyPairingRecipe(selectedMatch)}
-                            className="flex items-center gap-1 px-2.5 py-1 rounded-lg bg-amber-500/20 hover:bg-amber-500/30 border border-amber-400/40 text-amber-200 text-[11px] font-bold"
+                            className={`flex items-center gap-1 px-2.5 py-1 rounded-lg border text-[11px] font-bold ${currentTheme.exportBtn}`}
                           >
                             <Copy className="w-3 h-3" />
                             <span>Copy Pairing Recipe</span>
@@ -1177,13 +1450,13 @@ Mixer Note: These are verified one-shots (no loops). Please reference these exac
                         </div>
 
                         {/* Player Controls */}
-                        <div className="flex flex-wrap items-center justify-between gap-3 p-3 rounded-xl bg-black/60 border border-cyan-900/40">
+                        <div className="flex flex-wrap items-center justify-between gap-3 p-3 rounded-xl bg-black/60 border border-black/30">
                           <button
                             onClick={() => handleDualAuditionPlay(selectedMatch)}
                             className={`flex items-center gap-2 px-5 py-2.5 rounded-xl font-black text-xs transition-all shadow-lg active:scale-95 ${
                               isDualPlaying
                                 ? 'bg-red-500 text-white animate-pulse'
-                                : 'bg-gradient-to-r from-amber-400 to-orange-500 text-black hover:brightness-110'
+                                : currentTheme.auditionBtnPlay
                             }`}
                           >
                             {isDualPlaying ? <Square className="w-4 h-4 fill-current" /> : <Play className="w-4 h-4 fill-current" />}
@@ -1191,11 +1464,11 @@ Mixer Note: These are verified one-shots (no loops). Please reference these exac
                           </button>
 
                           {/* Solo / Dual Toggles */}
-                          <div className="flex items-center gap-1 bg-cyan-950/60 p-1 rounded-lg border border-cyan-800/40 text-[11px] font-bold">
+                          <div className={`flex items-center gap-1 p-1 rounded-lg border text-[11px] font-bold ${currentTheme.soloBox}`}>
                             <button
                               onClick={() => setDualSoloMode('both')}
                               className={`px-2.5 py-1 rounded-md transition-colors ${
-                                dualSoloMode === 'both' ? 'bg-amber-500 text-black' : 'text-cyan-300 hover:text-white'
+                                dualSoloMode === 'both' ? currentTheme.soloActiveBoth : currentTheme.soloInactive
                               }`}
                             >
                               Both Layered
@@ -1203,7 +1476,7 @@ Mixer Note: These are verified one-shots (no loops). Please reference these exac
                             <button
                               onClick={() => setDualSoloMode('sampleA')}
                               className={`px-2.5 py-1 rounded-md transition-colors ${
-                                dualSoloMode === 'sampleA' ? 'bg-cyan-500 text-black' : 'text-cyan-300 hover:text-white'
+                                dualSoloMode === 'sampleA' ? currentTheme.soloActiveA : currentTheme.soloInactive
                               }`}
                             >
                               Solo {selectedMatch.sampleA.category}
@@ -1211,7 +1484,7 @@ Mixer Note: These are verified one-shots (no loops). Please reference these exac
                             <button
                               onClick={() => setDualSoloMode('sampleB')}
                               className={`px-2.5 py-1 rounded-md transition-colors ${
-                                dualSoloMode === 'sampleB' ? 'bg-cyan-500 text-black' : 'text-cyan-300 hover:text-white'
+                                dualSoloMode === 'sampleB' ? currentTheme.soloActiveB : currentTheme.soloInactive
                               }`}
                             >
                               Solo {selectedMatch.sampleB.category}
@@ -1220,12 +1493,12 @@ Mixer Note: These are verified one-shots (no loops). Please reference these exac
                         </div>
 
                         {/* Micro-Offset Timing Slider */}
-                        <div className="mt-3 p-3 rounded-xl bg-black/40 border border-cyan-900/30">
+                        <div className="mt-3 p-3 rounded-xl bg-black/40 border border-black/20">
                           <div className="flex items-center justify-between text-xs font-mono mb-1.5">
-                            <span className="text-cyan-300">
-                              Micro-Nudge Transient Offset: <strong className="text-amber-400">{microOffsetMs > 0 ? `+${microOffsetMs}` : microOffsetMs} ms</strong>
+                            <span className="opacity-90">
+                              Micro-Nudge Transient Offset: <strong className={currentTheme.accentText}>{microOffsetMs > 0 ? `+${microOffsetMs}` : microOffsetMs} ms</strong>
                             </span>
-                            <span className="text-[10px] text-cyan-400/60">
+                            <span className="text-[10px] opacity-60">
                               {microOffsetMs === 0 ? 'Locked on 0ms' : microOffsetMs > 0 ? `${selectedMatch.sampleB.category} delayed for width` : `${selectedMatch.sampleB.category} pre-shifted`}
                             </span>
                           </div>
@@ -1236,9 +1509,9 @@ Mixer Note: These are verified one-shots (no loops). Please reference these exac
                             step="1"
                             value={microOffsetMs}
                             onChange={(e) => setMicroOffsetMs(parseInt(e.target.value, 10))}
-                            className="w-full accent-amber-400 cursor-pointer"
+                            className={`w-full cursor-pointer ${currentTheme.sliderAccent}`}
                           />
-                          <div className="flex justify-between text-[9px] font-mono text-cyan-500/60 mt-0.5">
+                          <div className="flex justify-between text-[9px] font-mono opacity-50 mt-0.5">
                             <span>-30ms (Pre-Shift)</span>
                             <span>0ms (Sample Accurate)</span>
                             <span>+30ms (Slapback Delay)</span>
@@ -1248,77 +1521,77 @@ Mixer Note: These are verified one-shots (no loops). Please reference these exac
 
                       {/* Acoustic & Harmonic Breakdown Grid */}
                       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                        <div className="p-3 rounded-xl bg-cyan-950/30 border border-cyan-900/50">
-                          <span className="text-[10px] font-bold uppercase text-cyan-400 block mb-1">
+                        <div className={`p-3 rounded-xl border ${currentTheme.boxCard}`}>
+                          <span className={`text-[10px] font-bold uppercase block mb-1 ${currentTheme.accentText}`}>
                             Harmonic Alignment
                           </span>
-                          <div className="text-sm font-black text-amber-300">
+                          <div className={`text-sm font-black ${currentTheme.accentText}`}>
                             {selectedMatch.harmonicRelationship}
                           </div>
-                          <span className="text-[11px] font-mono text-cyan-200 block mt-1">
+                          <span className="text-[11px] font-mono opacity-80 block mt-1">
                             Score: {selectedMatch.harmonicScore}/100
                           </span>
                         </div>
 
-                        <div className="p-3 rounded-xl bg-cyan-950/30 border border-cyan-900/50">
-                          <span className="text-[10px] font-bold uppercase text-cyan-400 block mb-1">
+                        <div className={`p-3 rounded-xl border ${currentTheme.boxCard}`}>
+                          <span className={`text-[10px] font-bold uppercase block mb-1 ${currentTheme.accentText}`}>
                             Sub-Bass Pocket Gap
                           </span>
                           <div className="text-sm font-black text-emerald-300">
                             {selectedMatch.frequencyScore}/100 Clarity
                           </div>
-                          <span className="text-[11px] font-mono text-cyan-200 block mt-1">
+                          <span className="text-[11px] font-mono opacity-80 block mt-1">
                             Zero Frequency Clash
                           </span>
                         </div>
 
-                        <div className="p-3 rounded-xl bg-cyan-950/30 border border-cyan-900/50">
-                          <span className="text-[10px] font-bold uppercase text-cyan-400 block mb-1">
+                        <div className={`p-3 rounded-xl border ${currentTheme.boxCard}`}>
+                          <span className={`text-[10px] font-bold uppercase block mb-1 ${currentTheme.accentText}`}>
                             Envelope Blend
                           </span>
                           <div className="text-sm font-black text-sky-300">
                             {selectedMatch.envelopeScore}/100 Synergy
                           </div>
-                          <span className="text-[11px] font-mono text-cyan-200 block mt-1">
+                          <span className="text-[11px] font-mono opacity-80 block mt-1">
                             Attack & Decay Locked
                           </span>
                         </div>
                       </div>
 
                       {/* Frequency Analysis Card */}
-                      <div className="p-3.5 rounded-xl bg-cyan-950/20 border border-cyan-900/40">
-                        <span className="text-xs font-bold uppercase text-amber-400 flex items-center gap-1.5 mb-1">
+                      <div className={`p-3.5 rounded-xl border ${currentTheme.boxCard}`}>
+                        <span className={`text-xs font-bold uppercase flex items-center gap-1.5 mb-1 ${currentTheme.accentText}`}>
                           <Sliders className="w-3.5 h-3.5" />
                           <span>Spectral Pocket Analysis</span>
                         </span>
-                        <p className="text-xs text-cyan-100 font-sans leading-relaxed">
+                        <p className="text-xs font-sans leading-relaxed opacity-90">
                           {selectedMatch.frequencyPocketAnalysis}
                         </p>
                       </div>
 
                       {/* UAD Mixing Recipe (Strictly Software Controls) */}
-                      <div className="p-4 rounded-xl bg-cyan-950/30 border border-cyan-500/30 space-y-2.5">
-                        <span className="text-xs font-black uppercase text-cyan-300 flex items-center gap-1.5">
-                          <Layers className="w-4 h-4 text-cyan-400" />
+                      <div className={`p-4 rounded-xl border space-y-2.5 ${currentTheme.uadBox}`}>
+                        <span className={`text-xs font-black uppercase flex items-center gap-1.5 ${currentTheme.accentText}`}>
+                          <Layers className="w-4 h-4" />
                           <span>UAD Software Mix Chain & Carving Strategy</span>
                         </span>
 
-                        <div className="text-xs text-cyan-200/90 font-mono leading-relaxed bg-black/40 p-3 rounded-lg border border-cyan-900/50">
-                          <strong className="text-cyan-300">EQ Carve:</strong> {selectedMatch.uadSoftwareProcessing.eqPocketStrategy}
+                        <div className={`text-xs font-mono leading-relaxed p-3 rounded-lg border ${currentTheme.uadCarve}`}>
+                          <strong className={currentTheme.accentText}>EQ Carve:</strong> {selectedMatch.uadSoftwareProcessing.eqPocketStrategy}
                         </div>
 
-                        <div className="text-xs text-cyan-200/90 font-mono leading-relaxed bg-black/40 p-3 rounded-lg border border-cyan-900/50">
-                          <strong className="text-cyan-300">Dynamics & Sidechain:</strong> {selectedMatch.uadSoftwareProcessing.dynamicsTip}
+                        <div className={`text-xs font-mono leading-relaxed p-3 rounded-lg border ${currentTheme.uadCarve}`}>
+                          <strong className={currentTheme.accentText}>Dynamics & Sidechain:</strong> {selectedMatch.uadSoftwareProcessing.dynamicsTip}
                         </div>
 
                         <div className="flex flex-wrap items-center gap-1.5 pt-1">
-                          <span className="text-[10px] font-bold uppercase text-cyan-400/80">
+                          <span className={`text-[10px] font-bold uppercase opacity-80 ${currentTheme.accentText}`}>
                             Plugins:
                           </span>
                           {selectedMatch.uadSoftwareProcessing.recommendedPlugins.map((plug, idx) => (
                             <span
                               key={idx}
-                              className="text-[10px] font-mono px-2 py-0.5 rounded bg-cyan-950/80 text-cyan-300 border border-cyan-800/60"
+                              className={`text-[10px] font-mono px-2 py-0.5 rounded border ${currentTheme.tag}`}
                             >
                               {plug}
                             </span>
@@ -1327,10 +1600,10 @@ Mixer Note: These are verified one-shots (no loops). Please reference these exac
                       </div>
                     </>
                   ) : (
-                    <div className="h-full flex flex-col items-center justify-center text-center text-cyan-400/50 p-8">
-                      <Zap className="w-12 h-12 mb-3 text-amber-400/30" />
+                    <div className="h-full flex flex-col items-center justify-center text-center opacity-50 p-8">
+                      <Zap className={`w-12 h-12 mb-3 opacity-30 ${currentTheme.accentText}`} />
                       <p className="text-sm font-bold text-white">Select a stack candidate on the left</p>
-                      <p className="text-xs font-mono mt-1 text-cyan-400/60">
+                      <p className="text-xs font-mono mt-1 opacity-70">
                         The engine will calculate acoustic pitch intervals, sub frequency masking, and provide the exact UAD software mixing moves.
                       </p>
                     </div>
@@ -1342,23 +1615,23 @@ Mixer Note: These are verified one-shots (no loops). Please reference these exac
             {/* TAB 3: MOVE FROM GOOGLE DRIVE FOLDER */}
             {activeTab === 'drive-import' && (
               <div className="flex-1 overflow-y-auto p-6 max-w-3xl mx-auto space-y-6">
-                <div className="p-6 rounded-3xl bg-cyan-950/20 border border-cyan-500/30 space-y-4">
+                <div className={`p-6 rounded-3xl border space-y-4 ${currentTheme.driveContainer}`}>
                   <div className="flex items-center gap-3">
-                    <div className="p-3 rounded-2xl bg-blue-500/20 text-blue-400 border border-blue-500/40">
+                    <div className={`p-3 rounded-2xl border ${currentTheme.discBg}`}>
                       <FolderInput className="w-6 h-6" />
                     </div>
                     <div>
                       <h3 className="text-base font-black uppercase text-white">
                         Move One-Shots from Google Drive Folder
                       </h3>
-                      <p className="text-xs text-cyan-300/80 font-mono">
+                      <p className={`text-xs font-mono opacity-80 ${currentTheme.subtitle}`}>
                         Zero-Duplication Native Move: Organizes files into your Vault without copying or consuming double storage quota.
                       </p>
                     </div>
                   </div>
 
                   <div className="space-y-2">
-                    <label className="text-xs font-bold uppercase text-cyan-400 block">
+                    <label className={`text-xs font-bold uppercase block ${currentTheme.accentText}`}>
                       Google Drive Folder Link or Folder ID
                     </label>
                     <div className="flex items-center gap-2">
@@ -1367,32 +1640,32 @@ Mixer Note: These are verified one-shots (no loops). Please reference these exac
                         value={driveFolderInput}
                         onChange={(e) => setDriveFolderInput(e.target.value)}
                         placeholder="https://drive.google.com/drive/folders/1aBcDeFg... or Folder ID"
-                        className="flex-1 bg-black/60 border border-cyan-500/40 rounded-xl px-4 py-2.5 text-xs text-white font-mono placeholder:text-cyan-700 focus:outline-none focus:border-cyan-300"
+                        className={`flex-1 border rounded-xl px-4 py-2.5 text-xs font-mono focus:outline-none ${currentTheme.driveInput}`}
                       />
                       <button
                         onClick={handleScanDriveFolder}
                         disabled={isScanningFolder || isMigratingDriveFolder}
-                        className="px-5 py-2.5 rounded-xl bg-cyan-500 hover:bg-cyan-400 text-black text-xs font-black transition-all shadow-md active:scale-95 disabled:opacity-50"
+                        className={`px-5 py-2.5 rounded-xl text-xs font-black transition-all shadow-md active:scale-95 disabled:opacity-50 ${currentTheme.driveBtn}`}
                       >
                         {isScanningFolder ? 'Scanning...' : 'Scan Folder'}
                       </button>
                     </div>
                   </div>
 
-                  <div className="p-3 rounded-xl bg-blue-950/30 border border-blue-900/50 text-xs text-blue-200/90 leading-relaxed font-sans">
+                  <div className={`p-3 rounded-xl border text-xs leading-relaxed font-sans ${currentTheme.guidanceCard}`}>
                     💡 <strong>How Zero-Duplication Moving Works:</strong> This operation calls Google Drive's API to update the file's parent folder directly on Google's servers (`addParents` & `removeParents`). The audio data is not cloned or duplicated, so your Google Drive storage quota remains 100% free of duplicates!
                   </div>
                 </div>
 
                 {/* Scanned Files List & Move Action */}
                 {scannedFiles.length > 0 && (
-                  <div className="p-6 rounded-3xl bg-cyan-950/20 border border-cyan-900/40 space-y-4">
+                  <div className={`p-6 rounded-3xl border space-y-4 ${currentTheme.driveContainer}`}>
                     <div className="flex items-center justify-between">
                       <div>
                         <h4 className="text-sm font-bold text-white">
                           Discovered Audio Files ({scannedFiles.length})
                         </h4>
-                        <p className="text-xs text-cyan-400/70 font-mono">
+                        <p className={`text-xs font-mono opacity-80 ${currentTheme.subtitle}`}>
                           Ready for pitch analysis, loop rejection, and native folder move.
                         </p>
                       </div>
@@ -1400,7 +1673,7 @@ Mixer Note: These are verified one-shots (no loops). Please reference these exac
                       <button
                         onClick={handleMigrateAndMoveDriveFolder}
                         disabled={isMigratingDriveFolder}
-                        className="flex items-center gap-2 px-6 py-2.5 rounded-xl bg-gradient-to-r from-blue-500 to-cyan-500 hover:brightness-110 text-white font-black text-xs shadow-lg shadow-blue-500/30 active:scale-95 disabled:opacity-50"
+                        className={`flex items-center gap-2 px-6 py-2.5 rounded-xl font-black text-xs shadow-lg active:scale-95 disabled:opacity-50 ${currentTheme.driveBtnMove}`}
                       >
                         <Sparkles className="w-4 h-4 animate-spin-slow" />
                         <span>{isMigratingDriveFolder ? 'Moving & Analyzing...' : 'Start Zero-Duplication Move'}</span>
@@ -1408,14 +1681,14 @@ Mixer Note: These are verified one-shots (no loops). Please reference these exac
                     </div>
 
                     {isMigratingDriveFolder && (
-                      <div className="p-4 rounded-xl bg-black/60 border border-cyan-500/40 space-y-2">
-                        <div className="flex items-center justify-between text-xs font-mono text-cyan-300">
+                      <div className="p-4 rounded-xl bg-black/60 border border-amber-500/40 space-y-2">
+                        <div className="flex items-center justify-between text-xs font-mono text-amber-300">
                           <span>Progress: {migrationProgress.current} / {migrationProgress.total}</span>
                           <span className="truncate max-w-[250px]">{migrationProgress.fileName}</span>
                         </div>
-                        <div className="w-full h-2 rounded-full bg-cyan-950 overflow-hidden">
+                        <div className="w-full h-2 rounded-full bg-black/60 overflow-hidden">
                           <div 
-                            className="h-full bg-gradient-to-r from-cyan-400 to-blue-500 transition-all duration-300"
+                            className={`h-full transition-all duration-300 ${currentTheme.progressBar}`}
                             style={{ width: `${(migrationProgress.current / migrationProgress.total) * 100}%` }}
                           />
                         </div>
@@ -1442,10 +1715,10 @@ Mixer Note: These are verified one-shots (no loops). Please reference these exac
                       {scannedFiles.map((file) => (
                         <div
                           key={file.id}
-                          className="flex items-center justify-between p-2.5 rounded-lg bg-black/40 border border-cyan-900/30 text-xs font-mono"
+                          className="flex items-center justify-between p-2.5 rounded-lg bg-black/40 border border-black/30 text-xs font-mono"
                         >
                           <span className="text-white truncate max-w-[350px]">{file.name}</span>
-                          <span className="text-cyan-400/70 text-[11px]">{file.mimeType}</span>
+                          <span className="opacity-60 text-[11px]">{file.mimeType}</span>
                         </div>
                       ))}
                     </div>

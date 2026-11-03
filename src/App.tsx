@@ -6921,32 +6921,6 @@ Provide the exact JSFX plugin name and required sliders/parameters.`;
                     <div className="text-[9px] opacity-50 mt-0.5">{t('upload_new_plugin_file')}</div>
                   </div>
                 </button>
-                <div className={`h-px w-full my-1 ${getDropdownTheme(theme).divider}`} />
-
-                {(user?.email === 'recognizemiracles@gmail.com' || user?.email === 'coldestconcept@gmail.com' || user?.email === 'ruhedramarkprod@gmail.com') && (
-                  <>
-                    <button 
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setShowSampleVault(true);
-                        setShowBrandMenu(false);
-                      }}
-                      className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-left transition-all group bg-amber-500/15 hover:bg-amber-500/25 border border-amber-500/40 ${getDropdownTheme(theme).itemHover}`}
-                    >
-                      <div className="w-7 h-7 rounded-full flex items-center justify-center bg-amber-500 text-black shadow-md shadow-amber-500/30">
-                        <Disc size={14} className="animate-spin-slow" />
-                      </div>
-                      <div className="flex-1">
-                        <div className="text-xs font-black uppercase tracking-wider text-amber-400 flex items-center gap-1.5">
-                          Drum Vault <span className="px-1.5 py-0.5 rounded text-[8px] bg-amber-400 text-black font-extrabold tracking-widest shadow">VIP</span>
-                        </div>
-                        <div className="text-[9px] opacity-75 mt-0.5 text-zinc-300">Intelligent One-Shot Library & AI Matcher</div>
-                      </div>
-                    </button>
-                    <div className={`h-px w-full my-1 ${getDropdownTheme(theme).divider}`} />
-                  </>
-                )}
-
                 <button 
                   disabled={showTutorial}
                   onClick={(e) => {
@@ -7251,24 +7225,44 @@ Provide the exact JSFX plugin name and required sliders/parameters.`;
                       </>
                     )}
 
-                    {(user?.email === 'recognizemiracles@gmail.com' || user?.email === 'coldestconcept@gmail.com' || user?.email === 'ruhedramarkprod@gmail.com') && (
-                      <button 
-                        onClick={() => {
-                          setShowSampleVault(true);
-                          setIsUserMenuOpen(false);
-                        }}
-                        className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-left transition-all group bg-amber-500/15 hover:bg-amber-500/25 border border-amber-500/40 my-1 ${getDropdownTheme(theme).itemHover}`}
-                      >
-                        <div className="w-7 h-7 rounded-full flex items-center justify-center bg-amber-500 text-black shadow-md shadow-amber-500/30">
-                          <Disc size={14} className="animate-spin-slow" />
-                        </div>
-                        <div className="flex-1">
-                          <div className="text-xs font-black uppercase tracking-wider text-amber-400 flex items-center gap-1.5">
-                            DRUM VAULT <span className="px-1.5 py-0.5 rounded text-[8px] bg-amber-400 text-black font-extrabold tracking-widest shadow">VIP</span>
+                    {user?.email && ['recognizemiracles@gmail.com', 'coldestconcept@gmail.com', 'ruhedramarkprod@gmail.com'].includes(user.email.toLowerCase().trim()) && (
+                      <>
+                        <button 
+                          onClick={() => {
+                            setShowSampleVault(true);
+                            setIsUserMenuOpen(false);
+                          }}
+                          className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-left transition-colors group ${getDropdownTheme(theme).itemHover}`}
+                        >
+                          <div className={`w-7 h-7 rounded-full flex items-center justify-center transition-colors ${
+                            theme === 'coldest' 
+                              ? 'bg-sky-500 text-white' 
+                              : theme === 'crazy-bird' 
+                                ? 'bg-red-600 text-white' 
+                                : theme === 'chef-mode' 
+                                  ? 'bg-orange-500 text-white' 
+                                  : 'bg-amber-500 text-black'
+                          }`}>
+                            <Disc size={14} className="group-hover:rotate-180 transition-transform duration-500" />
                           </div>
-                          <div className="text-[9px] opacity-75 mt-0.5 text-zinc-300">Intelligent One-Shot Library & AI Matcher</div>
-                        </div>
-                      </button>
+                          <div className="flex-1">
+                            <div className="text-xs font-bold uppercase tracking-wider flex items-center gap-1.5">
+                              <span>DRUM VAULT</span>
+                              <span className={`text-[7px] font-black px-1.5 py-0.2 rounded border ${
+                                theme === 'coldest' 
+                                  ? 'bg-sky-100 text-sky-700 border-sky-300' 
+                                  : theme === 'crazy-bird'
+                                    ? 'bg-red-900/40 text-red-300 border-red-500/40'
+                                    : 'bg-amber-500/20 text-amber-400 border-amber-500/30'
+                              }`}>
+                                VIP
+                              </span>
+                            </div>
+                            <div className="text-[9px] opacity-50 mt-0.5">Intelligent One-Shot Library & AI Matcher</div>
+                          </div>
+                        </button>
+                        <div className={`h-px w-full my-1 ${getDropdownTheme(theme).divider}`} />
+                      </>
                     )}
 
                     {(user?.email === 'recognizemiracles@gmail.com' || user?.email === 'coldestconcept@gmail.com') && (
@@ -7590,7 +7584,6 @@ Provide the exact JSFX plugin name and required sliders/parameters.`;
                   setFriendMode(false);
                   setImportedSaveFile(null);
                 }} 
-                onOpenSampleVault={() => setShowSampleVault(true)}
                 onRemove={removeFromVault} 
                 onRemoveCritique={removeFromSavedCritique}
                 onUpdateColor={updateVaultColor}
@@ -8131,17 +8124,6 @@ Provide the exact JSFX plugin name and required sliders/parameters.`;
             {user && (
               <button onClick={() => setShowBetaApplyModal(true)} className="px-3 py-1 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded text-sm font-medium hover:from-blue-500 hover:to-indigo-500 transition-all shadow border border-blue-400/20">Beta Tester</button>
             )}
-            {(user?.email === 'recognizemiracles@gmail.com' || user?.email === 'coldestconcept@gmail.com' || user?.email === 'ruhedramarkprod@gmail.com') && (
-              <button 
-                onClick={() => setShowSampleVault(true)} 
-                className="flex items-center gap-2 px-3.5 py-1.5 bg-gradient-to-r from-amber-500 via-orange-500 to-amber-500 hover:from-amber-400 hover:to-orange-400 text-black rounded-xl text-xs font-black uppercase tracking-wider transition-all shadow-lg shadow-amber-500/25 border border-amber-300/50 hover:scale-105 active:scale-95 group"
-                title="Open BeatGangsta Drum Vault (VIP One-Shot Library & AI Matcher)"
-              >
-                <Disc size={15} className="text-black group-hover:rotate-180 transition-transform duration-500" />
-                <span>Drum Vault</span>
-                <span className="px-1.5 py-0.5 rounded bg-black text-amber-300 text-[8px] font-black tracking-widest shadow">VIP</span>
-              </button>
-            )}
           </div>
           
           <div className="hidden sm:flex flex-wrap items-center justify-end gap-2">
@@ -8314,17 +8296,6 @@ Provide the exact JSFX plugin name and required sliders/parameters.`;
             >
                <Cpu size={16} />
                <span className="text-[10px] font-black uppercase tracking-[0.2em]">{t('gear_rack')}</span>
-            </button>
-
-            <button 
-              id="btn-sample-vault"
-              onClick={() => setShowSampleVault(true)}
-              className={`pointer-events-auto relative flex items-center gap-2 px-4 py-2 sm:px-5 sm:py-2.5 rounded-full border shadow-xl transition-all hover:scale-105 active:scale-95 group ${mainBlurClass} ${theme === 'coldest' ? 'bg-amber-400/20 border-amber-500/60 text-amber-900 shadow-amber-500/20' : 'bg-amber-500/20 border-amber-400/60 text-amber-300 shadow-amber-500/20'}`}
-              title="BeatGangsta Drum Vault (Google Drive Synced - One-Shots Only)"
-            >
-               <Disc size={16} className="text-amber-500 animate-spin-slow group-hover:rotate-180 transition-transform" />
-               <span className="text-[10px] font-black uppercase tracking-[0.2em]">Drum Vault</span>
-               <span className="px-1.5 py-0.5 rounded-full bg-amber-500 text-black text-[8px] font-black tracking-widest shadow">VIP</span>
             </button>
         </div>
 
