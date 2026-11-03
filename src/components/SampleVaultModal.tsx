@@ -19,7 +19,10 @@ import {
   Zap,
   FolderInput,
   Layers,
-  Sliders
+  Sliders,
+  Archive,
+  FileQuestion,
+  HelpCircle
 } from 'lucide-react';
 import { AppTheme, SampleVaultItem, DrumOneShotCategory } from '../types';
 import { 
@@ -36,10 +39,12 @@ import {
   deleteSampleFromDrive,
   extractDriveFolderId,
   listFilesInDriveFolder,
+  unpackZipFromDrive,
   moveDriveFile,
   downloadDriveFileAsBlob,
   getOrCreateDriveFolder,
-  DriveAudioFileMeta
+  DriveAudioFileMeta,
+  DriveFolderScanReport
 } from '../services/sampleVaultService';
 import {
   findTopComplementaryMatches,
@@ -382,7 +387,18 @@ export const SampleVaultModal: React.FC<SampleVaultModalProps> = ({
   const [driveFolderInput, setDriveFolderInput] = useState<string>('');
   const [isScanningFolder, setIsScanningFolder] = useState<boolean>(false);
   const [scannedFiles, setScannedFiles] = useState<DriveAudioFileMeta[]>([]);
+  const [scannedZipFiles, setScannedZipFiles] = useState<Array<{ id: string; name: string; size?: number; mimeType: string }>>([]);
+  const [scannedNonAudio, setScannedNonAudio] = useState<Array<{ id: string; name: string; mimeType: string }>>([]);
   const [detectedFolderId, setDetectedFolderId] = useState<string | null>(null);
+  const [detectedFolderName, setDetectedFolderName] = useState<string | null>(null);
+  const [totalScannedFolders, setTotalScannedFolders] = useState<number>(1);
+  const [showNonAudioFiles, setShowNonAudioFiles] = useState<boolean>(false);
+  const [isUnpackingZip, setIsUnpackingZip] = useState<boolean>(false);
+  const [unpackProgress, setUnpackProgress] = useState<{ current: number; total: number; fileName: string }>({
+    current: 0,
+    total: 0,
+    fileName: ''
+  });
   const [isMigratingDriveFolder, setIsMigratingDriveFolder] = useState<boolean>(false);
   const [migrationProgress, setMigrationProgress] = useState<{ current: number; total: number; fileName: string }>({
     current: 0,
@@ -599,20 +615,161 @@ export const SampleVaultModal: React.FC<SampleVaultModalProps> = ({
     setErrorMessage(null);
     setSuccessNotice(null);
     setScannedFiles([]);
+    setScannedZipFiles([]);
+    setScannedNonAudio([]);
     setDetectedFolderId(folderId);
 
     try {
-      const files = await listFilesInDriveFolder(folderId, token);
-      setScannedFiles(files);
-      if (files.length === 0) {
-        setErrorMessage(`No audio files (.wav, .mp3, .aif, .flac) found in that Google Drive folder or its subfolders.`);
+      const report: DriveFolderScanReport = await listFilesInDriveFolder(folderId, token);
+      setDetectedFolderId(report.folderId);
+      setDetectedFolderName(report.folderName);
+      setTotalScannedFolders(report.totalScannedFolders);
+      setScannedFiles(report.audioFiles);
+      setScannedZipFiles(report.zipFiles);
+      setScannedNonAudio(report.nonAudioFiles);
+
+      if (report.audioFiles.length > 0) {
+        setSuccessNotice(
+          `Discovered ${report.audioFiles.length} audio file(s) across ${report.totalScannedFolders} folder(s) in "${report.folderName}" ready for zero-duplication move!`
+        );
+      } else if (report.zipFiles.length > 0) {
+        setSuccessNotice(
+          `Found ${report.zipFiles.length} drum kit zip archive(s) in "${report.folderName}". Click "Unpack & Import" below to extract your one-shots!`
+        );
+      } else if (report.nonAudioFiles.length > 0) {
+        setErrorMessage(
+          `Found ${report.nonAudioFiles.length} file(s) in "${report.folderName}", but their file extensions or MIME types were not recognized as audio (.wav, .mp3, .aif, .flac). Click "Treat & Import All as Audio" below if they are audio files without standard extensions.`
+        );
       } else {
-        setSuccessNotice(`Discovered ${files.length} audio file(s) ready for one-shot analysis and zero-duplication move!`);
+        setErrorMessage(
+          `Google Drive returned 0 items for folder "${report.folderName}". Please ensure this folder has "Anyone with the link can view" enabled in Google Drive sharing settings, or that your Google account has view permission.`
+        );
       }
     } catch (err: any) {
       setErrorMessage(`Folder scan failed: ${err.message || 'Make sure folder is shared or accessible'}`);
     } finally {
       setIsScanningFolder(false);
+    }
+  };
+
+  const handleTreatNonAudioAsAudio = () => {
+    if (scannedNonAudio.length === 0) return;
+    const converted: DriveAudioFileMeta[] = scannedNonAudio.map(f => ({
+      id: f.id,
+      name: f.name,
+      mimeType: f.mimeType || 'audio/wav',
+      originalParentId: detectedFolderId || undefined
+    }));
+    setScannedFiles(prev => [...prev, ...converted]);
+    setScannedNonAudio([]);
+    setSuccessNotice(`Queued ${converted.length} discovered file(s) for audio one-shot analysis & moving.`);
+  };
+
+  const handleUnpackZipAndImport = async (zipMeta: { id: string; name: string }) => {
+    let token = accessToken;
+    if (!token) token = await getAccessToken();
+    if (!token) {
+      setErrorMessage('Google Drive access token missing. Please authorize Google Drive first.');
+      return;
+    }
+
+    setIsUnpackingZip(true);
+    setErrorMessage(null);
+    setSuccessNotice(null);
+    setUnpackProgress({ current: 0, total: 0, fileName: `Downloading "${zipMeta.name}" from Drive...` });
+
+    try {
+      const extractedFiles = await unpackZipFromDrive(zipMeta.id, token, (curr, tot, name) => {
+        setUnpackProgress({ current: curr, total: tot, fileName: `Extracting ${name} (${curr}/${tot})...` });
+      });
+
+      if (extractedFiles.length === 0) {
+        throw new Error(`No audio files (.wav, .mp3, .aif, .flac) found inside archive "${zipMeta.name}".`);
+      }
+
+      setUnpackProgress({ current: 0, total: extractedFiles.length, fileName: 'Analyzing extracted one-shots...' });
+
+      let addedCount = 0;
+      const currentSamples = [...samples];
+
+      for (let i = 0; i < extractedFiles.length; i++) {
+        const item = extractedFiles[i];
+        setUnpackProgress({
+          current: i + 1,
+          total: extractedFiles.length,
+          fileName: `[${i + 1}/${extractedFiles.length}] DSP pitch & harmonic analysis on "${item.name}"...`
+        });
+
+        try {
+          const audioFile = new File([item.blob], item.name, { type: item.mimeType });
+          const { acoustic } = await analyzeOneShotAudio(audioFile);
+
+          const lowerName = item.name.toLowerCase();
+          let cat: DrumOneShotCategory = 'kicks';
+          if (lowerName.includes('808') || lowerName.includes('sub')) cat = '808s';
+          else if (lowerName.includes('clap')) cat = 'claps';
+          else if (lowerName.includes('snare') || lowerName.includes('rim')) cat = 'snares';
+          else if (lowerName.includes('hat') || lowerName.includes('hh')) cat = 'hihats';
+          else if (lowerName.includes('perc') || lowerName.includes('shaker') || lowerName.includes('tamb')) cat = 'percs';
+
+          const aiAnalysis = await getAiOneShotGuidance({
+            fileName: item.name,
+            category: cat,
+            acoustic
+          });
+
+          const localBlobUrl = URL.createObjectURL(item.blob);
+
+          const newVaultItem: SampleVaultItem = {
+            id: `sample_zip_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`,
+            name: item.name.replace(/\.[^/.]+$/, ''),
+            category: cat,
+            exactType: aiAnalysis.exactType,
+            detectedKey: acoustic.detectedKey,
+            fundamentalHz: acoustic.fundamentalHz,
+            centsDetune: acoustic.centsDetune,
+            durationSeconds: acoustic.durationSeconds,
+            punchFrequencyHz: acoustic.punchFrequencyHz,
+            attackMs: acoustic.attackMs,
+            decayMs: acoustic.decayMs,
+            peakDb: acoustic.peakDb,
+            tags: aiAnalysis.tags,
+            guidance: aiAnalysis.guidance,
+            fileUrl: localBlobUrl,
+            uploadedAt: new Date().toISOString(),
+            userEmail: currentUser?.email || 'coldestconcept@gmail.com'
+          };
+
+          if (token) {
+            try {
+              const driveUpload = await uploadSampleToDrive(audioFile, cat, newVaultItem, token);
+              newVaultItem.driveFileId = driveUpload.fileId;
+              newVaultItem.driveFolderId = driveUpload.folderId;
+            } catch (upErr) {
+              console.warn('Zip file drive upload fallback:', upErr);
+            }
+          }
+
+          currentSamples.unshift(newVaultItem);
+          addedCount++;
+        } catch (itemErr: any) {
+          console.warn(`Skipped item ${item.name}:`, itemErr.message);
+        }
+      }
+
+      setSamples(currentSamples);
+      if (token && addedCount > 0) {
+        await syncVaultIndexToDrive(currentSamples, token);
+      }
+
+      setSuccessNotice(`Successfully extracted, analyzed, and added ${addedCount} one-shot(s) from "${zipMeta.name}"!`);
+      // Remove this zip from scanned list
+      setScannedZipFiles(prev => prev.filter(z => z.id !== zipMeta.id));
+    } catch (err: any) {
+      setErrorMessage(`Zip extraction failed: ${err.message || 'Error processing archive'}`);
+    } finally {
+      setIsUnpackingZip(false);
+      setUnpackProgress({ current: 0, total: 0, fileName: '' });
     }
   };
 
@@ -1742,9 +1899,126 @@ Pairing Tips: ${sample.guidance.pairingTips}`;
                   <div className={`p-3 rounded-xl border text-xs leading-relaxed font-sans ${currentTheme.guidanceCard}`}>
                     💡 <strong>How Zero-Duplication Moving Works:</strong> This operation calls Google Drive's API to update the file's parent folder directly on Google's servers (`addParents` & `removeParents`). The audio data is not cloned or duplicated, so your Google Drive storage quota remains 100% free of duplicates!
                   </div>
+
+                  {/* Detected Folder Header */}
+                  {detectedFolderName && (
+                    <div className="flex items-center justify-between p-3 rounded-xl bg-black/40 border border-white/10 text-xs font-mono">
+                      <div className="flex items-center gap-2 text-white">
+                        <Folder className={`w-4 h-4 ${currentTheme.accentText}`} />
+                        <span>Source: <strong className={currentTheme.accentText}>"{detectedFolderName}"</strong></span>
+                      </div>
+                      <span className="opacity-70 text-[11px]">
+                        Scanned {totalScannedFolders} folder{totalScannedFolders > 1 ? 's' : ''} recursively
+                      </span>
+                    </div>
+                  )}
                 </div>
 
-                {/* Scanned Files List & Move Action */}
+                {/* Detected Zip Archives Card */}
+                {scannedZipFiles.length > 0 && (
+                  <div className={`p-6 rounded-3xl border space-y-4 ${currentTheme.driveContainer}`}>
+                    <div className="flex items-center gap-2">
+                      <Archive className={`w-5 h-5 ${currentTheme.accentText}`} />
+                      <h4 className="text-sm font-bold text-white uppercase tracking-wider">
+                        Drum Kit Zip Archives Found ({scannedZipFiles.length})
+                      </h4>
+                    </div>
+                    <p className={`text-xs font-mono opacity-80 ${currentTheme.subtitle}`}>
+                      BeatGangsta can extract .wav / .mp3 one-shots directly from these zip archives in memory, run AI harmonic analysis, and add them to your Vault.
+                    </p>
+
+                    {isUnpackingZip && (
+                      <div className="p-4 rounded-xl bg-black/60 border border-sky-500/40 space-y-2">
+                        <div className="flex items-center justify-between text-xs font-mono text-sky-300">
+                          <span>Unpacking Progress</span>
+                          <span className="truncate max-w-[280px]">{unpackProgress.fileName}</span>
+                        </div>
+                        <div className="w-full h-2 rounded-full bg-black/60 overflow-hidden">
+                          <div
+                            className={`h-full transition-all duration-300 ${currentTheme.progressBar}`}
+                            style={{
+                              width: `${
+                                unpackProgress.total > 0
+                                  ? (unpackProgress.current / unpackProgress.total) * 100
+                                  : 50
+                              }%`
+                            }}
+                          />
+                        </div>
+                      </div>
+                    )}
+
+                    <div className="space-y-2">
+                      {scannedZipFiles.map((zip) => (
+                        <div
+                          key={zip.id}
+                          className="flex flex-wrap items-center justify-between gap-3 p-3 rounded-xl bg-black/40 border border-black/30"
+                        >
+                          <div className="flex items-center gap-2.5">
+                            <Archive className="w-4 h-4 text-amber-400" />
+                            <div>
+                              <div className="text-xs font-bold text-white">{zip.name}</div>
+                              {zip.size && (
+                                <div className="text-[10px] font-mono opacity-60">
+                                  {(zip.size / (1024 * 1024)).toFixed(1)} MB
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                          <button
+                            onClick={() => handleUnpackZipAndImport(zip)}
+                            disabled={isUnpackingZip || isMigratingDriveFolder}
+                            className={`flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-black shadow-md active:scale-95 disabled:opacity-50 ${currentTheme.driveBtn}`}
+                          >
+                            <Sparkles className="w-3.5 h-3.5" />
+                            <span>{isUnpackingZip ? 'Extracting...' : 'Unpack & Import One-Shots'}</span>
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Discovered Non-Audio Items Card (Override Available) */}
+                {scannedNonAudio.length > 0 && (
+                  <div className="p-4 rounded-2xl bg-black/30 border border-white/10 space-y-3">
+                    <div className="flex flex-wrap items-center justify-between gap-2">
+                      <div className="flex items-center gap-2">
+                        <FileQuestion className="w-4 h-4 text-amber-400" />
+                        <span className="text-xs font-bold text-white">
+                          Discovered Other File Formats ({scannedNonAudio.length})
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <button
+                          onClick={() => setShowNonAudioFiles(!showNonAudioFiles)}
+                          className="text-[11px] font-mono text-sky-400 hover:underline"
+                        >
+                          {showNonAudioFiles ? 'Hide List' : 'View File Names'}
+                        </button>
+                        <button
+                          onClick={handleTreatNonAudioAsAudio}
+                          className={`px-3 py-1.5 rounded-lg text-[11px] font-bold border ${currentTheme.exportBtn}`}
+                        >
+                          Treat & Import All as Audio
+                        </button>
+                      </div>
+                    </div>
+
+                    {showNonAudioFiles && (
+                      <div className="max-h-36 overflow-y-auto space-y-1 text-xs font-mono opacity-80 p-2 rounded bg-black/40">
+                        {scannedNonAudio.map((f) => (
+                          <div key={f.id} className="flex items-center justify-between">
+                            <span className="truncate max-w-[320px]">{f.name}</span>
+                            <span className="text-[10px] opacity-60">{f.mimeType}</span>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* Scanned Audio Files List & Move Action */}
                 {scannedFiles.length > 0 && (
                   <div className={`p-6 rounded-3xl border space-y-4 ${currentTheme.driveContainer}`}>
                     <div className="flex items-center justify-between">
@@ -1804,7 +2078,14 @@ Pairing Tips: ${sample.guidance.pairingTips}`;
                           key={file.id}
                           className="flex items-center justify-between p-2.5 rounded-lg bg-black/40 border border-black/30 text-xs font-mono"
                         >
-                          <span className="text-white truncate max-w-[350px]">{file.name}</span>
+                          <div className="flex items-center gap-2 truncate max-w-[350px]">
+                            {file.subfolderName && (
+                              <span className="text-[10px] px-1.5 py-0.5 rounded bg-white/10 text-white/80">
+                                {file.subfolderName}
+                              </span>
+                            )}
+                            <span className="text-white truncate">{file.name}</span>
+                          </div>
                           <span className="opacity-60 text-[11px]">{file.mimeType}</span>
                         </div>
                       ))}

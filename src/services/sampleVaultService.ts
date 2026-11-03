@@ -1,4 +1,5 @@
 import { SampleVaultItem, DrumOneShotCategory } from '../types';
+import JSZip from 'jszip';
 
 const NOTE_NAMES = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
 
@@ -507,16 +508,22 @@ export async function deleteSampleFromDrive(fileId: string, accessToken: string)
 }
 
 /**
- * Parses a Google Drive Folder URL or raw folder ID
+ * Parses any Google Drive URL (folders, files, shortcuts, custom query links) or raw ID
  */
 export function extractDriveFolderId(input: string): string {
   const trimmed = input.trim();
-  // Matches https://drive.google.com/drive/folders/1ABC... or ?id=1ABC...
-  const urlMatch = trimmed.match(/\/folders\/([a-zA-Z0-9_-]+)/);
-  if (urlMatch && urlMatch[1]) return urlMatch[1];
+  // Matches /folders/([a-zA-Z0-9_-]+)
+  const folderMatch = trimmed.match(/\/folders\/([a-zA-Z0-9_-]+)/);
+  if (folderMatch && folderMatch[1]) return folderMatch[1];
+  // Matches /file/d/([a-zA-Z0-9_-]+)
+  const fileMatch = trimmed.match(/\/file\/d\/([a-zA-Z0-9_-]+)/);
+  if (fileMatch && fileMatch[1]) return fileMatch[1];
+  // Matches ?id=([a-zA-Z0-9_-]+) or &id=([a-zA-Z0-9_-]+)
   const queryMatch = trimmed.match(/[?&]id=([a-zA-Z0-9_-]+)/);
   if (queryMatch && queryMatch[1]) return queryMatch[1];
-  // Direct folder ID
+  // Matches bare Drive IDs (length >= 20)
+  const bareMatch = trimmed.match(/^([a-zA-Z0-9_-]{20,55})/);
+  if (bareMatch && bareMatch[1]) return bareMatch[1];
   return trimmed;
 }
 
@@ -529,101 +536,244 @@ export interface DriveAudioFileMeta {
   subfolderName?: string;
 }
 
-const AUDIO_EXTENSIONS = ['.wav', '.mp3', '.aif', '.aiff', '.flac', '.m4a', '.ogg'];
+export interface DriveFolderScanReport {
+  folderId: string;
+  folderName: string;
+  audioFiles: DriveAudioFileMeta[];
+  nonAudioFiles: Array<{ id: string; name: string; mimeType: string }>;
+  zipFiles: Array<{ id: string; name: string; size?: number; mimeType: string }>;
+  totalScannedFolders: number;
+  totalItemsDiscovered: number;
+}
 
-function isAudioFile(name: string, mimeType: string): boolean {
-  if (mimeType && mimeType.toLowerCase().startsWith('audio/')) return true;
-  const lower = (name || '').toLowerCase();
-  return AUDIO_EXTENSIONS.some(ext => lower.endsWith(ext));
+const AUDIO_EXTENSIONS = ['.wav', '.mp3', '.aif', '.aiff', '.flac', '.m4a', '.ogg', '.aac', '.wma', '.opus', '.alac'];
+
+export function isAudioFile(name?: string, mimeType?: string): boolean {
+  if (!name && !mimeType) return false;
+  const mt = (mimeType || '').toLowerCase();
+  if (
+    mt.startsWith('audio/') ||
+    mt.includes('audio') ||
+    mt.includes('wav') ||
+    mt.includes('wave') ||
+    mt.includes('mpeg') ||
+    mt.includes('flac') ||
+    mt.includes('aiff')
+  ) {
+    return true;
+  }
+  const cleanName = (name || '').split('?')[0].split('#')[0].toLowerCase();
+  return AUDIO_EXTENSIONS.some(ext => cleanName.endsWith(ext));
+}
+
+export function isZipFile(name?: string, mimeType?: string): boolean {
+  if (!name && !mimeType) return false;
+  const mt = (mimeType || '').toLowerCase();
+  if (mt.includes('zip') || mt === 'application/x-zip-compressed' || mt === 'application/zip') return true;
+  const cleanName = (name || '').split('?')[0].split('#')[0].toLowerCase();
+  return cleanName.endsWith('.zip');
 }
 
 /**
- * Scans a user's Google Drive folder for audio files, including immediate subfolders (drum packs)
+ * Scans a user's Google Drive folder, shared link, or drive item for audio one-shots.
+ * Uses supportsAllDrives=true and includeItemsFromAllDrives=true for shared/public links.
+ * Handles subfolder hierarchies and detects zip archives.
  */
 export async function listFilesInDriveFolder(
-  folderId: string,
+  rawInputId: string,
   accessToken: string
-): Promise<DriveAudioFileMeta[]> {
-  // Query all non-trashed items inside the specified folder
-  const query = `'${folderId}' in parents and trashed = false`;
-  const res = await fetch(
-    `https://www.googleapis.com/drive/v3/files?q=${encodeURIComponent(
-      query
-    )}&fields=files(id,name,mimeType,size,parents)&pageSize=1000`,
-    {
-      headers: { Authorization: `Bearer ${accessToken}` }
-    }
-  );
+): Promise<DriveFolderScanReport> {
+  const targetId = extractDriveFolderId(rawInputId);
+  let effectiveFolderId = targetId;
+  let targetName = 'Google Drive Folder';
 
-  if (!res.ok) {
-    if (res.status === 401) {
-      throw new Error('Google Drive authorization expired (401). Please click "Authorize Drive" to refresh.');
+  // 1. Fetch metadata of the target item directly (handles direct audio files, zip files, shortcuts, and folder names)
+  try {
+    const metaRes = await fetch(
+      `https://www.googleapis.com/drive/v3/files/${targetId}?fields=id,name,mimeType,size,shortcutDetails&supportsAllDrives=true`,
+      { headers: { Authorization: `Bearer ${accessToken}` } }
+    );
+    if (metaRes.ok) {
+      const meta = await metaRes.json();
+      targetName = meta.name || targetName;
+
+      // Handle shortcuts
+      if (meta.mimeType === 'application/vnd.google-apps.shortcut' && meta.shortcutDetails?.targetId) {
+        effectiveFolderId = meta.shortcutDetails.targetId;
+      }
+
+      // If user pasted a direct link to an individual audio file
+      if (isAudioFile(meta.name, meta.mimeType)) {
+        return {
+          folderId: targetId,
+          folderName: targetName,
+          audioFiles: [{
+            id: meta.id,
+            name: meta.name,
+            mimeType: meta.mimeType || 'audio/wav',
+            size: meta.size ? Number(meta.size) : undefined,
+            originalParentId: targetId
+          }],
+          nonAudioFiles: [],
+          zipFiles: [],
+          totalScannedFolders: 1,
+          totalItemsDiscovered: 1
+        };
+      }
+
+      // If user pasted a link to a zip archive
+      if (isZipFile(meta.name, meta.mimeType)) {
+        return {
+          folderId: targetId,
+          folderName: targetName,
+          audioFiles: [],
+          nonAudioFiles: [],
+          zipFiles: [{
+            id: meta.id,
+            name: meta.name,
+            size: meta.size ? Number(meta.size) : undefined,
+            mimeType: meta.mimeType
+          }],
+          totalScannedFolders: 1,
+          totalItemsDiscovered: 1
+        };
+      }
     }
-    if (res.status === 403) {
-      throw new Error('Google Drive access restricted (403). Ensure this folder is accessible to your Google account and Drive permissions are granted.');
-    }
-    if (res.status === 404) {
-      throw new Error('Google Drive folder not found (404). Please verify the folder link or folder ID.');
-    }
-    const errorText = await res.text();
-    throw new Error(`Failed to scan Google Drive folder (${res.status}): ${errorText}`);
+  } catch (e) {
+    console.warn('Could not fetch target root metadata:', e);
   }
 
-  const data = await res.json();
-  const rawFiles: any[] = data.files || [];
-
+  // 2. Scan folders recursively (up to 4 levels deep, max 50 folders)
+  const queue: Array<{ id: string; name: string; depth: number }> = [
+    { id: effectiveFolderId, name: targetName, depth: 0 }
+  ];
+  const visited = new Set<string>();
   const audioFiles: DriveAudioFileMeta[] = [];
-  const subfolders: Array<{ id: string; name: string }> = [];
+  const nonAudioFiles: Array<{ id: string; name: string; mimeType: string }> = [];
+  const zipFiles: Array<{ id: string; name: string; size?: number; mimeType: string }> = [];
+  let scannedCount = 0;
 
-  for (const f of rawFiles) {
-    if (f.mimeType === 'application/vnd.google-apps.folder') {
-      subfolders.push({ id: f.id, name: f.name });
-    } else if (isAudioFile(f.name, f.mimeType)) {
-      audioFiles.push({
-        id: f.id,
-        name: f.name,
-        mimeType: f.mimeType,
-        size: f.size ? Number(f.size) : undefined,
-        originalParentId: folderId
-      });
+  while (queue.length > 0 && scannedCount < 50) {
+    const current = queue.shift()!;
+    if (visited.has(current.id)) continue;
+    visited.add(current.id);
+    scannedCount++;
+
+    const query = `'${current.id}' in parents and trashed = false`;
+    const url = `https://www.googleapis.com/drive/v3/files?q=${encodeURIComponent(
+      query
+    )}&supportsAllDrives=true&includeItemsFromAllDrives=true&pageSize=1000&fields=files(id,name,mimeType,size,parents,shortcutDetails)`;
+
+    const res = await fetch(url, {
+      headers: { Authorization: `Bearer ${accessToken}` }
+    });
+
+    if (!res.ok) {
+      if (res.status === 401) {
+        throw new Error('Google Drive authorization expired (401). Please click "Authorize Drive" to refresh.');
+      }
+      if (res.status === 403) {
+        throw new Error('Google Drive access restricted (403). Ensure this folder has "Anyone with the link can view" enabled or is accessible to your Google account.');
+      }
+      if (res.status === 404 && scannedCount === 1) {
+        throw new Error('Google Drive folder not found (404). Please verify the link or folder ID.');
+      }
+      continue;
     }
-  }
 
-  // If subfolders exist (e.g., Kicks/, Claps/, 808s/), scan them as well to capture complete kits
-  if (subfolders.length > 0) {
-    for (const sub of subfolders) {
-      try {
-        const subQuery = `'${sub.id}' in parents and trashed = false and mimeType != 'application/vnd.google-apps.folder'`;
-        const subRes = await fetch(
-          `https://www.googleapis.com/drive/v3/files?q=${encodeURIComponent(
-            subQuery
-          )}&fields=files(id,name,mimeType,size)&pageSize=500`,
-          {
-            headers: { Authorization: `Bearer ${accessToken}` }
-          }
-        );
-        if (subRes.ok) {
-          const subData = await subRes.json();
-          for (const sf of subData.files || []) {
-            if (isAudioFile(sf.name, sf.mimeType)) {
-              audioFiles.push({
-                id: sf.id,
-                name: sf.name,
-                mimeType: sf.mimeType,
-                size: sf.size ? Number(sf.size) : undefined,
-                originalParentId: sub.id,
-                subfolderName: sub.name
-              });
-            }
-          }
+    const data = await res.json();
+    const items: any[] = data.files || [];
+
+    for (const item of items) {
+      let realMime = item.mimeType;
+      let realId = item.id;
+      if (item.mimeType === 'application/vnd.google-apps.shortcut' && item.shortcutDetails?.targetId) {
+        realId = item.shortcutDetails.targetId;
+        realMime = item.shortcutDetails.targetMimeType || realMime;
+      }
+
+      if (realMime === 'application/vnd.google-apps.folder') {
+        if (current.depth < 4 && !visited.has(realId)) {
+          queue.push({ id: realId, name: item.name, depth: current.depth + 1 });
         }
-      } catch (err) {
-        console.warn(`Could not read subfolder ${sub.name}:`, err);
+      } else if (isAudioFile(item.name, realMime)) {
+        audioFiles.push({
+          id: realId,
+          name: item.name,
+          mimeType: realMime || 'audio/wav',
+          size: item.size ? Number(item.size) : undefined,
+          originalParentId: current.id,
+          subfolderName: current.depth > 0 ? current.name : undefined
+        });
+      } else if (isZipFile(item.name, realMime)) {
+        zipFiles.push({
+          id: realId,
+          name: item.name,
+          size: item.size ? Number(item.size) : undefined,
+          mimeType: realMime
+        });
+      } else {
+        nonAudioFiles.push({
+          id: realId,
+          name: item.name,
+          mimeType: realMime
+        });
       }
     }
   }
 
-  return audioFiles;
+  return {
+    folderId: effectiveFolderId,
+    folderName: targetName,
+    audioFiles,
+    nonAudioFiles,
+    zipFiles,
+    totalScannedFolders: scannedCount,
+    totalItemsDiscovered: audioFiles.length + nonAudioFiles.length + zipFiles.length
+  };
+}
+
+/**
+ * Downloads and unpacks an audio zip archive from Google Drive into memory
+ */
+export async function unpackZipFromDrive(
+  fileId: string,
+  accessToken: string,
+  onProgress?: (current: number, total: number, name: string) => void
+): Promise<Array<{ name: string; blob: Blob; mimeType: string }>> {
+  const zipBlob = await downloadDriveFileAsBlob(fileId, accessToken);
+  const zip = await JSZip.loadAsync(zipBlob);
+  const extractedFiles: Array<{ name: string; blob: Blob; mimeType: string }> = [];
+
+  const fileEntries: any[] = [];
+  zip.forEach((relativePath, file) => {
+    if (!file.dir && !relativePath.startsWith('__MACOSX') && !relativePath.includes('/._')) {
+      const lower = relativePath.toLowerCase();
+      if (AUDIO_EXTENSIONS.some(ext => lower.endsWith(ext))) {
+        fileEntries.push({ path: relativePath, file });
+      }
+    }
+  });
+
+  for (let i = 0; i < fileEntries.length; i++) {
+    const entry = fileEntries[i];
+    const fileName = entry.path.split('/').pop() || entry.path;
+    if (onProgress) onProgress(i + 1, fileEntries.length, fileName);
+
+    const blob = await entry.file.async('blob');
+    let mime = 'audio/wav';
+    if (fileName.toLowerCase().endsWith('.mp3')) mime = 'audio/mpeg';
+    else if (fileName.toLowerCase().endsWith('.flac')) mime = 'audio/flac';
+    else if (fileName.toLowerCase().endsWith('.aif') || fileName.toLowerCase().endsWith('.aiff')) mime = 'audio/aiff';
+
+    extractedFiles.push({
+      name: fileName,
+      blob,
+      mimeType: mime
+    });
+  }
+
+  return extractedFiles;
 }
 
 /**
