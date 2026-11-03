@@ -525,32 +525,105 @@ export interface DriveAudioFileMeta {
   name: string;
   mimeType: string;
   size?: number;
+  originalParentId?: string;
+  subfolderName?: string;
+}
+
+const AUDIO_EXTENSIONS = ['.wav', '.mp3', '.aif', '.aiff', '.flac', '.m4a', '.ogg'];
+
+function isAudioFile(name: string, mimeType: string): boolean {
+  if (mimeType && mimeType.toLowerCase().startsWith('audio/')) return true;
+  const lower = (name || '').toLowerCase();
+  return AUDIO_EXTENSIONS.some(ext => lower.endsWith(ext));
 }
 
 /**
- * Scans a user's Google Drive folder for audio files
+ * Scans a user's Google Drive folder for audio files, including immediate subfolders (drum packs)
  */
 export async function listFilesInDriveFolder(
   folderId: string,
   accessToken: string
 ): Promise<DriveAudioFileMeta[]> {
-  const query = `'${folderId}' in parents and trashed = false and (mimeType contains 'audio/' or name contains '.wav' or name contains '.mp3' or name contains '.aif' or name contains '.flac')`;
+  // Query all non-trashed items inside the specified folder
+  const query = `'${folderId}' in parents and trashed = false`;
   const res = await fetch(
     `https://www.googleapis.com/drive/v3/files?q=${encodeURIComponent(
       query
-    )}&fields=files(id,name,mimeType,size)&pageSize=1000`,
+    )}&fields=files(id,name,mimeType,size,parents)&pageSize=1000`,
     {
       headers: { Authorization: `Bearer ${accessToken}` }
     }
   );
 
   if (!res.ok) {
+    if (res.status === 401) {
+      throw new Error('Google Drive authorization expired (401). Please click "Authorize Drive" to refresh.');
+    }
+    if (res.status === 403) {
+      throw new Error('Google Drive access restricted (403). Ensure this folder is accessible to your Google account and Drive permissions are granted.');
+    }
+    if (res.status === 404) {
+      throw new Error('Google Drive folder not found (404). Please verify the folder link or folder ID.');
+    }
     const errorText = await res.text();
     throw new Error(`Failed to scan Google Drive folder (${res.status}): ${errorText}`);
   }
 
   const data = await res.json();
-  return (data.files || []) as DriveAudioFileMeta[];
+  const rawFiles: any[] = data.files || [];
+
+  const audioFiles: DriveAudioFileMeta[] = [];
+  const subfolders: Array<{ id: string; name: string }> = [];
+
+  for (const f of rawFiles) {
+    if (f.mimeType === 'application/vnd.google-apps.folder') {
+      subfolders.push({ id: f.id, name: f.name });
+    } else if (isAudioFile(f.name, f.mimeType)) {
+      audioFiles.push({
+        id: f.id,
+        name: f.name,
+        mimeType: f.mimeType,
+        size: f.size ? Number(f.size) : undefined,
+        originalParentId: folderId
+      });
+    }
+  }
+
+  // If subfolders exist (e.g., Kicks/, Claps/, 808s/), scan them as well to capture complete kits
+  if (subfolders.length > 0) {
+    for (const sub of subfolders) {
+      try {
+        const subQuery = `'${sub.id}' in parents and trashed = false and mimeType != 'application/vnd.google-apps.folder'`;
+        const subRes = await fetch(
+          `https://www.googleapis.com/drive/v3/files?q=${encodeURIComponent(
+            subQuery
+          )}&fields=files(id,name,mimeType,size)&pageSize=500`,
+          {
+            headers: { Authorization: `Bearer ${accessToken}` }
+          }
+        );
+        if (subRes.ok) {
+          const subData = await subRes.json();
+          for (const sf of subData.files || []) {
+            if (isAudioFile(sf.name, sf.mimeType)) {
+              audioFiles.push({
+                id: sf.id,
+                name: sf.name,
+                mimeType: sf.mimeType,
+                size: sf.size ? Number(sf.size) : undefined,
+                originalParentId: sub.id,
+                subfolderName: sub.name
+              });
+            }
+          }
+        }
+      } catch (err) {
+        console.warn(`Could not read subfolder ${sub.name}:`, err);
+      }
+    }
+  }
+
+  return audioFiles;
 }
 
 /**
@@ -577,8 +650,22 @@ export async function moveDriveFile(
   });
 
   if (!res.ok) {
-    const errText = await res.text();
-    throw new Error(`Failed to move file in Google Drive (${res.status}): ${errText}`);
+    // If removing parents failed, try adding parents
+    const fallbackUrl = `https://www.googleapis.com/drive/v3/files/${fileId}?addParents=${encodeURIComponent(
+      toFolderId
+    )}&fields=id,name,parents`;
+    const fallbackRes = await fetch(fallbackUrl, {
+      method: 'PATCH',
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+        'Content-Type': 'application/json'
+      }
+    });
+
+    if (!fallbackRes.ok) {
+      const errText = await res.text();
+      throw new Error(`Failed to move file in Google Drive (${res.status}): ${errText}`);
+    }
   }
 }
 

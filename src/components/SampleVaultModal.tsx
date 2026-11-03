@@ -427,7 +427,7 @@ export const SampleVaultModal: React.FC<SampleVaultModalProps> = ({
     }
   }, [samples]);
 
-  // Check auth and tokens
+  // Check auth and tokens on mount
   useEffect(() => {
     getAccessToken().then(token => {
       if (token) setAccessToken(token);
@@ -436,7 +436,7 @@ export const SampleVaultModal: React.FC<SampleVaultModalProps> = ({
 
   const isAuthorized = isAuthorizedForVault(currentUser?.email);
 
-  const handleGoogleAuth = async () => {
+  const handleGoogleAuth = async (): Promise<string | null> => {
     setIsAuthenticating(true);
     setErrorMessage(null);
     try {
@@ -450,10 +450,14 @@ export const SampleVaultModal: React.FC<SampleVaultModalProps> = ({
       const token = res.accessToken;
       if (token) {
         setAccessToken(token);
+        setSuccessNotice('Google Drive successfully authorized and connected!');
         await loadFromDrive(token);
+        return token;
       }
+      return null;
     } catch (err: any) {
       setErrorMessage(err.message || 'Authentication with Google failed.');
+      return null;
     } finally {
       setIsAuthenticating(false);
     }
@@ -569,8 +573,19 @@ export const SampleVaultModal: React.FC<SampleVaultModalProps> = ({
       setErrorMessage('Please enter a Google Drive folder link or folder ID.');
       return;
     }
-    if (!accessToken) {
-      setErrorMessage('Google Drive access token missing. Please sign in with your authorized Google account.');
+
+    let token = accessToken;
+    if (!token) {
+      token = await getAccessToken();
+    }
+
+    // Auto-prompt to authorize Drive if token is missing
+    if (!token) {
+      token = await handleGoogleAuth();
+    }
+
+    if (!token) {
+      setErrorMessage('Google Drive access token missing. Please click "Authorize Google Drive" to grant access.');
       return;
     }
 
@@ -587,10 +602,10 @@ export const SampleVaultModal: React.FC<SampleVaultModalProps> = ({
     setDetectedFolderId(folderId);
 
     try {
-      const files = await listFilesInDriveFolder(folderId, accessToken);
+      const files = await listFilesInDriveFolder(folderId, token);
       setScannedFiles(files);
       if (files.length === 0) {
-        setErrorMessage(`No audio files (.wav, .mp3, .aif, .flac) found in that Google Drive folder.`);
+        setErrorMessage(`No audio files (.wav, .mp3, .aif, .flac) found in that Google Drive folder or its subfolders.`);
       } else {
         setSuccessNotice(`Discovered ${files.length} audio file(s) ready for one-shot analysis and zero-duplication move!`);
       }
@@ -603,21 +618,31 @@ export const SampleVaultModal: React.FC<SampleVaultModalProps> = ({
 
   // Google Drive Folder Migration: Step 2 Native Move & AI Analysis
   const handleMigrateAndMoveDriveFolder = async () => {
-    if (!detectedFolderId || scannedFiles.length === 0 || !accessToken) return;
+    let token = accessToken;
+    if (!token) {
+      token = await getAccessToken();
+    }
+    if (!token) {
+      token = await handleGoogleAuth();
+    }
+    if (!detectedFolderId || scannedFiles.length === 0 || !token) {
+      if (!token) setErrorMessage('Google Drive access token missing. Please authorize Google Drive first.');
+      return;
+    }
 
     setIsMigratingDriveFolder(true);
     setErrorMessage(null);
     setSuccessNotice(null);
     setMigrationRejections([]);
 
-    const rootFolderId = await getOrCreateDriveFolder('Beatgangsta Sample Vault', undefined, accessToken);
+    const rootFolderId = await getOrCreateDriveFolder('Beatgangsta Sample Vault', undefined, token);
     const categoryFolderMap: Record<DrumOneShotCategory, string> = {
-      kicks: await getOrCreateDriveFolder('01_Kicks', rootFolderId, accessToken),
-      '808s': await getOrCreateDriveFolder('02_808s', rootFolderId, accessToken),
-      claps: await getOrCreateDriveFolder('03_Claps', rootFolderId, accessToken),
-      snares: await getOrCreateDriveFolder('04_Snares', rootFolderId, accessToken),
-      hihats: await getOrCreateDriveFolder('05_HiHats', rootFolderId, accessToken),
-      percs: await getOrCreateDriveFolder('06_Percs', rootFolderId, accessToken)
+      kicks: await getOrCreateDriveFolder('01_Kicks', rootFolderId, token),
+      '808s': await getOrCreateDriveFolder('02_808s', rootFolderId, token),
+      claps: await getOrCreateDriveFolder('03_Claps', rootFolderId, token),
+      snares: await getOrCreateDriveFolder('04_Snares', rootFolderId, token),
+      hihats: await getOrCreateDriveFolder('05_HiHats', rootFolderId, token),
+      percs: await getOrCreateDriveFolder('06_Percs', rootFolderId, token)
     };
 
     const newSamples = [...samples];
@@ -634,7 +659,7 @@ export const SampleVaultModal: React.FC<SampleVaultModalProps> = ({
 
       try {
         // Download blob into memory for acoustic analysis
-        const blob = await downloadDriveFileAsBlob(fileMeta.id, accessToken);
+        const blob = await downloadDriveFileAsBlob(fileMeta.id, token);
         const audioFile = new File([blob], fileMeta.name, { type: fileMeta.mimeType });
 
         // DSP analysis
@@ -658,7 +683,7 @@ export const SampleVaultModal: React.FC<SampleVaultModalProps> = ({
         const destinationFolderId = categoryFolderMap[targetCat];
 
         // Native Move via Google Drive API: add destination folder, remove original source folder
-        await moveDriveFile(fileMeta.id, destinationFolderId, detectedFolderId, accessToken);
+        await moveDriveFile(fileMeta.id, fileMeta.originalParentId || detectedFolderId, destinationFolderId, token);
 
         // AI Harmonic Guidance
         const aiAnalysis = await getAiOneShotGuidance({
@@ -1039,13 +1064,37 @@ Pairing Tips: ${sample.guidance.pairingTips}`;
                 </button>
               </div>
 
-              <div className="flex items-center gap-3 text-xs">
-                <span className="flex items-center gap-1 text-emerald-400 font-bold">
+              <div className="flex items-center gap-2 sm:gap-3 text-xs">
+                <span className="flex items-center gap-1.5 text-emerald-400 font-bold">
                   <ShieldCheck className="w-4 h-4" />
                   <span className="hidden md:inline">{currentUser?.email}</span>
                 </span>
+
+                {accessToken ? (
+                  <span className="flex items-center gap-1 text-[11px] font-bold text-emerald-400 bg-emerald-950/60 border border-emerald-500/30 px-2.5 py-1 rounded-full">
+                    <CheckCircle2 className="w-3 h-3 text-emerald-400" />
+                    <span className="hidden sm:inline">Drive Connected</span>
+                  </span>
+                ) : (
+                  <button
+                    onClick={handleGoogleAuth}
+                    disabled={isAuthenticating}
+                    className="flex items-center gap-1.5 text-[11px] font-black text-amber-200 bg-amber-500/25 hover:bg-amber-500/40 border border-amber-400/60 px-3 py-1 rounded-full shadow-lg transition-all active:scale-95 animate-pulse"
+                    title="Click to authorize Google Drive access"
+                  >
+                    <Lock className="w-3 h-3 text-amber-400" />
+                    <span>{isAuthenticating ? 'Connecting...' : 'Authorize Drive'}</span>
+                  </button>
+                )}
+
                 <button
-                  onClick={() => accessToken && loadFromDrive(accessToken)}
+                  onClick={() => {
+                    if (accessToken) {
+                      loadFromDrive(accessToken);
+                    } else {
+                      handleGoogleAuth();
+                    }
+                  }}
                   disabled={isSyncingDrive}
                   className={`flex items-center gap-1 text-[11px] font-bold transition-colors ${currentTheme.accentText} hover:opacity-80`}
                 >
@@ -1057,12 +1106,24 @@ Pairing Tips: ${sample.guidance.pairingTips}`;
 
             {/* Notification Banners */}
             {errorMessage && (
-              <div className="mx-6 mt-3 p-3 rounded-xl bg-red-950/70 border border-red-500/50 text-red-200 text-xs flex items-center justify-between">
-                <div className="flex items-center gap-2">
+              <div className="mx-6 mt-3 p-3.5 rounded-xl bg-red-950/80 border border-red-500/50 text-red-200 text-xs flex flex-wrap items-center justify-between gap-3 shadow-lg">
+                <div className="flex items-center gap-2.5 min-w-0">
                   <AlertTriangle className="w-4 h-4 flex-shrink-0 text-red-400" />
-                  <span className="font-mono">{errorMessage}</span>
+                  <span className="font-mono break-all">{errorMessage}</span>
                 </div>
-                <button onClick={() => setErrorMessage(null)} className="text-red-400 hover:text-white">✕</button>
+                <div className="flex items-center gap-2 shrink-0">
+                  {(!accessToken || errorMessage.toLowerCase().includes('token') || errorMessage.toLowerCase().includes('authoriz') || errorMessage.toLowerCase().includes('drive')) && (
+                    <button
+                      onClick={handleGoogleAuth}
+                      disabled={isAuthenticating}
+                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-red-600 hover:bg-red-500 text-white font-bold text-xs shadow-md transition-all active:scale-95 disabled:opacity-50"
+                    >
+                      <FolderInput className="w-3.5 h-3.5" />
+                      <span>{isAuthenticating ? 'Connecting...' : 'Authorize Google Drive'}</span>
+                    </button>
+                  )}
+                  <button onClick={() => setErrorMessage(null)} className="p-1 text-red-400 hover:text-white">✕</button>
+                </div>
               </div>
             )}
 
@@ -1629,6 +1690,32 @@ Pairing Tips: ${sample.guidance.pairingTips}`;
                       </p>
                     </div>
                   </div>
+
+                  {!accessToken && (
+                    <div className="p-4 rounded-2xl bg-amber-950/40 border border-amber-500/40 flex flex-wrap items-center justify-between gap-3 shadow-md">
+                      <div className="flex items-center gap-3">
+                        <div className="p-2.5 rounded-xl bg-amber-500/20 text-amber-300">
+                          <Lock className="w-5 h-5" />
+                        </div>
+                        <div>
+                          <div className="text-xs font-black text-white uppercase tracking-wider">
+                            Google Drive Authorization Required
+                          </div>
+                          <p className="text-[11px] font-mono text-amber-200/80 mt-0.5">
+                            Connect your Google account so BeatGangsta can inspect your folder and move one-shots without duplicating space.
+                          </p>
+                        </div>
+                      </div>
+                      <button
+                        onClick={handleGoogleAuth}
+                        disabled={isAuthenticating}
+                        className="flex items-center gap-2 px-4 py-2 rounded-xl bg-gradient-to-r from-amber-500 to-yellow-500 hover:from-amber-400 hover:to-yellow-400 text-black font-black text-xs shadow-lg active:scale-95 disabled:opacity-50"
+                      >
+                        <Zap className="w-3.5 h-3.5 fill-current" />
+                        <span>{isAuthenticating ? 'Authorizing...' : 'Authorize Google Drive Now'}</span>
+                      </button>
+                    </div>
+                  )}
 
                   <div className="space-y-2">
                     <label className={`text-xs font-bold uppercase block ${currentTheme.accentText}`}>
