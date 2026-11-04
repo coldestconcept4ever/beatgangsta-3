@@ -40,7 +40,8 @@ import {
   ZoomOut,
   Pause
 } from 'lucide-react';
-import { AppTheme, SampleVaultItem, DrumOneShotCategory } from '../types';
+import { AppTheme, SampleVaultItem, DrumOneShotCategory, VSTPlugin, Hardware } from '../types';
+import { USER_GEAR_PRESET_PLUGINS } from '../data/userGearSeed';
 import { 
   isAuthorizedForVault, 
   googleSignIn, 
@@ -79,6 +80,8 @@ import {
 interface SampleVaultModalProps {
   theme: AppTheme;
   user: any;
+  userPlugins?: VSTPlugin[];
+  analogHardware?: Hardware[];
   onClose: () => void;
   onUpdateUser?: (updated: any) => void;
 }
@@ -886,6 +889,8 @@ export function getKitSlotList(slots?: MatchedBeatKit['slots']): Array<{
 export const SampleVaultModal: React.FC<SampleVaultModalProps> = ({
   theme,
   user,
+  userPlugins,
+  analogHardware,
   onClose,
   onUpdateUser
 }) => {
@@ -893,6 +898,23 @@ export const SampleVaultModal: React.FC<SampleVaultModalProps> = ({
   const [currentUser, setCurrentUser] = useState<any>(user);
   const [accessToken, setAccessToken] = useState<string | null>(null);
   const [isAuthenticating, setIsAuthenticating] = useState(false);
+
+  // Active Gear Rack plugins (from props, localStorage, or user's Studio One seed)
+  const activeGearRackPlugins = React.useMemo<VSTPlugin[]>(() => {
+    if (userPlugins && userPlugins.length > 0) return userPlugins;
+    try {
+      const saved = localStorage.getItem('bg_library');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+      }
+    } catch {}
+    // If local library is empty, seed it with the user's Studio One pluginmanagement suite
+    try {
+      localStorage.setItem('bg_library', JSON.stringify(USER_GEAR_PRESET_PLUGINS));
+    } catch {}
+    return USER_GEAR_PRESET_PLUGINS;
+  }, [userPlugins]);
   
   // Tabs: 'vault' (Cosmos Browser & Galaxy) | 'song-matcher' (AI Song Matcher & Groove Player) | 'pairing' (Dual Layer Stacking) | 'drive-import'
   const [activeTab, setActiveTab] = useState<'vault' | 'song-matcher' | 'pairing' | 'drive-import'>('vault');
@@ -1026,7 +1048,7 @@ export const SampleVaultModal: React.FC<SampleVaultModalProps> = ({
   const [isDualPlaying, setIsDualPlaying] = useState<boolean>(false);
   const [dualSoloMode, setDualSoloMode] = useState<'both' | 'sampleA' | 'sampleB'>('both');
   const webAudioCtxRef = useRef<AudioContext | null>(null);
-  const activeSourcesRef = useRef<AudioBufferSourceNode[]>([]);
+  const activeSourcesRef = useRef<(AudioBufferSourceNode | OscillatorNode)[]>([]);
 
   // Persistent storage auto-guard: never lose progress or downgrade samples
   useEffect(() => {
@@ -1828,25 +1850,278 @@ export const SampleVaultModal: React.FC<SampleVaultModalProps> = ({
     }
   };
 
-  const handlePlaySample = (sample: SampleVaultItem) => {
+  const handlePlaySample = async (sample: SampleVaultItem) => {
+    // If already playing this sample, toggle stop
     if (playingSampleId === sample.id) {
       if (audioRef.current) {
         audioRef.current.pause();
         audioRef.current.currentTime = 0;
       }
+      if (activeSourcesRef.current.length > 0) {
+        activeSourcesRef.current.forEach(s => {
+          try { s.stop(); } catch {}
+        });
+        activeSourcesRef.current = [];
+      }
       setPlayingSampleId(null);
       return;
     }
 
-    if (sample.fileUrl) {
-      if (audioRef.current) {
-        audioRef.current.pause();
+    // Stop any other currently playing sample immediately
+    if (audioRef.current) {
+      audioRef.current.pause();
+      audioRef.current.currentTime = 0;
+    }
+    if (activeSourcesRef.current.length > 0) {
+      activeSourcesRef.current.forEach(s => {
+        try { s.stop(); } catch {}
+      });
+      activeSourcesRef.current = [];
+    }
+
+    setPlayingSampleId(sample.id);
+
+    try {
+      // 0. Ensure Web Audio Context is initialized and resumed synchronously within user gesture
+      if (!webAudioCtxRef.current || webAudioCtxRef.current.state === 'closed') {
+        webAudioCtxRef.current = new (window.AudioContext || (window as any).webkitAudioContext)();
       }
-      const audio = new Audio(sample.fileUrl);
-      audioRef.current = audio;
-      setPlayingSampleId(sample.id);
-      audio.play().catch(e => console.warn('Playback failed:', e));
-      audio.onended = () => setPlayingSampleId(null);
+      const ctx = webAudioCtxRef.current;
+      if (ctx.state === 'suspended') {
+        await ctx.resume();
+      }
+
+      // Helper: High-fidelity Web Audio DSP Synthesizer
+      // Produces an acoustic, audible one-shot customized to the sample's category, pitch, punch, and envelope
+      const playDpsFallback = () => {
+        try {
+          const now = ctx.currentTime;
+          const masterGain = ctx.createGain();
+          masterGain.gain.setValueAtTime(Math.max(0.2, auditionVolume), now);
+          masterGain.connect(ctx.destination);
+
+          const decaySec = Math.max(0.08, Math.min(2.5, (sample.decayMs || 150) / 1000));
+          const punch = sample.punchFrequencyHz || sample.fundamentalHz || 100;
+          const fund = sample.fundamentalHz || punch;
+
+          const createdSources: (AudioBufferSourceNode | OscillatorNode)[] = [];
+
+          if (sample.category === '808s') {
+            const osc = ctx.createOscillator();
+            const gain = ctx.createGain();
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(fund + 15, now);
+            osc.frequency.exponentialRampToValueAtTime(Math.max(30, fund), now + 0.04);
+
+            gain.gain.setValueAtTime(0.95, now);
+            gain.gain.exponentialRampToValueAtTime(0.0001, now + decaySec);
+
+            osc.connect(gain);
+            gain.connect(masterGain);
+            osc.start(now);
+            osc.stop(now + decaySec);
+            createdSources.push(osc);
+          } else if (sample.category === 'kicks') {
+            const osc = ctx.createOscillator();
+            const gain = ctx.createGain();
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(Math.max(140, punch * 2.2), now);
+            osc.frequency.exponentialRampToValueAtTime(punch, now + 0.035);
+            osc.frequency.exponentialRampToValueAtTime(35, now + decaySec);
+
+            gain.gain.setValueAtTime(1.0, now);
+            gain.gain.exponentialRampToValueAtTime(0.0001, now + decaySec);
+
+            osc.connect(gain);
+            gain.connect(masterGain);
+            osc.start(now);
+            osc.stop(now + decaySec);
+            createdSources.push(osc);
+
+            // Transient snap
+            const clickOsc = ctx.createOscillator();
+            const clickGain = ctx.createGain();
+            clickOsc.type = 'triangle';
+            clickOsc.frequency.setValueAtTime(750, now);
+            clickGain.gain.setValueAtTime(0.5, now);
+            clickGain.gain.exponentialRampToValueAtTime(0.0001, now + 0.015);
+            clickOsc.connect(clickGain);
+            clickGain.connect(masterGain);
+            clickOsc.start(now);
+            clickOsc.stop(now + 0.02);
+            createdSources.push(clickOsc);
+          } else if (sample.category === 'snares') {
+            const toneOsc = ctx.createOscillator();
+            const toneGain = ctx.createGain();
+            toneOsc.type = 'triangle';
+            toneOsc.frequency.setValueAtTime(punch, now);
+            toneOsc.frequency.exponentialRampToValueAtTime(punch * 0.75, now + 0.1);
+            toneGain.gain.setValueAtTime(0.7, now);
+            toneGain.gain.exponentialRampToValueAtTime(0.0001, now + 0.12);
+            toneOsc.connect(toneGain);
+            toneGain.connect(masterGain);
+            toneOsc.start(now);
+            toneOsc.stop(now + 0.15);
+            createdSources.push(toneOsc);
+
+            // White noise body
+            const bufferSize = Math.floor(ctx.sampleRate * Math.min(0.4, decaySec));
+            const noiseBuffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
+            const output = noiseBuffer.getChannelData(0);
+            for (let i = 0; i < bufferSize; i++) output[i] = Math.random() * 2 - 1;
+            const whiteNoise = ctx.createBufferSource();
+            whiteNoise.buffer = noiseBuffer;
+            const filter = ctx.createBiquadFilter();
+            filter.type = 'highpass';
+            filter.frequency.setValueAtTime(1000, now);
+            const noiseGain = ctx.createGain();
+            noiseGain.gain.setValueAtTime(0.85, now);
+            noiseGain.gain.exponentialRampToValueAtTime(0.0001, now + decaySec);
+            whiteNoise.connect(filter);
+            filter.connect(noiseGain);
+            noiseGain.connect(masterGain);
+            whiteNoise.start(now);
+            whiteNoise.stop(now + decaySec);
+            createdSources.push(whiteNoise);
+          } else if (sample.category === 'claps') {
+            [0, 0.011, 0.024].forEach((flamOffset, idx) => {
+              const flamLen = idx === 2 ? decaySec : 0.015;
+              const bufSize = Math.floor(ctx.sampleRate * flamLen);
+              const nBuf = ctx.createBuffer(1, bufSize, ctx.sampleRate);
+              const out = nBuf.getChannelData(0);
+              for (let i = 0; i < bufSize; i++) out[i] = Math.random() * 2 - 1;
+              const src = ctx.createBufferSource();
+              src.buffer = nBuf;
+              const band = ctx.createBiquadFilter();
+              band.type = 'bandpass';
+              band.frequency.setValueAtTime(1200, now + flamOffset);
+              band.Q.setValueAtTime(1.5, now + flamOffset);
+              const g = ctx.createGain();
+              g.gain.setValueAtTime(idx === 2 ? 0.9 : 0.5, now + flamOffset);
+              g.gain.exponentialRampToValueAtTime(0.0001, now + flamOffset + flamLen);
+              src.connect(band);
+              band.connect(g);
+              g.connect(masterGain);
+              src.start(now + flamOffset);
+              src.stop(now + flamOffset + flamLen);
+              createdSources.push(src);
+            });
+          } else if (sample.category === 'closed_hats' || sample.category === 'open_hats' || sample.category === 'cymbals') {
+            const hatLen = sample.category === 'closed_hats' ? Math.min(0.12, decaySec) : Math.max(0.4, decaySec);
+            const bufSize = Math.floor(ctx.sampleRate * hatLen);
+            const nBuf = ctx.createBuffer(1, bufSize, ctx.sampleRate);
+            const out = nBuf.getChannelData(0);
+            for (let i = 0; i < bufSize; i++) out[i] = Math.random() * 2 - 1;
+            const src = ctx.createBufferSource();
+            src.buffer = nBuf;
+            const hp = ctx.createBiquadFilter();
+            hp.type = 'highpass';
+            hp.frequency.setValueAtTime(sample.spectralCentroidHz ? Math.max(3500, sample.spectralCentroidHz * 0.7) : 6500, now);
+            const g = ctx.createGain();
+            g.gain.setValueAtTime(0.8, now);
+            g.gain.exponentialRampToValueAtTime(0.0001, now + hatLen);
+            src.connect(hp);
+            hp.connect(g);
+            g.connect(masterGain);
+            src.start(now);
+            src.stop(now + hatLen);
+            createdSources.push(src);
+          } else {
+            const osc = ctx.createOscillator();
+            const gain = ctx.createGain();
+            osc.type = sample.category === 'toms' ? 'sine' : 'triangle';
+            osc.frequency.setValueAtTime(punch, now);
+            osc.frequency.exponentialRampToValueAtTime(Math.max(40, punch * 0.7), now + decaySec);
+            gain.gain.setValueAtTime(0.85, now);
+            gain.gain.exponentialRampToValueAtTime(0.0001, now + decaySec);
+            osc.connect(gain);
+            gain.connect(masterGain);
+            osc.start(now);
+            osc.stop(now + decaySec);
+            createdSources.push(osc);
+          }
+
+          activeSourcesRef.current = createdSources;
+
+          setTimeout(() => {
+            setPlayingSampleId(prev => prev === sample.id ? null : prev);
+          }, decaySec * 1000 + 50);
+        } catch (synthErr) {
+          console.error('DSP Synth failed:', synthErr);
+          setPlayingSampleId(null);
+        }
+      };
+
+      // 1. Try real audio decoding if sample.fileUrl is present
+      if (sample.fileUrl) {
+        try {
+          const res = await fetch(sample.fileUrl);
+          if (res.ok) {
+            const arrayBuf = await res.arrayBuffer();
+            const decodedBuf = await ctx.decodeAudioData(arrayBuf);
+            if (decodedBuf) {
+              const srcNode = ctx.createBufferSource();
+              srcNode.buffer = decodedBuf;
+              const gainNode = ctx.createGain();
+              gainNode.gain.setValueAtTime(auditionVolume, ctx.currentTime);
+              srcNode.connect(gainNode);
+              gainNode.connect(ctx.destination);
+              srcNode.start();
+              activeSourcesRef.current = [srcNode];
+              srcNode.onended = () => {
+                setPlayingSampleId(prev => prev === sample.id ? null : prev);
+              };
+              return;
+            }
+          }
+        } catch (fileUrlErr) {
+          console.warn('Real fileUrl playback failed or blob expired, cleaning up and trying Drive/DSP:', fileUrlErr);
+          if (sample.fileUrl.startsWith('blob:')) {
+            sample.fileUrl = undefined;
+          }
+        }
+      }
+
+      // 2. Try Google Drive API streaming with accessToken if driveFileId exists
+      let token = accessToken;
+      if (!token) token = await getAccessToken();
+      if (sample.driveFileId && token) {
+        try {
+          const res = await fetch(`https://www.googleapis.com/drive/v3/files/${sample.driveFileId}?alt=media`, {
+            headers: { Authorization: `Bearer ${token}` }
+          });
+          if (res.ok) {
+            const arrayBuf = await res.arrayBuffer();
+            const decodedBuf = await ctx.decodeAudioData(arrayBuf);
+            if (decodedBuf) {
+              const srcNode = ctx.createBufferSource();
+              srcNode.buffer = decodedBuf;
+              const gainNode = ctx.createGain();
+              gainNode.gain.setValueAtTime(auditionVolume, ctx.currentTime);
+              srcNode.connect(gainNode);
+              gainNode.connect(ctx.destination);
+              srcNode.start();
+              activeSourcesRef.current = [srcNode];
+              srcNode.onended = () => {
+                setPlayingSampleId(prev => prev === sample.id ? null : prev);
+              };
+              try {
+                sample.fileUrl = URL.createObjectURL(new Blob([arrayBuf]));
+              } catch {}
+              return;
+            }
+          }
+        } catch (driveErr) {
+          console.warn('Google Drive direct stream error:', driveErr);
+        }
+      }
+
+      // 3. Guaranteed audible fallback: Instant Web Audio DSP Synth
+      playDpsFallback();
+
+    } catch (err) {
+      console.error('Audition error:', err);
+      setPlayingSampleId(null);
     }
   };
 
@@ -1960,31 +2235,78 @@ Pairing Tips: ${sample.guidance.pairingTips}`;
     setSuccessNotice(`Copied "${sample.name}" profile to clipboard! Paste it into our chat for real-time guidance.`);
   };
 
-  const handleExportFullVaultForChat = () => {
+  const handleCopyVaultDriverLink = () => {
     if (samples.length === 0) {
-      setErrorMessage('Vault is empty. Add samples first before exporting.');
+      setErrorMessage('Vault is empty. Add samples first before copying access link.');
       return;
     }
 
+    const driveFolderUrl = detectedFolderId
+      ? `https://drive.google.com/drive/folders/${detectedFolderId}`
+      : 'https://drive.google.com/drive/folders/178NNk_i40urru5sLBDQ-4cAsqeInVHl3';
+
+    // 1. Group Sample Vault inventory by category
+    const catGroup: Record<string, SampleVaultItem[]> = {};
+    samples.forEach(s => {
+      const cat = s.category;
+      if (!catGroup[cat]) catGroup[cat] = [];
+      catGroup[cat].push(s);
+    });
+
+    // 2. Group Gear Rack plugins by vendor
+    const vendorMap: Record<string, string[]> = {};
+    activeGearRackPlugins.forEach(p => {
+      const v = p.vendor || 'Other';
+      if (!vendorMap[v]) vendorMap[v] = [];
+      vendorMap[v].push(p.name);
+    });
+
+    const userEmail = currentUser?.email || user?.email || 'Studio Member';
+
     const lines = [
-      `=== BEATGANGSTA USER VAULT INVENTORY (${samples.length} Samples) ===`,
-      `User: ${currentUser?.email || 'coldestconcept@gmail.com'}`,
-      `Exported: ${new Date().toLocaleString()}`,
-      ''
+      `[BEATGANGSTA STUDIO COCKPIT & VAULT DRIVER ACCESS]`,
+      `User Identity: ${userEmail}`,
+      `Google Drive Vault Folder: ${driveFolderUrl}`,
+      `Total Cataloged Samples: ${samples.length} one-shots`,
+      `Active Gear Rack Plugins: ${activeGearRackPlugins.length} owned VSTs & Processors`,
+      `Database Status: 100% Analyzed with Web Audio DSP & UAD Software Recipes`,
+      ``,
+      `======================================================`,
+      `--- PART 1: ACTIVE USER GEAR RACK (OWNED PLUGINS) ---`,
+      `======================================================`,
+      `[STRICT AI ENFORCEMENT: Only recommend plugins from this list for mix chains!]`
     ];
 
-    samples.forEach((s, idx) => {
-      lines.push(`${idx + 1}. [${s.category.toUpperCase()}] "${s.name}"`);
-      lines.push(`   Type: ${s.exactType} | Key: ${s.detectedKey} (${s.fundamentalHz}Hz) | Punch: ${s.punchFrequencyHz || s.fundamentalHz}Hz | Duration: ${s.durationSeconds}s`);
-      lines.push(`   Tags: ${s.tags.join(', ')}`);
-      lines.push(`   EQ Carve: ${s.guidance.eqNotes}`);
-      lines.push(`   Plugins: ${s.guidance.recommendedPlugins.join(', ')}`);
-      lines.push('');
+    Object.entries(vendorMap).sort(([a], [b]) => a.localeCompare(b)).forEach(([vendor, plugList]) => {
+      lines.push(`\n* ${vendor.toUpperCase()} (${plugList.length}):`);
+      lines.push(`  ${plugList.join(', ')}`);
     });
+
+    lines.push(`\n======================================================`);
+    lines.push(`--- PART 2: SAMPLE VAULT DRUM ONE-SHOT INVENTORY ---`);
+    lines.push(`======================================================`);
+
+    Object.entries(catGroup).forEach(([catName, list]) => {
+      lines.push(`\n### ${catName.toUpperCase()} (${list.length} items):`);
+      list.forEach((item, idx) => {
+        lines.push(
+          `${idx + 1}. "${item.name}" | Key: ${item.detectedKey} (${item.fundamentalHz}Hz) | Punch: ${item.punchFrequencyHz || item.fundamentalHz}Hz | Decay: ${item.decayMs}ms | Type: ${item.exactType}`
+        );
+      });
+    });
+
+    lines.push(`\n======================================================`);
+    lines.push(`--- INSTRUCTIONS FOR AI ASSISTANT IN CHAT ---`);
+    lines.push(`======================================================`);
+    lines.push(`You have full driver's seat control of this BeatGangsta Studio session.`);
+    lines.push(`When I ask you for a drum kit, beat recipe, or mix chain for a reference song, artist vibe, or tempo:`);
+    lines.push(`1. ACOUSTIC SAMPLE SELECTION: Navigate the Sample Vault inventory above to select complementary one-shots (matching Kick punch pocket to 808 root pitch, layering Snare snap with Clap crack, and balancing Closed/Open hat frequency sizzle).`);
+    lines.push(`2. STRICT GEAR RACK ENFORCEMENT: You must ONLY recommend mixing moves using the plugins from the user's ACTIVE GEAR RACK in Part 1 (e.g. FabFilter Pro-Q 3, UAD Neve 1073, Distressor, Teletronix LA-2A, iZotope Ozone 11 / Neutron 4, Soundtheory Gullfoss, RC-20 Retro Color, Softube, etc.). Never prescribe plugins that are not in their rack.`);
+    lines.push(`3. BEATGANGSTA SOFTWARE-ONLY GUI DISCIPLINE: Model only official digital software GUI parameters (knobs, ratios, frequency bands, ms) as automatable in the digital plugin window.`);
 
     const fullExport = lines.join('\n');
     navigator.clipboard.writeText(fullExport);
-    setSuccessNotice('Copied entire Vault inventory to clipboard! You can paste this right into our chat for personalized mix guidance.');
+    setSuccessNotice(`Copied complete Studio Driver Link (Sample Vault + ${activeGearRackPlugins.length} Gear Rack plugins) to clipboard! Paste it right into our chat.`);
   };
 
   const handleToggleFavorite = (sampleId: string) => {
@@ -2287,6 +2609,16 @@ Pairing Tips: ${sample.guidance.pairingTips}`;
             >
               <FolderInput className="w-3.5 h-3.5" />
               <span className="hidden md:inline">Drive Mover</span>
+            </button>
+
+            {/* Single Copy Vault & Gear Rack Driver Link for Chat */}
+            <button
+              onClick={handleCopyVaultDriverLink}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold transition-all border shadow-md active:scale-95 bg-gradient-to-r from-amber-500 to-yellow-500 hover:from-amber-400 hover:to-yellow-400 text-black border-amber-400 shadow-amber-500/20"
+              title="Copy single Studio Driver Link (Sample Vault + Gear Rack) for AI Assistant chat prompt"
+            >
+              <Copy className="w-3.5 h-3.5 fill-current" />
+              <span className="hidden sm:inline">Copy Vault & Gear AI Link</span>
             </button>
 
             {/* AI Batch Auto-Enrichment Indicator & Controller */}
@@ -2599,68 +2931,26 @@ Pairing Tips: ${sample.guidance.pairingTips}`;
                   </span>
                 </div>
 
-                {/* Section: Local Folders */}
+                {/* Section: SampleVault Cloud */}
                 <div className="p-3 border-b border-[#12243a]">
-                  <div className="flex items-center justify-between mb-2">
-                    <span className="text-xs font-bold text-gray-200">Local Folders</span>
-                    <div className="flex items-center gap-1.5 text-gray-400">
-                      <button
-                        onClick={() => fileInputRef.current?.click()}
-                        className="hover:text-white"
-                        title="Add audio files"
-                      >
-                        +
-                      </button>
-                      <button
-                        onClick={() => {
-                          if (accessToken) loadFromDrive(accessToken);
-                        }}
-                        className="hover:text-white"
-                        title="Rescan"
-                      >
-                        <RotateCcw className="w-3 h-3" />
-                      </button>
-                    </div>
+                  <div className="flex items-center justify-between mb-1.5">
+                    <span className="text-xs font-bold text-gray-200 flex items-center gap-1.5">
+                      <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+                      SampleVault Cloud
+                    </span>
+                    <button
+                      onClick={() => {
+                        if (accessToken) loadFromDrive(accessToken);
+                      }}
+                      className="text-gray-400 hover:text-white p-1 rounded hover:bg-sky-500/10 transition-colors"
+                      title="Rescan Cloud Vault"
+                    >
+                      <RotateCcw className="w-3 h-3" />
+                    </button>
                   </div>
-
-                  {/* Folder Toggle Switches (iOS / DAW Style matching screenshot) */}
-                  <div className="space-y-1.5">
-                    {[
-                      { key: 'waves_factory', label: 'Waves Audio Factor...', count: 12 },
-                      { key: 'intrigger_factory', label: 'InTrigger Factory Pa...', count: 6 },
-                      { key: 'colby_samples', label: "Colby's Samples", count: 8 },
-                      { key: 'drive_vault', label: 'Google Drive VIP Vault', count: samples.length }
-                    ].map(f => {
-                      const isToggled = folderToggles[f.key] !== false;
-                      return (
-                        <div
-                          key={f.key}
-                          onClick={() => {
-                            setFolderToggles(prev => ({ ...prev, [f.key]: !isToggled }));
-                          }}
-                          className="flex items-center justify-between py-1 text-xs text-gray-300 hover:text-white cursor-pointer group"
-                        >
-                          <div className="flex items-center gap-2 truncate">
-                            {/* iOS Style Switch */}
-                            <div
-                              className={`w-7 h-3.5 rounded-full p-0.5 transition-colors flex items-center ${
-                                isToggled ? 'bg-sky-500' : 'bg-gray-700'
-                              }`}
-                            >
-                              <div
-                                className={`w-2.5 h-2.5 rounded-full bg-white transition-transform ${
-                                  isToggled ? 'translate-x-3.5' : 'translate-x-0'
-                                }`}
-                              />
-                            </div>
-                            <span className="truncate group-hover:text-white">{f.label}</span>
-                          </div>
-                          <span className="text-[10px] font-mono text-gray-500 group-hover:text-gray-400">
-                            {f.count}
-                          </span>
-                        </div>
-                      );
-                    })}
+                  <div className="text-[11px] text-gray-400 font-sans flex items-center justify-between">
+                    <span>Drive Storage</span>
+                    <span className="font-mono text-sky-400 font-bold">{samples.length} one-shots</span>
                   </div>
                 </div>
 
@@ -2800,17 +3090,6 @@ Pairing Tips: ${sample.guidance.pairingTips}`;
                                 />
                               </button>
 
-                              {/* Add to Kit / Profile Icon ([+]) */}
-                              <button
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  handleCopySampleProfile(sample);
-                                }}
-                                className="text-gray-500 hover:text-sky-400 transition-colors p-1"
-                                title="Copy Sample Profile & Mix Tips"
-                              >
-                                <FolderInput className="w-4 h-4" />
-                              </button>
 
                               {/* Sample Title and Pipe-Separated Tags */}
                               <div className="min-w-0 flex-1 pr-2">

@@ -7554,6 +7554,8 @@ Provide the exact JSFX plugin name and required sliders/parameters.`;
               <SampleVaultModal
                 theme={theme}
                 user={user}
+                userPlugins={plugins}
+                analogHardware={analogHardware}
                 onClose={() => setShowSampleVault(false)}
                 onUpdateUser={(updated) => {
                   setUser(updated);
