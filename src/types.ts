@@ -517,7 +517,19 @@ export interface XpandPreset {
   is_owned: boolean;
 }
 
-export type DrumOneShotCategory = 'kicks' | '808s' | 'claps' | 'snares' | 'hihats' | 'percs';
+export type DrumOneShotCategory = 
+  | 'kicks' 
+  | '808s' 
+  | 'claps' 
+  | 'snares' 
+  | 'closed_hats' 
+  | 'open_hats' 
+  | 'cymbals' 
+  | 'percs' 
+  | 'toms' 
+  | 'vox' 
+  | 'fx' 
+  | 'hihats'; // backwards compatibility
 
 export interface SampleVaultItem {
   id: string;
@@ -544,5 +556,13 @@ export interface SampleVaultItem {
   driveFolderId?: string;
   uploadedAt: string;
   userEmail: string;
+  // Waves COSMOS Acoustic Attributes
+  spectralCentroidHz?: number;
+  brightnessScore?: number; // 0 - 100 for Cosmos Map X-Axis (Dark -> Bright Sizzle)
+  dynamicsScore?: number;   // 0 - 100 (Punchiness / Crest Factor)
+  spaceScore?: number;      // 0 - 100 for Cosmos Map Y-Axis (Tight / Dry -> Ambient / Tail)
+  isFavorite?: boolean;
+  researchStatus?: 'full_studio_dsp' | 'ai_enhanced';
+  researchSource?: 'dsp_matrix' | 'gemini_batch' | 'gemini_single';
 }
 

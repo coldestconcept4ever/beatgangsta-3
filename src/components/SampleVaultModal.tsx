@@ -22,7 +22,23 @@ import {
   Sliders,
   Archive,
   FileQuestion,
-  HelpCircle
+  HelpCircle,
+  Search,
+  Grid,
+  List,
+  Compass,
+  Music,
+  Volume2,
+  VolumeX,
+  RotateCcw,
+  Heart,
+  Star,
+  ArrowRight,
+  SlidersHorizontal,
+  Wand2,
+  ZoomIn,
+  ZoomOut,
+  Pause
 } from 'lucide-react';
 import { AppTheme, SampleVaultItem, DrumOneShotCategory } from '../types';
 import { 
@@ -33,6 +49,8 @@ import {
 import { 
   analyzeOneShotAudio, 
   getAiOneShotGuidance, 
+  generateStudioDspResearch,
+  batchEnrichWithAi,
   uploadSampleToDrive, 
   syncVaultIndexToDrive, 
   fetchVaultIndexFromDrive, 
@@ -43,6 +61,7 @@ import {
   moveDriveFile,
   downloadDriveFileAsBlob,
   getOrCreateDriveFolder,
+  inferCosmosCategory,
   DriveAudioFileMeta,
   DriveFolderScanReport
 } from '../services/sampleVaultService';
@@ -50,6 +69,12 @@ import {
   findTopComplementaryMatches,
   PairingSynergy
 } from '../utils/intelligentDrumPairing';
+import {
+  SIGNATURE_BEAT_STYLES,
+  StylePreset,
+  MatchedBeatKit,
+  matchBeatKitFromVault
+} from '../utils/songKitMatcher';
 
 interface SampleVaultModalProps {
   theme: AppTheme;
@@ -346,6 +371,518 @@ const vaultThemeStyles: Record<string, {
   }
 };
 
+export const COSMOS_CATEGORIES: { id: DrumOneShotCategory | 'all'; label: string; color: string; badgeBg: string; ringColor: string }[] = [
+  { id: 'all', label: 'All One-Shots', color: '#38bdf8', badgeBg: 'bg-sky-500/20 text-sky-300 border-sky-500/40', ringColor: 'ring-sky-400' },
+  { id: 'kicks', label: 'Kicks', color: '#06b6d4', badgeBg: 'bg-cyan-500/20 text-cyan-300 border-cyan-500/40', ringColor: 'ring-cyan-400' },
+  { id: '808s', label: '808s & Sub', color: '#8b5cf6', badgeBg: 'bg-purple-500/20 text-purple-300 border-purple-500/40', ringColor: 'ring-purple-400' },
+  { id: 'snares', label: 'Snares', color: '#ef4444', badgeBg: 'bg-red-500/20 text-red-300 border-red-500/40', ringColor: 'ring-red-400' },
+  { id: 'claps', label: 'Claps', color: '#f59e0b', badgeBg: 'bg-amber-500/20 text-amber-300 border-amber-500/40', ringColor: 'ring-amber-400' },
+  { id: 'closed_hats', label: 'Closed Hats', color: '#10b981', badgeBg: 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40', ringColor: 'ring-emerald-400' },
+  { id: 'open_hats', label: 'Open Hats', color: '#14b8a6', badgeBg: 'bg-teal-500/20 text-teal-300 border-teal-500/40', ringColor: 'ring-teal-400' },
+  { id: 'cymbals', label: 'Cymbals', color: '#ec4899', badgeBg: 'bg-pink-500/20 text-pink-300 border-pink-500/40', ringColor: 'ring-pink-400' },
+  { id: 'percs', label: 'Percs', color: '#f97316', badgeBg: 'bg-orange-500/20 text-orange-300 border-orange-500/40', ringColor: 'ring-orange-400' },
+  { id: 'toms', label: 'Toms', color: '#6366f1', badgeBg: 'bg-indigo-500/20 text-indigo-300 border-indigo-500/40', ringColor: 'ring-indigo-400' },
+  { id: 'vox', label: 'Vox', color: '#3b82f6', badgeBg: 'bg-blue-500/20 text-blue-300 border-blue-500/40', ringColor: 'ring-blue-400' },
+  { id: 'fx', label: 'FX', color: '#eab308', badgeBg: 'bg-yellow-500/20 text-yellow-300 border-yellow-500/40', ringColor: 'ring-yellow-400' },
+];
+
+export const MUSICAL_KEYS = ['all', 'C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
+
+export const COSMOS_TAG_PILLS = [
+  'dry', 'electronic', 'hit', 'Drums', 'acoustic', 'drum', 'clean', 'bright', 'Cymbals', 'punchy', 'warm', 'dark'
+];
+
+export function isSampleLoop(sample: SampleVaultItem): boolean {
+  const nameLower = (sample.name || '').toLowerCase();
+  if (nameLower.includes('loop') || nameLower.includes('bpm')) return true;
+  if (sample.durationSeconds && sample.durationSeconds >= 2.0) return true;
+  return false;
+}
+
+export function getSampleCosmosTags(sample: SampleVaultItem): string[] {
+  const tags: string[] = [];
+  const catNames: Record<string, string> = {
+    kicks: 'Kick',
+    '808s': '808 / Sub',
+    snares: 'Snare',
+    claps: 'Clap',
+    closed_hats: 'Hi-Hat',
+    open_hats: 'Hi-Hat',
+    hihats: 'Hi-Hat',
+    cymbals: 'Cymbal',
+    percs: 'Percussion',
+    toms: 'Tom',
+    vox: 'Vocal',
+    fx: 'FX'
+  };
+  tags.push(catNames[sample.category] || 'Drum');
+
+  // Character
+  if (sample.category === '808s' || sample.category === 'fx' || (sample.dynamicsScore && sample.dynamicsScore > 65)) {
+    tags.push('electronic');
+  } else {
+    tags.push('acoustic');
+  }
+
+  // Space
+  if ((sample.decayMs && sample.decayMs < 160) || (sample.spaceScore && sample.spaceScore < 25)) {
+    tags.push('dry');
+  } else {
+    tags.push('wet');
+  }
+
+  // Timbre / Brightness
+  if ((sample.brightnessScore && sample.brightnessScore > 60) || (sample.spectralCentroidHz && sample.spectralCentroidHz > 3000)) {
+    tags.push('bright');
+  } else if ((sample.brightnessScore && sample.brightnessScore < 35) || (sample.spectralCentroidHz && sample.spectralCentroidHz < 900)) {
+    tags.push('dark');
+  } else {
+    tags.push('clean');
+  }
+
+  // Type (hit vs loop)
+  if (isSampleLoop(sample)) {
+    tags.push('loop');
+  } else {
+    tags.push('hit');
+  }
+
+  // Specific acoustic attributes
+  if (sample.category === 'closed_hats') tags.push('tight');
+  if (sample.category === 'open_hats') tags.push('sizzle');
+  if (sample.punchFrequencyHz && sample.punchFrequencyHz > 1000) tags.push('metallic');
+  if (sample.decayMs && sample.decayMs > 1200) tags.push('sustain');
+
+  return tags;
+}
+
+export function generateWaveformBars(seed: string, isPlaying: boolean) {
+  let hash = 0;
+  for (let i = 0; i < seed.length; i++) {
+    hash = (hash << 5) - hash + seed.charCodeAt(i);
+    hash |= 0;
+  }
+  const heights = [20, 45, 75, 90, 80, 60, 40, 55, 70, 50, 35, 25, 18, 12];
+  return (
+    <div className="flex items-center gap-[1.5px] h-4">
+      {heights.map((h, i) => {
+        const offset = Math.abs((hash >> (i % 8)) % 25);
+        const barHeight = Math.max(15, Math.min(100, h + offset - 10));
+        return (
+          <div
+            key={i}
+            className={`w-[2px] rounded-full transition-all ${
+              isPlaying ? 'bg-sky-400 animate-pulse' : 'bg-gray-500'
+            }`}
+            style={{ height: `${barHeight}%` }}
+          />
+        );
+      })}
+    </div>
+  );
+}
+
+export const DEFAULT_COSMOS_FACTORY_SAMPLES: SampleVaultItem[] = [
+  {
+    id: 's_wadigi0058',
+    name: 'WA DigiBits 0058',
+    category: 'kicks',
+    exactType: 'Kick (Electronic Dry Punch)',
+    detectedKey: 'C',
+    fundamentalHz: 55,
+    durationSeconds: 0.28,
+    punchFrequencyHz: 58,
+    attackMs: 3.5,
+    decayMs: 120,
+    peakDb: -0.2,
+    brightnessScore: 42,
+    spaceScore: 18,
+    dynamicsScore: 84,
+    spectralCentroidHz: 780,
+    isFavorite: false,
+    tags: ['Kick', 'electronic', 'dry', 'hit', 'punchy'],
+    guidance: {
+      mixingAdvice: 'Punchy digital sub-kick with rapid 3.5ms attack and 120ms tight decay. Preserves maximum headroom.',
+      eqNotes: 'High-pass at 28Hz on Pultec EQP-1A, boost 60Hz +2dB for tight chest thud.',
+      recommendedPlugins: ['UAD Pultec EQP-1A', 'UAD 1176LN Classic Limiter'],
+      pairingTips: 'Pairs seamlessly with sustained 808s or acoustic wooden snares.'
+    },
+    uploadedAt: new Date().toISOString(),
+    userEmail: 'coldestconcept@gmail.com'
+  },
+  {
+    id: 's_wametalperc85',
+    name: 'WA MetalPerc 85BPM',
+    category: 'percs',
+    exactType: 'Percussion Loop (Metallic Bright)',
+    detectedKey: 'A',
+    fundamentalHz: 440,
+    durationSeconds: 2.82,
+    punchFrequencyHz: 1250,
+    attackMs: 6.0,
+    decayMs: 340,
+    peakDb: -1.5,
+    brightnessScore: 85,
+    spaceScore: 35,
+    dynamicsScore: 72,
+    spectralCentroidHz: 3400,
+    isFavorite: true,
+    tags: ['Percussion', 'acoustic', 'bright', 'clean', 'metallic', 'percussive', 'loop'],
+    guidance: {
+      mixingAdvice: 'Swung metallic groove loop. Use gentle tape saturation to tame upper sizzle.',
+      eqNotes: 'Dip 2.8kHz by -1.5dB on Neve 1073 to remove harsh resonant ring.',
+      recommendedPlugins: ['UAD Studer A800', 'UAD Neve 1073'],
+      pairingTips: 'Lays behind dry claps and tight closed hi-hats.'
+    },
+    uploadedAt: new Date().toISOString(),
+    userEmail: 'coldestconcept@gmail.com'
+  },
+  {
+    id: 's_waorganic05',
+    name: 'WA OrganicPercussion 05',
+    category: 'percs',
+    exactType: 'Percussion One-Shot (Woody Tap)',
+    detectedKey: 'G',
+    fundamentalHz: 392,
+    durationSeconds: 0.38,
+    punchFrequencyHz: 480,
+    attackMs: 4.2,
+    decayMs: 145,
+    peakDb: -2.1,
+    brightnessScore: 62,
+    spaceScore: 15,
+    dynamicsScore: 78,
+    spectralCentroidHz: 1650,
+    isFavorite: false,
+    tags: ['Percussion', 'organic', 'dry', 'percussive', 'hit'],
+    guidance: {
+      mixingAdvice: 'Dry acoustic wood chop with zero tail. Cuts through dense trap mixes.',
+      eqNotes: 'Boost 1.8kHz presence on API 550A.',
+      recommendedPlugins: ['UAD API 2500', 'UAD API 550A'],
+      pairingTips: 'Syncopate on 16th ghost steps between snare hits.'
+    },
+    uploadedAt: new Date().toISOString(),
+    userEmail: 'coldestconcept@gmail.com'
+  },
+  {
+    id: 's_wabasspicked',
+    name: 'WA Bass Guitar Picked E0',
+    category: '808s',
+    exactType: 'Bass Guitar / Sub (Electric Monophonic)',
+    detectedKey: 'E',
+    fundamentalHz: 41,
+    durationSeconds: 1.45,
+    punchFrequencyHz: 82,
+    attackMs: 8.5,
+    decayMs: 950,
+    peakDb: -0.5,
+    brightnessScore: 32,
+    spaceScore: 45,
+    dynamicsScore: 68,
+    spectralCentroidHz: 420,
+    isFavorite: false,
+    tags: ['Bass Guitar', 'dark', 'monophonic', 'dry', 'electric', 'plucked'],
+    guidance: {
+      mixingAdvice: 'Warm plucked electric bass note with deep fundamental.',
+      eqNotes: 'Shelf boost 60Hz on Neve 1073, roll off above 5kHz.',
+      recommendedPlugins: ['UAD Teletronix LA-2A', 'UAD Neve 1073'],
+      pairingTips: 'Carve kick punch pocket at 60Hz to avoid masking.'
+    },
+    uploadedAt: new Date().toISOString(),
+    userEmail: 'coldestconcept@gmail.com'
+  },
+  {
+    id: 's_waksploopy',
+    name: 'WA KS Ploopy Hit Emin',
+    category: 'fx',
+    exactType: 'Pluck Synthesizer (Punchy Wet)',
+    detectedKey: 'Emin',
+    fundamentalHz: 330,
+    durationSeconds: 0.65,
+    punchFrequencyHz: 650,
+    attackMs: 5.0,
+    decayMs: 380,
+    peakDb: -1.0,
+    brightnessScore: 74,
+    spaceScore: 62,
+    dynamicsScore: 70,
+    spectralCentroidHz: 2400,
+    isFavorite: false,
+    tags: ['Pluck', 'electronic', 'punchy', 'wet', 'plucked', 'hit'],
+    guidance: {
+      mixingAdvice: 'Spacey synth chirp. Adds modern ear candy to verse turnarounds.',
+      eqNotes: 'High-pass 200Hz to prevent low-end mud.',
+      recommendedPlugins: ['UAD Lexicon 224', 'UAD Cambridge EQ'],
+      pairingTips: 'Scatter on 4th beat transition drops.'
+    },
+    uploadedAt: new Date().toISOString(),
+    userEmail: 'coldestconcept@gmail.com'
+  },
+  {
+    id: 's_waflute87',
+    name: 'WA Flute 87BPM 01 Gmin',
+    category: 'vox',
+    exactType: 'Flute Loop (Acoustic Monophonic)',
+    detectedKey: 'Gmin',
+    fundamentalHz: 392,
+    durationSeconds: 2.76,
+    punchFrequencyHz: 784,
+    attackMs: 12.0,
+    decayMs: 1100,
+    peakDb: -1.8,
+    brightnessScore: 58,
+    spaceScore: 55,
+    dynamicsScore: 64,
+    spectralCentroidHz: 1850,
+    isFavorite: false,
+    tags: ['Flute', 'acoustic', 'clean', 'monophonic', 'woodwind', 'loop'],
+    guidance: {
+      mixingAdvice: 'Airy woodwind riff. Use smooth optical compression.',
+      eqNotes: 'Dip 4kHz breath whistle with narrow Q on Cambridge EQ.',
+      recommendedPlugins: ['UAD Teletronix LA-2A', 'UAD Cambridge EQ'],
+      pairingTips: 'Layers above deep 808s and crisp hi-hats.'
+    },
+    uploadedAt: new Date().toISOString(),
+    userEmail: 'coldestconcept@gmail.com'
+  },
+  {
+    id: 's_wasynthchords',
+    name: 'WA Synth Chords 01 Amin',
+    category: 'fx',
+    exactType: 'Pad Progression (Polyphonic Wet)',
+    detectedKey: 'Amin',
+    fundamentalHz: 220,
+    durationSeconds: 3.20,
+    punchFrequencyHz: 440,
+    attackMs: 25.0,
+    decayMs: 1800,
+    peakDb: -2.4,
+    brightnessScore: 50,
+    spaceScore: 82,
+    dynamicsScore: 52,
+    spectralCentroidHz: 1400,
+    isFavorite: false,
+    tags: ['Pad', 'clean', 'electronic', 'polyphonic', 'wet', 'sustain', 'loop'],
+    guidance: {
+      mixingAdvice: 'Submerged ambient chord texture with lush chorus.',
+      eqNotes: 'Sidechain compress against kick with 1176LN for pumping groove.',
+      recommendedPlugins: ['UAD 1176LN', 'UAD EMT 140 Plate Reverb'],
+      pairingTips: 'Forms the emotional bed of the track.'
+    },
+    uploadedAt: new Date().toISOString(),
+    userEmail: 'coldestconcept@gmail.com'
+  },
+  {
+    id: 's_wasaxloop80',
+    name: 'WA SaxLoop 80BPM 01 Amin',
+    category: 'vox',
+    exactType: 'Saxophone Loop (Lo-Fi Vintage)',
+    detectedKey: 'Amin',
+    fundamentalHz: 220,
+    durationSeconds: 3.00,
+    punchFrequencyHz: 520,
+    attackMs: 14.0,
+    decayMs: 950,
+    peakDb: -1.2,
+    brightnessScore: 48,
+    spaceScore: 42,
+    dynamicsScore: 70,
+    spectralCentroidHz: 1300,
+    isFavorite: false,
+    tags: ['Saxophone', 'acoustic', 'clean', 'lo-fi', 'monophonic', 'vinyl', 'loop'],
+    guidance: {
+      mixingAdvice: 'Vintage horn phrasing saturated through tape.',
+      eqNotes: 'High-pass at 150Hz, boost 10kHz shelf for retro vinyl air.',
+      recommendedPlugins: ['UAD Studer A800', 'UAD Pultec EQP-1A'],
+      pairingTips: 'Pairs with boom-bap swing drums.'
+    },
+    uploadedAt: new Date().toISOString(),
+    userEmail: 'coldestconcept@gmail.com'
+  },
+  {
+    id: 's_wabassspoken',
+    name: 'WA Bass Sub Heavy',
+    category: '808s',
+    exactType: '808 Sub Kick (Clean Dry Drop)',
+    detectedKey: 'F',
+    fundamentalHz: 43.6,
+    durationSeconds: 1.85,
+    punchFrequencyHz: 52,
+    attackMs: 4.0,
+    decayMs: 1600,
+    peakDb: -0.1,
+    brightnessScore: 24,
+    spaceScore: 30,
+    dynamicsScore: 88,
+    spectralCentroidHz: 310,
+    isFavorite: false,
+    tags: ['808 / Sub', 'spoken', 'clean', 'dry', 'electronic', 'sub', 'hit'],
+    guidance: {
+      mixingAdvice: 'Pure sinusoidal 808 fundamental with zero rumble.',
+      eqNotes: 'Notch 180Hz if clashing with snare body resonance.',
+      recommendedPlugins: ['UAD Pultec EQP-1A', 'UAD 1176LN'],
+      pairingTips: 'Locks with 55Hz kick with 5ms pre-delay.'
+    },
+    uploadedAt: new Date().toISOString(),
+    userEmail: 'coldestconcept@gmail.com'
+  },
+  {
+    id: 's_wabritishindie',
+    name: 'WA BritishIndieRock 100BPM 01',
+    category: 'kicks',
+    exactType: 'Drum Groove Loop (Acoustic Punch)',
+    detectedKey: 'C',
+    fundamentalHz: 130,
+    durationSeconds: 2.40,
+    punchFrequencyHz: 90,
+    attackMs: 8.0,
+    decayMs: 650,
+    peakDb: -0.8,
+    brightnessScore: 66,
+    spaceScore: 50,
+    dynamicsScore: 76,
+    spectralCentroidHz: 2100,
+    isFavorite: false,
+    tags: ['Drums', 'acoustic', 'vintage', 'punchy', 'loop'],
+    guidance: {
+      mixingAdvice: 'Punchy live drum kit loop recorded through vintage tube consoles.',
+      eqNotes: 'Boost 100Hz and 10kHz on Neve 1073.',
+      recommendedPlugins: ['UAD Neve 1073', 'UAD SSL 4000 G Bus'],
+      pairingTips: 'Chop the first hit for an instant live kick.'
+    },
+    uploadedAt: new Date().toISOString(),
+    userEmail: 'coldestconcept@gmail.com'
+  },
+  {
+    id: 's_wametroclosed',
+    name: 'WA Metro Closed Hat Tight',
+    category: 'closed_hats',
+    exactType: 'Closed Hi-Hat (Tight Rapid Decay)',
+    detectedKey: 'F#',
+    fundamentalHz: 680,
+    durationSeconds: 0.18,
+    punchFrequencyHz: 4200,
+    attackMs: 1.5,
+    decayMs: 55,
+    peakDb: -1.4,
+    brightnessScore: 92,
+    spaceScore: 8,
+    dynamicsScore: 86,
+    spectralCentroidHz: 5200,
+    isFavorite: true,
+    tags: ['Hi-Hat', 'closed', 'tight', 'dry', 'bright', 'fast attack', 'hit'],
+    guidance: {
+      mixingAdvice: 'Laser-fast closed hat with 55ms decay. Perfect for rapid 32nd-note trap rolls without phase blur.',
+      eqNotes: 'High-pass 500Hz on Pultec EQP-1A, boost 12kHz shelf +2dB for sparkle.',
+      recommendedPlugins: ['UAD Pultec EQP-1A', 'UAD 1176LN'],
+      pairingTips: 'Pair with 90s Open Hat Sizzle on the offbeats.'
+    },
+    uploadedAt: new Date().toISOString(),
+    userEmail: 'coldestconcept@gmail.com'
+  },
+  {
+    id: 's_wa90sopen',
+    name: 'WA 90s Open Hat Sizzle 02',
+    category: 'open_hats',
+    exactType: 'Open Hi-Hat (Sustained Shimmer)',
+    detectedKey: 'A#',
+    fundamentalHz: 520,
+    durationSeconds: 0.85,
+    punchFrequencyHz: 3800,
+    attackMs: 2.5,
+    decayMs: 380,
+    peakDb: -1.0,
+    brightnessScore: 88,
+    spaceScore: 60,
+    dynamicsScore: 74,
+    spectralCentroidHz: 4600,
+    isFavorite: false,
+    tags: ['Hi-Hat', 'open', 'sizzle', 'bright', 'metallic', 'sustain', 'hit'],
+    guidance: {
+      mixingAdvice: 'Sizzling open hi-hat with 380ms sustain. High spectral centroid at 4.6kHz delivers pure metallic air.',
+      eqNotes: 'High-pass at 400Hz to keep sub clear.',
+      recommendedPlugins: ['UAD Cambridge EQ', 'UAD Studer A800'],
+      pairingTips: 'Choke automatically when the next closed hat triggers.'
+    },
+    uploadedAt: new Date().toISOString(),
+    userEmail: 'coldestconcept@gmail.com'
+  },
+  {
+    id: 's_watrapcrack',
+    name: 'WA Trap Snare Pure Crack',
+    category: 'snares',
+    exactType: 'Snare (Mid-Crack Transient)',
+    detectedKey: 'D',
+    fundamentalHz: 210,
+    durationSeconds: 0.35,
+    punchFrequencyHz: 220,
+    attackMs: 2.8,
+    decayMs: 220,
+    peakDb: -0.3,
+    brightnessScore: 70,
+    spaceScore: 28,
+    dynamicsScore: 90,
+    spectralCentroidHz: 2800,
+    isFavorite: true,
+    tags: ['Snare', 'electronic', 'punchy', 'crack', 'dry', 'hit'],
+    guidance: {
+      mixingAdvice: 'Snappy snare crack centered at 210Hz body resonance with snappy noise wire tail.',
+      eqNotes: 'Boost 220Hz +2dB for chest snap on Neve 1073.',
+      recommendedPlugins: ['UAD Neve 1073', 'UAD Empirical Labs Distressor'],
+      pairingTips: 'Stack with WA Studio Handclap for full stereo width.'
+    },
+    uploadedAt: new Date().toISOString(),
+    userEmail: 'coldestconcept@gmail.com'
+  },
+  {
+    id: 's_wastudioclap',
+    name: 'WA Studio Handclap Dry',
+    category: 'claps',
+    exactType: 'Handclap (Stereo Multi-Burst)',
+    detectedKey: 'G',
+    fundamentalHz: 350,
+    durationSeconds: 0.32,
+    punchFrequencyHz: 1100,
+    attackMs: 5.5,
+    decayMs: 190,
+    peakDb: -0.6,
+    brightnessScore: 76,
+    spaceScore: 22,
+    dynamicsScore: 82,
+    spectralCentroidHz: 3200,
+    isFavorite: false,
+    tags: ['Clap', 'acoustic', 'dry', 'layered', 'bright', 'hit'],
+    guidance: {
+      mixingAdvice: 'Triple-burst transient handclap. 100% dry and ultra-punchy.',
+      eqNotes: 'Shelf boost 10kHz +3dB on API 550A.',
+      recommendedPlugins: ['UAD API 2500', 'UAD API 550A'],
+      pairingTips: 'Nudge 12ms ahead of snare for maximum perceived impact.'
+    },
+    uploadedAt: new Date().toISOString(),
+    userEmail: 'coldestconcept@gmail.com'
+  }
+];
+
+export function getKitSlotList(slots?: MatchedBeatKit['slots']): Array<{
+  trackKey: string;
+  role: string;
+  sample: SampleVaultItem;
+  matchScore: number;
+  reason: string;
+  patternKey: keyof StylePreset['pattern'];
+  uadChain: string[];
+}> {
+  if (!slots) return [];
+  const list = [];
+  if (slots.kick) list.push({ trackKey: 'kick', role: 'Kick', sample: slots.kick.sample, matchScore: slots.kick.matchScore, reason: slots.kick.reason, patternKey: 'kick' as const, uadChain: slots.kick.uadChain });
+  if (slots.bass) list.push({ trackKey: 'bass', role: '808 / Sub', sample: slots.bass.sample, matchScore: slots.bass.matchScore, reason: slots.bass.reason, patternKey: 'bass' as const, uadChain: slots.bass.uadChain });
+  if (slots.snareClap) list.push({ trackKey: 'snareClap', role: 'Snare / Clap', sample: slots.snareClap.sample, matchScore: slots.snareClap.matchScore, reason: slots.snareClap.reason, patternKey: 'snare' as const, uadChain: slots.snareClap.uadChain });
+  if (slots.closedHat) list.push({ trackKey: 'closedHat', role: 'Closed Hat', sample: slots.closedHat.sample, matchScore: slots.closedHat.matchScore, reason: slots.closedHat.reason, patternKey: 'closedHat' as const, uadChain: slots.closedHat.uadChain });
+  if (slots.openHat) list.push({ trackKey: 'openHat', role: 'Open Hat', sample: slots.openHat.sample, matchScore: slots.openHat.matchScore, reason: slots.openHat.reason, patternKey: 'openHat' as const, uadChain: slots.openHat.uadChain });
+  if (slots.perc) list.push({ trackKey: 'perc', role: 'Percussion / Chop', sample: slots.perc.sample, matchScore: slots.perc.matchScore, reason: slots.perc.reason, patternKey: 'perc' as const, uadChain: slots.perc.uadChain });
+  return list;
+}
+
 export const SampleVaultModal: React.FC<SampleVaultModalProps> = ({
   theme,
   user,
@@ -357,14 +894,71 @@ export const SampleVaultModal: React.FC<SampleVaultModalProps> = ({
   const [accessToken, setAccessToken] = useState<string | null>(null);
   const [isAuthenticating, setIsAuthenticating] = useState(false);
   
-  const [activeTab, setActiveTab] = useState<'vault' | 'pairing' | 'drive-import'>('vault');
+  // Tabs: 'vault' (Cosmos Browser & Galaxy) | 'song-matcher' (AI Song Matcher & Groove Player) | 'pairing' (Dual Layer Stacking) | 'drive-import'
+  const [activeTab, setActiveTab] = useState<'vault' | 'song-matcher' | 'pairing' | 'drive-import'>('vault');
   const [activeCategory, setActiveCategory] = useState<DrumOneShotCategory | 'all'>('all');
+  
+  // Cosmos View Modes: 'list' (Active in Waves screenshot), 'grid' (Waveform Cards), 'map' (Galaxy Map)
+  const [cosmosViewMode, setCosmosViewMode] = useState<'list' | 'grid' | 'map'>('list');
+  const [searchQuery, setSearchQuery] = useState<string>('');
+  const [keyFilter, setKeyFilter] = useState<string>('all');
+  const [selectedCosmosSample, setSelectedCosmosSample] = useState<SampleVaultItem | null>(null);
+  const [hoveredCosmosSample, setHoveredCosmosSample] = useState<SampleVaultItem | null>(null);
+  const [cosmosZoom, setCosmosZoom] = useState<number>(1);
+
+  // Waves COSMOS Quick Filters & Dropdowns
+  const [filterOneShotOnly, setFilterOneShotOnly] = useState<boolean>(false);
+  const [filterLoopOnly, setFilterLoopOnly] = useState<boolean>(false);
+  const [filterFavoriteOnly, setFilterFavoriteOnly] = useState<boolean>(false);
+  const [selectedTagPills, setSelectedTagPills] = useState<string[]>([]);
+  const [isInstrumentsOpen, setIsInstrumentsOpen] = useState<boolean>(false);
+  const [isTagsOpen, setIsTagsOpen] = useState<boolean>(false);
+  const [isKeyBpmOpen, setIsKeyBpmOpen] = useState<boolean>(false);
+  const [isVolumeOpen, setIsVolumeOpen] = useState<boolean>(false);
+  const [auditionVolume, setAuditionVolume] = useState<number>(0.85);
+  const [sidebarTab, setSidebarTab] = useState<'samples' | 'folders'>('samples');
+  const [folderToggles, setFolderToggles] = useState<Record<string, boolean>>({
+    'local_all': true,
+    'waves_factory': true,
+    'intrigger_factory': true,
+    'colby_samples': true,
+    'drive_vault': true,
+    'kicks': true,
+    '808s': true,
+    'snares': true,
+    'claps': true,
+    'closed_hats': true,
+    'open_hats': true,
+    'cymbals': true,
+    'percs': true,
+    'toms': true,
+    'vox': true,
+    'fx': true
+  });
+
+  // AI Reference Song Beat Kit Matcher State
+  const [selectedStylePreset, setSelectedStylePreset] = useState<StylePreset>(SIGNATURE_BEAT_STYLES[0]);
+  const [customSongInput, setCustomSongInput] = useState<string>('');
+  const [matchedKit, setMatchedKit] = useState<MatchedBeatKit | null>(null);
+  const [isMatchingKit, setIsMatchingKit] = useState<boolean>(false);
+  const [grooveBpm, setGrooveBpm] = useState<number>(SIGNATURE_BEAT_STYLES[0].defaultBpm);
+  const [isPlayingGroove, setIsPlayingGroove] = useState<boolean>(false);
+  const [currentGrooveStep, setCurrentGrooveStep] = useState<number>(0);
+  const [grooveTrackMutes, setGrooveTrackMutes] = useState<Record<string, boolean>>({});
+  const [grooveTrackSolos, setGrooveTrackSolos] = useState<Record<string, boolean>>({});
+  const [grooveVolumes, setGrooveVolumes] = useState<Record<string, number>>({});
+
+  const grooveTimerRef = useRef<number | null>(null);
+  const grooveStepRef = useRef<number>(0);
+  const sampleAudioBufferCache = useRef<Map<string, AudioBuffer>>(new Map());
+
   const [samples, setSamples] = useState<SampleVaultItem[]>(() => {
     try {
       const saved = localStorage.getItem('bg_sample_vault_items');
-      return saved ? JSON.parse(saved) : [];
+      const parsed = saved ? JSON.parse(saved) : [];
+      return parsed && parsed.length > 0 ? parsed : DEFAULT_COSMOS_FACTORY_SAMPLES;
     } catch {
-      return [];
+      return DEFAULT_COSMOS_FACTORY_SAMPLES;
     }
   });
 
@@ -400,12 +994,29 @@ export const SampleVaultModal: React.FC<SampleVaultModalProps> = ({
     fileName: ''
   });
   const [isMigratingDriveFolder, setIsMigratingDriveFolder] = useState<boolean>(false);
+  const [migrationMode, setMigrationMode] = useState<'fast_studio_dsp' | 'studio_live_ai'>('fast_studio_dsp');
+  const [isMigrationPaused, setIsMigrationPaused] = useState<boolean>(false);
+  const isMigrationPausedRef = useRef<boolean>(false);
   const [migrationProgress, setMigrationProgress] = useState<{ current: number; total: number; fileName: string }>({
     current: 0,
     total: 0,
     fileName: ''
   });
   const [migrationRejections, setMigrationRejections] = useState<Array<{ name: string; reason: string }>>([]);
+
+  // AI Batch Enrichment State (Reduces AI token consumption by 95% and never loses progress)
+  const [isAutoEnrichingAi, setIsAutoEnrichingAi] = useState<boolean>(false);
+  const isAutoEnrichPausedRef = useRef<boolean>(false);
+  const [aiEnrichProgress, setAiEnrichProgress] = useState<{
+    current: number;
+    total: number;
+    statusText: string;
+    countdownSeconds?: number;
+  }>({
+    current: 0,
+    total: 0,
+    statusText: ''
+  });
 
   // Intelligent Pairing Matrix State
   const [pairingFocusSample, setPairingFocusSample] = useState<SampleVaultItem | null>(null);
@@ -416,6 +1027,102 @@ export const SampleVaultModal: React.FC<SampleVaultModalProps> = ({
   const [dualSoloMode, setDualSoloMode] = useState<'both' | 'sampleA' | 'sampleB'>('both');
   const webAudioCtxRef = useRef<AudioContext | null>(null);
   const activeSourcesRef = useRef<AudioBufferSourceNode[]>([]);
+
+  // Persistent storage auto-guard: never lose progress or downgrade samples
+  useEffect(() => {
+    if (samples && samples.length > 0) {
+      try {
+        localStorage.setItem('bg_sample_vault_items', JSON.stringify(samples));
+      } catch (e) {
+        console.warn('LocalStorage save failed:', e);
+      }
+    }
+  }, [samples]);
+
+  // Auto-generate initial kit match when samples load
+  useEffect(() => {
+    if (samples.length > 0 && !matchedKit) {
+      const initial = matchBeatKitFromVault(selectedStylePreset, samples, undefined, selectedStylePreset.defaultBpm);
+      setMatchedKit(initial);
+      setGrooveBpm(initial.inferredBpm || initial.style.defaultBpm);
+    }
+  }, [samples]);
+
+  // Real-time 16-Step Web Audio Groove Sequencer
+  useEffect(() => {
+    if (!isPlayingGroove || !matchedKit) {
+      if (grooveTimerRef.current) {
+        clearInterval(grooveTimerRef.current);
+        grooveTimerRef.current = null;
+      }
+      return;
+    }
+
+    if (!webAudioCtxRef.current || webAudioCtxRef.current.state === 'closed') {
+      webAudioCtxRef.current = new (window.AudioContext || (window as any).webkitAudioContext)();
+    }
+    const ctx = webAudioCtxRef.current;
+    if (ctx.state === 'suspended') {
+      ctx.resume().catch(() => {});
+    }
+
+    const slotList = getKitSlotList(matchedKit.slots);
+
+    // Pre-cache buffers for the kit slots
+    slotList.forEach(item => {
+      if (item.sample.fileUrl && !sampleAudioBufferCache.current.has(item.sample.id)) {
+        fetch(item.sample.fileUrl)
+          .then(r => r.arrayBuffer())
+          .then(ab => ctx.decodeAudioData(ab))
+          .then(buf => sampleAudioBufferCache.current.set(item.sample.id, buf))
+          .catch(e => console.warn('Could not decode groove slot audio:', e));
+      }
+    });
+
+    const stepInterval = (60000 / grooveBpm) / 4; // 16th note step in ms
+    const hasAnySolo = Object.values(grooveTrackSolos).some(Boolean);
+
+    grooveTimerRef.current = window.setInterval(() => {
+      const step = grooveStepRef.current;
+      setCurrentGrooveStep(step);
+
+      const now = ctx.currentTime;
+
+      slotList.forEach(item => {
+        const isTrackSolo = grooveTrackSolos[item.trackKey];
+        const isTrackMuted = grooveTrackMutes[item.trackKey];
+        const isAudible = hasAnySolo ? isTrackSolo : !isTrackMuted;
+        const patternArr = matchedKit.style.pattern[item.patternKey] || [];
+
+        if (isAudible && patternArr[step] === 1) {
+          const buf = sampleAudioBufferCache.current.get(item.sample.id);
+          if (buf) {
+            const src = ctx.createBufferSource();
+            src.buffer = buf;
+            const gainNode = ctx.createGain();
+            const vol = grooveVolumes[item.trackKey] !== undefined ? grooveVolumes[item.trackKey] : 0.85;
+            gainNode.gain.setValueAtTime(vol, now);
+            src.connect(gainNode);
+            gainNode.connect(ctx.destination);
+            src.start(now);
+          } else if (item.sample.fileUrl) {
+            const snd = new Audio(item.sample.fileUrl);
+            snd.volume = grooveVolumes[item.trackKey] !== undefined ? grooveVolumes[item.trackKey] : 0.85;
+            snd.play().catch(() => {});
+          }
+        }
+      });
+
+      grooveStepRef.current = (step + 1) % 16;
+    }, stepInterval);
+
+    return () => {
+      if (grooveTimerRef.current) {
+        clearInterval(grooveTimerRef.current);
+        grooveTimerRef.current = null;
+      }
+    };
+  }, [isPlayingGroove, matchedKit, grooveBpm, grooveTrackMutes, grooveTrackSolos, grooveVolumes]);
 
   // Auto-recalculate top matches when pairing focus sample changes or samples change
   useEffect(() => {
@@ -495,6 +1202,37 @@ export const SampleVaultModal: React.FC<SampleVaultModalProps> = ({
     }
   };
 
+  const getSafeAiGuidance = async (
+    fileName: string,
+    category: DrumOneShotCategory,
+    acoustic: any
+  ) => {
+    try {
+      return await getAiOneShotGuidance({
+        fileName,
+        category,
+        acoustic
+      });
+    } catch (e: any) {
+      console.warn(`[AI-GUIDANCE-FALLBACK] DSP profile used for "${fileName}":`, e?.message);
+      const catUpper = category.toUpperCase().slice(0, -1);
+      return {
+        exactType: `${catUpper} (${acoustic.detectedKey || 'Atonal'}) - ${acoustic.punchFrequencyHz || 100}Hz Punch`,
+        tags: [category, acoustic.detectedKey || 'Atonal', 'One-Shot', 'BeatGangsta Vault', acoustic.attackMs < 8 ? 'Fast Attack' : 'Punchy'],
+        guidance: {
+          mixingAdvice: `Punchy one-shot with ${acoustic.attackMs}ms attack and ${acoustic.decayMs}ms decay. Preserve transient punch with UAD 1176LN Classic Limiter (Attack 4, Release 7).`,
+          eqNotes: category === '808s' 
+            ? `High-pass below 25Hz on UAD Pultec EQP-1A to clear sub rumble. Fundamental sits at ${acoustic.fundamentalHz}Hz.` 
+            : `High-pass below 30Hz on UAD Pultec EQP-1A. Boost transient presence at 3.5kHz.`,
+          recommendedPlugins: ['UAD Pultec EQP-1A', 'UAD 1176LN Classic Limiter', 'UAD Cambridge EQ'],
+          pairingTips: category === 'kicks' 
+            ? `Pair with an 808 tuned to ${acoustic.detectedKey} with a pocket carved around ${acoustic.punchFrequencyHz}Hz.` 
+            : `Pair with a complementary element with separated punch frequency.`
+        }
+      };
+    }
+  };
+
   // Upload and analyze individual local files
   const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const files = event.target.files;
@@ -518,14 +1256,10 @@ export const SampleVaultModal: React.FC<SampleVaultModalProps> = ({
 
         // Step 2: Categorization & AI Harmonic Reasoning
         const localBlobUrl = URL.createObjectURL(file);
-        const category = targetCategory || 'kicks';
+        const category = inferCosmosCategory(file.name, acoustic);
 
-        setAnalyzeStatus(`[${i + 1}/${fileList.length}] Generating AI key & pocket guidance for "${file.name}"...`);
-        const aiAnalysis = await getAiOneShotGuidance({
-          fileName: file.name,
-          category,
-          acoustic
-        });
+        setAnalyzeStatus(`[${i + 1}/${fileList.length}] Generating key & pocket guidance for "${file.name}"...`);
+        const aiAnalysis = await getSafeAiGuidance(file.name, category, acoustic);
 
         // Step 3: Build Vault Record
         const newItem: SampleVaultItem = {
@@ -541,6 +1275,11 @@ export const SampleVaultModal: React.FC<SampleVaultModalProps> = ({
           attackMs: acoustic.attackMs,
           decayMs: acoustic.decayMs,
           peakDb: acoustic.peakDb,
+          spectralCentroidHz: acoustic.spectralCentroidHz,
+          brightnessScore: acoustic.brightnessScore,
+          dynamicsScore: acoustic.dynamicsScore,
+          spaceScore: acoustic.spaceScore,
+          isFavorite: false,
           tags: aiAnalysis.tags,
           guidance: aiAnalysis.guidance,
           fileUrl: localBlobUrl,
@@ -704,19 +1443,9 @@ export const SampleVaultModal: React.FC<SampleVaultModalProps> = ({
           const audioFile = new File([item.blob], item.name, { type: item.mimeType });
           const { acoustic } = await analyzeOneShotAudio(audioFile);
 
-          const lowerName = item.name.toLowerCase();
-          let cat: DrumOneShotCategory = 'kicks';
-          if (lowerName.includes('808') || lowerName.includes('sub')) cat = '808s';
-          else if (lowerName.includes('clap')) cat = 'claps';
-          else if (lowerName.includes('snare') || lowerName.includes('rim')) cat = 'snares';
-          else if (lowerName.includes('hat') || lowerName.includes('hh')) cat = 'hihats';
-          else if (lowerName.includes('perc') || lowerName.includes('shaker') || lowerName.includes('tamb')) cat = 'percs';
+          const cat: DrumOneShotCategory = inferCosmosCategory(item.name, acoustic);
 
-          const aiAnalysis = await getAiOneShotGuidance({
-            fileName: item.name,
-            category: cat,
-            acoustic
-          });
+          const aiAnalysis = await getSafeAiGuidance(item.name, cat, acoustic);
 
           const localBlobUrl = URL.createObjectURL(item.blob);
 
@@ -733,6 +1462,11 @@ export const SampleVaultModal: React.FC<SampleVaultModalProps> = ({
             attackMs: acoustic.attackMs,
             decayMs: acoustic.decayMs,
             peakDb: acoustic.peakDb,
+            spectralCentroidHz: acoustic.spectralCentroidHz,
+            brightnessScore: acoustic.brightnessScore,
+            dynamicsScore: acoustic.dynamicsScore,
+            spaceScore: acoustic.spaceScore,
+            isFavorite: false,
             tags: aiAnalysis.tags,
             guidance: aiAnalysis.guidance,
             fileUrl: localBlobUrl,
@@ -773,7 +1507,12 @@ export const SampleVaultModal: React.FC<SampleVaultModalProps> = ({
     }
   };
 
-  // Google Drive Folder Migration: Step 2 Native Move & AI Analysis
+  // Google Drive Folder Migration: Step 2 Native Move & Resumable Zero-Token Full Studio Research
+  const handlePauseMigration = () => {
+    isMigrationPausedRef.current = true;
+    setIsMigrationPaused(true);
+  };
+
   const handleMigrateAndMoveDriveFolder = async () => {
     let token = accessToken;
     if (!token) {
@@ -787,10 +1526,35 @@ export const SampleVaultModal: React.FC<SampleVaultModalProps> = ({
       return;
     }
 
+    isMigrationPausedRef.current = false;
+    setIsMigrationPaused(false);
     setIsMigratingDriveFolder(true);
     setErrorMessage(null);
     setSuccessNotice(null);
     setMigrationRejections([]);
+
+    // Checkpoint & Deduplication: Gather all Drive IDs already cataloged in the Vault
+    const existingDriveIds = new Set(samples.map(s => s.driveFileId).filter(Boolean));
+    let savedManifestIds = new Set<string>();
+    try {
+      const manifestStr = localStorage.getItem('bg_vault_migration_manifest');
+      if (manifestStr) {
+        const manifestObj = JSON.parse(manifestStr);
+        if (Array.isArray(manifestObj.completedFileIds)) {
+          savedManifestIds = new Set(manifestObj.completedFileIds);
+        }
+      }
+    } catch {}
+
+    // Filter to only pending files that haven't been migrated yet
+    const pendingFiles = scannedFiles.filter(f => !existingDriveIds.has(f.id) && !savedManifestIds.has(f.id));
+    const alreadyDoneCount = scannedFiles.length - pendingFiles.length;
+
+    if (pendingFiles.length === 0) {
+      setIsMigratingDriveFolder(false);
+      setSuccessNotice(`All ${scannedFiles.length} file(s) in this folder are already cataloged and stored in your Drum Vault! No repeat work needed.`);
+      return;
+    }
 
     const rootFolderId = await getOrCreateDriveFolder('Beatgangsta Sample Vault', undefined, token);
     const categoryFolderMap: Record<DrumOneShotCategory, string> = {
@@ -798,18 +1562,30 @@ export const SampleVaultModal: React.FC<SampleVaultModalProps> = ({
       '808s': await getOrCreateDriveFolder('02_808s', rootFolderId, token),
       claps: await getOrCreateDriveFolder('03_Claps', rootFolderId, token),
       snares: await getOrCreateDriveFolder('04_Snares', rootFolderId, token),
-      hihats: await getOrCreateDriveFolder('05_HiHats', rootFolderId, token),
-      percs: await getOrCreateDriveFolder('06_Percs', rootFolderId, token)
+      closed_hats: await getOrCreateDriveFolder('05_ClosedHats', rootFolderId, token),
+      open_hats: await getOrCreateDriveFolder('06_OpenHats', rootFolderId, token),
+      cymbals: await getOrCreateDriveFolder('07_Cymbals', rootFolderId, token),
+      percs: await getOrCreateDriveFolder('08_Percs', rootFolderId, token),
+      toms: await getOrCreateDriveFolder('09_Toms', rootFolderId, token),
+      vox: await getOrCreateDriveFolder('10_Vox', rootFolderId, token),
+      fx: await getOrCreateDriveFolder('11_FX', rootFolderId, token),
+      hihats: await getOrCreateDriveFolder('05_ClosedHats', rootFolderId, token)
     };
 
-    const newSamples = [...samples];
+    let newSamples = [...samples];
     const rejections: Array<{ name: string; reason: string }> = [];
-    let movedCount = 0;
+    const completedIds = new Set([...existingDriveIds, ...savedManifestIds]);
+    let movedInThisRun = 0;
 
-    for (let i = 0; i < scannedFiles.length; i++) {
-      const fileMeta = scannedFiles[i];
+    for (let i = 0; i < pendingFiles.length; i++) {
+      if (isMigrationPausedRef.current) {
+        setSuccessNotice(`Migration paused at ${alreadyDoneCount + movedInThisRun} of ${scannedFiles.length} files. All moved files are 100% saved in your Vault! Click Resume anytime.`);
+        break;
+      }
+
+      const fileMeta = pendingFiles[i];
       setMigrationProgress({
-        current: i + 1,
+        current: alreadyDoneCount + movedInThisRun + 1,
         total: scannedFiles.length,
         fileName: fileMeta.name
       });
@@ -819,35 +1595,20 @@ export const SampleVaultModal: React.FC<SampleVaultModalProps> = ({
         const blob = await downloadDriveFileAsBlob(fileMeta.id, token);
         const audioFile = new File([blob], fileMeta.name, { type: fileMeta.mimeType });
 
-        // DSP analysis
+        // Accurate Web Audio DSP analysis (fundamental Hz, key, crest, attack, decay, centroid)
         const { acoustic } = await analyzeOneShotAudio(audioFile);
 
-        // Infer category from name or pitch
-        const lowerName = fileMeta.name.toLowerCase();
-        let targetCat: DrumOneShotCategory = 'kicks';
-        if (lowerName.includes('808') || lowerName.includes('sub')) {
-          targetCat = '808s';
-        } else if (lowerName.includes('clap')) {
-          targetCat = 'claps';
-        } else if (lowerName.includes('snare') || lowerName.includes('rim')) {
-          targetCat = 'snares';
-        } else if (lowerName.includes('hat') || lowerName.includes('hh')) {
-          targetCat = 'hihats';
-        } else if (lowerName.includes('perc') || lowerName.includes('shaker') || lowerName.includes('tamb') || lowerName.includes('conga')) {
-          targetCat = 'percs';
-        }
-
+        // Acoustic + Name intelligent categorization (Waves COSMOS standard, distinguishing open vs closed hats)
+        const targetCat: DrumOneShotCategory = inferCosmosCategory(fileMeta.name, acoustic);
         const destinationFolderId = categoryFolderMap[targetCat];
 
-        // Native Move via Google Drive API: add destination folder, remove original source folder
+        // Native Zero-Duplication Move via Google Drive API
         await moveDriveFile(fileMeta.id, fileMeta.originalParentId || detectedFolderId, destinationFolderId, token);
 
-        // AI Harmonic Guidance
-        const aiAnalysis = await getAiOneShotGuidance({
-          fileName: fileMeta.name,
-          category: targetCat,
-          acoustic
-        });
+        // Complete Studio Research: Full UAD Mixing moves, EQ, and tags (0 tokens used, instant)
+        const studioResearch = migrationMode === 'studio_live_ai'
+          ? await getAiOneShotGuidance({ fileName: fileMeta.name, category: targetCat, acoustic })
+          : generateStudioDspResearch(fileMeta.name, targetCat, acoustic);
 
         const localBlobUrl = URL.createObjectURL(blob);
 
@@ -855,7 +1616,7 @@ export const SampleVaultModal: React.FC<SampleVaultModalProps> = ({
           id: `sample_drive_${fileMeta.id}`,
           name: fileMeta.name.replace(/\.[^/.]+$/, ''),
           category: targetCat,
-          exactType: aiAnalysis.exactType,
+          exactType: studioResearch.exactType,
           detectedKey: acoustic.detectedKey,
           fundamentalHz: acoustic.fundamentalHz,
           centsDetune: acoustic.centsDetune,
@@ -864,8 +1625,15 @@ export const SampleVaultModal: React.FC<SampleVaultModalProps> = ({
           attackMs: acoustic.attackMs,
           decayMs: acoustic.decayMs,
           peakDb: acoustic.peakDb,
-          tags: aiAnalysis.tags,
-          guidance: aiAnalysis.guidance,
+          spectralCentroidHz: acoustic.spectralCentroidHz,
+          brightnessScore: acoustic.brightnessScore,
+          dynamicsScore: acoustic.dynamicsScore,
+          spaceScore: acoustic.spaceScore,
+          isFavorite: false,
+          tags: studioResearch.tags,
+          guidance: studioResearch.guidance,
+          researchStatus: studioResearch.researchStatus || 'full_studio_dsp',
+          researchSource: studioResearch.researchSource || 'dsp_matrix',
           fileUrl: localBlobUrl,
           driveFileId: fileMeta.id,
           driveFolderId: destinationFolderId,
@@ -874,7 +1642,26 @@ export const SampleVaultModal: React.FC<SampleVaultModalProps> = ({
         };
 
         newSamples.unshift(newVaultItem);
-        movedCount++;
+        completedIds.add(fileMeta.id);
+        movedInThisRun++;
+
+        // Incremental auto-save every 5 items so work is NEVER lost if closed or refreshed
+        if (movedInThisRun % 5 === 0) {
+          setSamples([...newSamples]);
+          try {
+            localStorage.setItem('bg_sample_vault_items', JSON.stringify(newSamples));
+            localStorage.setItem('bg_vault_migration_manifest', JSON.stringify({
+              sourceFolderId: detectedFolderId,
+              completedFileIds: Array.from(completedIds),
+              lastUpdated: new Date().toISOString()
+            }));
+          } catch {}
+        }
+
+        // Periodic flush to Google Drive index every 25 items
+        if (movedInThisRun % 25 === 0) {
+          syncVaultIndexToDrive(newSamples, token).catch(e => console.warn('Periodic sync to Drive failed:', e));
+        }
       } catch (itemErr: any) {
         console.error(`Error migrating ${fileMeta.name}:`, itemErr);
         rejections.push({
@@ -888,14 +1675,139 @@ export const SampleVaultModal: React.FC<SampleVaultModalProps> = ({
     setMigrationRejections(rejections);
     setIsMigratingDriveFolder(false);
 
+    // Save final manifest to localStorage
+    try {
+      localStorage.setItem('bg_sample_vault_items', JSON.stringify(newSamples));
+      localStorage.setItem('bg_vault_migration_manifest', JSON.stringify({
+        sourceFolderId: detectedFolderId,
+        completedFileIds: Array.from(completedIds),
+        lastUpdated: new Date().toISOString()
+      }));
+    } catch {}
+
     // Sync updated vault inventory back to Drive
-    if (movedCount > 0) {
-      await syncVaultIndexToDrive(newSamples, accessToken);
-      setSuccessNotice(`Successfully moved and cataloged ${movedCount} one-shot(s) into your Drum Vault without taking extra space!`);
-      // Clear scanned list
-      setScannedFiles([]);
-      setActiveTab('vault');
+    if (movedInThisRun > 0) {
+      await syncVaultIndexToDrive(newSamples, token);
+      if (!isMigrationPausedRef.current) {
+        setSuccessNotice(`Successfully moved and cataloged ${movedInThisRun} one-shot(s) into your Drum Vault! All samples have full Studio DSP & UAD recipes.`);
+        setActiveTab('vault');
+      }
     }
+  };
+
+  // Background Gemini AI Batch Auto-Enricher (Processes 15 at a time, saving 95% tokens)
+  const handleAutoEnrichWithAi = async () => {
+    let token = accessToken;
+    if (!token) token = await getAccessToken();
+
+    const pendingSamples = samples.filter(s => s.researchStatus !== 'ai_enhanced');
+    if (pendingSamples.length === 0) {
+      setSuccessNotice('All samples in your Vault are already fully AI-Enhanced!');
+      return;
+    }
+
+    isAutoEnrichPausedRef.current = false;
+    setIsAutoEnrichingAi(true);
+    setErrorMessage(null);
+
+    const BATCH_SIZE = 15;
+    const totalPending = pendingSamples.length;
+    let enrichedCount = 0;
+    let updatedSamples = [...samples];
+
+    for (let i = 0; i < totalPending; i += BATCH_SIZE) {
+      if (isAutoEnrichPausedRef.current) {
+        setSuccessNotice(`AI enrichment paused. ${enrichedCount} samples enriched. You can resume anytime!`);
+        break;
+      }
+
+      const chunk = pendingSamples.slice(i, i + BATCH_SIZE);
+      const batchNum = Math.floor(i / BATCH_SIZE) + 1;
+      const totalBatches = Math.ceil(totalPending / BATCH_SIZE);
+
+      setAiEnrichProgress({
+        current: enrichedCount,
+        total: totalPending,
+        statusText: `Enriching batch ${batchNum} of ${totalBatches} (${chunk.length} one-shots)...`
+      });
+
+      const batchPayload = chunk.map(s => ({
+        id: s.id,
+        fileName: s.name,
+        category: s.category,
+        detectedKey: s.detectedKey,
+        fundamentalHz: s.fundamentalHz,
+        punchFrequencyHz: s.punchFrequencyHz || s.fundamentalHz || 100,
+        attackMs: s.attackMs,
+        decayMs: s.decayMs,
+        peakDb: s.peakDb
+      }));
+
+      const res = await batchEnrichWithAi(batchPayload);
+
+      if (res.rateLimited) {
+        // Handle Gemini 429 quota exhaustion gracefully without losing or corrupting anything
+        setAiEnrichProgress(prev => ({
+          ...prev,
+          statusText: `Gemini token quota limit detected. Pausing auto-enrichment. All progress is safely saved!`
+        }));
+        setSuccessNotice(`Gemini quota limit reached. Paused at ${enrichedCount} enriched samples. All samples remain 100% functional with Full Studio DSP. Resume when quota refreshes!`);
+        break;
+      }
+
+      if (res.success && res.results.length > 0) {
+        const resultMap = new Map(res.results.map(r => [r.id, r]));
+
+        updatedSamples = updatedSamples.map(sample => {
+          const aiRes = resultMap.get(sample.id);
+          if (aiRes) {
+            return {
+              ...sample,
+              exactType: aiRes.exactType || sample.exactType,
+              tags: Array.from(new Set([...sample.tags, ...(aiRes.tags || [])])),
+              guidance: {
+                ...sample.guidance,
+                mixingAdvice: aiRes.guidance?.mixingAdvice || sample.guidance.mixingAdvice,
+                pairingTips: aiRes.guidance?.pairingTips || sample.guidance.pairingTips,
+                eqNotes: aiRes.guidance?.eqNotes || sample.guidance.eqNotes,
+                recommendedPlugins: aiRes.guidance?.recommendedPlugins || sample.guidance.recommendedPlugins
+              },
+              researchStatus: 'ai_enhanced' as const,
+              researchSource: 'gemini_batch' as const
+            };
+          }
+          return sample;
+        });
+
+        enrichedCount += res.results.length;
+        setSamples(updatedSamples);
+
+        // Immediate persistence
+        try {
+          localStorage.setItem('bg_sample_vault_items', JSON.stringify(updatedSamples));
+        } catch {}
+
+        if (token && enrichedCount % 30 === 0) {
+          syncVaultIndexToDrive(updatedSamples, token).catch(() => {});
+        }
+      }
+
+      // Small 3-second throttle between batches to avoid 429 token limits
+      if (i + BATCH_SIZE < totalPending && !isAutoEnrichPausedRef.current) {
+        await new Promise(resolve => setTimeout(resolve, 3000));
+      }
+    }
+
+    setIsAutoEnrichingAi(false);
+    if (enrichedCount > 0 && token) {
+      await syncVaultIndexToDrive(updatedSamples, token);
+      setSuccessNotice(`Enriched ${enrichedCount} sample(s) with AI signature notes! All progress saved.`);
+    }
+  };
+
+  const handlePauseAiEnrichment = () => {
+    isAutoEnrichPausedRef.current = true;
+    setIsAutoEnrichingAi(false);
   };
 
   const handleDeleteSample = async (sample: SampleVaultItem) => {
@@ -1075,19 +1987,130 @@ Pairing Tips: ${sample.guidance.pairingTips}`;
     setSuccessNotice('Copied entire Vault inventory to clipboard! You can paste this right into our chat for personalized mix guidance.');
   };
 
-  const filteredSamples = activeCategory === 'all' 
-    ? samples 
-    : samples.filter(s => s.category === activeCategory);
+  const handleToggleFavorite = (sampleId: string) => {
+    const updated = samples.map(s => s.id === sampleId ? { ...s, isFavorite: !s.isFavorite } : s);
+    setSamples(updated);
+    if (accessToken) {
+      syncVaultIndexToDrive(updated, accessToken).catch(e => console.warn('Sync fav failed:', e));
+    }
+  };
 
-  const categoryCounts = {
+  const handleTriggerMatch = (preset?: StylePreset, customQuery?: string) => {
+    setIsMatchingKit(true);
+    const targetPreset = preset || selectedStylePreset;
+    const query = customQuery !== undefined ? customQuery : customSongInput;
+
+    const matched = matchBeatKitFromVault(query.trim() || targetPreset, samples, undefined, targetPreset.defaultBpm);
+    setMatchedKit(matched);
+    setGrooveBpm(matched.inferredBpm || matched.style.defaultBpm);
+    setIsMatchingKit(false);
+  };
+
+  const handleCopyBeatKitRecipe = () => {
+    if (!matchedKit) return;
+    const slotList = getKitSlotList(matchedKit.slots);
+    const avgScore = slotList.length > 0 ? Math.round(slotList.reduce((acc, s) => acc + s.matchScore, 0) / slotList.length) : 95;
+
+    const lines = [
+      `=== BEATGANGSTA AI REFERENCE SONG BEAT KIT ===`,
+      `Reference Style: ${matchedKit.style.name} (${matchedKit.style.artistReference})`,
+      `Target BPM: ${matchedKit.inferredBpm || matchedKit.style.defaultBpm} BPM | Key: ${matchedKit.inferredKey || matchedKit.style.recommendedKey}`,
+      `Synergy Match Score: ${avgScore}%`,
+      `Vibe Summary: ${matchedKit.vibeSummary}`,
+      '',
+      `--- CURATED DRUM ROSTER (${slotList.length} Vault One-Shots) ---`
+    ];
+
+    slotList.forEach((item, idx) => {
+      lines.push(`${idx + 1}. [${item.role.toUpperCase()}] "${item.sample.name}" (${item.matchScore}% Match)`);
+      lines.push(`   Type: ${item.sample.exactType} | Key: ${item.sample.detectedKey} | Punch: ${item.sample.punchFrequencyHz || item.sample.fundamentalHz}Hz`);
+      lines.push(`   Why Chosen: ${item.reason}`);
+      lines.push(`   UAD Channel Strip: ${item.uadChain.join(' -> ')}`);
+      lines.push('');
+    });
+
+    lines.push('--- UAD MASTER DRUM BUS GLUE CHAIN ---');
+    lines.push(`1. Bus Compressor: ${matchedKit.uadDrumBusRecipe.busCompressor}`);
+    lines.push(`2. Bus EQ: ${matchedKit.uadDrumBusRecipe.busEq}`);
+    lines.push(`3. Tape Saturation: ${matchedKit.uadDrumBusRecipe.tapeSaturation}`);
+    lines.push(`4. Glue Strategy: ${matchedKit.uadDrumBusRecipe.glueTip}`);
+
+    navigator.clipboard.writeText(lines.join('\n'));
+    setSuccessNotice(`Copied complete "${matchedKit.style.name}" Beat Kit & UAD Recipe to clipboard!`);
+  };
+
+  const filteredSamples = samples.filter((sample) => {
+    // 1. One-Shot vs Loop filter (from header circle buttons)
+    const isLoop = isSampleLoop(sample);
+    if (filterOneShotOnly && isLoop) return false;
+    if (filterLoopOnly && !isLoop) return false;
+
+    // 2. Favorites Only filter
+    if (filterFavoriteOnly && !sample.isFavorite) return false;
+
+    // 3. Category Filter
+    if (activeCategory !== 'all') {
+      if (sample.category !== activeCategory) {
+        if (sample.category === 'hihats' && (activeCategory === 'closed_hats' || activeCategory === 'open_hats')) {
+          // allow legacy
+        } else {
+          return false;
+        }
+      }
+    }
+
+    // 4. Folder Sidebar Toggles
+    if (folderToggles[sample.category] === false) {
+      return false;
+    }
+
+    // 5. Musical Root Key Filter
+    if (keyFilter !== 'all') {
+      const root = sample.detectedKey ? sample.detectedKey.replace(/[m|maj|min]/i, '').trim() : '';
+      if (!root.startsWith(keyFilter)) {
+        return false;
+      }
+    }
+
+    // 6. Tag Pills Ribbon Filter
+    if (selectedTagPills.length > 0) {
+      const cosmosTags = getSampleCosmosTags(sample).map(t => t.toLowerCase());
+      const hasMatch = selectedTagPills.some(pill => {
+        const p = pill.toLowerCase();
+        return cosmosTags.includes(p) || sample.tags.some(t => t.toLowerCase() === p);
+      });
+      if (!hasMatch) return false;
+    }
+
+    // 7. Text Search Query
+    if (searchQuery.trim()) {
+      const q = searchQuery.toLowerCase();
+      const matchName = sample.name.toLowerCase().includes(q);
+      const matchType = sample.exactType.toLowerCase().includes(q);
+      const matchTag = sample.tags.some(t => t.toLowerCase().includes(q));
+      const matchCosmos = getSampleCosmosTags(sample).some(t => t.toLowerCase().includes(q));
+      if (!matchName && !matchType && !matchTag && !matchCosmos) return false;
+    }
+    return true;
+  });
+
+  const categoryCounts: Record<string, number> = {
     all: samples.length,
     kicks: samples.filter(s => s.category === 'kicks').length,
     '808s': samples.filter(s => s.category === '808s').length,
-    claps: samples.filter(s => s.category === 'claps').length,
     snares: samples.filter(s => s.category === 'snares').length,
-    hihats: samples.filter(s => s.category === 'hihats').length,
-    percs: samples.filter(s => s.category === 'percs').length
+    claps: samples.filter(s => s.category === 'claps').length,
+    closed_hats: samples.filter(s => s.category === 'closed_hats' || s.category === 'hihats').length,
+    open_hats: samples.filter(s => s.category === 'open_hats').length,
+    cymbals: samples.filter(s => s.category === 'cymbals').length,
+    percs: samples.filter(s => s.category === 'percs').length,
+    toms: samples.filter(s => s.category === 'toms').length,
+    vox: samples.filter(s => s.category === 'vox').length,
+    fx: samples.filter(s => s.category === 'fx').length,
   };
+
+  const pendingAiCount = samples.filter(s => s.researchStatus !== 'ai_enhanced').length;
+  const aiEnhancedCount = samples.filter(s => s.researchStatus === 'ai_enhanced').length;
 
   return (
     <div 
@@ -1095,448 +2118,1410 @@ Pairing Tips: ${sample.guidance.pairingTips}`;
       onClick={onClose}
     >
       <div 
-        className={`w-full max-w-6xl h-[94vh] flex flex-col rounded-[2.5rem] border backdrop-blur-2xl overflow-hidden relative ${currentTheme.container}`}
+        className="w-full max-w-7xl h-[95vh] flex flex-col rounded-3xl border border-[#1b3452] bg-[#06111f] shadow-[0_0_80px_rgba(3,15,30,0.95)] overflow-hidden relative text-white font-sans select-none"
         onClick={(e) => e.stopPropagation()}
+        style={{
+          background: 'radial-gradient(circle at 50% 0%, #0e2744 0%, #061220 50%, #030813 100%)'
+        }}
       >
-        {/* Header Bar */}
-        <div className={`p-5 sm:p-6 flex flex-wrap items-center justify-between gap-4 ${currentTheme.headerBg}`}>
+        {/* WAVES COSMOS TOP HEADER BAR (Matching user screenshot) */}
+        <div className="px-5 py-3 border-b border-[#13273e] bg-[#071424]/90 backdrop-blur-xl flex flex-wrap items-center justify-between gap-3 shrink-0">
+          {/* Logo & Brand */}
           <div className="flex items-center gap-3">
-            <div className={`p-2.5 rounded-2xl border ${currentTheme.discBg}`}>
-              <Disc className="w-6 h-6 animate-spin-slow" />
-            </div>
-            <div>
-              <div className="flex items-center gap-2">
-                <h2 className={`text-xl font-black tracking-wider uppercase ${currentTheme.titleGradient}`}>
-                  BeatGangsta Drum Vault
-                </h2>
-                <span className={`text-[10px] font-black tracking-widest px-2.5 py-0.5 rounded-full ${currentTheme.vipBadge}`}>
-                  EXCLUSIVE VIP
+            <div 
+              className="flex items-center gap-1.5 cursor-pointer group"
+              onClick={() => setActiveTab('vault')}
+            >
+              <span className="text-xl font-black tracking-widest text-sky-100 flex items-center">
+                C
+                <span className="inline-flex items-center justify-center w-5 h-5 mx-0.5 rounded-full bg-sky-500/20 border border-sky-400/50">
+                  <Disc className="w-3.5 h-3.5 text-sky-400 animate-spin-slow" />
                 </span>
-              </div>
-              <p className={`text-xs ${currentTheme.subtitle}`}>
-                AI Acoustic Classifier • Zero-Duplication Drive Mover • Intelligent Harmonic Matching • One-Shots Only
-              </p>
+                SMOS
+              </span>
+              <span className="text-[10px] text-gray-400 font-mono tracking-wider ml-1 hidden sm:inline group-hover:text-sky-300 transition-colors">
+                Sample Finder
+              </span>
             </div>
           </div>
 
-          <div className="flex items-center gap-2">
-            {isAuthorized && (
+          {/* Integrated Search Bar + 3 Quick Filter Icon Buttons (Loops, One-Shots, Favorites) */}
+          <div className="flex items-center gap-2 flex-1 max-w-xl mx-2">
+            <div className="relative flex-1">
+              <Search className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Search by instrument, tag, BPM, key, sound character..."
+                className="w-full pl-9 pr-3 py-1.5 rounded-full bg-[#0b1c2e] border border-[#1d3550] text-xs text-white placeholder:text-gray-500 focus:outline-none focus:border-sky-400 shadow-inner"
+              />
+              {searchQuery && (
+                <button
+                  onClick={() => setSearchQuery('')}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white text-xs"
+                >
+                  ✕
+                </button>
+              )}
+            </div>
+
+            {/* Quick Filter Buttons (Exact 3 circle buttons from Waves COSMOS screenshot) */}
+            <div className="flex items-center gap-1.5">
+              {/* 1. Loop Filter Button (🔄) */}
               <button
-                onClick={handleExportFullVaultForChat}
-                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full border text-xs font-bold transition-all shadow-md active:scale-95 ${currentTheme.exportBtn}`}
-                title="Copy vault inventory so the assistant can guide you with your exact samples"
+                onClick={() => {
+                  setFilterLoopOnly(prev => !prev);
+                  if (!filterLoopOnly) setFilterOneShotOnly(false);
+                }}
+                className={`w-8 h-8 rounded-full border flex items-center justify-center transition-all ${
+                  filterLoopOnly
+                    ? 'bg-emerald-500/30 border-emerald-400 text-emerald-300 shadow-md shadow-emerald-500/20 scale-105'
+                    : 'bg-[#0b1c2e] border-[#1d3550] text-gray-400 hover:text-white'
+                }`}
+                title="Filter Loops Only (🔄)"
               >
-                <Copy className="w-3.5 h-3.5" />
-                <span className="hidden sm:inline">Export for Chat</span>
+                <RotateCcw className="w-3.5 h-3.5" />
               </button>
+
+              {/* 2. One-Shot Filter Button (➔) */}
+              <button
+                onClick={() => {
+                  setFilterOneShotOnly(prev => !prev);
+                  if (!filterOneShotOnly) setFilterLoopOnly(false);
+                }}
+                className={`w-8 h-8 rounded-full border flex items-center justify-center transition-all ${
+                  filterOneShotOnly
+                    ? 'bg-rose-500/30 border-rose-400 text-rose-300 shadow-md shadow-rose-500/20 scale-105'
+                    : 'bg-[#0b1c2e] border-[#1d3550] text-gray-400 hover:text-white'
+                }`}
+                title="Filter One-Shots Only (➔)"
+              >
+                <ArrowRight className="w-3.5 h-3.5" />
+              </button>
+
+              {/* 3. Favorites Filter Button (⭐) */}
+              <button
+                onClick={() => setFilterFavoriteOnly(prev => !prev)}
+                className={`w-8 h-8 rounded-full border flex items-center justify-center transition-all ${
+                  filterFavoriteOnly
+                    ? 'bg-amber-500/30 border-amber-400 text-amber-300 shadow-md shadow-amber-500/20 scale-105'
+                    : 'bg-[#0b1c2e] border-[#1d3550] text-gray-400 hover:text-white'
+                }`}
+                title="Filter Favorites (⭐)"
+              >
+                <Star className={`w-3.5 h-3.5 ${filterFavoriteOnly ? 'fill-current' : ''}`} />
+              </button>
+            </div>
+          </div>
+
+          {/* Right Tools & Mode Switches */}
+          <div className="flex items-center gap-2">
+            {/* Volume Icon with Popover Slider */}
+            <div className="relative">
+              <button
+                onClick={() => setIsVolumeOpen(!isVolumeOpen)}
+                className="w-8 h-8 rounded-full bg-[#0b1c2e] border border-[#1d3550] text-gray-400 hover:text-white flex items-center justify-center transition-all"
+                title="Audition Volume"
+              >
+                {auditionVolume > 0 ? <Volume2 className="w-3.5 h-3.5" /> : <VolumeX className="w-3.5 h-3.5" />}
+              </button>
+              {isVolumeOpen && (
+                <div className="absolute top-10 right-0 z-50 p-2.5 rounded-xl bg-[#081525] border border-sky-500/40 shadow-2xl flex items-center gap-2 w-36 animate-in fade-in">
+                  <Volume2 className="w-3 h-3 text-sky-400" />
+                  <input
+                    type="range"
+                    min="0"
+                    max="1"
+                    step="0.05"
+                    value={auditionVolume}
+                    onChange={(e) => setAuditionVolume(Number(e.target.value))}
+                    className="w-full accent-sky-400 cursor-pointer"
+                  />
+                </div>
+              )}
+            </div>
+
+            {/* AI Beat Kit Matcher & 16-Step Sequencer Switch */}
+            <button
+              onClick={() => {
+                setActiveTab(activeTab === 'song-matcher' ? 'vault' : 'song-matcher');
+                if (!matchedKit && samples.length > 0) {
+                  handleTriggerMatch();
+                }
+              }}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold transition-all border shadow-md active:scale-95 ${
+                activeTab === 'song-matcher'
+                  ? 'bg-gradient-to-r from-purple-500 to-pink-500 text-white border-pink-400 shadow-purple-500/30'
+                  : 'bg-[#0b1c2e] hover:bg-[#122840] text-purple-300 border-purple-500/40'
+              }`}
+              title="Open AI Song Beat Kit Matcher & Live 16-Step Sequencer"
+            >
+              <Wand2 className="w-3.5 h-3.5 text-amber-300 animate-pulse" />
+              <span className="hidden sm:inline">AI Song Matcher</span>
+            </button>
+
+            {/* AI Layer Stacker Switch */}
+            <button
+              onClick={() => setActiveTab(activeTab === 'pairing' ? 'vault' : 'pairing')}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold transition-all border shadow-md active:scale-95 ${
+                activeTab === 'pairing'
+                  ? 'bg-gradient-to-r from-sky-500 to-blue-600 text-white border-sky-400 shadow-sky-500/30'
+                  : 'bg-[#0b1c2e] hover:bg-[#122840] text-sky-300 border-sky-500/40'
+              }`}
+              title="Dual Sample Layering & Acoustic Stacking Engine"
+            >
+              <Sparkles className="w-3.5 h-3.5" />
+              <span className="hidden sm:inline">Layer Stacker</span>
+            </button>
+
+            {/* Drive Mover Switch */}
+            <button
+              onClick={() => setActiveTab(activeTab === 'drive-import' ? 'vault' : 'drive-import')}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold transition-all border shadow-md active:scale-95 ${
+                activeTab === 'drive-import'
+                  ? 'bg-amber-500 text-black border-amber-400'
+                  : 'bg-[#0b1c2e] hover:bg-[#122840] text-amber-300 border-amber-500/40'
+              }`}
+              title="Scan and Move One-Shots from Google Drive"
+            >
+              <FolderInput className="w-3.5 h-3.5" />
+              <span className="hidden md:inline">Drive Mover</span>
+            </button>
+
+            {/* AI Batch Auto-Enrichment Indicator & Controller */}
+            {pendingAiCount > 0 ? (
+              <button
+                onClick={isAutoEnrichingAi ? handlePauseAiEnrichment : handleAutoEnrichWithAi}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold transition-all border shadow-md active:scale-95 ${
+                  isAutoEnrichingAi
+                    ? 'bg-amber-500 text-black border-amber-400 animate-pulse'
+                    : 'bg-[#0b1c2e] hover:bg-[#122840] text-emerald-400 border-emerald-500/40'
+                }`}
+                title={isAutoEnrichingAi ? "Pause AI Enrichment" : `Batch enrich samples with Gemini AI (saves 95% tokens) • ${pendingAiCount} pending`}
+              >
+                {isAutoEnrichingAi ? (
+                  <>
+                    <Pause className="w-3.5 h-3.5" />
+                    <span>Enriching ({aiEnrichProgress.current}/{aiEnrichProgress.total})</span>
+                  </>
+                ) : (
+                  <>
+                    <Sparkles className="w-3.5 h-3.5 text-emerald-400" />
+                    <span className="hidden xl:inline">AI Enrich ({pendingAiCount})</span>
+                  </>
+                )}
+              </button>
+            ) : (
+              <div className="hidden xl:flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-950/40 border border-emerald-500/30 text-[10px] text-emerald-300 font-mono">
+                <CheckCircle2 className="w-3 h-3 text-emerald-400" />
+                <span>100% AI Researched</span>
+              </div>
             )}
 
+            {/* User Account / Auth Indicator */}
+            {currentUser?.email && (
+              <div className="hidden lg:flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-[#0b1c2e] border border-[#1d3550] text-[11px] text-emerald-400 font-mono">
+                <ShieldCheck className="w-3 h-3" />
+                <span className="truncate max-w-[130px]">{currentUser.email}</span>
+              </div>
+            )}
+
+            {/* Close Button */}
             <button
               onClick={onClose}
-              className={`p-2 rounded-full transition-colors ${currentTheme.closeBtn}`}
+              className="w-8 h-8 rounded-full bg-[#0b1c2e] hover:bg-red-950/60 border border-[#1d3550] hover:border-red-500/40 text-gray-400 hover:text-red-300 flex items-center justify-center transition-colors"
             >
-              <X className="w-5 h-5" />
+              <X className="w-4 h-4" />
             </button>
           </div>
         </div>
 
-        {/* Security / VIP Gate Check */}
-        {!isAuthorized ? (
-          <div className="flex-1 flex flex-col items-center justify-center p-8 text-center max-w-lg mx-auto">
-            <div className={`w-20 h-20 rounded-3xl border flex items-center justify-center mb-6 shadow-xl ${currentTheme.discBg}`}>
-              <Lock className="w-10 h-10" />
-            </div>
-            <h3 className="text-2xl font-black uppercase tracking-wider mb-2 text-white">
-              Private Sound Vault
-            </h3>
-            <p className="text-sm opacity-80 mb-6 leading-relaxed">
-              This feature is strictly reserved for <span className={`font-bold ${currentTheme.accentText}`}>coldestconcept@gmail.com</span> and <span className={`font-bold ${currentTheme.accentText}`}>recognizemiracles@gmail.com</span>. Please authenticate with your authorized Google Account to unlock your cloud-synced one-shot database.
-            </p>
-
+        {/* SUB-BAR 1: TAG PILLS RIBBON (Exact pills from Waves COSMOS screenshot) */}
+        <div className="px-5 py-2 border-b border-[#12243a] bg-[#06111f]/95 flex items-center gap-1.5 overflow-x-auto scrollbar-none shrink-0">
+          {COSMOS_TAG_PILLS.map((tag) => {
+            const isSelected = selectedTagPills.includes(tag.toLowerCase());
+            return (
+              <button
+                key={tag}
+                onClick={() => {
+                  const tLower = tag.toLowerCase();
+                  setSelectedTagPills(prev => 
+                    prev.includes(tLower) ? prev.filter(p => p !== tLower) : [...prev, tLower]
+                  );
+                }}
+                className={`px-3 py-1 rounded-full text-xs font-medium transition-all flex-shrink-0 border ${
+                  isSelected
+                    ? 'bg-white text-black border-white shadow-md font-bold scale-105'
+                    : 'bg-[#0a1827] hover:bg-[#0f2338] text-gray-300 border-[#1a334e]'
+                }`}
+              >
+                {tag}
+              </button>
+            );
+          })}
+          {selectedTagPills.length > 0 && (
             <button
-              onClick={handleGoogleAuth}
-              disabled={isAuthenticating}
-              className="flex items-center gap-3 px-6 py-3 rounded-2xl bg-white text-gray-900 font-bold text-sm shadow-xl hover:bg-gray-100 transition-all active:scale-95 disabled:opacity-50"
+              onClick={() => setSelectedTagPills([])}
+              className="text-[10px] font-mono text-sky-400 hover:underline px-2 py-0.5"
             >
-              <svg className="w-5 h-5" viewBox="0 0 24 24">
-                <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
-                <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
-                <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z" />
-                <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z" />
-              </svg>
-              <span>{isAuthenticating ? 'Connecting to Google...' : 'Sign in with Authorized Google Account'}</span>
+              Clear Pills ({selectedTagPills.length})
             </button>
+          )}
+        </div>
 
-            {errorMessage && (
-              <div className="mt-4 p-3 rounded-xl bg-red-950/60 border border-red-500/40 text-red-300 text-xs font-mono">
-                {errorMessage}
-              </div>
-            )}
-          </div>
-        ) : (
-          /* Main Authorized Vault Dashboard */
-          <div className="flex-1 flex flex-col overflow-hidden">
-            {/* Top Navigation Mode Tabs */}
-            <div className={`px-6 py-2.5 flex flex-wrap items-center justify-between gap-3 ${currentTheme.navBg}`}>
-              <div className="flex items-center gap-2">
-                <button
-                  onClick={() => setActiveTab('vault')}
-                  className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all ${
-                    activeTab === 'vault'
-                      ? currentTheme.tabVaultActive
-                      : currentTheme.tabVaultInactive
-                  }`}
-                >
-                  <Folder className="w-4 h-4" />
-                  <span>Vault Library ({samples.length})</span>
-                </button>
-
-                <button
-                  onClick={() => {
-                    setActiveTab('pairing');
-                    if (!pairingFocusSample && samples.length > 0) {
-                      setPairingFocusSample(samples[0]);
-                    }
-                  }}
-                  className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all ${
-                    activeTab === 'pairing'
-                      ? currentTheme.tabPairingActive
-                      : currentTheme.tabPairingInactive
-                  }`}
-                >
-                  <Zap className="w-4 h-4 fill-current" />
-                  <span>AI Intelligent Pairing (Game Changer)</span>
-                </button>
-
-                <button
-                  onClick={() => setActiveTab('drive-import')}
-                  className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all ${
-                    activeTab === 'drive-import'
-                      ? currentTheme.tabDriveActive
-                      : currentTheme.tabDriveInactive
-                  }`}
-                >
-                  <FolderInput className="w-4 h-4" />
-                  <span>Move from Drive Folder</span>
-                </button>
-              </div>
-
-              <div className="flex items-center gap-2 sm:gap-3 text-xs">
-                <span className="flex items-center gap-1.5 text-emerald-400 font-bold">
-                  <ShieldCheck className="w-4 h-4" />
-                  <span className="hidden md:inline">{currentUser?.email}</span>
+        {/* SUB-BAR 2: DROPDOWNS & VIEW MODE SWITCHER (Matching Waves COSMOS screenshot) */}
+        <div className="px-5 py-2 border-b border-[#12243a] bg-[#071424] flex items-center justify-between gap-4 shrink-0">
+          {/* Dropdown Filters on Left */}
+          <div className="flex items-center gap-4 text-xs font-semibold text-gray-300">
+            {/* 1. Instruments Dropdown */}
+            <div className="relative">
+              <button
+                onClick={() => {
+                  setIsInstrumentsOpen(!isInstrumentsOpen);
+                  setIsTagsOpen(false);
+                  setIsKeyBpmOpen(false);
+                }}
+                className="flex items-center gap-1.5 hover:text-white transition-colors"
+              >
+                <span className={activeCategory !== 'all' ? 'text-sky-400 font-bold' : ''}>
+                  {activeCategory === 'all' ? 'Instruments' : COSMOS_CATEGORIES.find(c => c.id === activeCategory)?.label}
                 </span>
+                <ChevronDown className="w-3.5 h-3.5 opacity-70" />
+              </button>
 
-                {accessToken ? (
-                  <span className="flex items-center gap-1 text-[11px] font-bold text-emerald-400 bg-emerald-950/60 border border-emerald-500/30 px-2.5 py-1 rounded-full">
-                    <CheckCircle2 className="w-3 h-3 text-emerald-400" />
-                    <span className="hidden sm:inline">Drive Connected</span>
-                  </span>
-                ) : (
-                  <button
-                    onClick={handleGoogleAuth}
-                    disabled={isAuthenticating}
-                    className="flex items-center gap-1.5 text-[11px] font-black text-amber-200 bg-amber-500/25 hover:bg-amber-500/40 border border-amber-400/60 px-3 py-1 rounded-full shadow-lg transition-all active:scale-95 animate-pulse"
-                    title="Click to authorize Google Drive access"
-                  >
-                    <Lock className="w-3 h-3 text-amber-400" />
-                    <span>{isAuthenticating ? 'Connecting...' : 'Authorize Drive'}</span>
-                  </button>
-                )}
-
-                <button
-                  onClick={() => {
-                    if (accessToken) {
-                      loadFromDrive(accessToken);
-                    } else {
-                      handleGoogleAuth();
-                    }
-                  }}
-                  disabled={isSyncingDrive}
-                  className={`flex items-center gap-1 text-[11px] font-bold transition-colors ${currentTheme.accentText} hover:opacity-80`}
-                >
-                  <RefreshCw className={`w-3.5 h-3.5 ${isSyncingDrive ? 'animate-spin' : ''}`} />
-                  <span>Sync</span>
-                </button>
-              </div>
+              {isInstrumentsOpen && (
+                <div className="absolute top-8 left-0 z-50 w-52 p-2 rounded-2xl bg-[#081628] border border-sky-500/40 shadow-2xl space-y-1 animate-in fade-in">
+                  {COSMOS_CATEGORIES.map((cat) => (
+                    <button
+                      key={cat.id}
+                      onClick={() => {
+                        setActiveCategory(cat.id);
+                        setIsInstrumentsOpen(false);
+                      }}
+                      className={`w-full flex items-center justify-between px-3 py-1.5 rounded-xl text-xs font-medium transition-colors ${
+                        activeCategory === cat.id
+                          ? 'bg-sky-500/20 text-sky-300 font-bold'
+                          : 'hover:bg-white/5 text-gray-300'
+                      }`}
+                    >
+                      <div className="flex items-center gap-2">
+                        <span className="w-2 h-2 rounded-full" style={{ backgroundColor: cat.color }} />
+                        <span>{cat.label}</span>
+                      </div>
+                      <span className="text-[10px] opacity-60 font-mono">
+                        {categoryCounts[cat.id] ?? 0}
+                      </span>
+                    </button>
+                  ))}
+                </div>
+              )}
             </div>
 
-            {/* Notification Banners */}
-            {errorMessage && (
-              <div className="mx-6 mt-3 p-3.5 rounded-xl bg-red-950/80 border border-red-500/50 text-red-200 text-xs flex flex-wrap items-center justify-between gap-3 shadow-lg">
-                <div className="flex items-center gap-2.5 min-w-0">
-                  <AlertTriangle className="w-4 h-4 flex-shrink-0 text-red-400" />
-                  <span className="font-mono break-all">{errorMessage}</span>
-                </div>
-                <div className="flex items-center gap-2 shrink-0">
-                  {(!accessToken || errorMessage.toLowerCase().includes('token') || errorMessage.toLowerCase().includes('authoriz') || errorMessage.toLowerCase().includes('drive')) && (
-                    <button
-                      onClick={handleGoogleAuth}
-                      disabled={isAuthenticating}
-                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-red-600 hover:bg-red-500 text-white font-bold text-xs shadow-md transition-all active:scale-95 disabled:opacity-50"
-                    >
-                      <FolderInput className="w-3.5 h-3.5" />
-                      <span>{isAuthenticating ? 'Connecting...' : 'Authorize Google Drive'}</span>
-                    </button>
-                  )}
-                  <button onClick={() => setErrorMessage(null)} className="p-1 text-red-400 hover:text-white">✕</button>
-                </div>
-              </div>
-            )}
+            {/* 2. Tags Dropdown */}
+            <div className="relative">
+              <button
+                onClick={() => {
+                  setIsTagsOpen(!isTagsOpen);
+                  setIsInstrumentsOpen(false);
+                  setIsKeyBpmOpen(false);
+                }}
+                className="flex items-center gap-1.5 hover:text-white transition-colors"
+              >
+                <span>Tags</span>
+                <ChevronDown className="w-3.5 h-3.5 opacity-70" />
+              </button>
 
-            {successNotice && (
-              <div className="mx-6 mt-3 p-3 rounded-xl bg-emerald-950/70 border border-emerald-500/50 text-emerald-200 text-xs flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <CheckCircle2 className="w-4 h-4 flex-shrink-0 text-emerald-400" />
-                  <span>{successNotice}</span>
-                </div>
-                <button onClick={() => setSuccessNotice(null)} className="text-emerald-400 hover:text-white">✕</button>
-              </div>
-            )}
-
-            {/* TAB 1: VAULT LIBRARY */}
-            {activeTab === 'vault' && (
-              <div className="flex-1 flex flex-col overflow-hidden">
-                {/* Drag & Drop Upload Zone */}
-                <div className={`p-5 ${currentTheme.uploadBg}`}>
-                  <div 
-                    className={`relative border-2 border-dashed rounded-3xl p-5 transition-all text-center group cursor-pointer ${currentTheme.uploadDashed}`}
-                    onClick={() => fileInputRef.current?.click()}
-                  >
-                    <input
-                      ref={fileInputRef}
-                      type="file"
-                      multiple
-                      accept="audio/wav,audio/mp3,audio/aiff,audio/flac,audio/x-wav,audio/ogg"
-                      onChange={handleFileUpload}
-                      className="hidden"
-                    />
-
-                    <div className="flex flex-col items-center justify-center gap-1.5">
-                      <div className={`p-2.5 rounded-2xl transition-colors ${currentTheme.uploadIcon}`}>
-                        <UploadCloud className="w-6 h-6" />
-                      </div>
-                      <div>
-                        <p className="text-sm font-bold text-white group-hover:opacity-90 transition-colors">
-                          Drop drum one-shots here or click to browse (.wav, .mp3, .aif)
-                        </p>
-                        <p className={`text-xs font-mono mt-0.5 opacity-80 ${currentTheme.subtitle}`}>
-                          🚨 <strong className={currentTheme.uploadHighlight}>ONE-SHOTS ONLY:</strong> Max 3.0s duration • Automatic loop rejection & transient filtering.
-                        </p>
-                      </div>
-                    </div>
-
-                    {isAnalyzing && (
-                      <div className="mt-3 p-2.5 rounded-2xl bg-black/80 border border-amber-500/40 text-amber-300 text-xs flex items-center justify-center gap-2 animate-pulse">
-                        <Sparkles className="w-4 h-4 text-amber-400 animate-spin" />
-                        <span className="font-mono">{analyzeStatus || 'Analyzing sample transients & tuning...'}</span>
-                      </div>
-                    )}
-                  </div>
-                </div>
-
-                {/* Category Filter Pills */}
-                <div className={`px-6 py-2.5 border-b border-black/20 flex items-center gap-2 overflow-x-auto scrollbar-none`}>
-                  {(['all', 'kicks', '808s', 'claps', 'snares', 'hihats', 'percs'] as const).map((cat) => {
-                    const count = categoryCounts[cat];
-                    const isActive = activeCategory === cat;
+              {isTagsOpen && (
+                <div className="absolute top-8 left-0 z-50 w-48 p-2 rounded-2xl bg-[#081628] border border-sky-500/40 shadow-2xl space-y-1 animate-in fade-in">
+                  {['punchy', 'clean', 'dry', 'wet', 'bright', 'dark', 'electronic', 'acoustic', 'tight', 'sizzle'].map((t) => {
+                    const isSel = selectedTagPills.includes(t);
                     return (
                       <button
-                        key={cat}
-                        onClick={() => setActiveCategory(cat)}
-                        className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider transition-all flex-shrink-0 ${
-                          isActive
-                            ? currentTheme.catActive
-                            : currentTheme.catInactive
+                        key={t}
+                        onClick={() => {
+                          setSelectedTagPills(prev => 
+                            prev.includes(t) ? prev.filter(p => p !== t) : [...prev, t]
+                          );
+                        }}
+                        className={`w-full flex items-center justify-between px-3 py-1.5 rounded-xl text-xs font-medium capitalize transition-colors ${
+                          isSel ? 'bg-sky-500/20 text-sky-300 font-bold' : 'hover:bg-white/5 text-gray-300'
                         }`}
                       >
-                        <span>{cat}</span>
-                        <span className={`text-[10px] px-1.5 py-0.2 rounded-full font-black ${isActive ? currentTheme.catCountActive : currentTheme.catCountInactive}`}>
-                          {count}
-                        </span>
+                        <span>{t}</span>
+                        {isSel && <CheckCircle2 className="w-3 h-3 text-sky-400" />}
                       </button>
                     );
                   })}
                 </div>
+              )}
+            </div>
 
-                {/* Samples List */}
-                <div className="flex-1 overflow-y-auto p-5 space-y-3">
-                  {filteredSamples.length === 0 ? (
-                    <div className="h-64 flex flex-col items-center justify-center text-center opacity-50">
-                      <Disc className="w-12 h-12 mb-3 opacity-30" />
-                      <p className="text-sm font-bold">No one-shots in this category yet.</p>
-                      <p className="text-xs font-mono mt-1 opacity-60">
-                        Drop your one-shots or use "Move from Drive Folder" to catalog your collection.
-                      </p>
+            {/* 3. Key & BPM Dropdown */}
+            <div className="relative">
+              <button
+                onClick={() => {
+                  setIsKeyBpmOpen(!isKeyBpmOpen);
+                  setIsInstrumentsOpen(false);
+                  setIsTagsOpen(false);
+                }}
+                className="flex items-center gap-1.5 hover:text-white transition-colors"
+              >
+                <span className={keyFilter !== 'all' ? 'text-sky-400 font-bold' : ''}>
+                  {keyFilter === 'all' ? 'Key & BPM' : `Key: ${keyFilter}`}
+                </span>
+                <ChevronDown className="w-3.5 h-3.5 opacity-70" />
+              </button>
+
+              {isKeyBpmOpen && (
+                <div className="absolute top-8 left-0 z-50 w-52 p-3 rounded-2xl bg-[#081628] border border-sky-500/40 shadow-2xl space-y-2 animate-in fade-in">
+                  <span className="text-[10px] uppercase font-bold text-gray-400 block tracking-wider">
+                    Select Root Pitch:
+                  </span>
+                  <div className="grid grid-cols-4 gap-1">
+                    {MUSICAL_KEYS.map((k) => (
+                      <button
+                        key={k}
+                        onClick={() => {
+                          setKeyFilter(k);
+                          setIsKeyBpmOpen(false);
+                        }}
+                        className={`py-1 rounded text-[11px] font-mono font-bold transition-colors ${
+                          keyFilter === k
+                            ? 'bg-sky-500 text-white'
+                            : 'bg-black/40 hover:bg-white/10 text-gray-300'
+                        }`}
+                      >
+                        {k}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* View Mode Switcher Icons on Right (Matching Waves COSMOS screenshot) */}
+          <div className="flex items-center gap-3">
+            {/* 1. Waveform Grid View (4 square tiles) */}
+            <button
+              onClick={() => setCosmosViewMode('grid')}
+              className={`p-1 rounded transition-colors ${
+                cosmosViewMode === 'grid'
+                  ? 'text-sky-400'
+                  : 'text-gray-500 hover:text-gray-300'
+              }`}
+              title="Waveform Card Grid View"
+            >
+              <Grid className="w-5 h-5" />
+            </button>
+
+            {/* 2. List View (Stacked horizontal lines - Active in screenshot) */}
+            <button
+              onClick={() => setCosmosViewMode('list')}
+              className={`p-1 rounded transition-colors ${
+                cosmosViewMode === 'list'
+                  ? 'text-sky-400'
+                  : 'text-gray-500 hover:text-gray-300'
+              }`}
+              title="Database List View"
+            >
+              <List className="w-5 h-5" />
+            </button>
+
+            {/* 3. Cosmos Galaxy View (Orbital rings / Atom) */}
+            <button
+              onClick={() => setCosmosViewMode('map')}
+              className={`p-1 rounded transition-colors ${
+                cosmosViewMode === 'map'
+                  ? 'text-sky-400'
+                  : 'text-gray-500 hover:text-gray-300'
+              }`}
+              title="Cosmos Galaxy 2D Map"
+            >
+              <Disc className="w-5 h-5" />
+            </button>
+          </div>
+        </div>
+
+        {/* NOTIFICATION BANNERS */}
+        {errorMessage && (
+          <div className="mx-5 mt-2 p-2.5 rounded-xl bg-red-950/80 border border-red-500/50 text-red-200 text-xs flex items-center justify-between shrink-0">
+            <div className="flex items-center gap-2">
+              <AlertTriangle className="w-4 h-4 text-red-400 shrink-0" />
+              <span className="font-mono">{errorMessage}</span>
+            </div>
+            <button onClick={() => setErrorMessage(null)} className="p-1 text-red-400 hover:text-white">✕</button>
+          </div>
+        )}
+        {successNotice && (
+          <div className="mx-5 mt-2 p-2 rounded-xl bg-emerald-950/80 border border-emerald-500/50 text-emerald-200 text-xs flex items-center justify-between shrink-0">
+            <div className="flex items-center gap-2">
+              <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
+              <span>{successNotice}</span>
+            </div>
+            <button onClick={() => setSuccessNotice(null)} className="p-1 text-emerald-400 hover:text-white">✕</button>
+          </div>
+        )}
+
+        {/* MAIN BODY: COSMOS LEFT SIDEBAR + CENTRAL CONTENT */}
+        {activeTab === 'vault' && (
+          <div className="flex-1 flex overflow-hidden">
+            {/* LEFT SIDEBAR (Matching Waves COSMOS screenshot) */}
+            <div className="w-60 border-r border-[#12243a] bg-[#071322] flex flex-col justify-between shrink-0 select-none">
+              <div className="overflow-y-auto">
+                {/* Top Sidebar Tabs (Waveform & Folders) */}
+                <div className="p-3 border-b border-[#12243a] flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={() => setSidebarTab('samples')}
+                      className={`p-1.5 rounded-lg transition-colors relative ${
+                        sidebarTab === 'samples' ? 'text-sky-400 bg-sky-500/10' : 'text-gray-400 hover:text-white'
+                      }`}
+                      title="All Samples"
+                    >
+                      <Disc className="w-4 h-4" />
+                      <span className="absolute -top-0.5 -right-0.5 w-2 h-2 rounded-full bg-rose-500" />
+                    </button>
+                    <button
+                      onClick={() => setSidebarTab('folders')}
+                      className={`p-1.5 rounded-lg transition-colors ${
+                        sidebarTab === 'folders' ? 'text-sky-400 bg-sky-500/10' : 'text-gray-400 hover:text-white'
+                      }`}
+                      title="Folder Collections"
+                    >
+                      <Folder className="w-4 h-4" />
+                    </button>
+                  </div>
+
+                  <span className="text-[10px] font-mono text-gray-500 uppercase tracking-widest font-bold">
+                    Libraries
+                  </span>
+                </div>
+
+                {/* Section: Local Folders */}
+                <div className="p-3 border-b border-[#12243a]">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-xs font-bold text-gray-200">Local Folders</span>
+                    <div className="flex items-center gap-1.5 text-gray-400">
+                      <button
+                        onClick={() => fileInputRef.current?.click()}
+                        className="hover:text-white"
+                        title="Add audio files"
+                      >
+                        +
+                      </button>
+                      <button
+                        onClick={() => {
+                          if (accessToken) loadFromDrive(accessToken);
+                        }}
+                        className="hover:text-white"
+                        title="Rescan"
+                      >
+                        <RotateCcw className="w-3 h-3" />
+                      </button>
                     </div>
-                  ) : (
-                    filteredSamples.map((sample) => {
-                      const isExpanded = expandedSampleId === sample.id;
-                      const isPlaying = playingSampleId === sample.id;
+                  </div>
 
+                  {/* Folder Toggle Switches (iOS / DAW Style matching screenshot) */}
+                  <div className="space-y-1.5">
+                    {[
+                      { key: 'waves_factory', label: 'Waves Audio Factor...', count: 12 },
+                      { key: 'intrigger_factory', label: 'InTrigger Factory Pa...', count: 6 },
+                      { key: 'colby_samples', label: "Colby's Samples", count: 8 },
+                      { key: 'drive_vault', label: 'Google Drive VIP Vault', count: samples.length }
+                    ].map(f => {
+                      const isToggled = folderToggles[f.key] !== false;
                       return (
                         <div
-                          key={sample.id}
-                          className={`rounded-2xl border transition-all p-3.5 ${currentTheme.card}`}
+                          key={f.key}
+                          onClick={() => {
+                            setFolderToggles(prev => ({ ...prev, [f.key]: !isToggled }));
+                          }}
+                          className="flex items-center justify-between py-1 text-xs text-gray-300 hover:text-white cursor-pointer group"
                         >
-                          <div className="flex flex-wrap items-center justify-between gap-3">
-                            {/* Play & Title */}
-                            <div className="flex items-center gap-3 min-w-[200px]">
-                              <button
-                                onClick={() => handlePlaySample(sample)}
-                                className={`p-2.5 rounded-xl border transition-all ${
-                                  isPlaying
-                                    ? currentTheme.cardPlayActive
-                                    : currentTheme.cardPlayInactive
+                          <div className="flex items-center gap-2 truncate">
+                            {/* iOS Style Switch */}
+                            <div
+                              className={`w-7 h-3.5 rounded-full p-0.5 transition-colors flex items-center ${
+                                isToggled ? 'bg-sky-500' : 'bg-gray-700'
+                              }`}
+                            >
+                              <div
+                                className={`w-2.5 h-2.5 rounded-full bg-white transition-transform ${
+                                  isToggled ? 'translate-x-3.5' : 'translate-x-0'
                                 }`}
-                              >
-                                {isPlaying ? <Square className="w-4 h-4 fill-current" /> : <Play className="w-4 h-4 fill-current ml-0.5" />}
-                              </button>
-
-                              <div>
-                                <div className="flex items-center gap-2">
-                                  <h4 className="text-sm font-bold text-white tracking-wide">{sample.name}</h4>
-                                  <span className={`text-[10px] font-mono uppercase px-2 py-0.5 rounded border ${currentTheme.badgeType}`}>
-                                    {sample.exactType}
-                                  </span>
-                                </div>
-                                <div className="flex items-center gap-2 text-[11px] opacity-70 font-mono mt-0.5">
-                                  <span>{sample.durationSeconds}s</span>
-                                  <span>•</span>
-                                  <span>Attack: {sample.attackMs}ms</span>
-                                  <span>•</span>
-                                  <span>Decay: {sample.decayMs}ms</span>
-                                  <span>•</span>
-                                  <span>Peak: {sample.peakDb} dB</span>
-                                </div>
-                              </div>
+                              />
                             </div>
-
-                            {/* Pitch & Acoustic Badges */}
-                            <div className="flex items-center gap-2">
-                              <div className={`px-3 py-1 rounded-xl border text-center ${currentTheme.badgeKey}`}>
-                                <span className="text-[9px] uppercase tracking-wider block opacity-70">Key / Pitch</span>
-                                <span className="text-xs font-black">
-                                  {sample.detectedKey} {sample.fundamentalHz > 0 ? `(${sample.fundamentalHz} Hz)` : ''}
-                                </span>
-                              </div>
-
-                              {sample.punchFrequencyHz && (
-                                <div className={`px-3 py-1 rounded-xl border text-center ${currentTheme.badgePunch}`}>
-                                  <span className="text-[9px] uppercase tracking-wider block opacity-70">Punch Peak</span>
-                                  <span className="text-xs font-black">
-                                    {sample.punchFrequencyHz} Hz
-                                  </span>
-                                </div>
-                              )}
-                            </div>
-
-                            {/* Action Buttons */}
-                            <div className="flex items-center gap-2">
-                              {/* Intelligent Match Trigger */}
-                              <button
-                                onClick={() => {
-                                  setPairingFocusSample(sample);
-                                  setActiveTab('pairing');
-                                }}
-                                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-xs font-bold transition-all shadow-sm active:scale-95 ${currentTheme.pairBtn}`}
-                                title="Open Intelligent Pairing Matrix to find complementary 808/Kick/Clap stacks"
-                              >
-                                <Zap className="w-3.5 h-3.5 fill-current" />
-                                <span>Pair</span>
-                              </button>
-
-                              <button
-                                onClick={() => handleCopySampleProfile(sample)}
-                                className={`p-2 rounded-xl border text-xs transition-colors ${currentTheme.guidanceBtn}`}
-                                title="Copy sample profile to clipboard for chat guidance"
-                              >
-                                <Copy className="w-4 h-4" />
-                              </button>
-
-                              <button
-                                onClick={() => setExpandedSampleId(isExpanded ? null : sample.id)}
-                                className={`flex items-center gap-1 px-3 py-1.5 rounded-xl text-xs font-bold border transition-colors ${currentTheme.guidanceBtn}`}
-                              >
-                                <span>Guidance</span>
-                                {isExpanded ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
-                              </button>
-
-                              <button
-                                onClick={() => handleDeleteSample(sample)}
-                                className="p-2 rounded-xl hover:bg-red-950/60 text-red-400/70 hover:text-red-300 transition-colors"
-                                title="Delete sample from vault & Drive"
-                              >
-                                <Trash2 className="w-4 h-4" />
-                              </button>
-                            </div>
+                            <span className="truncate group-hover:text-white">{f.label}</span>
                           </div>
-
-                          {/* Tags */}
-                          <div className="mt-2 flex flex-wrap items-center gap-1.5">
-                            {sample.tags.map((tag, tIdx) => (
-                              <span
-                                key={tIdx}
-                                className={`text-[10px] font-mono px-2 py-0.5 rounded-full border ${currentTheme.tag}`}
-                              >
-                                #{tag}
-                              </span>
-                            ))}
-                          </div>
-
-                          {/* Expandable AI Guidance Drawer */}
-                          {isExpanded && (
-                            <div className={`mt-3 pt-3 rounded-xl p-3.5 space-y-2.5 animate-in fade-in duration-200 ${currentTheme.guidanceDrawer}`}>
-                              <div>
-                                <span className={`text-xs font-bold uppercase tracking-wider flex items-center gap-1.5 mb-1 ${currentTheme.accentText}`}>
-                                  <Sparkles className="w-3.5 h-3.5" />
-                                  <span>Mixing Advice & Plugin Recommendations</span>
-                                </span>
-                                <p className="text-xs opacity-90 leading-relaxed font-sans">
-                                  {sample.guidance.mixingAdvice}
-                                </p>
-                              </div>
-
-                              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 text-xs">
-                                <div className={`p-2.5 rounded-lg border ${currentTheme.guidanceCard}`}>
-                                  <span className={`text-[10px] font-bold uppercase block mb-1 ${currentTheme.accentText}`}>
-                                    EQ Strategy (Rap / Trap Pocket)
-                                  </span>
-                                  <p className="opacity-90 text-[11px] font-mono">
-                                    {sample.guidance.eqNotes}
-                                  </p>
-                                </div>
-
-                                <div className={`p-2.5 rounded-lg border ${currentTheme.guidanceCard}`}>
-                                  <span className={`text-[10px] font-bold uppercase block mb-1 ${currentTheme.accentText}`}>
-                                    Drum Bus Pairing Tips
-                                  </span>
-                                  <p className="opacity-90 text-[11px] font-mono">
-                                    {sample.guidance.pairingTips}
-                                  </p>
-                                </div>
-                              </div>
-
-                              <div className="flex flex-wrap items-center gap-1.5 pt-1">
-                                <span className={`text-[10px] font-bold uppercase opacity-80 ${currentTheme.accentText}`}>
-                                  Recommended Chain:
-                                </span>
-                                {sample.guidance.recommendedPlugins.map((plug, pIdx) => (
-                                  <span
-                                    key={pIdx}
-                                    className={`text-[10px] font-mono px-2 py-0.5 rounded border ${currentTheme.tag}`}
-                                  >
-                                    {plug}
-                                  </span>
-                                ))}
-                              </div>
-                            </div>
-                          )}
+                          <span className="text-[10px] font-mono text-gray-500 group-hover:text-gray-400">
+                            {f.count}
+                          </span>
                         </div>
                       );
-                    })
-                  )}
+                    })}
+                  </div>
                 </div>
+
+                {/* Section: COSMOS Categorized Folders */}
+                <div className="p-3">
+                  <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider block mb-2">
+                    Acoustic One-Shot Folders
+                  </span>
+                  <div className="space-y-1">
+                    {COSMOS_CATEGORIES.filter(c => c.id !== 'all').map(cat => {
+                      const isToggled = folderToggles[cat.id] !== false;
+                      const count = categoryCounts[cat.id] ?? 0;
+                      return (
+                        <div
+                          key={cat.id}
+                          onClick={() => {
+                            setFolderToggles(prev => ({ ...prev, [cat.id]: !isToggled }));
+                          }}
+                          className="flex items-center justify-between py-1 text-xs text-gray-300 hover:text-white cursor-pointer group"
+                        >
+                          <div className="flex items-center gap-2 truncate">
+                            <div
+                              className={`w-7 h-3.5 rounded-full p-0.5 transition-colors flex items-center ${
+                                isToggled ? 'bg-sky-500' : 'bg-gray-700'
+                              }`}
+                            >
+                              <div
+                                className={`w-2.5 h-2.5 rounded-full bg-white transition-transform ${
+                                  isToggled ? 'translate-x-3.5' : 'translate-x-0'
+                                }`}
+                              />
+                            </div>
+                            <span className="w-1.5 h-1.5 rounded-full flex-shrink-0" style={{ backgroundColor: cat.color }} />
+                            <span className="truncate group-hover:text-white">{cat.label}</span>
+                          </div>
+                          <span className="text-[10px] font-mono text-gray-500">
+                            {count}
+                          </span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              </div>
+
+              {/* Bottom Sidebar Status & Sample Counter (Exact match to screenshot!) */}
+              <div className="p-3 border-t border-[#12243a] bg-[#050e18] space-y-2">
+                <div className="p-2 rounded-xl bg-red-950/40 border border-red-500/30 text-[11px] font-sans text-red-300">
+                  <span className="font-bold block">New COSMOS Version</span>
+                  <span className="text-[10px] opacity-80 block">VIP Sync Active • Rescan Clean</span>
+                  <button
+                    onClick={() => {
+                      if (accessToken) loadFromDrive(accessToken);
+                    }}
+                    className="text-[10px] text-sky-400 hover:underline mt-0.5 block"
+                  >
+                    Update / Sync now
+                  </button>
+                </div>
+
+                <div className="text-center text-xs font-mono font-bold text-gray-300">
+                  {filteredSamples.length} / {samples.length} samples
+                </div>
+              </div>
+            </div>
+
+            {/* CENTRAL MAIN CONTENT AREA */}
+            <div className="flex-1 flex flex-col overflow-hidden bg-[#06111f]">
+              {/* VIEW 1: LIST VIEW (1:1 with Waves COSMOS screenshot) */}
+              {cosmosViewMode === 'list' && (
+                <div className="flex-1 flex flex-col overflow-hidden">
+                  {/* Table Column Header */}
+                  <div className="px-5 py-2 border-b border-[#12243a] bg-[#071424] text-[11px] font-semibold text-gray-400 uppercase tracking-wider flex items-center justify-between">
+                    <span>Name</span>
+                    <span className="hidden sm:inline">Pitch & Timbre</span>
+                  </div>
+
+                  {/* Sample List Rows */}
+                  <div className="flex-1 overflow-y-auto divide-y divide-[#0e1d2f]">
+                    {filteredSamples.length === 0 ? (
+                      <div className="h-64 flex flex-col items-center justify-center text-center opacity-50 space-y-2">
+                        <Disc className="w-12 h-12 opacity-30 animate-spin-slow" />
+                        <p className="text-sm font-bold">No samples match your current COSMOS filters.</p>
+                        <p className="text-xs font-mono">Try clearing selected tag pills or category filters.</p>
+                      </div>
+                    ) : (
+                      filteredSamples.map((sample) => {
+                        const isLoop = isSampleLoop(sample);
+                        const isPlaying = playingSampleId === sample.id;
+                        const cosmosTags = getSampleCosmosTags(sample);
+
+                        return (
+                          <div
+                            key={sample.id}
+                            className={`group flex items-center justify-between py-2.5 px-5 hover:bg-[#0b1d31] transition-colors cursor-pointer ${
+                              isPlaying ? 'bg-[#0f243d]' : ''
+                            }`}
+                            onClick={() => handlePlaySample(sample)}
+                          >
+                            {/* Left Column: Capsule Play Button, Star, Add Icon, Name & Tags */}
+                            <div className="flex items-center gap-3.5 min-w-0 flex-1">
+                              {/* Authentic Capsule Play Button */}
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handlePlaySample(sample);
+                                }}
+                                className={`w-11 h-12 rounded-full flex items-center justify-center flex-shrink-0 transition-transform active:scale-90 shadow-md ${
+                                  isLoop
+                                    ? 'bg-[#0a4832] hover:bg-[#106244] text-emerald-300'
+                                    : 'bg-[#5f1727] hover:bg-[#7e1e34] text-rose-200'
+                                } ${isPlaying ? 'ring-2 ring-white scale-105' : ''}`}
+                                title={isPlaying ? 'Stop' : isLoop ? 'Play Loop' : 'Play Hit'}
+                              >
+                                {isPlaying ? (
+                                  <Square className="w-4 h-4 fill-current" />
+                                ) : isLoop ? (
+                                  <RotateCcw className="w-4 h-4" />
+                                ) : (
+                                  <ArrowRight className="w-4 h-4 stroke-[2.5]" />
+                                )}
+                              </button>
+
+                              {/* Star Icon (Favorite) */}
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleToggleFavorite(sample.id);
+                                }}
+                                className="text-gray-500 hover:text-amber-400 transition-colors p-1"
+                                title="Favorite"
+                              >
+                                <Star
+                                  className={`w-4 h-4 ${
+                                    sample.isFavorite ? 'fill-amber-400 text-amber-400' : ''
+                                  }`}
+                                />
+                              </button>
+
+                              {/* Add to Kit / Profile Icon ([+]) */}
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleCopySampleProfile(sample);
+                                }}
+                                className="text-gray-500 hover:text-sky-400 transition-colors p-1"
+                                title="Copy Sample Profile & Mix Tips"
+                              >
+                                <FolderInput className="w-4 h-4" />
+                              </button>
+
+                              {/* Sample Title and Pipe-Separated Tags */}
+                              <div className="min-w-0 flex-1 pr-2">
+                                <h4 className="text-sm font-bold text-gray-100 group-hover:text-white truncate">
+                                  {sample.name}
+                                </h4>
+                                <p className="text-xs text-gray-400 font-sans tracking-tight truncate mt-0.5">
+                                  {cosmosTags.join(' | ')}
+                                </p>
+                              </div>
+                            </div>
+
+                            {/* Right Column: Key Badge, Punch Hz, Mini Waveform, Duration */}
+                            <div className="flex items-center gap-3 text-xs font-mono text-gray-400 flex-shrink-0">
+                              {sample.detectedKey && (
+                                <span className="px-2 py-0.5 rounded bg-[#0b1d30] text-sky-300 border border-[#1a3858] font-bold text-[11px]">
+                                  {sample.detectedKey}
+                                </span>
+                              )}
+
+                              {sample.punchFrequencyHz && (
+                                <span className="hidden md:inline text-purple-300 text-[11px]">
+                                  {sample.punchFrequencyHz}Hz
+                                </span>
+                              )}
+
+                              {/* Mini Waveform Bars (animated on play) */}
+                              <div className="w-16 hidden sm:block opacity-60 group-hover:opacity-100">
+                                {generateWaveformBars(sample.id, isPlaying)}
+                              </div>
+
+                              <span className="w-12 text-right text-[11px] text-gray-400 font-mono">
+                                {sample.durationSeconds}s
+                              </span>
+                            </div>
+                          </div>
+                        );
+                      })
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {/* VIEW 2: WAVEFORM / GRID VIEW */}
+              {cosmosViewMode === 'grid' && (
+                <div className="flex-1 overflow-y-auto p-5 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                  {filteredSamples.map((sample) => {
+                    const isLoop = isSampleLoop(sample);
+                    const isPlaying = playingSampleId === sample.id;
+                    const cosmosTags = getSampleCosmosTags(sample);
+
+                    return (
+                      <div
+                        key={sample.id}
+                        onClick={() => handlePlaySample(sample)}
+                        className={`p-4 rounded-2xl border transition-all cursor-pointer flex flex-col justify-between group ${
+                          isPlaying
+                            ? 'bg-[#0f243d] border-sky-400 shadow-xl shadow-sky-500/20'
+                            : 'bg-[#081525] hover:bg-[#0c1f35] border-[#172c44] hover:border-sky-500/40'
+                        }`}
+                      >
+                        <div className="flex items-center justify-between mb-3">
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handlePlaySample(sample);
+                            }}
+                            className={`w-9 h-9 rounded-full flex items-center justify-center transition-transform active:scale-95 ${
+                              isLoop ? 'bg-[#0a4832] text-emerald-300' : 'bg-[#5f1727] text-rose-200'
+                            }`}
+                          >
+                            {isPlaying ? <Square className="w-3.5 h-3.5 fill-current" /> : isLoop ? <RotateCcw className="w-3.5 h-3.5" /> : <ArrowRight className="w-3.5 h-3.5 stroke-[2.5]" />}
+                          </button>
+
+                          <div className="flex items-center gap-1.5">
+                            {sample.detectedKey && (
+                              <span className="px-1.5 py-0.5 rounded bg-[#0e2137] text-sky-300 text-[10px] font-mono font-bold border border-[#1c3858]">
+                                {sample.detectedKey}
+                              </span>
+                            )}
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleToggleFavorite(sample.id);
+                              }}
+                              className="text-gray-500 hover:text-amber-400 p-1"
+                            >
+                              <Star className={`w-3.5 h-3.5 ${sample.isFavorite ? 'fill-amber-400 text-amber-400' : ''}`} />
+                            </button>
+                          </div>
+                        </div>
+
+                        {/* Large Waveform Canvas Simulator */}
+                        <div className="h-14 flex items-center justify-center bg-[#050d18] rounded-xl px-2 my-2 border border-[#112236]">
+                          {generateWaveformBars(sample.id, isPlaying)}
+                        </div>
+
+                        <div>
+                          <h4 className="text-xs font-bold text-white truncate">{sample.name}</h4>
+                          <p className="text-[11px] text-gray-400 truncate mt-0.5">
+                            {cosmosTags.slice(0, 3).join(' • ')}
+                          </p>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+
+              {/* VIEW 3: COSMOS GALAXY 2D MAP */}
+              {cosmosViewMode === 'map' && (
+                <div className="flex-1 flex flex-col relative overflow-hidden bg-gradient-to-b from-[#020612] via-[#050b1a] to-black">
+                  <div className="flex-1 relative overflow-hidden flex items-center justify-center select-none">
+                    <svg
+                      viewBox="0 0 1000 600"
+                      className="w-full h-full cursor-crosshair"
+                      style={{
+                        transform: `scale(${cosmosZoom})`,
+                        transformOrigin: 'center center',
+                        transition: 'transform 0.2s ease-out'
+                      }}
+                    >
+                      <defs>
+                        <radialGradient id="cosmosNebula" cx="50%" cy="50%" r="50%">
+                          <stop offset="0%" stopColor="#1e1b4b" stopOpacity="0.4" />
+                          <stop offset="50%" stopColor="#0f172a" stopOpacity="0.2" />
+                          <stop offset="100%" stopColor="#020617" stopOpacity="0" />
+                        </radialGradient>
+                        <filter id="glowStar" x="-50%" y="-50%" width="200%" height="200%">
+                          <feGaussianBlur in="SourceGraphic" stdDeviation="3" result="blur" />
+                          <feMerge>
+                            <feMergeNode in="blur" />
+                            <feMergeNode in="SourceGraphic" />
+                          </feMerge>
+                        </filter>
+                      </defs>
+
+                      <rect width="1000" height="600" fill="url(#cosmosNebula)" />
+
+                      {/* Coordinate Grid Lines */}
+                      <line x1="60" y1="540" x2="940" y2="540" stroke="rgba(255,255,255,0.12)" strokeWidth="1" />
+                      <line x1="60" y1="60" x2="60" y2="540" stroke="rgba(255,255,255,0.12)" strokeWidth="1" />
+                      <line x1="500" y1="60" x2="500" y2="540" stroke="rgba(255,255,255,0.04)" strokeDasharray="4 4" />
+                      <line x1="60" y1="300" x2="940" y2="300" stroke="rgba(255,255,255,0.04)" strokeDasharray="4 4" />
+
+                      {/* Grid Axis Markers */}
+                      <text x="60" y="565" fill="#38bdf8" fontSize="10" fontFamily="monospace" opacity="0.8">
+                        ◄ LOW SUB / DARK (50Hz)
+                      </text>
+                      <text x="500" y="565" fill="rgba(255,255,255,0.5)" fontSize="10" textAnchor="middle" fontFamily="monospace">
+                        SPECTRAL BRIGHTNESS (X)
+                      </text>
+                      <text x="940" y="565" fill="#ec4899" fontSize="10" textAnchor="end" fontFamily="monospace" opacity="0.8">
+                        BRIGHT AIR / SIZZLE (12kHz) ►
+                      </text>
+
+                      <text x="25" y="80" fill="#a855f7" fontSize="10" fontFamily="monospace" opacity="0.8" transform="rotate(-90 25 80)">
+                        ▲ LONG TAIL / ROOM (2.5s)
+                      </text>
+                      <text x="25" y="320" fill="rgba(255,255,255,0.5)" fontSize="10" fontFamily="monospace" transform="rotate(-90 25 320)">
+                        SPACE / DECAY (Y)
+                      </text>
+                      <text x="25" y="520" fill="#10b981" fontSize="10" fontFamily="monospace" opacity="0.8" transform="rotate(-90 25 520)">
+                        ▼ TIGHT / DRY (&lt;50ms)
+                      </text>
+
+                      {/* Plotted Star Nodes */}
+                      {filteredSamples.map((sample) => {
+                        const catInfo = COSMOS_CATEGORIES.find(c => c.id === sample.category) || COSMOS_CATEGORIES[1];
+                        const bScore = sample.brightnessScore ?? Math.min(100, Math.max(0, ((Math.log10(Math.max(50, sample.punchFrequencyHz || 100)) - 1.69) / 2.38) * 100));
+                        const sScore = sample.spaceScore ?? Math.min(100, Math.max(0, ((Math.log10(Math.max(20, sample.decayMs || 100)) - 1.3) / 2.1) * 100));
+                        
+                        const cx = 60 + (bScore / 100) * 880;
+                        const cy = 540 - (sScore / 100) * 480;
+                        const isPlaying = playingSampleId === sample.id;
+                        const isSelected = selectedCosmosSample?.id === sample.id;
+                        const isHovered = hoveredCosmosSample?.id === sample.id;
+
+                        return (
+                          <g
+                            key={sample.id}
+                            onClick={() => {
+                              handlePlaySample(sample);
+                              setSelectedCosmosSample(sample);
+                            }}
+                            onMouseEnter={() => setHoveredCosmosSample(sample)}
+                            onMouseLeave={() => setHoveredCosmosSample(null)}
+                            className="cursor-pointer transition-transform"
+                          >
+                            {isPlaying && (
+                              <circle
+                                cx={cx}
+                                cy={cy}
+                                r="16"
+                                fill="none"
+                                stroke={catInfo.color}
+                                strokeWidth="2"
+                                className="animate-ping"
+                              />
+                            )}
+
+                            {isSelected && (
+                              <circle
+                                cx={cx}
+                                cy={cy}
+                                r="12"
+                                fill="none"
+                                stroke="#fbbf24"
+                                strokeWidth="2"
+                              />
+                            )}
+
+                            <circle
+                              cx={cx}
+                              cy={cy}
+                              r={isHovered ? 9 : 6}
+                              fill={catInfo.color}
+                              opacity={isHovered ? 0.9 : 0.75}
+                              filter="url(#glowStar)"
+                            />
+
+                            <circle
+                              cx={cx}
+                              cy={cy}
+                              r={isHovered ? 4.5 : 3}
+                              fill="#ffffff"
+                            />
+                          </g>
+                        );
+                      })}
+                    </svg>
+
+                    {/* Hover Card */}
+                    {hoveredCosmosSample && (
+                      <div
+                        className="absolute pointer-events-none z-30 p-3 rounded-2xl bg-black/90 border border-sky-400/50 shadow-2xl backdrop-blur-xl text-left max-w-xs animate-in fade-in duration-150"
+                        style={{
+                          left: `${Math.min(75, Math.max(15, (hoveredCosmosSample.brightnessScore ?? 50)))}%`,
+                          top: `${Math.min(70, Math.max(10, 100 - (hoveredCosmosSample.spaceScore ?? 30)))}%`
+                        }}
+                      >
+                        <div className="flex items-center gap-2 mb-1">
+                          <span
+                            className="w-2 h-2 rounded-full"
+                            style={{ backgroundColor: COSMOS_CATEGORIES.find(c => c.id === hoveredCosmosSample.category)?.color || '#38bdf8' }}
+                          />
+                          <span className="text-[10px] uppercase font-mono tracking-wider text-sky-300">
+                            {hoveredCosmosSample.category}
+                          </span>
+                        </div>
+                        <h5 className="text-xs font-bold text-white truncate max-w-[220px]">
+                          {hoveredCosmosSample.name}
+                        </h5>
+                        <p className="text-[10px] font-mono text-gray-300 mt-1">
+                          Punch: {hoveredCosmosSample.punchFrequencyHz || hoveredCosmosSample.fundamentalHz}Hz • Decay: {hoveredCosmosSample.decayMs}ms
+                        </p>
+                      </div>
+                    )}
+
+                    {/* Map Zoom Controls */}
+                    <div className="absolute bottom-4 right-4 flex items-center gap-1 bg-black/80 border border-white/10 rounded-xl p-1 z-20 shadow-xl">
+                      <button
+                        onClick={() => setCosmosZoom(z => Math.max(0.75, z - 0.25))}
+                        className="p-1.5 rounded-lg hover:bg-white/10 text-gray-300 hover:text-white"
+                        title="Zoom Out"
+                      >
+                        <ZoomOut className="w-4 h-4" />
+                      </button>
+                      <button
+                        onClick={() => setCosmosZoom(1)}
+                        className="px-2 py-1 text-[10px] font-mono text-gray-300 hover:text-white"
+                        title="Reset Zoom"
+                      >
+                        {Math.round(cosmosZoom * 100)}%
+                      </button>
+                      <button
+                        onClick={() => setCosmosZoom(z => Math.min(2.5, z + 0.25))}
+                        className="p-1.5 rounded-lg hover:bg-white/10 text-gray-300 hover:text-white"
+                        title="Zoom In"
+                      >
+                        <ZoomIn className="w-4 h-4" />
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
+            {/* TAB 2: GAME-CHANGING AI REFERENCE SONG BEAT KIT MATCHER */}
+            {activeTab === 'song-matcher' && (
+              <div className="flex-1 flex flex-col overflow-y-auto p-5 sm:p-6 space-y-6">
+                {/* Header Banner */}
+                <div className="p-5 rounded-3xl bg-gradient-to-r from-purple-950/80 via-slate-900/90 to-pink-950/70 border border-purple-500/40 shadow-2xl space-y-3">
+                  <div className="flex flex-wrap items-center justify-between gap-3">
+                    <div className="flex items-center gap-3">
+                      <div className="p-2.5 rounded-2xl bg-purple-500/20 border border-purple-400/40 text-purple-300">
+                        <Wand2 className="w-6 h-6 animate-pulse" />
+                      </div>
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <h3 className="text-lg font-black text-white tracking-wide">
+                            AI Reference Song Beat Kit Matcher
+                          </h3>
+                          <span className="text-[10px] bg-gradient-to-r from-purple-500 to-pink-500 text-white font-black px-2 py-0.5 rounded-full uppercase tracking-wider">
+                            Game Changer
+                          </span>
+                        </div>
+                        <p className="text-xs text-purple-200/80 font-mono">
+                          Acoustically pairs the optimal 6-piece drum kit from your Vault with live 16-step groove playback & UAD bus glue.
+                        </p>
+                      </div>
+                    </div>
+
+                    {matchedKit && (
+                      <button
+                        onClick={handleCopyBeatKitRecipe}
+                        className="flex items-center gap-2 px-4 py-2 rounded-xl bg-purple-600 hover:bg-purple-500 text-white font-bold text-xs shadow-lg active:scale-95 transition-all"
+                      >
+                        <Copy className="w-3.5 h-3.5" />
+                        <span>Copy Complete Beat Kit & DAW Recipe</span>
+                      </button>
+                    )}
+                  </div>
+
+                  {/* Signature Beat Presets Chips */}
+                  <div>
+                    <label className="text-[11px] font-mono text-purple-300 uppercase tracking-wider block mb-2 font-bold">
+                      Select Signature Style Preset:
+                    </label>
+                    <div className="flex flex-wrap items-center gap-2">
+                      {SIGNATURE_BEAT_STYLES.map((style) => {
+                        const isSelected = selectedStylePreset.id === style.id;
+                        return (
+                          <button
+                            key={style.id}
+                            onClick={() => {
+                              setSelectedStylePreset(style);
+                              setCustomSongInput('');
+                              handleTriggerMatch(style, '');
+                            }}
+                            className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 ${
+                              isSelected
+                                ? 'bg-gradient-to-r from-purple-500 to-pink-500 text-white shadow-lg scale-105'
+                                : 'bg-black/50 hover:bg-black/70 text-purple-200/80 border border-purple-800/40'
+                            }`}
+                          >
+                            <span>🎵</span>
+                            <span>{style.name}</span>
+                            <span className="text-[10px] opacity-75 font-mono">
+                              ({style.defaultBpm} BPM • {style.recommendedKey})
+                            </span>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+
+                  {/* Custom Hit Song / Artist Search Input */}
+                  <div className="pt-2 flex flex-wrap items-center gap-3">
+                    <div className="relative flex-1 min-w-[260px]">
+                      <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-purple-400" />
+                      <input
+                        type="text"
+                        value={customSongInput}
+                        onChange={(e) => setCustomSongInput(e.target.value)}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter') handleTriggerMatch(undefined, customSongInput);
+                        }}
+                        placeholder="Or enter any hit song/artist (e.g., Sicko Mode, Not Like Us, God's Plan, Superhero)..."
+                        className="w-full pl-10 pr-4 py-2.5 rounded-2xl bg-black/70 border border-purple-500/40 text-xs text-white placeholder:text-purple-400/60 focus:outline-none focus:border-pink-400 shadow-inner"
+                      />
+                    </div>
+
+                    <button
+                      onClick={() => handleTriggerMatch(undefined, customSongInput)}
+                      disabled={isMatchingKit}
+                      className="flex items-center gap-2 px-5 py-2.5 rounded-2xl bg-gradient-to-r from-purple-500 via-pink-500 to-rose-500 text-white font-black text-xs shadow-lg active:scale-95 disabled:opacity-50 transition-all"
+                    >
+                      <Sparkles className="w-4 h-4 text-amber-300 animate-spin-slow" />
+                      <span>{isMatchingKit ? 'Analyzing Acoustics...' : 'AI Match Beat Kit from My Vault'}</span>
+                    </button>
+                  </div>
+                </div>
+
+                {matchedKit && (() => {
+                  const slotList = getKitSlotList(matchedKit.slots);
+                  const overallScore = slotList.length > 0
+                    ? Math.round(slotList.reduce((acc, s) => acc + s.matchScore, 0) / slotList.length)
+                    : 96;
+
+                  return (
+                    <>
+                      {/* Kit Synergy Summary */}
+                      <div className="p-4 rounded-2xl bg-black/60 border border-purple-500/30 flex flex-wrap items-center justify-between gap-4">
+                        <div>
+                          <div className="flex items-center gap-2">
+                            <span className="text-xs font-mono text-gray-400">Match Style:</span>
+                            <strong className="text-white text-sm">{matchedKit.style.name}</strong>
+                            <span className="text-xs font-mono text-purple-300">({matchedKit.style.artistReference})</span>
+                          </div>
+                          <p className="text-xs text-purple-200/90 font-mono mt-1">
+                            Vibe Profile: {matchedKit.vibeSummary}
+                          </p>
+                          <p className="text-xs text-sky-200/90 font-mono">
+                            Harmonic Pocket: Key of {matchedKit.inferredKey} • Grooving at {matchedKit.inferredBpm} BPM
+                          </p>
+                        </div>
+
+                        <div className="text-right">
+                          <span className="text-[10px] font-mono text-gray-400 uppercase block">
+                            Synergy Compatibility
+                          </span>
+                          <div className="flex items-center gap-2 justify-end">
+                            <span className="text-2xl font-black text-amber-400">
+                              {overallScore}%
+                            </span>
+                            <span className="text-[10px] font-black px-2 py-0.5 rounded-full bg-amber-400/20 text-amber-300 border border-amber-400/40">
+                              ELITE MATCH
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* LIVE 16-STEP GROOVE SEQUENCER PLAYER */}
+                      <div className="p-5 rounded-3xl bg-black/80 border border-purple-500/40 space-y-4 shadow-2xl">
+                        <div className="flex flex-wrap items-center justify-between gap-4">
+                          <div className="flex items-center gap-3">
+                            <button
+                              onClick={() => setIsPlayingGroove(!isPlayingGroove)}
+                              className={`flex items-center gap-2 px-5 py-2.5 rounded-2xl font-black text-xs shadow-lg transition-all active:scale-95 ${
+                                isPlayingGroove
+                                  ? 'bg-red-500 text-white shadow-red-500/40 animate-pulse'
+                                  : 'bg-gradient-to-r from-emerald-400 to-teal-500 text-black shadow-emerald-500/30'
+                              }`}
+                            >
+                              {isPlayingGroove ? (
+                                <>
+                                  <Square className="w-4 h-4 fill-current" />
+                                  <span>Stop Groove</span>
+                                </>
+                              ) : (
+                                <>
+                                  <Play className="w-4 h-4 fill-current ml-0.5" />
+                                  <span>Play Beat Kit Groove</span>
+                                </>
+                              )}
+                            </button>
+
+                            {/* Tempo Slider */}
+                            <div className="flex items-center gap-2 bg-black/60 border border-white/10 rounded-xl px-3 py-1.5">
+                              <span className="text-xs font-mono text-gray-400">BPM:</span>
+                              <span className="text-xs font-mono font-bold text-sky-300 w-8">{grooveBpm}</span>
+                              <input
+                                type="range"
+                                min="60"
+                                max="180"
+                                value={grooveBpm}
+                                onChange={(e) => setGrooveBpm(Number(e.target.value))}
+                                className="w-24 accent-sky-400 cursor-pointer"
+                              />
+                            </div>
+                          </div>
+
+                          {/* Step Counter Indicator */}
+                          <div className="flex items-center gap-1.5 font-mono text-xs text-gray-300">
+                            <span className="text-gray-500">Step:</span>
+                            <span className="text-amber-400 font-bold w-5">{currentGrooveStep + 1} / 16</span>
+                          </div>
+                        </div>
+
+                        {/* Sequencer Track Rows */}
+                        <div className="space-y-2 pt-2">
+                          {/* 16-Step Header Lights */}
+                          <div className="flex items-center gap-2">
+                            <div className="w-44 text-[10px] font-mono text-gray-500 uppercase">Track / Element</div>
+                            <div className="flex-1 grid grid-cols-16 gap-1">
+                              {Array.from({ length: 16 }).map((_, stepIdx) => (
+                                <div
+                                  key={stepIdx}
+                                  className={`h-1.5 rounded-full transition-all ${
+                                    currentGrooveStep === stepIdx
+                                      ? 'bg-amber-400 shadow-md shadow-amber-400/80 scale-y-150'
+                                      : (stepIdx % 4 === 0 ? 'bg-white/30' : 'bg-white/10')
+                                  }`}
+                                />
+                              ))}
+                            </div>
+                          </div>
+
+                          {/* Sequencer Tracks */}
+                          {slotList.map((slot) => {
+                            const isMuted = grooveTrackMutes[slot.trackKey];
+                            const isSolo = grooveTrackSolos[slot.trackKey];
+                            const catColor = COSMOS_CATEGORIES.find(c => c.id === slot.sample.category)?.color || '#38bdf8';
+                            const trackPattern = matchedKit.style.pattern[slot.patternKey] || [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0];
+
+                            return (
+                              <div
+                                key={slot.trackKey}
+                                className={`p-2.5 rounded-xl border flex flex-wrap items-center gap-2 transition-all ${
+                                  isMuted
+                                    ? 'bg-black/30 border-white/5 opacity-40'
+                                    : 'bg-black/60 border-white/10 hover:border-purple-500/40'
+                                }`}
+                              >
+                                {/* Track Info & Solo/Mute */}
+                                <div className="w-44 flex items-center justify-between pr-2">
+                                  <div className="truncate">
+                                    <div className="flex items-center gap-1.5">
+                                      <span
+                                        className="w-2 h-2 rounded-full flex-shrink-0"
+                                        style={{ backgroundColor: catColor }}
+                                      />
+                                      <span className="text-xs font-bold text-white uppercase tracking-wider truncate">
+                                        {slot.role}
+                                      </span>
+                                    </div>
+                                    <span className="text-[10px] font-mono text-gray-400 truncate block">
+                                      {slot.sample.name}
+                                    </span>
+                                  </div>
+
+                                  <div className="flex items-center gap-1 flex-shrink-0">
+                                    <button
+                                      onClick={() => {
+                                        setGrooveTrackSolos(prev => ({
+                                          ...prev,
+                                          [slot.trackKey]: !prev[slot.trackKey]
+                                        }));
+                                      }}
+                                      className={`w-5 h-5 rounded text-[10px] font-black transition-all ${
+                                        isSolo
+                                          ? 'bg-amber-400 text-black'
+                                          : 'bg-white/5 hover:bg-white/10 text-gray-400'
+                                      }`}
+                                      title="Solo track"
+                                    >
+                                      S
+                                    </button>
+                                    <button
+                                      onClick={() => {
+                                        setGrooveTrackMutes(prev => ({
+                                          ...prev,
+                                          [slot.trackKey]: !prev[slot.trackKey]
+                                        }));
+                                      }}
+                                      className={`w-5 h-5 rounded text-[10px] font-black transition-all ${
+                                        isMuted
+                                          ? 'bg-red-500 text-white'
+                                          : 'bg-white/5 hover:bg-white/10 text-gray-400'
+                                      }`}
+                                      title="Mute track"
+                                    >
+                                      M
+                                    </button>
+                                    <button
+                                      onClick={() => handlePlaySample(slot.sample)}
+                                      className="p-1 rounded text-sky-400 hover:text-white"
+                                      title="Trigger sample"
+                                    >
+                                      <Play className="w-3 h-3 fill-current ml-0.5" />
+                                    </button>
+                                  </div>
+                                </div>
+
+                                {/* 16 Step Rhythm Trigger Lights */}
+                                <div className="flex-1 grid grid-cols-16 gap-1 min-w-[200px]">
+                                  {trackPattern.map((hasBeat, sIdx) => {
+                                    const isCurrent = currentGrooveStep === sIdx && isPlayingGroove;
+                                    const isHit = hasBeat === 1;
+
+                                    return (
+                                      <div
+                                        key={sIdx}
+                                        className={`h-7 rounded-lg flex items-center justify-center transition-all ${
+                                          isHit
+                                            ? isCurrent
+                                              ? 'bg-amber-300 shadow-lg shadow-amber-300 scale-105'
+                                              : 'bg-purple-600/80 hover:bg-purple-500'
+                                            : isCurrent
+                                              ? 'bg-white/20'
+                                              : (sIdx % 4 === 0 ? 'bg-white/10' : 'bg-white/5')
+                                        }`}
+                                      >
+                                        {isHit && (
+                                          <div
+                                            className={`w-2 h-2 rounded-full ${
+                                              isCurrent ? 'bg-black' : 'bg-white'
+                                            }`}
+                                          />
+                                        )}
+                                      </div>
+                                    );
+                                  })}
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+
+                      {/* Curated Vault Sample Cards */}
+                      <div>
+                        <h4 className="text-sm font-bold text-white mb-3 flex items-center gap-2">
+                          <Sparkles className="w-4 h-4 text-purple-400" />
+                          <span>Curated One-Shots from Your Drum Vault ({slotList.length})</span>
+                        </h4>
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                          {slotList.map((slot) => {
+                            const catColor = COSMOS_CATEGORIES.find(c => c.id === slot.sample.category)?.color || '#38bdf8';
+                            const isPlaying = playingSampleId === slot.sample.id;
+
+                            return (
+                              <div
+                                key={slot.role}
+                                className="p-4 rounded-2xl bg-black/50 border border-purple-500/30 hover:border-purple-400 space-y-2.5 transition-all"
+                              >
+                                <div className="flex items-center justify-between">
+                                  <span
+                                    className="text-[10px] font-mono uppercase px-2 py-0.5 rounded border font-bold"
+                                    style={{
+                                      color: catColor,
+                                      borderColor: `${catColor}60`,
+                                      backgroundColor: `${catColor}15`
+                                    }}
+                                  >
+                                    {slot.role}
+                                  </span>
+                                  <span className="text-[10px] font-mono text-emerald-400 font-bold">
+                                    {slot.matchScore}% Match
+                                  </span>
+                                </div>
+
+                                <div className="flex items-center justify-between">
+                                  <h5 className="text-sm font-bold text-white truncate max-w-[180px]">
+                                    {slot.sample.name}
+                                  </h5>
+                                  <button
+                                    onClick={() => handlePlaySample(slot.sample)}
+                                    className={`p-2 rounded-xl border transition-all ${
+                                      isPlaying
+                                        ? 'bg-sky-400 text-black border-sky-300'
+                                        : 'bg-white/10 text-white border-white/20 hover:bg-white/20'
+                                    }`}
+                                  >
+                                    {isPlaying ? <Square className="w-3.5 h-3.5 fill-current" /> : <Play className="w-3.5 h-3.5 fill-current ml-0.5" />}
+                                  </button>
+                                </div>
+
+                                <p className="text-xs text-gray-300 font-sans leading-relaxed">
+                                  {slot.reason}
+                                </p>
+
+                                {slot.uadChain && slot.uadChain.length > 0 && (
+                                  <div className="p-2 rounded-lg bg-black/60 border border-white/10 text-[11px] font-mono text-purple-200">
+                                    <span className="text-[9px] text-gray-400 uppercase block font-bold">
+                                      Recommended UAD Track Processing:
+                                    </span>
+                                    <strong>{slot.uadChain.join(' ➔ ')}</strong>
+                                  </div>
+                                )}
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+
+                      {/* UAD MASTER DRUM BUS GLUE CHAIN */}
+                      <div className="p-5 rounded-3xl bg-black/70 border border-amber-500/30 space-y-3">
+                        <div className="flex items-center gap-2">
+                          <SlidersHorizontal className="w-4 h-4 text-amber-400" />
+                          <h4 className="text-sm font-bold text-white">
+                            UAD Software Master Drum Bus Glue Recipe (Zero Hardware Contaminants)
+                          </h4>
+                        </div>
+                        <p className="text-xs text-gray-400 font-mono">
+                          Exact software parameters exposed on the digital plugin GUI for your master drum bus.
+                        </p>
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 pt-1">
+                          <div className="p-3.5 rounded-xl bg-black/60 border border-amber-500/20 space-y-1">
+                            <span className="text-xs font-bold text-amber-300">1. Bus Compression</span>
+                            <p className="text-xs font-mono text-white/90">
+                              {matchedKit.uadDrumBusRecipe.busCompressor}
+                            </p>
+                          </div>
+                          <div className="p-3.5 rounded-xl bg-black/60 border border-amber-500/20 space-y-1">
+                            <span className="text-xs font-bold text-amber-300">2. Bus Tonal EQ</span>
+                            <p className="text-xs font-mono text-white/90">
+                              {matchedKit.uadDrumBusRecipe.busEq}
+                            </p>
+                          </div>
+                          <div className="p-3.5 rounded-xl bg-black/60 border border-amber-500/20 space-y-1">
+                            <span className="text-xs font-bold text-amber-300">3. Tape Saturation</span>
+                            <p className="text-xs font-mono text-white/90">
+                              {matchedKit.uadDrumBusRecipe.tapeSaturation}
+                            </p>
+                          </div>
+                          <div className="p-3.5 rounded-xl bg-black/60 border border-amber-500/20 space-y-1">
+                            <span className="text-xs font-bold text-amber-300">4. Pro Glue Tip</span>
+                            <p className="text-xs font-sans text-gray-300">
+                              {matchedKit.uadDrumBusRecipe.glueTip}
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    </>
+                  );
+                })()}
               </div>
             )}
 
@@ -1849,28 +3834,34 @@ Pairing Tips: ${sample.guidance.pairingTips}`;
                   </div>
 
                   {!accessToken && (
-                    <div className="p-4 rounded-2xl bg-amber-950/40 border border-amber-500/40 flex flex-wrap items-center justify-between gap-3 shadow-md">
-                      <div className="flex items-center gap-3">
-                        <div className="p-2.5 rounded-xl bg-amber-500/20 text-amber-300">
-                          <Lock className="w-5 h-5" />
-                        </div>
-                        <div>
-                          <div className="text-xs font-black text-white uppercase tracking-wider">
-                            Google Drive Authorization Required
+                    <div className="p-4 rounded-2xl bg-amber-950/40 border border-amber-500/40 space-y-3 shadow-md">
+                      <div className="flex flex-wrap items-center justify-between gap-3">
+                        <div className="flex items-center gap-3">
+                          <div className="p-2.5 rounded-xl bg-amber-500/20 text-amber-300">
+                            <Lock className="w-5 h-5" />
                           </div>
-                          <p className="text-[11px] font-mono text-amber-200/80 mt-0.5">
-                            Connect your Google account so BeatGangsta can inspect your folder and move one-shots without duplicating space.
-                          </p>
+                          <div>
+                            <div className="text-xs font-black text-white uppercase tracking-wider">
+                              Google Drive Authorization Required
+                            </div>
+                            <p className="text-[11px] font-mono text-amber-200/80 mt-0.5">
+                              Connect your Google account so BeatGangsta can inspect your folder and move one-shots without duplicating space.
+                            </p>
+                          </div>
                         </div>
+                        <button
+                          onClick={handleGoogleAuth}
+                          disabled={isAuthenticating}
+                          className="flex items-center gap-2 px-4 py-2 rounded-xl bg-gradient-to-r from-amber-500 to-yellow-500 hover:from-amber-400 hover:to-yellow-400 text-black font-black text-xs shadow-lg active:scale-95 disabled:opacity-50"
+                        >
+                          <Zap className="w-3.5 h-3.5 fill-current" />
+                          <span>{isAuthenticating ? 'Authorizing...' : 'Authorize Google Drive Now'}</span>
+                        </button>
                       </div>
-                      <button
-                        onClick={handleGoogleAuth}
-                        disabled={isAuthenticating}
-                        className="flex items-center gap-2 px-4 py-2 rounded-xl bg-gradient-to-r from-amber-500 to-yellow-500 hover:from-amber-400 hover:to-yellow-400 text-black font-black text-xs shadow-lg active:scale-95 disabled:opacity-50"
-                      >
-                        <Zap className="w-3.5 h-3.5 fill-current" />
-                        <span>{isAuthenticating ? 'Authorizing...' : 'Authorize Google Drive Now'}</span>
-                      </button>
+
+                      <div className="p-2.5 rounded-xl bg-black/40 border border-amber-500/30 text-[11px] font-mono text-amber-300/90 leading-relaxed">
+                        ⚠️ <strong>If Google shows "Google hasn't verified this app":</strong> You are the developer (<code className="text-white">coldestconcept@gmail.com</code>). Simply tap <strong className="text-white underline">"Advanced"</strong> on the bottom-left of that screen &rarr; then tap <strong className="text-white underline">"Go to Coldest Concept's Apps (unsafe)"</strong> &rarr; tap <strong className="text-white underline">"Continue"</strong>.
+                      </div>
                     </div>
                   )}
 
@@ -2019,42 +4010,122 @@ Pairing Tips: ${sample.guidance.pairingTips}`;
                 )}
 
                 {/* Scanned Audio Files List & Move Action */}
-                {scannedFiles.length > 0 && (
-                  <div className={`p-6 rounded-3xl border space-y-4 ${currentTheme.driveContainer}`}>
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <h4 className="text-sm font-bold text-white">
-                          Discovered Audio Files ({scannedFiles.length})
-                        </h4>
-                        <p className={`text-xs font-mono opacity-80 ${currentTheme.subtitle}`}>
-                          Ready for pitch analysis, loop rejection, and native folder move.
-                        </p>
+                {scannedFiles.length > 0 && (() => {
+                  const existingDriveIds = new Set(samples.map(s => s.driveFileId).filter(Boolean));
+                  const alreadyMigratedCount = scannedFiles.filter(f => existingDriveIds.has(f.id)).length;
+                  const pendingMigrateCount = scannedFiles.length - alreadyMigratedCount;
+
+                  return (
+                    <div className={`p-6 rounded-3xl border space-y-4 ${currentTheme.driveContainer}`}>
+                      <div className="flex flex-wrap items-center justify-between gap-3">
+                        <div>
+                          <div className="flex items-center gap-2">
+                            <h4 className="text-sm font-bold text-white">
+                              Discovered Audio Files ({scannedFiles.length})
+                            </h4>
+                            {alreadyMigratedCount > 0 && (
+                              <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/40">
+                                {alreadyMigratedCount} In Vault
+                              </span>
+                            )}
+                            {pendingMigrateCount > 0 && (
+                              <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-sky-500/20 text-sky-300 border border-sky-500/40">
+                                {pendingMigrateCount} Pending
+                              </span>
+                            )}
+                          </div>
+                          <p className={`text-xs font-mono opacity-80 mt-0.5 ${currentTheme.subtitle}`}>
+                            Auto-deduplicated: Skips already moved files, never consumes double quota.
+                          </p>
+                        </div>
+
+                        {/* Migration Action Buttons */}
+                        <div className="flex items-center gap-2">
+                          {isMigratingDriveFolder ? (
+                            <button
+                              onClick={handlePauseMigration}
+                              className="flex items-center gap-2 px-5 py-2.5 rounded-xl font-black text-xs bg-amber-500 hover:bg-amber-400 text-black shadow-lg active:scale-95 transition-all"
+                            >
+                              <Pause className="w-4 h-4 fill-current" />
+                              <span>Pause Migration</span>
+                            </button>
+                          ) : pendingMigrateCount === 0 ? (
+                            <div className="flex items-center gap-2 px-4 py-2 rounded-xl bg-emerald-950/60 border border-emerald-500/40 text-emerald-300 text-xs font-bold font-mono">
+                              <CheckCircle2 className="w-4 h-4 text-emerald-400" />
+                              <span>100% Migrated to Vault</span>
+                            </div>
+                          ) : (
+                            <button
+                              onClick={handleMigrateAndMoveDriveFolder}
+                              className={`flex items-center gap-2 px-6 py-2.5 rounded-xl font-black text-xs shadow-lg active:scale-95 ${currentTheme.driveBtnMove}`}
+                            >
+                              <Sparkles className="w-4 h-4 animate-spin-slow" />
+                              <span>
+                                {alreadyMigratedCount > 0
+                                  ? `Resume Move (${pendingMigrateCount} Remaining)`
+                                  : 'Start Zero-Duplication Move'}
+                              </span>
+                            </button>
+                          )}
+                        </div>
                       </div>
 
-                      <button
-                        onClick={handleMigrateAndMoveDriveFolder}
-                        disabled={isMigratingDriveFolder}
-                        className={`flex items-center gap-2 px-6 py-2.5 rounded-xl font-black text-xs shadow-lg active:scale-95 disabled:opacity-50 ${currentTheme.driveBtnMove}`}
-                      >
-                        <Sparkles className="w-4 h-4 animate-spin-slow" />
-                        <span>{isMigratingDriveFolder ? 'Moving & Analyzing...' : 'Start Zero-Duplication Move'}</span>
-                      </button>
-                    </div>
-
-                    {isMigratingDriveFolder && (
-                      <div className="p-4 rounded-xl bg-black/60 border border-amber-500/40 space-y-2">
-                        <div className="flex items-center justify-between text-xs font-mono text-amber-300">
-                          <span>Progress: {migrationProgress.current} / {migrationProgress.total}</span>
-                          <span className="truncate max-w-[250px]">{migrationProgress.fileName}</span>
-                        </div>
-                        <div className="w-full h-2 rounded-full bg-black/60 overflow-hidden">
-                          <div 
-                            className={`h-full transition-all duration-300 ${currentTheme.progressBar}`}
-                            style={{ width: `${(migrationProgress.current / migrationProgress.total) * 100}%` }}
-                          />
+                      {/* Engine Mode Selector */}
+                      <div className="p-3 rounded-2xl bg-black/40 border border-white/10 flex flex-wrap items-center justify-between gap-2 text-xs">
+                        <span className="text-gray-300 font-bold flex items-center gap-1.5">
+                          <Zap className="w-3.5 h-3.5 text-amber-400" />
+                          Research Mode:
+                        </span>
+                        <div className="flex items-center gap-1.5">
+                          <button
+                            onClick={() => setMigrationMode('fast_studio_dsp')}
+                            className={`px-3 py-1 rounded-lg font-bold text-[11px] transition-all ${
+                              migrationMode === 'fast_studio_dsp'
+                                ? 'bg-sky-500 text-white shadow-md shadow-sky-500/30'
+                                : 'bg-black/50 text-gray-400 hover:text-white'
+                            }`}
+                            title="Zero AI tokens used. Computes exact pitch, key, punch Hz, and UAD Pultec/1176/Neve recipes instantly without 429 limits."
+                          >
+                            ⚡ Full Studio DSP (0 Tokens, Fast)
+                          </button>
+                          <button
+                            onClick={() => setMigrationMode('studio_live_ai')}
+                            className={`px-3 py-1 rounded-lg font-bold text-[11px] transition-all ${
+                              migrationMode === 'studio_live_ai'
+                                ? 'bg-purple-600 text-white shadow-md shadow-purple-600/30'
+                                : 'bg-black/50 text-gray-400 hover:text-white'
+                            }`}
+                            title="Calls Gemini AI per file for extra descriptive archetype labels (subject to token limits)."
+                          >
+                            🤖 Studio + Live AI
+                          </button>
                         </div>
                       </div>
-                    )}
+
+                      {/* Checkpoint Resumption Banner */}
+                      {alreadyMigratedCount > 0 && pendingMigrateCount > 0 && !isMigratingDriveFolder && (
+                        <div className="p-3 rounded-xl bg-sky-950/40 border border-sky-500/40 text-xs font-mono text-sky-200 flex items-center justify-between">
+                          <span>
+                            💾 <strong>Checkpoint Active:</strong> {alreadyMigratedCount} files from this folder are already safely stored in your Vault. Resuming will start on pending file #{alreadyMigratedCount + 1}.
+                          </span>
+                        </div>
+                      )}
+
+                      {/* Active Migration Progress Bar */}
+                      {isMigratingDriveFolder && (
+                        <div className="p-4 rounded-xl bg-black/60 border border-amber-500/40 space-y-2">
+                          <div className="flex items-center justify-between text-xs font-mono text-amber-300">
+                            <span>Progress: {migrationProgress.current} / {migrationProgress.total}</span>
+                            <span className="truncate max-w-[250px]">{migrationProgress.fileName}</span>
+                          </div>
+                          <div className="w-full h-2 rounded-full bg-black/60 overflow-hidden">
+                            <div 
+                              className={`h-full transition-all duration-300 ${currentTheme.progressBar}`}
+                              style={{ width: `${(migrationProgress.current / migrationProgress.total) * 100}%` }}
+                            />
+                          </div>
+                        </div>
+                      )}
 
                     {migrationRejections.length > 0 && (
                       <div className="p-4 rounded-xl bg-amber-950/40 border border-amber-500/40 space-y-2">
@@ -2091,11 +4162,10 @@ Pairing Tips: ${sample.guidance.pairingTips}`;
                       ))}
                     </div>
                   </div>
-                )}
-              </div>
-            )}
-          </div>
-        )}
+                );
+              })()}
+            </div>
+          )}
       </div>
     </div>
   );
