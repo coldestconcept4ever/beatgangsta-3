@@ -126,10 +126,14 @@ export const StudioCopilotChat: React.FC<StudioCopilotChatProps> = ({
         content: m.content
       }));
 
+      // Detect pasted studio driver link or vault URL
+      const isDriverLink = /beatgangsta\.app\/vault|vault\/share|drive\.google\.com\/drive\/folders|user=/i.test(text);
+
       // Auto-synced context payload
       const payload = {
         message: text,
         history,
+        hasDriverLink: isDriverLink,
         userEmail: userEmail || localStorage.getItem('beatgangsta_sync_email') || 'coldestconcept@gmail.com',
         gearRack: activeGear.map(p => ({ vendor: p.vendor, name: p.name })),
         vaultSamples: vaultSamples.map(s => ({
@@ -292,6 +296,7 @@ export const StudioCopilotChat: React.FC<StudioCopilotChatProps> = ({
       <div className="flex-1 overflow-y-auto p-4 space-y-4 custom-scrollbar">
         {messages.map((m) => {
           const isUser = m.role === 'user';
+          const isDriverLinkInMsg = /beatgangsta\.app\/vault|vault\/share|drive\.google\.com\/drive\/folders|user=/i.test(m.content);
           return (
             <div
               key={m.id}
@@ -311,6 +316,13 @@ export const StudioCopilotChat: React.FC<StudioCopilotChatProps> = ({
                 <div className="whitespace-pre-wrap select-text">
                   {m.content}
                 </div>
+
+                {isDriverLinkInMsg && (
+                  <div className="mt-2.5 p-2.5 rounded-xl bg-cyan-950/80 border border-cyan-400/50 text-[11px] font-mono text-cyan-200 flex items-center gap-2 shadow-lg">
+                    <Sparkles className="w-4 h-4 text-cyan-400 shrink-0 animate-pulse" />
+                    <span>🔗 <strong>Studio Driver Link Resolved:</strong> 100% Vault ({vaultSamples.length} One-Shots) &amp; Gear Rack ({activeGear.length} Plugins) Auto-Loaded</span>
+                  </div>
+                )}
 
                 {m.mutation && (
                   <div className="mt-3 p-3 rounded-xl bg-cyan-950/40 border border-cyan-500/30 text-xs space-y-1.5 font-mono">

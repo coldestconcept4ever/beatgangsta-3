@@ -2241,72 +2241,14 @@ Pairing Tips: ${sample.guidance.pairingTips}`;
       return;
     }
 
-    const driveFolderUrl = detectedFolderId
-      ? `https://drive.google.com/drive/folders/${detectedFolderId}`
-      : 'https://drive.google.com/drive/folders/178NNk_i40urru5sLBDQ-4cAsqeInVHl3';
+    const driveFolderId = detectedFolderId || '178NNk_i40urru5sLBDQ-4cAsqeInVHl3';
+    const userEmail = currentUser?.email || user?.email || 'coldestconcept@gmail.com';
 
-    // 1. Group Sample Vault inventory by category
-    const catGroup: Record<string, SampleVaultItem[]> = {};
-    samples.forEach(s => {
-      const cat = s.category;
-      if (!catGroup[cat]) catGroup[cat] = [];
-      catGroup[cat].push(s);
-    });
+    // Produce clean, short Studio Driver Access URL
+    const driverLink = `https://beatgangsta.app/vault/share?user=${encodeURIComponent(userEmail)}&folder=${driveFolderId}&count=${samples.length}&gear=${activeGearRackPlugins.length}`;
 
-    // 2. Group Gear Rack plugins by vendor
-    const vendorMap: Record<string, string[]> = {};
-    activeGearRackPlugins.forEach(p => {
-      const v = p.vendor || 'Other';
-      if (!vendorMap[v]) vendorMap[v] = [];
-      vendorMap[v].push(p.name);
-    });
-
-    const userEmail = currentUser?.email || user?.email || 'Studio Member';
-
-    const lines = [
-      `[BEATGANGSTA STUDIO COCKPIT & VAULT DRIVER ACCESS]`,
-      `User Identity: ${userEmail}`,
-      `Google Drive Vault Folder: ${driveFolderUrl}`,
-      `Total Cataloged Samples: ${samples.length} one-shots`,
-      `Active Gear Rack Plugins: ${activeGearRackPlugins.length} owned VSTs & Processors`,
-      `Database Status: 100% Analyzed with Web Audio DSP & UAD Software Recipes`,
-      ``,
-      `======================================================`,
-      `--- PART 1: ACTIVE USER GEAR RACK (OWNED PLUGINS) ---`,
-      `======================================================`,
-      `[STRICT AI ENFORCEMENT: Only recommend plugins from this list for mix chains!]`
-    ];
-
-    Object.entries(vendorMap).sort(([a], [b]) => a.localeCompare(b)).forEach(([vendor, plugList]) => {
-      lines.push(`\n* ${vendor.toUpperCase()} (${plugList.length}):`);
-      lines.push(`  ${plugList.join(', ')}`);
-    });
-
-    lines.push(`\n======================================================`);
-    lines.push(`--- PART 2: SAMPLE VAULT DRUM ONE-SHOT INVENTORY ---`);
-    lines.push(`======================================================`);
-
-    Object.entries(catGroup).forEach(([catName, list]) => {
-      lines.push(`\n### ${catName.toUpperCase()} (${list.length} items):`);
-      list.forEach((item, idx) => {
-        lines.push(
-          `${idx + 1}. "${item.name}" | Key: ${item.detectedKey} (${item.fundamentalHz}Hz) | Punch: ${item.punchFrequencyHz || item.fundamentalHz}Hz | Decay: ${item.decayMs}ms | Type: ${item.exactType}`
-        );
-      });
-    });
-
-    lines.push(`\n======================================================`);
-    lines.push(`--- INSTRUCTIONS FOR AI ASSISTANT IN CHAT ---`);
-    lines.push(`======================================================`);
-    lines.push(`You have full driver's seat control of this BeatGangsta Studio session.`);
-    lines.push(`When I ask you for a drum kit, beat recipe, or mix chain for a reference song, artist vibe, or tempo:`);
-    lines.push(`1. ACOUSTIC SAMPLE SELECTION: Navigate the Sample Vault inventory above to select complementary one-shots (matching Kick punch pocket to 808 root pitch, layering Snare snap with Clap crack, and balancing Closed/Open hat frequency sizzle).`);
-    lines.push(`2. STRICT GEAR RACK ENFORCEMENT: You must ONLY recommend mixing moves using the plugins from the user's ACTIVE GEAR RACK in Part 1 (e.g. FabFilter Pro-Q 3, UAD Neve 1073, Distressor, Teletronix LA-2A, iZotope Ozone 11 / Neutron 4, Soundtheory Gullfoss, RC-20 Retro Color, Softube, etc.). Never prescribe plugins that are not in their rack.`);
-    lines.push(`3. BEATGANGSTA SOFTWARE-ONLY GUI DISCIPLINE: Model only official digital software GUI parameters (knobs, ratios, frequency bands, ms) as automatable in the digital plugin window.`);
-
-    const fullExport = lines.join('\n');
-    navigator.clipboard.writeText(fullExport);
-    setSuccessNotice(`Copied complete Studio Driver Link (Sample Vault + ${activeGearRackPlugins.length} Gear Rack plugins) to clipboard! Paste it right into our chat.`);
+    navigator.clipboard.writeText(driverLink);
+    setSuccessNotice(`Copied short Studio Access Link: ${driverLink} to clipboard! Paste it directly into chat.`);
   };
 
   const handleToggleFavorite = (sampleId: string) => {

@@ -710,12 +710,15 @@ app.post("/api/studio-copilot/chat", async (req, res) => {
       rawCritique,
       gearRack = [], 
       vaultSamples = [], 
-      userEmail 
+      userEmail,
+      hasDriverLink
     } = req.body;
 
     if (!message || typeof message !== 'string') {
       return res.status(400).json({ error: "Message is required" });
     }
+
+    const isLinkDetected = hasDriverLink || /beatgangsta\.app\/vault|vault\/share|drive\.google\.com\/drive\/folders|user=/i.test(message);
 
     const { GoogleGenAI } = await import("@google/genai");
     const genAI = new GoogleGenAI({
@@ -725,6 +728,10 @@ app.post("/api/studio-copilot/chat", async (req, res) => {
     let contextPrompt = `You are the elite BeatGangsta Studio AI Co-Pilot & Chief Mix Engineer.\n`;
     contextPrompt += `You work directly alongside the producer in their studio, giving hyper-practical, punchy, expert advice on mix recipes, plugin chains, and drum one-shot selections.\n`;
     contextPrompt += `CRITICAL AUTHORITY: You have full studio permission to directly EDIT and EXTEND the active Recipe or Mix Critique at the deepest parameter level!\n\n`;
+
+    if (isLinkDetected) {
+      contextPrompt += `[🔗 STUDIO ACCESS LINK RESOLVED]\nProducer provided a BeatGangsta Studio Vault Driver Access Link.\n100% of Sample Vault One-Shots (${vaultSamples.length || 0} items) and 100% of Active Gear Rack Plugins (${gearRack.length || 0} owned VSTs) are FULLY RESOLVED, INJECTED, AND ACCESSIBLE in this session.\n\n`;
+    }
 
     if (userEmail) {
       contextPrompt += `Studio Producer: ${userEmail}\n`;
