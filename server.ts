@@ -697,6 +697,197 @@ Respond ONLY with valid JSON with this exact structure:
   }
 });
 
+// BeatGangsta Studio AI Co-Pilot Chat Endpoint
+// Auto-syncs live mix critique, recipe, user gear rack, and sample vault one-shots
+app.post("/api/studio-copilot/chat", async (req, res) => {
+  try {
+    const { 
+      message, 
+      history = [], 
+      recipeContext, 
+      critiqueContext, 
+      rawRecipe,
+      rawCritique,
+      gearRack = [], 
+      vaultSamples = [], 
+      userEmail 
+    } = req.body;
+
+    if (!message || typeof message !== 'string') {
+      return res.status(400).json({ error: "Message is required" });
+    }
+
+    const { GoogleGenAI } = await import("@google/genai");
+    const genAI = new GoogleGenAI({
+      apiKey: process.env.GEMINI_API_KEY
+    });
+
+    let contextPrompt = `You are the elite BeatGangsta Studio AI Co-Pilot & Chief Mix Engineer.\n`;
+    contextPrompt += `You work directly alongside the producer in their studio, giving hyper-practical, punchy, expert advice on mix recipes, plugin chains, and drum one-shot selections.\n`;
+    contextPrompt += `CRITICAL AUTHORITY: You have full studio permission to directly EDIT and EXTEND the active Recipe or Mix Critique at the deepest parameter level!\n\n`;
+
+    if (userEmail) {
+      contextPrompt += `Studio Producer: ${userEmail}\n`;
+    }
+
+    // 1. Gear Rack Context
+    if (Array.isArray(gearRack) && gearRack.length > 0) {
+      contextPrompt += `\n=== USER'S ACTIVE GEAR RACK (OWNED PLUGINS) ===\n`;
+      contextPrompt += `The user owns ${gearRack.length} plugins in their rack. STRICT RULE: You must ONLY recommend mixing plugins and processing chains from this list! Never recommend plugins not in their rack.\n`;
+      const pluginNames = gearRack.map((p: any) => typeof p === 'string' ? p : `${p.vendor ? p.vendor + ' ' : ''}${p.name || ''}`).filter(Boolean);
+      contextPrompt += `${pluginNames.slice(0, 160).join(', ')}\n`;
+    }
+
+    // 2. Sample Vault Context
+    if (Array.isArray(vaultSamples) && vaultSamples.length > 0) {
+      contextPrompt += `\n=== USER'S SAMPLE VAULT (DRUM ONE-SHOTS) ===\n`;
+      contextPrompt += `The user has cataloged ${vaultSamples.length} one-shots in their cloud vault. When discussing drum choices, recommend specific one-shots from this list:\n`;
+      vaultSamples.slice(0, 60).forEach((s: any, idx: number) => {
+        contextPrompt += `${idx + 1}. "${s.name}" (${s.category}) | Key: ${s.detectedKey || 'N/A'} (${s.fundamentalHz || 0}Hz) | Punch: ${s.punchFrequencyHz || 0}Hz | Decay: ${s.decayMs || 0}ms\n`;
+      });
+    }
+
+    // 3. Current Recipe or Critique Context
+    const effectiveRecipe = rawRecipe || recipeContext;
+    if (effectiveRecipe) {
+      contextPrompt += `\n=== ACTIVE BEAT RECIPE CONTEXT ===\n`;
+      contextPrompt += `Title: ${effectiveRecipe.title || 'Untitled Beat'}\n`;
+      if (effectiveRecipe.bpm) contextPrompt += `BPM: ${effectiveRecipe.bpm}\n`;
+      if (effectiveRecipe.key) contextPrompt += `Root Key: ${effectiveRecipe.key}\n`;
+      if (effectiveRecipe.style || effectiveRecipe.genre) contextPrompt += `Genre / Style: ${effectiveRecipe.style || effectiveRecipe.genre}\n`;
+      
+      const tracks = effectiveRecipe.instruments || effectiveRecipe.tracks || [];
+      if (Array.isArray(tracks) && tracks.length > 0) {
+        contextPrompt += `Instruments & Tracks (${tracks.length}):\n`;
+        tracks.forEach((t: any, i: number) => {
+          contextPrompt += `  Track ${i + 1}: ${t.name || t.instrument} (Role: ${t.loopGuide || ''})\n`;
+          if (t.plugin) contextPrompt += `    Instrument VST: ${t.plugin}\n`;
+          if (Array.isArray(t.deepDive) && t.deepDive.length > 0) {
+            contextPrompt += `    Instrument Settings: ${t.deepDive.map((d: any) => `${d.parameter}: ${d.value}`).join(', ')}\n`;
+          }
+          if (Array.isArray(t.fxPlugins) && t.fxPlugins.length > 0) {
+            contextPrompt += `    FX Chain:\n`;
+            t.fxPlugins.forEach((fx: any, fxI: number) => {
+              const params = Array.isArray(fx.deepDive) ? fx.deepDive.map((p: any) => `${p.parameter}: ${p.value}`).join(' | ') : '';
+              contextPrompt += `      ${fxI + 1}. [${fx.name}] (${fx.purpose || ''}) -> ${params}\n`;
+            });
+          }
+        });
+      }
+
+      if (Array.isArray(effectiveRecipe.masterPlugins) && effectiveRecipe.masterPlugins.length > 0) {
+        contextPrompt += `Master Bus Chain:\n`;
+        effectiveRecipe.masterPlugins.forEach((mp: any, mI: number) => {
+          const params = Array.isArray(mp.deepDive) ? mp.deepDive.map((p: any) => `${p.parameter}: ${p.value}`).join(' | ') : '';
+          contextPrompt += `  ${mI + 1}. [${mp.name}] (${mp.purpose || ''}) -> ${params}\n`;
+        });
+      }
+    }
+
+    const effectiveCritique = rawCritique || critiqueContext;
+    if (effectiveCritique) {
+      contextPrompt += `\n=== ACTIVE MIX CRITIQUE CONTEXT ===\n`;
+      contextPrompt += `Title: ${effectiveCritique.title || 'Mix Analysis'}\n`;
+      if (effectiveCritique.overallScore) contextPrompt += `Mix Score: ${effectiveCritique.overallScore}%\n`;
+      if (effectiveCritique.overallFeedback) contextPrompt += `Overall Feedback: ${effectiveCritique.overallFeedback}\n`;
+      if (effectiveCritique.lowEndAnalysis) contextPrompt += `Low-End / 808 Notes: ${effectiveCritique.lowEndAnalysis}\n`;
+      if (effectiveCritique.vocalAnalysis) contextPrompt += `Vocal Notes: ${effectiveCritique.vocalAnalysis}\n`;
+      if (Array.isArray(effectiveCritique.actionPlan)) {
+        contextPrompt += `Action Plan Items:\n`;
+        effectiveCritique.actionPlan.forEach((act: any, i: number) => {
+          contextPrompt += `  ${i + 1}. [Target: ${act.targetStem || 'Mix'}] Issue: ${act.issue} -> Solution: ${act.solution}\n`;
+        });
+      }
+    }
+
+    contextPrompt += `\n=== STRICT ARCHITECTURAL & DEEP CARD MUTATION RULES ===\n`;
+    contextPrompt += `1. ABSOLUTELY NO HARDWARE-ONLY CONTROLS: Model only official digital software GUI controls (knobs, ratios, frequency bands, milliseconds, dB). Never invent internal chassis pots, hardware tube biasing, or physical calibrations.\n`;
+    contextPrompt += `2. NO MOCK GENERALITIES: Give exact numbers matching the software GUI.\n`;
+    contextPrompt += `3. DEEP CARD EDITING & EXTENDING:\n`;
+    contextPrompt += `   When the producer asks you to adjust a parameter, fix a unit (e.g. dB to ms), correct a parameter name, add an additional plugin from their rack, or replace a plugin, you must explain your move AND append a structured mutation JSON block at the very end of your response inside \`\`\`json:card_mutation ... \`\`\`.\n`;
+    contextPrompt += `   When adding an additional plugin: Research the current signal chain, determine where it best belongs (e.g. dynamic resonance carving before vintage color compressor, or tape saturation after EQ, or dynamic stereo balance on master bus), and configure all deepDive parameters with official software GUI dials.\n`;
+    contextPrompt += `\nJSON CARD MUTATION SCHEMA:\n`;
+    contextPrompt += `\`\`\`json:card_mutation\n`;
+    contextPrompt += `{\n`;
+    contextPrompt += `  "type": "update_parameters" | "add_plugin" | "replace_plugin" | "update_critique",\n`;
+    contextPrompt += `  "summary": "Short user-facing explanation of the exact change made",\n`;
+    contextPrompt += `  "target": {\n`;
+    contextPrompt += `    "trackName": "Kick", // track name or "master" or "Master Bus"\n`;
+    contextPrompt += `    "pluginName": "SSL 4000 G Bus Compressor", // target plugin name if updating/replacing\n`;
+    contextPrompt += `    "destination": "track" | "bus" | "master" | "critique"\n`;
+    contextPrompt += `  },\n`;
+    contextPrompt += `  "parameterUpdates": [\n`;
+    contextPrompt += `    { "parameter": "Attack", "value": "15ms", "explanation": "Faster transient clamp" }\n`;
+    contextPrompt += `  ],\n`;
+    contextPrompt += `  "newPlugin": {\n`;
+    contextPrompt += `    "name": "FabFilter Pro-Q 3",\n`;
+    contextPrompt += `    "purpose": "Dynamic Resonance Suppression",\n`;
+    contextPrompt += `    "band": "Dynamic Mid/Side",\n`;
+    contextPrompt += `    "routing": "Insert 1",\n`;
+    contextPrompt += `    "deepDive": [\n`;
+    contextPrompt += `      { "parameter": "Low Cut", "value": "30 Hz", "explanation": "Clean subsonic rumble" },\n`;
+    contextPrompt += `      { "parameter": "Band 2 Freq", "value": "280 Hz", "explanation": "Dynamic dip of boxiness" }\n`;
+    contextPrompt += `    ]\n`;
+    contextPrompt += `  }\n`;
+    contextPrompt += `}\n`;
+    contextPrompt += `\`\`\`\n`;
+
+    const contents: any[] = [];
+    
+    if (Array.isArray(history)) {
+      history.slice(-10).forEach((turn: any) => {
+        contents.push({
+          role: turn.role === 'assistant' || turn.role === 'model' ? 'model' : 'user',
+          parts: [{ text: turn.content || turn.text || '' }]
+        });
+      });
+    }
+
+    contents.push({
+      role: 'user',
+      parts: [{ text: message }]
+    });
+
+    const response = await genAI.models.generateContent({
+      model: "gemini-3.8-flash",
+      contents: contents,
+      config: {
+        systemInstruction: contextPrompt,
+        temperature: 0.7,
+        maxOutputTokens: 1600
+      }
+    });
+
+    const rawReply = response.text || "I've analyzed your mix context. Let me know what specific move or track you want to dial in.";
+    
+    // Parse mutation if present
+    let mutation: any = null;
+    const mutationMatch = rawReply.match(/```json:card_mutation\s*([\s\S]*?)\s*```/i);
+    if (mutationMatch) {
+      try {
+        mutation = JSON.parse(mutationMatch[1]);
+      } catch (parseErr) {
+        console.error("Failed to parse card_mutation JSON:", parseErr);
+      }
+    }
+
+    // Clean conversational reply for clean display in chat
+    const cleanReply = rawReply.replace(/```json:card_mutation[\s\S]*?```/gi, '').trim();
+
+    return res.json({ 
+      reply: cleanReply, 
+      mutation, 
+      rawReply 
+    });
+  } catch (error: any) {
+    console.error("Studio Co-Pilot error:", error);
+    return res.status(500).json({ 
+      error: "Studio Co-Pilot service encountered an error. Please try again.",
+      details: error.message 
+    });
+  }
+});
+
 // NowPayments Payment Creation
 app.post("/api/payments/nowpayments/create", async (req, res) => {
   try {

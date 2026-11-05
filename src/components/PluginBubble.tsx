@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { RefreshCw, Loader2, ShieldCheck, Zap, Mail, X } from 'lucide-react';
+import { RefreshCw, Loader2, ShieldCheck, Zap, Mail, X, Sparkles } from 'lucide-react';
 import { VSTPlugin } from '../types';
 import { EQVisualizer } from './EQVisualizer';
 
@@ -10,6 +10,7 @@ export interface PluginBubbleProps {
   band?: string;
   routing?: string;
   isRegenerating: boolean;
+  isCopilotUpdated?: boolean;
   onRegenerate: () => void;
   onCorrect?: (pluginName: string, corrections: { parameter: string, value: string }[], version: string) => Promise<{ success: boolean, message: string, plugin?: VSTPlugin }>;
   onContactSupport?: (pluginInfo: any) => void;
@@ -18,7 +19,21 @@ export interface PluginBubbleProps {
   className?: string;
 }
 
-export const PluginBubble: React.FC<PluginBubbleProps> = ({ name, purpose, deepDive, band, routing, isRegenerating, onRegenerate, onCorrect, onContactSupport, onUpdateParameters, theme, className = '' }) => {
+export const PluginBubble: React.FC<PluginBubbleProps> = ({ 
+  name, 
+  purpose, 
+  deepDive, 
+  band, 
+  routing, 
+  isRegenerating, 
+  isCopilotUpdated,
+  onRegenerate, 
+  onCorrect, 
+  onContactSupport, 
+  onUpdateParameters, 
+  theme, 
+  className = '' 
+}) => {
   const [isCorrectionMode, setIsCorrectionMode] = useState(false);
   const [corrections, setCorrections] = useState<{ parameter: string, value: string }[]>(() => {
     return (deepDive || []).map(d => ({ parameter: d.parameter, value: d.value }));
@@ -48,16 +63,29 @@ export const PluginBubble: React.FC<PluginBubbleProps> = ({ name, purpose, deepD
     }
   };
 
+  const hasCopilotParam = Array.isArray(deepDive) && deepDive.some((s: any) => s.isCopilotUpdated);
+  const isHighlighted = isCopilotUpdated || hasCopilotParam;
+
   return (
-    <div className={`relative p-4 rounded-2xl border ${className} ${isRegenerating ? 'opacity-50 blur-sm' : ''}`}>
+    <div className={`relative p-4 rounded-2xl border transition-all duration-300 ${className} ${
+      isRegenerating ? 'opacity-50 blur-sm' : ''
+    } ${
+      isHighlighted ? 'border-cyan-400/60 shadow-lg shadow-cyan-500/15 bg-gradient-to-br from-cyan-950/20 via-transparent to-transparent' : ''
+    }`}>
       {isRegenerating && (
-        <div className="absolute inset-0 flex items-center justify-center bg-white/20 rounded-2xl z-10">
-          <Loader2 className="w-6 h-6 animate-spin text-purple-600" />
+        <div className="absolute inset-0 flex items-center justify-center bg-black/40 backdrop-blur-sm rounded-2xl z-20">
+          <RefreshCw className="w-6 h-6 animate-spin text-cyan-400" />
         </div>
       )}
       <div className="flex justify-between items-start mb-2">
-        <div className="flex items-center gap-2">
-          <h6 className="font-black text-xs">{name}</h6>
+        <div className="flex items-center gap-2 flex-wrap">
+          <h6 className={`font-black text-xs ${isHighlighted ? 'font-mono text-cyan-300' : ''}`}>{name}</h6>
+          {isHighlighted && (
+            <span className="text-[8px] font-mono font-black uppercase tracking-wider px-2 py-0.5 rounded-full bg-cyan-500/20 text-cyan-300 border border-cyan-400/50 flex items-center gap-1 shadow-sm">
+              <Sparkles className="w-2.5 h-2.5 text-cyan-400 animate-pulse" />
+              Co-Pilot Tuned
+            </span>
+          )}
           <div className="flex items-center gap-1">
             <button 
               onClick={onRegenerate} 
@@ -190,11 +218,35 @@ export const PluginBubble: React.FC<PluginBubbleProps> = ({ name, purpose, deepD
             <EQVisualizer parameters={deepDive} theme={theme} onUpdateParameters={onUpdateParameters} />
           )}
 
-          {Array.isArray(deepDive) && deepDive.map((s, sIdx) => (
-            <div key={sIdx} className="text-xs font-bold opacity-90">
-              <span className={`${theme === 'coldest' ? 'text-sky-300' : 'text-current'}`}>{s.parameter}:</span> {s.value} {s.explanation && <span className="opacity-70">- {s.explanation}</span>}
-            </div>
-          ))}
+          {Array.isArray(deepDive) && deepDive.map((s: any, sIdx: number) => {
+            const isParamUpdated = s.isCopilotUpdated || isCopilotUpdated;
+            return (
+              <div 
+                key={sIdx} 
+                className={`text-xs transition-all ${
+                  isParamUpdated 
+                    ? 'font-mono text-cyan-300 font-bold tracking-tight bg-cyan-950/30 p-2 rounded-xl border border-cyan-500/30' 
+                    : 'font-sans font-bold opacity-90'
+                }`}
+              >
+                {isParamUpdated && (
+                  <span className="inline-flex items-center gap-1 text-[9px] font-black uppercase text-cyan-400 bg-cyan-500/20 px-1.5 py-0.5 rounded mr-1.5 border border-cyan-400/30">
+                    <Sparkles className="w-2.5 h-2.5" />
+                    CO-PILOT
+                  </span>
+                )}
+                <span className={isParamUpdated ? 'text-cyan-200 uppercase tracking-wider text-[10px] font-black' : (theme === 'coldest' ? 'text-sky-300' : 'text-current')}>
+                  {s.parameter}:
+                </span>{' '}
+                <span className={isParamUpdated ? 'text-cyan-100 font-black' : ''}>{s.value}</span>{' '}
+                {s.explanation && (
+                  <span className={isParamUpdated ? 'text-cyan-300/70 text-[11px] italic font-normal' : 'opacity-70'}>
+                    - {s.explanation}
+                  </span>
+                )}
+              </div>
+            );
+          })}
         </div>
       )}
     </div>

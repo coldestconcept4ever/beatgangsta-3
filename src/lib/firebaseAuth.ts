@@ -32,8 +32,8 @@ export const AUTHORIZED_VAULT_EMAILS = [
 ];
 
 export const isAuthorizedForVault = (email?: string | null): boolean => {
-  if (!email) return false;
-  return AUTHORIZED_VAULT_EMAILS.includes(email.toLowerCase().trim());
+  // Unlocked for multi-user rollout: all studio producers and accounts have Sample Vault access
+  return true;
 };
 
 export const initAuth = (

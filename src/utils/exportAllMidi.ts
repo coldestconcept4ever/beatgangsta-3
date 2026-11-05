@@ -1,6 +1,7 @@
 import MidiWriter from 'midi-writer-js';
 import { generateMidiTrack, generateAudioLoop, generateDrumMidiBaseData, generateFullSongMidiTrack, generateFullSongDrumPartMidi, getFullSongArrangement, isMidiCapable, getBeats, PatternLength, PatternVariation } from './midiGenerator';
-import { BeatRecipe, MidiNote } from '../types';
+import { BeatRecipe, MidiNote, SampleVaultItem } from '../types';
+import { matchBeatKitFromVault } from './songKitMatcher';
 
 // Dynamic import for JSZip
 const getJSZip = () => import('jszip').then(m => m.default);
@@ -223,6 +224,63 @@ export const generateAllMidiZip = async (recipe: BeatRecipe, dawType?: string | 
   }
 
   zip.file(`INSTRUMENT_SOUND_DESIGN_AND_MIX_GUIDE.txt`, guideText);
+
+  // 4. Sample Vault One-Shot Sampler Mappings
+  try {
+    const rawVault = typeof window !== 'undefined' ? localStorage.getItem('bg_sample_vault_items') : null;
+    if (rawVault) {
+      const parsed = JSON.parse(rawVault);
+      if (Array.isArray(parsed) && parsed.length > 0) {
+        const matchedKit = matchBeatKitFromVault(recipe.title, parsed, undefined, bpm);
+        const padSlots = [
+          { pad: 'Pad 1 (C1 / Note 36)', role: 'Kick Drum', data: matchedKit.slots.kick },
+          { pad: 'Pad 2 (D1 / Note 38)', role: 'Snare / Main Clap', data: matchedKit.slots.snareClap },
+          { pad: 'Pad 3 (F#1 / Note 42)', role: 'Closed Hi-Hat', data: matchedKit.slots.closedHat },
+          { pad: 'Pad 4 (A#1 / Note 46)', role: 'Open Hi-Hat / Cymbal', data: matchedKit.slots.openHat },
+          { pad: 'Pad 5 (C#1 / Note 37)', role: 'Sub Bass / 808', data: matchedKit.slots.bass },
+          { pad: 'Pad 6 (G#1 / Note 44)', role: 'Percussion / Foley', data: matchedKit.slots.perc },
+        ];
+
+        let vDoc = `========================================================================\n`;
+        vDoc += ` BEATGANGSTA STUDIO - VAULT ONE-SHOT KIT MAPPINGS & SOUND DESIGN\n`;
+        vDoc += `========================================================================\n\n`;
+        vDoc += `Song / Recipe: ${recipe.title}\n`;
+        vDoc += `Style Reference: ${matchedKit.style.name} (${matchedKit.style.genre})\n`;
+        vDoc += `Tempo: ${bpm} BPM | Key Center: ${matchedKit.inferredKey}\n\n`;
+
+        padSlots.forEach(({ pad, role, data }) => {
+          vDoc += `\n[${pad}] -> ${role.toUpperCase()}\n`;
+          if (data?.sample) {
+            const s = data.sample;
+            vDoc += `  Sample Name: ${s.name}\n`;
+            vDoc += `  Category: ${s.category.toUpperCase()} (${s.exactType || 'One-Shot'})\n`;
+            vDoc += `  Punch / Fundamental: ${s.punchFrequencyHz || s.fundamentalHz || 'N/A'} Hz\n`;
+            vDoc += `  Match Synergy: ${data.matchScore}% Match\n`;
+            if (data.recommendedTuningSemitones) {
+              vDoc += `  Pitch Offset: ${data.recommendedTuningSemitones > 0 ? '+' : ''}${data.recommendedTuningSemitones} semitones\n`;
+            }
+            vDoc += `  Synergy Reason: ${data.reason}\n`;
+            if (data.uadChain && data.uadChain.length > 0) {
+              vDoc += `  UAD Digital Settings:\n`;
+              data.uadChain.forEach(tip => {
+                vDoc += `    * ${tip}\n`;
+              });
+            }
+          }
+        });
+
+        vDoc += `\n========================================================================\n`;
+        vDoc += ` MASTER DRUM BUS GLUE (UAD DIGITAL GUI CONTROLS)\n`;
+        vDoc += `========================================================================\n`;
+        vDoc += `Bus Compressor: ${matchedKit.uadDrumBusRecipe.busCompressor}\n`;
+        vDoc += `Bus Equalizer: ${matchedKit.uadDrumBusRecipe.busEq}\n`;
+        vDoc += `Tape Saturation: ${matchedKit.uadDrumBusRecipe.tapeSaturation}\n`;
+        vDoc += `Glue Tip: ${matchedKit.uadDrumBusRecipe.glueTip}\n`;
+
+        zip.file(`VAULT_ONE_SHOT_MAPPINGS.txt`, vDoc);
+      }
+    }
+  } catch {}
 
   return await zip.generateAsync({ type: 'blob' });
 };

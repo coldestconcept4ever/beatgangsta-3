@@ -160,6 +160,7 @@ export interface ParameterSetting {
   parameter: string;
   value: string;
   explanation?: string;
+  isCopilotUpdated?: boolean;
 }
 
 export interface DeepDivePlugin {
@@ -168,6 +169,7 @@ export interface DeepDivePlugin {
   deepDive: ParameterSetting[];
   band?: string;
   routing?: string;
+  isCopilotUpdated?: boolean;
 }
 
 export interface MidiNote {

@@ -7225,7 +7225,7 @@ Provide the exact JSFX plugin name and required sliders/parameters.`;
                       </>
                     )}
 
-                    {user?.email && ['recognizemiracles@gmail.com', 'coldestconcept@gmail.com', 'ruhedramarkprod@gmail.com'].includes(user.email.toLowerCase().trim()) && (
+                    {user?.email && (
                       <>
                         <button 
                           onClick={() => {
@@ -10082,6 +10082,7 @@ Provide the exact JSFX plugin name and required sliders/parameters.`;
                           reaperSyncPin={reaperSyncPin}
                           reaperSyncEmail={user?.email || localStorage.getItem('beatgangsta_sync_email')}
                           isJsfxMode={isJsfxMode}
+                          userEmail={user?.email}
                         />
                       </ErrorBoundary>
                     </motion.div>

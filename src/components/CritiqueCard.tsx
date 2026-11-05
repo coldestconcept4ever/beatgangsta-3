@@ -6,9 +6,10 @@ import { uploadFileChunked, deleteFileFromDrive } from '../services/uploadServic
 import { analyzePhysicalCharacteristics } from '../utils/audioAnalyzer';
 import { generateDawProjectFromMixCritique } from '../utils/dawprojectUtils';
 import { motion, AnimatePresence } from 'motion/react';
-import { Loader2, Search, CheckCircle2, AlertCircle, Download, RefreshCw, Layers, BarChart2, Mic, Minus, Sparkles, Play, Square, Volume2, Eye, Info, RefreshCcw, Settings, Sliders, Check, Headphones, FileText, Upload, Music } from 'lucide-react';
+import { Loader2, Search, CheckCircle2, AlertCircle, Download, RefreshCw, Layers, BarChart2, Mic, Minus, Sparkles, Play, Square, Volume2, Eye, Info, RefreshCcw, Settings, Sliders, Check, Headphones, FileText, Upload, Music, Bot, Undo2 } from 'lucide-react';
 import { PluginBubble } from './PluginBubble';
 import { CritiqueHTMLTemplate } from './CritiqueHTMLTemplate';
+import { StudioCopilotChat } from './StudioCopilotChat';
 
 // Dynamically import heavy libraries
 const getRenderToStaticMarkup = () => import('react-dom/server').then(m => m.renderToStaticMarkup);
@@ -151,8 +152,111 @@ const getDawSpecificGuide = (daw: string | null) => {
   };
 };
 
-export const CritiqueCard: React.FC<CritiqueCardProps> = ({ critique, stems = [], theme, plugins, analogInstruments = [], analogHardware = [], audioBase64, audioUrl, geminiFileUri, mimeType, isSaved, onSave, onUpdateCritique, onReCritique, currentAudioInfo, onLogReceipt, onCorrectPlugin, onContactSupport, onMinimize, isMultiBandMode = false, dawType = null, lunaSumming = 'off', lunaTape = 'off', reaperSyncPin, reaperSyncEmail, isJsfxMode = false, userEmail = null }) => {
+export const CritiqueCard: React.FC<CritiqueCardProps> = ({ critique: initialCritique, stems = [], theme, plugins, analogInstruments = [], analogHardware = [], audioBase64, audioUrl, geminiFileUri, mimeType, isSaved, onSave, onUpdateCritique, onReCritique, currentAudioInfo, onLogReceipt, onCorrectPlugin, onContactSupport, onMinimize, isMultiBandMode = false, dawType = null, lunaSumming = 'off', lunaTape = 'off', reaperSyncPin, reaperSyncEmail, isJsfxMode = false, userEmail = null }) => {
   const { t, i18n } = useTranslation();
+  const [critique, setCritiqueState] = useState<MixCritique>(initialCritique);
+  const [undoStack, setUndoStack] = useState<{ snapshot: MixCritique; summary: string }[]>([]);
+  const [copilotBanner, setCopilotBanner] = useState<{ message: string; timestamp: number } | null>(null);
+
+  useEffect(() => {
+    setCritiqueState(initialCritique);
+  }, [initialCritique]);
+
+  const handleApplyCoPilotCritiqueMutation = (mutation: any) => {
+    if (!mutation) return;
+
+    setUndoStack(prev => [...prev, { snapshot: JSON.parse(JSON.stringify(critique)), summary: mutation.summary || 'Co-Pilot Edit' }]);
+
+    const updated = JSON.parse(JSON.stringify(critique)) as MixCritique;
+    let targetPluginId: string | null = null;
+
+    if (mutation.type === 'update_parameters') {
+      const updates: { parameter: string; value: string; explanation?: string }[] = mutation.parameterUpdates || [];
+      const targetName = (mutation.target?.pluginName || '').toLowerCase();
+
+      if (Array.isArray(updated.actionPlan)) {
+        updated.actionPlan.forEach((action: any, aIdx: number) => {
+          if (Array.isArray(action.recommendedChain)) {
+            action.recommendedChain.forEach((fx: any, fIdx: number) => {
+              if (!targetName || fx.name.toLowerCase().includes(targetName)) {
+                fx.deepDive = fx.deepDive || [];
+                updates.forEach(u => {
+                  const existingParam = fx.deepDive.find((p: any) => p.parameter.toLowerCase() === u.parameter.toLowerCase());
+                  if (existingParam) {
+                    existingParam.value = u.value;
+                    if (u.explanation) existingParam.explanation = u.explanation;
+                    existingParam.isCopilotUpdated = true;
+                  } else {
+                    fx.deepDive.push({ parameter: u.parameter, value: u.value, explanation: u.explanation || '', isCopilotUpdated: true });
+                  }
+                });
+                fx.isCopilotUpdated = true;
+                targetPluginId = `critique-${aIdx}-${fIdx}`;
+              }
+            });
+          }
+        });
+      }
+    } else if (mutation.type === 'add_plugin') {
+      const newPlug = {
+        ...mutation.newPlugin,
+        isCopilotUpdated: true,
+        deepDive: (mutation.newPlugin?.deepDive || []).map((p: any) => ({ ...p, isCopilotUpdated: true }))
+      };
+
+      if (!Array.isArray(updated.actionPlan) || updated.actionPlan.length === 0) {
+        updated.actionPlan = [{ issue: 'Co-Pilot Enhancement', solution: 'Added recommended processing plugin', recommendedChain: [] }];
+      }
+      const targetActionIdx = 0;
+      updated.actionPlan[targetActionIdx].recommendedChain = [...(updated.actionPlan[targetActionIdx].recommendedChain || []), newPlug];
+      targetPluginId = `critique-${targetActionIdx}-${updated.actionPlan[targetActionIdx].recommendedChain.length - 1}`;
+    } else if (mutation.type === 'replace_plugin') {
+      const newPlug = {
+        ...mutation.newPlugin,
+        isCopilotUpdated: true,
+        deepDive: (mutation.newPlugin?.deepDive || []).map((p: any) => ({ ...p, isCopilotUpdated: true }))
+      };
+      const targetName = (mutation.target?.pluginName || '').toLowerCase();
+
+      if (Array.isArray(updated.actionPlan)) {
+        updated.actionPlan.forEach((action: any, aIdx: number) => {
+          if (Array.isArray(action.recommendedChain)) {
+            action.recommendedChain.forEach((fx: any, fIdx: number) => {
+              if (fx.name.toLowerCase().includes(targetName)) {
+                action.recommendedChain[fIdx] = newPlug;
+                targetPluginId = `critique-${aIdx}-${fIdx}`;
+              }
+            });
+          }
+        });
+      }
+    } else if (mutation.type === 'update_critique') {
+      if (mutation.summary) {
+        updated.overallFeedback = `${updated.overallFeedback}\n\n[Co-Pilot Tuning Note]: ${mutation.summary}`;
+      }
+    }
+
+    setCritiqueState(updated);
+    if (onSave) onSave(updated);
+    setCopilotBanner({ message: mutation.summary || 'Co-Pilot updated mix critique', timestamp: Date.now() });
+
+    if (targetPluginId) {
+      setRegeneratingPluginId(targetPluginId);
+      setTimeout(() => setRegeneratingPluginId(null), 850);
+    }
+  };
+
+  const handleUndoCoPilot = () => {
+    if (undoStack.length === 0) return;
+    const last = undoStack[undoStack.length - 1];
+    setUndoStack(prev => prev.slice(0, -1));
+    setCritiqueState(last.snapshot);
+    if (onSave) onSave(last.snapshot);
+    setCopilotBanner({ message: `↩ Reverted: ${last.summary}`, timestamp: Date.now() });
+    setRegeneratingPluginId('undo-flash');
+    setTimeout(() => setRegeneratingPluginId(null), 600);
+  };
+
   const [specificHelpQuery, setSpecificHelpQuery] = useState('');
   const [isLoadingSpecificHelp, setIsLoadingSpecificHelp] = useState(false);
   const [specificHelpResults, setSpecificHelpResults] = useState<any[]>(() => critique.specificHelp || []);
@@ -165,6 +269,7 @@ export const CritiqueCard: React.FC<CritiqueCardProps> = ({ critique, stems = []
   const [isExportingDawProject, setIsExportingDawProject] = useState(false);
   const [regeneratingPluginId, setRegeneratingPluginId] = useState<string | null>(null);
   const [refreshPools, setRefreshPools] = useState<Record<string, string[]>>({});
+  const [showCopilot, setShowCopilot] = useState(false);
 
   // Lyric Tool States & Multi-track Timeline Config
   const [isLyricToolExpanded, setIsLyricToolExpanded] = useState(false);
@@ -909,6 +1014,44 @@ export const CritiqueCard: React.FC<CritiqueCardProps> = ({ critique, stems = []
             <Download className="w-3 h-3" />
             REAPER Markers (.csv)
           </button>
+
+          <button 
+            onClick={() => setShowCopilot(true)}
+            className={`shrink-0 px-3.5 py-1.5 rounded-full font-black text-[10px] uppercase tracking-widest transition-all shadow-md hover:scale-105 active:scale-95 flex items-center gap-1.5 bg-gradient-to-r from-sky-500 to-indigo-600 hover:from-sky-400 hover:to-indigo-500 text-white shadow-sky-500/25 border border-sky-400/40`}
+            title="Chat with AI Mix Engineer about this critique (auto-synced to your Gear Rack & Sample Vault)"
+          >
+            <Bot className="w-3.5 h-3.5 animate-pulse text-cyan-200" />
+            <span>Studio AI Co-Pilot</span>
+          </button>
+
+          {undoStack.length > 0 && (
+            <button
+              onClick={handleUndoCoPilot}
+              className="shrink-0 px-3 py-1.5 rounded-full font-black text-[10px] uppercase tracking-widest transition-all shadow-md hover:scale-105 active:scale-95 flex items-center gap-1 bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border border-amber-400/40"
+              title={`Undo: ${undoStack[undoStack.length - 1]?.summary}`}
+            >
+              <Undo2 className="w-3.5 h-3.5 text-amber-400" />
+              <span>Undo Co-Pilot ({undoStack.length})</span>
+            </button>
+          )}
+
+          {copilotBanner && (
+            <div className="w-full mt-3 p-3 rounded-2xl bg-cyan-950/40 border border-cyan-500/30 flex items-center justify-between text-xs text-cyan-200 animate-in fade-in slide-in-from-top-2">
+              <div className="flex items-center gap-2 font-mono text-[11px]">
+                <Sparkles className="w-3.5 h-3.5 text-cyan-400 animate-pulse" />
+                <span className="font-bold text-white">{copilotBanner.message}</span>
+              </div>
+              {undoStack.length > 0 && (
+                <button
+                  onClick={handleUndoCoPilot}
+                  className="px-2.5 py-0.5 rounded bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border border-amber-500/40 text-[9px] font-bold uppercase tracking-wider transition-all flex items-center gap-1 font-sans"
+                >
+                  <Undo2 className="w-3 h-3" />
+                  <span>Revert</span>
+                </button>
+              )}
+            </div>
+          )}
 
           <div className="flex flex-col gap-2 relative z-50">
             <button 
@@ -2239,6 +2382,7 @@ export const CritiqueCard: React.FC<CritiqueCardProps> = ({ critique, stems = []
                                     band={plugin.band}
                                     routing={plugin.routing}
                                     isRegenerating={regeneratingPluginId === `critique-${idx}-${originalIdx}`}
+                                    isCopilotUpdated={plugin.isCopilotUpdated}
                                     onRegenerate={() => handleRegenerate(plugin, idx, originalIdx)}
                                     onCorrect={onCorrectPlugin}
                                     onContactSupport={onContactSupport}
@@ -2272,6 +2416,7 @@ export const CritiqueCard: React.FC<CritiqueCardProps> = ({ critique, stems = []
                           band={plugin.band}
                           routing={plugin.routing}
                           isRegenerating={regeneratingPluginId === `critique-${idx}-${pIdx}`}
+                          isCopilotUpdated={plugin.isCopilotUpdated}
                           onRegenerate={() => handleRegenerate(plugin, idx, pIdx)}
                           onCorrect={onCorrectPlugin}
                           onContactSupport={onContactSupport}
@@ -2472,8 +2617,20 @@ export const CritiqueCard: React.FC<CritiqueCardProps> = ({ critique, stems = []
               </label>
             </div>
           </div>
-      
-      {/* Hidden Export View Removed */}
+
+      {/* Studio AI Co-Pilot Chat Drawer */}
+      <StudioCopilotChat
+        isOpen={showCopilot}
+        onClose={() => setShowCopilot(false)}
+        critique={critique}
+        plugins={plugins}
+        userEmail={userEmail}
+        theme={theme}
+        onApplyCritiqueMutation={handleApplyCoPilotCritiqueMutation}
+        onUndo={handleUndoCoPilot}
+        canUndo={undoStack.length > 0}
+        undoSummary={undoStack[undoStack.length - 1]?.summary}
+      />
     </motion.div>
   );
 };

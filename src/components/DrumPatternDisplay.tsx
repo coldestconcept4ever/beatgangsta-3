@@ -1,10 +1,13 @@
-import React, { useState, useEffect } from 'react';
-import { DrumPattern, AppTheme } from '../types';
+import React, { useState, useEffect, useMemo } from 'react';
+import { DrumPattern, AppTheme, SampleVaultItem } from '../types';
 import { motion } from 'motion/react';
-import { Download, Music, Play, Square } from 'lucide-react';
+import { Download, Music, Play, Square, Sparkles, Volume2, CheckCircle2, Sliders, FolderDown } from 'lucide-react';
 import { generateAudioLoop, generateDrumMidiBaseData } from '../utils/midiGenerator';
 import { playMidiPreview, stopMidiPreview, initAudio } from '../utils/midiPlayer';
 import { useTranslation } from 'react-i18next';
+import { DEFAULT_COSMOS_FACTORY_SAMPLES } from './SampleVaultModal';
+import { matchBeatKitFromVault, MatchedBeatKit } from '../utils/songKitMatcher';
+import { playVaultOneShot, stopAllVaultAudio } from '../utils/oneShotAudioPlayer';
 
 // Dynamic imports for heavy libraries
 const getJSZip = () => import('jszip').then(m => m.default);
@@ -159,6 +162,23 @@ export const DrumPatternDisplay: React.FC<DrumPatternDisplayProps> = ({ patterns
   const [activeSection, setActiveSection] = useState<keyof typeof patterns>('hook');
   const [localToggles, setLocalToggles] = useState<Record<string, { velocity: boolean, swingView: boolean }>>({});
   const [isPlaying, setIsPlaying] = useState(false);
+  const [playingOneShotId, setPlayingOneShotId] = useState<string | null>(null);
+
+  // Load user's Sample Vault items (with fallback to Cosmos factory samples)
+  const vaultSamples: SampleVaultItem[] = useMemo(() => {
+    try {
+      const saved = localStorage.getItem('bg_sample_vault_items');
+      const parsed = saved ? JSON.parse(saved) : [];
+      return parsed && parsed.length > 0 ? parsed : DEFAULT_COSMOS_FACTORY_SAMPLES;
+    } catch {
+      return DEFAULT_COSMOS_FACTORY_SAMPLES;
+    }
+  }, []);
+
+  // Compute matched beat kit from user's vault
+  const matchedKit: MatchedBeatKit = useMemo(() => {
+    return matchBeatKitFromVault(recipeTitle, vaultSamples, undefined, bpm);
+  }, [recipeTitle, bpm, vaultSamples]);
 
   useEffect(() => {
     // Stop playback when switching sections
@@ -167,6 +187,24 @@ export const DrumPatternDisplay: React.FC<DrumPatternDisplayProps> = ({ patterns
       setIsPlaying(false);
     }
   }, [activeSection]);
+
+  useEffect(() => {
+    return () => {
+      stopAllVaultAudio();
+    };
+  }, []);
+
+  const handlePlayOneShot = (sample: SampleVaultItem) => {
+    if (playingOneShotId === sample.id) {
+      stopAllVaultAudio();
+      setPlayingOneShotId(null);
+      return;
+    }
+    setPlayingOneShotId(sample.id);
+    playVaultOneShot(sample, 0.9, () => {
+      setPlayingOneShotId(prev => (prev === sample.id ? null : prev));
+    });
+  };
 
   if (!patterns) return null;
 
@@ -248,6 +286,7 @@ export const DrumPatternDisplay: React.FC<DrumPatternDisplayProps> = ({ patterns
     const isStudioOne = dawType === 'Studio One';
     const extension = 'mid';
 
+    // 1. Generate section MIDI files
     for (const section of sections) {
       const pattern = patterns[section];
       if (!pattern) continue;
@@ -277,6 +316,99 @@ export const DrumPatternDisplay: React.FC<DrumPatternDisplayProps> = ({ patterns
       const fileName = `${recipeTitle.replace(/\s+/g, '_')}_${String(section)}_Drums_${sectionBars}Bar_${bpm}BPM.${extension}`;
       
       zip.file(fileName, midiBytes);
+    }
+
+    // 2. Generate VAULT_ONE_SHOT_MAPPINGS.txt for sampler assignment
+    const padSlots = [
+      { pad: 'Pad 1 (C1 / Note 36)', role: 'Kick Drum', data: matchedKit.slots.kick },
+      { pad: 'Pad 2 (D1 / Note 38)', role: 'Snare / Main Clap', data: matchedKit.slots.snareClap },
+      { pad: 'Pad 3 (F#1 / Note 42)', role: 'Closed Hi-Hat', data: matchedKit.slots.closedHat },
+      { pad: 'Pad 4 (A#1 / Note 46)', role: 'Open Hi-Hat / Cymbal', data: matchedKit.slots.openHat },
+      { pad: 'Pad 5 (C#1 / Note 37)', role: 'Sub Bass / 808', data: matchedKit.slots.bass },
+      { pad: 'Pad 6 (G#1 / Note 44)', role: 'Percussion / Shaker', data: matchedKit.slots.perc },
+    ];
+
+    let mappingDoc = `========================================================================\n`;
+    mappingDoc += ` BEATGANGSTA STUDIO - VAULT ONE-SHOT KIT MAPPINGS & SOUND DESIGN\n`;
+    mappingDoc += `========================================================================\n\n`;
+    mappingDoc += `Groove Recipe: ${recipeTitle}\n`;
+    mappingDoc += `Style Reference: ${matchedKit.style.name} (${matchedKit.style.genre})\n`;
+    mappingDoc += `Tempo: ${bpm} BPM | Key Center: ${matchedKit.inferredKey}\n`;
+    mappingDoc += `Acoustic Summary: ${matchedKit.vibeSummary}\n\n`;
+
+    mappingDoc += `------------------------------------------------------------------------\n`;
+    mappingDoc += `SAMPLER PAD LAYOUT (MPC / Maschine / Ableton Drum Rack / FL Studio FPC)\n`;
+    mappingDoc += `------------------------------------------------------------------------\n`;
+
+    padSlots.forEach(({ pad, role, data }) => {
+      mappingDoc += `\n[${pad}] -> ${role.toUpperCase()}\n`;
+      if (data?.sample) {
+        const s = data.sample;
+        mappingDoc += `  Sample Name: ${s.name}\n`;
+        mappingDoc += `  Category: ${s.category.toUpperCase()} (${s.exactType || 'One-Shot'})\n`;
+        mappingDoc += `  Punch / Fundamental: ${s.punchFrequencyHz || s.fundamentalHz || 'N/A'} Hz (Detected Key: ${s.detectedKey || 'N/A'})\n`;
+        mappingDoc += `  Decay Envelope: ${s.decayMs || 'N/A'} ms\n`;
+        mappingDoc += `  Match Synergy: ${data.matchScore}% Match\n`;
+        if (data.recommendedTuningSemitones !== undefined && data.recommendedTuningSemitones !== 0) {
+          mappingDoc += `  Sampler Pitch Offset: ${data.recommendedTuningSemitones > 0 ? '+' : ''}${data.recommendedTuningSemitones} semitones (tune to lock with song key ${matchedKit.inferredKey})\n`;
+        }
+        mappingDoc += `  Pairing Synergy: ${data.reason}\n`;
+        if (data.uadChain && data.uadChain.length > 0) {
+          mappingDoc += `  UAD Digital Channel Strip Settings:\n`;
+          data.uadChain.forEach(tip => {
+            mappingDoc += `    * ${tip}\n`;
+          });
+        }
+      } else {
+        mappingDoc += `  No specific sample assigned in this slot.\n`;
+      }
+    });
+
+    mappingDoc += `\n========================================================================\n`;
+    mappingDoc += ` MASTER DRUM BUS GLUE & MIXING RECIPE (UAD DIGITAL GUI CONTROLS)\n`;
+    mappingDoc += `========================================================================\n`;
+    mappingDoc += `Bus Compressor: ${matchedKit.uadDrumBusRecipe.busCompressor}\n`;
+    mappingDoc += `Bus Equalizer: ${matchedKit.uadDrumBusRecipe.busEq}\n`;
+    mappingDoc += `Tape Saturation: ${matchedKit.uadDrumBusRecipe.tapeSaturation}\n`;
+    mappingDoc += `Glue Tip: ${matchedKit.uadDrumBusRecipe.glueTip}\n\n`;
+    mappingDoc += `RULE VERIFICATION: All listed parameters correspond strictly to official\n`;
+    mappingDoc += `digital software plugin GUI knobs and switches (no analog-only chassis wiring).\n`;
+
+    zip.file('VAULT_ONE_SHOT_MAPPINGS.txt', mappingDoc);
+
+    // 3. Collect and embed any available one-shot audio files into One-Shots/
+    const oneShotsFolder = zip.folder('One-Shots');
+    if (oneShotsFolder) {
+      oneShotsFolder.file(
+        'README_ONE_SHOTS.txt',
+        `Drag these one-shots directly into your DAW sampler or drum rack pads (Pad 1 = Kick, Pad 2 = Snare/Clap, Pad 3 = Closed Hat, Pad 4 = Open Hat, Pad 5 = 808, Pad 6 = Perc).\nRefer to VAULT_ONE_SHOT_MAPPINGS.txt in the root directory for exact tuning and UAD channel strip recipes!`
+      );
+
+      for (let i = 0; i < padSlots.length; i++) {
+        const slot = padSlots[i];
+        const sample = slot.data?.sample;
+        if (!sample || !sample.fileUrl) continue;
+
+        const safeSampleName = sample.name.replace(/[^a-z0-9_-]/gi, '_');
+        const fileName = `Pad${i + 1}_${slot.role.replace(/[^a-z0-9]/gi, '_')}_${safeSampleName}.wav`;
+
+        try {
+          if (sample.fileUrl.startsWith('data:audio')) {
+            const base64Data = sample.fileUrl.split(',')[1];
+            if (base64Data) {
+              oneShotsFolder.file(fileName, base64Data, { base64: true });
+            }
+          } else if (sample.fileUrl.startsWith('blob:') || sample.fileUrl.startsWith('http')) {
+            const res = await fetch(sample.fileUrl);
+            if (res.ok) {
+              const blobData = await res.blob();
+              oneShotsFolder.file(fileName, blobData);
+            }
+          }
+        } catch {
+          // If network fetch fails, continue without blocking zip generation
+        }
+      }
     }
 
     const content = await zip.generateAsync({ type: 'blob' });
@@ -410,6 +542,154 @@ export const DrumPatternDisplay: React.FC<DrumPatternDisplayProps> = ({ patterns
             <div className="flex flex-col items-start lg:items-end text-[10px] opacity-50 font-mono w-full lg:w-auto bg-black/5 dark:bg-white/5 p-3 rounded-xl">
               <span>{t('one_bar_loop')}</span>
               <span>{currentPattern.hiHat?.isDoubleTime ? t('double_time_steps') : t('normal_steps')}</span>
+            </div>
+          </div>
+
+          {/* VAULT ONE-SHOT ASSIGNMENTS FOR THIS GROOVE */}
+          <div className="mt-8 pt-8 border-t border-black/10 dark:border-white/10 space-y-4">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-gradient-to-r from-purple-900/30 via-indigo-900/20 to-transparent p-4 rounded-2xl border border-purple-500/20">
+              <div className="space-y-1">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <div className="w-2.5 h-2.5 rounded-full bg-purple-400 animate-ping" />
+                  <Sparkles className="w-4 h-4 text-purple-400" />
+                  <h4 className="text-xs sm:text-sm font-black uppercase tracking-widest text-white">
+                    🎯 Vault One-Shot Assignments for this Groove
+                  </h4>
+                  <span className="text-[10px] px-2 py-0.5 rounded-full bg-purple-500/20 text-purple-300 font-mono font-bold border border-purple-500/30">
+                    {matchedKit.style.name}
+                  </span>
+                </div>
+                <p className="text-[11px] text-purple-200/70">
+                  Auto-curated from your Sample Vault using transient punch analysis and harmonic tuning for "{recipeTitle}" ({bpm} BPM, Key {matchedKit.inferredKey}).
+                </p>
+              </div>
+              <button
+                onClick={handleDownloadAllDrumPatterns}
+                className="flex items-center justify-center gap-2 px-4 py-2 rounded-xl text-xs font-black uppercase tracking-wider bg-purple-600 hover:bg-purple-500 text-white transition-all shadow-lg shadow-purple-600/30 hover:scale-105 active:scale-95 whitespace-nowrap self-start sm:self-auto"
+                title="Download full package with MIDI files, VAULT_ONE_SHOT_MAPPINGS.txt, and one-shot audio files"
+              >
+                <FolderDown className="w-4 h-4" />
+                <span>Download Kit & MIDI (.zip)</span>
+              </button>
+            </div>
+
+            {/* Pad Cards Grid */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+              {[
+                { padNum: '1', role: 'Kick Drum', midiNote: 'C1 (36)', data: matchedKit.slots.kick, accent: 'text-sky-400', border: 'border-sky-500/30 bg-sky-950/20 hover:border-sky-400' },
+                { padNum: '2', role: matchedKit.slots.snareClap?.category === 'claps' ? 'Hand Clap' : 'Snare Drum', midiNote: 'D1 (38)', data: matchedKit.slots.snareClap, accent: 'text-pink-400', border: 'border-pink-500/30 bg-pink-950/20 hover:border-pink-400' },
+                { padNum: '3', role: 'Closed Hi-Hat', midiNote: 'F#1 (42)', data: matchedKit.slots.closedHat, accent: 'text-amber-400', border: 'border-amber-500/30 bg-amber-950/20 hover:border-amber-400' },
+                { padNum: '4', role: 'Open Hi-Hat', midiNote: 'A#1 (46)', data: matchedKit.slots.openHat, accent: 'text-emerald-400', border: 'border-emerald-500/30 bg-emerald-950/20 hover:border-emerald-400' },
+                { padNum: '5', role: 'Sub Bass / 808', midiNote: 'C#1 (37)', data: matchedKit.slots.bass, accent: 'text-violet-400', border: 'border-violet-500/30 bg-violet-950/20 hover:border-violet-400' },
+                { padNum: '6', role: 'Percussion / Foley', midiNote: 'G#1 (44)', data: matchedKit.slots.perc, accent: 'text-cyan-400', border: 'border-cyan-500/30 bg-cyan-950/20 hover:border-cyan-400' },
+              ].map(({ padNum, role, midiNote, data, accent, border }) => {
+                const sample = data?.sample;
+                const isThisPlaying = sample && playingOneShotId === sample.id;
+
+                return (
+                  <div
+                    key={padNum}
+                    className={`p-3.5 rounded-xl border transition-all flex flex-col justify-between gap-3 ${border} ${
+                      isThisPlaying ? 'ring-2 ring-purple-400 shadow-lg shadow-purple-500/20' : ''
+                    }`}
+                  >
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-1.5">
+                          <span className="text-[10px] font-mono font-black uppercase px-2 py-0.5 rounded bg-black/40 border border-white/10 text-white/90">
+                            PAD {padNum}
+                          </span>
+                          <span className="text-[9px] font-mono text-white/50">{midiNote}</span>
+                        </div>
+                        {data?.matchScore !== undefined && (
+                          <span className="text-[10px] font-bold text-emerald-400 flex items-center gap-1">
+                            <CheckCircle2 className="w-3 h-3" />
+                            <span>{data.matchScore}% Match</span>
+                          </span>
+                        )}
+                      </div>
+
+                      <div>
+                        <div className={`text-[11px] font-black uppercase tracking-wider ${accent}`}>{role}</div>
+                        <div className="text-xs font-bold text-white truncate" title={sample?.name}>
+                          {sample?.name || 'Standard Vault One-Shot'}
+                        </div>
+                      </div>
+
+                      {/* Acoustic Badges */}
+                      {sample && (
+                        <div className="flex flex-wrap gap-1 text-[9px] font-mono">
+                          {sample.punchFrequencyHz && (
+                            <span className="px-1.5 py-0.5 rounded bg-black/30 border border-white/5 text-sky-300">
+                              Punch: {sample.punchFrequencyHz}Hz
+                            </span>
+                          )}
+                          {sample.detectedKey && (
+                            <span className="px-1.5 py-0.5 rounded bg-black/30 border border-white/5 text-purple-300">
+                              Key: {sample.detectedKey}
+                            </span>
+                          )}
+                          {sample.decayMs && (
+                            <span className="px-1.5 py-0.5 rounded bg-black/30 border border-white/5 text-emerald-300">
+                              Decay: {sample.decayMs}ms
+                            </span>
+                          )}
+                          {data?.recommendedTuningSemitones !== undefined && data.recommendedTuningSemitones !== 0 && (
+                            <span className="px-1.5 py-0.5 rounded bg-yellow-500/20 border border-yellow-500/30 text-yellow-300 font-bold">
+                              Tune: {data.recommendedTuningSemitones > 0 ? '+' : ''}{data.recommendedTuningSemitones} st
+                            </span>
+                          )}
+                        </div>
+                      )}
+
+                      {/* UAD Mixing Tip */}
+                      {data?.uadChain && data.uadChain.length > 0 && (
+                        <div className="text-[10px] text-white/70 line-clamp-2 italic bg-black/30 p-1.5 rounded border border-white/5">
+                          🎛️ {data.uadChain[0]}
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Audition Button */}
+                    {sample && (
+                      <button
+                        onClick={() => handlePlayOneShot(sample)}
+                        className={`w-full py-1.5 px-3 rounded-lg text-[10px] font-bold uppercase tracking-wider flex items-center justify-center gap-2 transition-all ${
+                          isThisPlaying
+                            ? 'bg-red-500 text-white shadow-md'
+                            : 'bg-white/10 hover:bg-white/20 text-white border border-white/10 active:scale-95'
+                        }`}
+                      >
+                        {isThisPlaying ? (
+                          <>
+                            <Square className="w-3 h-3 fill-white" />
+                            <span>Stop Audition</span>
+                          </>
+                        ) : (
+                          <>
+                            <Volume2 className="w-3 h-3" />
+                            <span>Audition Pad {padNum}</span>
+                          </>
+                        )}
+                      </button>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* Drum Bus Glue Recipe Banner */}
+            <div className="p-3.5 rounded-xl bg-purple-950/30 border border-purple-500/20 text-[11px] space-y-1.5 text-white/90">
+              <div className="font-bold text-purple-300 flex items-center gap-1.5">
+                <Sliders className="w-3.5 h-3.5 text-purple-400" />
+                <span>UAD Master Drum Bus Glue: {matchedKit.uadDrumBusRecipe.busCompressor}</span>
+              </div>
+              <div className="text-[10px] opacity-80 leading-relaxed">
+                <strong>EQ & Tape Saturation:</strong> {matchedKit.uadDrumBusRecipe.busEq} • {matchedKit.uadDrumBusRecipe.tapeSaturation}
+              </div>
+              <div className="text-purple-200/90 text-[10px] italic">
+                💡 {matchedKit.uadDrumBusRecipe.glueTip}
+              </div>
             </div>
           </div>
         </>

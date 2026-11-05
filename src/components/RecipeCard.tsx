@@ -8,7 +8,7 @@ import { regeneratePlugin, regenerateTrackingChain } from '../services/geminiSer
 const getRenderToStaticMarkup = () => import('react-dom/server').then(m => m.renderToStaticMarkup);
 import { RecipeHTMLTemplate } from './RecipeHTMLTemplate';
 import { motion } from 'motion/react';
-import { Loader2, Download, Music, Save, Cloud, Search, FileCode, RefreshCw, Layers, Activity } from 'lucide-react';
+import { Loader2, Download, Music, Save, Cloud, Search, FileCode, RefreshCw, Layers, Activity, Play, Square, Bot, Undo2, Sparkles } from 'lucide-react';
 import { getSpecificMixHelp, getGangstaVoxRecipe } from '../services/geminiService';
 import { MidiDraggableButton } from './MidiDraggableButton';
 import { isMidiCapable, getBeats, generateDrumMidiBaseData, generateMidiTrack, getFullSongArrangement } from '../utils/midiGenerator';
@@ -16,9 +16,9 @@ import MidiWriter from 'midi-writer-js';
 import { generateAllMidiZip } from '../utils/exportAllMidi';
 import { generateDawProjectFromBeatRecipe } from '../utils/dawprojectUtils';
 import { stopMidiPreview } from '../utils/midiPlayer';
-import { Play, Square } from 'lucide-react';
 import { ErrorModal } from './ErrorModal';
 import { useTranslation } from 'react-i18next';
+import { StudioCopilotChat } from './StudioCopilotChat';
 
 interface RecipeCardProps {
   recipe: BeatRecipe;
@@ -39,20 +39,221 @@ interface RecipeCardProps {
   reaperSyncPin?: string | null;
   reaperSyncEmail?: string | null;
   isJsfxMode?: boolean;
+  userEmail?: string | null;
 }
 
 import { PluginBubble } from './PluginBubble';
 // ...
-export const RecipeCard: React.FC<RecipeCardProps> = ({ recipe: initialRecipe, isSaved, onSave, theme = 'coldest', dawType, plugins = [], analogHardware = [], drumKits = [], onCloudBackupRecipe, geminiFileUri, onLogReceipt, onCorrectPlugin, onContactSupport, onMinimize, isMultiBandMode = false, reaperSyncPin, reaperSyncEmail, isJsfxMode = false }) => {
+export const RecipeCard: React.FC<RecipeCardProps> = ({ recipe: initialRecipe, isSaved, onSave, theme = 'coldest', dawType, plugins = [], analogHardware = [], drumKits = [], onCloudBackupRecipe, geminiFileUri, onLogReceipt, onCorrectPlugin, onContactSupport, onMinimize, isMultiBandMode = false, reaperSyncPin, reaperSyncEmail, isJsfxMode = false, userEmail }) => {
   const { t, i18n } = useTranslation();
   const [recipe, setRecipe] = useState(initialRecipe);
   const [regeneratingPluginId, setRegeneratingPluginId] = useState<string | null>(null);
   const [refreshPools, setRefreshPools] = useState<Record<string, string[]>>({});
+  const [showCopilot, setShowCopilot] = useState(false);
+  const [undoStack, setUndoStack] = useState<{ snapshot: BeatRecipe; summary: string }[]>([]);
+  const [copilotBanner, setCopilotBanner] = useState<{ message: string; timestamp: number } | null>(null);
   const topRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     setRecipe(initialRecipe);
   }, [initialRecipe]);
+
+  const handleApplyCoPilotRecipeMutation = (mutation: any) => {
+    if (!mutation) return;
+
+    // Save previous snapshot for instant undo
+    setUndoStack(prev => [...prev, { snapshot: JSON.parse(JSON.stringify(recipe)), summary: mutation.summary || 'Co-Pilot Edit' }]);
+
+    const updated = JSON.parse(JSON.stringify(recipe)) as BeatRecipe;
+    let targetPluginId: string | null = null;
+
+    if (mutation.type === 'update_parameters') {
+      const updates: { parameter: string; value: string; explanation?: string }[] = mutation.parameterUpdates || [];
+      const targetName = (mutation.target?.pluginName || '').toLowerCase();
+      const trackName = (mutation.target?.trackName || '').toLowerCase();
+
+      let matched = false;
+
+      // 1. Search in instruments fxPlugins & deepDive
+      if (Array.isArray(updated.instruments)) {
+        for (let tIdx = 0; tIdx < updated.instruments.length; tIdx++) {
+          const track = updated.instruments[tIdx];
+          const trackMatches = !trackName || track.name.toLowerCase().includes(trackName);
+
+          if (Array.isArray(track.fxPlugins)) {
+            for (let fIdx = 0; fIdx < track.fxPlugins.length; fIdx++) {
+              const fx = track.fxPlugins[fIdx];
+              if (!targetName || fx.name.toLowerCase().includes(targetName) || (trackMatches && updates.length > 0)) {
+                fx.deepDive = fx.deepDive || [];
+                updates.forEach(u => {
+                  const existingParam = fx.deepDive.find((p: any) => p.parameter.toLowerCase() === u.parameter.toLowerCase());
+                  if (existingParam) {
+                    existingParam.value = u.value;
+                    if (u.explanation) existingParam.explanation = u.explanation;
+                    existingParam.isCopilotUpdated = true;
+                  } else {
+                    fx.deepDive.push({ parameter: u.parameter, value: u.value, explanation: u.explanation || '', isCopilotUpdated: true });
+                  }
+                });
+                fx.isCopilotUpdated = true;
+                targetPluginId = `track-${tIdx}-${fIdx}`;
+                matched = true;
+                break;
+              }
+            }
+          }
+          if (matched) break;
+
+          if (trackMatches && Array.isArray(track.deepDive)) {
+            updates.forEach(u => {
+              const existingParam = track.deepDive.find((p: any) => p.parameter.toLowerCase() === u.parameter.toLowerCase());
+              if (existingParam) {
+                existingParam.value = u.value;
+                if (u.explanation) existingParam.explanation = u.explanation;
+                existingParam.isCopilotUpdated = true;
+              } else {
+                track.deepDive.push({ parameter: u.parameter, value: u.value, explanation: u.explanation || '', isCopilotUpdated: true });
+              }
+            });
+            (track as any).isCopilotUpdated = true;
+            targetPluginId = `instrument-${tIdx}-0`;
+            matched = true;
+            break;
+          }
+        }
+      }
+
+      // 2. Search in masterPlugins
+      if (!matched && Array.isArray(updated.masterPlugins)) {
+        for (let mIdx = 0; mIdx < updated.masterPlugins.length; mIdx++) {
+          const mp = updated.masterPlugins[mIdx];
+          if (!targetName || mp.name.toLowerCase().includes(targetName)) {
+            mp.deepDive = mp.deepDive || [];
+            updates.forEach(u => {
+              const existingParam = mp.deepDive.find((p: any) => p.parameter.toLowerCase() === u.parameter.toLowerCase());
+              if (existingParam) {
+                existingParam.value = u.value;
+                if (u.explanation) existingParam.explanation = u.explanation;
+                existingParam.isCopilotUpdated = true;
+              } else {
+                mp.deepDive.push({ parameter: u.parameter, value: u.value, explanation: u.explanation || '', isCopilotUpdated: true });
+              }
+            });
+            mp.isCopilotUpdated = true;
+            targetPluginId = `master-0-${mIdx}`;
+            matched = true;
+            break;
+          }
+        }
+      }
+
+      // 3. Search in busses
+      if (!matched && Array.isArray(updated.busses)) {
+        for (let bIdx = 0; bIdx < updated.busses.length; bIdx++) {
+          const bus = updated.busses[bIdx];
+          if (Array.isArray(bus.fxPlugins)) {
+            for (let fIdx = 0; fIdx < bus.fxPlugins.length; fIdx++) {
+              const fx = bus.fxPlugins[fIdx];
+              if (!targetName || fx.name.toLowerCase().includes(targetName)) {
+                fx.deepDive = fx.deepDive || [];
+                updates.forEach(u => {
+                  const existingParam = fx.deepDive.find((p: any) => p.parameter.toLowerCase() === u.parameter.toLowerCase());
+                  if (existingParam) {
+                    existingParam.value = u.value;
+                    if (u.explanation) existingParam.explanation = u.explanation;
+                    existingParam.isCopilotUpdated = true;
+                  } else {
+                    fx.deepDive.push({ parameter: u.parameter, value: u.value, explanation: u.explanation || '', isCopilotUpdated: true });
+                  }
+                });
+                fx.isCopilotUpdated = true;
+                targetPluginId = `bus-${bIdx}-${fIdx}`;
+                matched = true;
+                break;
+              }
+            }
+          }
+          if (matched) break;
+        }
+      }
+    } else if (mutation.type === 'add_plugin') {
+      const newPlug = {
+        ...mutation.newPlugin,
+        isCopilotUpdated: true,
+        deepDive: (mutation.newPlugin?.deepDive || []).map((p: any) => ({ ...p, isCopilotUpdated: true }))
+      };
+
+      const dest = (mutation.target?.destination || '').toLowerCase();
+      const trackName = (mutation.target?.trackName || '').toLowerCase();
+
+      if (dest === 'master' || trackName.includes('master')) {
+        updated.masterPlugins = [...(updated.masterPlugins || []), newPlug];
+        targetPluginId = `master-0-${updated.masterPlugins.length - 1}`;
+      } else if (dest === 'bus' || trackName.includes('bus')) {
+        let bIdx = updated.busses?.findIndex(b => b.name.toLowerCase().includes(trackName)) ?? -1;
+        if (bIdx === -1) bIdx = 0;
+        if (updated.busses?.[bIdx]) {
+          updated.busses[bIdx].fxPlugins = [...(updated.busses[bIdx].fxPlugins || []), newPlug];
+          targetPluginId = `bus-${bIdx}-${updated.busses[bIdx].fxPlugins.length - 1}`;
+        }
+      } else {
+        let tIdx = updated.instruments?.findIndex(t => t.name.toLowerCase().includes(trackName)) ?? -1;
+        if (tIdx === -1) tIdx = 0;
+        if (updated.instruments?.[tIdx]) {
+          updated.instruments[tIdx].fxPlugins = [...(updated.instruments[tIdx].fxPlugins || []), newPlug];
+          targetPluginId = `track-${tIdx}-${updated.instruments[tIdx].fxPlugins.length - 1}`;
+        }
+      }
+    } else if (mutation.type === 'replace_plugin') {
+      const newPlug = {
+        ...mutation.newPlugin,
+        isCopilotUpdated: true,
+        deepDive: (mutation.newPlugin?.deepDive || []).map((p: any) => ({ ...p, isCopilotUpdated: true }))
+      };
+      const targetName = (mutation.target?.pluginName || '').toLowerCase();
+
+      if (Array.isArray(updated.instruments)) {
+        updated.instruments.forEach((t, tIdx) => {
+          if (Array.isArray(t.fxPlugins)) {
+            t.fxPlugins.forEach((fx, fIdx) => {
+              if (fx.name.toLowerCase().includes(targetName)) {
+                t.fxPlugins[fIdx] = newPlug;
+                targetPluginId = `track-${tIdx}-${fIdx}`;
+              }
+            });
+          }
+        });
+      }
+
+      if (Array.isArray(updated.masterPlugins)) {
+        updated.masterPlugins.forEach((mp, mIdx) => {
+          if (mp.name.toLowerCase().includes(targetName)) {
+            updated.masterPlugins[mIdx] = newPlug;
+            targetPluginId = `master-0-${mIdx}`;
+          }
+        });
+      }
+    }
+
+    setRecipe(updated);
+    setCopilotBanner({ message: mutation.summary || 'Co-Pilot updated recipe', timestamp: Date.now() });
+
+    // Trigger the exact refresh animation on the target plugin
+    if (targetPluginId) {
+      setRegeneratingPluginId(targetPluginId);
+      setTimeout(() => setRegeneratingPluginId(null), 850);
+    }
+  };
+
+  const handleUndoCoPilot = () => {
+    if (undoStack.length === 0) return;
+    const last = undoStack[undoStack.length - 1];
+    setUndoStack(prev => prev.slice(0, -1));
+    setRecipe(last.snapshot);
+    setCopilotBanner({ message: `↩ Reverted: ${last.summary}`, timestamp: Date.now() });
+    setRegeneratingPluginId('undo-flash');
+    setTimeout(() => setRegeneratingPluginId(null), 600);
+  };
 
   const targetTotalBars = recipe.totalBars || (recipe.audioDuration && recipe.bpm ? Math.ceil((recipe.audioDuration * recipe.bpm) / 240) : undefined);
 
@@ -867,6 +1068,44 @@ export const RecipeCard: React.FC<RecipeCardProps> = ({ recipe: initialRecipe, i
             {isExportingDawProject || isLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />}
             DAWProject
           </button>
+
+          <button 
+            onClick={() => setShowCopilot(true)}
+            className={`w-full sm:w-auto px-8 py-4 rounded-full font-black text-xs uppercase tracking-widest transition-all shadow-xl hover:scale-105 active:scale-95 flex items-center gap-2 justify-center bg-gradient-to-r from-sky-500 to-indigo-600 hover:from-sky-400 hover:to-indigo-500 text-white shadow-sky-500/25 border border-sky-400/40`}
+            title="Chat with AI Mix Engineer about this recipe (auto-synced to your Gear Rack & Sample Vault)"
+          >
+            <Bot className="w-4 h-4 animate-pulse text-cyan-200" />
+            <span>Studio AI Co-Pilot</span>
+          </button>
+
+          {undoStack.length > 0 && (
+            <button
+              onClick={handleUndoCoPilot}
+              className="w-full sm:w-auto px-6 py-4 rounded-full font-black text-xs uppercase tracking-widest transition-all shadow-xl hover:scale-105 active:scale-95 flex items-center gap-2 justify-center bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border border-amber-400/40 shadow-amber-500/20"
+              title={`Undo: ${undoStack[undoStack.length - 1]?.summary}`}
+            >
+              <Undo2 className="w-4 h-4 text-amber-400" />
+              <span>Undo Co-Pilot ({undoStack.length})</span>
+            </button>
+          )}
+
+          {copilotBanner && (
+            <div className="w-full mt-3 p-3.5 rounded-2xl bg-cyan-950/40 border border-cyan-500/30 flex items-center justify-between text-xs text-cyan-200 animate-in fade-in slide-in-from-top-2">
+              <div className="flex items-center gap-2 font-mono">
+                <Sparkles className="w-4 h-4 text-cyan-400 animate-pulse" />
+                <span className="font-bold text-white">{copilotBanner.message}</span>
+              </div>
+              {undoStack.length > 0 && (
+                <button
+                  onClick={handleUndoCoPilot}
+                  className="px-3 py-1 rounded-lg bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border border-amber-500/40 text-[10px] font-bold uppercase tracking-wider transition-all flex items-center gap-1 font-sans"
+                >
+                  <Undo2 className="w-3 h-3" />
+                  <span>Revert</span>
+                </button>
+              )}
+            </div>
+          )}
           
           {(dawType === 'Reaper' || dawType === 'REAPER') && (
             <div className="relative">
@@ -1165,6 +1404,7 @@ export const RecipeCard: React.FC<RecipeCardProps> = ({ recipe: initialRecipe, i
                                   band={dive.band}
                                   routing={dive.routing}
                                   isRegenerating={regeneratingPluginId === `track-${idx}-${originalIdx}`}
+                                  isCopilotUpdated={dive.isCopilotUpdated}
                                   onRegenerate={() => handleRegenerate(dive, idx, originalIdx, 'track')}
                                   onCorrect={onCorrectPlugin}
                                   onContactSupport={onContactSupport}
@@ -1188,6 +1428,7 @@ export const RecipeCard: React.FC<RecipeCardProps> = ({ recipe: initialRecipe, i
                         band={dive.band}
                         routing={dive.routing}
                         isRegenerating={regeneratingPluginId === `track-${idx}-${dIdx}`}
+                        isCopilotUpdated={dive.isCopilotUpdated}
                         onRegenerate={() => handleRegenerate(dive, idx, dIdx, 'track')}
                         onCorrect={onCorrectPlugin}
                         onContactSupport={onContactSupport}
@@ -1388,6 +1629,7 @@ export const RecipeCard: React.FC<RecipeCardProps> = ({ recipe: initialRecipe, i
                         band={dive.band}
                         routing={dive.routing}
                         isRegenerating={regeneratingPluginId === `bus-${idx}-${dIdx}`}
+                        isCopilotUpdated={dive.isCopilotUpdated}
                         onRegenerate={() => handleRegenerate(dive, idx, dIdx, 'bus')}
                         onCorrect={onCorrectPlugin}
                         onContactSupport={onContactSupport}
@@ -1417,6 +1659,7 @@ export const RecipeCard: React.FC<RecipeCardProps> = ({ recipe: initialRecipe, i
                 band={dive.band}
                 routing={dive.routing}
                 isRegenerating={regeneratingPluginId === `master-0-${idx}`}
+                isCopilotUpdated={dive.isCopilotUpdated}
                 onRegenerate={() => handleRegenerate(dive, 0, idx, 'master')}
                 onCorrect={onCorrectPlugin}
                 onContactSupport={onContactSupport}
@@ -2307,7 +2550,20 @@ export const RecipeCard: React.FC<RecipeCardProps> = ({ recipe: initialRecipe, i
         title={errorModal.title}
         errorMessage={errorModal.message}
         stackTrace={errorModal.stack}
+      />
+
+      {/* Studio AI Co-Pilot Chat Drawer */}
+      <StudioCopilotChat
+        isOpen={showCopilot}
+        onClose={() => setShowCopilot(false)}
+        recipe={recipe as any}
+        plugins={plugins}
+        userEmail={userEmail}
         theme={theme}
+        onApplyRecipeMutation={handleApplyCoPilotRecipeMutation}
+        onUndo={handleUndoCoPilot}
+        canUndo={undoStack.length > 0}
+        undoSummary={undoStack[undoStack.length - 1]?.summary}
       />
     </motion.div>
   );
