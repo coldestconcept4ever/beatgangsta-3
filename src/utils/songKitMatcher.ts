@@ -38,6 +38,74 @@ export interface StylePreset {
 
 export const SIGNATURE_BEAT_STYLES: StylePreset[] = [
   {
+    id: 'call-me-maybe-808-trap',
+    name: 'Call Me Maybe (138 BPM 808 Trap Flip)',
+    artistReference: 'Call Me Maybe / 808 Sub & Chords Reference Beat (138 BPM, Key of B minor)',
+    genre: 'Melodic 808 Trap / Pop Bounce',
+    defaultBpm: 138,
+    recommendedKey: 'B',
+    description: 'Custom 138 BPM structure. Preserves the exact 808 Sub, Punch, Grit, and Chords stems intact while replacing the acoustic drum set (Kick, Closed Hats, Open Hats, Clap, Crash, Perc) with high-synergy vault selections.',
+    icon: '🎹',
+    targetAcoustics: {
+      kickPunchHz: 62,
+      kickMaxDecayMs: 220,
+      bassKey: 'B',
+      bassMinDecayMs: 1400,
+      snareType: 'clap',
+      snarePunchHz: 980,
+      closedHatMaxDecayMs: 45,
+      openHatMinDecayMs: 280
+    },
+    pattern: {
+      kick:      [1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 0],
+      bass:      [1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 0],
+      snare:     [0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0],
+      closedHat: [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
+      openHat:   [0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 0],
+      perc:      [0, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1]
+    },
+    uadBusRecipe: {
+      busCompressor: 'UAD SSL 4000 G Bus Compressor (Ratio 4:1, Attack 30ms, Release Auto, 2-3dB gain reduction)',
+      busEq: 'UAD Pultec EQP-1A (Boost 60Hz +2dB, Boost 12kHz +3dB for master air)',
+      tapeSaturation: 'UAD Studer A800 (15 IPS, 456 formula for tape warmth)',
+      glueTip: 'Keep the 808 Sub, Punch, Grit, and Chords stems completely untouched. Sidechain duck the 808 Sub 2.5dB from the Kick using UAD 1176LN for tight low-end separation.'
+    }
+  },
+  {
+    id: 'carly-call-me-maybe',
+    name: '120 BPM Dance Pop Anthem',
+    artistReference: 'Carly Rae Jepsen / Katy Perry / Dua Lipa / Call Me Maybe',
+    genre: 'Dance Pop / Synth Pop',
+    defaultBpm: 120,
+    recommendedKey: 'G',
+    description: 'High-energy 4-on-the-floor dance pop bounce. Driving, punchy 75Hz kick on every beat, bright layered snare/clap on 2 & 4, continuous 16th closed hats, sizzling off-beat open hats, and pumping sidechained synth bass.',
+    icon: '✨',
+    targetAcoustics: {
+      kickPunchHz: 75,
+      kickMaxDecayMs: 280,
+      bassKey: 'G',
+      bassMinDecayMs: 1100,
+      snareType: 'snare',
+      snarePunchHz: 240,
+      closedHatMaxDecayMs: 50,
+      openHatMinDecayMs: 320
+    },
+    pattern: {
+      kick:      [1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0], // Four on the floor
+      bass:      [0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0], // Pumping sidechain rhythm
+      snare:     [0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0], // Beats 2 & 4
+      closedHat: [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1], // Steady 16th driving hats
+      openHat:   [0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0], // Off-beat sizzle ("&" of every beat)
+      perc:      [0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1]  // Shaker / Tambourine drive
+    },
+    uadBusRecipe: {
+      busCompressor: 'UAD SSL 4000 G Bus Compressor (Ratio 4:1, Attack 30ms, Release Auto, 2-3dB gain reduction)',
+      busEq: 'UAD Pultec EQP-1A (Boost 100Hz +2.5dB for punchy low-end, Boost 12kHz +3dB for top-end pop air)',
+      tapeSaturation: 'UAD Ampex ATR-102 (30 IPS, CCIR curve, ultra-clean tape gloss)',
+      glueTip: 'Sidechain duck the Synth Bass and Open Hi-Hats to the 4-on-the-floor Kick using UAD Teletronix LA-2A / 1176LN for the iconic 120 BPM pumping dance-pop bounce.'
+    }
+  },
+  {
     id: 'travis-metro',
     name: 'Dark Atlanta Trap',
     artistReference: 'Travis Scott / Metro Boomin / 21 Savage (e.g., Sicko Mode, Creepin)',
