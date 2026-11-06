@@ -1496,28 +1496,52 @@ export const getAI = () => {
             body: JSON.stringify(payload)
           });
           const rawText = await response.text();
-          const cleanText = rawText.trim();
+          let cleanText = rawText.trim();
+          
           if (!cleanText) {
-            throw new Error(`Empty response from Gemini server proxy (HTTP ${response.status} ${response.statusText}).`);
+            console.warn("Empty response from Gemini server proxy. Retrying request...");
+            await new Promise(r => setTimeout(r, 1200));
+            const retryRes = await fetchWithDetailedError(endpoint, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify(payload)
+            });
+            const retryRawText = await retryRes.text();
+            cleanText = retryRawText.trim();
           }
+
+          if (!cleanText) {
+            throw new Error("The AI server returned an empty response. Spikes in demand are temporary—please try again in a moment.");
+          }
+
           let data;
           try {
             data = JSON.parse(cleanText);
           } catch (jsonErr: any) {
             console.error("Failed to parse Gemini response as JSON. Raw text:", rawText);
-            throw new Error(`Failed to parse Gemini response: ${jsonErr.message}. Response: ${cleanText.substring(0, 300)}`);
+            throw new Error(`Failed to parse Gemini response. Output: ${cleanText.substring(0, 200)}`);
           }
+
           if (data && data.error) {
-            const errorStr = typeof data.error === 'string' ? data.error : JSON.stringify(data.error);
+            let errorStr = "";
+            if (typeof data.error === 'string') {
+              errorStr = data.error;
+            } else if (typeof data.error === 'object') {
+              errorStr = data.error.message || data.error.error || JSON.stringify(data.error);
+            }
+            
             if (errorStr.includes('429') || errorStr.includes('RESOURCE_EXHAUSTED') || errorStr.includes('credits are depleted') || errorStr.includes('quota')) {
               throw new Error('INSUFFICIENT_CREDITS: ' + errorStr);
+            }
+            if (errorStr.includes('high demand') || errorStr.includes('503') || errorStr.includes('overloaded')) {
+              throw new Error('HIGH_DEMAND: The AI models are currently experiencing high demand. Spikes are temporary—please click Architect again in a few seconds!');
             }
             throw new Error(errorStr);
           }
           return data;
         } catch (e: any) {
           console.error("Gemini API call failed", e);
-          if (e.message.includes('NETWORK_ERROR')) {
+          if (e?.message?.includes('NETWORK_ERROR')) {
             const sizeMB = (JSON.stringify(payload).length / (1024 * 1024)).toFixed(2);
             throw new Error(`${e.message} Payload size: ${sizeMB}MB.`);
           }

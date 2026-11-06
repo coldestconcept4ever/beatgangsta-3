@@ -4830,16 +4830,19 @@ if (process.env.NODE_ENV !== 'production') {
       return res.status(500).json({ error: "API_KEY_MISSING: System API key is missing." });
     }
 
-    res.setHeader('Content-Type', 'application/json');
-    res.setHeader('X-Accel-Buffering', 'no'); // Disable Nginx buffering
-    res.setHeader('Cache-Control', 'no-cache');
-    res.setHeader('Connection', 'keep-alive');
-    res.status(200);
+    let heartbeatInterval: NodeJS.Timeout | null = null;
 
-    // Start sending whitespace heartbeats to prevent Cloudflare 524 timeout
-    const heartbeatInterval = setInterval(() => {
+    // Start sending whitespace heartbeats only if request takes longer than 10s
+    heartbeatInterval = setInterval(() => {
+      if (!res.headersSent) {
+        res.setHeader('Content-Type', 'application/json');
+        res.setHeader('X-Accel-Buffering', 'no');
+        res.setHeader('Cache-Control', 'no-cache');
+        res.setHeader('Connection', 'keep-alive');
+        res.status(200);
+      }
       res.write(' ');
-    }, 15000); // Every 15 seconds
+    }, 10000);
     
     try {
       const { GoogleGenAI } = await import("@google/genai");
@@ -4853,13 +4856,9 @@ if (process.env.NODE_ENV !== 'production') {
         const result = await genAI.models.list();
         responseData = result;
       } else {
-        // Log the request payload for debugging
-        // Use a less noisy log if payload is huge
         const debugPayload = { model, contents, config, safetySettings };
         console.log("Gemini Request Payload Models:", model);
 
-        // Before calling generateContent, we MUST ensure any uploaded files are in ACTIVE state.
-        // Wait up to 3 minutes for each file.
         try {
           const filesToPoll: string[] = [];
           const fileMimeTypes: Record<string, string> = {};
@@ -4915,7 +4914,6 @@ if (process.env.NODE_ENV !== 'production') {
               }
             }
             
-            // Enforce correct registered mimeTypes for all parts to prevent any 400 "Request contains an invalid argument" errors
             for (const part of partsArr) {
               if (part && part.fileData && part.fileData.fileUri) {
                 const match = part.fileData.fileUri.match(/files\/[a-zA-Z0-9_-]+/);
@@ -5008,7 +5006,6 @@ if (process.env.NODE_ENV !== 'production') {
         // Record plugin usage if it's a recipe
         if (action === 'recipe' && text) {
           try {
-            // Clean up text if it has markdown blocks
             let jsonText = text.trim();
             if (jsonText.startsWith("```json")) {
               jsonText = jsonText.replace(/^```json\n?/, "").replace(/\n?```$/, "");
@@ -5022,7 +5019,6 @@ if (process.env.NODE_ENV !== 'production') {
             
             const pluginsToRecord: { name: string, type: string }[] = [];
             
-            // Instruments
             if (Array.isArray(recipe.instruments)) {
               recipe.instruments.forEach((inst: any) => {
                 if (inst.plugin) pluginsToRecord.push({ name: inst.plugin, type: 'instrument' });
@@ -5034,7 +5030,6 @@ if (process.env.NODE_ENV !== 'production') {
               });
             }
             
-            // Vocal Elements
             if (recipe.vocalElements) {
               if (recipe.vocalElements.plugin) pluginsToRecord.push({ name: recipe.vocalElements.plugin, type: 'vocal_instrument' });
               if (Array.isArray(recipe.vocalElements.fxPlugins)) {
@@ -5044,7 +5039,6 @@ if (process.env.NODE_ENV !== 'production') {
               }
             }
             
-            // Busses
             if (Array.isArray(recipe.busses)) {
               recipe.busses.forEach((bus: any) => {
                 if (Array.isArray(bus.fxPlugins)) {
@@ -5055,14 +5049,12 @@ if (process.env.NODE_ENV !== 'production') {
               });
             }
             
-            // Master
             if (Array.isArray(recipe.masterPlugins)) {
               recipe.masterPlugins.forEach((fx: any) => {
                 if (fx.name) pluginsToRecord.push({ name: fx.name, type: 'fx' });
               });
             }
             
-            // Save to DB
             if (pluginsToRecord.length > 0) {
               const db = getDb();
               for (const p of pluginsToRecord) {
@@ -5079,18 +5071,16 @@ if (process.env.NODE_ENV !== 'production') {
         }
       }
       
-      // Deduct credits and log receipt only after successful API call
+      // Deduct credits only after successful API call
       if (usingSystemKey && creditsToDeduct > 0) {
         const uid = String(req.session!.user!.uid);
         
-        // Deduct credits transactionally
         const updateResult = await getDb().execute({
           sql: `UPDATE users SET credits = credits - ? WHERE uid = ? AND credits >= ?`,
           args: [creditsToDeduct, uid, creditsToDeduct]
         });
         
         if (updateResult.rowsAffected > 0) {
-          // Log the receipt in Turso
           try {
             const receiptId = `rec_${Math.random().toString(36).substr(2, 9)}_${Date.now()}`;
             let actionName = action;
@@ -5115,7 +5105,6 @@ if (process.env.NODE_ENV !== 'production') {
               args: [receiptId, uid, actionName, creditsToDeduct, new Date().toISOString()]
             });
             
-            // Also update the aggregated spend table
             await getDb().execute({
               sql: `INSERT INTO user_feature_spend (uid, action, total_spent, usage_count) 
                     VALUES (?, ?, ?, 1) 
@@ -5128,24 +5117,26 @@ if (process.env.NODE_ENV !== 'production') {
             console.error("Failed to log receipt to Turso:", err);
           }
         } else {
-          console.error(`Failed to deduct credits for user ${uid} after successful generation. They might have bypassed the check.`);
+          console.error(`Failed to deduct credits for user ${uid} after successful generation.`);
         }
       }
       
-      clearInterval(heartbeatInterval);
-      res.write(JSON.stringify(responseData));
-      res.end();
+      if (heartbeatInterval) clearInterval(heartbeatInterval);
+      
+      if (!res.headersSent) {
+        return res.status(200).json(responseData);
+      } else {
+        res.write(JSON.stringify(responseData));
+        return res.end();
+      }
     } catch (error: any) {
-      clearInterval(heartbeatInterval);
+      if (heartbeatInterval) clearInterval(heartbeatInterval);
 
-      // Log the full error for server-side debugging
       console.error("Gemini API Error Detail:", error);
       
-      // Try to extract the most descriptive error message and details
       let message = error.message || "Error calling Gemini API";
       let details = error.details || error.errorDetails || [];
       
-      // Handle cases where the error message itself is a JSON string from the API
       if (typeof message === 'string' && message.includes('{')) {
         try {
           const parsed = JSON.parse(message.substring(message.indexOf('{')));
@@ -5153,30 +5144,30 @@ if (process.env.NODE_ENV !== 'production') {
             message = parsed.error.message || message;
             details = parsed.error.details || details;
           }
-        } catch (e) {
-          // Ignore parse errors
-        }
+        } catch (e) {}
       }
 
-      // If details is still empty, check if it's nested in the error object (common in some SDK versions)
       if ((!details || details.length === 0) && error.response?.data?.error?.details) {
         details = error.response.data.error.details;
       }
       
+      const statusCode = error.status || error.code || 500;
+      const validStatusCode = typeof statusCode === 'number' && statusCode >= 400 && statusCode < 600 ? statusCode : 500;
+
       const errorResponse = {
         error: {
           message: message,
           details: details,
-          code: error.status || 400,
-          status: error.statusText || "INVALID_ARGUMENT"
+          code: validStatusCode,
+          status: error.statusText || "ERROR"
         }
       };
       
       if (res.headersSent) {
         res.write(JSON.stringify(errorResponse));
-        res.end();
+        return res.end();
       } else {
-        res.status(error.status || 500).json(errorResponse);
+        return res.status(validStatusCode).json(errorResponse);
       }
     }
   });
