@@ -38,6 +38,40 @@ export interface StylePreset {
 
 export const SIGNATURE_BEAT_STYLES: StylePreset[] = [
   {
+    id: 'memphis-three6-tm88',
+    name: 'Memphis Three 6 / TM88 Dark Gangsta Trap',
+    artistReference: 'Three 6 Mafia / TM88 / Juicy J / Project Pat / Southside (e.g. Sippin on Some Sumpin, Codeine Crazy)',
+    genre: 'Memphis Dark Trap / Horrorcore',
+    defaultBpm: 138,
+    recommendedKey: 'B',
+    description: 'Hard-hitting Memphis dark gangsta trap. Overdriven clipped kick, aggressive metallic snare crack + Lex Luger style clap layer, rapid triple-roll closed hats, vocal chant drops, and gun shot FX.',
+    icon: '💀',
+    targetAcoustics: {
+      kickPunchHz: 58,
+      kickMaxDecayMs: 240,
+      bassKey: 'B',
+      bassMinDecayMs: 1400,
+      snareType: 'snare',
+      snarePunchHz: 220,
+      closedHatMaxDecayMs: 40,
+      openHatMinDecayMs: 250
+    },
+    pattern: {
+      kick:      [1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 0],
+      bass:      [1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 0],
+      snare:     [0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0], // Beats 2 & 4 Hard Snare Crack
+      closedHat: [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1], // Rapid rolling 16ths
+      openHat:   [0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 0], // Offbeat sizzle
+      perc:      [0, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1]  // Vocal chant / Gun shot drop
+    },
+    uadBusRecipe: {
+      busCompressor: 'UAD Empirical Labs Distressor (Ratio 6:1, Attack 3, Release 2, Dist 3 for extreme gangsta aggression)',
+      busEq: 'UAD Pultec EQP-1A (Boost 60Hz +3dB for sub punch, Boost 10kHz +3.5dB for razor top-end air)',
+      tapeSaturation: 'UAD Oxide Tape Recorder (Input saturated +2.5dB, Fast 15 IPS)',
+      glueTip: 'Crush the Memphis Snare through UAD 1176LN on All-Buttons British Mode (Attack 4, Release 7) for maximum transient crack. Layer vocal chants with UAD Lexicon 224 digital reverb.'
+    }
+  },
+  {
     id: 'call-me-maybe-808-trap',
     name: 'Call Me Maybe (138 BPM 808 Trap Flip)',
     artistReference: 'Call Me Maybe / 808 Sub & Chords Reference Beat (138 BPM, Key of B minor)',

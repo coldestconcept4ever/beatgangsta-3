@@ -599,6 +599,9 @@ const App: React.FC = () => {
   const [generationBPM, setGenerationBPM] = useState<string>('');
   const [generationContext, setGenerationContext] = useState<string>('');
   const [isGangstaVox, setIsGangstaVox] = useState<boolean>(false);
+  const [searchQuery, setSearchQuery] = useState<string>('');
+  const [isExactDuplicate, setIsExactDuplicate] = useState<boolean>(false);
+  const [searchCategoryFilter, setSearchCategoryFilter] = useState<'all' | 'artist' | 'genre' | 'title'>('all');
   const [csvInput, setCsvInput] = useState<string>('');
   const [plugins, setPlugins] = useState<VSTPlugin[]>(() => {
     try {
@@ -5391,6 +5394,22 @@ The AI was unable to verify these parameters. Please investigate.`;
       if (!requireAuth()) return;
 
     let finalGenerationContext = generationContext;
+    if (inputMode === 'search' && searchQuery.trim()) {
+      const modeText = isGangstaVox ? "GangstaVox (Vocals Only / Vocal Chops)" : "BeatGangsta (Beat Recipe)";
+      const dupText = isExactDuplicate 
+        ? "EXACT DUPLICATE MODE (1:1 Remake). Replicate the target song structure, tempo, key signature, chord progression, drum pattern, and mixing template as close to 1:1 as humanly possible."
+        : "TYPE BEAT MODE (Inspired Vibe). Create an original song inspired by the style, vibe, and drum sound selection of " + searchQuery.trim() + ".";
+      
+      const searchDirectives = `SEARCH DIRECTIVE:
+Search Query: "${searchQuery.trim()}"
+Category Filter: ${searchCategoryFilter.toUpperCase()}
+Mode: ${modeText}
+Replication Level: ${dupText}
+Vault Sample Matching: Match exact drum one-shot names from the user's Sample Vault manifest (e.g. Murda K, Snap 005 Lex, 2DGTZ LOG DRUM 6, Kick 004 Blam) for pad assignment.
+MIDI Export: Include downloadable formatted MIDI ZIPs with section bar lengths.`;
+
+      finalGenerationContext = (finalGenerationContext ? finalGenerationContext + "\n\n" : "") + searchDirectives;
+    }
     if (dawType === 'LUNA') {
       if (lunaSumming !== 'off') {
         finalGenerationContext = finalGenerationContext + (finalGenerationContext ? "\n\n" : "") + `CRITICAL LUNA DIRECTIVE: The user has enabled ${lunaSumming.toUpperCase()} SUMMING. You MUST include specific settings for the ${lunaSumming === 'api' ? 'API Vision Console' : 'Neve Summing'} extension on the busses and master fader. Do not ignore this.`;
@@ -8748,6 +8767,224 @@ Provide the exact JSFX plugin name and required sliders/parameters.`;
                   </div>
                 )}
               </div>
+              )}
+
+              {inputMode === 'search' && (
+                <div className={`transition-all duration-700 max-w-3xl mx-auto w-full my-4 ${mainTab === null ? 'blur-[8px] pointer-events-none opacity-40' : 'animate-in fade-in slide-in-from-bottom-4 duration-300'}`}>
+                  <div className={`p-6 sm:p-8 rounded-[2.5rem] border shadow-2xl backdrop-blur-xl ${
+                    theme === 'coldest' ? 'bg-white/60 border-sky-200 text-slate-800' :
+                    theme === 'chef-mode' ? 'bg-white/80 border-orange-200 text-orange-950' :
+                    theme === 'crazy-bird' ? 'bg-red-950/40 border-red-900/50 text-white' :
+                    'bg-black/60 border-white/10 text-white'
+                  }`}>
+                    {/* Search Header & Mode Indicator */}
+                    <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mb-6 pb-6 border-b border-current/10">
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <span className="text-xl">🔍</span>
+                          <h3 className="text-lg font-black uppercase tracking-tight">Search Recipes & Vocals</h3>
+                        </div>
+                        <p className="text-xs font-bold opacity-60 mt-0.5">
+                          Search by Artist, Genre, or Song Title to auto-architect recipes with Vault sample matching.
+                        </p>
+                      </div>
+
+                      {/* Mode Toggle Button */}
+                      <div className={`flex items-center p-1 rounded-full border text-xs font-black ${
+                        theme === 'coldest' ? 'bg-sky-500/10 border-sky-300' : 'bg-white/10 border-white/20'
+                      }`}>
+                        <button
+                          onClick={() => {
+                            setIsGangstaVox(false);
+                            setMainTab('beat');
+                          }}
+                          className={`px-3 py-1.5 rounded-full transition-all flex items-center gap-1.5 ${
+                            !isGangstaVox 
+                              ? (theme === 'coldest' ? 'bg-sky-500 text-white shadow' : 'bg-amber-500 text-black shadow') 
+                              : 'opacity-60 hover:opacity-100'
+                          }`}
+                        >
+                          <span>🎹</span> Beat Recipes
+                        </button>
+                        <button
+                          onClick={() => {
+                            setIsGangstaVox(true);
+                            setMainTab('vox');
+                          }}
+                          className={`px-3 py-1.5 rounded-full transition-all flex items-center gap-1.5 ${
+                            isGangstaVox 
+                              ? (theme === 'coldest' ? 'bg-sky-500 text-white shadow' : 'bg-purple-500 text-white shadow') 
+                              : 'opacity-60 hover:opacity-100'
+                          }`}
+                        >
+                          <span>🎤</span> Vocals Only
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Marquee Ticker Examples Bar */}
+                    <div className="mb-4 overflow-hidden rounded-2xl bg-black/20 border border-white/10 p-2 relative group">
+                      <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-amber-400 px-2 pb-1 border-b border-white/5 mb-1">
+                        <Sparkles className="w-3.5 h-3.5 animate-spin" />
+                        <span>Search Ticker • Click any item to search instantly</span>
+                      </div>
+                      <div className="overflow-hidden whitespace-nowrap flex relative">
+                        <div className="inline-flex gap-4 animate-marquee py-1 text-xs font-bold opacity-90">
+                          {[
+                            "Metro Boomin", "TM88", "Three 6 Mafia", "Call Me Maybe (Carly Rae)", "Drake", "Travis Scott",
+                            "Dark Memphis Trap", "Afrobeats", "Future", "Playboi Carti", "Pop Smoke", "Lil Baby", "21 Savage",
+                            "Sublime", "Wu-Tang Clan", "Dr. Dre", "Lex Luger", "Pierre Bourne", "Southside", "Wheezy"
+                          ].map((example, i) => (
+                            <button
+                              key={i}
+                              onClick={() => setSearchQuery(example)}
+                              className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-white/10 hover:bg-amber-500 hover:text-black transition-all cursor-pointer border border-white/10 active:scale-95"
+                            >
+                              <span>🔥</span>
+                              <span>{example}</span>
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Search Input Box */}
+                    <div className="relative mb-6">
+                      <div className="relative flex items-center">
+                        <input
+                          type="text"
+                          value={searchQuery}
+                          onChange={(e) => setSearchQuery(e.target.value)}
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter') handleGenerate();
+                          }}
+                          placeholder={
+                            !isGangstaVox 
+                              ? "Search Artist, Genre, or Song Title (e.g. TM88, Three 6 Mafia, Call Me Maybe)..."
+                              : "Search Vocals by Artist, Genre, or Song (e.g. Memphis Vocal Chops, Acapella)..."
+                          }
+                          className={`w-full py-4 pl-12 pr-12 rounded-2xl text-sm font-bold transition-all outline-none border-2 shadow-inner ${
+                            theme === 'coldest'
+                              ? 'bg-white border-sky-200 focus:border-sky-500 text-slate-900 placeholder:text-slate-400'
+                              : 'bg-black/60 border-white/20 focus:border-amber-400 text-white placeholder:text-slate-400'
+                          }`}
+                        />
+                        <div className="absolute left-4 opacity-50">
+                          <Search className="w-5 h-5" />
+                        </div>
+                        {searchQuery && (
+                          <button
+                            onClick={() => setSearchQuery('')}
+                            className="absolute right-4 p-1 rounded-full hover:bg-white/20 transition-all opacity-60 hover:opacity-100"
+                          >
+                            <X className="w-4 h-4" />
+                          </button>
+                        )}
+                      </div>
+
+                      {/* Filter Category Pills */}
+                      <div className="flex flex-wrap items-center gap-2 mt-3">
+                        <span className="text-[10px] font-black uppercase tracking-widest opacity-50 mr-1">Search By:</span>
+                        {(['all', 'artist', 'genre', 'title'] as const).map((cat) => (
+                          <button
+                            key={cat}
+                            onClick={() => setSearchCategoryFilter(cat)}
+                            className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest transition-all ${
+                              searchCategoryFilter === cat
+                                ? (theme === 'coldest' ? 'bg-slate-800 text-white' : 'bg-white text-black')
+                                : 'bg-black/20 hover:bg-black/40 text-current opacity-60 hover:opacity-100 border border-white/10'
+                            }`}
+                          >
+                            {cat === 'all' ? '✨ All' : cat === 'artist' ? '👤 Artist' : cat === 'genre' ? '🎵 Genre' : '🎼 Song Title'}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Exact Duplicate vs Type Beat Toggle Switch */}
+                    <div className={`p-5 rounded-2xl border mb-6 flex flex-col sm:flex-row items-center justify-between gap-4 transition-all ${
+                      isExactDuplicate
+                        ? (theme === 'coldest' ? 'bg-amber-50 border-amber-300' : 'bg-amber-950/40 border-amber-500/50 shadow-[0_0_30px_rgba(245,158,11,0.2)]')
+                        : (theme === 'coldest' ? 'bg-white/40 border-sky-100' : 'bg-white/5 border-white/10')
+                    }`}>
+                      <div className="flex items-start gap-3">
+                        <div className={`p-2.5 rounded-xl text-lg ${isExactDuplicate ? 'bg-amber-500 text-black' : 'bg-sky-500/20 text-sky-400'}`}>
+                          {isExactDuplicate ? '🎯' : '🎨'}
+                        </div>
+                        <div>
+                          <div className="flex items-center gap-2">
+                            <h4 className="text-xs font-black uppercase tracking-wider">
+                              {isExactDuplicate ? 'Exact Duplicate Mode (1:1 Remake)' : 'Type Beat Mode (Inspired Style - Default)'}
+                            </h4>
+                            <span className={`text-[9px] font-black uppercase px-2 py-0.5 rounded-full ${
+                              isExactDuplicate ? 'bg-amber-500 text-black' : 'bg-sky-500/20 text-sky-300'
+                            }`}>
+                              {isExactDuplicate ? '1:1 Remake' : 'Default'}
+                            </span>
+                          </div>
+                          <p className="text-[11px] font-medium opacity-70 mt-1 max-w-md">
+                            {isExactDuplicate
+                              ? "Imperative 1:1 replication. Recreates exact structural arrangement, keys, tempos, drum patterns, and mixing chains as close as humanly possible."
+                              : "Generates a unique, original recipe matching the artist or song's sonic aesthetic, tempo style, and vibe."}
+                          </p>
+                        </div>
+                      </div>
+
+                      {/* Switch Control */}
+                      <div className="flex items-center gap-3">
+                        <span className={`text-[10px] font-black uppercase tracking-widest ${!isExactDuplicate ? 'opacity-100' : 'opacity-40'}`}>
+                          Type Beat
+                        </span>
+                        <button
+                          onClick={() => setIsExactDuplicate(!isExactDuplicate)}
+                          className={`relative w-14 h-7 rounded-full p-1 transition-colors duration-300 ease-in-out ${
+                            isExactDuplicate ? 'bg-amber-500' : 'bg-slate-600/50'
+                          }`}
+                        >
+                          <div className={`w-5 h-5 rounded-full bg-white shadow-md transform transition-transform duration-300 ease-in-out ${
+                            isExactDuplicate ? 'translate-x-7' : 'translate-x-0'
+                          }`} />
+                        </button>
+                        <span className={`text-[10px] font-black uppercase tracking-widest ${isExactDuplicate ? 'text-amber-400 font-bold' : 'opacity-40'}`}>
+                          Exact Remake
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Action Button */}
+                    <div className="flex flex-col items-center gap-3">
+                      <button
+                        onClick={handleGenerate}
+                        disabled={loading || mainTab === null}
+                        className={`w-full py-4 px-8 rounded-full font-black text-xs uppercase tracking-widest shadow-xl hover:scale-[1.02] active:scale-95 transition-all flex items-center justify-center gap-2 ${
+                          theme === 'coldest' || theme === 'chef-mode' ? 'bg-sky-500 text-white shadow-sky-500/30' : 'bg-gradient-to-r from-amber-500 to-orange-500 text-black shadow-amber-500/20'
+                        }`}
+                      >
+                        {loading ? (
+                          <>
+                            <Loader2 className="w-4 h-4 animate-spin" />
+                            <span>Architecting Recipe...</span>
+                          </>
+                        ) : (
+                          <>
+                            <Sparkles className="w-4 h-4" />
+                            <span>
+                              {searchQuery.trim()
+                                ? `Architect ${isExactDuplicate ? '1:1 Remake' : 'Type Beat'} for "${searchQuery.trim()}"`
+                                : `Architect ${isGangstaVox ? 'Vocal' : 'Beat'} Recipe`}
+                            </span>
+                          </>
+                        )}
+                      </button>
+
+                      {/* Vault Status Indicator */}
+                      <div className="flex items-center gap-2 text-[10px] font-bold opacity-60">
+                        <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping" />
+                        <span>Sample Vault Linked • 2,637 drum samples ready for matching</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
               )}
 
               {inputMode === 'upload' && (
