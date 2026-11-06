@@ -1,5 +1,84 @@
 /**
- * Sanitizes a JSON string by removing common LLM artifacts like markdown code blocks.
+ * Auto-repairs truncated or malformed JSON by balancing unclosed strings, arrays, and objects.
+ */
+export const repairTruncatedJSON = (jsonStr: string): string => {
+  let str = jsonStr.trim();
+  if (!str) return '{}';
+
+  // 1. If JSON parses directly, return as is
+  try {
+    JSON.parse(str);
+    return str;
+  } catch (e) {}
+
+  // 2. Remove trailing comma or incomplete tokens at the end
+  str = str.replace(/,\s*$/, '');
+
+  // 3. Track string state and stack of open structures ('{' or '[')
+  const stack: string[] = [];
+  let inString = false;
+  let escapeNext = false;
+
+  for (let i = 0; i < str.length; i++) {
+    const char = str[i];
+
+    if (escapeNext) {
+      escapeNext = false;
+      continue;
+    }
+    if (char === '\\') {
+      escapeNext = true;
+      continue;
+    }
+    if (char === '"') {
+      inString = !inString;
+      continue;
+    }
+
+    if (!inString) {
+      if (char === '{' || char === '[') {
+        stack.push(char);
+      } else if (char === '}') {
+        if (stack[stack.length - 1] === '{') stack.pop();
+      } else if (char === ']') {
+        if (stack[stack.length - 1] === '[') stack.pop();
+      }
+    }
+  }
+
+  // 4. If we ended inside an open string, close the string quote
+  if (inString) {
+    str += '"';
+  }
+
+  // 5. Clean up any incomplete key-value pairing (e.g. `"prop": ` or trailing comma)
+  str = str.replace(/,\s*$/, '');
+  str = str.replace(/:\s*$/, ': null');
+
+  // 6. Close all remaining unclosed braces/brackets in reverse order
+  while (stack.length > 0) {
+    const openChar = stack.pop();
+    if (openChar === '{') str += '}';
+    else if (openChar === '[') str += ']';
+  }
+
+  // 7. Verify if repaired JSON is valid
+  try {
+    JSON.parse(str);
+    return str;
+  } catch (err) {
+    // Slicing strategy: if mid-token truncation prevented repair, step back to last comma or bracket
+    const lastComma = str.lastIndexOf(',');
+    if (lastComma > 10) {
+      return repairTruncatedJSON(str.substring(0, lastComma));
+    }
+    return str;
+  }
+};
+
+/**
+ * Sanitizes a JSON string by removing common LLM artifacts like markdown code blocks
+ * and repairing any truncated JSON payloads automatically.
  */
 export const sanitizeJSON = (jsonString: string): string => {
   if (!jsonString) return '{}';
@@ -23,7 +102,7 @@ export const sanitizeJSON = (jsonString: string): string => {
   // Trim whitespace
   sanitized = sanitized.trim();
   
-  // Try to extract the outermost balanced {} or []
+  // Extract outermost JSON structure starting index
   const firstBrace = sanitized.indexOf('{');
   const firstBracket = sanitized.indexOf('[');
 
@@ -76,9 +155,10 @@ export const sanitizeJSON = (jsonString: string): string => {
       }
     }
     
-    // If it never reaches depth 0, fallback to returning from startIdx
-    return sanitized.substring(startIdx);
+    // If it never reaches depth 0 (e.g. truncated response), repair it automatically!
+    const substring = sanitized.substring(startIdx);
+    return repairTruncatedJSON(substring);
   }
   
-  return sanitized;
+  return repairTruncatedJSON(sanitized);
 };
