@@ -3259,7 +3259,7 @@ export const getBeatRecommendations = async (plugins: VSTPlugin[], analogInstrum
     ${ADVANCED_MIDI_PROMPT}
   `;
   const response = await ai.models.generateContent({
-    model: 'gemini-3.8-flash',
+    model: 'gemini-3-flash-preview',
     contents: { parts: [{ text: prompt + getSchemaInstruction(isGangstaVox) }] },
     config: {
       customAction: 'recipe',
@@ -3455,7 +3455,7 @@ export const getCustomBeatRecommendations = async (plugins: VSTPlugin[], query: 
   `;
   const multiBandInstruction = getMultiBandInstruction(isMultiBandMode);
   const response = await ai.models.generateContent({
-    model: 'gemini-3.8-flash',
+    model: 'gemini-3-flash-preview',
     contents: { parts: [{ text: prompt + multiBandInstruction + getSchemaInstruction(isGangstaVox) }] },
     config: {
       customAction: 'type_beat_search',
@@ -3651,7 +3651,7 @@ export const getSongBeatRecommendations = async (plugins: VSTPlugin[], songQuery
   `;
   const multiBandInstruction = getMultiBandInstruction(isMultiBandMode);
   const response = await ai.models.generateContent({
-    model: 'gemini-3.8-flash',
+    model: 'gemini-3-flash-preview',
     contents: { parts: [{ text: prompt + multiBandInstruction + getSchemaInstruction(isGangstaVox) }] },
     config: {
       customAction: 'song_search',
@@ -4055,7 +4055,7 @@ export const getAudioBeatRecommendations = async (plugins: VSTPlugin[], audioBas
   let response;
   try {
     response = await ai.models.generateContent({
-      model: "gemini-3.8-flash",
+      model: "gemini-3-flash-preview",
       contents: {
         parts: parts
       },

@@ -4946,11 +4946,52 @@ if (process.env.NODE_ENV !== 'production') {
           ? "gemini-3.8-flash"
           : model;
 
-        const response = await genAI.models.generateContent({
-          model: effectiveModel,
-          contents,
-          config: finalConfig
-        });
+        const fallbackModels = [effectiveModel, "gemini-2.5-flash", "gemini-1.5-flash", "gemini-2.5-pro"].filter((m, i, arr) => arr.indexOf(m) === i);
+
+        let response: any = null;
+        let lastError: any = null;
+
+        for (const modelToTry of fallbackModels) {
+          let attempt = 0;
+          const maxAttempts = 2;
+          while (attempt <= maxAttempts) {
+            try {
+              console.log(`[GEMINI API] Requesting model: ${modelToTry} (attempt ${attempt + 1})`);
+              response = await genAI.models.generateContent({
+                model: modelToTry,
+                contents,
+                config: finalConfig
+              });
+              break;
+            } catch (err: any) {
+              lastError = err;
+              const errMessage = (err?.message || String(err)).toLowerCase();
+              const errCode = err?.code || err?.status || err?.statusCode;
+              const isHighDemand = 
+                errMessage.includes("high demand") || 
+                errMessage.includes("503") || 
+                errMessage.includes("resource_exhausted") || 
+                errMessage.includes("overloaded") || 
+                errMessage.includes("temporarily unavailable") || 
+                errCode === 503 || 
+                errCode === 429;
+
+              if (isHighDemand && attempt < maxAttempts) {
+                console.warn(`[GEMINI API] Model ${modelToTry} busy/high demand (HTTP ${errCode || 503}). Retrying in 1.5s...`);
+                await new Promise(r => setTimeout(r, 1500 * (attempt + 1)));
+                attempt++;
+              } else {
+                console.warn(`[GEMINI API] Model ${modelToTry} failed (${errMessage}). Trying fallback model...`);
+                break;
+              }
+            }
+          }
+          if (response) break;
+        }
+
+        if (!response) {
+          throw lastError || new Error("All Gemini model fallbacks failed due to high demand. Please try again in a few seconds.");
+        }
         
         let text = "";
         try {
