@@ -14,6 +14,7 @@ export interface IsolatedStems {
   piano: AudioBuffer;
   pad: AudioBuffer;
   vocal: AudioBuffer;
+  perc: AudioBuffer;
   detectedBpm: number;
 }
 
@@ -25,7 +26,11 @@ export async function splitAudioBufferIntoStems(
   const numChannels = audioBuffer.numberOfChannels;
   const length = audioBuffer.length;
 
-  onProgress?.(5, 'Initializing Web Audio DSP Engine...');
+  onProgress?.(5, 'Analyzing Spectral Profile for Adaptive Crossover...');
+  const centroid = calculateSpectralCentroid(audioBuffer);
+  const brightnessOffset = centroid > 3000 ? 1.2 : centroid < 1500 ? 0.8 : 1.0;
+
+  onProgress?.(10, 'Initializing Web Audio DSP Engine...');
 
   // Create M/S (Mid/Side) Buffers: Mid = (L + R) / 2, Side = (L - R) / 2
   const midBuffer = new OfflineAudioContext(1, length, sampleRate).createBuffer(1, length, sampleRate);
@@ -202,13 +207,23 @@ export async function splitAudioBufferIntoStems(
   const rawVocal = await renderStem(midBuffer, (ctx, src) => {
     const hp = ctx.createBiquadFilter();
     hp.type = 'highpass';
-    hp.frequency.value = 280;
+    hp.frequency.value = 280 * brightnessOffset;
     const lp = ctx.createBiquadFilter();
     lp.type = 'lowpass';
-    lp.frequency.value = 4000;
+    lp.frequency.value = 4000 * brightnessOffset;
     src.connect(hp);
     hp.connect(lp);
     return lp;
+  });
+
+  // 13. Percussion / FX: Side channel, 1.2kHz-8kHz (Transient focus)
+  const rawPerc = await renderStem(sideBuffer, (ctx, src) => {
+    const band = ctx.createBiquadFilter();
+    band.type = 'bandpass';
+    band.frequency.value = 4500 * brightnessOffset;
+    band.Q.value = 0.5;
+    src.connect(band);
+    return band;
   });
 
   onProgress?.(85, 'Applying AI Artifact Repair & Spectral Smoothing...');
@@ -237,6 +252,8 @@ export async function splitAudioBufferIntoStems(
   const pad = await repairStemArtifacts(rawPad, 'pad');
   await yieldToUI();
   const vocal = await repairStemArtifacts(rawVocal, 'vocal');
+  await yieldToUI();
+  const perc = await repairStemArtifacts(rawPerc, 'snare');
 
   onProgress?.(95, 'Calculating Studio BPM & Peak Alignment...');
 
@@ -257,8 +274,48 @@ export async function splitAudioBufferIntoStems(
     piano,
     pad,
     vocal,
+    perc,
     detectedBpm
   };
+}
+
+/**
+ * Advanced Spectral Centroid Analysis
+ * Estimates the "center of mass" of the audio spectrum to adapt filter crossovers.
+ */
+function calculateSpectralCentroid(audioBuffer: AudioBuffer): number {
+  const data = audioBuffer.getChannelData(0);
+  const sampleRate = audioBuffer.sampleRate;
+  const fftSize = 2048;
+  const numBins = fftSize / 2;
+  const binFreq = sampleRate / fftSize;
+
+  let totalMagnitude = 0;
+  let weightedSum = 0;
+
+  // Analyze the first 30 seconds
+  const samplesToAnalyze = Math.min(data.length, sampleRate * 30);
+  
+  for (let i = 0; i < samplesToAnalyze; i += fftSize) {
+    const chunk = data.slice(i, i + fftSize);
+    if (chunk.length < fftSize) break;
+
+    // Simplified FFT magnitude calculation
+    for (let b = 0; b < numBins; b++) {
+      let re = 0;
+      let im = 0;
+      for (let n = 0; n < fftSize; n++) {
+        const angle = (2 * Math.PI * b * n) / fftSize;
+        re += chunk[n] * Math.cos(angle);
+        im -= chunk[n] * Math.sin(angle);
+      }
+      const mag = Math.sqrt(re * re + im * im);
+      weightedSum += mag * (b * binFreq);
+      totalMagnitude += mag;
+    }
+  }
+
+  return totalMagnitude > 0 ? weightedSum / totalMagnitude : 2000;
 }
 
 function estimateAudioBpm(kickBuffer: AudioBuffer): number {
