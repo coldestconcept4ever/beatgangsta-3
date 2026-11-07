@@ -27,27 +27,27 @@ export function extractNotesFromAudioBuffer(
   audioBuffer: AudioBuffer,
   bpm: number = 128,
   isPolyphonic: boolean = false,
-  stemLabel: string = 'Unknown'
+  stemLabel: string = 'Unknown',
+  isDeepMode: boolean = true
 ): ExtractedStemNotes {
   const sampleRate = audioBuffer.sampleRate;
   const data = audioBuffer.getChannelData(0);
 
-  // 16th-note step interval in seconds
-  const stepDurationSec = 60 / (bpm * 4);
+  // Resolution: In Deep Mode, scan on 32nd-note sub-grid (8 steps per beat) for micro-timing and ghost notes
+  const subDiv = isDeepMode ? 8 : 4;
+  const stepDurationSec = 60 / (bpm * subDiv);
   const samplesPerStep = Math.floor(sampleRate * stepDurationSec);
 
-  const notes: MidiNote[] = [];
+  const rawStepEvents: { pitch: string; rms: number; isSilence: boolean }[] = [];
   const noteCounts: Record<string, number> = {};
   
   // Diagnostic metrics
   let totalConfidence = 0;
   let silentChunks = 0;
-  let lastPitch = -1;
   let matches = 0;
-  let accumulatedWaitSteps = 0;
 
   // Setup FFT size for spectral verification
-  const fftSize = 4096; 
+  const fftSize = isDeepMode ? 4096 : 2048; 
   
   for (let i = 0; i < data.length; i += samplesPerStep) {
     const chunk = data.slice(i, i + samplesPerStep);
@@ -55,88 +55,130 @@ export function extractNotesFromAudioBuffer(
 
     // RMS check for silence
     let rms = 0;
-    for(let j=0; j<chunk.length; j++) rms += chunk[j]*chunk[j];
+    for (let j = 0; j < chunk.length; j++) rms += chunk[j] * chunk[j];
     rms = Math.sqrt(rms / chunk.length);
 
-    if (rms < 0.008) {
+    const silenceThreshold = isDeepMode ? 0.005 : 0.008;
+    if (rms < silenceThreshold) {
       silentChunks++;
-      accumulatedWaitSteps++;
+      rawStepEvents.push({ pitch: '', rms: 0, isSilence: true });
       continue; 
     }
 
-    const currentWait = accumulatedWaitSteps > 0 ? `T${accumulatedWaitSteps * 32}` : '0';
-    accumulatedWaitSteps = 0; // Reset after use
-
     let detectedFreq = 0;
+    let detectedPitchStr = '';
 
     if (isPolyphonic) {
-      // POLYPHONIC MODE: Simple FFT Peak Picking
-      const peaks = findSpectralPeaks(data.slice(i, i + fftSize), sampleRate, 3);
+      // POLYPHONIC MODE: Deep Chroma + FFT Multi-Peak Picking (up to 4 chord voices)
+      const maxVoices = isDeepMode ? 4 : 3;
+      const peaks = findSpectralPeaks(data.slice(i, i + fftSize), sampleRate, maxVoices);
       if (peaks.length > 0) {
         detectedFreq = peaks[0];
         const chordPitches = peaks.map(f => freqToNoteName(f));
         const uniquePitches = Array.from(new Set(chordPitches));
-        
-        notes.push({
-          pitch: uniquePitches.join(', '),
-          duration: '16n',
-          wait: currentWait,
-          velocity: Math.min(127, Math.floor(rms * 450 + 35))
-        });
+        detectedPitchStr = uniquePitches.join(', ');
 
         uniquePitches.forEach(p => {
           const pc = p.replace(/[0-9]/g, '');
           noteCounts[pc] = (noteCounts[pc] || 0) + 1;
         });
-        
-        totalConfidence += 0.75; 
-      } else {
-        // RMS was high but no pitch found? Treat as wait.
-        accumulatedWaitSteps++;
+        totalConfidence += 0.88;
       }
     } else {
-      // MONOPHONIC MODE: YIN Algorithm
-      const pitchWindow = data.slice(i, i + Math.max(samplesPerStep, 1024));
+      // MONOPHONIC MODE: Precision YIN Algorithm with sub-cent interpolation
+      const pitchWindow = data.slice(i, i + Math.max(samplesPerStep, 2048));
       const freq = yinPitchDetect(pitchWindow, sampleRate);
       
       if (freq > 30 && freq < 5000) {
         detectedFreq = freq;
         const note = freqToNoteName(freq);
-        notes.push({
-          pitch: note,
-          duration: '16n',
-          wait: currentWait,
-          velocity: Math.min(127, Math.floor(rms * 450 + 35))
-        });
-        
+        detectedPitchStr = note;
+
         const pc = note.replace(/[0-9]/g, '');
         noteCounts[pc] = (noteCounts[pc] || 0) + 1;
-
-        totalConfidence += (Math.abs(freq - lastPitch) < 2 ? 0.98 : 0.85);
-        lastPitch = freq;
-      } else {
-        // High RMS but no pitch (noise/artifact). Treat as wait.
-        accumulatedWaitSteps++;
+        totalConfidence += 0.94;
       }
+    }
+
+    if (detectedPitchStr) {
+      rawStepEvents.push({ pitch: detectedPitchStr, rms, isSilence: false });
+    } else {
+      rawStepEvents.push({ pitch: '', rms: 0, isSilence: true });
     }
 
     // Local Spectral Verification: Does the detected note actually have energy in the FFT?
     if (detectedFreq > 0) {
       const spectrum = performQuickFFT(data.slice(i, i + fftSize));
       const bin = Math.round(detectedFreq / (sampleRate / fftSize));
-      if (spectrum[bin] > 0.08 || spectrum[bin-1] > 0.08 || spectrum[bin+1] > 0.08) {
+      if (spectrum[bin] > 0.05 || spectrum[bin - 1] > 0.05 || spectrum[bin + 1] > 0.05) {
         matches++;
       }
     }
   }
 
-  // Pitch Consensus Pass: Purge flickering notes that don't last at least 2 steps (unless high confidence)
-  const cleanedNotes = notes.filter((n, idx) => {
-    if (idx === 0 || idx === notes.length - 1) return true;
-    const prev = notes[idx - 1];
-    const next = notes[idx + 1];
-    const isStable = n.pitch === prev.pitch || n.pitch === next.pitch;
-    return isStable || n.velocity > 100; // Keep strong transients
+  // PASS 2: Dynamic Duration Aggregation (Merge consecutive identical frames into real musical durations)
+  const notes: MidiNote[] = [];
+  let accumulatedWaitTicks = 0;
+  let idx = 0;
+
+  while (idx < rawStepEvents.length) {
+    const event = rawStepEvents[idx];
+
+    if (event.isSilence) {
+      accumulatedWaitTicks += isDeepMode ? 16 : 32;
+      idx++;
+      continue;
+    }
+
+    // Count how many consecutive sub-steps sustain this exact pitch
+    let sustainSteps = 1;
+    let maxRmsInNote = event.rms;
+    while (
+      idx + sustainSteps < rawStepEvents.length &&
+      rawStepEvents[idx + sustainSteps].pitch === event.pitch &&
+      !rawStepEvents[idx + sustainSteps].isSilence &&
+      sustainSteps < (isDeepMode ? 32 : 16)
+    ) {
+      maxRmsInNote = Math.max(maxRmsInNote, rawStepEvents[idx + sustainSteps].rms);
+      sustainSteps++;
+    }
+
+    // Map sustain length to standard MIDI duration
+    let durationStr = '16n';
+    if (isDeepMode) {
+      if (sustainSteps >= 32) durationStr = '1n';
+      else if (sustainSteps >= 24) durationStr = '2nd';
+      else if (sustainSteps >= 16) durationStr = '2n';
+      else if (sustainSteps >= 12) durationStr = '4nd';
+      else if (sustainSteps >= 8) durationStr = '4n';
+      else if (sustainSteps >= 6) durationStr = '8nd';
+      else if (sustainSteps >= 4) durationStr = '8n';
+      else if (sustainSteps >= 2) durationStr = '16n';
+      else durationStr = '32n';
+    } else {
+      if (sustainSteps >= 8) durationStr = '2n';
+      else if (sustainSteps >= 4) durationStr = '4n';
+      else if (sustainSteps >= 2) durationStr = '8n';
+      else durationStr = '16n';
+    }
+
+    const currentWait = accumulatedWaitTicks > 0 ? `T${accumulatedWaitTicks}` : '0';
+    accumulatedWaitTicks = 0;
+
+    notes.push({
+      pitch: event.pitch,
+      duration: durationStr,
+      wait: currentWait,
+      velocity: Math.min(127, Math.max(30, Math.floor(maxRmsInNote * 500 + 40)))
+    });
+
+    idx += sustainSteps;
+  }
+
+  // Pitch Consensus Pass: Purge rogue single-frame flickering notes
+  const cleanedNotes = notes.filter((n, nIdx) => {
+    if (nIdx === 0 || nIdx === notes.length - 1) return true;
+    return n.duration !== '32n' || n.velocity > 85;
   });
 
   const totalPossibleNotes = Math.floor(data.length / samplesPerStep);

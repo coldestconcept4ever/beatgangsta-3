@@ -1,4 +1,5 @@
 // 100% Client-Side Local AudioBuffer to WAV File Encoder (0 Token, 0 Internet Cost)
+// Memory-optimized: Writes directly into DataView without intermediate interleaved Float32Array allocations.
 
 const yieldToUI = () => new Promise(resolve => setTimeout(resolve, 0));
 
@@ -7,49 +8,19 @@ export async function audioBufferToWav(buffer: AudioBuffer, opt?: { float32?: bo
   const sampleRate = buffer.sampleRate;
   const format = opt && opt.float32 ? 3 : 1; // 1 = 16-bit PCM, 3 = 32-bit Float
   const bitDepth = format === 3 ? 32 : 16;
+  const length = buffer.length;
 
-  let result: Float32Array;
-  if (numChannels === 2) {
-    result = interleave(buffer.getChannelData(0), buffer.getChannelData(1));
-  } else {
-    result = buffer.getChannelData(0);
-  }
-
-  return await encodeWAV(result, format, sampleRate, numChannels, bitDepth);
-}
-
-function interleave(inputL: Float32Array, inputR: Float32Array): Float32Array {
-  const length = inputL.length + inputR.length;
-  const result = new Float32Array(length);
-
-  let index = 0;
-  let inputIndex = 0;
-
-  while (index < length) {
-    result[index++] = inputL[inputIndex];
-    result[index++] = inputR[inputIndex];
-    inputIndex++;
-  }
-  return result;
-}
-
-async function encodeWAV(
-  samples: Float32Array,
-  format: number,
-  sampleRate: number,
-  numChannels: number,
-  bitDepth: number
-): Promise<ArrayBuffer> {
   const bytesPerSample = bitDepth / 8;
+  const totalSamples = length * numChannels;
   const blockAlign = numChannels * bytesPerSample;
 
-  const buffer = new ArrayBuffer(44 + samples.length * bytesPerSample);
-  const view = new DataView(buffer);
+  const wavBuffer = new ArrayBuffer(44 + totalSamples * bytesPerSample);
+  const view = new DataView(wavBuffer);
 
   /* RIFF identifier */
   writeString(view, 0, 'RIFF');
   /* RIFF chunk length */
-  view.setUint32(4, 36 + samples.length * bytesPerSample, true);
+  view.setUint32(4, 36 + totalSamples * bytesPerSample, true);
   /* RIFF type */
   writeString(view, 8, 'WAVE');
   /* format chunk identifier */
@@ -71,32 +42,41 @@ async function encodeWAV(
   /* data chunk identifier */
   writeString(view, 36, 'data');
   /* data chunk length */
-  view.setUint32(40, samples.length * bytesPerSample, true);
+  view.setUint32(40, totalSamples * bytesPerSample, true);
 
+  const chan0 = buffer.getChannelData(0);
+  const chan1 = numChannels > 1 ? buffer.getChannelData(1) : null;
+
+  let offset = 44;
   if (format === 1) {
-    // 16-bit PCM
-    await floatTo16BitPCMAsync(view, 44, samples);
+    // 16-bit PCM: write directly from channel buffers without intermediate interleaved array
+    for (let i = 0; i < length; i++) {
+      if (i % 50000 === 0) await yieldToUI();
+      const s0 = Math.max(-1, Math.min(1, chan0[i]));
+      view.setInt16(offset, s0 < 0 ? s0 * 0x8000 : s0 * 0x7fff, true);
+      offset += 2;
+
+      if (chan1) {
+        const s1 = Math.max(-1, Math.min(1, chan1[i]));
+        view.setInt16(offset, s1 < 0 ? s1 * 0x8000 : s1 * 0x7fff, true);
+        offset += 2;
+      }
+    }
   } else {
     // 32-bit Float
-    await writeFloat32Async(view, 44, samples);
+    for (let i = 0; i < length; i++) {
+      if (i % 50000 === 0) await yieldToUI();
+      view.setFloat32(offset, chan0[i], true);
+      offset += 4;
+
+      if (chan1) {
+        view.setFloat32(offset, chan1[i], true);
+        offset += 4;
+      }
+    }
   }
 
-  return buffer;
-}
-
-async function floatTo16BitPCMAsync(output: DataView, offset: number, input: Float32Array) {
-  for (let i = 0; i < input.length; i++, offset += 2) {
-    if (i % 50000 === 0) await yieldToUI(); // Yield every 50k samples
-    const s = Math.max(-1, Math.min(1, input[i]));
-    output.setInt16(offset, s < 0 ? s * 0x8000 : s * 0x7fff, true);
-  }
-}
-
-async function writeFloat32Async(view: DataView, offset: number, input: Float32Array) {
-  for (let i = 0; i < input.length; i++, offset += 4) {
-    if (i % 50000 === 0) await yieldToUI();
-    view.setFloat32(offset, input[i], true);
-  }
+  return wavBuffer;
 }
 
 function writeString(view: DataView, offset: number, string: string) {

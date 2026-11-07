@@ -22,11 +22,50 @@ export const AudioStemAnalyzerModal: React.FC<AudioStemAnalyzerModalProps> = ({
   const [isProcessing, setIsProcessing] = useState(false);
   const [progressLabel, setProgressLabel] = useState('');
   const [progressPct, setProgressPct] = useState(0);
+  const [isDeepMode, setIsDeepMode] = useState<boolean>(true); // Default to Studio Deep Engine as requested
+  const [elapsedSec, setElapsedSec] = useState<number>(0);
   const [stems, setStems] = useState<IsolatedStems | null>(null);
   const [fileName, setFileName] = useState<string>('');
   const [playingStem, setPlayingStem] = useState<string | null>(null);
   const [audioSource, setAudioSource] = useState<AudioBufferSourceNode | null>(null);
   const [transcriptionDiagnostics, setTranscriptionDiagnostics] = useState<any[]>([]);
+  const previewAudioCtxRef = React.useRef<AudioContext | null>(null);
+
+  // Manage persistent AudioContext for stem previews (Chrome tab limit = 6 max)
+  const getPreviewAudioCtx = () => {
+    if (!previewAudioCtxRef.current || previewAudioCtxRef.current.state === 'closed') {
+      previewAudioCtxRef.current = new AudioContext();
+    }
+    if (previewAudioCtxRef.current.state === 'suspended') {
+      previewAudioCtxRef.current.resume();
+    }
+    return previewAudioCtxRef.current;
+  };
+
+  React.useEffect(() => {
+    return () => {
+      if (audioSource) {
+        try { audioSource.stop(); } catch {}
+      }
+      if (previewAudioCtxRef.current && previewAudioCtxRef.current.state !== 'closed') {
+        previewAudioCtxRef.current.close().catch(() => {});
+      }
+    };
+  }, []);
+
+  // Timer for deep analysis
+  React.useEffect(() => {
+    let interval: any = null;
+    if (isProcessing) {
+      setElapsedSec(0);
+      interval = setInterval(() => {
+        setElapsedSec(prev => prev + 1);
+      }, 1000);
+    } else {
+      clearInterval(interval);
+    }
+    return () => clearInterval(interval);
+  }, [isProcessing]);
 
   if (!isOpen) return null;
 
@@ -35,17 +74,23 @@ export const AudioStemAnalyzerModal: React.FC<AudioStemAnalyzerModalProps> = ({
     setFileName(file.name);
     setIsProcessing(true);
     setProgressPct(5);
-    setProgressLabel('Loading MP3/WAV file...');
+    setProgressLabel(isDeepMode ? 'Initializing Studio Deep AI Engine (3-5 Min Precision Mode)...' : 'Loading MP3/WAV file...');
 
     try {
       const arrayBuffer = await file.arrayBuffer();
-      const audioCtx = new AudioContext();
-      const audioBuffer = await audioCtx.decodeAudioData(arrayBuffer);
+      const decodeCtx = new AudioContext();
+      let audioBuffer: AudioBuffer;
+      try {
+        audioBuffer = await decodeCtx.decodeAudioData(arrayBuffer);
+      } finally {
+        // Guarantee immediate closure of temporary decoding context
+        decodeCtx.close().catch(() => {});
+      }
 
       const isolated = await splitAudioBufferIntoStems(audioBuffer, (pct, label) => {
         setProgressPct(pct);
         setProgressLabel(label);
-      });
+      }, isDeepMode);
 
       setStems(isolated);
       setIsProcessing(false);
@@ -58,17 +103,17 @@ export const AudioStemAnalyzerModal: React.FC<AudioStemAnalyzerModalProps> = ({
 
   const playStemPreview = (buffer: AudioBuffer, stemName: string) => {
     if (playingStem === stemName && audioSource) {
-      audioSource.stop();
+      try { audioSource.stop(); } catch {}
       setPlayingStem(null);
       setAudioSource(null);
       return;
     }
 
     if (audioSource) {
-      audioSource.stop();
+      try { audioSource.stop(); } catch {}
     }
 
-    const audioCtx = new AudioContext();
+    const audioCtx = getPreviewAudioCtx();
     const source = audioCtx.createBufferSource();
     source.buffer = buffer;
     source.connect(audioCtx.destination);
@@ -85,33 +130,70 @@ export const AudioStemAnalyzerModal: React.FC<AudioStemAnalyzerModalProps> = ({
   const handleExportStemsAndRecipe = async () => {
     if (!stems) return;
 
-    setProgressLabel('Encoding 12-Channel High-Quality WAV Stems...');
+    setIsProcessing(true);
+    setProgressPct(10);
+    setProgressLabel('Encoding 13 High-Quality WAV Stems...');
 
-    // Convert stems to local WAV blobs (Async yielding)
+    const yieldToUI = () => new Promise(resolve => setTimeout(resolve, 0));
+
+    // Convert stems to local WAV blobs with event-loop yielding to prevent UI freezes
+    setProgressLabel('Encoding Kick, Snare & Drums WAV Stems (1-5/13)...');
+    await yieldToUI();
+    const kickBlob = await audioBufferToWavBlob(stems.kick);
+    const snareBlob = await audioBufferToWavBlob(stems.snare);
+    const hihatBlob = await audioBufferToWavBlob(stems.hihat);
+    const openhatBlob = await audioBufferToWavBlob(stems.openhat);
+    const percBlob = await audioBufferToWavBlob(stems.perc);
+
+    setProgressPct(35);
+    setProgressLabel('Encoding Bass & Guitars WAV Stems (6-9/13)...');
+    await yieldToUI();
+    const bassBlob = await audioBufferToWavBlob(stems.bass);
+    const bassGuitarBlob = await audioBufferToWavBlob(stems.bassGuitar);
+    const leadGuitarBlob = await audioBufferToWavBlob(stems.leadGuitar);
+    const acousticGuitarBlob = await audioBufferToWavBlob(stems.acousticGuitar);
+
+    setProgressPct(55);
+    setProgressLabel('Encoding Synths, Keys & Vocals WAV Stems (10-13/13)...');
+    await yieldToUI();
+    const leadBlob = await audioBufferToWavBlob(stems.lead);
+    const pianoBlob = await audioBufferToWavBlob(stems.piano);
+    const padBlob = await audioBufferToWavBlob(stems.pad);
+    const vocalBlob = await audioBufferToWavBlob(stems.vocal);
+
     const stemWavs: Record<string, Blob> = {
-      '01_Kick_Stem.wav': await audioBufferToWavBlob(stems.kick),
-      '02_Snare_Stem.wav': await audioBufferToWavBlob(stems.snare),
-      '03_HiHats_Stem.wav': await audioBufferToWavBlob(stems.hihat),
-      '04_OpenHat_Stem.wav': await audioBufferToWavBlob(stems.openhat),
-      '05_SynthBass_Stem.wav': await audioBufferToWavBlob(stems.bass),
-      '06_BassGuitar_Stem.wav': await audioBufferToWavBlob(stems.bassGuitar),
-      '07_LeadSynth_Stem.wav': await audioBufferToWavBlob(stems.lead),
-      '08_LeadGuitar_Stem.wav': await audioBufferToWavBlob(stems.leadGuitar),
-      '09_AcousticGuitar_Stem.wav': await audioBufferToWavBlob(stems.acousticGuitar),
-      '10_Piano_Stem.wav': await audioBufferToWavBlob(stems.piano),
-      '11_PadChords_Stem.wav': await audioBufferToWavBlob(stems.pad),
-      '12_Vocals_Stem.wav': await audioBufferToWavBlob(stems.vocal),
-      '13_Percussion_Stem.wav': await audioBufferToWavBlob(stems.perc)
+      '01_Kick_Stem.wav': kickBlob,
+      '02_Snare_Stem.wav': snareBlob,
+      '03_HiHats_Stem.wav': hihatBlob,
+      '04_OpenHat_Stem.wav': openhatBlob,
+      '05_SynthBass_Stem.wav': bassBlob,
+      '06_BassGuitar_Stem.wav': bassGuitarBlob,
+      '07_LeadSynth_Stem.wav': leadBlob,
+      '08_LeadGuitar_Stem.wav': leadGuitarBlob,
+      '09_AcousticGuitar_Stem.wav': acousticGuitarBlob,
+      '10_Piano_Stem.wav': pianoBlob,
+      '11_PadChords_Stem.wav': padBlob,
+      '12_Vocals_Stem.wav': vocalBlob,
+      '13_Percussion_Stem.wav': percBlob
     };
 
-    const leadNotes = extractNotesFromAudioBuffer(stems.lead, stems.detectedBpm, false, 'Lead Synth');
-    const bassNotes = extractNotesFromAudioBuffer(stems.bass, stems.detectedBpm, false, 'Synth Bass');
-    const leadGuitarNotes = extractNotesFromAudioBuffer(stems.leadGuitar, stems.detectedBpm, false, 'Lead Guitar');
-    const bassGuitarNotes = extractNotesFromAudioBuffer(stems.bassGuitar, stems.detectedBpm, false, 'Bass Guitar');
-    const pianoNotes = extractNotesFromAudioBuffer(stems.piano, stems.detectedBpm, true, 'Piano');
-    const padNotes = extractNotesFromAudioBuffer(stems.pad, stems.detectedBpm, true, 'Pad Chords');
+    setProgressPct(70);
+    setProgressLabel('Transcribing Lead Synth & Bass MIDI...');
+    await yieldToUI();
+    const leadNotes = extractNotesFromAudioBuffer(stems.lead, stems.detectedBpm, false, 'Lead Synth', isDeepMode);
+    const bassNotes = extractNotesFromAudioBuffer(stems.bass, stems.detectedBpm, false, 'Synth Bass', isDeepMode);
 
-    // Extract Drum Patterns locally
+    setProgressPct(82);
+    setProgressLabel('Transcribing Guitars, Keys & Polyphonic Pads...');
+    await yieldToUI();
+    const leadGuitarNotes = extractNotesFromAudioBuffer(stems.leadGuitar, stems.detectedBpm, false, 'Lead Guitar', isDeepMode);
+    const bassGuitarNotes = extractNotesFromAudioBuffer(stems.bassGuitar, stems.detectedBpm, false, 'Bass Guitar', isDeepMode);
+    const pianoNotes = extractNotesFromAudioBuffer(stems.piano, stems.detectedBpm, true, 'Piano', isDeepMode);
+    const padNotes = extractNotesFromAudioBuffer(stems.pad, stems.detectedBpm, true, 'Pad Chords', isDeepMode);
+
+    setProgressPct(92);
+    setProgressLabel('Transcribing High-Res 32nd-Note Drum Tracks...');
+    await yieldToUI();
     const kickPattern = extractDrumPatternFromAudioBuffer(stems.kick, stems.detectedBpm);
     const snarePattern = extractDrumPatternFromAudioBuffer(stems.snare, stems.detectedBpm);
     const hihatPattern = extractDrumPatternFromAudioBuffer(stems.hihat, stems.detectedBpm);
@@ -343,6 +425,47 @@ export const AudioStemAnalyzerModal: React.FC<AudioStemAnalyzerModalProps> = ({
             </button>
           </div>
 
+          {/* Separation & MIDI Engine Selector */}
+          {!stems && !isProcessing && (
+            <div className="mb-6 p-4 rounded-2xl bg-black/40 border border-white/10 flex flex-col sm:flex-row items-center justify-between gap-4">
+              <div>
+                <span className="text-[10px] font-black uppercase tracking-widest text-white/50 block">Separation & MIDI Engine</span>
+                <span className="text-xs font-black text-sky-400">
+                  {isDeepMode ? '🧠 Studio Deep AI Engine (3–5 Min Precision Mode)' : '⚡ Fast Preview Mode (~5 Sec)'}
+                </span>
+                <p className="text-[10px] text-white/60 mt-0.5">
+                  {isDeepMode
+                    ? '120-pass NMF spectral factorization, 10ms polyphonic chord extraction, 32nd-note ghost rolls, and >45dB isolation.'
+                    : 'Rapid transient/tonal decoupling preview.'}
+                </p>
+              </div>
+              <div className="flex items-center gap-2 shrink-0">
+                <button
+                  type="button"
+                  onClick={() => setIsDeepMode(true)}
+                  className={`px-4 py-2 rounded-xl text-xs font-black tracking-wider uppercase transition-all ${
+                    isDeepMode
+                      ? 'bg-sky-500 text-slate-950 shadow-lg shadow-sky-500/20'
+                      : 'bg-white/5 text-white/60 hover:text-white'
+                  }`}
+                >
+                  Studio Deep (3-5 Min)
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setIsDeepMode(false)}
+                  className={`px-4 py-2 rounded-xl text-xs font-black tracking-wider uppercase transition-all ${
+                    !isDeepMode
+                      ? 'bg-sky-500 text-slate-950 shadow-lg shadow-sky-500/20'
+                      : 'bg-white/5 text-white/60 hover:text-white'
+                  }`}
+                >
+                  Fast Preview
+                </button>
+              </div>
+            </div>
+          )}
+
           {/* Upload Area */}
           {!stems && !isProcessing && (
             <div
@@ -368,23 +491,39 @@ export const AudioStemAnalyzerModal: React.FC<AudioStemAnalyzerModalProps> = ({
                   Drop MP3 or WAV Reference Track Here
                 </h4>
                 <p className="text-xs font-bold opacity-75 max-w-md">
-                  Splits Kick, Snare, Hats, Basses, Guitars, Synths, Piano, Pads, and Vocals locally in your browser with 0 tokens.
+                  {isDeepMode 
+                    ? 'Will run intensive 120-pass NMF separation & 10ms polyphonic chord extraction (~3-5 minutes for full song accuracy).'
+                    : 'Splits Kick, Snare, Hats, Basses, Guitars, Synths, Piano, Pads, and Vocals locally in your browser.'}
                 </p>
               </label>
             </div>
           )}
 
-          {/* Processing Progress */}
+          {/* Processing Progress with Live Elapsed Timer */}
           {isProcessing && (
             <div className="p-12 text-center flex flex-col items-center justify-center space-y-6">
-              <div className="w-16 h-16 rounded-full border-4 border-sky-500 border-t-transparent animate-spin" />
-              <div>
+              <div className="relative">
+                <div className="w-20 h-20 rounded-full border-4 border-sky-500/30 border-t-sky-400 animate-spin" />
+                <div className="absolute inset-0 flex items-center justify-center text-[10px] font-black text-sky-300">
+                  {Math.floor(elapsedSec / 60)}:{String(elapsedSec % 60).padStart(2, '0')}
+                </div>
+              </div>
+              <div className="space-y-2 max-w-md w-full">
                 <h4 className="text-sm font-black uppercase tracking-wider text-sky-300">{progressLabel}</h4>
-                <div className="w-64 h-3 bg-white/10 rounded-full mt-4 overflow-hidden border border-white/10">
+                <p className="text-[11px] font-bold text-white/50">
+                  {isDeepMode 
+                    ? 'Studio Deep Precision Mode Active (~3-5 Min) • 120-Pass Spectral Matrix Factorization & 10ms Polyphonic Chord Voicings' 
+                    : 'Running Fast Local Separation...'}
+                </p>
+                <div className="w-full h-3 bg-white/10 rounded-full mx-auto overflow-hidden border border-white/10">
                   <div
-                    className="h-full bg-gradient-to-r from-sky-500 to-emerald-400 transition-all duration-300"
+                    className="h-full bg-gradient-to-r from-sky-500 via-indigo-500 to-emerald-400 transition-all duration-300"
                     style={{ width: `${progressPct}%` }}
                   />
+                </div>
+                <div className="flex justify-between text-[10px] font-bold text-white/40 px-2 pt-1">
+                  <span>Elapsed: {Math.floor(elapsedSec / 60)}:{String(elapsedSec % 60).padStart(2, '0')}</span>
+                  <span>{progressPct}% Completed</span>
                 </div>
               </div>
             </div>

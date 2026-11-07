@@ -152,34 +152,62 @@ export async function repairStemArtifacts(
 }
 
 /**
+ * Zero-allocation 5-element median sorting network
+ * Eliminates millions of temporary array allocations and .sort() calls.
+ */
+function median5(a: number, b: number, c: number, d: number, e: number): number {
+  let v0 = a, v1 = b, v2 = c, v3 = d, v4 = e, t: number;
+  if (v0 > v1) { t = v0; v0 = v1; v1 = t; }
+  if (v3 > v4) { t = v3; v3 = v4; v4 = t; }
+  if (v0 > v3) { t = v0; v0 = v3; v3 = t; }
+  if (v1 > v4) { t = v1; v1 = v4; v4 = t; }
+  if (v1 > v2) { t = v1; v1 = v2; v2 = t; }
+  if (v2 > v3) { t = v2; v2 = v3; v3 = t; }
+  if (v1 > v2) { t = v1; v1 = v2; v2 = t; }
+  return v2;
+}
+
+/**
  * Harmonic Median Filter (Pico-HPSS)
  * Purges short-duration impulsive transients (drum bleeds) from sustained melodic stems.
+ * Runs in O(N) with zero garbage-collector memory pressure.
  */
 function applyHarmonicMedianFilter(data: Float32Array) {
-  const windowSize = 5; // 5-sample median window for pico-speed transient rejection
+  const len = data.length;
+  if (len < 5) return;
   const copy = new Float32Array(data);
-  for (let i = 2; i < data.length - 2; i++) {
-    const window = [copy[i-2], copy[i-1], copy[i], copy[i+1], copy[i+2]].sort();
-    data[i] = window[2]; // Median
+  for (let i = 2; i < len - 2; i++) {
+    data[i] = median5(copy[i - 2], copy[i - 1], copy[i], copy[i + 1], copy[i + 2]);
   }
 }
 
 /**
  * Percussive Transient Sharper
  * Purges sustained low-energy harmonic bleed from drum stems to ensure 100% peak accuracy.
+ * Uses a sliding window moving average to run in O(N) instead of O(lookahead * N).
  */
 function applyPercussiveTransientSharper(data: Float32Array) {
+  const len = data.length;
   const lookahead = 10;
-  for (let i = 0; i < data.length; i++) {
+  if (len <= lookahead) return;
+
+  let futureEnergy = 0;
+  for (let j = 1; j <= lookahead && j < len; j++) {
+    futureEnergy += Math.abs(data[j]);
+  }
+
+  for (let i = 0; i < len; i++) {
     const val = Math.abs(data[i]);
-    // If the energy is sustained rather than spiking, attenuate it (purging melodic bleed)
-    let futureEnergy = 0;
-    for (let j = 1; j <= lookahead && i + j < data.length; j++) {
-      futureEnergy += Math.abs(data[i+j]);
-    }
     const avgFuture = futureEnergy / lookahead;
     if (val < avgFuture * 0.8) {
-      data[i] *= 0.5; // Attenuate sustained harmonic "blur"
+      data[i] *= 0.5; // Attenuate sustained harmonic blur
+    }
+    // Slide forward window
+    if (i + 1 < len) {
+      futureEnergy -= Math.abs(data[i + 1]);
+      if (i + 1 + lookahead < len) {
+        futureEnergy += Math.abs(data[i + 1 + lookahead]);
+      }
     }
   }
 }

@@ -706,6 +706,7 @@ export const RecipeCard: React.FC<RecipeCardProps> = ({ recipe: initialRecipe, i
   }, [recipe.isGangstaVox, recipe.gangstaVox]);
 
   const [isDownloadingAll, setIsDownloadingAll] = useState(false);
+  const [zipProgress, setZipProgress] = useState(0);
   const [isExportingDawProject, setIsExportingDawProject] = useState(false);
   const exportRef = useRef<HTMLDivElement>(null);
 
@@ -875,11 +876,14 @@ export const RecipeCard: React.FC<RecipeCardProps> = ({ recipe: initialRecipe, i
   };
 
   const handleDownloadAllMidi = async () => {
-    const zipName = 'MIDI';
+    const zipName = stemWavs ? 'MIDI_and_Stems' : 'MIDI';
 
     try {
       setIsDownloadingAll(true);
-      const zipBlob = await generateAllMidiZip(recipe, dawType, stemWavs || undefined);
+      setZipProgress(0);
+      const zipBlob = await generateAllMidiZip(recipe, dawType, stemWavs || undefined, (pct) => {
+        setZipProgress(pct);
+      });
       const downloadUrl = URL.createObjectURL(zipBlob);
       const link = document.createElement('a');
       link.href = downloadUrl;
@@ -887,12 +891,14 @@ export const RecipeCard: React.FC<RecipeCardProps> = ({ recipe: initialRecipe, i
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
-      setTimeout(() => URL.revokeObjectURL(downloadUrl), 100);
+      // Give the browser 60s to stream large archives to disk before revoking
+      setTimeout(() => URL.revokeObjectURL(downloadUrl), 60000);
     } catch (error) {
       console.error("Failed to generate MIDI ZIP:", error);
       alert(t('failed_to_generate_zip'));
     } finally {
       setIsDownloadingAll(false);
+      setZipProgress(0);
     }
   };
 
@@ -1128,7 +1134,7 @@ export const RecipeCard: React.FC<RecipeCardProps> = ({ recipe: initialRecipe, i
             }`}
           >
             {isDownloadingAll || isLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Music className="w-4 h-4" />}
-            {isDownloadingAll || isLoading ? t('preparing') : t('download_midi')}
+            {isDownloadingAll ? (zipProgress > 0 ? `Packing ZIP (${zipProgress}%)...` : t('preparing')) : (stemWavs ? 'Download MIDI + Stems ZIP' : t('download_midi'))}
           </button>
           <button 
             onClick={handleExportDawProject}

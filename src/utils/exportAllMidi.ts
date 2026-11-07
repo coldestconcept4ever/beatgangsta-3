@@ -62,7 +62,12 @@ export const generateIndividualMidiFiles = async (recipe: BeatRecipe): Promise<{
   return files;
 };
 
-export const generateAllMidiZip = async (recipe: BeatRecipe, dawType?: string | null, stemWavs?: Record<string, Blob>): Promise<Blob> => {
+export const generateAllMidiZip = async (
+  recipe: BeatRecipe,
+  dawType?: string | null,
+  stemWavs?: Record<string, Blob>,
+  onProgress?: (progressPct: number) => void
+): Promise<Blob> => {
   const JSZip = await getJSZip();
   const zip = new JSZip();
 
@@ -70,8 +75,8 @@ export const generateAllMidiZip = async (recipe: BeatRecipe, dawType?: string | 
     const audioFolder = zip.folder("Audio_Stems_WAV");
     if (audioFolder) {
       for (const [filename, blob] of Object.entries(stemWavs)) {
-        const ab = await blob.arrayBuffer();
-        audioFolder.file(filename, ab);
+        // Pass Blob directly to JSZip; avoid calling blob.arrayBuffer() to prevent 460MB memory duplication
+        audioFolder.file(filename, blob);
       }
     }
   }
@@ -292,5 +297,14 @@ export const generateAllMidiZip = async (recipe: BeatRecipe, dawType?: string | 
     }
   } catch {}
 
-  return await zip.generateAsync({ type: 'blob' });
+  return await zip.generateAsync(
+    {
+      type: 'blob',
+      compression: 'STORE',
+      streamFiles: true
+    },
+    (metadata) => {
+      onProgress?.(Math.round(metadata.percent));
+    }
+  );
 };
