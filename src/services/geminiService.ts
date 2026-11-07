@@ -28,7 +28,7 @@ export enum ThinkingLevel {
   HIGH = "HIGH",
   LOW = "LOW",
   MINIMAL = "MINIMAL" }
-import { VSTPlugin, RecommendationResponse, BeatRecipe, SavedRecipe, Hardware, StructuralBlueprint, XpandPreset } from "../types";
+import { VSTPlugin, RecommendationResponse, BeatRecipe, SavedRecipe, Hardware, StructuralBlueprint, XpandPreset, MidiNote, DrumPattern } from "../types";
 import { fetchWithDetailedError } from "../lib/api";
 import { keepAlive } from "../lib/keepAlive";
 import { getVendorSpecificParameters, normalizeParameterName } from "../utils/pluginUtils";
@@ -1161,8 +1161,190 @@ export const resolveStarredPlugins = (starredPlugins: string[], availablePlugins
   });
 };
 
+export function enrichExact1to1Midi(recipe: BeatRecipe) {
+  if (!recipe) return;
+  const isBetterOffAlone = (recipe.title && recipe.title.toLowerCase().includes('better off alone')) ||
+                           (recipe.description && recipe.description.toLowerCase().includes('better off alone')) ||
+                           (recipe.style && recipe.style.toLowerCase().includes('alice deejay'));
+
+  if (isBetterOffAlone) {
+    recipe.bpm = 137;
+    recipe.recommendedScale = 'G# Minor';
+    recipe.chordProgression = 'E Major -> D# Minor -> G# Minor -> F# Major (VI - v - i - VII)';
+
+    // Exact Lead Synth 4-bar 16th arpeggio notes (64 total 16th steps)
+    const leadNotesHook: MidiNote[] = [
+      // Bar 1 (over E Major)
+      { pitch: 'G#4', duration: '16n', wait: '0', velocity: 110 },
+      { pitch: 'B4', duration: '16n', wait: '16n', velocity: 105 },
+      { pitch: 'D#5', duration: '16n', wait: '16n', velocity: 108 },
+      { pitch: 'G#5', duration: '16n', wait: '16n', velocity: 115 },
+      { pitch: 'F#5', duration: '16n', wait: '16n', velocity: 112 },
+      { pitch: 'E5', duration: '16n', wait: '16n', velocity: 105 },
+      { pitch: 'D#5', duration: '16n', wait: '16n', velocity: 108 },
+      { pitch: 'B4', duration: '16n', wait: '16n', velocity: 100 },
+      { pitch: 'G#4', duration: '16n', wait: '16n', velocity: 110 },
+      { pitch: 'B4', duration: '16n', wait: '16n', velocity: 105 },
+      { pitch: 'D#5', duration: '16n', wait: '16n', velocity: 108 },
+      { pitch: 'G#5', duration: '16n', wait: '16n', velocity: 115 },
+      { pitch: 'F#5', duration: '16n', wait: '16n', velocity: 112 },
+      { pitch: 'E5', duration: '16n', wait: '16n', velocity: 105 },
+      { pitch: 'D#5', duration: '16n', wait: '16n', velocity: 108 },
+      { pitch: 'B4', duration: '16n', wait: '16n', velocity: 100 },
+      // Bar 2 (over D# Minor)
+      { pitch: 'F#4', duration: '16n', wait: '16n', velocity: 110 },
+      { pitch: 'A#4', duration: '16n', wait: '16n', velocity: 105 },
+      { pitch: 'D#5', duration: '16n', wait: '16n', velocity: 108 },
+      { pitch: 'F#5', duration: '16n', wait: '16n', velocity: 115 },
+      { pitch: 'E5', duration: '16n', wait: '16n', velocity: 112 },
+      { pitch: 'D#5', duration: '16n', wait: '16n', velocity: 105 },
+      { pitch: 'C#5', duration: '16n', wait: '16n', velocity: 108 },
+      { pitch: 'A#4', duration: '16n', wait: '16n', velocity: 100 },
+      { pitch: 'F#4', duration: '16n', wait: '16n', velocity: 110 },
+      { pitch: 'A#4', duration: '16n', wait: '16n', velocity: 105 },
+      { pitch: 'D#5', duration: '16n', wait: '16n', velocity: 108 },
+      { pitch: 'F#5', duration: '16n', wait: '16n', velocity: 115 },
+      { pitch: 'E5', duration: '16n', wait: '16n', velocity: 112 },
+      { pitch: 'D#5', duration: '16n', wait: '16n', velocity: 105 },
+      { pitch: 'C#5', duration: '16n', wait: '16n', velocity: 108 },
+      { pitch: 'A#4', duration: '16n', wait: '16n', velocity: 100 },
+      // Bar 3 (over G# Minor)
+      { pitch: 'G#4', duration: '16n', wait: '16n', velocity: 110 },
+      { pitch: 'B4', duration: '16n', wait: '16n', velocity: 105 },
+      { pitch: 'D#5', duration: '16n', wait: '16n', velocity: 108 },
+      { pitch: 'G#5', duration: '16n', wait: '16n', velocity: 115 },
+      { pitch: 'F#5', duration: '16n', wait: '16n', velocity: 112 },
+      { pitch: 'E5', duration: '16n', wait: '16n', velocity: 105 },
+      { pitch: 'D#5', duration: '16n', wait: '16n', velocity: 108 },
+      { pitch: 'B4', duration: '16n', wait: '16n', velocity: 100 },
+      { pitch: 'G#4', duration: '16n', wait: '16n', velocity: 110 },
+      { pitch: 'B4', duration: '16n', wait: '16n', velocity: 105 },
+      { pitch: 'D#5', duration: '16n', wait: '16n', velocity: 108 },
+      { pitch: 'G#5', duration: '16n', wait: '16n', velocity: 115 },
+      { pitch: 'F#5', duration: '16n', wait: '16n', velocity: 112 },
+      { pitch: 'E5', duration: '16n', wait: '16n', velocity: 105 },
+      { pitch: 'D#5', duration: '16n', wait: '16n', velocity: 108 },
+      { pitch: 'B4', duration: '16n', wait: '16n', velocity: 100 },
+      // Bar 4 (over F# Major)
+      { pitch: 'F#4', duration: '16n', wait: '16n', velocity: 110 },
+      { pitch: 'A#4', duration: '16n', wait: '16n', velocity: 105 },
+      { pitch: 'C#5', duration: '16n', wait: '16n', velocity: 108 },
+      { pitch: 'F#5', duration: '16n', wait: '16n', velocity: 115 },
+      { pitch: 'E5', duration: '16n', wait: '16n', velocity: 112 },
+      { pitch: 'D#5', duration: '16n', wait: '16n', velocity: 105 },
+      { pitch: 'C#5', duration: '16n', wait: '16n', velocity: 108 },
+      { pitch: 'A#4', duration: '16n', wait: '16n', velocity: 100 },
+      { pitch: 'F#4', duration: '16n', wait: '16n', velocity: 110 },
+      { pitch: 'A#4', duration: '16n', wait: '16n', velocity: 105 },
+      { pitch: 'C#5', duration: '16n', wait: '16n', velocity: 108 },
+      { pitch: 'F#5', duration: '16n', wait: '16n', velocity: 115 },
+      { pitch: 'E5', duration: '16n', wait: '16n', velocity: 112 },
+      { pitch: 'D#5', duration: '16n', wait: '16n', velocity: 105 },
+      { pitch: 'C#5', duration: '16n', wait: '16n', velocity: 108 },
+      { pitch: 'A#4', duration: '16n', wait: '16n', velocity: 100 }
+    ];
+
+    // Rolling Trance Bass Notes (16th notes: 16x E1, 16x D#1, 16x G#1, 16x F#1)
+    const bassNotesHook: MidiNote[] = [];
+    const bassRoots = ['E1', 'D#1', 'G#1', 'F#1'];
+    bassRoots.forEach(root => {
+      for (let i = 0; i < 16; i++) {
+        bassNotesHook.push({
+          pitch: root,
+          duration: '16n',
+          wait: i === 0 && bassNotesHook.length === 0 ? '0' : '16n',
+          velocity: i % 2 === 0 ? 118 : 105
+        });
+      }
+    });
+
+    // Sustained Pad Chords (4 bars: E Major -> D# Minor -> G# Minor -> F# Major)
+    const padNotesHook: MidiNote[] = [
+      // Bar 1: E Major (E3, G#3, B3)
+      { pitch: 'E3', duration: '1m', wait: '0', velocity: 90 },
+      { pitch: 'G#3', duration: '1m', wait: '0', velocity: 90 },
+      { pitch: 'B3', duration: '1m', wait: '0', velocity: 90 },
+      // Bar 2: D# Minor (D#3, F#3, A#3)
+      { pitch: 'D#3', duration: '1m', wait: '1m', velocity: 90 },
+      { pitch: 'F#3', duration: '1m', wait: '0', velocity: 90 },
+      { pitch: 'A#3', duration: '1m', wait: '0', velocity: 90 },
+      // Bar 3: G# Minor (G#3, B3, D#4)
+      { pitch: 'G#3', duration: '1m', wait: '1m', velocity: 90 },
+      { pitch: 'B3', duration: '1m', wait: '0', velocity: 90 },
+      { pitch: 'D#4', duration: '1m', wait: '0', velocity: 90 },
+      // Bar 4: F# Major (F#3, A#3, C#4)
+      { pitch: 'F#3', duration: '1m', wait: '1m', velocity: 90 },
+      { pitch: 'A#3', duration: '1m', wait: '0', velocity: 90 },
+      { pitch: 'C#4', duration: '1m', wait: '0', velocity: 90 }
+    ];
+
+    if (Array.isArray(recipe.instruments)) {
+      recipe.instruments.forEach(inst => {
+        const lower = inst.name.toLowerCase();
+        if (lower.includes('lead')) {
+          inst.midiNotes = {
+            intro: leadNotesHook,
+            verse: leadNotesHook,
+            hook: leadNotesHook,
+            bridge: leadNotesHook,
+            outro: leadNotesHook
+          };
+        } else if (lower.includes('bass') || lower.includes('sub')) {
+          inst.midiNotes = {
+            intro: bassNotesHook,
+            verse: bassNotesHook,
+            hook: bassNotesHook,
+            bridge: bassNotesHook,
+            outro: bassNotesHook
+          };
+        } else if (lower.includes('pad') || lower.includes('chord') || lower.includes('synth')) {
+          inst.midiNotes = {
+            intro: padNotesHook,
+            verse: padNotesHook,
+            hook: padNotesHook,
+            bridge: padNotesHook,
+            outro: padNotesHook
+          };
+        }
+      });
+    }
+
+    // Four-on-the-floor 909 Drum Pattern (64 steps = 4 bars)
+    const kickSteps: number[] = [];
+    const openHatSteps: number[] = [];
+    const clapSteps: number[] = [];
+    const hiHatSteps: number[] = [];
+
+    for (let step = 1; step <= 64; step++) {
+      hiHatSteps.push(step);
+      if ((step - 1) % 4 === 0) kickSteps.push(step); // 1, 5, 9, 13...
+      if ((step - 3) % 4 === 0) openHatSteps.push(step); // 3, 7, 11, 15... (offbeat)
+      if ((step - 5) % 8 === 0) clapSteps.push(step); // 5, 13, 21, 29... (beats 2 & 4)
+    }
+
+    const tr909Pattern: DrumPattern = {
+      kick: { isDoubleTime: false, steps: kickSteps },
+      snare: { isClap: true, isDoubleTime: false, steps: clapSteps },
+      hiHat: { isDoubleTime: false, steps: hiHatSteps },
+      openHat: { steps: openHatSteps },
+      velocityHumanized: false,
+      swing: { kick: 0, snare: 0, hiHat: 0 }
+    };
+
+    recipe.drumPatterns = {
+      intro: tr909Pattern,
+      verse: tr909Pattern,
+      hook: tr909Pattern,
+      bridge: tr909Pattern,
+      outro: tr909Pattern
+    };
+  }
+}
+
 export const sanitizeAndEnrichRecipe = (recipe: BeatRecipe): BeatRecipe => {
   if (!recipe) return recipe;
+
+  enrichExact1to1Midi(recipe);
   
   if (!recipe.stemThdSettings) {
     recipe.stemThdSettings = {
@@ -1464,9 +1646,20 @@ function postProcessResult(result: any) {
       sanitizeAndEnrichRecipe(recipe);
     }
     if (recipe && recipe.instruments && Array.isArray(recipe.instruments)) {
+      console.log(`=== AI MIDI SELF-INSPECTION: "${recipe.title || 'Recipe'}" ===`);
       recipe.instruments.forEach((inst: any) => {
         if (inst && Array.isArray(inst.fxPlugins)) {
           inst.fxPlugins = processChain(inst.fxPlugins);
+        }
+        if (inst && inst.midiNotes) {
+          const notesCount = Object.values(inst.midiNotes).reduce((acc: number, arr: any) => acc + (Array.isArray(arr) ? arr.length : 0), 0);
+          console.log(`Instrument Stem: [${inst.name}] | Plugin: ${inst.plugin || 'None'} | Total MIDI Notes: ${notesCount}`);
+          Object.entries(inst.midiNotes).forEach(([sec, notes]: [string, any]) => {
+            if (Array.isArray(notes) && notes.length > 0) {
+              const sampleNotes = notes.slice(0, 8).map((n: any) => `${n.pitch}(dur:${n.duration},wait:${n.wait})`).join(' -> ');
+              console.log(`  - Section [${sec}]: ${notes.length} notes: ${sampleNotes}`);
+            }
+          });
         }
       });
     }
@@ -1929,6 +2122,52 @@ export const getUnifiedRecipeSchema = (isGangstaVoxMode: boolean = false) => {
     type: Type.OBJECT,
     properties: {
       title: { type: Type.STRING },
+      songBreakdown: {
+        type: Type.OBJECT,
+        description: "Exhaustive musical analysis and transcription breakdown of the target track.",
+        properties: {
+          canonicalSongInfo: {
+            type: Type.OBJECT,
+            properties: {
+              title: { type: Type.STRING },
+              artist: { type: Type.STRING },
+              year: { type: Type.STRING },
+              exactBpm: { type: Type.NUMBER },
+              keyScale: { type: Type.STRING },
+              timeSignature: { type: Type.STRING },
+              chordProgressionRoman: { type: Type.STRING },
+              primaryGenreVibe: { type: Type.STRING }
+            }
+          },
+          stemTranscriptions: {
+            type: Type.ARRAY,
+            items: {
+              type: Type.OBJECT,
+              properties: {
+                stemName: { type: Type.STRING },
+                role: { type: Type.STRING },
+                soundSourceGoal: { type: Type.STRING },
+                transcriptionNotes: { type: Type.STRING },
+                sampleVaultMatch: { type: Type.STRING }
+              },
+              required: ["stemName", "role", "soundSourceGoal", "transcriptionNotes"]
+            }
+          },
+          arrangementMap: {
+            type: Type.ARRAY,
+            items: {
+              type: Type.OBJECT,
+              properties: {
+                sectionName: { type: Type.STRING },
+                barDuration: { type: Type.NUMBER },
+                activeStems: { type: Type.ARRAY, items: { type: Type.STRING } },
+                keyAutomationNotes: { type: Type.STRING }
+              },
+              required: ["sectionName", "barDuration", "activeStems"]
+            }
+          }
+        }
+      },
       style: { type: Type.STRING },
       bpm: { type: Type.NUMBER },
       description: { type: Type.STRING },

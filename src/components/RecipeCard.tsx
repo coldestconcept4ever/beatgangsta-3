@@ -1018,6 +1018,79 @@ export const RecipeCard: React.FC<RecipeCardProps> = ({ recipe: initialRecipe, i
               ))}
             </div>
           )}
+
+          {recipe.songBreakdown && (
+            <div className={`mt-6 p-6 rounded-3xl border ${
+              theme === 'coldest' 
+                ? 'bg-gradient-to-br from-slate-900/90 to-sky-950/80 border-sky-400/30 text-white shadow-2xl' 
+                : 'bg-black/60 border-amber-500/20 text-white shadow-2xl backdrop-blur-xl'
+            }`}>
+              <div className="flex items-center justify-between gap-4 mb-4 pb-4 border-b border-white/10">
+                <div className="flex items-center gap-2">
+                  <span className="text-xl">🎵</span>
+                  <h4 className="text-sm font-black uppercase tracking-widest text-amber-400">
+                    Song Analysis & 1:1 Structural Breakdown
+                  </h4>
+                </div>
+                {recipe.songBreakdown.canonicalSongInfo?.year && (
+                  <span className="px-3 py-1 rounded-full text-[10px] font-black bg-white/10 text-white/80 border border-white/10">
+                    Released: {recipe.songBreakdown.canonicalSongInfo.year}
+                  </span>
+                )}
+              </div>
+
+              {/* Canonical Info Grid */}
+              {recipe.songBreakdown.canonicalSongInfo && (
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
+                  <div className="p-3 rounded-2xl bg-white/5 border border-white/10">
+                    <div className="text-[10px] font-black uppercase tracking-wider opacity-60">Exact BPM</div>
+                    <div className="text-sm font-black text-amber-300">{recipe.songBreakdown.canonicalSongInfo.exactBpm || recipe.bpm} BPM</div>
+                  </div>
+                  <div className="p-3 rounded-2xl bg-white/5 border border-white/10">
+                    <div className="text-[10px] font-black uppercase tracking-wider opacity-60">Key / Scale</div>
+                    <div className="text-sm font-black text-sky-300">{recipe.songBreakdown.canonicalSongInfo.keyScale || recipe.recommendedScale}</div>
+                  </div>
+                  <div className="p-3 rounded-2xl bg-white/5 border border-white/10">
+                    <div className="text-[10px] font-black uppercase tracking-wider opacity-60">Time Signature</div>
+                    <div className="text-sm font-black text-emerald-300">{recipe.songBreakdown.canonicalSongInfo.timeSignature || '4/4'}</div>
+                  </div>
+                  <div className="p-3 rounded-2xl bg-white/5 border border-white/10">
+                    <div className="text-[10px] font-black uppercase tracking-wider opacity-60">Chord Progression</div>
+                    <div className="text-xs font-black text-purple-300 truncate">{recipe.songBreakdown.canonicalSongInfo.chordProgressionRoman || recipe.chordProgression}</div>
+                  </div>
+                </div>
+              )}
+
+              {/* Stem Transcriptions */}
+              {recipe.songBreakdown.stemTranscriptions && recipe.songBreakdown.stemTranscriptions.length > 0 && (
+                <div className="space-y-3">
+                  <h5 className="text-xs font-black uppercase tracking-widest opacity-60">Stem-by-Stem Musical Transcription</h5>
+                  <div className="overflow-x-auto rounded-2xl border border-white/10 bg-black/40">
+                    <table className="w-full text-left text-xs border-collapse">
+                      <thead>
+                        <tr className="border-b border-white/10 bg-white/5 text-[10px] font-black uppercase tracking-wider text-amber-400">
+                          <th className="p-3">Stem Name</th>
+                          <th className="p-3">Role</th>
+                          <th className="p-3">Sound Source Goal</th>
+                          <th className="p-3">Transcription & Pattern Notes</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-white/5 font-medium">
+                        {recipe.songBreakdown.stemTranscriptions.map((stem, i) => (
+                          <tr key={i} className="hover:bg-white/5 transition-all">
+                            <td className="p-3 font-black text-sky-300 whitespace-nowrap">{stem.stemName}</td>
+                            <td className="p-3 font-bold opacity-80 whitespace-nowrap">{stem.role}</td>
+                            <td className="p-3 font-bold opacity-90">{stem.soundSourceGoal}</td>
+                            <td className="p-3 font-mono text-[11px] text-amber-200/90">{stem.transcriptionNotes}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
         </div>
         <div className="flex flex-wrap gap-3">
           {onMinimize && (
@@ -2124,19 +2197,7 @@ export const RecipeCard: React.FC<RecipeCardProps> = ({ recipe: initialRecipe, i
         </div>
       )}
 
-      <button 
-        onClick={toggleGangstaVox}
-        disabled={isGeneratingGangstaVox}
-        className={`w-full mt-4 py-4 rounded-2xl font-black text-xs uppercase tracking-widest transition-all flex items-center justify-center gap-2 ${
-          theme === 'coldest' ? 'bg-purple-100 hover:bg-purple-200 border border-purple-300 text-purple-900 shadow-[0_0_20px_rgba(168,85,247,0.2)]' : 'bg-purple-900/30 hover:bg-purple-900/50 border border-purple-500/30 text-purple-100'
-        } ${isGeneratingGangstaVox ? 'opacity-50 cursor-not-allowed' : ''}`}
-      >
-        {isGeneratingGangstaVox ? (
-          <><Loader2 className="w-4 h-4 animate-spin" /> {t('generating') || 'Generating...'}</>
-        ) : (
-          showGangstaVox ? t('hide_gangstavox_guide') : '🎤 ' + t('show_gangstavox_guide')
-        )}
-      </button>
+
 
       {expanded && (
         <motion.div 

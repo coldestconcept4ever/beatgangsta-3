@@ -381,22 +381,60 @@ function sanitizeDuration(val: string | undefined, defaultVal: string): string {
   return closest + (hasD ? 'd' : '') + (hasT ? 't' : '');
 }
 
-// Calculate the length of the generated MIDI in beats
-export const getBeats = (val: string | undefined): number => {
-  if (!val || val === '0') return 0;
+// Calculate the length of the generated MIDI in beats with comprehensive parsing
+export const getBeats = (val: string | number | undefined): number => {
+  if (val === undefined || val === null || val === '' || val === '0' || val === 0) return 0;
+  if (typeof val === 'number') {
+    return isNaN(val) ? 0 : val;
+  }
   const str = String(val).trim().toLowerCase();
-  if (str.startsWith('t')) return parseInt(str.substring(1)) / 128;
-  
+  if (str === '0' || str === '0.0' || str === 'none') return 0;
+
+  // Ticks format: 'T128' = 1 beat, 'T32' = 0.25 beat
+  if (str.startsWith('t')) {
+    const ticks = parseFloat(str.substring(1));
+    return isNaN(ticks) ? 0 : ticks / 128;
+  }
+
+  // Fractional note division format: '1/16', '1/8', '1/4', '1/2', '1/1', '3/16', '3/8'
+  if (str.includes('/')) {
+    const parts = str.split('/');
+    const numerator = parseFloat(parts[0]);
+    const denominator = parseFloat(parts[1]);
+    if (!isNaN(numerator) && !isNaN(denominator) && denominator > 0) {
+      // In 4/4 time: 1/4 note = 1 beat, 1/16 note = 0.25 beats, 1/8 note = 0.5 beats, 1/1 note = 4 beats
+      return (numerator / denominator) * 4;
+    }
+  }
+
+  // Word-based musical duration names
+  if (str.includes('sixtyfourth') || str.includes('64th')) return 0.0625;
+  if (str.includes('thirtysecond') || str.includes('32nd')) return 0.125;
+  if (str.includes('sixteenth') || str.includes('16th')) return 0.25;
+  if (str.includes('eighth') || str.includes('8th')) return 0.5;
+  if (str.includes('quarter')) return 1.0;
+  if (str.includes('half')) return 2.0;
+  if (str.includes('whole')) return 4.0;
+
+  // Decimal beat duration directly (e.g. '0.25', '0.5', '1.5', '0.75')
+  if (str.includes('.')) {
+    const dec = parseFloat(str);
+    return isNaN(dec) ? 0 : dec;
+  }
+
+  // Standard MIDI Writer format: '1', '2', '4', '8', '16', '32', '64'
+  // with possible 'd' (dotted) or 't' (triplet) modifier
   const hasD = str.endsWith('d');
   const hasT = str.endsWith('t');
   const base = str.replace(/[dt]/g, '');
-  
-  const num = parseInt(base);
-  if (isNaN(num) || num === 0) return 0;
-  
+
+  const num = parseFloat(base);
+  if (isNaN(num) || num <= 0) return 0;
+
+  // 16 -> 4/16 = 0.25, 8 -> 4/8 = 0.5, 4 -> 4/4 = 1.0, 2 -> 2.0, 1 -> 4.0
   let beats = 4 / num;
   if (hasD) beats *= 1.5;
-  if (hasT) beats *= 0.666;
+  if (hasT) beats *= 0.66666667;
   return beats;
 };
 
@@ -420,56 +458,61 @@ export const generateMidiTrack = (
     const text = (instrument + ' ' + loopGuide).toLowerCase();
     const isDrums = text.includes('drum') || text.includes('perc') || text.includes('kick') || text.includes('snare') || text.includes('hat') || text.includes('clap');
 
-    let originalTotalBeats = 0;
+    let origBeats = 0;
     for (const note of midiNotes) {
-      originalTotalBeats += getBeats(note.wait) + getBeats(note.duration);
+      origBeats += getBeats(note.wait) + getBeats(note.duration);
     }
+    // Default to at least 1 bar (4 beats) if notes have no duration specified
+    if (origBeats <= 0) origBeats = 4;
 
     const targetBeats = bars * 4;
-    // Stretch factor so the notes perfectly span targetBeats
-    const stretchFactor = originalTotalBeats > 0 ? targetBeats / originalTotalBeats : 1;
+    let placedBeats = 0;
+    let previousTicks = 0;
 
-    let cumulativeOriginalBeats = 0;
-    let previousStretchedTicks = 0;
+    // Loop the phrase cleanly to fill targetBeats without time-stretching note lengths or pitches
+    while (placedBeats < targetBeats) {
+      const loopStartBeat = placedBeats;
+      let cumulativeNoteBeats = 0;
 
-    midiNotes.forEach((note) => {
-      let pitches = Array.isArray(note.pitch) ? note.pitch : note.pitch.split(',').map(p => p.trim());
-      let transposedPitches = pitches.map(p => isDrums ? p : transposePitch(p, 0));
+      for (const note of midiNotes) {
+        const origWait = getBeats(note.wait);
+        const origDuration = getBeats(note.duration);
 
-      const origWait = getBeats(note.wait);
-      const origDuration = getBeats(note.duration);
+        const noteStartBeat = loopStartBeat + cumulativeNoteBeats + origWait;
+        const noteEndBeat = noteStartBeat + origDuration;
+        cumulativeNoteBeats += origWait + origDuration;
 
-      // Start and end times in the original timeline (in beats)
-      const origStart = cumulativeOriginalBeats + origWait;
-      const origEnd = origStart + origDuration;
+        if (noteStartBeat >= targetBeats) break;
 
-      // Move original timeline forward
-      cumulativeOriginalBeats = origEnd;
+        const startTick = Math.round(noteStartBeat * 128);
+        const endTick = Math.round(Math.min(noteEndBeat, targetBeats) * 128);
 
-      // Map to the stretched timeline
-      const scaledStartBeats = origStart * stretchFactor;
-      const scaledEndBeats = origEnd * stretchFactor;
+        const waitTicks = Math.max(0, startTick - previousTicks);
+        const durationTicks = Math.max(1, endTick - startTick);
 
-      // Convert beats to ticks (128 ticks per beat)
-      const scaledStartTicks = Math.round(scaledStartBeats * 128);
-      const scaledEndTicks = Math.round(scaledEndBeats * 128);
+        previousTicks = startTick + durationTicks;
 
-      // Calculate relative ticks
-      const waitTicks = Math.max(0, scaledStartTicks - previousStretchedTicks);
-      const durationTicks = Math.max(1, scaledEndTicks - scaledStartTicks);
+        let pitches = Array.isArray(note.pitch) ? note.pitch : String(note.pitch).split(',').map(p => p.trim());
+        let transposedPitches = pitches.map(p => isDrums ? p : transposePitch(p, 0));
+        const velocity = Math.min(127, Math.max(1, note.velocity || 100));
 
-      // Update previous stretched ticks tracker
-      previousStretchedTicks = scaledStartTicks + durationTicks;
+        customEvents.push(new MidiWriter.NoteEvent({
+          pitch: transposedPitches,
+          duration: `T${durationTicks}`,
+          wait: `T${waitTicks}`,
+          velocity: velocity
+        }));
+      }
 
-      const velocity = Math.min(127, Math.max(1, note.velocity || 100));
+      placedBeats += origBeats;
+    }
 
-      customEvents.push(new MidiWriter.NoteEvent({
-        pitch: transposedPitches,
-        duration: `T${durationTicks}`,
-        wait: `T${waitTicks}`,
-        velocity: velocity
-      }));
-    });
+    // Ensure the track ends cleanly at exact bar boundary with All Notes Off (CC 123)
+    const totalTicks = Math.round(targetBeats * 128);
+    if (previousTicks < totalTicks) {
+      const trailingWait = Math.max(0, totalTicks - previousTicks);
+      track.controllerChange(123, 0, 1, trailingWait);
+    }
 
     track.addEvent(customEvents);
     return track;
@@ -1223,12 +1266,20 @@ export const generateFullSongDrumPartMidi = (
         const stepNum = typeof s === 'number' ? s : s.step;
         if (stepNum > maxStepInPart) maxStepInPart = stepNum;
       });
-      const patternBars = Math.max(4, Math.ceil(maxStepInPart / stepsPerBar));
+      // A pattern spans however many bars it covers (minimum 1 bar)
+      const patternBars = Math.max(1, Math.ceil(maxStepInPart / stepsPerBar));
       const patternDurationBeats = patternBars * 4;
+
+      // Sort steps in chronological order
+      const sortedSteps = [...drumPartObj.steps].sort((a: any, b: any) => {
+        const stepA = typeof a === 'number' ? a : a.step;
+        const stepB = typeof b === 'number' ? b : b.step;
+        return stepA - stepB;
+      });
 
       let placedBeats = 0;
       while (placedBeats < sectionDurationBeats) {
-        drumPartObj.steps.forEach((s: any) => {
+        sortedSteps.forEach((s: any) => {
           const stepNum = typeof s === 'number' ? s : s.step;
           let velocity = 100;
           if (typeof s === 'object' && s.velocity !== undefined) {

@@ -287,8 +287,35 @@ export interface DrumPattern {
   };
 }
 
+export interface SongBreakdown {
+  canonicalSongInfo?: {
+    title?: string;
+    artist?: string;
+    year?: string;
+    exactBpm?: number;
+    keyScale?: string;
+    timeSignature?: string;
+    chordProgressionRoman?: string;
+    primaryGenreVibe?: string;
+  };
+  stemTranscriptions?: {
+    stemName: string;
+    role: string;
+    soundSourceGoal: string;
+    transcriptionNotes: string;
+    sampleVaultMatch?: string;
+  }[];
+  arrangementMap?: {
+    sectionName: string;
+    barDuration: number;
+    activeStems: string[];
+    keyAutomationNotes?: string;
+  }[];
+}
+
 export interface BeatRecipe {
   title: string;
+  songBreakdown?: SongBreakdown;
   style: string;
   bpm: number;
   description: string;

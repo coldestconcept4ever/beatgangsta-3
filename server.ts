@@ -5173,8 +5173,23 @@ if (process.env.NODE_ENV !== 'production') {
     }
   });
 
+  let lastGeneratedRecipeCache: any = null;
 
+  app.post("/api/last-generated-recipe/save", (req, res) => {
+    const { recipe, searchQuery, isExactDuplicate } = req.body || {};
+    lastGeneratedRecipeCache = {
+      recipe,
+      searchQuery,
+      isExactDuplicate,
+      savedAt: new Date().toISOString()
+    };
+    console.log(`[RECIPE CACHE] Saved last generated recipe "${recipe?.title}" for query "${searchQuery}" (Exact: ${isExactDuplicate})`);
+    return res.json({ success: true });
+  });
 
+  app.get("/api/last-generated-recipe", (_req, res) => {
+    return res.json(lastGeneratedRecipeCache || { message: "No recipe generated yet in this session." });
+  });
 
   app.post("/api/verify-turnstile", async (req, res) => {
     const token = req.body["cf-turnstile-response"];
@@ -5256,6 +5271,111 @@ app.post("/api/debug/dawproject", (req, res) => {
     res.json({ success: true });
   } catch (e: any) {
     console.error("Debug log failed:", e);
+    res.status(500).json({ error: e.message });
+  }
+});
+
+// In-memory store for last generated MIDI breakdown & audit
+let lastGeneratedMidiReport: any = null;
+
+app.post("/api/debug-midi", (req, res) => {
+  try {
+    const { title, bpm, key, tracks, notes, detectedSectionLengths, rawPayload } = req.body;
+    lastGeneratedMidiReport = {
+      timestamp: new Date().toISOString(),
+      title: title || "Untitled Recipe",
+      bpm: bpm || 120,
+      key: key || "Unknown",
+      detectedSectionLengths: detectedSectionLengths || {},
+      tracks: tracks || [],
+      notes: notes || {},
+      rawPayload: rawPayload || null
+    };
+    safeAppendFileSync(path.join(process.cwd(), "midi_debug.log"), JSON.stringify(lastGeneratedMidiReport) + "\n---\n");
+    res.json({ success: true, count: tracks?.length || 0, timestamp: lastGeneratedMidiReport.timestamp });
+  } catch (e: any) {
+    console.error("Debug MIDI log failed:", e);
+    res.status(500).json({ error: e.message });
+  }
+});
+
+app.get(["/api/last-midi", "/api/debug-midi"], (req, res) => {
+  try {
+    if (!lastGeneratedMidiReport) {
+      if (req.query.format === 'html') {
+        return res.send(`<html><head><title>MIDI Audit</title><style>body{font-family:sans-serif;background:#0f172a;color:#f8fafc;padding:2rem;}</style></head><body><h1>BeatGangsta MIDI Inspector & Audit</h1><p>No MIDI stem generated or audited yet in this session.</p></body></html>`);
+      }
+      return res.json({ status: "empty", message: "No MIDI report logged yet." });
+    }
+
+    if (req.query.format === 'html') {
+      const { title, bpm, key, timestamp, tracks, notes, detectedSectionLengths } = lastGeneratedMidiReport;
+      const html = `<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>MIDI Audit - ${title}</title>
+  <style>
+    body { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; background: #030712; color: #f3f4f6; padding: 24px; margin: 0; }
+    h1 { color: #38bdf8; font-size: 22px; margin-bottom: 8px; }
+    .badge { display: inline-block; padding: 4px 10px; border-radius: 9999px; background: #1e293b; color: #94a3b8; font-size: 12px; margin-right: 8px; font-weight: bold; }
+    .track-card { background: #111827; border: 1px solid #1f2937; border-radius: 12px; padding: 16px; margin-top: 16px; }
+    .track-title { color: #f43f5e; font-size: 16px; font-weight: bold; margin-bottom: 8px; display: flex; justify-content: space-between; }
+    table { width: 100%; border-collapse: collapse; margin-top: 8px; font-size: 12px; }
+    th { text-align: left; background: #1f2937; color: #38bdf8; padding: 8px; border-bottom: 1px solid #374151; }
+    td { padding: 8px; border-bottom: 1px solid #1f2937; }
+    tr:nth-child(even) { background: #0b0f19; }
+    .pitch { font-weight: bold; color: #34d399; }
+    .duration { color: #fbbf24; }
+  </style>
+</head>
+<body>
+  <h1>🎹 BeatGangsta Direct MIDI Audit Report</h1>
+  <div>
+    <span class="badge">Track: ${title}</span>
+    <span class="badge">BPM: ${bpm}</span>
+    <span class="badge">Key: ${key}</span>
+    <span class="badge">Audited: ${timestamp}</span>
+  </div>
+  ${tracks && tracks.length > 0 ? tracks.map((tr: any) => `
+    <div class="track-card">
+      <div class="track-title">
+        <span>${tr.name} (${tr.type || 'Instrument'})</span>
+        <span style="color: #94a3b8; font-size: 12px;">Notes: ${tr.events?.length || tr.notes?.length || 0}</span>
+      </div>
+      <table>
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Pitch / Notes</th>
+            <th>Duration</th>
+            <th>Wait / Rest</th>
+            <th>Beats</th>
+            <th>Velocity</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${(tr.events || tr.notes || []).map((n: any, idx: number) => `
+            <tr>
+              <td>${idx + 1}</td>
+              <td class="pitch">${Array.isArray(n.pitch) ? n.pitch.join(', ') : (n.pitch || '-')}</td>
+              <td class="duration">${n.duration || '-'}</td>
+              <td>${n.wait || '0'}</td>
+              <td>${n.calculatedBeats !== undefined ? n.calculatedBeats : '-'}</td>
+              <td>${n.velocity || 100}</td>
+            </tr>
+          `).join('')}
+        </tbody>
+      </table>
+    </div>
+  `).join('') : '<p>No track data captured.</p>'}
+</body>
+</html>`;
+      return res.send(html);
+    }
+
+    res.json(lastGeneratedMidiReport);
+  } catch (e: any) {
     res.status(500).json({ error: e.message });
   }
 });

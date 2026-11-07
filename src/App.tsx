@@ -5423,6 +5423,17 @@ MIDI Export: Include downloadable formatted MIDI ZIPs with section bar lengths.`
       setGenerationProgress(100);
       clearTimeout(timeoutId);
       setRecipes(response.recipes || []);
+      if (response.recipes && response.recipes[0]) {
+        fetch('/api/last-generated-recipe/save', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            recipe: response.recipes[0],
+            searchQuery: searchQuery.trim(),
+            isExactDuplicate
+          })
+        }).catch(() => {});
+      }
       const newHistory: HistoryItem[] = (response.recipes || []).map(r => ({
         ...r,
         generatedAt: new Date().toISOString()
@@ -5587,6 +5598,17 @@ MIDI Export: Include downloadable formatted MIDI ZIPs with section bar lengths.`
       setGenerationProgress(100);
       clearTimeout(timeoutId);
       setRecipes(response.recipes || []);
+      if (response.recipes && response.recipes[0]) {
+        fetch('/api/last-generated-recipe/save', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            recipe: response.recipes[0],
+            searchQuery: songSearch.trim(),
+            isExactDuplicate: true
+          })
+        }).catch(() => {});
+      }
       const newHistory: HistoryItem[] = (response.recipes || []).map(r => ({
         ...r,
         generatedAt: new Date().toISOString()
