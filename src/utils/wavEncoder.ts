@@ -1,6 +1,8 @@
 // 100% Client-Side Local AudioBuffer to WAV File Encoder (0 Token, 0 Internet Cost)
 
-export function audioBufferToWav(buffer: AudioBuffer, opt?: { float32?: boolean }): ArrayBuffer {
+const yieldToUI = () => new Promise(resolve => setTimeout(resolve, 0));
+
+export async function audioBufferToWav(buffer: AudioBuffer, opt?: { float32?: boolean }): Promise<ArrayBuffer> {
   const numChannels = buffer.numberOfChannels;
   const sampleRate = buffer.sampleRate;
   const format = opt && opt.float32 ? 3 : 1; // 1 = 16-bit PCM, 3 = 32-bit Float
@@ -13,7 +15,7 @@ export function audioBufferToWav(buffer: AudioBuffer, opt?: { float32?: boolean 
     result = buffer.getChannelData(0);
   }
 
-  return encodeWAV(result, format, sampleRate, numChannels, bitDepth);
+  return await encodeWAV(result, format, sampleRate, numChannels, bitDepth);
 }
 
 function interleave(inputL: Float32Array, inputR: Float32Array): Float32Array {
@@ -31,13 +33,13 @@ function interleave(inputL: Float32Array, inputR: Float32Array): Float32Array {
   return result;
 }
 
-function encodeWAV(
+async function encodeWAV(
   samples: Float32Array,
   format: number,
   sampleRate: number,
   numChannels: number,
   bitDepth: number
-): ArrayBuffer {
+): Promise<ArrayBuffer> {
   const bytesPerSample = bitDepth / 8;
   const blockAlign = numChannels * bytesPerSample;
 
@@ -73,25 +75,27 @@ function encodeWAV(
 
   if (format === 1) {
     // 16-bit PCM
-    floatTo16BitPCM(view, 44, samples);
+    await floatTo16BitPCMAsync(view, 44, samples);
   } else {
     // 32-bit Float
-    writeFloat32(view, 44, samples);
+    await writeFloat32Async(view, 44, samples);
   }
 
   return buffer;
 }
 
-function floatTo16BitPCM(output: DataView, offset: number, input: Float32Array) {
+async function floatTo16BitPCMAsync(output: DataView, offset: number, input: Float32Array) {
   for (let i = 0; i < input.length; i++, offset += 2) {
+    if (i % 50000 === 0) await yieldToUI(); // Yield every 50k samples
     const s = Math.max(-1, Math.min(1, input[i]));
     output.setInt16(offset, s < 0 ? s * 0x8000 : s * 0x7fff, true);
   }
 }
 
-function writeFloat32(output: DataView, offset: number, input: Float32Array) {
+async function writeFloat32Async(view: DataView, offset: number, input: Float32Array) {
   for (let i = 0; i < input.length; i++, offset += 4) {
-    output.setFloat32(offset, input[i], true);
+    if (i % 50000 === 0) await yieldToUI();
+    view.setFloat32(offset, input[i], true);
   }
 }
 
@@ -101,7 +105,7 @@ function writeString(view: DataView, offset: number, string: string) {
   }
 }
 
-export function audioBufferToWavBlob(buffer: AudioBuffer): Blob {
-  const wavArrayBuffer = audioBufferToWav(buffer);
+export async function audioBufferToWavBlob(buffer: AudioBuffer): Promise<Blob> {
+  const wavArrayBuffer = await audioBufferToWav(buffer);
   return new Blob([wavArrayBuffer], { type: 'audio/wav' });
 }
