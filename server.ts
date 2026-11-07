@@ -600,7 +600,7 @@ app.post("/api/test-schema", async (req, res) => {
     
     // We expect the payload to be EXACTLY the model contents config
     const response = await genAI.models.generateContent({
-      model: req.body.model || "gemini-3-flash-preview",
+      model: req.body.model || "gemini-2.5-flash",
       contents: req.body.contents,
       config: req.body.config
     });
@@ -661,7 +661,7 @@ Respond ONLY with valid JSON with this exact structure:
 }`;
 
     const response = await genAI.models.generateContent({
-      model: "gemini-3.8-flash",
+      model: "gemini-2.5-flash",
       contents: prompt,
       config: {
         responseMimeType: "application/json"
@@ -889,7 +889,7 @@ app.post("/api/studio-copilot/chat", async (req, res) => {
     });
 
     const response = await genAI.models.generateContent({
-      model: "gemini-3.8-flash",
+      model: "gemini-2.5-flash",
       contents: contents,
       config: {
         systemInstruction: contextPrompt,
@@ -4941,8 +4941,8 @@ if (process.env.NODE_ENV !== 'production') {
           delete finalConfig.customAction;
         }
 
-        const effectiveModel = (model === "gemini-3.1-pro-preview" || model === "gemini-3-flash-preview" || !model)
-          ? "gemini-3.8-flash"
+        const effectiveModel = (model === "gemini-3.1-pro-preview" || model === "gemini-3-flash-preview" || model === "gemini-3.8-flash" || !model)
+          ? "gemini-2.5-flash"
           : model;
 
         const fallbackModels = [effectiveModel, "gemini-2.5-flash", "gemini-1.5-flash", "gemini-2.5-pro"].filter((m, i, arr) => arr.indexOf(m) === i);

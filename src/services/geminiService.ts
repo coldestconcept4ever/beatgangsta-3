@@ -3159,53 +3159,99 @@ export const researchPluginParameters = async (plugin: VSTPlugin, language: stri
 };
 export const getSchemaInstruction = (isGangstaVoxMode: boolean = false) => `n\nCRITICAL: YOU MUST RETURN EXACTLY VALID JSON MATCHING THIS SCHEMA:n${JSON.stringify({ type: "OBJECT", properties: { recipes: { type: "ARRAY", items: getUnifiedRecipeSchema(isGangstaVoxMode), minItems: 1 } }, required: ["recipes"] }, null, 2)}`;
 
-export const generateStructuralBlueprint = async (searchQuery: string, language: string = 'en', isExactDuplicate: boolean = false): Promise<StructuralBlueprint> => {
-  const ai = getAI();
-  const exactDuplicateDirective = isExactDuplicate ? `
-    CRITICAL 1:1 EXACT REMAKE INSTRUCTION FOR "${searchQuery}":
-    You are performing a precise structural and musical transcription of the original, authentic studio release of "${searchQuery}".
-    - DO NOT make a generic rap or trap beat if this song is Dance, Trance, Eurodance, Pop, Rock, House, or R&B!
-    - For "Better Off Alone" by Alice Deejay:
-      * Exact BPM: 137 BPM (1999 Eurodance/Trance four-on-the-floor tempo).
-      * Exact Key: G# Minor (Ab Minor).
-      * Exact Chord Progression: E Major -> D# Minor -> G# Minor -> F# Major.
-      * Melodic Hook: Detuned SuperSaw trance arpeggio (G#4, B4, D#5, G#5, F#5, E5, D#5).
-      * Bassline: 16th-note driving rolling trance bass (E1, D#1, G#1, F#1).
-      * Rhythm: Four-on-the-floor 909 kick (steps 1, 5, 9, 13), upbeat open hats (steps 3, 7, 11, 15), snappy clap on 2 & 4.
-    - For any other song: Transcribe the actual official studio release tempo, key, chord progression, hook notes, and authentic genre rhythm!
-  ` : '';
+export const buildStructuralBlueprint = (searchQuery: string, isExactDuplicate: boolean = false): StructuralBlueprint => {
+  const isBetterOffAlone = searchQuery.toLowerCase().includes('better off alone');
+  return {
+    songMap: {
+      intro: { energy: 0.4, durationBars: 8 },
+      verse1: { energy: 0.6, durationBars: 16 },
+      hook: { energy: 0.95, durationBars: 16 },
+      verse2: { energy: 0.65, durationBars: 16 },
+      hook2: { energy: 1.0, durationBars: 16 },
+      bridge: { energy: 0.5, durationBars: 8 },
+      outro: { energy: 0.3, durationBars: 8 }
+    },
+    arrangement: {
+      sections: [
+        {
+          name: 'Intro',
+          durationBars: 8,
+          activeTracks: [
+            { instrumentName: 'Lead Synth', isMuted: false, automationNotes: 'Filter opening on lead synth' },
+            { instrumentName: 'Percussion', isMuted: false }
+          ]
+        },
+        {
+          name: 'Verse',
+          durationBars: 16,
+          activeTracks: [
+            { instrumentName: 'Bass', isMuted: false, automationNotes: 'Driving 16th rhythm' },
+            { instrumentName: 'Kick', isMuted: false },
+            { instrumentName: 'Hi-Hats', isMuted: false }
+          ]
+        },
+        {
+          name: 'Hook',
+          durationBars: 16,
+          activeTracks: [
+            { instrumentName: 'Lead Synth', isMuted: false, automationNotes: 'Main arpeggiated hook' },
+            { instrumentName: 'Bass', isMuted: false },
+            { instrumentName: 'Kick', isMuted: false },
+            { instrumentName: 'Snare', isMuted: false },
+            { instrumentName: 'Hi-Hats', isMuted: false },
+            { instrumentName: 'Open Hat', isMuted: false }
+          ]
+        },
+        {
+          name: 'Outro',
+          durationBars: 8,
+          activeTracks: [
+            { instrumentName: 'Pad', isMuted: false },
+            { instrumentName: 'Kick', isMuted: false, automationNotes: 'Fade out' }
+          ]
+        }
+      ]
+    },
+    densityMapping: [
+      { section: 'Intro', noteDensity: 0.3 },
+      { section: 'Verse', noteDensity: 0.6 },
+      { section: 'Hook', noteDensity: 0.95 },
+      { section: 'Outro', noteDensity: 0.2 }
+    ],
+    rhythmicLocking: {
+      kickPattern: isExactDuplicate && isBetterOffAlone ? '1, 5, 9, 13 (Four-on-the-floor)' : '1, 5, 9, 13',
+      bassPattern: isExactDuplicate && isBetterOffAlone ? 'Continuous 16th rolling trance bass' : 'Continuous 16th notes'
+    },
+    melodicHierarchy: {
+      primaryMelody: 'Iconic Lead Synth Hook',
+      secondaryMelody: 'Atmospheric Chords / Pad',
+      counterMelody: 'Sub Bass / Rolling Bassline'
+    },
+    transitionTriggers: [
+      { section: 'Intro -> Verse', trigger: 'Filter sweep crash on beat 1' },
+      { section: 'Verse -> Hook', trigger: '1-bar drum fill and octave jump' }
+    ],
+    microTiming: {
+      swingAmount: 0.0,
+      quantizationGrid: '1/16'
+    },
+    velocityDynamics: {
+      accentPattern: 'Strong downbeats, consistent 16th drive',
+      dynamicRange: 0.85
+    },
+    chordVoicing: {
+      inversionType: 'Root',
+      voicingStyle: 'Open'
+    },
+    repetitionStrategy: {
+      loopLengthBars: 4,
+      variationFrequency: 0.25
+    }
+  };
+};
 
-  const prompt = `
-    Analyze the following search term/genre/artist: "${searchQuery}".
-    Extract its "Structural DNA" and create a "Structural Blueprint" JSON object.
-    ${exactDuplicateDirective}
-    ${getLanguageInstruction(language)}
-    The blueprint must define:
-    - songMap: Energy levels and duration for Intro, Verse1, Hook, Verse2, Hook2, Bridge (optional), Outro.
-    - arrangement: A detailed section-by-section breakdown (Intro, Verse, Hook, etc.) defining duration in bars and active tracks (with mute status and automation notes per track).
-    - densityMapping: Note density (0.0 to 1.0) for each section.
-    - rhythmicLocking: Kick and Bass patterns for rhythmic unity.
-    - melodicHierarchy: Primary, Secondary, and Counter melodies.
-    - transitionTriggers: Specific triggers (e.g., 1-bar break, octave jump) for section transitions.
-    - microTiming: Swing amount (0.0 to 1.0) and quantization grid (e.g., 1/16, 1/8T).
-    - velocityDynamics: Accent pattern (e.g., strong-weak-medium-weak) and dynamic range (0.0 to 1.0).
-    - chordVoicing: Inversion type (e.g., root, first, second) and voicing style (e.g., closed, open).
-    - repetitionStrategy: Loop length in bars and variation frequency (0.0 to 1.0).
-    Return ONLY the JSON object.
-  `;
-  const response = await ai.models.generateContent({
-    model: "gemini-3-flash-preview",
-    contents: { parts: [{ text: prompt }] },
-    config: {
-      customAction: 'structural_blueprint',
-      responseMimeType: "application/json" }
-  });
-  try {
-    return JSON.parse(sanitizeJSON(response.text || '{}'));
-  } catch (e) {
-    console.error("Failed to parse AI response as JSON in generateStructuralBlueprint", e);
-    return {} as StructuralBlueprint;
-  }
+export const generateStructuralBlueprint = async (searchQuery: string, language: string = 'en', isExactDuplicate: boolean = false): Promise<StructuralBlueprint> => {
+  return buildStructuralBlueprint(searchQuery, isExactDuplicate);
 };
 export const getBeatRecommendations = async (plugins: VSTPlugin[], analogInstruments: Hardware[] = [], analogHardware: Hardware[] = [], drumKits: Hardware[] = [], excludeAnalog: boolean = false, dawType: string | null = null, starredPlugins: string[] = [], isGangstaVox: boolean = false, language: string = 'en', isMultiBandMode: boolean = false, bpm?: string, context?: string, isJsfxMode: boolean = false, installedJsfxPacks: string[] = [], xpandPresets?: XpandPreset[]): Promise<RecommendationResponse> => {
   const ai = getAI();
