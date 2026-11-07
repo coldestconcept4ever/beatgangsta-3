@@ -519,70 +519,95 @@ export const generateMidiTrack = (
   // Map vibe parameters to old logic variables
   const isFast = vibe.density > 0.6;
   const isSyncopated = vibe.swing > 0.4;
-  const isCrankDat = recipeTitle.toLowerCase().includes('crank dat');
+  const titleLower = recipeTitle.toLowerCase();
+  const guideLower = (loopGuide || '').toLowerCase();
+  const isCrankDat = titleLower.includes('crank dat');
+  const isBetterOffAlone = titleLower.includes('better off alone') || guideLower.includes('better off alone');
+  const isDanceTrance = isBetterOffAlone || titleLower.includes('trance') || titleLower.includes('eurodance') || titleLower.includes('house') || titleLower.includes('edm') || titleLower.includes('dance') || guideLower.includes('trance') || guideLower.includes('eurodance') || guideLower.includes('dance');
 
   if (type === 'chords') {
-    const chordsA = [['C4', 'E4', 'G4'], ['A3', 'C4', 'E4'], ['F3', 'A3', 'C4'], ['G3', 'B3', 'D4']];
-    const chordsB = [['D4', 'F4', 'A4'], ['G3', 'B3', 'D4'], ['C4', 'E4', 'G4'], ['A3', 'C4', 'E4']];
-    const chords = variation === 'A' ? chordsA : chordsB;
-    
-    for (let i = 0; i < bars; i++) {
-      const chord = chords[i % chords.length];
-      const isTurnaround = bars === 8 && (i === 3 || i === 7);
+    if (isBetterOffAlone) {
+      // Alice Deejay - Better Off Alone chord progression in G# minor (E - D#m - G#m - F#)
+      const boaChords = [['E4', 'G#4', 'B4'], ['D#4', 'F#4', 'A#4'], ['G#3', 'B3', 'D#4'], ['F#3', 'A#3', 'C#4']];
+      for (let i = 0; i < bars; i++) {
+        const chord = boaChords[i % boaChords.length];
+        pushNote(chord, '2');
+        pushNote(chord, '2');
+      }
+    } else {
+      const chordsA = [['C4', 'E4', 'G4'], ['A3', 'C4', 'E4'], ['F3', 'A3', 'C4'], ['G3', 'B3', 'D4']];
+      const chordsB = [['D4', 'F4', 'A4'], ['G3', 'B3', 'D4'], ['C4', 'E4', 'G4'], ['A3', 'C4', 'E4']];
+      const chords = variation === 'A' ? chordsA : chordsB;
       
-      if (isCrankDat) {
-        // Crank Dat style chord pattern
-        pushNote(chord, '8'); pushNote(chord, '8', '8'); pushNote(chord, '4'); pushNote(chord, '8'); pushNote(chord, '8', '8');
-      } else if (isFast) {
-        if (isTurnaround) {
-          pushNote(chord, '8'); pushNote(chord, '8'); pushNote(chord, '4'); pushNote(chord, '4'); pushNote(chord, '4');
+      for (let i = 0; i < bars; i++) {
+        const chord = chords[i % chords.length];
+        const isTurnaround = bars === 8 && (i === 3 || i === 7);
+        
+        if (isCrankDat) {
+          // Crank Dat style chord pattern
+          pushNote(chord, '8'); pushNote(chord, '8', '8'); pushNote(chord, '4'); pushNote(chord, '8'); pushNote(chord, '8', '8');
+        } else if (isFast) {
+          if (isTurnaround) {
+            pushNote(chord, '8'); pushNote(chord, '8'); pushNote(chord, '4'); pushNote(chord, '4'); pushNote(chord, '4');
+          } else {
+            pushNote(chord, '4'); pushNote(chord, '4'); pushNote(chord, '4'); pushNote(chord, '4');
+          }
+        } else if (isSyncopated) {
+          if (isTurnaround) {
+            pushNote(chord, '4'); pushNote(chord, '8', '8'); pushNote(chord, '8', '8'); pushNote(chord, '8', '8');
+          } else {
+            pushNote(chord, '4'); pushNote(chord, '8', '8'); pushNote(chord, '4', '4');
+          }
         } else {
-          pushNote(chord, '4'); pushNote(chord, '4'); pushNote(chord, '4'); pushNote(chord, '4');
-        }
-      } else if (isSyncopated) {
-        if (isTurnaround) {
-          pushNote(chord, '4'); pushNote(chord, '8', '8'); pushNote(chord, '8', '8'); pushNote(chord, '8', '8');
-        } else {
-          pushNote(chord, '4'); pushNote(chord, '8', '8'); pushNote(chord, '4', '4');
-        }
-      } else {
-        if (isTurnaround) {
-          pushNote(chord, '2'); pushNote(chord, '2');
-        } else {
-          pushNote(chord, '1');
+          if (isTurnaround) {
+            pushNote(chord, '2'); pushNote(chord, '2');
+          } else {
+            pushNote(chord, '1');
+          }
         }
       }
     }
   } else if (type === 'bass') {
-    const rootNotesA = ['C2', 'A1', 'F1', 'G1'];
-    const rootNotesB = ['D2', 'G1', 'C2', 'A1'];
-    const notes = variation === 'A' ? rootNotesA : rootNotesB;
-    
-    for (let i = 0; i < bars; i++) {
-      const note = notes[i % notes.length];
-      const isTurnaround = bars === 8 && (i === 3 || i === 7);
+    if (isBetterOffAlone) {
+      // Alice Deejay - Better Off Alone driving 16th-note rolling trance bassline (E1 -> D#1 -> G#1 -> F#1)
+      const boaRoots = ['E1', 'D#1', 'G#1', 'F#1'];
+      for (let i = 0; i < bars; i++) {
+        const root = boaRoots[i % boaRoots.length];
+        for (let j = 0; j < 16; j++) {
+          pushNote(root, '16');
+        }
+      }
+    } else {
+      const rootNotesA = ['C2', 'A1', 'F1', 'G1'];
+      const rootNotesB = ['D2', 'G1', 'C2', 'A1'];
+      const notes = variation === 'A' ? rootNotesA : rootNotesB;
       
-      if (isCrankDat) {
-        // Crank Dat style bass pattern
-        pushNote(note, '4'); pushNote(note, '8', '8'); pushNote(note, '4'); pushNote(note, '8', '8');
-      } else if (isSyncopated) {
-        if (isTurnaround) {
-          pushNote(note, '8'); pushNote(note, '8', '8'); pushNote(note, '8', '8'); pushNote(note, '8', '8'); pushNote(note, '8');
+      for (let i = 0; i < bars; i++) {
+        const note = notes[i % notes.length];
+        const isTurnaround = bars === 8 && (i === 3 || i === 7);
+        
+        if (isCrankDat) {
+          // Crank Dat style bass pattern
+          pushNote(note, '4'); pushNote(note, '8', '8'); pushNote(note, '4'); pushNote(note, '8', '8');
+        } else if (isSyncopated) {
+          if (isTurnaround) {
+            pushNote(note, '8'); pushNote(note, '8', '8'); pushNote(note, '8', '8'); pushNote(note, '8', '8'); pushNote(note, '8');
+          } else {
+            pushNote(note, '8'); pushNote(note, '8', '8'); pushNote(note, '4', '8'); pushNote(note, '8', '8');
+          }
+        } else if (isFast) {
+          if (isTurnaround) {
+            for(let j=0; j<6; j++) pushNote(note, '8');
+            pushNote(note, '16'); pushNote(note, '16'); pushNote(note, '16'); pushNote(note, '16');
+          } else {
+            for(let j=0; j<8; j++) pushNote(note, '8');
+          }
         } else {
-          pushNote(note, '8'); pushNote(note, '8', '8'); pushNote(note, '4', '8'); pushNote(note, '8', '8');
-        }
-      } else if (isFast) {
-        if (isTurnaround) {
-          for(let j=0; j<6; j++) pushNote(note, '8');
-          pushNote(note, '16'); pushNote(note, '16'); pushNote(note, '16'); pushNote(note, '16');
-        } else {
-          for(let j=0; j<8; j++) pushNote(note, '8');
-        }
-      } else {
-        if (isTurnaround) {
-          pushNote(note, '2'); pushNote(note, '4'); pushNote(note, '4');
-        } else {
-          pushNote(note, '1');
+          if (isTurnaround) {
+            pushNote(note, '2'); pushNote(note, '4'); pushNote(note, '4');
+          } else {
+            pushNote(note, '1');
+          }
         }
       }
     }
@@ -605,74 +630,116 @@ export const generateMidiTrack = (
       }
     }
   } else if (type === 'hihat') {
-    for (let i = 0; i < bars * 4; i++) {
-      const isTurnaround = bars === 8 && (i === 15 || i === 31); // 4th and 8th bar last beat
-      if (isFast || variation === 'B') {
-        if (isTurnaround) {
-          for(let j=0; j<8; j++) pushNote('F#1', '32'); // roll
-        } else {
-          pushNote('F#1', '16'); pushNote('F#1', '16'); pushNote('F#1', '16'); pushNote('F#1', '16');
+    if (isDanceTrance) {
+      // Four on the floor upbeat open hats (steps 3, 7, 11, 15)
+      for (let i = 0; i < bars; i++) {
+        for (let b = 0; b < 4; b++) {
+          pushNote('F#1', '8', '8');
         }
-      } else {
-        if (isTurnaround) {
-          pushNote('F#1', '16'); pushNote('F#1', '16'); pushNote('F#1', '16'); pushNote('F#1', '16');
+      }
+    } else {
+      for (let i = 0; i < bars * 4; i++) {
+        const isTurnaround = bars === 8 && (i === 15 || i === 31); // 4th and 8th bar last beat
+        if (isFast || variation === 'B') {
+          if (isTurnaround) {
+            for(let j=0; j<8; j++) pushNote('F#1', '32'); // roll
+          } else {
+            pushNote('F#1', '16'); pushNote('F#1', '16'); pushNote('F#1', '16'); pushNote('F#1', '16');
+          }
         } else {
-          pushNote('F#1', '8'); pushNote('F#1', '8');
+          if (isTurnaround) {
+            pushNote('F#1', '16'); pushNote('F#1', '16'); pushNote('F#1', '16'); pushNote('F#1', '16');
+          } else {
+            pushNote('F#1', '8'); pushNote('F#1', '8');
+          }
         }
       }
     }
   } else if (type === 'kick') {
-    for (let i = 0; i < bars; i++) {
-      const isTurnaround = bars === 8 && (i === 3 || i === 7);
-      if (variation === 'A') {
-        if (isTurnaround) {
-          pushNote('C1', '4'); pushNote('C1', '8', '8'); pushNote('C1', '8', '8'); pushNote('C1', '8', '8');
+    if (isDanceTrance) {
+      // Authentic four-on-the-floor club/Eurodance kick (every quarter note beat)
+      for (let i = 0; i < bars; i++) {
+        pushNote('C1', '4');
+        pushNote('C1', '4');
+        pushNote('C1', '4');
+        pushNote('C1', '4');
+      }
+    } else {
+      for (let i = 0; i < bars; i++) {
+        const isTurnaround = bars === 8 && (i === 3 || i === 7);
+        if (variation === 'A') {
+          if (isTurnaround) {
+            pushNote('C1', '4'); pushNote('C1', '8', '8'); pushNote('C1', '8', '8'); pushNote('C1', '8', '8');
+          } else {
+            pushNote('C1', '4'); pushNote('C1', '8', '8'); pushNote('C1', '4', '4');
+          }
         } else {
-          pushNote('C1', '4'); pushNote('C1', '8', '8'); pushNote('C1', '4', '4');
-        }
-      } else {
-        if (isTurnaround) {
-          pushNote('C1', '4'); pushNote('C1', '8', '8'); pushNote('C1', '4'); pushNote('C1', '4');
-        } else {
-          pushNote('C1', '4'); pushNote('C1', '4', '4'); pushNote('C1', '4');
+          if (isTurnaround) {
+            pushNote('C1', '4'); pushNote('C1', '8', '8'); pushNote('C1', '4'); pushNote('C1', '4');
+          } else {
+            pushNote('C1', '4'); pushNote('C1', '4', '4'); pushNote('C1', '4');
+          }
         }
       }
     }
   } else if (type === 'snare') {
     const snareNote = text.includes('clap') ? 'D#1' : 'D1';
-    for (let i = 0; i < bars; i++) {
-      const isTurnaround = bars === 8 && (i === 3 || i === 7);
-      if (isTurnaround) {
-        pushNote(snareNote, '4', '4'); pushNote(snareNote, '8', '4'); pushNote(snareNote, '8');
-      } else {
-        pushNote(snareNote, '4', '4'); pushNote(snareNote, '4', '4');
+    if (isDanceTrance) {
+      // Snare / Clap strictly on beats 2 and 4 (steps 5 and 13)
+      for (let i = 0; i < bars; i++) {
+        pushNote(snareNote, '4', '4');
+        pushNote(snareNote, '4', '4');
+      }
+    } else {
+      for (let i = 0; i < bars; i++) {
+        const isTurnaround = bars === 8 && (i === 3 || i === 7);
+        if (isTurnaround) {
+          pushNote(snareNote, '4', '4'); pushNote(snareNote, '8', '4'); pushNote(snareNote, '8');
+        } else {
+          pushNote(snareNote, '4', '4'); pushNote(snareNote, '4', '4');
+        }
       }
     }
   } else {
-    // Melody
-    const scale = variation === 'A' ? ['C4', 'D4', 'E4', 'G4'] : ['A4', 'G4', 'E4', 'C4'];
-    for (let i = 0; i < bars; i++) {
-      const isTurnaround = bars === 8 && (i === 3 || i === 7);
-      if (isFast) {
-        if (isTurnaround) {
-          pushNote(scale[0], '16'); pushNote(scale[1], '16'); pushNote(scale[2], '16'); pushNote(scale[3], '16');
-          pushNote(scale[3], '16'); pushNote(scale[2], '16'); pushNote(scale[1], '16'); pushNote(scale[0], '16');
-          pushNote(scale[0], '8'); pushNote(scale[1], '8'); pushNote(scale[2], '8'); pushNote(scale[3], '8');
-        } else {
-          pushNote(scale[0], '8'); pushNote(scale[1], '8'); pushNote(scale[2], '8'); pushNote(scale[3], '8');
-          pushNote(scale[3], '8'); pushNote(scale[2], '8'); pushNote(scale[1], '8'); pushNote(scale[0], '8');
+    // Melody / Lead Synth
+    if (isBetterOffAlone) {
+      // Note-for-note iconic 16th-note arpeggiated hook for Alice Deejay - Better Off Alone
+      const bar1Notes = ['G#4', 'B4', 'D#5', 'G#5', 'F#5', 'E5', 'D#5', 'B4', 'G#4', 'B4', 'D#5', 'G#5', 'F#5', 'E5', 'D#5', 'B4'];
+      const bar2Notes = ['F#4', 'A#4', 'D#5', 'F#5', 'E5', 'D#5', 'C#5', 'A#4', 'F#4', 'A#4', 'D#5', 'F#5', 'E5', 'D#5', 'C#5', 'A#4'];
+      const bar3Notes = ['G#4', 'B4', 'D#5', 'G#5', 'F#5', 'E5', 'D#5', 'B4', 'G#4', 'B4', 'D#5', 'G#5', 'F#5', 'E5', 'D#5', 'B4'];
+      const bar4Notes = ['F#4', 'A#4', 'C#5', 'F#5', 'E5', 'D#5', 'C#5', 'A#4', 'F#4', 'A#4', 'C#5', 'F#5', 'E5', 'D#5', 'C#5', 'A#4'];
+      const phrase = [bar1Notes, bar2Notes, bar3Notes, bar4Notes];
+      for (let i = 0; i < bars; i++) {
+        const curBarNotes = phrase[i % 4];
+        for (const n of curBarNotes) {
+          pushNote(n, '16');
         }
-      } else if (isSyncopated) {
-        if (isTurnaround) {
-          pushNote(scale[0], '8'); pushNote(scale[1], '8', '8'); pushNote(scale[2], '8', '8'); pushNote(scale[3], '8', '8'); pushNote(scale[0], '8');
+      }
+    } else {
+      const scale = variation === 'A' ? ['C4', 'D4', 'E4', 'G4'] : ['A4', 'G4', 'E4', 'C4'];
+      for (let i = 0; i < bars; i++) {
+        const isTurnaround = bars === 8 && (i === 3 || i === 7);
+        if (isFast) {
+          if (isTurnaround) {
+            pushNote(scale[0], '16'); pushNote(scale[1], '16'); pushNote(scale[2], '16'); pushNote(scale[3], '16');
+            pushNote(scale[3], '16'); pushNote(scale[2], '16'); pushNote(scale[1], '16'); pushNote(scale[0], '16');
+            pushNote(scale[0], '8'); pushNote(scale[1], '8'); pushNote(scale[2], '8'); pushNote(scale[3], '8');
+          } else {
+            pushNote(scale[0], '8'); pushNote(scale[1], '8'); pushNote(scale[2], '8'); pushNote(scale[3], '8');
+            pushNote(scale[3], '8'); pushNote(scale[2], '8'); pushNote(scale[1], '8'); pushNote(scale[0], '8');
+          }
+        } else if (isSyncopated) {
+          if (isTurnaround) {
+            pushNote(scale[0], '8'); pushNote(scale[1], '8', '8'); pushNote(scale[2], '8', '8'); pushNote(scale[3], '8', '8'); pushNote(scale[0], '8');
+          } else {
+            pushNote(scale[0], '8'); pushNote(scale[1], '8', '8'); pushNote(scale[2], '4', '8'); pushNote(scale[3], '8', '8');
+          }
         } else {
-          pushNote(scale[0], '8'); pushNote(scale[1], '8', '8'); pushNote(scale[2], '4', '8'); pushNote(scale[3], '8', '8');
-        }
-      } else {
-        if (isTurnaround) {
-          pushNote(scale[0], '8'); pushNote(scale[1], '8'); pushNote(scale[2], '4'); pushNote(scale[3], '4'); pushNote(scale[0], '4');
-        } else {
-          pushNote(scale[0], '4'); pushNote(scale[1], '4'); pushNote(scale[2], '4'); pushNote(scale[3], '4');
+          if (isTurnaround) {
+            pushNote(scale[0], '8'); pushNote(scale[1], '8'); pushNote(scale[2], '4'); pushNote(scale[3], '4'); pushNote(scale[0], '4');
+          } else {
+            pushNote(scale[0], '4'); pushNote(scale[1], '4'); pushNote(scale[2], '4'); pushNote(scale[3], '4');
+          }
         }
       }
     }

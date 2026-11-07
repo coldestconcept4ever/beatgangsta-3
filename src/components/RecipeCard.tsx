@@ -1672,18 +1672,9 @@ export const RecipeCard: React.FC<RecipeCardProps> = ({ recipe: initialRecipe, i
         </div>
       )}
 
-      {!recipe.isGangstaVox && (
-        <div className="space-y-6 mb-8">
-          <h4 className={`text-sm font-black uppercase tracking-widest ${theme === 'coldest' ? 'text-sky-400' : 'opacity-40'}`}>{t('drum_patterns')}</h4>
-          <div className={`p-2 sm:p-6 rounded-[2.5rem] border ${
-            theme === 'coldest' ? 'bg-black/40 border-sky-500/20 shadow-inner' : 'bg-black/20 border-white/5'
-          }`}>
-            <DrumPatternDisplay patterns={recipe.drumPatterns} theme={theme} dawType={dawType} recipeTitle={recipe.title} bpm={recipe.bpm} detectedSectionLengths={recipe.detectedSectionLengths} />
-          </div>
-        </div>
-      )}
 
-      {recipe.drumKitAdvice && !recipe.isGangstaVox && (
+
+      {false /* drumKitAdvice integrated into instruments grid */ && recipe.drumKitAdvice && !recipe.isGangstaVox && (
         <div className="space-y-6 mb-8">
           <h4 className={`text-sm font-black uppercase tracking-widest ${theme === 'coldest' ? 'text-sky-400' : 'opacity-40'}`}>{t('drum_kit_advice', 'Drum Kit & VST/JSFX Advice')}</h4>
           <div className={`p-6 rounded-[2.5rem] border grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 ${

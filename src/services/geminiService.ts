@@ -872,6 +872,88 @@ const SONIBLE_SPEC_PROMPT = `
          - Controls: Reverb (0-100), Mix (0-100), Size (0-100).
     AI GUIDELINE: Always detect which series the user owns from their plugin list and apply the EXACT parameter names and styles defined above for that specific series.
 `;
+const SUBLAB_SPEC_PROMPT = `
+    CRITICAL - FUTURE AUDIO WORKSHOP SUBLAB & SUBLAB XL PARAMETER ACCURACY DIRECTIVE:
+    When SubLab or SubLab XL is recommended or referenced (in recipes, mix advice, or chat), you MUST use exact software GUI parameter names and realistic units matching the Future Audio Workshop (FAW) SubLab software plugin interface:
+    
+    🚨 ABSOLUTE DIRECTIVE ON MIXER SLIDERS (BOTTOM-RIGHT CORNER OF SUBLAB):
+    The three main mixer channel level sliders in the bottom right corner (SYNTH, SAMPLE, X-SUB) are CALIBRATED AND DISPLAYED STRICTLY IN DECIBELS (dB), NOT PERCENTAGE (%):
+    - Volume fader range is from -inf dB (or -48.0 dB) up to 0.0 dB (nominal max) or +6.0 dB.
+    - NEVER, EVER express the mixer sliders as a percentage (e.g. NEVER say "70%", "80%", "100%"). Saying percentage for SubLab sliders is INCORRECT and causes confusion.
+    - ALWAYS format slider values in exact decibels (dB), e.g.:
+      * Synth Oscillator Level Slider (Green): "-6.0 dB", "-10.0 dB", or "-12.0 dB"
+      * Sample Oscillator Level Slider (Orange): "-3.0 dB", "-4.5 dB", or "-6.0 dB"
+      * X-Sub / Sub Oscillator Level Slider (Purple): "0.0 dB" (pushed to unity/top line), or "-1.5 dB"
+    
+    1. SYNTH OSCILLATOR ENGINE (SYNTH):
+       - 'Synth Waveform': 'Sine', 'Triangle', 'Sawtooth', or 'Square'
+       - 'Synth Octave / Tune': Semitones (-24 to +24 st) and Fine Cents
+       - 'Synth Filter Route': 'On' or 'Off'
+       - 'Synth Attack': 0ms to 2000ms (0ms for punchy immediate transient)
+       - 'Synth Decay': 10ms to 10000ms (e.g. 800ms for sustained 808 body)
+       - 'Synth Sustain': -inf dB to 0.0 dB (or 0 for standard decaying trap 808s)
+       - 'Synth Release': 10ms to 5000ms (e.g. 50ms for clean stops)
+       - 'Synth Level': Measured strictly in DECIBELS (dB), e.g. "-6.0 dB", "-9.0 dB", "-12.0 dB" (NEVER %).
+
+    2. SAMPLE OSCILLATOR ENGINE (SAMPLE):
+       - 'Sample Selection': Matched kick/808 sample name from Sample Vault
+       - 'Sample Root Note': Auto-detected or tuned root key (e.g. C1, D#1, F1)
+       - 'Sample Delayed Start': 0ms to 500ms (delays sample trigger for rolling 808s)
+       - 'Sample Loop Mode': 'On' or 'Off' (loops sample sustain for infinite length)
+       - 'Sample Lo-Cut / Hi-Cut': Pre-filters the sample layer (e.g. Lo-Cut: 40Hz, Hi-Cut: 6000Hz)
+       - 'Sample Filter Route': 'On' or 'Off'
+       - 'Sample Level': Measured strictly in DECIBELS (dB), e.g. "-3.0 dB", "-5.0 dB", "-8.0 dB" (NEVER %).
+
+    3. X-SUB™ PSYCHOACOUSTIC SUB ENGINE (X-SUB / SUB):
+       - 'X-Sub Root Note Lock': Locks to exact played MIDI key (30Hz–65Hz) and generates mathematically precise lower harmonics (65Hz–260Hz)
+       - 'X-Sub Harmonics Drive': Controls upper harmonic intensity for small speaker translation
+       - 'X-Sub Level': Measured strictly in DECIBELS (dB), e.g. "0.0 dB" (top line), "-1.5 dB", "-3.0 dB" (NEVER %).
+
+    4. ANALOG FILTER (FILTER):
+       - 'Filter Type': 'LP 12dB', 'LP 24dB', 'BP 12dB', or 'HP 12dB'
+       - 'Filter Cutoff': 20Hz to 20000Hz (e.g. 150Hz)
+       - 'Filter Resonance': 0% to 100%
+       - 'Filter Parallel Mix': 0% to 100% (blends filtered signal with dry signal)
+
+    5. DISTORTION ENGINE (DISTORTION):
+       - 'Distortion Algorithm': 'Darkdrive', 'Overdrive', 'Grunge', or 'Tube'
+       - 'Distortion Drive': 0% to 100%
+       - 'Distortion Flavor Macro': 'Fatness' (for Darkdrive), 'Tone' (for Overdrive), 'Fizz' (for Grunge), or 'Heat' (for Tube)
+       - 'Distortion Lo-Cut': 20Hz to 500Hz (post-distortion HPF keeps sub clean)
+       - 'Distortion Hi-Cut': 1000Hz to 20000Hz (post-distortion LPF tames buzz)
+       - 'Distortion Parallel Mix': 0% to 100% (wet/dry blend)
+
+    6. COMPRESSOR ENGINE (COMPRESSOR):
+       - 'Compressor Threshold': -40 dB to 0 dB
+       - 'Compressor Ratio': 1.5:1 to 8:1 (e.g. 4:1)
+       - 'Compressor Release': 10ms to 1000ms
+       - 'Compressor Auto-Sidechain': 'On' or 'Off' (ducks sub when kick transient strikes)
+       - 'Compressor Parallel Mix': 0% to 100%
+       - 'Compressor Makeup Gain': 0.0 dB to +18.0 dB
+
+    7. PITCH & GLIDE / LEGATO (GLIDE):
+       - 'Glide Mode': 'Legato' (smooth pitch slide without re-triggering attack envelope) or 'Retrigger'
+       - 'Glide Time': Musical divisions (1/64, 1/32, 1/16, 1/8) or 0ms to 2000ms
+
+    8. MASTER MAXIMIZER LIMITER (MAXIMIZER):
+       - 'Maximizer Amount': 0% to 100% (drives into brickwall limiter)
+       - 'Maximizer Release': 10ms to 1000ms
+       - 'Master Output Volume': -inf dB to +6.0 dB
+
+    STRICTLY FORBIDDEN: Using percentage (%) for SubLab mixer sliders, or inventing physical chassis knobs, hardware tube bias controls, or non-existent controls that do not exist on the SubLab software GUI.
+`;
+
+const SAMPLE_VAULT_DRUM_DIRECTIVE = `
+    CRITICAL - SAMPLE VAULT ONE-SHOT DRUM SELECTION DIRECTIVE:
+    - ALL drum parts (Kick, Snare, Hi-Hats, Clap, Percussion, Open Hat) MUST be included in the main 'instruments' array at the top of the recipe, alongside Lead, Keys, and Pad tracks.
+    - Instead of synth VST instruments or drum machines (like Electribe or Xpand!2) or hats using VST synths, ALL drum parts (except Sub Bass/808) MUST use one-shot samples matched directly from the user's Sample Vault manifest.
+    - Set the 'plugin' field for each drum track to "Sample Vault: [Matched Sample Name]" (e.g., "Sample Vault: Murda K Kick", "Sample Vault: Snap 005 Lex Clap", "Sample Vault: 2DGTZ LOG DRUM 6", "Sample Vault: Hat 001 Crisp").
+    - Provide a full 'deepDive' array for sample envelope and sampler shaping (Sample Pitch, Start Offset, Velocity Curve, Attack, Decay).
+    - Provide a full 'fxPlugins' array for each drum track containing exact mixing and enhancement plugins (EQ, Compression, Saturation, Transient Shaper) with detailed parameter deepDives.
+    - Provide full 4-bar or 8-bar MIDI patterns in 'midiNotes' for each drum track in the 'instruments' array so users can drag-and-drop their drum stems directly into their DAW!
+    - Sub Bass / 808 remains an instrument track in 'instruments' using SubLab or Serum with accurate SubLab GUI parameter settings.
+`;
+
 const EXTRACT_RECIPE_MIDI_PROMPT = `
     CRITICAL - EXTRACT RECIPE & FULL ARRANGEMENT MIDI:
     - **CRITICAL COMPUTE DIRECTIVE**: You MUST dedicate maximum compute time to transcribe the FULL song precisely. This is a massive operation. DO NOT rush. Do not give short 4 or 8 bar loops.
@@ -3077,11 +3159,26 @@ export const researchPluginParameters = async (plugin: VSTPlugin, language: stri
 };
 export const getSchemaInstruction = (isGangstaVoxMode: boolean = false) => `n\nCRITICAL: YOU MUST RETURN EXACTLY VALID JSON MATCHING THIS SCHEMA:n${JSON.stringify({ type: "OBJECT", properties: { recipes: { type: "ARRAY", items: getUnifiedRecipeSchema(isGangstaVoxMode), minItems: 1 } }, required: ["recipes"] }, null, 2)}`;
 
-export const generateStructuralBlueprint = async (searchQuery: string, language: string = 'en'): Promise<StructuralBlueprint> => {
+export const generateStructuralBlueprint = async (searchQuery: string, language: string = 'en', isExactDuplicate: boolean = false): Promise<StructuralBlueprint> => {
   const ai = getAI();
+  const exactDuplicateDirective = isExactDuplicate ? `
+    CRITICAL 1:1 EXACT REMAKE INSTRUCTION FOR "${searchQuery}":
+    You are performing a precise structural and musical transcription of the original, authentic studio release of "${searchQuery}".
+    - DO NOT make a generic rap or trap beat if this song is Dance, Trance, Eurodance, Pop, Rock, House, or R&B!
+    - For "Better Off Alone" by Alice Deejay:
+      * Exact BPM: 137 BPM (1999 Eurodance/Trance four-on-the-floor tempo).
+      * Exact Key: G# Minor (Ab Minor).
+      * Exact Chord Progression: E Major -> D# Minor -> G# Minor -> F# Major.
+      * Melodic Hook: Detuned SuperSaw trance arpeggio (G#4, B4, D#5, G#5, F#5, E5, D#5).
+      * Bassline: 16th-note driving rolling trance bass (E1, D#1, G#1, F#1).
+      * Rhythm: Four-on-the-floor 909 kick (steps 1, 5, 9, 13), upbeat open hats (steps 3, 7, 11, 15), snappy clap on 2 & 4.
+    - For any other song: Transcribe the actual official studio release tempo, key, chord progression, hook notes, and authentic genre rhythm!
+  ` : '';
+
   const prompt = `
     Analyze the following search term/genre/artist: "${searchQuery}".
     Extract its "Structural DNA" and create a "Structural Blueprint" JSON object.
+    ${exactDuplicateDirective}
     ${getLanguageInstruction(language)}
     The blueprint must define:
     - songMap: Energy levels and duration for Intro, Verse1, Hook, Verse2, Hook2, Bridge (optional), Outro.
@@ -3241,18 +3338,14 @@ export const getBeatRecommendations = async (plugins: VSTPlugin[], analogInstrum
     ${RC20_SPEC_PROMPT}
     ${ATR102_SPEC_PROMPT}
     ${THD_HEADSPACE_DIRECTIVE}
-    Focus on modern sub-genres: Melodic Trap, Dark Drill, High-Energy Rage.
+    ${SUBLAB_SPEC_PROMPT}
+    ${SAMPLE_VAULT_DRUM_DIRECTIVE}
+    ${additionalContextStr ? 'Strictly adhere to the user specified context, genres, and musical instructions above.' : 'Focus on modern sub-genres: Melodic Trap, Dark Drill, High-Energy Rage.'}
     Identify 2-3 mainstream or commonly known artists who would typically use this specific beat type (e.g., "Lil Wayne type", "Travis Scott type").
     Include a recommended BPM, 'recommendedScale', and 'chordProgression'.
-    You MUST provide the 'instruments' array with EXACTLY 6 DISTINCT INSTRUMENTS/TRACKS (no more, no less). The 6 tracks MUST be:
-      1. A Pad (Melody track, e.g. using Serum, Keyscape, Omnisphere, or Xpand!2)
-      2. A Lead (Melody track, e.g. using Serum, Omnisphere, or Kontakt)
-      3. A Sub Bass or 808 (Bass track, e.g. using SubLab, Serum, or Trilogy)
-      4. A Kick (Drum/Sampler instrument track with exact sampler settings to synthesize/shape a punchy kick)
-      5. A Hi-Hat (Drum/Sampler instrument track with sampler/envelope settings to shape a clean hi-hat)
-      6. A Clap or Snare (Drum/Sampler instrument track with sampler/envelope settings to shape a crispy clap/snare)
-    CRITICAL: Each of these 6 instruments MUST have a minimum of 2 FX plugins in its 'fxPlugins' array (each with full, detailed 'deepDive' parameter lists).
-    CRITICAL: ALL VST INSTRUMENTS AND ALL FX DEEP DIVES MUST HAVE EXHAUSTIVE PARAMETERS WITH ACTUAL REASONABLE NUMERICAL VALUES. Do not give simple or abbreviated settings. For instance, when using SubLab for the sub bass, you MUST provide exhaustive parameter settings for EVERY section of the plugin (Synth Oscillator, Sample Oscillator, Sub Oscillator, Filter, LFO, and Master Pitch/Glide envelopes).
+    You MUST provide the 'instruments' array with ALL main tonal and drum elements (e.g., Lead, Chords/Pad, Sub Bass / 808 [SubLab], Kick Drum [Sample Vault], Snare/Clap [Sample Vault], Hi-Hats [Sample Vault], Percussion [Sample Vault]).
+    CRITICAL: Each of these instruments MUST have a minimum of 2 FX plugins in its 'fxPlugins' array (each with full, detailed 'deepDive' parameter lists).
+    CRITICAL: ALL VST INSTRUMENTS AND ALL FX DEEP DIVES MUST HAVE EXHAUSTIVE PARAMETERS WITH ACTUAL REASONABLE NUMERICAL VALUES. For instance, when using SubLab for the sub bass, you MUST provide exhaustive parameter settings for EVERY section of the plugin (Synth Oscillator, Sample Oscillator, Sub Oscillator, Filter, Volume Envelope, Pitch/Glide, Distortion, Maximizer).
     CRITICAL: NO SHORTCUTS. You MUST provide exhaustive 'fxPlugins' for every instrument, 'midiNotes' for every instrument, full 'drumPatterns', and full 'masterPlugins'. DO NOT skip anything!
     CRITICAL: 808s and Basslines MUST be included in the 'instruments' array with a detailed 'midiNotes' pattern. DO NOT put 808s in 'drumPatterns'.
     CRITICAL: DO NOT use vocals as a main instrument in the 'instruments' array. Vocals MUST be separate.
@@ -3436,18 +3529,14 @@ export const getCustomBeatRecommendations = async (plugins: VSTPlugin[], query: 
     ${sphereMicStr}
     ${getLanguageInstruction(language)}
     ${THD_HEADSPACE_DIRECTIVE}
+    ${SUBLAB_SPEC_PROMPT}
+    ${SAMPLE_VAULT_DRUM_DIRECTIVE}
     Ensure the recipe captures the signature sound, bounce, and atmospheric elements associated with ${query}.
     Identify 2-3 mainstream or commonly known artists who would typically use this specific beat type.
     Include a recommended BPM, 'recommendedScale', and 'chordProgression' that fits the vibe.
-    You MUST provide the 'instruments' array with EXACTLY 6 DISTINCT INSTRUMENTS/TRACKS (no more, no less). The 6 tracks MUST be:
-      1. A Pad (Melody track, e.g. using Serum, Keyscape, Omnisphere, or Xpand!2)
-      2. A Lead (Melody track, e.g. using Serum, Omnisphere, or Kontakt)
-      3. A Sub Bass or 808 (Bass track, e.g. using SubLab, Serum, or Trilogy)
-      4. A Kick (Drum/Sampler instrument track with exact sampler settings to synthesize/shape a punchy kick)
-      5. A Hi-Hat (Drum/Sampler instrument track with sampler/envelope settings to shape a clean hi-hat)
-      6. A Clap or Snare (Drum/Sampler instrument track with sampler/envelope settings to shape a crispy clap/snare)
-    CRITICAL: Each of these 6 instruments MUST have a minimum of 2 FX plugins in its 'fxPlugins' array (each with full, detailed 'deepDive' parameter lists).
-    CRITICAL: ALL VST INSTRUMENTS AND ALL FX DEEP DIVES MUST HAVE EXHAUSTIVE PARAMETERS WITH ACTUAL REASONABLE NUMERICAL VALUES. Do not give simple or abbreviated settings. For instance, when using SubLab for the sub bass, you MUST provide exhaustive parameter settings for EVERY section of the plugin (Synth Oscillator, Sample Oscillator, Sub Oscillator, Filter, LFO, and Master Pitch/Glide envelopes).
+    You MUST provide the 'instruments' array with ALL main tonal and drum elements (e.g., Lead, Chords/Pad, Sub Bass / 808 [SubLab], Kick Drum [Sample Vault], Snare/Clap [Sample Vault], Hi-Hats [Sample Vault], Percussion [Sample Vault]).
+    CRITICAL: Each of these instruments MUST have a minimum of 2 FX plugins in its 'fxPlugins' array (each with full, detailed 'deepDive' parameter lists).
+    CRITICAL: ALL VST INSTRUMENTS AND ALL FX DEEP DIVES MUST HAVE EXHAUSTIVE PARAMETERS WITH ACTUAL REASONABLE NUMERICAL VALUES. For instance, when using SubLab for the sub bass, you MUST provide exhaustive parameter settings for EVERY section of the plugin (Synth Oscillator, Sample Oscillator, Sub Oscillator, Filter, Volume Envelope, Pitch/Glide, Distortion, Maximizer).
     CRITICAL: NO SHORTCUTS. You MUST provide exhaustive 'fxPlugins' for every instrument, 'midiNotes' for every instrument, full 'drumPatterns', and full 'masterPlugins'. DO NOT skip anything!
     CRITICAL: 808s and Basslines MUST be included in the 'instruments' array with a detailed 'midiNotes' pattern. DO NOT put 808s in 'drumPatterns'.
     CRITICAL: DO NOT use vocals as a main instrument in the 'instruments' array. Vocals MUST be separate.
@@ -3503,8 +3592,8 @@ export const getCustomBeatRecommendations = async (plugins: VSTPlugin[], query: 
   }
   return result;
 };
-export const getSongBeatRecommendations = async (plugins: VSTPlugin[], songQuery: string, analogInstruments: Hardware[] = [], analogHardware: Hardware[] = [], drumKits: Hardware[] = [], excludeAnalog: boolean = false, dawType: string | null = null, starredPlugins: string[] = [], isGangstaVox: boolean = false, language: string = 'en', isMultiBandMode: boolean = false, bpm?: string, context?: string, isJsfxMode: boolean = false, installedJsfxPacks: string[] = [], xpandPresets?: XpandPreset[]): Promise<RecommendationResponse> => {
-  const blueprint = await generateStructuralBlueprint(songQuery, language);
+export const getSongBeatRecommendations = async (plugins: VSTPlugin[], songQuery: string, analogInstruments: Hardware[] = [], analogHardware: Hardware[] = [], drumKits: Hardware[] = [], excludeAnalog: boolean = false, dawType: string | null = null, starredPlugins: string[] = [], isGangstaVox: boolean = false, language: string = 'en', isMultiBandMode: boolean = false, bpm?: string, context?: string, isJsfxMode: boolean = false, installedJsfxPacks: string[] = [], xpandPresets?: XpandPreset[], isExactDuplicate: boolean = false): Promise<RecommendationResponse> => {
+  const blueprint = await generateStructuralBlueprint(songQuery, language, isExactDuplicate);
   const ai = getAI();
       const isStudioOne = dawType?.toLowerCase().includes('studio one');
   const filteredPlugins = plugins.filter(p => {
@@ -3609,7 +3698,42 @@ export const getSongBeatRecommendations = async (plugins: VSTPlugin[], songQuery
   ` : `
     You are an expert audio engineer and producer.
     ${nonJsfxDiktat}
-    Analyze my VST plugin list and suggest 1 high-level, extremely detailed "Beat Recipe" that recreate the production style, bounce, and sonic atmosphere of the song "${songQuery}".
+    ${isExactDuplicate ? `
+      ========================================================================================
+      🎯🎯🎯 CRITICAL: 1:1 EXACT REMAKE / DUPLICATION DIRECTIVE FOR "${songQuery}" 🎯🎯🎯
+      ========================================================================================
+      THE USER HAS ACTIVATED "EXACT DUPLICATE MODE" (1:1 Remake).
+      YOUR MANDATE IS TO RECREATE THE ACTUAL TARGET SONG "${songQuery}" NOTE-FOR-NOTE, TEMPO-FOR-TEMPO, AND INSTRUMENT-FOR-INSTRUMENT!
+      
+      DO NOT GENERATE A GENERIC TRAP / RAP BEAT!
+      DO NOT FORCE 808s OR TRAP HATS IF THE SONG IS DANCE, TRANCE, EURODANCE, POP, ROCK, OR HOUSE!
+
+      EXACT SONG SPECIFICATIONS:
+      - IF THE SONG IS "Better Off Alone" by Alice Deejay (or similar 90s Eurodance / Trance anthem):
+        * Official BPM: 137 BPM (137 BPM four-on-the-floor, NOT 140 trap, NOT half-time). Set 'recommendedBpm' to 137.
+        * Official Key Signature: G# Minor / Ab Minor. Set 'recommendedScale' to 'G# Minor'.
+        * Exact Chord Progression: E Major -> D# Minor -> G# Minor -> F# Major (VI - v - i - VII).
+        * Melodic Lead Synth ('midiNotes'): Roland JP-8000 style detuned SuperSaw trance lead arpeggio. You MUST transcribe the iconic 16th-note arpeggiated hook in 'midiNotes':
+          - Bar 1 (over E): G#4, B4, D#5, G#5, F#5, E5, D#5, B4, G#4, B4, D#5, G#5, F#5, E5, D#5, B4
+          - Bar 2 (over D#m): F#4, A#4, D#5, F#5, E5, D#5, C#5, A#4, F#4, A#4, D#5, F#5, E5, D#5, C#5, A#4
+          - Bar 3 (over G#m): G#4, B4, D#5, G#5, F#5, E5, D#5, B4, G#4, B4, D#5, G#5, F#5, E5, D#5, B4
+          - Bar 4 (over F#): F#4, A#4, C#5, F#5, E5, D#5, C#5, A#4, F#4, A#4, C#5, F#5, E5, D#5, C#5, A#4
+        * Bassline ('midiNotes'): Driving 16th-note galloping/rolling synth bassline following root notes: E1, D#1, G#1, F#1.
+        * Drums ('drumPatterns'): 
+          - Kick: Punchy TR-909 style four-on-the-floor kick on steps 1, 5, 9, 13 (beats 1, 2, 3, 4).
+          - Open Hi-Hat: Prominent upbeat open hat on steps 3, 7, 11, 15 (offbeats).
+          - Snare / Clap: Heavy snappy clap on steps 5 and 13 (beats 2 and 4).
+          - Hi-Hats: Fast 16th running closed hats.
+        * Drum Instrument Stems: All drum tracks in 'instruments' MUST use Sample Vault one-shots ("Sample Vault: 909 Punch Kick", "Sample Vault: Trance Offbeat Open Hat", "Sample Vault: Snap 005 Lex Clap")!
+
+      - FOR ANY OTHER TARGET TRACK:
+        * Detect the real, released studio BPM, Key Signature, Chord Progression, Lead Melody notes, Bassline, and Drum Grooves.
+        * Transcribe the iconic hook melody note-for-note into 'midiNotes'.
+        * Provide full genre-accurate 'drumPatterns' (e.g. 4-on-the-floor for Eurodance/EDM, boom-bap for 90s hip-hop, half-time for trap).
+        * All drum parts (Kick, Snare, Hi-Hats, Clap, Percussion) MUST use Sample Vault one-shots ("Sample Vault: [Matched Sample Name]") and appear in the main 'instruments' array!
+    ` : `
+      Analyze my VST plugin list and suggest 1 high-level, extremely detailed "Beat Recipe" that recreates the production style, bounce, and sonic atmosphere of the song "${songQuery}".
+    `}
     ${additionalContextStr}
     ${bpmStr}
     ${xpandInstruction}
@@ -3629,6 +3753,8 @@ export const getSongBeatRecommendations = async (plugins: VSTPlugin[], songQuery
     ${ATR102_SPEC_PROMPT}
     ${GLOBAL_PARAMETER_STRICTNESS_PROMPT}
     ${THD_HEADSPACE_DIRECTIVE}
+    ${SUBLAB_SPEC_PROMPT}
+    ${SAMPLE_VAULT_DRUM_DIRECTIVE}
     FOLLOW THIS STRUCTURAL BLUEPRINT:
     ${JSON.stringify(blueprint)}
     Ensure the recipe captures the signature sound, instrumentation, and mixing techniques of that specific song, while strictly adhering to the structural blueprint provided above.
@@ -3636,15 +3762,9 @@ export const getSongBeatRecommendations = async (plugins: VSTPlugin[], songQuery
     CRITICAL: You MUST use the blueprint's microTiming, velocityDynamics, chordVoicing, and repetitionStrategy to generate the MIDI notes and drum patterns. This is essential for achieving an iconic, authentic, high-energy, and highly realistic MIDI quality that perfectly encapsulates the requested tracking.
     Identify 2-3 mainstream or commonly known artists who would typically use this specific beat type.
     Include a recommended BPM, 'recommendedScale', and 'chordProgression' that fits the vibe.
-    You MUST provide the 'instruments' array with EXACTLY 6 DISTINCT INSTRUMENTS/TRACKS (no more, no less). The 6 tracks MUST be:
-      1. A Pad (Melody track, e.g. using Serum, Keyscape, Omnisphere, or Xpand!2)
-      2. A Lead (Melody track, e.g. using Serum, Omnisphere, or Kontakt)
-      3. A Sub Bass or 808 (Bass track, e.g. using SubLab, Serum, or Trilogy)
-      4. A Kick (Drum/Sampler instrument track with exact sampler settings to synthesize/shape a punchy kick)
-      5. A Hi-Hat (Drum/Sampler instrument track with sampler/envelope settings to shape a clean hi-hat)
-      6. A Clap or Snare (Drum/Sampler instrument track with sampler/envelope settings to shape a crispy clap/snare)
-    CRITICAL: Each of these 6 instruments MUST have a minimum of 2 FX plugins in its 'fxPlugins' array (each with full, detailed 'deepDive' parameter lists).
-    CRITICAL: ALL VST INSTRUMENTS AND ALL FX DEEP DIVES MUST HAVE EXHAUSTIVE PARAMETERS WITH ACTUAL REASONABLE NUMERICAL VALUES. Do not give simple or abbreviated settings. For instance, when using SubLab for the sub bass, you MUST provide exhaustive parameter settings for EVERY section of the plugin (Synth Oscillator, Sample Oscillator, Sub Oscillator, Filter, LFO, and Master Pitch/Glide envelopes).
+    You MUST provide the 'instruments' array with ALL main tonal and drum elements (e.g., Lead, Chords/Pad, Sub Bass / 808 [SubLab], Kick Drum [Sample Vault], Snare/Clap [Sample Vault], Hi-Hats [Sample Vault], Percussion [Sample Vault]).
+    CRITICAL: Each of these instruments MUST have a minimum of 2 FX plugins in its 'fxPlugins' array (each with full, detailed 'deepDive' parameter lists).
+    CRITICAL: ALL VST INSTRUMENTS AND ALL FX DEEP DIVES MUST HAVE EXHAUSTIVE PARAMETERS WITH ACTUAL REASONABLE NUMERICAL VALUES. For instance, when using SubLab for the sub bass, you MUST provide exhaustive parameter settings for EVERY section of the plugin (Synth Oscillator, Sample Oscillator, Sub Oscillator, Filter, Volume Envelope, Pitch/Glide, Distortion, Maximizer).
     CRITICAL: 808s and Basslines MUST be included in the 'instruments' array with a detailed 'midiNotes' pattern. DO NOT put 808s in 'drumPatterns'.
     CRITICAL: DO NOT use vocals as a main instrument in the 'instruments' array. Vocals MUST be separate.
     For each instrument:
@@ -3960,20 +4080,16 @@ export const getAudioBeatRecommendations = async (plugins: VSTPlugin[], audioBas
     ${ATR102_SPEC_PROMPT}
     ${GLOBAL_PARAMETER_STRICTNESS_PROMPT}
     ${THD_HEADSPACE_DIRECTIVE}
+    ${SUBLAB_SPEC_PROMPT}
+    ${SAMPLE_VAULT_DRUM_DIRECTIVE}
     ${isTargetOnly ? "The user's project/vocal track is provided as audio. Analyze this track to detect its BPM, Key, vocal pocket, and section arrangement, and generate full-song MIDI stems and sound design recipes to completely replace the original beat." : (audioUrl ? `The main audio file is available at this URL: ${audioUrl}. Please fetch and analyze it.` : "The main audio file is provided as inline data.")}
     ${isDoubleAudio ? "\nThere is a second audio file attached. This is the target 'Recreate For' track. Analyze both and adapt the first song's elements (such as chords, leads, sub-bass, 808s, arpeggios, and drums) to match the second track's BPM and Key perfectly." : ""}
     Ensure the recipe captures the signature sound, instrumentation, and mixing techniques heard in the audio.
     Identify 2-3 mainstream or commonly known artists who would typically use this specific beat type.
     Include a recommended BPM, 'recommendedScale', and 'chordProgression' that fits the vibe.
-    You MUST provide the 'instruments' array with EXACTLY 6 DISTINCT INSTRUMENTS/TRACKS (no more, no less). The 6 tracks MUST be:
-      1. A Pad (Melody track, e.g. using Serum, Keyscape, Omnisphere, or Xpand!2)
-      2. A Lead (Melody track, e.g. using Serum, Omnisphere, or Kontakt)
-      3. A Sub Bass or 808 (Bass track, e.g. using SubLab, Serum, or Trilogy)
-      4. A Kick (Drum/Sampler instrument track with exact sampler settings to synthesize/shape a punchy kick)
-      5. A Hi-Hat (Drum/Sampler instrument track with sampler/envelope settings to shape a clean hi-hat)
-      6. A Clap or Snare (Drum/Sampler instrument track with sampler/envelope settings to shape a crispy clap/snare)
-    CRITICAL: Each of these 6 instruments MUST have a minimum of 2 FX plugins in its 'fxPlugins' array (each with full, detailed 'deepDive' parameter lists).
-    CRITICAL: ALL VST INSTRUMENTS AND ALL FX DEEP DIVES MUST HAVE EXHAUSTIVE PARAMETERS WITH ACTUAL REASONABLE NUMERICAL VALUES. Do not give simple or abbreviated settings. For instance, when using SubLab for the sub bass, you MUST provide exhaustive parameter settings for EVERY section of the plugin (Synth Oscillator, Sample Oscillator, Sub Oscillator, Filter, LFO, and Master Pitch/Glide envelopes).
+    You MUST provide the 'instruments' array with ALL main tonal and drum elements (e.g., Lead, Chords/Pad, Sub Bass / 808 [SubLab], Kick Drum [Sample Vault], Snare/Clap [Sample Vault], Hi-Hats [Sample Vault], Percussion [Sample Vault]).
+    CRITICAL: Each of these instruments MUST have a minimum of 2 FX plugins in its 'fxPlugins' array (each with full, detailed 'deepDive' parameter lists).
+    CRITICAL: ALL VST INSTRUMENTS AND ALL FX DEEP DIVES MUST HAVE EXHAUSTIVE PARAMETERS WITH ACTUAL REASONABLE NUMERICAL VALUES. For instance, when using SubLab for the sub bass, you MUST provide exhaustive parameter settings for EVERY section of the plugin (Synth Oscillator, Sample Oscillator, Sub Oscillator, Filter, Volume Envelope, Pitch/Glide, Distortion, Maximizer).
     CRITICAL: 808s and Basslines MUST be included in the 'instruments' array with a detailed 'midiNotes' pattern. DO NOT put 808s in 'drumPatterns'.
     CRITICAL: DO NOT use vocals as a main instrument in the 'instruments' array. Vocals MUST be separate.
     For each instrument:
@@ -4456,6 +4572,7 @@ CRITICAL DIRECTIVE ON MIX CRITIQUE DEPTH, VARIETY, & ZERO-BOILERPLATE:
     ${SONIBLE_SPEC_PROMPT}
     ${RC20_SPEC_PROMPT}
     ${ATR102_SPEC_PROMPT}
+    ${SUBLAB_SPEC_PROMPT}
     ${GLOBAL_PARAMETER_STRICTNESS_PROMPT}
 
     Analyze the attached audio file(s) and provide a detailed mix critique and action plan.
@@ -4874,6 +4991,7 @@ ${getLanguageInstruction(language)}
     ${SONIBLE_SPEC_PROMPT}
     ${RC20_SPEC_PROMPT}
     ${ATR102_SPEC_PROMPT}
+    ${SUBLAB_SPEC_PROMPT}
     ${GLOBAL_PARAMETER_STRICTNESS_PROMPT}
     ${apolloConstraint}
     ${audioBase64 || audioUrl ? "I am uploading an MP3 of a project that needs work." : "I am providing a recipe for a track."}

@@ -842,7 +842,8 @@ app.post("/api/studio-copilot/chat", async (req, res) => {
     contextPrompt += `\n=== STRICT ARCHITECTURAL & DEEP CARD MUTATION RULES ===\n`;
     contextPrompt += `1. ABSOLUTELY NO HARDWARE-ONLY CONTROLS: Model only official digital software GUI controls (knobs, ratios, frequency bands, milliseconds, dB). Never invent internal chassis pots, hardware tube biasing, or physical calibrations.\n`;
     contextPrompt += `2. NO MOCK GENERALITIES: Give exact numbers matching the software GUI.\n`;
-    contextPrompt += `3. DEEP CARD EDITING & EXTENDING:\n`;
+    contextPrompt += `3. SUBLAB MIXER SLIDERS (BOTTOM RIGHT CORNER): The three mixer level sliders (Synth/green, Sampler/orange, X-Sub/purple) are calibrated and displayed in DECIBELS (dB), NOT PERCENTAGES (%). NEVER instruct the producer to set them to percentages like "70%" or "80%". Instead, instruct exact decibel levels (e.g. "-12.0 dB", "-6.0 dB", "-3.0 dB", "0.0 dB").\n`;
+    contextPrompt += `4. DEEP CARD EDITING & EXTENDING:\n`;
     contextPrompt += `   When the producer asks you to adjust a parameter, fix a unit (e.g. dB to ms), correct a parameter name, add an additional plugin from their rack, or replace a plugin, you must explain your move AND append a structured mutation JSON block at the very end of your response inside \`\`\`json:card_mutation ... \`\`\`.\n`;
     contextPrompt += `   When adding an additional plugin: Research the current signal chain, determine where it best belongs (e.g. dynamic resonance carving before vintage color compressor, or tape saturation after EQ, or dynamic stereo balance on master bus), and configure all deepDive parameters with official software GUI dials.\n`;
     contextPrompt += `\nJSON CARD MUTATION SCHEMA:\n`;

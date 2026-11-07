@@ -70,6 +70,8 @@ const getSynthParams = (instrumentType: string, noteNumber?: number) => {
     return { type: 'square' as OscillatorType, attack: 0.01, decay: 0.1, sustain: 0, release: 0.05, filterFreq: 8000, noise: true };
   } else if (text.includes('chord') || text.includes('pad')) {
     return { type: 'sawtooth' as OscillatorType, attack: 0.2, decay: 0.5, sustain: 0.8, release: 1.0, filterFreq: 2000 };
+  } else if (text.includes('lead') || text.includes('synth') || text.includes('saw') || text.includes('trance') || text.includes('pluck')) {
+    return { type: 'sawtooth' as OscillatorType, attack: 0.01, decay: 0.25, sustain: 0.5, release: 0.2, filterFreq: 4500 };
   } else {
     // default melody
     return { type: 'square' as OscillatorType, attack: 0.05, decay: 0.2, sustain: 0.5, release: 0.3, filterFreq: 3000 };

@@ -30,6 +30,8 @@ export const pluginDetails: Record<string, { description: string; year: number }
   "Gross Beat": { description: "Time and volume manipulation effect.", year: 2008 },
   "Edison": { description: "Fully integrated audio editing and recording tool.", year: 2007 },
   "Lurssen Mastering Console": { description: "Emulation of Gavin Lurssen's mastering console with 5-band 1dB stepped EQ, master Push control (moves all 5 dials simultaneously), continuous Input Drive, and 40 style presets.", year: 2016 },
+  "SubLab": { description: "Future Audio Workshop 808 & sub-bass synthesizer combining Synth, Sampler, and psychoacoustic X-Sub engines with dedicated Overdrive/Darkdrive distortion, Compressor, and mixer faders calibrated in dB.", year: 2019 },
+  "SubLab XL": { description: "Expanded Future Audio Workshop sub-bass workstation with Super Oscillator, dual LFOs, analog filter, and expanded FX engine.", year: 2022 },
 };
 
 export const getPluginInfo = (name: string, type: string) => {

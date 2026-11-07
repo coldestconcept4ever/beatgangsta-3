@@ -5416,7 +5416,9 @@ MIDI Export: Include downloadable formatted MIDI ZIPs with section bar lengths.`
         finalGenerationContext = finalGenerationContext + (finalGenerationContext ? "\n\n" : "") + `CRITICAL LUNA DIRECTIVE: The user has enabled ${lunaTape.toUpperCase()} TAPE. You MUST include specific settings for the ${lunaTape === 'oxide' ? 'Oxide Tape' : 'Studer A800'} extension on the tracks and busses. Do not ignore this.`;
       }
     }
-      const response = await getBeatRecommendations(plugins, analogInstruments, analogHardware, drumKits, excludeAnalog, dawType, starredPlugins, isGangstaVox, i18n.language, isMultiBandMode, generationBPM, finalGenerationContext, isJsfxMode, installedJsfxPacks, xpandPresets);
+      const response = (inputMode === 'search' && searchQuery.trim())
+        ? await getSongBeatRecommendations(plugins, searchQuery.trim(), analogInstruments, analogHardware, drumKits, excludeAnalog, dawType, starredPlugins, isGangstaVox, i18n.language, isMultiBandMode, generationBPM, finalGenerationContext, isJsfxMode, installedJsfxPacks, xpandPresets, isExactDuplicate)
+        : await getBeatRecommendations(plugins, analogInstruments, analogHardware, drumKits, excludeAnalog, dawType, starredPlugins, isGangstaVox, i18n.language, isMultiBandMode, generationBPM, finalGenerationContext, isJsfxMode, installedJsfxPacks, xpandPresets);
       clearInterval(progressInterval);
       setGenerationProgress(100);
       clearTimeout(timeoutId);
@@ -5426,7 +5428,7 @@ MIDI Export: Include downloadable formatted MIDI ZIPs with section bar lengths.`
         generatedAt: new Date().toISOString()
       }));
       setHistory(prev => [...newHistory, ...prev].slice(0, 50));
-      logReceipt('Generate Beat Recipe', 10);
+      logReceipt(inputMode === 'search' ? (isExactDuplicate ? '1:1 Remake' : 'Song Search') : 'Generate Beat Recipe', 10);
       setShowFairy(true);
     } catch (err: any) {
       clearInterval(progressInterval);
