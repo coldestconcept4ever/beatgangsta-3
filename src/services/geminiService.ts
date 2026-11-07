@@ -29,6 +29,7 @@ export enum ThinkingLevel {
   LOW = "LOW",
   MINIMAL = "MINIMAL" }
 import { VSTPlugin, RecommendationResponse, BeatRecipe, SavedRecipe, Hardware, StructuralBlueprint, XpandPreset, MidiNote, DrumPattern } from "../types";
+import { findExactSongData } from "../data/exactSongDatabase";
 import { fetchWithDetailedError } from "../lib/api";
 import { keepAlive } from "../lib/keepAlive";
 import { getVendorSpecificParameters, normalizeParameterName } from "../utils/pluginUtils";
@@ -1163,121 +1164,61 @@ export const resolveStarredPlugins = (starredPlugins: string[], availablePlugins
 
 export function enrichExact1to1Midi(recipe: BeatRecipe) {
   if (!recipe) return;
-  const isBetterOffAlone = (recipe.title && recipe.title.toLowerCase().includes('better off alone')) ||
-                           (recipe.description && recipe.description.toLowerCase().includes('better off alone')) ||
-                           (recipe.style && recipe.style.toLowerCase().includes('alice deejay'));
+  const match = findExactSongData(recipe.title || '') ||
+                findExactSongData(recipe.description || '') ||
+                findExactSongData(recipe.style || '');
 
-  if (isBetterOffAlone) {
-    recipe.bpm = 137;
-    recipe.recommendedScale = 'G# Minor';
-    recipe.chordProgression = 'E Major -> D# Minor -> G# Minor -> F# Major (VI - v - i - VII)';
+  if (match) {
+    recipe.bpm = match.exactBpm;
+    recipe.recommendedScale = match.keyScale;
+    recipe.chordProgression = match.chordProgression;
+    if (match.songBreakdown) {
+      recipe.songBreakdown = match.songBreakdown;
+    }
+    if (match.detectedSectionLengths) {
+      recipe.detectedSectionLengths = match.detectedSectionLengths;
+    }
 
-    // Exact Lead Synth 4-bar 16th arpeggio notes (64 total 16th steps, continuous 16th notes => wait: '0')
-    const leadPitches: string[] = [
-      // Bar 1 (over E Major)
-      'G#4', 'B4', 'D#5', 'G#5', 'F#5', 'E5', 'D#5', 'B4', 'G#4', 'B4', 'D#5', 'G#5', 'F#5', 'E5', 'D#5', 'B4',
-      // Bar 2 (over D# Minor)
-      'F#4', 'A#4', 'D#5', 'F#5', 'E5', 'D#5', 'C#5', 'A#4', 'F#4', 'A#4', 'D#5', 'F#5', 'E5', 'D#5', 'C#5', 'A#4',
-      // Bar 3 (over G# Minor)
-      'G#4', 'B4', 'D#5', 'G#5', 'F#5', 'E5', 'D#5', 'B4', 'G#4', 'B4', 'D#5', 'G#5', 'F#5', 'E5', 'D#5', 'B4',
-      // Bar 4 (over F# Major)
-      'F#4', 'A#4', 'C#5', 'F#5', 'E5', 'D#5', 'C#5', 'A#4', 'F#4', 'A#4', 'C#5', 'F#5', 'E5', 'D#5', 'C#5', 'A#4'
-    ];
-
-    const leadNotesHook: MidiNote[] = leadPitches.map((pitch, idx) => ({
-      pitch,
-      duration: '16n',
-      wait: '0',
-      velocity: idx % 4 === 0 ? 118 : idx % 2 === 0 ? 110 : 102
-    }));
-
-    // Rolling Trance Bass Notes (64 total 16th steps: 16x E1, 16x D#1, 16x G#1, 16x F#1 => wait: '0')
-    const bassPitches: string[] = [
-      ...Array(16).fill('E1'),
-      ...Array(16).fill('D#1'),
-      ...Array(16).fill('G#1'),
-      ...Array(16).fill('F#1')
-    ];
-
-    const bassNotesHook: MidiNote[] = bassPitches.map((pitch, idx) => ({
-      pitch,
-      duration: '16n',
-      wait: '0',
-      velocity: idx % 2 === 0 ? 118 : 105
-    }));
-
-    // Sustained Pad Chords (4 bars: E Major -> D# Minor -> G# Minor -> F# Major)
-    const padNotesHook: MidiNote[] = [
-      // Bar 1: E Major (E3, G#3, B3)
-      { pitch: 'E3, G#3, B3', duration: '1m', wait: '0', velocity: 90 },
-      // Bar 2: D# Minor (D#3, F#3, A#3)
-      { pitch: 'D#3, F#3, A#3', duration: '1m', wait: '0', velocity: 90 },
-      // Bar 3: G# Minor (G#3, B3, D#4)
-      { pitch: 'G#3, B3, D#4', duration: '1m', wait: '0', velocity: 90 },
-      // Bar 4: F# Major (F#3, A#3, C#4)
-      { pitch: 'F#3, A#3, C#4', duration: '1m', wait: '0', velocity: 90 }
-    ];
-
-    if (Array.isArray(recipe.instruments)) {
+    if (match.stems.lead && Array.isArray(recipe.instruments)) {
       recipe.instruments.forEach(inst => {
         const lower = inst.name.toLowerCase();
-        if (lower.includes('lead')) {
+        if (lower.includes('lead') && match.stems.lead) {
           inst.midiNotes = {
-            intro: leadNotesHook,
-            verse: leadNotesHook,
-            hook: leadNotesHook,
-            bridge: leadNotesHook,
-            outro: leadNotesHook
+            intro: match.stems.lead.notes,
+            verse: match.stems.lead.notes,
+            hook: match.stems.lead.notes,
+            bridge: match.stems.lead.notes,
+            outro: match.stems.lead.notes
           };
-        } else if (lower.includes('bass') || lower.includes('sub')) {
+        } else if ((lower.includes('bass') || lower.includes('sub')) && match.stems.bass) {
           inst.midiNotes = {
-            intro: bassNotesHook,
-            verse: bassNotesHook,
-            hook: bassNotesHook,
-            bridge: bassNotesHook,
-            outro: bassNotesHook
+            intro: match.stems.bass.notes,
+            verse: match.stems.bass.notes,
+            hook: match.stems.bass.notes,
+            bridge: match.stems.bass.notes,
+            outro: match.stems.bass.notes
           };
-        } else if (lower.includes('pad') || lower.includes('chord') || lower.includes('synth')) {
+        } else if ((lower.includes('pad') || lower.includes('chord') || lower.includes('synth')) && match.stems.pad) {
           inst.midiNotes = {
-            intro: padNotesHook,
-            verse: padNotesHook,
-            hook: padNotesHook,
-            bridge: padNotesHook,
-            outro: padNotesHook
+            intro: match.stems.pad.notes,
+            verse: match.stems.pad.notes,
+            hook: match.stems.pad.notes,
+            bridge: match.stems.pad.notes,
+            outro: match.stems.pad.notes
           };
         }
       });
     }
 
-    // Four-on-the-floor 909 Drum Pattern (64 steps = 4 bars)
-    const kickSteps: number[] = [];
-    const openHatSteps: number[] = [];
-    const clapSteps: number[] = [];
-    const hiHatSteps: number[] = [];
-
-    for (let step = 1; step <= 64; step++) {
-      hiHatSteps.push(step);
-      if ((step - 1) % 4 === 0) kickSteps.push(step); // 1, 5, 9, 13...
-      if ((step - 3) % 4 === 0) openHatSteps.push(step); // 3, 7, 11, 15... (offbeat)
-      if ((step - 5) % 8 === 0) clapSteps.push(step); // 5, 13, 21, 29... (beats 2 & 4)
+    if (match.drumPattern) {
+      recipe.drumPatterns = {
+        intro: match.drumPattern,
+        verse: match.drumPattern,
+        hook: match.drumPattern,
+        bridge: match.drumPattern,
+        outro: match.drumPattern
+      };
     }
-
-    const tr909Pattern: DrumPattern = {
-      kick: { isDoubleTime: false, steps: kickSteps },
-      snare: { isClap: true, isDoubleTime: false, steps: clapSteps },
-      hiHat: { isDoubleTime: false, steps: hiHatSteps },
-      openHat: { steps: openHatSteps },
-      velocityHumanized: false,
-      swing: { kick: 0, snare: 0, hiHat: 0 }
-    };
-
-    recipe.drumPatterns = {
-      intro: tr909Pattern,
-      verse: tr909Pattern,
-      hook: tr909Pattern,
-      bridge: tr909Pattern,
-      outro: tr909Pattern
-    };
   }
 }
 

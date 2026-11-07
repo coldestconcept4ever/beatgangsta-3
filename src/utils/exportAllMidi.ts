@@ -62,9 +62,18 @@ export const generateIndividualMidiFiles = async (recipe: BeatRecipe): Promise<{
   return files;
 };
 
-export const generateAllMidiZip = async (recipe: BeatRecipe, dawType?: string | null): Promise<Blob> => {
+export const generateAllMidiZip = async (recipe: BeatRecipe, dawType?: string | null, stemWavs?: Record<string, Blob>): Promise<Blob> => {
   const JSZip = await getJSZip();
   const zip = new JSZip();
+
+  if (stemWavs) {
+    const audioFolder = zip.folder("Audio_Stems_WAV");
+    if (audioFolder) {
+      Object.entries(stemWavs).forEach(([filename, blob]) => {
+        audioFolder.file(filename, blob);
+      });
+    }
+  }
   const bpm = recipe.bpm || 120;
   const safeTitle = recipe.title.replace(/[^a-z0-9]/gi, '_').toLowerCase();
   const calculatedBars = recipe.totalBars || (recipe.audioDuration && recipe.bpm ? Math.ceil((recipe.audioDuration * recipe.bpm) / 240) : undefined);

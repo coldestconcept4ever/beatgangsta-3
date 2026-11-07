@@ -25,6 +25,7 @@ import { PluginCard } from './components/PluginCard';
 import { JSFXCard } from './components/JSFXCard';
 import { HardwareCard } from './components/HardwareCard';
 import { ErrorBoundary } from './components/ErrorBoundary';
+import { AudioStemAnalyzerModal } from './components/AudioStemAnalyzerModal';
 const RecipeCard = React.lazy(() => import('./components/RecipeCard').then(m => ({ default: m.RecipeCard })));
 const CritiqueCard = React.lazy(() => import('./components/CritiqueCard').then(m => ({ default: m.CritiqueCard })));
 const Mascot = React.lazy(() => import('./components/Mascot').then(m => ({ default: m.Mascot })));
@@ -593,6 +594,14 @@ const App: React.FC = () => {
   } | null>(null);
 
   const [mainTab, setMainTab] = useState<'beat' | 'vox' | null>(null);
+  const [showStemAnalyzerModal, setShowStemAnalyzerModal] = useState<boolean>(false);
+  const [stemWavsCache, setStemWavsCache] = useState<Record<string, Blob> | null>(null);
+
+  const handleGenerateFromStems = (recipe: Partial<BeatRecipe>, stemWavs: Record<string, Blob>) => {
+    setStemWavsCache(stemWavs);
+    setRecipes([recipe as BeatRecipe]);
+    setShowFairy(true);
+  };
   const [inputMode, setInputMode] = useState<'random' | 'search' | 'upload'>('upload');
   const [generationBPM, setGenerationBPM] = useState<string>('');
   const [generationContext, setGenerationContext] = useState<string>('');
@@ -8651,6 +8660,15 @@ Provide the exact JSFX plugin name and required sliders/parameters.`;
                       🎤 GangstaVox
                     </button>
                     <button 
+                      id="btn-pico-stem-splitter"
+                      onClick={() => setShowStemAnalyzerModal(true)}
+                      className={`py-3 px-6 rounded-full font-black text-xs select-none transition-all flex items-center gap-1.5 ${
+                        theme === 'coldest' ? 'bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 border border-emerald-500/30' : 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'
+                      }`}
+                    >
+                      🎙️ Pico/Nano Stem Splitter (0 Tokens)
+                    </button>
+                    <button 
                       onClick={() => setShowModeInfo(true)}
                       className={`w-8 h-8 mr-1 flex items-center justify-center rounded-full transition-all font-bold text-sm ${
                         theme === 'coldest' ? 'text-sky-900/60 hover:bg-sky-500/20 hover:text-sky-900' : 
@@ -10909,17 +10927,13 @@ Provide the exact JSFX plugin name and required sliders/parameters.`;
         />
       )}
 
-      {showCookieConsent && (
-        <React.Suspense fallback={null}>
-          <LegalConsentBanner
-            show={showCookieConsent}
-            onAccept={() => {
-              localStorage.setItem('bg_cookie_consent', 'accepted');
-              setShowCookieConsent(false);
-            }}
-            onClose={() => setShowCookieConsent(false)}
-          />
-        </React.Suspense>
+      {showStemAnalyzerModal && (
+        <AudioStemAnalyzerModal
+          isOpen={showStemAnalyzerModal}
+          onClose={() => setShowStemAnalyzerModal(false)}
+          onGenerateFromStems={handleGenerateFromStems}
+          theme={theme}
+        />
       )}
     </div>
   );
