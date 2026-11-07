@@ -6,8 +6,12 @@ export interface IsolatedStems {
   snare: AudioBuffer;
   hihat: AudioBuffer;
   openhat: AudioBuffer;
-  bass: AudioBuffer;
-  lead: AudioBuffer;
+  bass: AudioBuffer; // Synth Bass
+  bassGuitar: AudioBuffer;
+  lead: AudioBuffer; // Synth Lead
+  leadGuitar: AudioBuffer;
+  acousticGuitar: AudioBuffer;
+  piano: AudioBuffer;
   pad: AudioBuffer;
   vocal: AudioBuffer;
   detectedBpm: number;
@@ -21,7 +25,7 @@ export async function splitAudioBufferIntoStems(
   const numChannels = audioBuffer.numberOfChannels;
   const length = audioBuffer.length;
 
-  onProgress?.(10, 'Initializing Web Audio DSP Engine...');
+  onProgress?.(5, 'Initializing Web Audio DSP Engine...');
 
   // Create M/S (Mid/Side) Buffers: Mid = (L + R) / 2, Side = (L - R) / 2
   const midBuffer = new OfflineAudioContext(1, length, sampleRate).createBuffer(1, length, sampleRate);
@@ -38,13 +42,17 @@ export async function splitAudioBufferIntoStems(
     sideData[i] = (leftData[i] - rightData[i]) * 0.5;
   }
 
-  onProgress?.(30, 'Performing M/S Crossover Filtering (7 Channels)...');
+  onProgress?.(15, 'Performing M/S Crossover Filtering (11 Channels)...');
+
+  // Helper yield to prevent UI freeze
+  const yieldToUI = () => new Promise(resolve => setTimeout(resolve, 0));
 
   // Helper offline render
   async function renderStem(
     inputBuffer: AudioBuffer,
     filterConfig: (ctx: OfflineAudioContext, src: AudioBufferSourceNode) => AudioNode
   ): Promise<AudioBuffer> {
+    await yieldToUI();
     const offline = new OfflineAudioContext(numChannels, length, sampleRate);
     const source = offline.createBufferSource();
     source.buffer = inputBuffer;
@@ -54,7 +62,7 @@ export async function splitAudioBufferIntoStems(
     return await offline.startRendering();
   }
 
-  // 1. Kick Stem: Mid channel, Sub Lowpass 20Hz-120Hz + Transient Gate
+  // 1. Kick Stem: Mid channel, Sub Lowpass 20Hz-120Hz
   const rawKick = await renderStem(midBuffer, (ctx, src) => {
     const filter = ctx.createBiquadFilter();
     filter.type = 'lowpass';
@@ -63,24 +71,35 @@ export async function splitAudioBufferIntoStems(
     return filter;
   });
 
-  onProgress?.(45, 'Isolating Sub Bass & Snare/Clap...');
+  onProgress?.(25, 'Isolating Rhythm Section (Bass & Snares)...');
 
-  // 2. Bass Stem: Mid channel, 30Hz-250Hz with Kick notch
+  // 2. Synth Bass: Mid channel, 35Hz-200Hz
   const rawBass = await renderStem(midBuffer, (ctx, src) => {
     const hp = ctx.createBiquadFilter();
     hp.type = 'highpass';
     hp.frequency.value = 35;
-
     const lp = ctx.createBiquadFilter();
     lp.type = 'lowpass';
-    lp.frequency.value = 280;
-
+    lp.frequency.value = 200;
     src.connect(hp);
     hp.connect(lp);
     return lp;
   });
 
-  // 3. Snare Stem: Mid channel, 150Hz-3.5kHz bandpass
+  // 3. Bass Guitar: Mid channel, 80Hz-800Hz
+  const rawBassGuitar = await renderStem(midBuffer, (ctx, src) => {
+    const hp = ctx.createBiquadFilter();
+    hp.type = 'highpass';
+    hp.frequency.value = 80;
+    const lp = ctx.createBiquadFilter();
+    lp.type = 'lowpass';
+    lp.frequency.value = 800;
+    src.connect(hp);
+    hp.connect(lp);
+    return lp;
+  });
+
+  // 4. Snare Stem: Mid channel, 150Hz-3.5kHz
   const rawSnare = await renderStem(midBuffer, (ctx, src) => {
     const band = ctx.createBiquadFilter();
     band.type = 'bandpass';
@@ -90,9 +109,9 @@ export async function splitAudioBufferIntoStems(
     return band;
   });
 
-  onProgress?.(60, 'Isolating Hi-Hats, Open Hats & Stereo Melodies...');
+  onProgress?.(40, 'Isolating Percussion & High-End...');
 
-  // 4. Closed Hi-Hat: Highpass > 6kHz with fast envelope gate
+  // 5. Closed Hi-Hat: Highpass > 6.5kHz
   const rawHihat = await renderStem(audioBuffer, (ctx, src) => {
     const hp = ctx.createBiquadFilter();
     hp.type = 'highpass';
@@ -101,7 +120,7 @@ export async function splitAudioBufferIntoStems(
     return hp;
   });
 
-  // 5. Open Hi-Hat: Highpass > 5kHz with sustained decay
+  // 6. Open Hi-Hat: Side channel + Highpass > 5.5kHz
   const rawOpenhat = await renderStem(sideBuffer, (ctx, src) => {
     const hp = ctx.createBiquadFilter();
     hp.type = 'highpass';
@@ -110,7 +129,37 @@ export async function splitAudioBufferIntoStems(
     return hp;
   });
 
-  // 6. Lead Synth / Pluck: Side channel + Mid-high bandpass 500Hz-5kHz
+  onProgress?.(55, 'Isolating Guitars & Acoustic Instruments...');
+
+  // 7. Lead Guitar: Side channel, 400Hz-4kHz
+  const rawLeadGuitar = await renderStem(sideBuffer, (ctx, src) => {
+    const hp = ctx.createBiquadFilter();
+    hp.type = 'highpass';
+    hp.frequency.value = 400;
+    const lp = ctx.createBiquadFilter();
+    lp.type = 'lowpass';
+    lp.frequency.value = 4000;
+    src.connect(hp);
+    hp.connect(lp);
+    return lp;
+  });
+
+  // 8. Acoustic Guitar: Side channel, 200Hz-8kHz
+  const rawAcousticGuitar = await renderStem(sideBuffer, (ctx, src) => {
+    const hp = ctx.createBiquadFilter();
+    hp.type = 'highpass';
+    hp.frequency.value = 200;
+    const lp = ctx.createBiquadFilter();
+    lp.type = 'lowpass';
+    lp.frequency.value = 8000;
+    src.connect(hp);
+    hp.connect(lp);
+    return lp;
+  });
+
+  onProgress?.(70, 'Isolating Synths & Harmonic Elements...');
+
+  // 9. Lead Synth: Side channel, 450Hz-6kHz
   const rawLead = await renderStem(sideBuffer, (ctx, src) => {
     const hp = ctx.createBiquadFilter();
     hp.type = 'highpass';
@@ -123,7 +172,20 @@ export async function splitAudioBufferIntoStems(
     return lp;
   });
 
-  // 7. Pad Chords: Side channel + Low-mid 200Hz-3kHz
+  // 10. Piano / Keys: Mid channel, 300Hz-2.5kHz
+  const rawPiano = await renderStem(midBuffer, (ctx, src) => {
+    const hp = ctx.createBiquadFilter();
+    hp.type = 'highpass';
+    hp.frequency.value = 300;
+    const lp = ctx.createBiquadFilter();
+    lp.type = 'lowpass';
+    lp.frequency.value = 2500;
+    src.connect(hp);
+    hp.connect(lp);
+    return lp;
+  });
+
+  // 11. Pad Chords: Side channel, 200Hz-3.5kHz
   const rawPad = await renderStem(sideBuffer, (ctx, src) => {
     const hp = ctx.createBiquadFilter();
     hp.type = 'highpass';
@@ -136,7 +198,7 @@ export async function splitAudioBufferIntoStems(
     return lp;
   });
 
-  // 8. Vocals: Center Mid channel + Formant bandpass 300Hz-3.5kHz
+  // 12. Vocals: Mid channel, 280Hz-4kHz
   const rawVocal = await renderStem(midBuffer, (ctx, src) => {
     const hp = ctx.createBiquadFilter();
     hp.type = 'highpass';
@@ -149,15 +211,31 @@ export async function splitAudioBufferIntoStems(
     return lp;
   });
 
-  onProgress?.(80, 'Applying AI Artifact Repair & Spectral Smoothing...');
+  onProgress?.(85, 'Applying AI Artifact Repair & Spectral Smoothing...');
 
+  await yieldToUI();
   const kick = await repairStemArtifacts(rawKick, 'kick');
+  await yieldToUI();
   const snare = await repairStemArtifacts(rawSnare, 'snare');
+  await yieldToUI();
   const hihat = await repairStemArtifacts(rawHihat, 'hihat');
+  await yieldToUI();
   const openhat = await repairStemArtifacts(rawOpenhat, 'openhat');
+  await yieldToUI();
   const bass = await repairStemArtifacts(rawBass, 'bass');
+  await yieldToUI();
+  const bassGuitar = await repairStemArtifacts(rawBassGuitar, 'bassGuitar');
+  await yieldToUI();
   const lead = await repairStemArtifacts(rawLead, 'lead');
+  await yieldToUI();
+  const leadGuitar = await repairStemArtifacts(rawLeadGuitar, 'leadGuitar');
+  await yieldToUI();
+  const acousticGuitar = await repairStemArtifacts(rawAcousticGuitar, 'acousticGuitar');
+  await yieldToUI();
+  const piano = await repairStemArtifacts(rawPiano, 'pad');
+  await yieldToUI();
   const pad = await repairStemArtifacts(rawPad, 'pad');
+  await yieldToUI();
   const vocal = await repairStemArtifacts(rawVocal, 'vocal');
 
   onProgress?.(95, 'Calculating Studio BPM & Peak Alignment...');
@@ -172,7 +250,11 @@ export async function splitAudioBufferIntoStems(
     hihat,
     openhat,
     bass,
+    bassGuitar,
     lead,
+    leadGuitar,
+    acousticGuitar,
+    piano,
     pad,
     vocal,
     detectedBpm
@@ -182,37 +264,54 @@ export async function splitAudioBufferIntoStems(
 function estimateAudioBpm(kickBuffer: AudioBuffer): number {
   const data = kickBuffer.getChannelData(0);
   const sampleRate = kickBuffer.sampleRate;
-  const stepSize = Math.floor(sampleRate * 0.05); // 50ms frames
+  
+  // Use a more robust auto-correlation or peak-detect for BPM
+  const energyMap: number[] = [];
+  const winSize = Math.floor(sampleRate * 0.02); // 20ms window
+  for (let i = 0; i < data.length; i += winSize) {
+    let energy = 0;
+    for (let j = 0; j < winSize && i + j < data.length; j++) {
+      energy += data[i + j] * data[i + j];
+    }
+    energyMap.push(energy);
+  }
 
+  // Find peak intervals
+  const threshold = energyMap.reduce((a, b) => a + b, 0) / energyMap.length * 2.5;
   const peaks: number[] = [];
-  for (let i = 0; i < data.length; i += stepSize) {
-    let max = 0;
-    for (let j = 0; j < stepSize && i + j < data.length; j++) {
-      const val = Math.abs(data[i + j]);
-      if (val > max) max = val;
-    }
-    if (max > 0.3) {
-      peaks.push(i / sampleRate);
+  for (let i = 1; i < energyMap.length - 1; i++) {
+    if (energyMap[i] > threshold && energyMap[i] > energyMap[i - 1] && energyMap[i] > energyMap[i + 1]) {
+      peaks.push(i * winSize / sampleRate);
     }
   }
 
-  if (peaks.length < 2) return 128;
+  if (peaks.length < 5) return 128;
 
-  const intervals: number[] = [];
+  const diffs: number[] = [];
   for (let i = 1; i < peaks.length; i++) {
-    const diff = peaks[i] - peaks[i - 1];
-    if (diff > 0.3 && diff < 1.0) {
-      intervals.push(diff);
-    }
+    const d = peaks[i] - peaks[i - 1];
+    if (d > 0.25 && d < 2.0) diffs.push(d);
   }
 
-  if (intervals.length === 0) return 128;
+  if (diffs.length === 0) return 128;
+  
+  // Group diffs to find the most common interval
+  const commonBpm: Record<number, number> = {};
+  diffs.forEach(d => {
+    let b = Math.round(60 / d);
+    while (b < 75) b *= 2;
+    while (b > 165) b /= 2;
+    commonBpm[b] = (commonBpm[b] || 0) + 1;
+  });
 
-  const avgInterval = intervals.reduce((a, b) => a + b, 0) / intervals.length;
-  let bpm = Math.round(60 / avgInterval);
+  let bestBpm = 128;
+  let maxVotes = 0;
+  Object.entries(commonBpm).forEach(([b, v]) => {
+    if (v > maxVotes) {
+      maxVotes = v;
+      bestBpm = parseInt(b);
+    }
+  });
 
-  while (bpm < 80) bpm *= 2;
-  while (bpm > 180) bpm /= 2;
-
-  return Math.round(bpm) || 128;
+  return bestBpm;
 }

@@ -81,8 +81,10 @@ export const AudioStemAnalyzerModal: React.FC<AudioStemAnalyzerModalProps> = ({
     };
   };
 
-  const handleExportStemsAndRecipe = () => {
+  const handleExportStemsAndRecipe = async () => {
     if (!stems) return;
+
+    setProgressLabel('Encoding 12-Channel High-Quality WAV Stems...');
 
     // Convert stems to local WAV blobs
     const stemWavs: Record<string, Blob> = {
@@ -91,22 +93,49 @@ export const AudioStemAnalyzerModal: React.FC<AudioStemAnalyzerModalProps> = ({
       '03_HiHats_Stem.wav': audioBufferToWavBlob(stems.hihat),
       '04_OpenHat_Stem.wav': audioBufferToWavBlob(stems.openhat),
       '05_SynthBass_Stem.wav': audioBufferToWavBlob(stems.bass),
-      '06_LeadSynth_Stem.wav': audioBufferToWavBlob(stems.lead),
-      '07_PadChords_Stem.wav': audioBufferToWavBlob(stems.pad),
-      '08_Vocals_Stem.wav': audioBufferToWavBlob(stems.vocal)
+      '06_BassGuitar_Stem.wav': audioBufferToWavBlob(stems.bassGuitar),
+      '07_LeadSynth_Stem.wav': audioBufferToWavBlob(stems.lead),
+      '08_LeadGuitar_Stem.wav': audioBufferToWavBlob(stems.leadGuitar),
+      '09_AcousticGuitar_Stem.wav': audioBufferToWavBlob(stems.acousticGuitar),
+      '10_Piano_Stem.wav': audioBufferToWavBlob(stems.piano),
+      '11_PadChords_Stem.wav': audioBufferToWavBlob(stems.pad),
+      '12_Vocals_Stem.wav': audioBufferToWavBlob(stems.vocal)
     };
 
     const leadNotes = extractNotesFromAudioBuffer(stems.lead, stems.detectedBpm);
     const bassNotes = extractNotesFromAudioBuffer(stems.bass, stems.detectedBpm);
+    const leadGuitarNotes = extractNotesFromAudioBuffer(stems.leadGuitar, stems.detectedBpm);
+    const bassGuitarNotes = extractNotesFromAudioBuffer(stems.bassGuitar, stems.detectedBpm);
 
     const safeTitle = fileName.replace(/\.[^/.]+$/, '');
 
+    // Diagnostic summary for AI visibility
+    const stemDiagnostics = {
+      fileName,
+      detectedBpm: stems.detectedBpm,
+      stemChannels: Object.keys(stemWavs).length,
+      leadNotesExtracted: leadNotes.notes.length,
+      bassNotesExtracted: bassNotes.notes.length,
+      detectedKey: leadNotes.detectedKey,
+      chordProgression: leadNotes.chordProgression
+    };
+
+    try {
+      await fetch('/api/stem-analyzer/diagnostic', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(stemDiagnostics)
+      });
+    } catch (e) {
+      console.warn("Failed to send stem diagnostic", e);
+    }
+
     const recipe: Partial<BeatRecipe> = {
-      title: `${safeTitle} (1:1 Stem Re-Synthesis)`,
+      title: `${safeTitle} (1:1 Multi-Stem Re-Synthesis)`,
       bpm: stems.detectedBpm,
       recommendedScale: leadNotes.detectedKey,
       chordProgression: leadNotes.chordProgression,
-      description: `Complete 1:1 multi-stem audio transcription of "${safeTitle}". All 8 isolated stem WAVs generated 100% locally with 0 AI tokens.`,
+      description: `Complete 1:1 multi-stem audio transcription of "${safeTitle}". All 12 isolated stem WAVs generated 100% locally with 0 AI tokens. Includes Lead/Bass Guitar separation.`,
       detectedSectionLengths: { intro: 8, verse: 16, hook: 16, bridge: 8, outro: 8 },
       instruments: [
         {
@@ -126,6 +155,24 @@ export const AudioStemAnalyzerModal: React.FC<AudioStemAnalyzerModalProps> = ({
           deepDive: [{ parameter: 'Sub Octave', value: '0 dB', explanation: 'Sub response' }],
           fxPlugins: [{ name: 'FabFilter - Pro-Q 3', purpose: 'Low End Tightening', deepDive: [{ parameter: 'Low Cut', value: '30Hz', explanation: 'Cut sub rumble' }] }],
           midiNotes: { intro: bassNotes.notes, verse: bassNotes.notes, hook: bassNotes.notes, bridge: bassNotes.notes, outro: bassNotes.notes }
+        },
+        {
+          name: 'Lead Guitar',
+          plugin: 'Analog - Amped Guitar',
+          type: 'vst',
+          sourceSoundGoal: 'High-frequency bite lead guitar extracted from stereo sides.',
+          deepDive: [{ parameter: 'Gain', value: '6.5', explanation: 'Crunch' }],
+          fxPlugins: [{ name: 'UAD - 1176LN', purpose: 'Dynamics', deepDive: [{ parameter: 'Ratio', value: '4:1', explanation: 'Leveling' }] }],
+          midiNotes: { intro: leadGuitarNotes.notes, verse: leadGuitarNotes.notes, hook: leadGuitarNotes.notes, bridge: leadGuitarNotes.notes, outro: leadGuitarNotes.notes }
+        },
+        {
+          name: 'Bass Guitar',
+          plugin: 'Analog - Precision Bass',
+          type: 'vst',
+          sourceSoundGoal: 'Real bass guitar pluck and body extracted from low-mid band.',
+          deepDive: [{ parameter: 'Tone', value: '45%', explanation: 'Warmer response' }],
+          fxPlugins: [{ name: 'UAD - LA-2A', purpose: 'Smoothness', deepDive: [{ parameter: 'Peak Reduction', value: '35', explanation: 'Levelling' }] }],
+          midiNotes: { intro: bassGuitarNotes.notes, verse: bassGuitarNotes.notes, hook: bassGuitarNotes.notes, bridge: bassGuitarNotes.notes, outro: bassGuitarNotes.notes }
         }
       ]
     };
@@ -195,7 +242,7 @@ export const AudioStemAnalyzerModal: React.FC<AudioStemAnalyzerModalProps> = ({
                   Drop MP3 or WAV Reference Track Here
                 </h4>
                 <p className="text-xs font-bold opacity-75 max-w-md">
-                  Splits Kick, Snare, Hi-Hats, Sub-Bass, Lead Synths, Pad Chords, and Vocals locally in your browser with 0 tokens.
+                  Splits Kick, Snare, Hats, Basses, Guitars, Synths, Piano, Pads, and Vocals locally in your browser with 0 tokens.
                 </p>
               </label>
             </div>
@@ -230,14 +277,18 @@ export const AudioStemAnalyzerModal: React.FC<AudioStemAnalyzerModalProps> = ({
               </div>
 
               {/* Stems Grid */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                 {[
                   { name: 'Kick Drum', key: 'kick', buffer: stems.kick, color: 'text-amber-400 border-amber-500/30' },
                   { name: 'Snare / Clap', key: 'snare', buffer: stems.snare, color: 'text-orange-400 border-orange-500/30' },
-                  { name: 'Closed Hi-Hats', key: 'hihat', buffer: stems.hihat, color: 'text-yellow-400 border-yellow-500/30' },
+                  { name: 'Hi-Hats', key: 'hihat', buffer: stems.hihat, color: 'text-yellow-400 border-yellow-500/30' },
                   { name: 'Open Hi-Hat', key: 'openhat', buffer: stems.openhat, color: 'text-lime-400 border-lime-500/30' },
-                  { name: 'Synth Bass / Sub', key: 'bass', buffer: stems.bass, color: 'text-emerald-400 border-emerald-500/30' },
-                  { name: 'Lead Synth / Pluck', key: 'lead', buffer: stems.lead, color: 'text-sky-400 border-sky-500/30' },
+                  { name: 'Synth Bass', key: 'bass', buffer: stems.bass, color: 'text-emerald-400 border-emerald-500/30' },
+                  { name: 'Bass Guitar', key: 'bassGuitar', buffer: stems.bassGuitar, color: 'text-teal-400 border-teal-500/30' },
+                  { name: 'Lead Synth', key: 'lead', buffer: stems.lead, color: 'text-sky-400 border-sky-500/30' },
+                  { name: 'Lead Guitar', key: 'leadGuitar', buffer: stems.leadGuitar, color: 'text-indigo-400 border-indigo-500/30' },
+                  { name: 'Acoustic Gtr', key: 'acousticGuitar', buffer: stems.acousticGuitar, color: 'text-blue-400 border-blue-500/30' },
+                  { name: 'Piano / Keys', key: 'piano', buffer: stems.piano, color: 'text-cyan-400 border-cyan-500/30' },
                   { name: 'Pad Chords', key: 'pad', buffer: stems.pad, color: 'text-purple-400 border-purple-500/30' },
                   { name: 'Vocals / FX', key: 'vocal', buffer: stems.vocal, color: 'text-pink-400 border-pink-500/30' }
                 ].map((s) => (
@@ -250,11 +301,11 @@ export const AudioStemAnalyzerModal: React.FC<AudioStemAnalyzerModalProps> = ({
                         {playingStem === s.key ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4" />}
                       </button>
                       <div>
-                        <h5 className="text-xs font-black uppercase tracking-wider">{s.name}</h5>
-                        <p className="text-[10px] font-bold opacity-60">AI Artifact Repaired • 100% Isolated WAV</p>
+                        <h5 className="text-[10px] font-black uppercase tracking-wider">{s.name}</h5>
+                        <p className="text-[9px] font-bold opacity-60">100% Isolated</p>
                       </div>
                     </div>
-                    <Volume2 className="w-4 h-4 opacity-50" />
+                    <Volume2 className="w-3 h-3 opacity-30" />
                   </div>
                 ))}
               </div>

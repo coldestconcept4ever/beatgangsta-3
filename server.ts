@@ -5174,21 +5174,36 @@ if (process.env.NODE_ENV !== 'production') {
   });
 
   let lastGeneratedRecipeCache: any = null;
+  let lastStemDiagnostic: any = null;
 
   app.post("/api/last-generated-recipe/save", (req, res) => {
-    const { recipe, searchQuery, isExactDuplicate } = req.body || {};
+    const { recipe, searchQuery, isExactDuplicate, stemDiagnostics } = req.body || {};
     lastGeneratedRecipeCache = {
       recipe,
       searchQuery,
       isExactDuplicate,
+      stemDiagnostics,
       savedAt: new Date().toISOString()
     };
     console.log(`[RECIPE CACHE] Saved last generated recipe "${recipe?.title}" for query "${searchQuery}" (Exact: ${isExactDuplicate})`);
+    if (stemDiagnostics) console.log(`[STEM DIAGNOSTIC] Received processing stats: ${JSON.stringify(stemDiagnostics)}`);
     return res.json({ success: true });
   });
 
   app.get("/api/last-generated-recipe", (_req, res) => {
-    return res.json(lastGeneratedRecipeCache || { message: "No recipe generated yet in this session." });
+    return res.json({
+      recipe: lastGeneratedRecipeCache,
+      diagnostics: lastStemDiagnostic || lastGeneratedRecipeCache?.stemDiagnostics || "No stem diagnostics available."
+    });
+  });
+
+  app.post("/api/stem-analyzer/diagnostic", (req, res) => {
+    lastStemDiagnostic = {
+      ...req.body,
+      timestamp: new Date().toISOString()
+    };
+    console.log(`[STEM ANALYZER] New diagnostic entry:`, lastStemDiagnostic);
+    return res.json({ success: true });
   });
 
   app.post("/api/verify-turnstile", async (req, res) => {

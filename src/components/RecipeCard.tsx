@@ -40,11 +40,12 @@ interface RecipeCardProps {
   reaperSyncEmail?: string | null;
   isJsfxMode?: boolean;
   userEmail?: string | null;
+  stemWavs?: Record<string, Blob> | null;
 }
 
 import { PluginBubble } from './PluginBubble';
 // ...
-export const RecipeCard: React.FC<RecipeCardProps> = ({ recipe: initialRecipe, isSaved, onSave, theme = 'coldest', dawType, plugins = [], analogHardware = [], drumKits = [], onCloudBackupRecipe, geminiFileUri, onLogReceipt, onCorrectPlugin, onContactSupport, onMinimize, isMultiBandMode = false, reaperSyncPin, reaperSyncEmail, isJsfxMode = false, userEmail }) => {
+export const RecipeCard: React.FC<RecipeCardProps> = ({ recipe: initialRecipe, isSaved, onSave, theme = 'coldest', dawType, plugins = [], analogHardware = [], drumKits = [], onCloudBackupRecipe, geminiFileUri, onLogReceipt, onCorrectPlugin, onContactSupport, onMinimize, isMultiBandMode = false, reaperSyncPin, reaperSyncEmail, isJsfxMode = false, userEmail, stemWavs }) => {
   const { t, i18n } = useTranslation();
   const [recipe, setRecipe] = useState(initialRecipe);
   const [regeneratingPluginId, setRegeneratingPluginId] = useState<string | null>(null);
@@ -878,7 +879,7 @@ export const RecipeCard: React.FC<RecipeCardProps> = ({ recipe: initialRecipe, i
 
     try {
       setIsDownloadingAll(true);
-      const zipBlob = await generateAllMidiZip(recipe, dawType);
+      const zipBlob = await generateAllMidiZip(recipe, dawType, stemWavs || undefined);
       const downloadUrl = URL.createObjectURL(zipBlob);
       const link = document.createElement('a');
       link.href = downloadUrl;

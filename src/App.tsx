@@ -601,6 +601,21 @@ const App: React.FC = () => {
     setStemWavsCache(stemWavs);
     setRecipes([recipe as BeatRecipe]);
     setShowFairy(true);
+
+    // Save to server cache for AI visibility
+    fetch('/api/last-generated-recipe/save', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        recipe: recipe,
+        searchQuery: recipe.title,
+        isExactDuplicate: true,
+        stemDiagnostics: {
+          isStemResynthesis: true,
+          stemCount: Object.keys(stemWavs).length
+        }
+      })
+    }).catch(() => {});
   };
   const [inputMode, setInputMode] = useState<'random' | 'search' | 'upload'>('upload');
   const [generationBPM, setGenerationBPM] = useState<string>('');
@@ -10338,6 +10353,7 @@ Provide the exact JSFX plugin name and required sliders/parameters.`;
                           reaperSyncEmail={user?.email || localStorage.getItem('beatgangsta_sync_email')}
                           isJsfxMode={isJsfxMode}
                           userEmail={user?.email}
+                          stemWavs={stemWavsCache}
                         />
                       </ErrorBoundary>
                     </motion.div>

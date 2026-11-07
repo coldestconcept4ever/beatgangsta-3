@@ -69,9 +69,10 @@ export const generateAllMidiZip = async (recipe: BeatRecipe, dawType?: string | 
   if (stemWavs) {
     const audioFolder = zip.folder("Audio_Stems_WAV");
     if (audioFolder) {
-      Object.entries(stemWavs).forEach(([filename, blob]) => {
-        audioFolder.file(filename, blob);
-      });
+      for (const [filename, blob] of Object.entries(stemWavs)) {
+        const ab = await blob.arrayBuffer();
+        audioFolder.file(filename, ab);
+      }
     }
   }
   const bpm = recipe.bpm || 120;

@@ -10,7 +10,7 @@ export interface RepairOptions {
 
 export async function repairStemArtifacts(
   audioBuffer: AudioBuffer,
-  stemType: 'kick' | 'snare' | 'hihat' | 'openhat' | 'bass' | 'lead' | 'pad' | 'vocal',
+  stemType: 'kick' | 'snare' | 'hihat' | 'openhat' | 'bass' | 'bassGuitar' | 'lead' | 'leadGuitar' | 'acousticGuitar' | 'pad' | 'vocal',
   options: RepairOptions = {}
 ): Promise<AudioBuffer> {
   const noiseFloorDb = options.noiseFloorThresholdDb ?? -45;
@@ -60,32 +60,49 @@ export async function repairStemArtifacts(
     lastNode.connect(eqNode);
     eqNode.connect(compressor);
     lastNode = compressor;
-  } else if (stemType === 'bass') {
+  } else if (stemType === 'bass' || stemType === 'bassGuitar') {
     // Bass Stem Repair: Harmonic Overtone Filter + Sub Saturation
     const lowPass = offlineCtx.createBiquadFilter();
     lowPass.type = 'lowpass';
-    lowPass.frequency.value = 350;
+    lowPass.frequency.value = stemType === 'bassGuitar' ? 1200 : 350;
 
     const highPass = offlineCtx.createBiquadFilter();
     highPass.type = 'highpass';
-    highPass.frequency.value = 30;
+    highPass.frequency.value = 35;
 
-    lastNode.connect(highPass);
-    highPass.connect(lowPass);
+    // Bass Guitar "Pluck" Presence
+    if (stemType === 'bassGuitar') {
+      const presence = offlineCtx.createBiquadFilter();
+      presence.type = 'peaking';
+      presence.frequency.value = 800;
+      presence.gain.value = 3.0;
+      lastNode.connect(highPass);
+      highPass.connect(presence);
+      presence.connect(lowPass);
+    } else {
+      lastNode.connect(highPass);
+      highPass.connect(lowPass);
+    }
     lastNode = lowPass;
-  } else if (stemType === 'lead' || stemType === 'pad') {
+  } else if (stemType === 'lead' || stemType === 'leadGuitar' || stemType === 'acousticGuitar' || stemType === 'pad') {
     // Melodic Stem Repair: Spectral Masking Notch + High Shelf Air
     const highPass = offlineCtx.createBiquadFilter();
     highPass.type = 'highpass';
-    highPass.frequency.value = 200; // Cut low end bleed
+    highPass.frequency.value = stemType === 'pad' ? 150 : 200; // Cut low end bleed
+
+    const presence = offlineCtx.createBiquadFilter();
+    presence.type = 'peaking';
+    presence.frequency.value = stemType === 'leadGuitar' ? 2500 : 3500;
+    presence.gain.value = (stemType === 'leadGuitar' || stemType === 'lead') ? 2.0 : 0;
 
     const airBoost = offlineCtx.createBiquadFilter();
     airBoost.type = 'highshelf';
     airBoost.frequency.value = 8000;
-    airBoost.gain.value = 2.5;
+    airBoost.gain.value = stemType === 'acousticGuitar' ? 4.0 : 2.5;
 
     lastNode.connect(highPass);
-    highPass.connect(airBoost);
+    highPass.connect(presence);
+    presence.connect(airBoost);
     lastNode = airBoost;
   } else if (stemType === 'vocal') {
     // Vocal Stem Repair: Bandpass Formant Focus + De-Esser High Cut

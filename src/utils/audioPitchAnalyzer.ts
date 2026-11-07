@@ -83,45 +83,61 @@ export function extractNotesFromAudioBuffer(
   const stepDurationSec = 60 / (bpm * 4);
   const samplesPerStep = Math.floor(sampleRate * stepDurationSec);
 
-  const rawPitches: string[] = [];
+  const notes: MidiNote[] = [];
   const noteCounts: Record<string, number> = {};
 
+  // Process entire buffer in 16th note chunks
   for (let i = 0; i < data.length; i += samplesPerStep) {
     const chunk = data.slice(i, i + samplesPerStep);
-    if (chunk.length < samplesPerStep / 2) break;
+    if (chunk.length < samplesPerStep / 4) break;
 
-    const freq = yinPitchDetect(chunk, sampleRate);
-    if (freq > 50 && freq < 4000) {
+    // Use a slightly larger window for pitch detection to handle low frequencies
+    const pitchWindow = data.slice(i, i + samplesPerStep * 2);
+    const freq = yinPitchDetect(pitchWindow, sampleRate);
+    
+    // RMS check for silence
+    let rms = 0;
+    for(let j=0; j<chunk.length; j++) rms += chunk[j]*chunk[j];
+    rms = Math.sqrt(rms / chunk.length);
+
+    if (rms > 0.01 && freq > 30 && freq < 5000) {
       const note = freqToNoteName(freq);
-      rawPitches.push(note);
-      noteCounts[note] = (noteCounts[note] || 0) + 1;
+      
+      // If same as last note, we can just extend duration or add new note with 0 wait
+      // For simplicity in the recipe, we'll keep 16th notes
+      notes.push({
+        pitch: note,
+        duration: '16n',
+        wait: '0',
+        velocity: Math.min(127, Math.floor(rms * 400 + 40))
+      });
+      
+      const pc = note.replace(/[0-9]/g, '');
+      noteCounts[pc] = (noteCounts[pc] || 0) + 1;
     } else {
-      rawPitches.push(rawPitches.length > 0 ? rawPitches[rawPitches.length - 1] : 'C4');
+      // Add silence (rest) by increasing 'wait' of next note, 
+      // but the Current Recipe logic prefers a dummy note or 0-velocity if we want exact timing.
+      // We'll use a placeholder or just skip and handle in generator.
+      // To keep it 1:1, we'll add a very low velocity note or just skip.
+      // Skipping is better if the generator handles offsets.
     }
   }
 
   // Detect dominant pitch class
   let dominantNote = 'G#';
   let maxCount = 0;
-  Object.entries(noteCounts).forEach(([note, count]) => {
+  Object.entries(noteCounts).forEach(([pc, count]) => {
     if (count > maxCount) {
       maxCount = count;
-      dominantNote = note.replace(/[0-9]/g, '');
+      dominantNote = pc;
     }
   });
 
   const detectedKey = `${dominantNote} Minor`;
   const chordProgression = `${dominantNote} Minor -> F# Major -> E Major -> D# Minor`;
 
-  const notes: MidiNote[] = rawPitches.slice(0, 64).map((pitch) => ({
-    pitch,
-    duration: '16n',
-    wait: '0',
-    velocity: 110
-  }));
-
   return {
-    notes,
+    notes: notes.slice(0, 1024), // Cap at 1024 notes for performance
     detectedKey,
     chordProgression
   };
