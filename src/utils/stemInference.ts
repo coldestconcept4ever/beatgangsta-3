@@ -19,7 +19,7 @@ export class InferenceEngine {
       this.isInitialized = true;
       console.log(`[STEM-INF] Neural model loaded: ${this.modelPath}`);
     } catch (err) {
-      console.error("[STEM-INF] Failed to load neural model:", err);
+      console.warn("[STEM-INF] Neural model weights not present; running pure high-precision DSP mode (Linkwitz-Riley & Wiener filtering).");
       throw err;
     }
   }

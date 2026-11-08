@@ -22,6 +22,9 @@ export const AudioStemAnalyzerModal: React.FC<AudioStemAnalyzerModalProps> = ({
   const [isProcessing, setIsProcessing] = useState(false);
   const [progressLabel, setProgressLabel] = useState('');
   const [progressPct, setProgressPct] = useState(0);
+  const [isExporting, setIsExporting] = useState(false);
+  const [exportLabel, setExportLabel] = useState('');
+  const [exportPct, setExportPct] = useState(0);
   const [isDeepMode, setIsDeepMode] = useState<boolean>(true); // Default to Studio Deep Engine as requested
   const [elapsedSec, setElapsedSec] = useState<number>(0);
   const [stems, setStems] = useState<IsolatedStems | null>(null);
@@ -162,14 +165,14 @@ export const AudioStemAnalyzerModal: React.FC<AudioStemAnalyzerModalProps> = ({
   const handleExportStemsAndRecipe = async () => {
     if (!stems) return;
 
-    setIsProcessing(true);
-    setProgressPct(10);
-    setProgressLabel('Encoding 13 High-Quality WAV Stems...');
+    setIsExporting(true);
+    setExportPct(10);
+    setExportLabel('Encoding 13 High-Quality WAV Stems...');
 
     const yieldToUI = () => new Promise(resolve => setTimeout(resolve, 0));
 
     // Convert stems to local WAV blobs with event-loop yielding to prevent UI freezes
-    setProgressLabel('Encoding Kick, Snare & Drums WAV Stems (1-5/13)...');
+    setExportLabel('Encoding Kick, Snare & Drums WAV Stems (1-5/13)...');
     await yieldToUI();
     const kickBlob = await audioBufferToWavBlob(stems.kick);
     await yieldToUI();
@@ -182,8 +185,8 @@ export const AudioStemAnalyzerModal: React.FC<AudioStemAnalyzerModalProps> = ({
     const percBlob = await audioBufferToWavBlob(stems.perc);
     await yieldToUI();
 
-    setProgressPct(35);
-    setProgressLabel('Encoding Bass & Guitars WAV Stems (6-9/13)...');
+    setExportPct(35);
+    setExportLabel('Encoding Bass & Guitars WAV Stems (6-9/13)...');
     await yieldToUI();
     const bassBlob = await audioBufferToWavBlob(stems.bass);
     await yieldToUI();
@@ -194,8 +197,8 @@ export const AudioStemAnalyzerModal: React.FC<AudioStemAnalyzerModalProps> = ({
     const acousticGuitarBlob = await audioBufferToWavBlob(stems.acousticGuitar);
     await yieldToUI();
 
-    setProgressPct(55);
-    setProgressLabel('Encoding Synths, Keys & Vocals WAV Stems (10-13/13)...');
+    setExportPct(55);
+    setExportLabel('Encoding Synths, Keys & Vocals WAV Stems (10-13/13)...');
     await yieldToUI();
     const leadBlob = await audioBufferToWavBlob(stems.lead);
     await yieldToUI();
@@ -222,22 +225,22 @@ export const AudioStemAnalyzerModal: React.FC<AudioStemAnalyzerModalProps> = ({
       '13_Percussion_Stem.wav': percBlob
     };
 
-    setProgressPct(70);
-    setProgressLabel('Transcribing Lead Synth & Bass MIDI...');
+    setExportPct(70);
+    setExportLabel('Transcribing Lead Synth & Bass MIDI...');
     await yieldToUI();
     const leadNotes = extractNotesFromAudioBuffer(stems.lead, stems.detectedBpm, false, 'Lead Synth', isDeepMode);
     const bassNotes = extractNotesFromAudioBuffer(stems.bass, stems.detectedBpm, false, 'Synth Bass', isDeepMode);
 
-    setProgressPct(82);
-    setProgressLabel('Transcribing Guitars, Keys & Polyphonic Pads...');
+    setExportPct(82);
+    setExportLabel('Transcribing Guitars, Keys & Polyphonic Pads...');
     await yieldToUI();
     const leadGuitarNotes = extractNotesFromAudioBuffer(stems.leadGuitar, stems.detectedBpm, false, 'Lead Guitar', isDeepMode);
     const bassGuitarNotes = extractNotesFromAudioBuffer(stems.bassGuitar, stems.detectedBpm, false, 'Bass Guitar', isDeepMode);
     const pianoNotes = extractNotesFromAudioBuffer(stems.piano, stems.detectedBpm, true, 'Piano', isDeepMode);
     const padNotes = extractNotesFromAudioBuffer(stems.pad, stems.detectedBpm, true, 'Pad Chords', isDeepMode);
 
-    setProgressPct(92);
-    setProgressLabel('Transcribing High-Res 32nd-Note Drum Tracks...');
+    setExportPct(92);
+    setExportLabel('Transcribing High-Res 32nd-Note Drum Tracks...');
     await yieldToUI();
     const kickPattern = extractDrumPatternFromAudioBuffer(stems.kick, stems.detectedBpm);
     const snarePattern = extractDrumPatternFromAudioBuffer(stems.snare, stems.detectedBpm);
@@ -430,6 +433,7 @@ export const AudioStemAnalyzerModal: React.FC<AudioStemAnalyzerModalProps> = ({
       ]
     };
 
+    setIsExporting(false);
     onGenerateFromStems(recipe, stemWavs);
     onClose();
   };
@@ -695,13 +699,33 @@ export const AudioStemAnalyzerModal: React.FC<AudioStemAnalyzerModalProps> = ({
                 </div>
               )}
 
-              {/* Action */}
-              <button
-                onClick={handleExportStemsAndRecipe}
-                className="w-full py-4 rounded-2xl bg-gradient-to-r from-sky-500 to-emerald-500 hover:from-sky-400 hover:to-emerald-400 text-slate-950 font-black text-xs uppercase tracking-widest transition-all shadow-2xl flex items-center justify-center gap-2"
-              >
-                <Download className="w-4 h-4" /> Export All WAV Stems & Generate 1:1 MIDI Recipe
-              </button>
+              {/* Action / Export Progress Banner */}
+              <div className="space-y-4">
+                {isExporting && (
+                  <div className="p-4 rounded-2xl bg-sky-500/10 border border-sky-500/30 flex flex-col gap-2">
+                    <div className="flex items-center justify-between text-xs font-black">
+                      <span className="text-sky-300 animate-pulse">{exportLabel}</span>
+                      <span className="text-sky-400">{exportPct}%</span>
+                    </div>
+                    <div className="w-full h-2 bg-white/10 rounded-full overflow-hidden border border-white/10">
+                      <div className="h-full bg-gradient-to-r from-sky-500 to-emerald-400 transition-all duration-300" style={{ width: `${exportPct}%` }} />
+                    </div>
+                    <p className="text-[10px] text-white/50 italic">Stems remain fully playable while WAV export and MIDI transcription run in the background.</p>
+                  </div>
+                )}
+                <button
+                  type="button"
+                  disabled={isExporting}
+                  onClick={handleExportStemsAndRecipe}
+                  className={`w-full py-4 rounded-2xl font-black text-xs uppercase tracking-widest transition-all shadow-2xl flex items-center justify-center gap-2 ${
+                    isExporting 
+                      ? 'bg-sky-500/30 text-white/50 cursor-not-allowed' 
+                      : 'bg-gradient-to-r from-sky-500 to-emerald-500 hover:from-sky-400 hover:to-emerald-400 text-slate-950'
+                  }`}
+                >
+                  <Download className="w-4 h-4" /> {isExporting ? 'Exporting Stems & Generating MIDI...' : 'Export All WAV Stems & Generate 1:1 MIDI Recipe'}
+                </button>
+              </div>
             </div>
           )}
         </motion.div>
