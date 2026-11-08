@@ -18,6 +18,9 @@ export async function repairStemArtifacts(
   const sampleRate = audioBuffer.sampleRate;
   const length = audioBuffer.length;
 
+  const isHarmonic = ['lead', 'leadGuitar', 'acousticGuitar', 'pad', 'piano', 'bass', 'bassGuitar', 'vocal'].includes(stemType);
+  const isPercussive = ['kick', 'snare', 'hihat', 'openhat', 'perc'].includes(stemType);
+
   const offlineCtx = new OfflineAudioContext(numChannels, length, sampleRate);
   const source = offlineCtx.createBufferSource();
   source.buffer = audioBuffer;
