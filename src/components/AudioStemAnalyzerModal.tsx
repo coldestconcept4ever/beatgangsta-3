@@ -27,6 +27,7 @@ export const AudioStemAnalyzerModal: React.FC<AudioStemAnalyzerModalProps> = ({
   const [stems, setStems] = useState<IsolatedStems | null>(null);
   const [fileName, setFileName] = useState<string>('');
   const [playingStem, setPlayingStem] = useState<string | null>(null);
+  const [activePlayingStems, setActivePlayingStems] = useState<Set<string>>(new Set());
   const [audioSource, setAudioSource] = useState<AudioBufferSourceNode | null>(null);
   const [transcriptionDiagnostics, setTranscriptionDiagnostics] = useState<any[]>([]);
   const previewAudioCtxRef = React.useRef<AudioContext | null>(null);
@@ -101,30 +102,61 @@ export const AudioStemAnalyzerModal: React.FC<AudioStemAnalyzerModalProps> = ({
     }
   };
 
-  const playStemPreview = (buffer: AudioBuffer, stemName: string) => {
-    if (playingStem === stemName && audioSource) {
-      try { audioSource.stop(); } catch {}
-      setPlayingStem(null);
-      setAudioSource(null);
+  const activeSourcesRef = React.useRef<Record<string, AudioBufferSourceNode>>({});
+  const playbackStartTimeRef = React.useRef<number>(0);
+  const playbackOffsetRef = React.useRef<number>(0);
+
+  const toggleStemPreview = (buffer: AudioBuffer, stemName: string) => {
+    const audioCtx = getPreviewAudioCtx();
+    const activeSources = activeSourcesRef.current;
+
+    // If already playing this stem, stop it
+    if (activeSources[stemName]) {
+      try {
+        activeSources[stemName].stop();
+      } catch {}
+      delete activeSources[stemName];
+      setActivePlayingStems(new Set(Object.keys(activeSources)));
+      if (Object.keys(activeSources).length === 0) {
+        playbackOffsetRef.current = 0;
+      }
       return;
     }
 
-    if (audioSource) {
-      try { audioSource.stop(); } catch {}
+    // If no stems are currently playing, record anchor start time
+    if (Object.keys(activeSources).length === 0) {
+      playbackStartTimeRef.current = audioCtx.currentTime;
+      playbackOffsetRef.current = 0;
     }
 
-    const audioCtx = getPreviewAudioCtx();
+    // Play new stem synchronized to the shared anchor time
     const source = audioCtx.createBufferSource();
     source.buffer = buffer;
     source.connect(audioCtx.destination);
-    source.start(0);
-    setAudioSource(source);
-    setPlayingStem(stemName);
+
+    const elapsed = audioCtx.currentTime - playbackStartTimeRef.current + playbackOffsetRef.current;
+    const offset = elapsed % buffer.duration;
+
+    source.start(0, offset);
+    activeSources[stemName] = source;
+    setActivePlayingStems(new Set(Object.keys(activeSources)));
 
     source.onended = () => {
-      setPlayingStem(null);
-      setAudioSource(null);
+      if (activeSources[stemName] === source) {
+        delete activeSources[stemName];
+        setActivePlayingStems(new Set(Object.keys(activeSources)));
+      }
     };
+  };
+
+  const stopAllStems = () => {
+    const activeSources = activeSourcesRef.current;
+    Object.values(activeSources).forEach(src => {
+      try { src.stop(); } catch {}
+    });
+    activeSourcesRef.current = {};
+    playbackOffsetRef.current = 0;
+    setActivePlayingStems(new Set());
   };
 
   const handleExportStemsAndRecipe = async () => {
@@ -140,26 +172,39 @@ export const AudioStemAnalyzerModal: React.FC<AudioStemAnalyzerModalProps> = ({
     setProgressLabel('Encoding Kick, Snare & Drums WAV Stems (1-5/13)...');
     await yieldToUI();
     const kickBlob = await audioBufferToWavBlob(stems.kick);
+    await yieldToUI();
     const snareBlob = await audioBufferToWavBlob(stems.snare);
+    await yieldToUI();
     const hihatBlob = await audioBufferToWavBlob(stems.hihat);
+    await yieldToUI();
     const openhatBlob = await audioBufferToWavBlob(stems.openhat);
+    await yieldToUI();
     const percBlob = await audioBufferToWavBlob(stems.perc);
+    await yieldToUI();
 
     setProgressPct(35);
     setProgressLabel('Encoding Bass & Guitars WAV Stems (6-9/13)...');
     await yieldToUI();
     const bassBlob = await audioBufferToWavBlob(stems.bass);
+    await yieldToUI();
     const bassGuitarBlob = await audioBufferToWavBlob(stems.bassGuitar);
+    await yieldToUI();
     const leadGuitarBlob = await audioBufferToWavBlob(stems.leadGuitar);
+    await yieldToUI();
     const acousticGuitarBlob = await audioBufferToWavBlob(stems.acousticGuitar);
+    await yieldToUI();
 
     setProgressPct(55);
     setProgressLabel('Encoding Synths, Keys & Vocals WAV Stems (10-13/13)...');
     await yieldToUI();
     const leadBlob = await audioBufferToWavBlob(stems.lead);
+    await yieldToUI();
     const pianoBlob = await audioBufferToWavBlob(stems.piano);
+    await yieldToUI();
     const padBlob = await audioBufferToWavBlob(stems.pad);
+    await yieldToUI();
     const vocalBlob = await audioBufferToWavBlob(stems.vocal);
+    await yieldToUI();
 
     const stemWavs: Record<string, Blob> = {
       '01_Kick_Stem.wav': kickBlob,
@@ -541,6 +586,27 @@ export const AudioStemAnalyzerModal: React.FC<AudioStemAnalyzerModalProps> = ({
                 </div>
               </div>
 
+              {/* Playback Control Bar */}
+              <div className="p-4 rounded-2xl bg-black/50 border border-white/10 flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <span className={`w-2.5 h-2.5 rounded-full ${activePlayingStems.size > 0 ? 'bg-emerald-400 animate-ping' : 'bg-white/30'}`} />
+                  <span className="text-xs font-black uppercase tracking-wider text-white">
+                    {activePlayingStems.size > 0 
+                      ? `Synchronized Playback Active (${activePlayingStems.size} Stem${activePlayingStems.size > 1 ? 's' : ''} Synced in Time)` 
+                      : 'Stems Ready (Click play on any stem to audition or layer multiple together in time)'}
+                  </span>
+                </div>
+                {activePlayingStems.size > 0 && (
+                  <button
+                    type="button"
+                    onClick={stopAllStems}
+                    className="px-4 py-2 rounded-xl bg-red-500/20 hover:bg-red-500/30 border border-red-500/30 text-red-400 text-xs font-black uppercase tracking-wider transition-all flex items-center gap-2"
+                  >
+                    <Pause className="w-3.5 h-3.5" /> Stop All Stems
+                  </button>
+                )}
+              </div>
+
               {/* Stems Grid */}
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                 {[
@@ -557,23 +623,27 @@ export const AudioStemAnalyzerModal: React.FC<AudioStemAnalyzerModalProps> = ({
                   { name: 'Pad Chords', key: 'pad', buffer: stems.pad, color: 'text-purple-400 border-purple-500/30' },
                   { name: 'Vocals / FX', key: 'vocal', buffer: stems.vocal, color: 'text-pink-400 border-pink-500/30' },
                   { name: 'Percussion', key: 'perc', buffer: (stems as any).perc, color: 'text-rose-400 border-rose-500/30' }
-                ].map((s) => (
-                  <div key={s.key} className={`p-4 rounded-2xl border bg-black/40 flex items-center justify-between ${s.color}`}>
-                    <div className="flex items-center gap-3">
-                      <button
-                        onClick={() => playStemPreview(s.buffer, s.key)}
-                        className="p-3 rounded-xl bg-white/10 hover:bg-white/20 transition-all text-white"
-                      >
-                        {playingStem === s.key ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4" />}
-                      </button>
-                      <div>
-                        <h5 className="text-[10px] font-black uppercase tracking-wider">{s.name}</h5>
-                        <p className="text-[9px] font-bold opacity-60">100% Isolated</p>
+                ].map((s) => {
+                  const isPlaying = activePlayingStems.has(s.key);
+                  return (
+                    <div key={s.key} className={`p-4 rounded-2xl border bg-black/40 flex items-center justify-between transition-all ${s.color} ${isPlaying ? 'bg-sky-500/10 shadow-lg shadow-sky-500/20 ring-1 ring-sky-400/50' : ''}`}>
+                      <div className="flex items-center gap-3">
+                        <button
+                          type="button"
+                          onClick={() => toggleStemPreview(s.buffer, s.key)}
+                          className={`p-3 rounded-xl transition-all ${isPlaying ? 'bg-sky-500 text-slate-950 shadow-md scale-105' : 'bg-white/10 hover:bg-white/20 text-white'}`}
+                        >
+                          {isPlaying ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4" />}
+                        </button>
+                        <div>
+                          <h5 className="text-[10px] font-black uppercase tracking-wider">{s.name}</h5>
+                          <p className="text-[9px] font-bold opacity-60">{isPlaying ? 'Playing (Synced)' : '100% Isolated'}</p>
+                        </div>
                       </div>
+                      <Volume2 className={`w-3 h-3 ${isPlaying ? 'text-sky-400 animate-pulse' : 'opacity-30'}`} />
                     </div>
-                    <Volume2 className="w-3 h-3 opacity-30" />
-                  </div>
-                ))}
+                  );
+                })}
               </div>
 
               {/* Diagnostic Accuracy Panel */}
