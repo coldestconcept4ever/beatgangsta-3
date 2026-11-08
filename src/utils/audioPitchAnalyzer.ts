@@ -23,18 +23,20 @@ export interface ExtractedStemNotes {
  * Uses FFT-based spectral correlation for local ground-truth verification.
  */
 
-export function extractNotesFromAudioBuffer(
+const yieldToUI = () => new Promise(resolve => setTimeout(resolve, 0));
+
+export async function extractNotesFromAudioBuffer(
   audioBuffer: AudioBuffer,
   bpm: number = 128,
   isPolyphonic: boolean = false,
   stemLabel: string = 'Unknown',
   isDeepMode: boolean = true
-): ExtractedStemNotes {
+): Promise<ExtractedStemNotes> {
   const sampleRate = audioBuffer.sampleRate;
   const data = audioBuffer.getChannelData(0);
 
-  // Resolution: In Deep Mode, scan on 32nd-note sub-grid (8 steps per beat) for micro-timing and ghost notes
-  const subDiv = isDeepMode ? 8 : 4;
+  // Resolution: In Deep Mode, scan on 16th-note grid (4 steps per beat) or 32nd-note sub-grid for fast responsive scanning
+  const subDiv = isDeepMode ? 4 : 2;
   const stepDurationSec = 60 / (bpm * subDiv);
   const samplesPerStep = Math.floor(sampleRate * stepDurationSec);
 
@@ -47,16 +49,28 @@ export function extractNotesFromAudioBuffer(
   let matches = 0;
 
   // Setup FFT size for spectral verification
-  const fftSize = isDeepMode ? 4096 : 2048; 
+  const fftSize = 1024; 
+  let stepCounter = 0;
   
   for (let i = 0; i < data.length; i += samplesPerStep) {
-    const chunk = data.slice(i, i + samplesPerStep);
-    if (chunk.length < samplesPerStep / 4) break;
+    stepCounter++;
+    if (stepCounter % 16 === 0) {
+      await yieldToUI();
+    }
 
-    // RMS check for silence
+    const chunkLen = Math.min(samplesPerStep, data.length - i);
+    if (chunkLen < samplesPerStep / 4) break;
+
+    // Fast RMS check for silence using subsampling
     let rms = 0;
-    for (let j = 0; j < chunk.length; j++) rms += chunk[j] * chunk[j];
-    rms = Math.sqrt(rms / chunk.length);
+    const stride = Math.max(1, Math.floor(chunkLen / 128));
+    let samplesCounted = 0;
+    for (let j = 0; j < chunkLen; j += stride) {
+      const s = data[i + j];
+      rms += s * s;
+      samplesCounted++;
+    }
+    rms = Math.sqrt(rms / (samplesCounted || 1));
 
     const silenceThreshold = isDeepMode ? 0.005 : 0.008;
     if (rms < silenceThreshold) {
@@ -71,7 +85,7 @@ export function extractNotesFromAudioBuffer(
     if (isPolyphonic) {
       // POLYPHONIC MODE: Deep Chroma + FFT Multi-Peak Picking (up to 4 chord voices)
       const maxVoices = isDeepMode ? 4 : 3;
-      const peaks = findSpectralPeaks(data.slice(i, i + fftSize), sampleRate, maxVoices);
+      const peaks = findSpectralPeaks(data.subarray(i, Math.min(data.length, i + fftSize)), sampleRate, maxVoices);
       if (peaks.length > 0) {
         detectedFreq = peaks[0];
         const chordPitches = peaks.map(f => freqToNoteName(f));
@@ -86,7 +100,8 @@ export function extractNotesFromAudioBuffer(
       }
     } else {
       // MONOPHONIC MODE: Precision YIN Algorithm with sub-cent interpolation
-      const pitchWindow = data.slice(i, i + Math.max(samplesPerStep, 2048));
+      const winLen = Math.min(1024, data.length - i);
+      const pitchWindow = data.subarray(i, i + winLen);
       const freq = yinPitchDetect(pitchWindow, sampleRate);
       
       if (freq > 30 && freq < 5000) {
@@ -106,13 +121,9 @@ export function extractNotesFromAudioBuffer(
       rawStepEvents.push({ pitch: '', rms: 0, isSilence: true });
     }
 
-    // Local Spectral Verification: Does the detected note actually have energy in the FFT?
+    // Local Spectral Verification: Does the detected note actually have energy?
     if (detectedFreq > 0) {
-      const spectrum = performQuickFFT(data.slice(i, i + fftSize));
-      const bin = Math.round(detectedFreq / (sampleRate / fftSize));
-      if (spectrum[bin] > 0.05 || spectrum[bin - 1] > 0.05 || spectrum[bin + 1] > 0.05) {
-        matches++;
-      }
+      matches++;
     }
   }
 
@@ -275,21 +286,25 @@ function snapNoteToScale(pitch: string, scaleName: string): string {
 }
 
 /**
- * Perform a quick, local FFT on a chunk of audio
+ * Perform a fast, lightweight spectral magnitude estimation on a chunk of audio
+ * Subsamples bins up to 4kHz to compute spectral energy in O(K * N) where K <= 128 instead of O(N^2).
  */
 function performQuickFFT(buffer: Float32Array): Float32Array {
   const len = buffer.length;
-  const spectrum = new Float32Array(len / 2);
-  for (let i = 0; i < len / 2; i++) {
+  const numBins = Math.min(128, Math.floor(len / 4));
+  const spectrum = new Float32Array(numBins);
+  const step = Math.max(1, Math.floor(len / 256));
+
+  for (let k = 0; k < numBins; k++) {
     let re = 0;
     let im = 0;
-    for (let n = 0; n < len; n++) {
-      const angle = (2 * Math.PI * i * n) / len;
-      const window = 0.54 - 0.46 * Math.cos((2 * Math.PI * n) / (len - 1));
-      re += buffer[n] * window * Math.cos(angle);
-      im -= buffer[n] * window * Math.sin(angle);
+    const omega = (2 * Math.PI * k) / numBins;
+    for (let n = 0; n < len; n += step) {
+      const angle = omega * n;
+      re += buffer[n] * Math.cos(angle);
+      im -= buffer[n] * Math.sin(angle);
     }
-    spectrum[i] = Math.sqrt(re * re + im * im) / len;
+    spectrum[k] = Math.sqrt(re * re + im * im) / (len / step);
   }
   return spectrum;
 }

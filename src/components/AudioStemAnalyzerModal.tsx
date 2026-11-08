@@ -228,16 +228,22 @@ export const AudioStemAnalyzerModal: React.FC<AudioStemAnalyzerModalProps> = ({
     setExportPct(70);
     setExportLabel('Transcribing Lead Synth & Bass MIDI...');
     await yieldToUI();
-    const leadNotes = extractNotesFromAudioBuffer(stems.lead, stems.detectedBpm, false, 'Lead Synth', isDeepMode);
-    const bassNotes = extractNotesFromAudioBuffer(stems.bass, stems.detectedBpm, false, 'Synth Bass', isDeepMode);
+    const leadNotes = await extractNotesFromAudioBuffer(stems.lead, stems.detectedBpm, false, 'Lead Synth', isDeepMode);
+    await yieldToUI();
+    const bassNotes = await extractNotesFromAudioBuffer(stems.bass, stems.detectedBpm, false, 'Synth Bass', isDeepMode);
+    await yieldToUI();
 
     setExportPct(82);
     setExportLabel('Transcribing Guitars, Keys & Polyphonic Pads...');
     await yieldToUI();
-    const leadGuitarNotes = extractNotesFromAudioBuffer(stems.leadGuitar, stems.detectedBpm, false, 'Lead Guitar', isDeepMode);
-    const bassGuitarNotes = extractNotesFromAudioBuffer(stems.bassGuitar, stems.detectedBpm, false, 'Bass Guitar', isDeepMode);
-    const pianoNotes = extractNotesFromAudioBuffer(stems.piano, stems.detectedBpm, true, 'Piano', isDeepMode);
-    const padNotes = extractNotesFromAudioBuffer(stems.pad, stems.detectedBpm, true, 'Pad Chords', isDeepMode);
+    const leadGuitarNotes = await extractNotesFromAudioBuffer(stems.leadGuitar, stems.detectedBpm, false, 'Lead Guitar', isDeepMode);
+    await yieldToUI();
+    const bassGuitarNotes = await extractNotesFromAudioBuffer(stems.bassGuitar, stems.detectedBpm, false, 'Bass Guitar', isDeepMode);
+    await yieldToUI();
+    const pianoNotes = await extractNotesFromAudioBuffer(stems.piano, stems.detectedBpm, true, 'Piano', isDeepMode);
+    await yieldToUI();
+    const padNotes = await extractNotesFromAudioBuffer(stems.pad, stems.detectedBpm, true, 'Pad Chords', isDeepMode);
+    await yieldToUI();
 
     setExportPct(92);
     setExportLabel('Transcribing High-Res 32nd-Note Drum Tracks...');
