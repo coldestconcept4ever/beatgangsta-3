@@ -1717,7 +1717,7 @@ export const validateApiKey = async (key: string): Promise<{valid: boolean, mess
       return { valid: false, message: "Please enter an API key." };
     }
     const payload = {
-      model: "gemini-3.8-flash",
+      model: "gemini-3.1-pro-preview",
       contents: "hi",
       userApiKey: cleanKey
     };
@@ -1847,7 +1847,7 @@ export const regeneratePlugin = async (
     required: ["name", "purpose", "deepDive"]
   };
   const response = await ai.models.generateContent({
-    model: "gemini-3.8-flash",
+    model: "gemini-3.1-pro-preview",
     contents: { parts: [{ text: prompt + "n\nCRITICAL: You MUST return EXACTLY valid JSON matching this schema:n" + JSON.stringify(schemaObj, null, 2) }] },
     config: {
       customAction: 'regenerate_plugin',
@@ -1884,7 +1884,7 @@ export const categorizeAndCompareLibraries = async (senderPlugins: VSTPlugin[], 
     For each category, list the plugins the Sender has that I AM MISSING (similar names don't count as missing).
   `;
   const response = await ai.models.generateContent({
-    model: "gemini-3.8-flash",
+    model: "gemini-3.1-pro-preview",
     contents: { parts: [{ text: prompt }] },
     config: {
       customAction: 'compare_libraries',
@@ -2925,7 +2925,7 @@ export const enrichPluginLibrary = async (
     `;
     try {
       const response = await ai.models.generateContent({
-        model: "gemini-3.8-flash", // Use older flash preview for reliable enrichment as requested to save costs
+        model: "gemini-3.1-pro-preview", // Use older flash preview for reliable enrichment as requested to save costs
         contents: { parts: [{ text: prompt }] },
         config: {
           customAction: 'enrich_library',
@@ -3179,7 +3179,7 @@ export const verifyAndCorrectPlugin = async (
     }
   `;
   const response = await ai.models.generateContent({
-    model: "gemini-3.8-flash",
+    model: "gemini-3.1-pro-preview",
     contents: { parts: [{ text: prompt }] },
     config: {
       customAction: 'verify_plugin',
@@ -3240,7 +3240,7 @@ export const researchPluginParameters = async (plugin: VSTPlugin, language: stri
     ${getLanguageInstruction(language)}
   `;
   const response = await ai.models.generateContent({
-    model: "gemini-3.8-flash",
+    model: "gemini-3.1-pro-preview",
     contents: { parts: [{ text: prompt }] },
     config: {
       customAction: 'research_plugin',
@@ -3542,7 +3542,7 @@ export const getBeatRecommendations = async (plugins: VSTPlugin[], analogInstrum
     ${ADVANCED_MIDI_PROMPT}
   `;
   const response = await ai.models.generateContent({
-    model: 'gemini-3.8-flash',
+    model: 'gemini-3.1-pro-preview',
     contents: { parts: [{ text: prompt + getSchemaInstruction(isGangstaVox) }] },
     config: {
       customAction: 'recipe',
@@ -3734,7 +3734,7 @@ export const getCustomBeatRecommendations = async (plugins: VSTPlugin[], query: 
   `;
   const multiBandInstruction = getMultiBandInstruction(isMultiBandMode);
   const response = await ai.models.generateContent({
-    model: 'gemini-3.8-flash',
+    model: 'gemini-3.1-pro-preview',
     contents: { parts: [{ text: prompt + multiBandInstruction + getSchemaInstruction(isGangstaVox) }] },
     config: {
       customAction: 'type_beat_search',
@@ -3961,7 +3961,7 @@ export const getSongBeatRecommendations = async (plugins: VSTPlugin[], songQuery
   `;
   const multiBandInstruction = getMultiBandInstruction(isMultiBandMode);
   const response = await ai.models.generateContent({
-    model: 'gemini-3.8-flash',
+    model: 'gemini-3.1-pro-preview',
     contents: { parts: [{ text: prompt + multiBandInstruction + getSchemaInstruction(isGangstaVox) }] },
     config: {
       customAction: 'song_search',
@@ -4025,7 +4025,7 @@ export const analyzeInstrumental = async (audioBase64: string | null, mimeType: 
   }
 
   const data = await ai.models.generateContent({
-    model: "gemini-3.8-flash",
+    model: "gemini-3.1-pro-preview",
     contents: [{ parts: [{ text: prompt }, audioPart] }],
     config: {
       customAction: 'analyze_instrumental' }
@@ -4361,7 +4361,7 @@ export const getAudioBeatRecommendations = async (plugins: VSTPlugin[], audioBas
   let response;
   try {
     response = await ai.models.generateContent({
-      model: "gemini-3.8-flash",
+      model: "gemini-3.1-pro-preview",
       contents: {
         parts: parts
       },
@@ -5011,7 +5011,7 @@ CRITICAL DIRECTIVE ON MIX CRITIQUE DEPTH, VARIETY, & ZERO-BOILERPLATE:
         let response;
         try {
           response = await ai.models.generateContent({
-             model: "gemini-3.8-flash",
+             model: "gemini-3.1-pro-preview",
              contents: chunkParts,
              config: {
                customAction: 'stems_critique',
@@ -5061,7 +5061,7 @@ CRITICAL DIRECTIVE ON MIX CRITIQUE DEPTH, VARIETY, & ZERO-BOILERPLATE:
     let response;
     try {
       response = await ai.models.generateContent({
-        model: "gemini-3.8-flash",
+        model: "gemini-3.1-pro-preview",
         contents: finalParts,
         config: {
           customAction: hasStems ? 'stems_critique' : 'critique',
@@ -5111,7 +5111,7 @@ CRITICAL DIRECTIVE ON MIX CRITIQUE DEPTH, VARIETY, & ZERO-BOILERPLATE:
 export const compareMixDelta = async (plugins: VSTPlugin[], originalAudioBase64: string | undefined, originalMimeType: string | undefined, processedAudioBase64: string, processedMimeType: string, recipeContext: string, isJsfxMode: boolean, installedJsfxPacks: string[]): Promise<{analysis: string, correctiveActions: any[]}> => {
   const ai = getAI();
   const { GoogleGenAI } = await import("@google/genai");
-  const model = "gemini-3.8-flash";
+  const model = "gemini-3.1-pro-preview";
   const systemInstruction = `You are a world-class mastering engineer performing an A/B Mix Delta Analysis.nnYou will receive TWO audio files (if the platform supports it) or at least the processed audio, along with the recipe context that produced it.nnYour job is to:n1. Listen to the PROCESSED audio and identify any artifacts, distortion, over-compression, pumping, or phase issues.n2. Compare it to the original audio (if provided) to hear the delta.n3. Identify exactly which plugins/parameters in the recipe caused the issue (e.g. "The second compressor on the bass has the threshold too low and ratio too high, causing distortion").n4. Provide a detailed analysis and a corrective action plan.n\nCRITICAL: You MUST return EXACTLY valid JSON matching this schema:n${JSON.stringify({ type: "OBJECT", properties: { analysis: { type: "STRING" }, correctiveActions: { type: "ARRAY", items: { type: "OBJECT", properties: { targetStem: { type: "STRING" }, pluginName: { type: "STRING" }, paramChanges: { type: "ARRAY", items: { type: "OBJECT", properties: { paramName: { type: "STRING" }, newValue: { type: "NUMBER" }, reason: { type: "STRING" } } } } } } } }, required: ["analysis", "correctiveActions"] })}`; 
   const contents = [];
   if (originalAudioBase64 && originalMimeType) {
@@ -5207,7 +5207,7 @@ ${getLanguageInstruction(language)}
   let response;
   try {
     response = await ai.models.generateContent({
-      model: "gemini-3.8-flash",
+      model: "gemini-3.1-pro-preview",
       contents,
       config: {
         customAction: 'critique',
@@ -5390,7 +5390,7 @@ export const getLyricAnalysis = async (
 
   try {
     const response = await ai.models.generateContent({
-      model: "gemini-3.8-flash",
+      model: "gemini-3.1-pro-preview",
       contents: [{ role: 'user', parts }],
       config: {
         customAction: 'critique',
@@ -5416,10 +5416,10 @@ export const getLyricAnalysis = async (
     };
   } catch (error: any) {
     if (error?.status === 503 || error?.message?.includes('high demand') || error?.status === 'INVALID_ARGUMENT' || error?.status === 400 || String(error).includes('503')) {
-      console.warn("gemini-3.8-flash high demand or error, falling back to gemini-3.8-flash...");
+      console.warn("gemini-3.1-pro-preview high demand or error, falling back to gemini-3.1-pro-preview...");
       try {
         const responseListFallback = await ai.models.generateContent({
-          model: "gemini-3.8-flash",
+          model: "gemini-3.1-pro-preview",
           contents: [{ role: 'user', parts }],
           config: {
             customAction: 'critique',
@@ -5443,10 +5443,10 @@ export const getLyricAnalysis = async (
           syncedLyrics: parsed.syncedLyrics || []
         };
       } catch (fallbackError: any) {
-        console.warn("Fallback gemini-3.8-flash also failed, trying gemini-3.8-flash again...");
+        console.warn("Fallback gemini-3.1-pro-preview also failed, trying gemini-3.1-pro-preview again...");
         try {
           const responseListFallback2 = await ai.models.generateContent({
-            model: "gemini-3.8-flash",
+            model: "gemini-3.1-pro-preview",
             contents: [{ role: 'user', parts }],
             config: {
               customAction: 'critique',
@@ -5512,7 +5512,7 @@ export const getGangstaVoxRecipe = async (recipe: BeatRecipe | SavedRecipe, plug
   let response;
   try {
     response = await ai.models.generateContent({
-      model: "gemini-3.8-flash",
+      model: "gemini-3.1-pro-preview",
       contents: prompt,
       config: {
         customAction: 'gangsta_vox',
@@ -5554,7 +5554,7 @@ export const replicateRecipeWithUserGear = async (recipe: SavedRecipe, myPlugins
   `;
   try {
     const response = await ai.models.generateContent({
-      model: "gemini-3.8-flash",
+      model: "gemini-3.1-pro-preview",
       contents: { parts: [{ text: prompt + "n\nCRITICAL: You MUST return EXACTLY valid JSON matching this schema:n" + JSON.stringify(getUnifiedRecipeSchema(recipe.isGangstaVox), null, 2) }] },
       config: {
         customAction: 'analog_save',
@@ -5735,7 +5735,7 @@ export const regenerateTrackingChain = async (
       required: ["trackingChain"]
     };
     const result = await ai.models.generateContent({
-      model: "gemini-3.8-flash",
+      model: "gemini-3.1-pro-preview",
       contents: { parts: [{ text: prompt + "n\nCRITICAL: You MUST return a valid JSON object matching this schema exactly:n" + JSON.stringify(schema, null, 2) }] },
       config: {
         customAction: 'regenerate_tracking_chain',
@@ -5932,7 +5932,7 @@ For Lurssen Mastering Console, you MUST provide explicit settings for ALL availa
   };
 
   const response = await ai.models.generateContent({
-    model: "gemini-3.8-flash",
+    model: "gemini-3.1-pro-preview",
     contents: parts,
     config: {
         systemInstruction: "You are an elite, Grammy-winning mastering engineer. You output only valid JSON. Do not use markdown blocks for JSON.",

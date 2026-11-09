@@ -600,7 +600,7 @@ app.post("/api/test-schema", async (req, res) => {
     
     // We expect the payload to be EXACTLY the model contents config
     const response = await genAI.models.generateContent({
-      model: req.body.model || "gemini-3.8-flash",
+      model: req.body.model || "gemini-3.1-pro-preview",
       contents: req.body.contents,
       config: req.body.config
     });
@@ -661,7 +661,7 @@ Respond ONLY with valid JSON with this exact structure:
 }`;
 
     const response = await genAI.models.generateContent({
-      model: "gemini-3.8-flash",
+      model: "gemini-3.1-pro-preview",
       contents: prompt,
       config: {
         responseMimeType: "application/json"
@@ -889,7 +889,7 @@ app.post("/api/studio-copilot/chat", async (req, res) => {
     });
 
     const response = await genAI.models.generateContent({
-      model: "gemini-3.8-flash",
+      model: "gemini-3.1-pro-preview",
       contents: contents,
       config: {
         systemInstruction: contextPrompt,
@@ -4940,9 +4940,9 @@ if (process.env.NODE_ENV !== 'production') {
           delete finalConfig.customAction;
         }
 
-        const effectiveModel = model && !model.includes("gemini-2.5") && !model.includes("gemini-1.5") ? model : "gemini-3.8-flash";
+        const effectiveModel = model && !model.includes("gemini-2.5") && !model.includes("gemini-1.5") ? model : "gemini-3.1-pro-preview";
 
-        const fallbackModels = [effectiveModel, "gemini-3.8-flash", "gemini-3.1-flash-lite", "gemini-flash-latest"].filter((m, i, arr) => arr.indexOf(m) === i);
+        const fallbackModels = [effectiveModel, "gemini-3.1-pro-preview", "gemini-3.1-flash-lite", "gemini-flash-latest"].filter((m, i, arr) => arr.indexOf(m) === i);
 
         let response: any = null;
         let lastError: any = null;
@@ -5825,7 +5825,7 @@ Provide a JSON response with this exact structure:
 Respond with RAW JSON ONLY. No markdown, no backticks.`;
 
     const aiRes = await ai.models.generateContent({
-      model: "gemini-3.8-flash",
+      model: "gemini-3.1-pro-preview",
       contents: [{ role: "user", parts: [{ text: prompt }] }],
       config: {
         responseMimeType: "application/json"
@@ -5912,7 +5912,7 @@ Respond with a JSON array of objects with this EXACT format for each item in the
 Respond with RAW JSON ONLY. No markdown, no backticks.`;
 
     const aiRes = await ai.models.generateContent({
-      model: "gemini-3.8-flash",
+      model: "gemini-3.1-pro-preview",
       contents: [{ role: "user", parts: [{ text: prompt }] }],
       config: {
         responseMimeType: "application/json"
