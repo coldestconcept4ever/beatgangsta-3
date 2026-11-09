@@ -69,13 +69,12 @@ export async function repairStemArtifacts(
     filterNode2.frequency.value = 75;
     filterNode2.Q.value = 0.707;
   } else if (stemType === 'vocal') {
-    filterNode1.type = 'bandpass';
-    filterNode1.frequency.value = 1750;
-    filterNode1.Q.value = 0.65;
-    filterNode2.type = 'peaking';
-    filterNode2.frequency.value = 3200;
-    filterNode2.gain.value = 1.8;
-    filterNode2.Q.value = 0.9;
+    filterNode1.type = 'highpass';
+    filterNode1.frequency.value = 135;
+    filterNode1.Q.value = 0.707;
+    filterNode2.type = 'lowpass';
+    filterNode2.frequency.value = 10000;
+    filterNode2.Q.value = 0.707;
   } else {
     // Guitars, Synths, Keys, Pads
     filterNode1.type = 'highpass';
@@ -113,15 +112,24 @@ export async function repairStemArtifacts(
     }
 
     // Dynamic Spectral Denoising & Smooth Analog Tape Saturation
-    // Eliminates digital clicks, harsh square-wave edges, and residual low-level phase rumble
-    const noiseFloor = isPercussive ? 0.005 : 0.0025;
+    // Calculate channel peak to calibrate downward expander threshold
+    let channelPeak = 0.0001;
+    for (let i = 0; i < length; i += 8) {
+      const mag = Math.abs(data[i]);
+      if (mag > channelPeak) channelPeak = mag;
+    }
+
+    // Adaptive noise floor expander: silences inter-beat pauses and residual cross-bleed
+    const noiseFloor = isPercussive 
+      ? Math.max(0.012, channelPeak * 0.15) 
+      : Math.max(0.003, channelPeak * 0.05);
+
     for (let i = 0; i < length; i++) {
       let val = data[i];
-      // Adaptive noise floor expander: smoothly fades down low-level dirt instead of hard truncation
       const absVal = Math.abs(val);
       if (absVal < noiseFloor) {
         const factor = absVal / noiseFloor;
-        val *= (factor * factor); // Quadratic downward expansion
+        val *= (factor * factor * factor); // Steep cubic downward expansion (up to -60dB bleed reduction)
       }
 
       // Continuous analog-style soft-saturation curve (smooth tanh approximation)

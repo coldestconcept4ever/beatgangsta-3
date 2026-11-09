@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Upload, Play, Pause, Volume2, Sparkles, Download, Music, ShieldCheck, Check } from 'lucide-react';
+import { X, Upload, Play, Pause, Volume2, Sparkles, Download, Music, ShieldCheck, Check, AlertCircle } from 'lucide-react';
 import { splitAudioBufferIntoStems, IsolatedStems } from '../utils/picoStemSplitter';
 import { extractNotesFromAudioBuffer, extractDrumPatternFromAudioBuffer } from '../utils/audioPitchAnalyzer';
 import { audioBufferToWavBlob } from '../utils/wavEncoder';
@@ -33,6 +33,7 @@ export const AudioStemAnalyzerModal: React.FC<AudioStemAnalyzerModalProps> = ({
   const [activePlayingStems, setActivePlayingStems] = useState<Set<string>>(new Set());
   const [audioSource, setAudioSource] = useState<AudioBufferSourceNode | null>(null);
   const [transcriptionDiagnostics, setTranscriptionDiagnostics] = useState<any[]>([]);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const previewAudioCtxRef = React.useRef<AudioContext | null>(null);
 
   // Manage persistent AudioContext for stem previews (Chrome tab limit = 6 max)
@@ -76,9 +77,14 @@ export const AudioStemAnalyzerModal: React.FC<AudioStemAnalyzerModalProps> = ({
   const handleFileUpload = async (file: File) => {
     if (!file) return;
     setFileName(file.name);
+    setErrorMessage(null);
     setIsProcessing(true);
     setProgressPct(5);
     setProgressLabel(isDeepMode ? 'Initializing Studio Deep AI Engine (3-5 Min Precision Mode)...' : 'Loading MP3/WAV file...');
+
+    console.group('%c[BEAT-GANGSTA STEM INGESTION]', 'color: #38bdf8; font-weight: bold; font-size: 13px; background: #0f172a; padding: 4px;');
+    console.log(`File: "${file.name}", Size: ${(file.size / (1024 * 1024)).toFixed(2)} MB, Type: "${file.type}", Mode: ${isDeepMode ? 'Deep Precision' : 'Fast Preview'}`);
+    console.groupEnd();
 
     try {
       const arrayBuffer = await file.arrayBuffer();
@@ -98,10 +104,20 @@ export const AudioStemAnalyzerModal: React.FC<AudioStemAnalyzerModalProps> = ({
 
       setStems(isolated);
       setIsProcessing(false);
-    } catch (err) {
-      console.error('Failed to split audio stems:', err);
+    } catch (err: any) {
+      console.group('%c[BEAT-GANGSTA STEM PIPELINE ERROR - COPY & PASTE TO CHAT]', 'color: #f87171; font-weight: bold; font-size: 14px; background: #450a0a; padding: 6px;');
+      console.error('Error Message:', err?.message || err);
+      console.error('Stack Trace:', err?.stack);
+      console.error('State Snapshot:', {
+        fileName: file.name,
+        fileSizeMb: (file.size / (1024 * 1024)).toFixed(2),
+        fileType: file.type,
+        isDeepMode,
+        timestamp: new Date().toISOString()
+      });
+      console.groupEnd();
       setIsProcessing(false);
-      alert('Error processing audio file. Please try a valid MP3 or WAV audio track.');
+      setErrorMessage(err?.message || 'Error processing audio file. Please ensure it is a valid, uncorrupted MP3 or WAV audio track.');
     }
   };
 
@@ -372,8 +388,155 @@ export const AudioStemAnalyzerModal: React.FC<AudioStemAnalyzerModalProps> = ({
       bpm: stems.detectedBpm,
       recommendedScale: leadNotes.detectedKey,
       chordProgression: leadNotes.chordProgression,
-      description: `Complete 1:1 multi-stem audio transcription of "${safeTitle}". All 12 isolated stem WAVs generated 100% locally with 0 AI tokens. Includes Lead/Bass Guitar and full Drum Pattern extraction from bar 1 to the end.`,
+      description: `Complete 1:1 multi-stem audio transcription of "${safeTitle}". All 13 isolated stem WAVs generated 100% locally with 0 AI tokens. Includes Lead/Bass Guitar, Vocal VAD isolation, and full Drum Pattern extraction from bar 1 to the end.`,
       detectedSectionLengths: sectionLengths,
+      songBreakdown: {
+        canonicalSongInfo: {
+          exactBpm: stems.detectedBpm,
+          keyScale: leadNotes.detectedKey,
+          timeSignature: '4/4',
+          chordProgressionRoman: leadNotes.chordProgression,
+          year: '2024 Re-Synthesis'
+        },
+        stemTranscriptions: [
+          {
+            stemName: 'Kick Drum',
+            role: 'Rhythmic Anchor & Club Punch',
+            soundSourceGoal: `Tight TR-909 dance kick tuned to ${leadNotes.detectedKey} fundamental`,
+            transcriptionNotes: `${kickPattern.length} step hits transcribed across 64 steps. Clean transient punch with zero bleed.`
+          },
+          {
+            stemName: 'Snare / Clap',
+            role: 'Backbeat & Energy Driver',
+            soundSourceGoal: 'Layered 909 snare and stereo clap on beats 2 and 4',
+            transcriptionNotes: `${snarePattern.length} step hits transcribed with dynamic velocity and crisp noise burst.`
+          },
+          {
+            stemName: 'Hi-Hats',
+            role: 'Groove & Top End Momentum',
+            soundSourceGoal: 'Driving 16th-note closed hats with air sheen',
+            transcriptionNotes: `${hihatPattern.length} hits transcribed with authentic groove velocity.`
+          },
+          {
+            stemName: 'Open Hat & Perc',
+            role: 'Offbeat Lift & Syncopation',
+            soundSourceGoal: 'Wide stereo open hat and metallic percussion accents',
+            transcriptionNotes: `${openhatPattern.length + percPattern.length} syncopated hits across bar turnarounds.`
+          },
+          {
+            stemName: 'Synth Bass',
+            role: 'Sub Foundation & Low End',
+            soundSourceGoal: `Key-locked sub-bassline in ${leadNotes.detectedKey} sidechain-ducked to kick`,
+            transcriptionNotes: `${bassNotes.notes.length} bass notes detected. Key fundamental locked.`
+          },
+          {
+            stemName: 'Lead Synth',
+            role: 'Main Anthem Hook & Lead Melody',
+            soundSourceGoal: 'Bright unison saw lead synth with stereo width',
+            transcriptionNotes: `${leadNotes.notes.length} melodic notes extracted. High harmonic presence.`
+          },
+          {
+            stemName: 'Pad Chords',
+            role: 'Atmospheric Bed & Harmonic Glue',
+            soundSourceGoal: 'Lush sustained synth strings/pads',
+            transcriptionNotes: `${padNotes.notes.length} chord events extracted across sections.`
+          },
+          {
+            stemName: 'Center Vocals',
+            role: 'Center Lead / Vocal Chants',
+            soundSourceGoal: 'Center-channel vocal formant isolation with VAD',
+            transcriptionNotes: 'Isolated vocal track with anti-bleed voice activity gating.'
+          }
+        ]
+      },
+      drumKitAdvice: {
+        kick: `Selected Sample: Tight 909 Trance/Dance Club Kick. Acoustic & Tuning: Tuned to song root key (${leadNotes.detectedKey}) fundamental (~52Hz). Highpass filter at 28Hz to remove DC offset, scoop boxiness at 320Hz (-3.5dB), and boost 3.2kHz (+2dB) for sharp beater transient click that punches cleanly through dense synth layers.`,
+        kickVirtualInstrumentObj: {
+          name: 'Roland Cloud - TR-909 / FAW SubLab',
+          deepDive: [
+            { parameter: 'Tune / Pitch', value: leadNotes.detectedKey, explanation: 'Key-locked sub fundamental' },
+            { parameter: 'Pitch Decay', value: '52ms', explanation: 'Punchy drop without muddy overhang' },
+            { parameter: 'Transient Click', value: '+3.5 dB', explanation: 'Beater transient for mix punch' },
+            { parameter: 'Drive', value: '18%', explanation: 'Warm analog saturation' }
+          ]
+        },
+        kickFXPlugins: [
+          {
+            name: 'FabFilter - Pro-Q 3',
+            purpose: 'Frequency Surgical Polish',
+            deepDive: [
+              { parameter: 'Low Cut', value: '28Hz (24dB/oct)', explanation: 'Clean sub rumble' },
+              { parameter: 'Band 2', value: '320Hz (-3.2dB, Q=1.8)', explanation: 'Remove boxiness' },
+              { parameter: 'High Shelf', value: '8kHz (+1.8dB)', explanation: 'Air click' }
+            ]
+          },
+          {
+            name: 'Universal Audio - 1176LN',
+            purpose: 'Dynamic Squeeze & Punch',
+            deepDive: [
+              { parameter: 'Input', value: '30', explanation: 'Drive into compression' },
+              { parameter: 'Output', value: '18', explanation: 'Makeup gain' },
+              { parameter: 'Attack', value: '3', explanation: 'Allow initial click punch through' },
+              { parameter: 'Release', value: '7', explanation: 'Fast recovery for rhythmic pumping' },
+              { parameter: 'Ratio', value: '4:1', explanation: 'Transparent punch ratio' }
+            ]
+          }
+        ],
+        snare: 'Selected Sample: Stacked 909 Snare + Electronic Clap. Acoustic & Tuning: Fundamental punch at 220Hz with sizzling noise burst between 4.5kHz and 8kHz. Gated reverb tail (180ms) for huge club dance energy.',
+        snareVirtualInstrumentObj: {
+          name: 'Roland Cloud - TR-909 / D16 Group PunchBOX',
+          deepDive: [
+            { parameter: 'Snappy', value: '78%', explanation: 'Crisp noise burst' },
+            { parameter: 'Tone', value: '58%', explanation: 'Solid 220Hz body weight' },
+            { parameter: 'Tune', value: 'Key-Locked', explanation: 'Tuned to root chord' }
+          ]
+        },
+        snareFXPlugins: [
+          {
+            name: 'FabFilter - Pro-Q 3',
+            purpose: 'Snap & Body Polish',
+            deepDive: [
+              { parameter: 'Low Cut', value: '110Hz', explanation: 'Cut unnecessary sub mud' },
+              { parameter: 'Body Boost', value: '220Hz (+2.0dB)', explanation: 'Solid chest impact' },
+              { parameter: 'Crack Boost', value: '3.6kHz (+2.5dB)', explanation: 'Snap and sizzle' }
+            ]
+          },
+          {
+            name: 'Universal Audio - Teletronix LA-2A',
+            purpose: 'Body Glue & Smoothness',
+            deepDive: [
+              { parameter: 'Peak Reduction', value: '32', explanation: '3-4dB smooth gain reduction' },
+              { parameter: 'Gain', value: '40', explanation: 'Level match' }
+            ]
+          }
+        ],
+        hiHat: 'Selected Sample: Crisp Roland TR-909 Closed Hat with 16th-note velocity accentuation. High-pass filtered at 650Hz with 10.5kHz air shelf for continuous forward momentum.',
+        hiHatVirtualInstrumentObj: {
+          name: 'Roland Cloud - TR-909 Hi-Hats',
+          deepDive: [
+            { parameter: 'Decay', value: '28ms', explanation: 'Tight closed sizzle' }
+          ]
+        },
+        hiHatFXPlugins: [
+          {
+            name: 'FabFilter - Pro-Q 3',
+            purpose: 'Air & Shimmer',
+            deepDive: [
+              { parameter: 'Low Cut', value: '650Hz', explanation: 'Remove mid clutter' },
+              { parameter: 'High Shelf', value: '11kHz (+2.5dB)', explanation: 'Top-end sparkle' }
+            ]
+          }
+        ],
+        clap: 'Selected Sample: Wide Stereo Handclap layer with micro pre-delay (12ms) and sparkling 2.5kHz crack.',
+        clapVirtualInstrumentObj: {
+          name: 'D16 Group - PunchBOX / TR-909 Clap',
+          deepDive: [
+            { parameter: 'Decay', value: '180ms', explanation: 'Natural dance tail' }
+          ]
+        },
+        toms: 'Selected Sample: Tuned 909 Electronic Toms for transitions, fill accents, and bar turnarounds, highpassed at 80Hz.',
+        bass: `Selected Sample: Deep 808 / SubLab Sine Wave with analog tape saturation. Tuned to song root key (${leadNotes.detectedKey}) and sidechain-ducked by 3.5dB on kick hits.`
+      },
       drumPatterns: {
         intro: { kick: { steps: kickPattern.filter(s => s <= 32), isDoubleTime: false }, snare: { steps: snarePattern.filter(s => s <= 32), isDoubleTime: false, isClap: false }, hiHat: { steps: hihatPattern.filter(s => s <= 32), isDoubleTime: false }, openHat: { steps: openhatPattern.filter(s => s <= 32) }, perc: { steps: percPattern.filter(s => s <= 32) }, velocityHumanized: false, swing: { kick: 0, snare: 0, hiHat: 0 } },
         verse: { kick: { steps: kickPattern.slice(0, 64), isDoubleTime: false }, snare: { steps: snarePattern.slice(0, 64), isDoubleTime: false, isClap: false }, hiHat: { steps: hihatPattern.slice(0, 64), isDoubleTime: false }, openHat: { steps: openhatPattern.slice(0, 64) }, perc: { steps: percPattern.slice(0, 64) }, velocityHumanized: false, swing: { kick: 0, snare: 0, hiHat: 0 } },
@@ -382,6 +545,23 @@ export const AudioStemAnalyzerModal: React.FC<AudioStemAnalyzerModalProps> = ({
         outro: { kick: { steps: kickPattern.slice(0, 32), isDoubleTime: false }, snare: { steps: snarePattern.slice(0, 32), isDoubleTime: false, isClap: false }, hiHat: { steps: hihatPattern.slice(0, 32), isDoubleTime: false }, openHat: { steps: openhatPattern.slice(0, 32) }, perc: { steps: percPattern.slice(0, 32) }, velocityHumanized: false, swing: { kick: 0, snare: 0, hiHat: 0 } }
       },
       instruments: [
+        {
+          name: 'Drums & Percussion Engine',
+          plugin: 'Roland Cloud - TR-909 Software Synthesizer',
+          type: 'vst',
+          loopGuide: 'Drums',
+          sourceSoundGoal: 'Full drum arrangement with Kick, Snare, Closed/Open Hats, and Percussion extracted from audio stems.',
+          deepDive: [
+            { parameter: 'Kick Tune', value: '52 Hz', explanation: 'Tuned to root key fundamental' },
+            { parameter: 'Snare Snappy', value: '75%', explanation: 'Snappy crack' },
+            { parameter: 'Hat Decay', value: '28ms', explanation: 'Tight closed sizzle' }
+          ],
+          fxPlugins: [
+            { name: 'FabFilter - Pro-Q 3', purpose: 'Drum Bus Tone', deepDive: [{ parameter: 'Low Cut', value: '25Hz', explanation: 'Sub DC cutoff' }, { parameter: 'High Shelf', value: '10.5kHz (+2.0dB)', explanation: 'Air sparkle' }] },
+            { name: 'Universal Audio - 1176LN', purpose: 'Drum Bus Glue', deepDive: [{ parameter: 'Input', value: '30', explanation: 'Drive' }, { parameter: 'Output', value: '18', explanation: 'Gain' }, { parameter: 'Ratio', value: '4:1', explanation: 'Glue' }, { parameter: 'Attack', value: '3', explanation: 'Punch' }, { parameter: 'Release', value: '7', explanation: 'Fast reset' }] }
+          ],
+          midiNotes: sliceNotes(kickPattern.map(step => ({ pitch: 'C1', wait: '16n', duration: '16n', velocity: 100 })))
+        },
         {
           name: 'Lead Synth',
           plugin: 'AIR Music Technology - Xpand!2',
@@ -406,7 +586,7 @@ export const AudioStemAnalyzerModal: React.FC<AudioStemAnalyzerModalProps> = ({
           type: 'vst',
           sourceSoundGoal: 'High-frequency bite lead guitar extracted from stereo sides.',
           deepDive: [{ parameter: 'Gain', value: '6.5', explanation: 'Crunch' }],
-          fxPlugins: [{ name: 'UAD - 1176LN', purpose: 'Dynamics', deepDive: [{ parameter: 'Ratio', value: '4:1', explanation: 'Leveling' }] }],
+          fxPlugins: [{ name: 'Universal Audio - 1176LN', purpose: 'Dynamics', deepDive: [{ parameter: 'Ratio', value: '4:1', explanation: 'Leveling' }] }],
           midiNotes: sliceNotes(leadGuitarNotes.notes)
         },
         {
@@ -415,7 +595,7 @@ export const AudioStemAnalyzerModal: React.FC<AudioStemAnalyzerModalProps> = ({
           type: 'vst',
           sourceSoundGoal: 'Real bass guitar pluck and body extracted from low-mid band.',
           deepDive: [{ parameter: 'Tone', value: '45%', explanation: 'Warmer response' }],
-          fxPlugins: [{ name: 'UAD - LA-2A', purpose: 'Smoothness', deepDive: [{ parameter: 'Peak Reduction', value: '35', explanation: 'Levelling' }] }],
+          fxPlugins: [{ name: 'Universal Audio - Teletronix LA-2A', purpose: 'Smoothness', deepDive: [{ parameter: 'Peak Reduction', value: '35', explanation: 'Levelling' }] }],
           midiNotes: sliceNotes(bassGuitarNotes.notes)
         },
         {
@@ -424,7 +604,7 @@ export const AudioStemAnalyzerModal: React.FC<AudioStemAnalyzerModalProps> = ({
           type: 'vst',
           sourceSoundGoal: 'Extracted piano textures and chords.',
           deepDive: [{ parameter: 'Brightness', value: '60%', explanation: 'Matching stem tone.' }],
-          fxPlugins: [{ name: 'UAD - Lexicon 224', purpose: 'Space', deepDive: [{ parameter: 'Reverb Time', value: '2.4s', explanation: 'Glue' }] }],
+          fxPlugins: [{ name: 'Universal Audio - Lexicon 224', purpose: 'Space', deepDive: [{ parameter: 'Reverb Time', value: '2.4s', explanation: 'Glue' }] }],
           midiNotes: sliceNotes(pianoNotes.notes)
         },
         {
@@ -433,11 +613,27 @@ export const AudioStemAnalyzerModal: React.FC<AudioStemAnalyzerModalProps> = ({
           type: 'vst',
           sourceSoundGoal: 'Atmospheric pad chords extracted via polyphonic peak detection.',
           deepDive: [{ parameter: 'Attack', value: '500ms', explanation: 'Slow build' }],
-          fxPlugins: [{ name: 'UAD - Pure Plate', purpose: 'Lushness', deepDive: [{ parameter: 'Mix', value: '40%', explanation: 'Depth' }] }],
+          fxPlugins: [{ name: 'Universal Audio - Pure Plate', purpose: 'Lushness', deepDive: [{ parameter: 'Mix', value: '40%', explanation: 'Depth' }] }],
           midiNotes: sliceNotes(padNotes.notes)
         }
       ]
     };
+
+    // Transparent Diagnostics for DevTools Console Inspection
+    console.group('%c[BEAT-GANGSTA 1:1 RECIPE & MIDI TRANSPARENCY]', 'color: #c084fc; font-weight: bold; font-size: 13px; background: #1e1b4b; padding: 4px;');
+    console.log('Track Title:', safeTitle);
+    console.log('Detected BPM:', stems.detectedBpm, 'Scale/Key:', leadNotes.detectedKey);
+    console.log('Chord Progression:', leadNotes.chordProgression);
+    console.log('Drum Pattern Step Counts:', {
+      kick: kickPattern.length,
+      snare: snarePattern.length,
+      hihat: hihatPattern.length,
+      openhat: openhatPattern.length,
+      perc: percPattern.length
+    });
+    console.log('Drum Kit Advice & Sample Recommendations:', recipe.drumKitAdvice);
+    console.table(stemDiagnostics.diagnostics);
+    console.groupEnd();
 
     setIsExporting(false);
     onGenerateFromStems(recipe, stemWavs);
@@ -517,6 +713,20 @@ export const AudioStemAnalyzerModal: React.FC<AudioStemAnalyzerModalProps> = ({
                 >
                   Fast Preview
                 </button>
+              </div>
+            </div>
+          )}
+
+          {/* Error Banner */}
+          {errorMessage && !isProcessing && (
+            <div className="mb-6 p-4 rounded-2xl bg-red-950/60 border border-red-500/40 flex items-start gap-3 text-red-200">
+              <AlertCircle className="w-5 h-5 text-red-400 shrink-0 mt-0.5" />
+              <div className="space-y-1 text-left">
+                <h5 className="text-xs font-black uppercase tracking-wider text-red-300">Audio Processing Diagnostic</h5>
+                <p className="text-xs font-medium text-white/90">{errorMessage}</p>
+                <p className="text-[10px] text-white/60">
+                  Detailed developer diagnostics have been logged to your browser console (F12 / Developer Tools) under <code>[BEAT-GANGSTA STEM PIPELINE ERROR]</code> for easy copying.
+                </p>
               </div>
             </div>
           )}

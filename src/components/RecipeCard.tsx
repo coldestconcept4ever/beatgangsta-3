@@ -1754,9 +1754,9 @@ export const RecipeCard: React.FC<RecipeCardProps> = ({ recipe: initialRecipe, i
 
 
 
-      {false /* drumKitAdvice integrated into instruments grid */ && recipe.drumKitAdvice && !recipe.isGangstaVox && (
+      {recipe.drumKitAdvice && !recipe.isGangstaVox && (
         <div className="space-y-6 mb-8">
-          <h4 className={`text-sm font-black uppercase tracking-widest ${theme === 'coldest' ? 'text-sky-400' : 'opacity-40'}`}>{t('drum_kit_advice', 'Drum Kit & VST/JSFX Advice')}</h4>
+          <h4 className={`text-sm font-black uppercase tracking-widest ${theme === 'coldest' ? 'text-sky-400' : 'opacity-40'}`}>{t('drum_kit_advice', 'Drum Kit, Sample Selection & VST/JSFX Advice')}</h4>
           <div className={`p-6 rounded-[2.5rem] border grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 ${
             theme === 'coldest' ? 'bg-orange-950/60 border-orange-500/40 shadow-md' : 'bg-orange-900/10 border-orange-500/20'
           }`}>
@@ -1780,10 +1780,10 @@ export const RecipeCard: React.FC<RecipeCardProps> = ({ recipe: initialRecipe, i
                 )}
               </div>
               
-              {/* Muffling/Physical */}
-              {drumKits?.length > 0 && recipe.drumKitAdvice.kick && (
+              {/* Muffling/Physical/Sample Advice */}
+              {recipe.drumKitAdvice.kick && (
                 <div>
-                  <span className="text-[10px] uppercase font-black tracking-wider text-orange-400/70">Acoustic Tuning & Muffling</span>
+                  <span className="text-[10px] uppercase font-black tracking-wider text-orange-400/70">Sample Selection & Acoustic Tuning</span>
                   <p className="text-xs font-bold opacity-90 leading-relaxed mt-1">{recipe.drumKitAdvice.kick}</p>
                 </div>
               )}
@@ -1860,10 +1860,10 @@ export const RecipeCard: React.FC<RecipeCardProps> = ({ recipe: initialRecipe, i
                 )}
               </div>
               
-              {/* Muffling/Physical */}
-              {drumKits?.length > 0 && recipe.drumKitAdvice.snare && (
+              {/* Muffling/Physical/Sample Advice */}
+              {recipe.drumKitAdvice.snare && (
                 <div>
-                  <span className="text-[10px] uppercase font-black tracking-wider text-orange-400/70">Acoustic Tuning & Muffling</span>
+                  <span className="text-[10px] uppercase font-black tracking-wider text-orange-400/70">Sample Selection & Acoustic Tuning</span>
                   <p className="text-xs font-bold opacity-90 leading-relaxed mt-1">{recipe.drumKitAdvice.snare}</p>
                 </div>
               )}
@@ -2000,9 +2000,9 @@ export const RecipeCard: React.FC<RecipeCardProps> = ({ recipe: initialRecipe, i
               )}
 
               {/* Toms (Fallback / Extra info) */}
-              {drumKits?.length > 0 && recipe.drumKitAdvice.toms && (
+              {recipe.drumKitAdvice.toms && (
                 <div className="pt-2 border-t border-orange-500/10">
-                  <span className="text-[10px] uppercase font-black tracking-wider text-orange-400/70">Acoustic Toms Tuning</span>
+                  <span className="text-[10px] uppercase font-black tracking-wider text-orange-400/70">Acoustic Toms & Percussion Tuning</span>
                   <p className="text-xs font-bold opacity-90 leading-relaxed mt-1">{recipe.drumKitAdvice.toms}</p>
                 </div>
               )}
