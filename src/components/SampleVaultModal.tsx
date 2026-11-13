@@ -88,8 +88,10 @@ interface SampleVaultModalProps {
 
 // Comprehensive theme definitions matching BeatGangsta themes
 const vaultThemeStyles: Record<string, {
+  overlay: string;
   container: string;
   headerBg: string;
+  headerBorder: string;
   discBg: string;
   titleGradient: string;
   vipBadge: string;
@@ -104,6 +106,53 @@ const vaultThemeStyles: Record<string, {
   tabDriveActive: string;
   tabDriveInactive: string;
   accentText: string;
+  searchInput: string;
+  searchClearBtn: string;
+  quickFilterActive: string;
+  quickFilterInactive: string;
+  toolBtnActive: string;
+  toolBtnInactive: string;
+  toolBtnMatchActive: string;
+  toolBtnMatchInactive: string;
+  toolBtnCopyLink: string;
+  toolBtnEnrichActive: string;
+  toolBtnEnrichInactive: string;
+  toolUserBadge: string;
+  tagRibbonBg: string;
+  tagPillActive: string;
+  tagPillInactive: string;
+  subBarBg: string;
+  subBarBorder: string;
+  subBarText: string;
+  dropdownBtn: string;
+  dropdownMenu: string;
+  dropdownItemActive: string;
+  dropdownItemInactive: string;
+  viewModeActive: string;
+  viewModeInactive: string;
+  sidebarBg: string;
+  sidebarBorder: string;
+  sidebarHeader: string;
+  sidebarText: string;
+  sidebarSubtext: string;
+  sidebarToggleActive: string;
+  sidebarToggleInactive: string;
+  sidebarStatusCard: string;
+  mainContentBg: string;
+  tableHeader: string;
+  tableRowHover: string;
+  tableRowPlaying: string;
+  tableRowDivider: string;
+  tableCellText: string;
+  tableCellSubtext: string;
+  playBtnCapsuleLoop: string;
+  playBtnCapsuleHit: string;
+  playBtnCapsulePlaying: string;
+  gridCard: string;
+  gridCardPlaying: string;
+  waveformBox: string;
+  galaxyMapBg: string;
+  songMatcherBanner: string;
   uploadBg: string;
   uploadDashed: string;
   uploadIcon: string;
@@ -145,79 +194,177 @@ const vaultThemeStyles: Record<string, {
   progressBar: string;
 }> = {
   'coldest': {
-    container: 'bg-[#030d1c]/95 border-sky-400/40 text-sky-100 shadow-[0_0_60px_rgba(56,189,248,0.22)]',
-    headerBg: 'border-b border-sky-500/30 bg-gradient-to-r from-sky-950/70 via-[#04162e] to-slate-950/80',
-    discBg: 'bg-sky-500/15 border-sky-400/40 text-sky-300',
-    titleGradient: 'bg-gradient-to-r from-white via-sky-200 to-sky-400 bg-clip-text text-transparent',
-    vipBadge: 'bg-sky-500/20 text-sky-300 border-sky-400/40',
-    subtitle: 'text-sky-300/70 font-mono',
-    exportBtn: 'bg-sky-500/20 hover:bg-sky-500/30 border-sky-400/40 text-sky-200',
-    closeBtn: 'hover:bg-sky-900/40 text-sky-400',
-    navBg: 'bg-sky-950/40 border-b border-sky-900/40',
-    tabVaultActive: 'bg-sky-500 text-white shadow-lg shadow-sky-500/30 font-bold',
-    tabVaultInactive: 'bg-sky-950/50 hover:bg-sky-900/50 text-sky-300 border-sky-800/40',
-    tabPairingActive: 'bg-gradient-to-r from-sky-400 to-blue-500 text-white shadow-lg shadow-sky-500/30 font-black',
-    tabPairingInactive: 'bg-sky-950/40 hover:bg-sky-900/40 text-sky-300 border-sky-800/40',
-    tabDriveActive: 'bg-blue-600 text-white shadow-lg shadow-blue-500/30 font-bold',
-    tabDriveInactive: 'bg-blue-950/40 hover:bg-blue-900/40 text-blue-300 border-blue-800/40',
-    accentText: 'text-sky-400',
-    uploadBg: 'bg-gradient-to-b from-sky-950/20 to-transparent border-b border-sky-900/40',
-    uploadDashed: 'border-sky-500/40 hover:border-sky-400 bg-sky-950/20 hover:bg-sky-950/35',
-    uploadIcon: 'bg-sky-500/15 group-hover:bg-sky-500/25 text-sky-300',
-    uploadHighlight: 'text-sky-300',
+    overlay: 'bg-sky-950/60 backdrop-blur-2xl',
+    container: 'bg-white/35 border-white/60 text-[#0c4a6e] shadow-[0_25px_60px_rgba(2,132,199,0.35),inset_0_1px_2px_rgba(255,255,255,0.8)] backdrop-blur-3xl',
+    headerBg: 'border-b border-white/50 bg-white/45 backdrop-blur-2xl text-[#0c4a6e]',
+    headerBorder: 'border-white/50',
+    discBg: 'bg-white/70 border-white/80 text-sky-600 shadow-sm',
+    titleGradient: 'text-[#0c4a6e]',
+    vipBadge: 'bg-sky-500/20 text-sky-700 border-sky-400/40',
+    subtitle: 'text-[#0369a1]',
+    exportBtn: 'bg-white/50 hover:bg-white/80 border-white/70 text-[#0c4a6e] shadow-sm',
+    closeBtn: 'bg-white/50 hover:bg-white/80 border-white/70 text-[#0c4a6e] shadow-sm',
+    navBg: 'bg-white/40 border-b border-white/50',
+    tabVaultActive: 'bg-sky-500 text-white border-sky-300 shadow-md shadow-sky-500/30 font-black',
+    tabVaultInactive: 'bg-white/40 hover:bg-white/60 text-[#0c4a6e] border-white/60',
+    tabPairingActive: 'bg-gradient-to-r from-sky-400 via-sky-500 to-blue-600 text-white shadow-md shadow-sky-500/30 font-black',
+    tabPairingInactive: 'bg-white/40 hover:bg-white/60 text-[#0c4a6e] border-white/60',
+    tabDriveActive: 'bg-blue-600 text-white shadow-md shadow-blue-500/30 font-black',
+    tabDriveInactive: 'bg-white/40 hover:bg-white/60 text-[#0c4a6e] border-white/60',
+    accentText: 'text-[#0c4a6e]',
+    searchInput: 'bg-white/55 border-white/70 text-[#0c4a6e] placeholder:text-[#0c4a6e]/50 focus:border-sky-400 focus:bg-white/75 shadow-inner',
+    searchClearBtn: 'text-[#0c4a6e]/60 hover:text-[#0c4a6e]',
+    quickFilterActive: 'bg-sky-500 border-sky-300 text-white shadow-md scale-105',
+    quickFilterInactive: 'bg-white/45 hover:bg-white/70 border-white/60 text-[#0c4a6e]',
+    toolBtnActive: 'bg-sky-500 text-white border-sky-300 shadow-md shadow-sky-500/30',
+    toolBtnInactive: 'bg-white/45 hover:bg-white/70 text-[#0c4a6e] border-white/60',
+    toolBtnMatchActive: 'bg-gradient-to-r from-purple-500 to-pink-500 text-white border-pink-400 shadow-md',
+    toolBtnMatchInactive: 'bg-white/45 hover:bg-white/70 text-purple-800 border-white/60',
+    toolBtnCopyLink: 'bg-amber-400/30 hover:bg-amber-400/50 text-amber-900 border-amber-400/40 shadow-sm',
+    toolBtnEnrichActive: 'bg-amber-500 text-black border-amber-400 animate-pulse',
+    toolBtnEnrichInactive: 'bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-800 border-emerald-500/40',
+    toolUserBadge: 'bg-white/50 border-white/70 text-[#0c4a6e]',
+    tagRibbonBg: 'bg-white/35 border-b border-white/40 text-[#0c4a6e]',
+    tagPillActive: 'bg-sky-500 text-white border-sky-300 shadow-sm font-bold scale-105',
+    tagPillInactive: 'bg-white/45 hover:bg-white/70 text-[#0c4a6e] border-white/60',
+    subBarBg: 'bg-white/40 border-b border-white/40 text-[#0c4a6e]',
+    subBarBorder: 'border-white/40',
+    subBarText: 'text-[#0c4a6e]',
+    dropdownBtn: 'hover:text-sky-600 text-[#0c4a6e]',
+    dropdownMenu: 'bg-white/95 border-white/80 shadow-2xl text-[#0c4a6e] backdrop-blur-2xl',
+    dropdownItemActive: 'bg-sky-500/20 text-sky-800 font-bold',
+    dropdownItemInactive: 'hover:bg-white/60 text-[#0c4a6e]',
+    viewModeActive: 'text-sky-600 bg-white/70 border border-white/80 shadow-sm',
+    viewModeInactive: 'text-[#0c4a6e]/50 hover:text-[#0c4a6e]',
+    sidebarBg: 'bg-white/35 border-r border-white/45 text-[#0c4a6e]',
+    sidebarBorder: 'border-white/45',
+    sidebarHeader: 'border-b border-white/40 text-[#0c4a6e]',
+    sidebarText: 'text-[#0c4a6e]',
+    sidebarSubtext: 'text-[#0369a1]',
+    sidebarToggleActive: 'bg-sky-500',
+    sidebarToggleInactive: 'bg-slate-300',
+    sidebarStatusCard: 'bg-white/50 border-white/70 text-[#0c4a6e]',
+    mainContentBg: 'bg-white/20 text-[#0c4a6e]',
+    tableHeader: 'bg-white/45 border-b border-white/40 text-[#0c4a6e]/80 font-black',
+    tableRowHover: 'hover:bg-white/50 text-[#0c4a6e]',
+    tableRowPlaying: 'bg-sky-500/20 ring-1 ring-sky-400/50',
+    tableRowDivider: 'divide-white/30',
+    tableCellText: 'text-[#0c4a6e]',
+    tableCellSubtext: 'text-[#0369a1]',
+    playBtnCapsuleLoop: 'bg-emerald-500 hover:bg-emerald-400 text-white shadow-sm',
+    playBtnCapsuleHit: 'bg-sky-500 hover:bg-sky-400 text-white shadow-sm',
+    playBtnCapsulePlaying: 'bg-slate-900 text-white ring-2 ring-white scale-105 shadow-md',
+    gridCard: 'bg-white/40 hover:bg-white/60 border-white/60 text-[#0c4a6e] shadow-sm',
+    gridCardPlaying: 'bg-sky-500/25 border-sky-400 ring-2 ring-sky-400/60 shadow-md',
+    waveformBox: 'bg-white/50 border-white/60',
+    galaxyMapBg: 'bg-gradient-to-b from-sky-950/90 via-slate-900 to-black text-white',
+    songMatcherBanner: 'bg-white/45 border-white/60 text-[#0c4a6e] shadow-xl backdrop-blur-2xl',
+    uploadBg: 'bg-white/30 border-b border-white/40',
+    uploadDashed: 'border-sky-300 hover:border-sky-500 bg-white/30 hover:bg-white/45',
+    uploadIcon: 'bg-white/70 text-sky-600',
+    uploadHighlight: 'text-sky-700',
     catActive: 'bg-sky-500 text-white shadow-md shadow-sky-500/30 scale-105',
-    catInactive: 'bg-sky-950/40 hover:bg-sky-900/50 text-sky-300/80 border-sky-800/40',
+    catInactive: 'bg-white/40 hover:bg-white/60 text-[#0c4a6e] border-white/60',
     catCountActive: 'bg-black/25 text-white',
-    catCountInactive: 'bg-sky-900/60 text-sky-300',
-    card: 'bg-sky-950/25 hover:bg-sky-950/40 border-sky-900/50 hover:border-sky-500/40',
-    cardPlayActive: 'bg-sky-400 text-black border-sky-300 shadow-md scale-105',
-    cardPlayInactive: 'bg-sky-950/70 text-sky-300 border-sky-800/50 hover:bg-sky-900',
-    badgeType: 'bg-sky-500/15 text-sky-300 border-sky-500/30',
-    badgeKey: 'bg-sky-900/40 border-sky-500/30 text-sky-200',
-    badgePunch: 'bg-blue-900/40 border-blue-500/30 text-blue-200',
-    pairBtn: 'bg-sky-500/20 hover:bg-sky-500/30 border-sky-400/40 text-sky-200',
-    guidanceBtn: 'bg-sky-500/15 hover:bg-sky-500/25 text-sky-300 border-sky-500/30',
-    tag: 'bg-sky-950/60 text-sky-300/80 border-sky-800/40',
-    guidanceDrawer: 'border-t border-sky-900/50 bg-black/50',
-    guidanceCard: 'bg-sky-950/40 border-sky-900/60',
-    pairingSideBg: 'border-r border-sky-900/40 bg-sky-950/15',
-    pairingAnchorCard: 'bg-sky-950/50 border-sky-500/40',
-    pairingChosenCard: 'bg-sky-950/60 border-sky-400 shadow-md shadow-sky-500/15',
-    pairingUnchosenCard: 'bg-sky-950/25 border-sky-900/40 hover:bg-sky-950/45 hover:border-sky-700/60',
-    auditionPlayer: 'bg-gradient-to-r from-sky-950/60 via-black to-blue-950/50 border-sky-500/40',
-    auditionBtnPlay: 'bg-gradient-to-r from-sky-400 to-blue-500 text-white font-bold',
-    soloBox: 'bg-sky-950/60 border-sky-800/40',
-    soloActiveBoth: 'bg-sky-400 text-black font-bold',
-    soloActiveA: 'bg-sky-500 text-white font-bold',
-    soloActiveB: 'bg-blue-500 text-white font-bold',
-    soloInactive: 'text-sky-300 hover:text-white',
-    sliderAccent: 'accent-sky-400',
-    boxCard: 'bg-sky-950/30 border-sky-900/50',
-    uadBox: 'bg-sky-950/40 border-sky-500/40',
-    uadCarve: 'bg-black/40 border-sky-900/50 text-sky-200/90',
-    driveContainer: 'bg-sky-950/25 border-sky-500/30',
-    driveInput: 'bg-black/60 border-sky-500/40 text-white placeholder:text-sky-700 focus:border-sky-300',
-    driveBtn: 'bg-sky-500 hover:bg-sky-400 text-black font-bold',
-    driveBtnMove: 'bg-gradient-to-r from-blue-600 to-sky-500 text-white shadow-blue-500/30 font-black',
-    progressBar: 'bg-gradient-to-r from-sky-400 to-blue-500',
+    catCountInactive: 'bg-white/50 text-[#0c4a6e]',
+    card: 'bg-white/40 hover:bg-white/60 border-white/60 text-[#0c4a6e] shadow-sm',
+    cardPlayActive: 'bg-sky-500 text-white border-sky-400 shadow-md scale-105',
+    cardPlayInactive: 'bg-white/60 text-[#0c4a6e] border-white/70 hover:bg-white/80',
+    badgeType: 'bg-sky-500/15 text-sky-700 border-sky-500/30',
+    badgeKey: 'bg-white/50 border-white/60 text-[#0c4a6e]',
+    badgePunch: 'bg-blue-500/15 border-blue-500/30 text-blue-800',
+    pairBtn: 'bg-white/50 hover:bg-white/75 border-white/70 text-[#0c4a6e]',
+    guidanceBtn: 'bg-white/50 hover:bg-white/75 text-[#0c4a6e] border-white/70',
+    tag: 'bg-white/50 text-[#0c4a6e] border-white/60',
+    guidanceDrawer: 'border-t border-white/40 bg-white/40',
+    guidanceCard: 'bg-white/45 border-white/60 text-[#0c4a6e]',
+    pairingSideBg: 'border-r border-white/45 bg-white/25',
+    pairingAnchorCard: 'bg-white/45 border-white/60 text-[#0c4a6e]',
+    pairingChosenCard: 'bg-sky-500/25 border-sky-400 shadow-md text-[#0c4a6e]',
+    pairingUnchosenCard: 'bg-white/35 border-white/50 hover:bg-white/50 text-[#0c4a6e]',
+    auditionPlayer: 'bg-white/45 border-white/60 text-[#0c4a6e]',
+    auditionBtnPlay: 'bg-sky-500 hover:bg-sky-400 text-white font-bold',
+    soloBox: 'bg-white/50 border-white/60',
+    soloActiveBoth: 'bg-sky-500 text-white font-bold',
+    soloActiveA: 'bg-blue-600 text-white font-bold',
+    soloActiveB: 'bg-indigo-600 text-white font-bold',
+    soloInactive: 'text-[#0c4a6e] hover:text-black',
+    sliderAccent: 'accent-sky-500',
+    boxCard: 'bg-white/40 border-white/60 text-[#0c4a6e]',
+    uadBox: 'bg-white/45 border-white/60 text-[#0c4a6e]',
+    uadCarve: 'bg-white/55 border-white/60 text-[#0c4a6e]',
+    driveContainer: 'bg-white/40 border-white/60 text-[#0c4a6e]',
+    driveInput: 'bg-white/60 border-white/70 text-[#0c4a6e] placeholder:text-[#0c4a6e]/50 focus:border-sky-400',
+    driveBtn: 'bg-sky-500 hover:bg-sky-400 text-white font-bold',
+    driveBtnMove: 'bg-gradient-to-r from-sky-400 via-sky-500 to-blue-600 text-white shadow-md font-black',
+    progressBar: 'bg-gradient-to-r from-sky-400 to-blue-600',
   },
   'crazy-bird': {
-    container: 'bg-[#0c0000]/95 border-red-900/60 text-red-50 shadow-[0_0_60px_rgba(220,38,38,0.25)]',
-    headerBg: 'border-b border-red-900/40 bg-gradient-to-r from-red-950/70 via-black to-zinc-950/80',
-    discBg: 'bg-red-500/15 border-red-500/40 text-red-400',
-    titleGradient: 'bg-gradient-to-r from-red-300 via-rose-300 to-red-500 bg-clip-text text-transparent',
+    overlay: 'bg-black/75 backdrop-blur-2xl',
+    container: 'bg-[#140202]/90 border-red-500/35 text-red-50 shadow-[0_25px_60px_rgba(0,0,0,0.85),inset_0_1px_2px_rgba(255,255,255,0.15)] backdrop-blur-3xl',
+    headerBg: 'border-b border-red-500/30 bg-black/55 backdrop-blur-2xl text-red-100',
+    headerBorder: 'border-red-500/30',
+    discBg: 'bg-black/60 border-red-500/40 text-red-400 shadow-sm',
+    titleGradient: 'text-white',
     vipBadge: 'bg-red-500/20 text-red-300 border-red-500/40',
-    subtitle: 'text-red-300/70 font-mono',
-    exportBtn: 'bg-red-500/20 hover:bg-red-500/30 border-red-400/40 text-red-200',
-    closeBtn: 'hover:bg-red-900/40 text-red-400',
-    navBg: 'bg-red-950/40 border-b border-red-900/40',
-    tabVaultActive: 'bg-red-600 text-white shadow-lg shadow-red-600/30 font-bold',
-    tabVaultInactive: 'bg-red-950/50 hover:bg-red-900/50 text-red-300 border-red-900/40',
-    tabPairingActive: 'bg-gradient-to-r from-red-600 to-amber-600 text-white shadow-lg shadow-red-600/30 font-black',
-    tabPairingInactive: 'bg-red-950/40 hover:bg-red-900/40 text-red-300 border-red-900/40',
-    tabDriveActive: 'bg-rose-700 text-white shadow-lg shadow-rose-700/30 font-bold',
-    tabDriveInactive: 'bg-rose-950/40 hover:bg-rose-900/40 text-rose-300 border-rose-900/40',
+    subtitle: 'text-red-300/80',
+    exportBtn: 'bg-black/50 hover:bg-black/70 border-red-500/40 text-red-200 shadow-sm',
+    closeBtn: 'bg-black/50 hover:bg-black/70 border-red-500/40 text-red-300 shadow-sm',
+    navBg: 'bg-black/45 border-b border-red-900/40',
+    tabVaultActive: 'bg-red-600 text-white border-red-400 shadow-md shadow-red-600/30 font-black',
+    tabVaultInactive: 'bg-black/45 hover:bg-black/65 text-red-300 border-red-900/40',
+    tabPairingActive: 'bg-gradient-to-r from-red-600 to-amber-600 text-white shadow-md shadow-red-600/30 font-black',
+    tabPairingInactive: 'bg-black/45 hover:bg-black/65 text-red-300 border-red-900/40',
+    tabDriveActive: 'bg-rose-700 text-white shadow-md shadow-rose-700/30 font-black',
+    tabDriveInactive: 'bg-black/45 hover:bg-black/65 text-rose-300 border-red-900/40',
     accentText: 'text-red-400',
+    searchInput: 'bg-black/60 border border-red-500/40 text-white placeholder:text-red-300/40 focus:border-red-400 focus:bg-black/80 shadow-inner',
+    searchClearBtn: 'text-red-300/60 hover:text-white',
+    quickFilterActive: 'bg-red-600 border-red-400 text-white shadow-md scale-105',
+    quickFilterInactive: 'bg-black/45 hover:bg-black/65 border-red-500/30 text-red-200',
+    toolBtnActive: 'bg-red-600 text-white border-red-400 shadow-md shadow-red-600/30',
+    toolBtnInactive: 'bg-black/45 hover:bg-black/65 text-red-200 border-red-500/30',
+    toolBtnMatchActive: 'bg-gradient-to-r from-red-600 to-pink-600 text-white border-pink-400 shadow-md',
+    toolBtnMatchInactive: 'bg-black/45 hover:bg-black/65 text-pink-300 border-red-500/30',
+    toolBtnCopyLink: 'bg-amber-500/25 hover:bg-amber-500/40 text-amber-200 border-amber-500/40 shadow-sm',
+    toolBtnEnrichActive: 'bg-amber-500 text-black border-amber-400 animate-pulse',
+    toolBtnEnrichInactive: 'bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 border-emerald-500/40',
+    toolUserBadge: 'bg-black/50 border-red-500/40 text-red-200',
+    tagRibbonBg: 'bg-black/45 border-b border-red-900/40 text-red-100',
+    tagPillActive: 'bg-red-600 text-white border-red-400 shadow-sm font-bold scale-105',
+    tagPillInactive: 'bg-black/40 hover:bg-black/60 text-red-200 border border-red-500/25',
+    subBarBg: 'bg-black/50 border-b border-red-900/40 text-red-100',
+    subBarBorder: 'border-red-900/40',
+    subBarText: 'text-red-100',
+    dropdownBtn: 'hover:text-red-400 text-red-200',
+    dropdownMenu: 'bg-[#140202]/95 border-red-500/40 shadow-2xl text-red-100 backdrop-blur-2xl',
+    dropdownItemActive: 'bg-red-600/20 text-red-300 font-bold',
+    dropdownItemInactive: 'hover:bg-white/5 text-red-200',
+    viewModeActive: 'text-red-400 bg-black/60 border border-red-500/40 shadow-sm',
+    viewModeInactive: 'text-red-400/50 hover:text-red-200',
+    sidebarBg: 'bg-black/55 border-r border-red-500/30 text-red-100',
+    sidebarBorder: 'border-red-500/30',
+    sidebarHeader: 'border-b border-red-900/40 text-red-100',
+    sidebarText: 'text-red-100',
+    sidebarSubtext: 'text-red-300',
+    sidebarToggleActive: 'bg-red-600',
+    sidebarToggleInactive: 'bg-zinc-700',
+    sidebarStatusCard: 'bg-black/60 border-red-500/30 text-red-200',
+    mainContentBg: 'bg-black/40 text-red-100',
+    tableHeader: 'bg-black/45 border-b border-red-900/40 text-red-200/80 font-black',
+    tableRowHover: 'hover:bg-red-950/40 text-red-100',
+    tableRowPlaying: 'bg-red-900/30 ring-1 ring-red-500/50',
+    tableRowDivider: 'divide-red-900/30',
+    tableCellText: 'text-red-100',
+    tableCellSubtext: 'text-red-300',
+    playBtnCapsuleLoop: 'bg-emerald-600 hover:bg-emerald-500 text-white shadow-sm',
+    playBtnCapsuleHit: 'bg-red-600 hover:bg-red-500 text-white shadow-sm',
+    playBtnCapsulePlaying: 'bg-white text-black ring-2 ring-red-400 scale-105 shadow-md',
+    gridCard: 'bg-black/45 hover:bg-black/65 border-red-500/25 text-red-100 shadow-sm',
+    gridCardPlaying: 'bg-red-950/50 border-red-400 ring-2 ring-red-400/60 shadow-md',
+    waveformBox: 'bg-black/60 border-red-900/40',
+    galaxyMapBg: 'bg-gradient-to-b from-[#140202] via-[#090101] to-black text-white',
+    songMatcherBanner: 'bg-black/60 border-red-500/35 text-red-50 shadow-xl backdrop-blur-2xl',
     uploadBg: 'bg-gradient-to-b from-red-950/20 to-transparent border-b border-red-900/40',
     uploadDashed: 'border-red-500/40 hover:border-red-400 bg-red-950/20 hover:bg-red-950/35',
     uploadIcon: 'bg-red-500/15 group-hover:bg-red-500/25 text-red-400',
@@ -259,22 +406,71 @@ const vaultThemeStyles: Record<string, {
     progressBar: 'bg-gradient-to-r from-red-500 to-amber-500',
   },
   'chef-mode': {
-    container: 'bg-[#18110b]/95 border-orange-500/40 text-orange-50 shadow-[0_0_60px_rgba(249,115,22,0.2)]',
-    headerBg: 'border-b border-orange-900/40 bg-gradient-to-r from-orange-950/70 via-stone-950 to-amber-950/70',
-    discBg: 'bg-orange-500/15 border-orange-400/40 text-orange-400',
-    titleGradient: 'bg-gradient-to-r from-amber-200 via-orange-300 to-amber-500 bg-clip-text text-transparent',
-    vipBadge: 'bg-orange-500/20 text-orange-300 border-orange-400/40',
-    subtitle: 'text-orange-300/70 font-mono',
-    exportBtn: 'bg-orange-500/20 hover:bg-orange-500/30 border-orange-400/40 text-orange-200',
-    closeBtn: 'hover:bg-orange-900/40 text-orange-400',
-    navBg: 'bg-orange-950/40 border-b border-orange-900/40',
-    tabVaultActive: 'bg-orange-500 text-black font-black shadow-lg shadow-orange-500/30',
-    tabVaultInactive: 'bg-orange-950/50 hover:bg-orange-900/50 text-orange-300 border-orange-800/40',
-    tabPairingActive: 'bg-gradient-to-r from-amber-400 to-orange-500 text-black shadow-lg shadow-amber-500/30 font-black',
-    tabPairingInactive: 'bg-orange-950/40 hover:bg-orange-900/40 text-orange-300 border-orange-800/40',
-    tabDriveActive: 'bg-amber-600 text-black font-black shadow-lg shadow-amber-500/30',
-    tabDriveInactive: 'bg-amber-950/40 hover:bg-amber-900/40 text-amber-300 border-amber-800/40',
-    accentText: 'text-orange-400',
+    overlay: 'bg-amber-950/60 backdrop-blur-2xl',
+    container: 'bg-white/45 border-orange-200/60 text-[#431407] shadow-[0_25px_60px_rgba(234,88,12,0.25),inset_0_1px_2px_rgba(255,255,255,0.8)] backdrop-blur-3xl',
+    headerBg: 'border-b border-orange-200/50 bg-white/50 backdrop-blur-2xl text-[#431407]',
+    headerBorder: 'border-orange-200/50',
+    discBg: 'bg-orange-500/20 border-orange-400/40 text-orange-600 shadow-sm',
+    titleGradient: 'text-[#431407]',
+    vipBadge: 'bg-orange-500/20 text-orange-700 border-orange-400/40',
+    subtitle: 'text-orange-800/80',
+    exportBtn: 'bg-white/50 hover:bg-white/80 border-orange-200 text-orange-950 shadow-sm',
+    closeBtn: 'bg-white/50 hover:bg-white/80 border-orange-200 text-orange-950 shadow-sm',
+    navBg: 'bg-white/40 border-b border-orange-200/50',
+    tabVaultActive: 'bg-orange-500 text-white border-orange-400 shadow-md shadow-orange-500/30 font-black',
+    tabVaultInactive: 'bg-white/40 hover:bg-white/60 text-orange-950 border-orange-200/60',
+    tabPairingActive: 'bg-gradient-to-r from-amber-400 to-orange-500 text-white shadow-md font-black',
+    tabPairingInactive: 'bg-white/40 hover:bg-white/60 text-orange-950 border-orange-200/60',
+    tabDriveActive: 'bg-amber-600 text-white shadow-md font-black',
+    tabDriveInactive: 'bg-white/40 hover:bg-white/60 text-orange-950 border-orange-200/60',
+    accentText: 'text-orange-600',
+    searchInput: 'bg-white/60 border-orange-200 text-orange-950 placeholder:text-orange-900/40 focus:border-orange-500 shadow-inner',
+    searchClearBtn: 'text-orange-800/60 hover:text-orange-950',
+    quickFilterActive: 'bg-orange-500 border-orange-400 text-white shadow-md scale-105',
+    quickFilterInactive: 'bg-white/50 hover:bg-white/70 border-orange-200 text-orange-950',
+    toolBtnActive: 'bg-orange-500 text-white border-orange-400 shadow-md',
+    toolBtnInactive: 'bg-white/50 hover:bg-white/70 text-orange-950 border-orange-200',
+    toolBtnMatchActive: 'bg-gradient-to-r from-orange-500 to-amber-500 text-white border-amber-400 shadow-md',
+    toolBtnMatchInactive: 'bg-white/50 hover:bg-white/70 text-orange-950 border-orange-200',
+    toolBtnCopyLink: 'bg-amber-400/30 hover:bg-amber-400/50 text-amber-950 border-amber-400/40 shadow-sm',
+    toolBtnEnrichActive: 'bg-amber-500 text-black border-amber-400 animate-pulse',
+    toolBtnEnrichInactive: 'bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-800 border-emerald-500/40',
+    toolUserBadge: 'bg-white/60 border-orange-200 text-orange-950',
+    tagRibbonBg: 'bg-white/40 border-b border-orange-200/50 text-orange-950',
+    tagPillActive: 'bg-orange-500 text-white border-orange-400 shadow-sm font-bold scale-105',
+    tagPillInactive: 'bg-white/50 hover:bg-white/70 text-orange-950 border-orange-200',
+    subBarBg: 'bg-white/45 border-b border-orange-200/50 text-orange-950',
+    subBarBorder: 'border-orange-200/50',
+    subBarText: 'text-orange-950',
+    dropdownBtn: 'hover:text-orange-600 text-orange-950',
+    dropdownMenu: 'bg-white/95 border-orange-200 shadow-2xl text-orange-950 backdrop-blur-2xl',
+    dropdownItemActive: 'bg-orange-500/20 text-orange-800 font-bold',
+    dropdownItemInactive: 'hover:bg-orange-50 text-orange-950',
+    viewModeActive: 'text-orange-600 bg-white/80 border border-orange-200 shadow-sm',
+    viewModeInactive: 'text-orange-950/50 hover:text-orange-950',
+    sidebarBg: 'bg-white/40 border-r border-orange-200/50 text-orange-950',
+    sidebarBorder: 'border-orange-200/50',
+    sidebarHeader: 'border-b border-orange-200/50 text-orange-950',
+    sidebarText: 'text-orange-950',
+    sidebarSubtext: 'text-orange-800',
+    sidebarToggleActive: 'bg-orange-500',
+    sidebarToggleInactive: 'bg-stone-300',
+    sidebarStatusCard: 'bg-white/60 border-orange-200 text-orange-950',
+    mainContentBg: 'bg-white/25 text-orange-950',
+    tableHeader: 'bg-white/50 border-b border-orange-200/50 text-orange-950/80 font-black',
+    tableRowHover: 'hover:bg-white/60 text-orange-950',
+    tableRowPlaying: 'bg-orange-500/20 ring-1 ring-orange-400/50',
+    tableRowDivider: 'divide-orange-200/40',
+    tableCellText: 'text-orange-950',
+    tableCellSubtext: 'text-orange-800',
+    playBtnCapsuleLoop: 'bg-emerald-600 hover:bg-emerald-500 text-white shadow-sm',
+    playBtnCapsuleHit: 'bg-orange-500 hover:bg-orange-400 text-white shadow-sm',
+    playBtnCapsulePlaying: 'bg-stone-900 text-white ring-2 ring-white scale-105 shadow-md',
+    gridCard: 'bg-white/45 hover:bg-white/65 border-orange-200 text-orange-950 shadow-sm',
+    gridCardPlaying: 'bg-orange-500/25 border-orange-400 ring-2 ring-orange-400/60 shadow-md',
+    waveformBox: 'bg-white/60 border-orange-200',
+    galaxyMapBg: 'bg-gradient-to-b from-stone-950 via-stone-900 to-black text-white',
+    songMatcherBanner: 'bg-white/50 border-orange-200 text-orange-950 shadow-xl backdrop-blur-2xl',
     uploadBg: 'bg-gradient-to-b from-orange-950/20 to-transparent border-b border-orange-900/40',
     uploadDashed: 'border-orange-500/40 hover:border-orange-400 bg-orange-950/20 hover:bg-orange-950/35',
     uploadIcon: 'bg-orange-500/15 group-hover:bg-orange-500/25 text-orange-400',
@@ -316,22 +512,71 @@ const vaultThemeStyles: Record<string, {
     progressBar: 'bg-gradient-to-r from-amber-400 to-orange-500',
   },
   'hustle-time': {
-    container: 'bg-[#09090b]/95 border-amber-500/40 text-amber-50 shadow-[0_0_60px_rgba(245,158,11,0.2)]',
-    headerBg: 'border-b border-amber-900/40 bg-gradient-to-r from-amber-950/70 via-zinc-950 to-yellow-950/70',
-    discBg: 'bg-amber-500/15 border-amber-400/40 text-amber-400',
-    titleGradient: 'bg-gradient-to-r from-amber-200 via-yellow-300 to-amber-500 bg-clip-text text-transparent',
-    vipBadge: 'bg-amber-500/20 text-amber-300 border-amber-400/40',
-    subtitle: 'text-amber-300/70 font-mono',
-    exportBtn: 'bg-amber-500/20 hover:bg-amber-500/30 border-amber-400/40 text-amber-200',
-    closeBtn: 'hover:bg-amber-900/40 text-amber-400',
-    navBg: 'bg-amber-950/40 border-b border-amber-900/40',
-    tabVaultActive: 'bg-amber-500 text-black font-black shadow-lg shadow-amber-500/30',
-    tabVaultInactive: 'bg-amber-950/50 hover:bg-amber-900/50 text-amber-300 border-amber-800/40',
-    tabPairingActive: 'bg-gradient-to-r from-amber-400 to-yellow-500 text-black shadow-lg shadow-amber-500/30 font-black',
-    tabPairingInactive: 'bg-amber-950/40 hover:bg-amber-900/40 text-amber-300 border-amber-800/40',
-    tabDriveActive: 'bg-yellow-500 text-black font-black shadow-lg shadow-yellow-500/30',
-    tabDriveInactive: 'bg-yellow-950/40 hover:bg-yellow-900/40 text-yellow-300 border-yellow-800/40',
-    accentText: 'text-amber-400',
+    overlay: 'bg-black/80 backdrop-blur-2xl',
+    container: 'bg-zinc-950/90 border-yellow-500/35 text-yellow-100 shadow-[0_25px_60px_rgba(0,0,0,0.85)] backdrop-blur-3xl',
+    headerBg: 'border-b border-yellow-500/30 bg-black/60 backdrop-blur-2xl text-yellow-100',
+    headerBorder: 'border-yellow-500/30',
+    discBg: 'bg-yellow-500/20 border-yellow-400/40 text-yellow-400 shadow-sm',
+    titleGradient: 'text-white',
+    vipBadge: 'bg-yellow-500/20 text-yellow-300 border-yellow-400/40',
+    subtitle: 'text-yellow-300/80',
+    exportBtn: 'bg-black/50 hover:bg-black/70 border-yellow-500/40 text-yellow-200 shadow-sm',
+    closeBtn: 'bg-black/50 hover:bg-black/70 border-yellow-500/40 text-yellow-300 shadow-sm',
+    navBg: 'bg-black/45 border-b border-yellow-900/40',
+    tabVaultActive: 'bg-yellow-500 text-black border-yellow-400 shadow-md shadow-yellow-500/30 font-black',
+    tabVaultInactive: 'bg-black/45 hover:bg-black/65 text-yellow-300 border-yellow-900/40',
+    tabPairingActive: 'bg-gradient-to-r from-amber-400 to-yellow-500 text-black shadow-md font-black',
+    tabPairingInactive: 'bg-black/45 hover:bg-black/65 text-yellow-300 border-yellow-900/40',
+    tabDriveActive: 'bg-yellow-600 text-black shadow-md font-black',
+    tabDriveInactive: 'bg-black/45 hover:bg-black/65 text-yellow-300 border-yellow-900/40',
+    accentText: 'text-yellow-400',
+    searchInput: 'bg-black/60 border border-yellow-500/40 text-white placeholder:text-yellow-300/40 focus:border-yellow-400 focus:bg-black/80 shadow-inner',
+    searchClearBtn: 'text-yellow-300/60 hover:text-white',
+    quickFilterActive: 'bg-yellow-500 border-yellow-400 text-black shadow-md scale-105 font-bold',
+    quickFilterInactive: 'bg-black/45 hover:bg-black/65 border-yellow-500/30 text-yellow-200',
+    toolBtnActive: 'bg-yellow-500 text-black border-yellow-400 shadow-md font-bold',
+    toolBtnInactive: 'bg-black/45 hover:bg-black/65 text-yellow-200 border-yellow-500/30',
+    toolBtnMatchActive: 'bg-gradient-to-r from-yellow-500 to-amber-500 text-black border-amber-400 shadow-md font-bold',
+    toolBtnMatchInactive: 'bg-black/45 hover:bg-black/65 text-yellow-200 border-yellow-500/30',
+    toolBtnCopyLink: 'bg-amber-500/25 hover:bg-amber-500/40 text-amber-200 border-amber-500/40 shadow-sm',
+    toolBtnEnrichActive: 'bg-amber-500 text-black border-amber-400 animate-pulse',
+    toolBtnEnrichInactive: 'bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 border-emerald-500/40',
+    toolUserBadge: 'bg-black/50 border-yellow-500/40 text-yellow-200',
+    tagRibbonBg: 'bg-black/45 border-b border-yellow-900/40 text-yellow-100',
+    tagPillActive: 'bg-yellow-500 text-black border-yellow-400 shadow-sm font-bold scale-105',
+    tagPillInactive: 'bg-black/40 hover:bg-black/60 text-yellow-200 border border-yellow-500/25',
+    subBarBg: 'bg-black/50 border-b border-yellow-900/40 text-yellow-100',
+    subBarBorder: 'border-yellow-900/40',
+    subBarText: 'text-yellow-100',
+    dropdownBtn: 'hover:text-yellow-400 text-yellow-200',
+    dropdownMenu: 'bg-zinc-950/95 border-yellow-500/40 shadow-2xl text-yellow-100 backdrop-blur-2xl',
+    dropdownItemActive: 'bg-yellow-500/20 text-yellow-300 font-bold',
+    dropdownItemInactive: 'hover:bg-white/5 text-yellow-200',
+    viewModeActive: 'text-yellow-400 bg-black/60 border border-yellow-500/40 shadow-sm',
+    viewModeInactive: 'text-yellow-400/50 hover:text-yellow-200',
+    sidebarBg: 'bg-black/55 border-r border-yellow-500/30 text-yellow-100',
+    sidebarBorder: 'border-yellow-500/30',
+    sidebarHeader: 'border-b border-yellow-900/40 text-yellow-100',
+    sidebarText: 'text-yellow-100',
+    sidebarSubtext: 'text-yellow-300',
+    sidebarToggleActive: 'bg-yellow-500',
+    sidebarToggleInactive: 'bg-zinc-700',
+    sidebarStatusCard: 'bg-black/60 border-yellow-500/30 text-yellow-200',
+    mainContentBg: 'bg-black/40 text-yellow-100',
+    tableHeader: 'bg-black/45 border-b border-yellow-900/40 text-yellow-200/80 font-black',
+    tableRowHover: 'hover:bg-yellow-950/30 text-yellow-100',
+    tableRowPlaying: 'bg-yellow-900/30 ring-1 ring-yellow-500/50',
+    tableRowDivider: 'divide-yellow-900/30',
+    tableCellText: 'text-yellow-100',
+    tableCellSubtext: 'text-yellow-300',
+    playBtnCapsuleLoop: 'bg-emerald-600 hover:bg-emerald-500 text-white shadow-sm',
+    playBtnCapsuleHit: 'bg-yellow-500 hover:bg-yellow-400 text-black font-bold shadow-sm',
+    playBtnCapsulePlaying: 'bg-white text-black ring-2 ring-yellow-400 scale-105 shadow-md',
+    gridCard: 'bg-black/45 hover:bg-black/65 border-yellow-500/25 text-yellow-100 shadow-sm',
+    gridCardPlaying: 'bg-yellow-950/50 border-yellow-400 ring-2 ring-yellow-400/60 shadow-md',
+    waveformBox: 'bg-black/60 border-yellow-900/40',
+    galaxyMapBg: 'bg-gradient-to-b from-zinc-950 via-black to-zinc-900 text-white',
+    songMatcherBanner: 'bg-black/60 border-yellow-500/35 text-yellow-50 shadow-xl backdrop-blur-2xl',
     uploadBg: 'bg-gradient-to-b from-amber-950/20 to-transparent border-b border-amber-900/40',
     uploadDashed: 'border-amber-500/40 hover:border-amber-400 bg-amber-950/20 hover:bg-amber-950/35',
     uploadIcon: 'bg-amber-500/15 group-hover:bg-amber-500/25 text-amber-400',
@@ -2407,32 +2652,29 @@ Pairing Tips: ${sample.guidance.pairingTips}`;
 
   return (
     <div 
-      className="fixed inset-0 z-[220] flex items-center justify-center p-2 sm:p-6 bg-black/85 backdrop-blur-2xl animate-in fade-in duration-300"
+      className={`fixed inset-0 z-[220] flex items-center justify-center p-2 sm:p-6 ${currentTheme.overlay} animate-in fade-in duration-300`}
       onClick={onClose}
     >
       <div 
-        className="w-full max-w-7xl h-[95vh] flex flex-col rounded-3xl border border-[#1b3452] bg-[#06111f] shadow-[0_0_80px_rgba(3,15,30,0.95)] overflow-hidden relative text-white font-sans select-none"
+        className={`w-full max-w-7xl h-[95vh] flex flex-col rounded-[2.5rem] sm:rounded-[3rem] border ${currentTheme.container} overflow-hidden relative font-sans select-none shadow-2xl transition-all duration-300`}
         onClick={(e) => e.stopPropagation()}
-        style={{
-          background: 'radial-gradient(circle at 50% 0%, #0e2744 0%, #061220 50%, #030813 100%)'
-        }}
       >
         {/* WAVES COSMOS TOP HEADER BAR (Matching user screenshot) */}
-        <div className="px-5 py-3 border-b border-[#13273e] bg-[#071424]/90 backdrop-blur-xl flex flex-wrap items-center justify-between gap-3 shrink-0">
+        <div className={`px-5 py-3 border-b flex flex-wrap items-center justify-between gap-3 shrink-0 ${currentTheme.headerBg}`}>
           {/* Logo & Brand */}
           <div className="flex items-center gap-3">
             <div 
               className="flex items-center gap-1.5 cursor-pointer group"
               onClick={() => setActiveTab('vault')}
             >
-              <span className="text-xl font-black tracking-widest text-sky-100 flex items-center">
+              <span className={`text-xl font-black tracking-widest flex items-center ${currentTheme.titleGradient}`}>
                 C
-                <span className="inline-flex items-center justify-center w-5 h-5 mx-0.5 rounded-full bg-sky-500/20 border border-sky-400/50">
-                  <Disc className="w-3.5 h-3.5 text-sky-400 animate-spin-slow" />
+                <span className={`inline-flex items-center justify-center w-5 h-5 mx-0.5 rounded-full ${currentTheme.discBg}`}>
+                  <Disc className="w-3.5 h-3.5 animate-spin-slow" />
                 </span>
                 SMOS
               </span>
-              <span className="text-[10px] text-gray-400 font-mono tracking-wider ml-1 hidden sm:inline group-hover:text-sky-300 transition-colors">
+              <span className={`text-[10px] font-mono tracking-wider ml-1 hidden sm:inline ${currentTheme.subtitle}`}>
                 Sample Finder
               </span>
             </div>
@@ -2441,18 +2683,18 @@ Pairing Tips: ${sample.guidance.pairingTips}`;
           {/* Integrated Search Bar + 3 Quick Filter Icon Buttons (Loops, One-Shots, Favorites) */}
           <div className="flex items-center gap-2 flex-1 max-w-xl mx-2">
             <div className="relative flex-1">
-              <Search className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+              <Search className={`w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 ${currentTheme.searchClearBtn}`} />
               <input
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="Search by instrument, tag, BPM, key, sound character..."
-                className="w-full pl-9 pr-3 py-1.5 rounded-full bg-[#0b1c2e] border border-[#1d3550] text-xs text-white placeholder:text-gray-500 focus:outline-none focus:border-sky-400 shadow-inner"
+                className={`w-full pl-9 pr-3 py-1.5 rounded-full text-xs focus:outline-none transition-all ${currentTheme.searchInput}`}
               />
               {searchQuery && (
                 <button
                   onClick={() => setSearchQuery('')}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white text-xs"
+                  className={`absolute right-3 top-1/2 -translate-y-1/2 text-xs ${currentTheme.searchClearBtn}`}
                 >
                   ✕
                 </button>
@@ -2468,9 +2710,7 @@ Pairing Tips: ${sample.guidance.pairingTips}`;
                   if (!filterLoopOnly) setFilterOneShotOnly(false);
                 }}
                 className={`w-8 h-8 rounded-full border flex items-center justify-center transition-all ${
-                  filterLoopOnly
-                    ? 'bg-emerald-500/30 border-emerald-400 text-emerald-300 shadow-md shadow-emerald-500/20 scale-105'
-                    : 'bg-[#0b1c2e] border-[#1d3550] text-gray-400 hover:text-white'
+                  filterLoopOnly ? currentTheme.quickFilterActive : currentTheme.quickFilterInactive
                 }`}
                 title="Filter Loops Only (🔄)"
               >
@@ -2484,9 +2724,7 @@ Pairing Tips: ${sample.guidance.pairingTips}`;
                   if (!filterOneShotOnly) setFilterLoopOnly(false);
                 }}
                 className={`w-8 h-8 rounded-full border flex items-center justify-center transition-all ${
-                  filterOneShotOnly
-                    ? 'bg-rose-500/30 border-rose-400 text-rose-300 shadow-md shadow-rose-500/20 scale-105'
-                    : 'bg-[#0b1c2e] border-[#1d3550] text-gray-400 hover:text-white'
+                  filterOneShotOnly ? currentTheme.quickFilterActive : currentTheme.quickFilterInactive
                 }`}
                 title="Filter One-Shots Only (➔)"
               >
@@ -2497,9 +2735,7 @@ Pairing Tips: ${sample.guidance.pairingTips}`;
               <button
                 onClick={() => setFilterFavoriteOnly(prev => !prev)}
                 className={`w-8 h-8 rounded-full border flex items-center justify-center transition-all ${
-                  filterFavoriteOnly
-                    ? 'bg-amber-500/30 border-amber-400 text-amber-300 shadow-md shadow-amber-500/20 scale-105'
-                    : 'bg-[#0b1c2e] border-[#1d3550] text-gray-400 hover:text-white'
+                  filterFavoriteOnly ? currentTheme.quickFilterActive : currentTheme.quickFilterInactive
                 }`}
                 title="Filter Favorites (⭐)"
               >
@@ -2514,14 +2750,14 @@ Pairing Tips: ${sample.guidance.pairingTips}`;
             <div className="relative">
               <button
                 onClick={() => setIsVolumeOpen(!isVolumeOpen)}
-                className="w-8 h-8 rounded-full bg-[#0b1c2e] border border-[#1d3550] text-gray-400 hover:text-white flex items-center justify-center transition-all"
+                className={`w-8 h-8 rounded-full border flex items-center justify-center transition-all ${currentTheme.quickFilterInactive}`}
                 title="Audition Volume"
               >
                 {auditionVolume > 0 ? <Volume2 className="w-3.5 h-3.5" /> : <VolumeX className="w-3.5 h-3.5" />}
               </button>
               {isVolumeOpen && (
-                <div className="absolute top-10 right-0 z-50 p-2.5 rounded-xl bg-[#081525] border border-sky-500/40 shadow-2xl flex items-center gap-2 w-36 animate-in fade-in">
-                  <Volume2 className="w-3 h-3 text-sky-400" />
+                <div className={`absolute top-10 right-0 z-50 p-2.5 rounded-2xl border shadow-2xl flex items-center gap-2 w-36 animate-in fade-in ${currentTheme.dropdownMenu}`}>
+                  <Volume2 className="w-3 h-3" />
                   <input
                     type="range"
                     min="0"
@@ -2529,7 +2765,7 @@ Pairing Tips: ${sample.guidance.pairingTips}`;
                     step="0.05"
                     value={auditionVolume}
                     onChange={(e) => setAuditionVolume(Number(e.target.value))}
-                    className="w-full accent-sky-400 cursor-pointer"
+                    className="w-full accent-sky-500 cursor-pointer"
                   />
                 </div>
               )}
@@ -2543,24 +2779,20 @@ Pairing Tips: ${sample.guidance.pairingTips}`;
                   handleTriggerMatch();
                 }
               }}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold transition-all border shadow-md active:scale-95 ${
-                activeTab === 'song-matcher'
-                  ? 'bg-gradient-to-r from-purple-500 to-pink-500 text-white border-pink-400 shadow-purple-500/30'
-                  : 'bg-[#0b1c2e] hover:bg-[#122840] text-purple-300 border-purple-500/40'
+              className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-bold transition-all border shadow-md active:scale-95 ${
+                activeTab === 'song-matcher' ? currentTheme.toolBtnMatchActive : currentTheme.toolBtnMatchInactive
               }`}
               title="Open AI Song Beat Kit Matcher & Live 16-Step Sequencer"
             >
-              <Wand2 className="w-3.5 h-3.5 text-amber-300 animate-pulse" />
+              <Wand2 className="w-3.5 h-3.5 animate-pulse" />
               <span className="hidden sm:inline">AI Song Matcher</span>
             </button>
 
             {/* AI Layer Stacker Switch */}
             <button
               onClick={() => setActiveTab(activeTab === 'pairing' ? 'vault' : 'pairing')}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold transition-all border shadow-md active:scale-95 ${
-                activeTab === 'pairing'
-                  ? 'bg-gradient-to-r from-sky-500 to-blue-600 text-white border-sky-400 shadow-sky-500/30'
-                  : 'bg-[#0b1c2e] hover:bg-[#122840] text-sky-300 border-sky-500/40'
+              className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-bold transition-all border shadow-md active:scale-95 ${
+                activeTab === 'pairing' ? currentTheme.toolBtnActive : currentTheme.toolBtnInactive
               }`}
               title="Dual Sample Layering & Acoustic Stacking Engine"
             >
@@ -2571,10 +2803,8 @@ Pairing Tips: ${sample.guidance.pairingTips}`;
             {/* Drive Mover Switch */}
             <button
               onClick={() => setActiveTab(activeTab === 'drive-import' ? 'vault' : 'drive-import')}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold transition-all border shadow-md active:scale-95 ${
-                activeTab === 'drive-import'
-                  ? 'bg-amber-500 text-black border-amber-400'
-                  : 'bg-[#0b1c2e] hover:bg-[#122840] text-amber-300 border-amber-500/40'
+              className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-bold transition-all border shadow-md active:scale-95 ${
+                activeTab === 'drive-import' ? currentTheme.toolBtnActive : currentTheme.toolBtnInactive
               }`}
               title="Scan and Move One-Shots from Google Drive"
             >
@@ -2585,7 +2815,7 @@ Pairing Tips: ${sample.guidance.pairingTips}`;
             {/* Single Copy Vault & Gear Rack Driver Link for Chat */}
             <button
               onClick={handleCopyVaultDriverLink}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold transition-all border shadow-md active:scale-95 bg-gradient-to-r from-amber-500 to-yellow-500 hover:from-amber-400 hover:to-yellow-400 text-black border-amber-400 shadow-amber-500/20"
+              className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-bold transition-all border shadow-md active:scale-95 ${currentTheme.toolBtnCopyLink}`}
               title="Copy single Studio Driver Link (Sample Vault + Gear Rack) for AI Assistant chat prompt"
             >
               <Copy className="w-3.5 h-3.5 fill-current" />
@@ -2596,10 +2826,8 @@ Pairing Tips: ${sample.guidance.pairingTips}`;
             {pendingAiCount > 0 ? (
               <button
                 onClick={isAutoEnrichingAi ? handlePauseAiEnrichment : handleAutoEnrichWithAi}
-                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold transition-all border shadow-md active:scale-95 ${
-                  isAutoEnrichingAi
-                    ? 'bg-amber-500 text-black border-amber-400 animate-pulse'
-                    : 'bg-[#0b1c2e] hover:bg-[#122840] text-emerald-400 border-emerald-500/40'
+                className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-bold transition-all border shadow-md active:scale-95 ${
+                  isAutoEnrichingAi ? currentTheme.toolBtnEnrichActive : currentTheme.toolBtnEnrichInactive
                 }`}
                 title={isAutoEnrichingAi ? "Pause AI Enrichment" : `Batch enrich samples with Gemini AI (saves 95% tokens) • ${pendingAiCount} pending`}
               >
@@ -2610,22 +2838,22 @@ Pairing Tips: ${sample.guidance.pairingTips}`;
                   </>
                 ) : (
                   <>
-                    <Sparkles className="w-3.5 h-3.5 text-emerald-400" />
+                    <Sparkles className="w-3.5 h-3.5" />
                     <span className="hidden xl:inline">AI Enrich ({pendingAiCount})</span>
                   </>
                 )}
               </button>
             ) : (
-              <div className="hidden xl:flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-950/40 border border-emerald-500/30 text-[10px] text-emerald-300 font-mono">
-                <CheckCircle2 className="w-3 h-3 text-emerald-400" />
+              <div className={`hidden xl:flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-mono border ${currentTheme.toolUserBadge}`}>
+                <CheckCircle2 className="w-3 h-3 text-emerald-500" />
                 <span>100% AI Researched</span>
               </div>
             )}
 
             {/* User Account / Auth Indicator */}
             {currentUser?.email && (
-              <div className="hidden lg:flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-[#0b1c2e] border border-[#1d3550] text-[11px] text-emerald-400 font-mono">
-                <ShieldCheck className="w-3 h-3" />
+              <div className={`hidden lg:flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-mono border ${currentTheme.toolUserBadge}`}>
+                <ShieldCheck className="w-3 h-3 text-emerald-500" />
                 <span className="truncate max-w-[130px]">{currentUser.email}</span>
               </div>
             )}
@@ -2633,7 +2861,7 @@ Pairing Tips: ${sample.guidance.pairingTips}`;
             {/* Close Button */}
             <button
               onClick={onClose}
-              className="w-8 h-8 rounded-full bg-[#0b1c2e] hover:bg-red-950/60 border border-[#1d3550] hover:border-red-500/40 text-gray-400 hover:text-red-300 flex items-center justify-center transition-colors"
+              className={`w-8 h-8 rounded-full border flex items-center justify-center transition-all hover:scale-105 active:scale-95 ${currentTheme.closeBtn}`}
             >
               <X className="w-4 h-4" />
             </button>
@@ -2641,7 +2869,7 @@ Pairing Tips: ${sample.guidance.pairingTips}`;
         </div>
 
         {/* SUB-BAR 1: TAG PILLS RIBBON (Exact pills from Waves COSMOS screenshot) */}
-        <div className="px-5 py-2 border-b border-[#12243a] bg-[#06111f]/95 flex items-center gap-1.5 overflow-x-auto scrollbar-none shrink-0">
+        <div className={`px-5 py-2 border-b flex items-center gap-1.5 overflow-x-auto scrollbar-none shrink-0 ${currentTheme.tagRibbonBg}`}>
           {COSMOS_TAG_PILLS.map((tag) => {
             const isSelected = selectedTagPills.includes(tag.toLowerCase());
             return (
@@ -2654,9 +2882,7 @@ Pairing Tips: ${sample.guidance.pairingTips}`;
                   );
                 }}
                 className={`px-3 py-1 rounded-full text-xs font-medium transition-all flex-shrink-0 border ${
-                  isSelected
-                    ? 'bg-white text-black border-white shadow-md font-bold scale-105'
-                    : 'bg-[#0a1827] hover:bg-[#0f2338] text-gray-300 border-[#1a334e]'
+                  isSelected ? currentTheme.tagPillActive : currentTheme.tagPillInactive
                 }`}
               >
                 {tag}
@@ -2666,7 +2892,7 @@ Pairing Tips: ${sample.guidance.pairingTips}`;
           {selectedTagPills.length > 0 && (
             <button
               onClick={() => setSelectedTagPills([])}
-              className="text-[10px] font-mono text-sky-400 hover:underline px-2 py-0.5"
+              className={`text-[10px] font-mono hover:underline px-2 py-0.5 ${currentTheme.accentText}`}
             >
               Clear Pills ({selectedTagPills.length})
             </button>
@@ -2674,9 +2900,9 @@ Pairing Tips: ${sample.guidance.pairingTips}`;
         </div>
 
         {/* SUB-BAR 2: DROPDOWNS & VIEW MODE SWITCHER (Matching Waves COSMOS screenshot) */}
-        <div className="px-5 py-2 border-b border-[#12243a] bg-[#071424] flex items-center justify-between gap-4 shrink-0">
+        <div className={`px-5 py-2 border-b flex items-center justify-between gap-4 shrink-0 ${currentTheme.subBarBg}`}>
           {/* Dropdown Filters on Left */}
-          <div className="flex items-center gap-4 text-xs font-semibold text-gray-300">
+          <div className="flex items-center gap-4 text-xs font-semibold">
             {/* 1. Instruments Dropdown */}
             <div className="relative">
               <button
@@ -2685,16 +2911,16 @@ Pairing Tips: ${sample.guidance.pairingTips}`;
                   setIsTagsOpen(false);
                   setIsKeyBpmOpen(false);
                 }}
-                className="flex items-center gap-1.5 hover:text-white transition-colors"
+                className={`flex items-center gap-1.5 transition-colors ${currentTheme.dropdownBtn}`}
               >
-                <span className={activeCategory !== 'all' ? 'text-sky-400 font-bold' : ''}>
+                <span className={activeCategory !== 'all' ? 'font-bold' : ''}>
                   {activeCategory === 'all' ? 'Instruments' : COSMOS_CATEGORIES.find(c => c.id === activeCategory)?.label}
                 </span>
                 <ChevronDown className="w-3.5 h-3.5 opacity-70" />
               </button>
 
               {isInstrumentsOpen && (
-                <div className="absolute top-8 left-0 z-50 w-52 p-2 rounded-2xl bg-[#081628] border border-sky-500/40 shadow-2xl space-y-1 animate-in fade-in">
+                <div className={`absolute top-8 left-0 z-50 w-52 p-2 rounded-2xl border shadow-2xl space-y-1 animate-in fade-in ${currentTheme.dropdownMenu}`}>
                   {COSMOS_CATEGORIES.map((cat) => (
                     <button
                       key={cat.id}
@@ -2703,9 +2929,7 @@ Pairing Tips: ${sample.guidance.pairingTips}`;
                         setIsInstrumentsOpen(false);
                       }}
                       className={`w-full flex items-center justify-between px-3 py-1.5 rounded-xl text-xs font-medium transition-colors ${
-                        activeCategory === cat.id
-                          ? 'bg-sky-500/20 text-sky-300 font-bold'
-                          : 'hover:bg-white/5 text-gray-300'
+                        activeCategory === cat.id ? currentTheme.dropdownItemActive : currentTheme.dropdownItemInactive
                       }`}
                     >
                       <div className="flex items-center gap-2">
@@ -2729,14 +2953,14 @@ Pairing Tips: ${sample.guidance.pairingTips}`;
                   setIsInstrumentsOpen(false);
                   setIsKeyBpmOpen(false);
                 }}
-                className="flex items-center gap-1.5 hover:text-white transition-colors"
+                className={`flex items-center gap-1.5 transition-colors ${currentTheme.dropdownBtn}`}
               >
                 <span>Tags</span>
                 <ChevronDown className="w-3.5 h-3.5 opacity-70" />
               </button>
 
               {isTagsOpen && (
-                <div className="absolute top-8 left-0 z-50 w-48 p-2 rounded-2xl bg-[#081628] border border-sky-500/40 shadow-2xl space-y-1 animate-in fade-in">
+                <div className={`absolute top-8 left-0 z-50 w-48 p-2 rounded-2xl border shadow-2xl space-y-1 animate-in fade-in ${currentTheme.dropdownMenu}`}>
                   {['punchy', 'clean', 'dry', 'wet', 'bright', 'dark', 'electronic', 'acoustic', 'tight', 'sizzle'].map((t) => {
                     const isSel = selectedTagPills.includes(t);
                     return (
@@ -2748,11 +2972,11 @@ Pairing Tips: ${sample.guidance.pairingTips}`;
                           );
                         }}
                         className={`w-full flex items-center justify-between px-3 py-1.5 rounded-xl text-xs font-medium capitalize transition-colors ${
-                          isSel ? 'bg-sky-500/20 text-sky-300 font-bold' : 'hover:bg-white/5 text-gray-300'
+                          isSel ? currentTheme.dropdownItemActive : currentTheme.dropdownItemInactive
                         }`}
                       >
                         <span>{t}</span>
-                        {isSel && <CheckCircle2 className="w-3 h-3 text-sky-400" />}
+                        {isSel && <CheckCircle2 className="w-3 h-3 text-emerald-500" />}
                       </button>
                     );
                   })}
@@ -2768,17 +2992,17 @@ Pairing Tips: ${sample.guidance.pairingTips}`;
                   setIsInstrumentsOpen(false);
                   setIsTagsOpen(false);
                 }}
-                className="flex items-center gap-1.5 hover:text-white transition-colors"
+                className={`flex items-center gap-1.5 transition-colors ${currentTheme.dropdownBtn}`}
               >
-                <span className={keyFilter !== 'all' ? 'text-sky-400 font-bold' : ''}>
+                <span className={keyFilter !== 'all' ? 'font-bold' : ''}>
                   {keyFilter === 'all' ? 'Key & BPM' : `Key: ${keyFilter}`}
                 </span>
                 <ChevronDown className="w-3.5 h-3.5 opacity-70" />
               </button>
 
               {isKeyBpmOpen && (
-                <div className="absolute top-8 left-0 z-50 w-52 p-3 rounded-2xl bg-[#081628] border border-sky-500/40 shadow-2xl space-y-2 animate-in fade-in">
-                  <span className="text-[10px] uppercase font-bold text-gray-400 block tracking-wider">
+                <div className={`absolute top-8 left-0 z-50 w-52 p-3 rounded-2xl border shadow-2xl space-y-2 animate-in fade-in ${currentTheme.dropdownMenu}`}>
+                  <span className="text-[10px] uppercase font-bold opacity-75 block tracking-wider">
                     Select Root Pitch:
                   </span>
                   <div className="grid grid-cols-4 gap-1">
@@ -2791,8 +3015,8 @@ Pairing Tips: ${sample.guidance.pairingTips}`;
                         }}
                         className={`py-1 rounded text-[11px] font-mono font-bold transition-colors ${
                           keyFilter === k
-                            ? 'bg-sky-500 text-white'
-                            : 'bg-black/40 hover:bg-white/10 text-gray-300'
+                            ? currentTheme.quickFilterActive
+                            : currentTheme.quickFilterInactive
                         }`}
                       >
                         {k}
@@ -2805,44 +3029,38 @@ Pairing Tips: ${sample.guidance.pairingTips}`;
           </div>
 
           {/* View Mode Switcher Icons on Right (Matching Waves COSMOS screenshot) */}
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-1.5">
             {/* 1. Waveform Grid View (4 square tiles) */}
             <button
               onClick={() => setCosmosViewMode('grid')}
-              className={`p-1 rounded transition-colors ${
-                cosmosViewMode === 'grid'
-                  ? 'text-sky-400'
-                  : 'text-gray-500 hover:text-gray-300'
+              className={`p-1.5 rounded-full border transition-all ${
+                cosmosViewMode === 'grid' ? currentTheme.viewModeActive : currentTheme.viewModeInactive
               }`}
               title="Waveform Card Grid View"
             >
-              <Grid className="w-5 h-5" />
+              <Grid className="w-4 h-4" />
             </button>
 
             {/* 2. List View (Stacked horizontal lines - Active in screenshot) */}
             <button
               onClick={() => setCosmosViewMode('list')}
-              className={`p-1 rounded transition-colors ${
-                cosmosViewMode === 'list'
-                  ? 'text-sky-400'
-                  : 'text-gray-500 hover:text-gray-300'
+              className={`p-1.5 rounded-full border transition-all ${
+                cosmosViewMode === 'list' ? currentTheme.viewModeActive : currentTheme.viewModeInactive
               }`}
               title="Database List View"
             >
-              <List className="w-5 h-5" />
+              <List className="w-4 h-4" />
             </button>
 
             {/* 3. Cosmos Galaxy View (Orbital rings / Atom) */}
             <button
               onClick={() => setCosmosViewMode('map')}
-              className={`p-1 rounded transition-colors ${
-                cosmosViewMode === 'map'
-                  ? 'text-sky-400'
-                  : 'text-gray-500 hover:text-gray-300'
+              className={`p-1.5 rounded-full border transition-all ${
+                cosmosViewMode === 'map' ? currentTheme.viewModeActive : currentTheme.viewModeInactive
               }`}
               title="Cosmos Galaxy 2D Map"
             >
-              <Disc className="w-5 h-5" />
+              <Disc className="w-4 h-4" />
             </button>
           </div>
         </div>
@@ -2871,15 +3089,15 @@ Pairing Tips: ${sample.guidance.pairingTips}`;
         {activeTab === 'vault' && (
           <div className="flex-1 flex overflow-hidden">
             {/* LEFT SIDEBAR (Matching Waves COSMOS screenshot) */}
-            <div className="w-60 border-r border-[#12243a] bg-[#071322] flex flex-col justify-between shrink-0 select-none">
+            <div className={`w-60 border-r flex flex-col justify-between shrink-0 select-none ${currentTheme.sidebarBg}`}>
               <div className="overflow-y-auto">
                 {/* Top Sidebar Tabs (Waveform & Folders) */}
-                <div className="p-3 border-b border-[#12243a] flex items-center justify-between">
-                  <div className="flex items-center gap-2">
+                <div className={`p-3 border-b flex items-center justify-between ${currentTheme.sidebarBorder}`}>
+                  <div className="flex items-center gap-1.5">
                     <button
                       onClick={() => setSidebarTab('samples')}
-                      className={`p-1.5 rounded-lg transition-colors relative ${
-                        sidebarTab === 'samples' ? 'text-sky-400 bg-sky-500/10' : 'text-gray-400 hover:text-white'
+                      className={`p-1.5 rounded-lg border transition-colors relative ${
+                        sidebarTab === 'samples' ? currentTheme.quickFilterActive : currentTheme.quickFilterInactive
                       }`}
                       title="All Samples"
                     >
@@ -2888,8 +3106,8 @@ Pairing Tips: ${sample.guidance.pairingTips}`;
                     </button>
                     <button
                       onClick={() => setSidebarTab('folders')}
-                      className={`p-1.5 rounded-lg transition-colors ${
-                        sidebarTab === 'folders' ? 'text-sky-400 bg-sky-500/10' : 'text-gray-400 hover:text-white'
+                      className={`p-1.5 rounded-lg border transition-colors ${
+                        sidebarTab === 'folders' ? currentTheme.quickFilterActive : currentTheme.quickFilterInactive
                       }`}
                       title="Folder Collections"
                     >
@@ -2897,15 +3115,15 @@ Pairing Tips: ${sample.guidance.pairingTips}`;
                     </button>
                   </div>
 
-                  <span className="text-[10px] font-mono text-gray-500 uppercase tracking-widest font-bold">
+                  <span className={`text-[10px] font-mono uppercase tracking-widest font-bold ${currentTheme.sidebarSubtext}`}>
                     Libraries
                   </span>
                 </div>
 
                 {/* Section: SampleVault Cloud */}
-                <div className="p-3 border-b border-[#12243a]">
+                <div className={`p-3 border-b ${currentTheme.sidebarBorder}`}>
                   <div className="flex items-center justify-between mb-1.5">
-                    <span className="text-xs font-bold text-gray-200 flex items-center gap-1.5">
+                    <span className={`text-xs font-bold flex items-center gap-1.5 ${currentTheme.sidebarText}`}>
                       <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
                       SampleVault Cloud
                     </span>
@@ -2913,21 +3131,21 @@ Pairing Tips: ${sample.guidance.pairingTips}`;
                       onClick={() => {
                         if (accessToken) loadFromDrive(accessToken);
                       }}
-                      className="text-gray-400 hover:text-white p-1 rounded hover:bg-sky-500/10 transition-colors"
+                      className="p-1 rounded hover:opacity-80 transition-opacity"
                       title="Rescan Cloud Vault"
                     >
                       <RotateCcw className="w-3 h-3" />
                     </button>
                   </div>
-                  <div className="text-[11px] text-gray-400 font-sans flex items-center justify-between">
+                  <div className={`text-[11px] font-sans flex items-center justify-between ${currentTheme.sidebarSubtext}`}>
                     <span>Drive Storage</span>
-                    <span className="font-mono text-sky-400 font-bold">{samples.length} one-shots</span>
+                    <span className="font-mono font-bold">{samples.length} one-shots</span>
                   </div>
                 </div>
 
                 {/* Section: COSMOS Categorized Folders */}
                 <div className="p-3">
-                  <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider block mb-2">
+                  <span className={`text-[10px] font-bold uppercase tracking-wider block mb-2 ${currentTheme.sidebarSubtext}`}>
                     Acoustic One-Shot Folders
                   </span>
                   <div className="space-y-1">
@@ -2940,12 +3158,12 @@ Pairing Tips: ${sample.guidance.pairingTips}`;
                           onClick={() => {
                             setFolderToggles(prev => ({ ...prev, [cat.id]: !isToggled }));
                           }}
-                          className="flex items-center justify-between py-1 text-xs text-gray-300 hover:text-white cursor-pointer group"
+                          className={`flex items-center justify-between py-1 text-xs cursor-pointer group hover:opacity-90 ${currentTheme.sidebarText}`}
                         >
                           <div className="flex items-center gap-2 truncate">
                             <div
                               className={`w-7 h-3.5 rounded-full p-0.5 transition-colors flex items-center ${
-                                isToggled ? 'bg-sky-500' : 'bg-gray-700'
+                                isToggled ? currentTheme.sidebarToggleActive : currentTheme.sidebarToggleInactive
                               }`}
                             >
                               <div
@@ -2955,9 +3173,9 @@ Pairing Tips: ${sample.guidance.pairingTips}`;
                               />
                             </div>
                             <span className="w-1.5 h-1.5 rounded-full flex-shrink-0" style={{ backgroundColor: cat.color }} />
-                            <span className="truncate group-hover:text-white">{cat.label}</span>
+                            <span className="truncate">{cat.label}</span>
                           </div>
-                          <span className="text-[10px] font-mono text-gray-500">
+                          <span className={`text-[10px] font-mono ${currentTheme.sidebarSubtext}`}>
                             {count}
                           </span>
                         </div>
@@ -2968,39 +3186,39 @@ Pairing Tips: ${sample.guidance.pairingTips}`;
               </div>
 
               {/* Bottom Sidebar Status & Sample Counter (Exact match to screenshot!) */}
-              <div className="p-3 border-t border-[#12243a] bg-[#050e18] space-y-2">
-                <div className="p-2 rounded-xl bg-red-950/40 border border-red-500/30 text-[11px] font-sans text-red-300">
+              <div className={`p-3 border-t space-y-2 ${currentTheme.sidebarBorder}`}>
+                <div className={`p-2 rounded-xl border text-[11px] font-sans ${currentTheme.sidebarStatusCard}`}>
                   <span className="font-bold block">New COSMOS Version</span>
                   <span className="text-[10px] opacity-80 block">VIP Sync Active • Rescan Clean</span>
                   <button
                     onClick={() => {
                       if (accessToken) loadFromDrive(accessToken);
                     }}
-                    className="text-[10px] text-sky-400 hover:underline mt-0.5 block"
+                    className={`text-[10px] hover:underline mt-0.5 block ${currentTheme.accentText}`}
                   >
                     Update / Sync now
                   </button>
                 </div>
 
-                <div className="text-center text-xs font-mono font-bold text-gray-300">
+                <div className={`text-center text-xs font-mono font-bold ${currentTheme.sidebarText}`}>
                   {filteredSamples.length} / {samples.length} samples
                 </div>
               </div>
             </div>
 
             {/* CENTRAL MAIN CONTENT AREA */}
-            <div className="flex-1 flex flex-col overflow-hidden bg-[#06111f]">
+            <div className={`flex-1 flex flex-col overflow-hidden ${currentTheme.mainContentBg}`}>
               {/* VIEW 1: LIST VIEW (1:1 with Waves COSMOS screenshot) */}
               {cosmosViewMode === 'list' && (
                 <div className="flex-1 flex flex-col overflow-hidden">
                   {/* Table Column Header */}
-                  <div className="px-5 py-2 border-b border-[#12243a] bg-[#071424] text-[11px] font-semibold text-gray-400 uppercase tracking-wider flex items-center justify-between">
+                  <div className={`px-5 py-2 border-b text-[11px] uppercase tracking-wider flex items-center justify-between ${currentTheme.tableHeader}`}>
                     <span>Name</span>
                     <span className="hidden sm:inline">Pitch & Timbre</span>
                   </div>
 
                   {/* Sample List Rows */}
-                  <div className="flex-1 overflow-y-auto divide-y divide-[#0e1d2f]">
+                  <div className={`flex-1 overflow-y-auto divide-y ${currentTheme.tableRowDivider}`}>
                     {filteredSamples.length === 0 ? (
                       <div className="h-64 flex flex-col items-center justify-center text-center opacity-50 space-y-2">
                         <Disc className="w-12 h-12 opacity-30 animate-spin-slow" />
@@ -3016,8 +3234,8 @@ Pairing Tips: ${sample.guidance.pairingTips}`;
                         return (
                           <div
                             key={sample.id}
-                            className={`group flex items-center justify-between py-2.5 px-5 hover:bg-[#0b1d31] transition-colors cursor-pointer ${
-                              isPlaying ? 'bg-[#0f243d]' : ''
+                            className={`group flex items-center justify-between py-2.5 px-5 transition-colors cursor-pointer ${
+                              isPlaying ? currentTheme.tableRowPlaying : currentTheme.tableRowHover
                             }`}
                             onClick={() => handlePlaySample(sample)}
                           >
@@ -3030,10 +3248,8 @@ Pairing Tips: ${sample.guidance.pairingTips}`;
                                   handlePlaySample(sample);
                                 }}
                                 className={`w-11 h-12 rounded-full flex items-center justify-center flex-shrink-0 transition-transform active:scale-90 shadow-md ${
-                                  isLoop
-                                    ? 'bg-[#0a4832] hover:bg-[#106244] text-emerald-300'
-                                    : 'bg-[#5f1727] hover:bg-[#7e1e34] text-rose-200'
-                                } ${isPlaying ? 'ring-2 ring-white scale-105' : ''}`}
+                                  isPlaying ? currentTheme.playBtnCapsulePlaying : isLoop ? currentTheme.playBtnCapsuleLoop : currentTheme.playBtnCapsuleHit
+                                }`}
                                 title={isPlaying ? 'Stop' : isLoop ? 'Play Loop' : 'Play Hit'}
                               >
                                 {isPlaying ? (
@@ -3051,7 +3267,7 @@ Pairing Tips: ${sample.guidance.pairingTips}`;
                                   e.stopPropagation();
                                   handleToggleFavorite(sample.id);
                                 }}
-                                className="text-gray-500 hover:text-amber-400 transition-colors p-1"
+                                className="text-gray-400 hover:text-amber-400 transition-colors p-1"
                                 title="Favorite"
                               >
                                 <Star
@@ -3064,25 +3280,25 @@ Pairing Tips: ${sample.guidance.pairingTips}`;
 
                               {/* Sample Title and Pipe-Separated Tags */}
                               <div className="min-w-0 flex-1 pr-2">
-                                <h4 className="text-sm font-bold text-gray-100 group-hover:text-white truncate">
+                                <h4 className={`text-sm font-bold truncate ${currentTheme.tableCellText}`}>
                                   {sample.name}
                                 </h4>
-                                <p className="text-xs text-gray-400 font-sans tracking-tight truncate mt-0.5">
+                                <p className={`text-xs font-sans tracking-tight truncate mt-0.5 ${currentTheme.tableCellSubtext}`}>
                                   {cosmosTags.join(' | ')}
                                 </p>
                               </div>
                             </div>
 
                             {/* Right Column: Key Badge, Punch Hz, Mini Waveform, Duration */}
-                            <div className="flex items-center gap-3 text-xs font-mono text-gray-400 flex-shrink-0">
+                            <div className="flex items-center gap-3 text-xs font-mono flex-shrink-0">
                               {sample.detectedKey && (
-                                <span className="px-2 py-0.5 rounded bg-[#0b1d30] text-sky-300 border border-[#1a3858] font-bold text-[11px]">
+                                <span className={`px-2 py-0.5 rounded font-bold text-[11px] border ${currentTheme.badgeKey}`}>
                                   {sample.detectedKey}
                                 </span>
                               )}
 
                               {sample.punchFrequencyHz && (
-                                <span className="hidden md:inline text-purple-300 text-[11px]">
+                                <span className={`hidden md:inline text-[11px] font-mono ${currentTheme.tableCellSubtext}`}>
                                   {sample.punchFrequencyHz}Hz
                                 </span>
                               )}
@@ -3092,7 +3308,7 @@ Pairing Tips: ${sample.guidance.pairingTips}`;
                                 {generateWaveformBars(sample.id, isPlaying)}
                               </div>
 
-                              <span className="w-12 text-right text-[11px] text-gray-400 font-mono">
+                              <span className={`w-12 text-right text-[11px] font-mono ${currentTheme.tableCellSubtext}`}>
                                 {sample.durationSeconds}s
                               </span>
                             </div>
@@ -3117,9 +3333,7 @@ Pairing Tips: ${sample.guidance.pairingTips}`;
                         key={sample.id}
                         onClick={() => handlePlaySample(sample)}
                         className={`p-4 rounded-2xl border transition-all cursor-pointer flex flex-col justify-between group ${
-                          isPlaying
-                            ? 'bg-[#0f243d] border-sky-400 shadow-xl shadow-sky-500/20'
-                            : 'bg-[#081525] hover:bg-[#0c1f35] border-[#172c44] hover:border-sky-500/40'
+                          isPlaying ? currentTheme.gridCardPlaying : currentTheme.gridCard
                         }`}
                       >
                         <div className="flex items-center justify-between mb-3">
@@ -3129,7 +3343,7 @@ Pairing Tips: ${sample.guidance.pairingTips}`;
                               handlePlaySample(sample);
                             }}
                             className={`w-9 h-9 rounded-full flex items-center justify-center transition-transform active:scale-95 ${
-                              isLoop ? 'bg-[#0a4832] text-emerald-300' : 'bg-[#5f1727] text-rose-200'
+                              isPlaying ? currentTheme.playBtnCapsulePlaying : isLoop ? currentTheme.playBtnCapsuleLoop : currentTheme.playBtnCapsuleHit
                             }`}
                           >
                             {isPlaying ? <Square className="w-3.5 h-3.5 fill-current" /> : isLoop ? <RotateCcw className="w-3.5 h-3.5" /> : <ArrowRight className="w-3.5 h-3.5 stroke-[2.5]" />}
@@ -3137,7 +3351,7 @@ Pairing Tips: ${sample.guidance.pairingTips}`;
 
                           <div className="flex items-center gap-1.5">
                             {sample.detectedKey && (
-                              <span className="px-1.5 py-0.5 rounded bg-[#0e2137] text-sky-300 text-[10px] font-mono font-bold border border-[#1c3858]">
+                              <span className={`px-1.5 py-0.5 rounded text-[10px] font-mono font-bold border ${currentTheme.badgeKey}`}>
                                 {sample.detectedKey}
                               </span>
                             )}
@@ -3146,7 +3360,7 @@ Pairing Tips: ${sample.guidance.pairingTips}`;
                                 e.stopPropagation();
                                 handleToggleFavorite(sample.id);
                               }}
-                              className="text-gray-500 hover:text-amber-400 p-1"
+                              className="text-gray-400 hover:text-amber-400 p-1"
                             >
                               <Star className={`w-3.5 h-3.5 ${sample.isFavorite ? 'fill-amber-400 text-amber-400' : ''}`} />
                             </button>
@@ -3154,13 +3368,13 @@ Pairing Tips: ${sample.guidance.pairingTips}`;
                         </div>
 
                         {/* Large Waveform Canvas Simulator */}
-                        <div className="h-14 flex items-center justify-center bg-[#050d18] rounded-xl px-2 my-2 border border-[#112236]">
+                        <div className={`h-14 flex items-center justify-center rounded-xl px-2 my-2 border ${currentTheme.waveformBox}`}>
                           {generateWaveformBars(sample.id, isPlaying)}
                         </div>
 
                         <div>
-                          <h4 className="text-xs font-bold text-white truncate">{sample.name}</h4>
-                          <p className="text-[11px] text-gray-400 truncate mt-0.5">
+                          <h4 className={`text-xs font-bold truncate ${currentTheme.tableCellText}`}>{sample.name}</h4>
+                          <p className={`text-[11px] truncate mt-0.5 ${currentTheme.tableCellSubtext}`}>
                             {cosmosTags.slice(0, 3).join(' • ')}
                           </p>
                         </div>
@@ -3355,22 +3569,22 @@ Pairing Tips: ${sample.guidance.pairingTips}`;
             {activeTab === 'song-matcher' && (
               <div className="flex-1 flex flex-col overflow-y-auto p-5 sm:p-6 space-y-6">
                 {/* Header Banner */}
-                <div className="p-5 rounded-3xl bg-gradient-to-r from-purple-950/80 via-slate-900/90 to-pink-950/70 border border-purple-500/40 shadow-2xl space-y-3">
+                <div className={`p-5 rounded-3xl border shadow-xl backdrop-blur-2xl space-y-3 ${currentTheme.songMatcherBanner}`}>
                   <div className="flex flex-wrap items-center justify-between gap-3">
                     <div className="flex items-center gap-3">
-                      <div className="p-2.5 rounded-2xl bg-purple-500/20 border border-purple-400/40 text-purple-300">
+                      <div className={`p-2.5 rounded-2xl border ${currentTheme.discBg}`}>
                         <Wand2 className="w-6 h-6 animate-pulse" />
                       </div>
                       <div>
                         <div className="flex items-center gap-2">
-                          <h3 className="text-lg font-black text-white tracking-wide">
+                          <h3 className={`text-lg font-black tracking-wide ${currentTheme.titleGradient}`}>
                             AI Reference Song Beat Kit Matcher
                           </h3>
                           <span className="text-[10px] bg-gradient-to-r from-purple-500 to-pink-500 text-white font-black px-2 py-0.5 rounded-full uppercase tracking-wider">
                             Game Changer
                           </span>
                         </div>
-                        <p className="text-xs text-purple-200/80 font-mono">
+                        <p className={`text-xs font-mono opacity-80 ${currentTheme.subtitle}`}>
                           Acoustically pairs the optimal 6-piece drum kit from your Vault with live 16-step groove playback & UAD bus glue.
                         </p>
                       </div>
@@ -3389,7 +3603,7 @@ Pairing Tips: ${sample.guidance.pairingTips}`;
 
                   {/* Signature Beat Presets Chips */}
                   <div>
-                    <label className="text-[11px] font-mono text-purple-300 uppercase tracking-wider block mb-2 font-bold">
+                    <label className={`text-[11px] font-mono uppercase tracking-wider block mb-2 font-bold ${currentTheme.accentText}`}>
                       Select Signature Style Preset:
                     </label>
                     <div className="flex flex-wrap items-center gap-2">
@@ -3405,8 +3619,8 @@ Pairing Tips: ${sample.guidance.pairingTips}`;
                             }}
                             className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 ${
                               isSelected
-                                ? 'bg-gradient-to-r from-purple-500 to-pink-500 text-white shadow-lg scale-105'
-                                : 'bg-black/50 hover:bg-black/70 text-purple-200/80 border border-purple-800/40'
+                                ? currentTheme.quickFilterActive
+                                : currentTheme.quickFilterInactive
                             }`}
                           >
                             <span>🎵</span>
@@ -3423,7 +3637,7 @@ Pairing Tips: ${sample.guidance.pairingTips}`;
                   {/* Custom Hit Song / Artist Search Input */}
                   <div className="pt-2 flex flex-wrap items-center gap-3">
                     <div className="relative flex-1 min-w-[260px]">
-                      <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-purple-400" />
+                      <Search className={`w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 ${currentTheme.searchClearBtn}`} />
                       <input
                         type="text"
                         value={customSongInput}
@@ -3432,7 +3646,7 @@ Pairing Tips: ${sample.guidance.pairingTips}`;
                           if (e.key === 'Enter') handleTriggerMatch(undefined, customSongInput);
                         }}
                         placeholder="Or enter any hit song/artist (e.g., Sicko Mode, Not Like Us, God's Plan, Superhero)..."
-                        className="w-full pl-10 pr-4 py-2.5 rounded-2xl bg-black/70 border border-purple-500/40 text-xs text-white placeholder:text-purple-400/60 focus:outline-none focus:border-pink-400 shadow-inner"
+                        className={`w-full pl-10 pr-4 py-2.5 rounded-2xl text-xs focus:outline-none shadow-inner ${currentTheme.searchInput}`}
                       />
                     </div>
 
@@ -3456,30 +3670,30 @@ Pairing Tips: ${sample.guidance.pairingTips}`;
                   return (
                     <>
                       {/* Kit Synergy Summary */}
-                      <div className="p-4 rounded-2xl bg-black/60 border border-purple-500/30 flex flex-wrap items-center justify-between gap-4">
+                      <div className={`p-4 rounded-2xl border flex flex-wrap items-center justify-between gap-4 ${currentTheme.card}`}>
                         <div>
                           <div className="flex items-center gap-2">
-                            <span className="text-xs font-mono text-gray-400">Match Style:</span>
-                            <strong className="text-white text-sm">{matchedKit.style.name}</strong>
-                            <span className="text-xs font-mono text-purple-300">({matchedKit.style.artistReference})</span>
+                            <span className={`text-xs font-mono opacity-70 ${currentTheme.accentText}`}>Match Style:</span>
+                            <strong className="text-sm font-black">{matchedKit.style.name}</strong>
+                            <span className="text-xs font-mono opacity-80">({matchedKit.style.artistReference})</span>
                           </div>
-                          <p className="text-xs text-purple-200/90 font-mono mt-1">
+                          <p className="text-xs font-mono mt-1 opacity-90">
                             Vibe Profile: {matchedKit.vibeSummary}
                           </p>
-                          <p className="text-xs text-sky-200/90 font-mono">
+                          <p className="text-xs font-mono opacity-90">
                             Harmonic Pocket: Key of {matchedKit.inferredKey} • Grooving at {matchedKit.inferredBpm} BPM
                           </p>
                         </div>
 
                         <div className="text-right">
-                          <span className="text-[10px] font-mono text-gray-400 uppercase block">
+                          <span className="text-[10px] font-mono opacity-70 uppercase block">
                             Synergy Compatibility
                           </span>
                           <div className="flex items-center gap-2 justify-end">
-                            <span className="text-2xl font-black text-amber-400">
+                            <span className="text-2xl font-black text-amber-500">
                               {overallScore}%
                             </span>
-                            <span className="text-[10px] font-black px-2 py-0.5 rounded-full bg-amber-400/20 text-amber-300 border border-amber-400/40">
+                            <span className="text-[10px] font-black px-2 py-0.5 rounded-full bg-amber-400/20 text-amber-600 dark:text-amber-300 border border-amber-400/40">
                               ELITE MATCH
                             </span>
                           </div>
@@ -3487,7 +3701,7 @@ Pairing Tips: ${sample.guidance.pairingTips}`;
                       </div>
 
                       {/* LIVE 16-STEP GROOVE SEQUENCER PLAYER */}
-                      <div className="p-5 rounded-3xl bg-black/80 border border-purple-500/40 space-y-4 shadow-2xl">
+                      <div className={`p-5 rounded-3xl border space-y-4 shadow-2xl ${currentTheme.songMatcherBanner}`}>
                         <div className="flex flex-wrap items-center justify-between gap-4">
                           <div className="flex items-center gap-3">
                             <button
@@ -3512,24 +3726,24 @@ Pairing Tips: ${sample.guidance.pairingTips}`;
                             </button>
 
                             {/* Tempo Slider */}
-                            <div className="flex items-center gap-2 bg-black/60 border border-white/10 rounded-xl px-3 py-1.5">
-                              <span className="text-xs font-mono text-gray-400">BPM:</span>
-                              <span className="text-xs font-mono font-bold text-sky-300 w-8">{grooveBpm}</span>
+                            <div className={`flex items-center gap-2 border rounded-xl px-3 py-1.5 ${currentTheme.boxCard}`}>
+                              <span className="text-xs font-mono opacity-70">BPM:</span>
+                              <span className={`text-xs font-mono font-bold w-8 ${currentTheme.accentText}`}>{grooveBpm}</span>
                               <input
                                 type="range"
                                 min="60"
                                 max="180"
                                 value={grooveBpm}
                                 onChange={(e) => setGrooveBpm(Number(e.target.value))}
-                                className="w-24 accent-sky-400 cursor-pointer"
+                                className="w-24 accent-sky-500 cursor-pointer"
                               />
                             </div>
                           </div>
 
                           {/* Step Counter Indicator */}
-                          <div className="flex items-center gap-1.5 font-mono text-xs text-gray-300">
-                            <span className="text-gray-500">Step:</span>
-                            <span className="text-amber-400 font-bold w-5">{currentGrooveStep + 1} / 16</span>
+                          <div className="flex items-center gap-1.5 font-mono text-xs">
+                            <span className="opacity-70">Step:</span>
+                            <span className="text-amber-500 font-bold w-5">{currentGrooveStep + 1} / 16</span>
                           </div>
                         </div>
 
@@ -3537,7 +3751,7 @@ Pairing Tips: ${sample.guidance.pairingTips}`;
                         <div className="space-y-2 pt-2">
                           {/* 16-Step Header Lights */}
                           <div className="flex items-center gap-2">
-                            <div className="w-44 text-[10px] font-mono text-gray-500 uppercase">Track / Element</div>
+                            <div className="w-44 text-[10px] font-mono opacity-60 uppercase">Track / Element</div>
                             <div className="flex-1 grid grid-cols-16 gap-1">
                               {Array.from({ length: 16 }).map((_, stepIdx) => (
                                 <div
@@ -3545,7 +3759,7 @@ Pairing Tips: ${sample.guidance.pairingTips}`;
                                   className={`h-1.5 rounded-full transition-all ${
                                     currentGrooveStep === stepIdx
                                       ? 'bg-amber-400 shadow-md shadow-amber-400/80 scale-y-150'
-                                      : (stepIdx % 4 === 0 ? 'bg-white/30' : 'bg-white/10')
+                                      : (stepIdx % 4 === 0 ? 'bg-black/20 dark:bg-white/30' : 'bg-black/10 dark:bg-white/10')
                                   }`}
                                 />
                               ))}
@@ -3564,8 +3778,8 @@ Pairing Tips: ${sample.guidance.pairingTips}`;
                                 key={slot.trackKey}
                                 className={`p-2.5 rounded-xl border flex flex-wrap items-center gap-2 transition-all ${
                                   isMuted
-                                    ? 'bg-black/30 border-white/5 opacity-40'
-                                    : 'bg-black/60 border-white/10 hover:border-purple-500/40'
+                                    ? 'bg-black/10 border-black/5 opacity-40'
+                                    : currentTheme.card
                                 }`}
                               >
                                 {/* Track Info & Solo/Mute */}

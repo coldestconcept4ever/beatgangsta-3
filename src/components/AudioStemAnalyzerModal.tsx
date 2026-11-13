@@ -755,37 +755,153 @@ export const AudioStemAnalyzerModal: React.FC<AudioStemAnalyzerModalProps> = ({
     handleClose();
   };
 
+const getStemModalTheme = (theme: string) => {
+  if (theme === 'crazy-bird') {
+    return {
+      overlay: 'bg-black/80 backdrop-blur-2xl',
+      dialog: 'bg-[#1e0202]/85 border-red-500/35 text-red-50 shadow-[0_25px_60px_rgba(0,0,0,0.85),inset_0_1px_2px_rgba(255,255,255,0.15)]',
+      headerBorder: 'border-red-500/25',
+      iconBox: 'bg-red-500/20 text-red-300 border border-red-500/40 shadow-sm',
+      titleText: 'text-white',
+      subText: 'text-red-200/90',
+      badgeText: 'text-emerald-400',
+      closeBtn: 'bg-black/40 hover:bg-black/70 text-red-200 border border-red-500/30 shadow-sm',
+      sectionCard: 'bg-black/45 border border-red-500/30 text-red-100 shadow-sm',
+      activePill: 'bg-red-600 hover:bg-red-500 text-white border border-red-400 shadow-[0_0_20px_rgba(239,68,68,0.5)]',
+      inactivePill: 'bg-black/40 hover:bg-black/60 text-red-200 border border-red-500/30',
+      dropzone: 'border-red-500/40 hover:border-red-400 bg-black/35 hover:bg-black/55 text-red-100 shadow-xl shadow-black/50',
+      dropIcon: 'bg-red-500/20 text-red-400 border border-red-500/40 shadow-sm',
+      progressBar: 'bg-gradient-to-r from-red-500 via-rose-500 to-amber-500 shadow-sm',
+      statusBanner: 'bg-black/50 border border-red-500/30 text-red-100 shadow-sm',
+      playbackBar: 'bg-black/45 border border-red-500/30 text-red-100 shadow-sm',
+      stopBtn: 'bg-red-600/20 hover:bg-red-600/30 border border-red-500/40 text-red-300 shadow-sm',
+      stemCard: 'bg-black/45 hover:bg-black/65 border-red-500/30 text-red-50 shadow-sm',
+      stemPlaying: 'bg-red-600/25 border-red-400 shadow-[0_0_25px_rgba(239,68,68,0.4)] ring-2 ring-red-400/60',
+      playBtnActive: 'bg-red-600 text-white shadow-lg border border-red-400',
+      playBtnInactive: 'bg-black/50 hover:bg-black/80 text-red-200 border border-red-500/30 shadow-sm',
+      diagCard: 'bg-black/40 border border-red-500/25 text-red-100 shadow-md',
+      diagItem: 'bg-black/50 border border-red-500/20 text-red-100',
+      exportBtn: 'bg-gradient-to-r from-red-600 via-rose-600 to-red-700 hover:from-red-500 hover:to-rose-500 text-white border border-red-400 shadow-[0_10px_30px_rgba(239,68,68,0.5)]',
+      exportDisabled: 'bg-red-950/40 text-red-300/40 border-red-900/30 cursor-not-allowed',
+    };
+  }
+  if (theme === 'chef-mode') {
+    return {
+      overlay: 'bg-orange-950/70 backdrop-blur-2xl',
+      dialog: 'bg-white/60 border-orange-200/60 text-orange-950 shadow-2xl',
+      headerBorder: 'border-orange-200/40',
+      iconBox: 'bg-orange-500/20 text-orange-600 border border-orange-300 shadow-sm',
+      titleText: 'text-orange-950',
+      subText: 'text-orange-800',
+      badgeText: 'text-emerald-600',
+      closeBtn: 'bg-white/50 hover:bg-white/80 text-orange-950 border border-orange-200 shadow-sm',
+      sectionCard: 'bg-white/40 border border-orange-200/60 text-orange-950 shadow-sm',
+      activePill: 'bg-orange-500 text-white border border-orange-300 shadow-md',
+      inactivePill: 'bg-white/40 hover:bg-white/60 text-orange-950 border border-orange-200',
+      dropzone: 'border-orange-300 hover:border-orange-400 bg-white/30 hover:bg-white/50 text-orange-950 shadow-lg',
+      dropIcon: 'bg-orange-100 text-orange-600 border border-orange-200 shadow-sm',
+      progressBar: 'bg-gradient-to-r from-amber-400 to-orange-500',
+      statusBanner: 'bg-white/50 border border-orange-200 text-orange-950 shadow-sm',
+      playbackBar: 'bg-white/45 border border-orange-200 text-orange-950 shadow-sm',
+      stopBtn: 'bg-red-500/20 hover:bg-red-500/30 border border-red-400 text-red-700 shadow-sm',
+      stemCard: 'bg-white/40 hover:bg-white/60 border-orange-200 text-orange-950 shadow-sm',
+      stemPlaying: 'bg-orange-500/20 border-orange-400 ring-2 ring-orange-400/50 shadow-md',
+      playBtnActive: 'bg-orange-500 text-white shadow-md border border-orange-300',
+      playBtnInactive: 'bg-white/60 hover:bg-white/80 text-orange-950 border border-orange-200 shadow-sm',
+      diagCard: 'bg-white/35 border border-orange-200 text-orange-950 shadow-md',
+      diagItem: 'bg-white/50 border border-orange-200 text-orange-950',
+      exportBtn: 'bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-slate-950 border border-orange-300 shadow-lg',
+      exportDisabled: 'bg-orange-200 text-orange-400 cursor-not-allowed',
+    };
+  }
+  if (theme === 'hustle-time') {
+    return {
+      overlay: 'bg-black/85 backdrop-blur-2xl',
+      dialog: 'bg-black/85 border-yellow-500/30 text-yellow-100 shadow-2xl',
+      headerBorder: 'border-yellow-500/20',
+      iconBox: 'bg-yellow-500/20 text-yellow-400 border border-yellow-500/30 shadow-sm',
+      titleText: 'text-yellow-100',
+      subText: 'text-yellow-300/80',
+      badgeText: 'text-emerald-400',
+      closeBtn: 'bg-black/50 hover:bg-black/80 text-yellow-300 border border-yellow-500/30 shadow-sm',
+      sectionCard: 'bg-black/45 border border-yellow-500/25 text-yellow-100 shadow-sm',
+      activePill: 'bg-yellow-500 text-black border border-yellow-300 shadow-md',
+      inactivePill: 'bg-black/40 hover:bg-black/60 text-yellow-200 border border-yellow-500/20',
+      dropzone: 'border-yellow-500/40 hover:border-yellow-400 bg-black/40 hover:bg-black/60 text-yellow-100 shadow-lg',
+      dropIcon: 'bg-yellow-500/20 text-yellow-400 border border-yellow-500/30 shadow-sm',
+      progressBar: 'bg-gradient-to-r from-amber-400 to-yellow-500',
+      statusBanner: 'bg-black/50 border border-yellow-500/30 text-yellow-100 shadow-sm',
+      playbackBar: 'bg-black/45 border border-yellow-500/25 text-yellow-100 shadow-sm',
+      stopBtn: 'bg-red-500/20 hover:bg-red-500/30 border border-red-500/30 text-red-400 shadow-sm',
+      stemCard: 'bg-black/45 hover:bg-black/65 border-yellow-500/20 text-yellow-100 shadow-sm',
+      stemPlaying: 'bg-yellow-500/20 border-yellow-400 ring-2 ring-yellow-400/50 shadow-md',
+      playBtnActive: 'bg-yellow-500 text-black shadow-md border border-yellow-300',
+      playBtnInactive: 'bg-black/50 hover:bg-black/80 text-yellow-300 border border-yellow-500/20 shadow-sm',
+      diagCard: 'bg-black/40 border border-yellow-500/20 text-yellow-100 shadow-md',
+      diagItem: 'bg-black/50 border border-yellow-500/15 text-yellow-100',
+      exportBtn: 'bg-gradient-to-r from-amber-400 to-yellow-500 hover:from-amber-300 hover:to-yellow-400 text-black border border-yellow-300 shadow-lg',
+      exportDisabled: 'bg-yellow-950/40 text-yellow-400/30 cursor-not-allowed',
+    };
+  }
+  // Default: 'coldest' (Palm Pre glass style blue / cyan)
+  return {
+    overlay: 'bg-sky-950/60 backdrop-blur-2xl',
+    dialog: 'bg-white/35 border-white/60 text-[#0c4a6e] shadow-[0_25px_60px_rgba(2,132,199,0.35),inset_0_1px_2px_rgba(255,255,255,0.8)]',
+    headerBorder: 'border-white/50',
+    iconBox: 'bg-white/70 text-sky-600 border border-white/80 shadow-md',
+    titleText: 'text-[#0c4a6e]',
+    subText: 'text-[#0369a1]',
+    badgeText: 'text-emerald-600',
+    closeBtn: 'bg-white/50 hover:bg-white/80 border border-white/70 text-[#0c4a6e] shadow-md',
+    sectionCard: 'bg-white/40 border border-white/60 text-[#0c4a6e] shadow-sm',
+    activePill: 'bg-sky-500 hover:bg-sky-400 text-white border border-sky-300 shadow-[0_0_20px_rgba(14,165,233,0.45)]',
+    inactivePill: 'bg-white/40 hover:bg-white/60 border border-white/60 text-[#0c4a6e]',
+    dropzone: 'border-sky-300 hover:border-sky-500 bg-white/30 hover:bg-white/45 text-[#0c4a6e] shadow-lg shadow-sky-950/5',
+    dropIcon: 'bg-white/70 text-sky-600 border border-white/80 shadow-md',
+    progressBar: 'bg-gradient-to-r from-sky-400 via-sky-500 to-blue-600 shadow-sm',
+    statusBanner: 'bg-white/45 border border-white/60 text-[#0c4a6e] shadow-sm',
+    playbackBar: 'bg-white/40 border border-white/60 text-[#0c4a6e] shadow-sm',
+    stopBtn: 'bg-red-500/20 hover:bg-red-500/30 border border-red-400/40 text-red-700 shadow-sm',
+    stemCard: 'bg-white/40 hover:bg-white/60 border-white/60 text-[#0c4a6e] shadow-sm',
+    stemPlaying: 'bg-sky-500/25 border-sky-400 shadow-[0_0_25px_rgba(14,165,233,0.35)] ring-2 ring-sky-400/60',
+    playBtnActive: 'bg-sky-500 text-white shadow-lg border border-sky-300',
+    playBtnInactive: 'bg-white/60 hover:bg-white/80 border border-white/70 text-[#0c4a6e] shadow-sm',
+    diagCard: 'bg-white/35 border border-white/50 text-[#0c4a6e] shadow-md',
+    diagItem: 'bg-white/45 border border-white/60 text-[#0c4a6e] shadow-sm',
+    exportBtn: 'bg-gradient-to-r from-sky-400 via-sky-500 to-blue-600 hover:from-sky-300 hover:to-blue-500 text-white border border-sky-300 shadow-[0_10px_30px_rgba(14,165,233,0.45)]',
+    exportDisabled: 'bg-white/30 text-[#0c4a6e]/40 border-white/40 cursor-not-allowed',
+  };
+};
+
+  const currentTheme = getStemModalTheme(theme);
+
   return (
     <AnimatePresence>
-      <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md">
+      <div className={`fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 ${currentTheme.overlay}`}>
         <motion.div
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
           exit={{ opacity: 0, scale: 0.95 }}
-          className={`w-full max-w-4xl max-h-[90vh] overflow-y-auto rounded-3xl p-6 sm:p-8 border shadow-2xl ${
-            theme === 'coldest'
-              ? 'bg-slate-900 border-sky-500/30 text-white'
-              : 'bg-black border-amber-500/30 text-white'
-          }`}
+          className={`w-full max-w-4xl max-h-[90vh] overflow-y-auto rounded-[2.5rem] sm:rounded-[3rem] p-6 sm:p-10 border shadow-2xl backdrop-blur-3xl transition-all duration-300 ${currentTheme.dialog}`}
         >
           {/* Header */}
-          <div className="flex items-center justify-between pb-6 mb-6 border-b border-white/10">
-            <div className="flex items-center gap-3">
-              <div className="p-3 rounded-2xl bg-sky-500/20 text-sky-400 border border-sky-500/30">
+          <div className={`flex items-center justify-between pb-6 mb-6 border-b ${currentTheme.headerBorder}`}>
+            <div className="flex items-center gap-3.5">
+              <div className={`p-3 rounded-2xl ${currentTheme.iconBox}`}>
                 <Sparkles className="w-6 h-6" />
               </div>
               <div>
-                <h3 className="text-lg font-black uppercase tracking-wider">
+                <h3 className={`text-base sm:text-lg font-black uppercase tracking-[0.14em] leading-tight ${currentTheme.titleText}`}>
                   Pico/Nano Local Audio Stem Separator & Transcription Engine
                 </h3>
-                <p className="text-xs font-bold text-emerald-400 flex items-center gap-1 mt-1">
-                  <ShieldCheck className="w-4 h-4" /> 100% Client-Side Local Processing • 0 AI Tokens • 0 Cost
+                <p className={`text-xs font-bold flex items-center gap-1.5 mt-1 ${currentTheme.badgeText}`}>
+                  <ShieldCheck className="w-4 h-4 shrink-0" /> 100% Client-Side Local Processing • 0 AI Tokens • 0 Cost
                 </p>
               </div>
             </div>
             <button
               onClick={handleClose}
-              className="p-2 rounded-full bg-white/10 hover:bg-white/20 transition-all text-white/70 hover:text-white"
+              className={`w-9 h-9 rounded-full flex items-center justify-center transition-all hover:scale-105 active:scale-95 ${currentTheme.closeBtn}`}
             >
               <X className="w-5 h-5" />
             </button>
@@ -793,19 +909,19 @@ export const AudioStemAnalyzerModal: React.FC<AudioStemAnalyzerModalProps> = ({
 
           {/* Separation & MIDI Engine Selector */}
           {!stems && !isProcessing && (
-            <div className="mb-6 p-4 rounded-2xl bg-black/40 border border-white/10 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+            <div className={`mb-6 p-5 rounded-3xl border flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 backdrop-blur-xl ${currentTheme.sectionCard}`}>
               <div>
-                <span className="text-[10px] font-black uppercase tracking-widest text-white/50 block">Separation & MIDI Engine</span>
-                <span className="text-xs font-black text-sky-400">
+                <span className="text-[10px] font-black uppercase tracking-widest opacity-60 block">Separation & MIDI Engine</span>
+                <span className="text-xs font-black tracking-wide">
                   {isDeepMode ? 'Studio Neural AI (HTDemucs 6-Stem • WebGPU / WASM)' : 'Fast Local DSP (2048-pt STFT + 2D HPSS)'}
                 </span>
-                <p className="text-[10px] text-white/60 mt-0.5">
+                <p className="text-[11px] opacity-75 mt-0.5">
                   {isDeepMode
                     ? 'Runs Meta HTDemucs 6-Stem ONNX UVR/Neural separation in a background Web Worker, then isolates drums, synths & pads.'
                     : 'Instant 2048-pt STFT 2D HPSS separation without downloading neural model weights.'}
                 </p>
                 {isDeepMode && (
-                  <p className="text-[10px] font-bold text-emerald-300/90 mt-1">
+                  <p className="text-[10px] font-bold opacity-90 mt-1">
                     {hasWebGpu === null ? 'Checking GPU...' : hasWebGpu ? 'WebGPU Acceleration Ready' : 'WASM CPU Backend'} •{' '}
                     {neuralCached === null
                       ? 'Checking local model cache...'
@@ -819,10 +935,8 @@ export const AudioStemAnalyzerModal: React.FC<AudioStemAnalyzerModalProps> = ({
                 <button
                   type="button"
                   onClick={() => setIsDeepMode(true)}
-                  className={`px-4 py-2 rounded-xl text-xs font-black tracking-wider uppercase transition-all ${
-                    isDeepMode
-                      ? 'bg-sky-500 text-slate-950 shadow-lg shadow-sky-500/20'
-                      : 'bg-white/5 text-white/60 hover:text-white'
+                  className={`px-5 py-2.5 rounded-full text-[10px] font-black tracking-[0.18em] uppercase transition-all shadow-md active:scale-95 ${
+                    isDeepMode ? currentTheme.activePill : currentTheme.inactivePill
                   }`}
                 >
                   Studio Neural AI
@@ -830,10 +944,8 @@ export const AudioStemAnalyzerModal: React.FC<AudioStemAnalyzerModalProps> = ({
                 <button
                   type="button"
                   onClick={() => setIsDeepMode(false)}
-                  className={`px-4 py-2 rounded-xl text-xs font-black tracking-wider uppercase transition-all ${
-                    !isDeepMode
-                      ? 'bg-sky-500 text-slate-950 shadow-lg shadow-sky-500/20'
-                      : 'bg-white/5 text-white/60 hover:text-white'
+                  className={`px-5 py-2.5 rounded-full text-[10px] font-black tracking-[0.18em] uppercase transition-all shadow-md active:scale-95 ${
+                    !isDeepMode ? currentTheme.activePill : currentTheme.inactivePill
                   }`}
                 >
                   Fast Local DSP
@@ -864,7 +976,7 @@ export const AudioStemAnalyzerModal: React.FC<AudioStemAnalyzerModalProps> = ({
                 e.preventDefault();
                 if (e.dataTransfer.files[0]) handleFileUpload(e.dataTransfer.files[0]);
               }}
-              className="p-12 rounded-3xl border-2 border-dashed border-sky-500/30 hover:border-sky-400 bg-sky-950/10 transition-all text-center flex flex-col items-center justify-center cursor-pointer"
+              className={`p-10 sm:p-14 rounded-[2rem] border-2 border-dashed transition-all text-center flex flex-col items-center justify-center cursor-pointer ${currentTheme.dropzone}`}
             >
               <input
                 type="file"
@@ -876,11 +988,13 @@ export const AudioStemAnalyzerModal: React.FC<AudioStemAnalyzerModalProps> = ({
                 }}
               />
               <label htmlFor="audio-stem-file-input" className="cursor-pointer flex flex-col items-center">
-                <Upload className="w-12 h-12 text-sky-400 mb-4 animate-bounce" />
-                <h4 className="text-base font-black uppercase tracking-wider mb-2">
+                <div className={`p-4 rounded-full mb-4 shadow-md ${currentTheme.dropIcon}`}>
+                  <Upload className="w-8 h-8 animate-bounce" />
+                </div>
+                <h4 className={`text-base font-black uppercase tracking-[0.14em] mb-2 ${currentTheme.titleText}`}>
                   Drop MP3 or WAV Reference Track Here
                 </h4>
-                <p className="text-xs font-bold opacity-75 max-w-md">
+                <p className={`text-xs font-bold max-w-md ${currentTheme.subText}`}>
                   {isDeepMode
                     ? 'Runs HTDemucs 6-Stem Neural ONNX separation in-browser (WebGPU/WASM) and hides empty stems automatically.'
                     : 'Fast STFT 2D HPSS separation in your browser, showing only detected active stems.'}
@@ -891,27 +1005,27 @@ export const AudioStemAnalyzerModal: React.FC<AudioStemAnalyzerModalProps> = ({
 
           {/* Processing Progress with Live Elapsed Timer */}
           {isProcessing && (
-            <div className="p-12 text-center flex flex-col items-center justify-center space-y-6">
+            <div className={`p-10 sm:p-14 rounded-[2rem] text-center flex flex-col items-center justify-center space-y-6 ${currentTheme.sectionCard}`}>
               <div className="relative">
-                <div className="w-20 h-20 rounded-full border-4 border-sky-500/30 border-t-sky-400 animate-spin" />
-                <div className="absolute inset-0 flex items-center justify-center text-[10px] font-black text-sky-300">
+                <div className="w-20 h-20 rounded-full border-4 border-sky-400/20 border-t-sky-500 animate-spin" />
+                <div className={`absolute inset-0 flex items-center justify-center text-[10px] font-black ${currentTheme.titleText}`}>
                   {Math.floor(elapsedSec / 60)}:{String(elapsedSec % 60).padStart(2, '0')}
                 </div>
               </div>
               <div className="space-y-2 max-w-md w-full">
-                <h4 className="text-sm font-black uppercase tracking-wider text-sky-300">{progressLabel}</h4>
-                <p className="text-[11px] font-bold text-white/50">
+                <h4 className={`text-sm font-black uppercase tracking-[0.16em] ${currentTheme.titleText}`}>{progressLabel}</h4>
+                <p className={`text-[11px] font-bold ${currentTheme.subText}`}>
                   {isDeepMode
                     ? 'Meta HTDemucs 6-Stem ONNX Neural Separation • WebGPU/WASM Worker • Auto Drum & Synth Isolation'
                     : 'Running Fast 2048-pt STFT 2D HPSS Separation...'}
                 </p>
-                <div className="w-full h-3 bg-white/10 rounded-full mx-auto overflow-hidden border border-white/10">
+                <div className="w-full h-3 bg-black/10 dark:bg-white/10 rounded-full mx-auto overflow-hidden border border-white/20 p-0.5">
                   <div
-                    className="h-full bg-gradient-to-r from-sky-500 via-indigo-500 to-emerald-400 transition-all duration-300"
+                    className={`h-full rounded-full transition-all duration-300 ${currentTheme.progressBar}`}
                     style={{ width: `${progressPct}%` }}
                   />
                 </div>
-                <div className="flex justify-between text-[10px] font-bold text-white/40 px-2 pt-1">
+                <div className={`flex justify-between text-[10px] font-bold px-2 pt-1 ${currentTheme.subText}`}>
                   <span>Elapsed: {Math.floor(elapsedSec / 60)}:{String(elapsedSec % 60).padStart(2, '0')}</span>
                   <span>{progressPct}% Completed</span>
                 </div>
@@ -922,10 +1036,10 @@ export const AudioStemAnalyzerModal: React.FC<AudioStemAnalyzerModalProps> = ({
           {/* Separated Stems Display */}
           {stems && (
             <div className="space-y-6">
-              <div className="p-4 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-between flex-wrap gap-2">
-                <div className="flex items-center gap-2">
-                  <Check className="w-5 h-5 text-emerald-400" />
-                  <span className="text-xs font-black uppercase tracking-wider text-emerald-300">
+              <div className={`p-4 rounded-2xl flex items-center justify-between flex-wrap gap-2 ${currentTheme.statusBanner}`}>
+                <div className="flex items-center gap-2.5">
+                  <Check className="w-5 h-5 text-emerald-500 shrink-0" />
+                  <span className={`text-xs font-black uppercase tracking-wider ${currentTheme.titleText}`}>
                     Extracted {fileName} • {stems.detectedBpm} BPM • {detectedStemDefs.length} Active Stem{detectedStemDefs.length === 1 ? '' : 's'} •{' '}
                     {stems.engineUsed === 'neural-webgpu'
                       ? 'HTDemucs 6-Stem (WebGPU)'
@@ -938,8 +1052,8 @@ export const AudioStemAnalyzerModal: React.FC<AudioStemAnalyzerModalProps> = ({
                 </div>
               </div>
               {stems.fallbackReason && (
-                <div className="p-3 rounded-2xl bg-amber-500/10 border border-amber-500/30 flex items-start gap-2 text-amber-200 text-xs">
-                  <AlertCircle className="w-4 h-4 text-amber-400 shrink-0 mt-0.5" />
+                <div className="p-3.5 rounded-2xl bg-amber-500/15 border border-amber-500/30 flex items-start gap-2.5 text-amber-800 dark:text-amber-200 text-xs font-bold">
+                  <AlertCircle className="w-4 h-4 text-amber-500 shrink-0 mt-0.5" />
                   <span>
                     Neural ONNX separation fell back to Local 4096-pt STFT + KL-NMF DSP ({stems.fallbackReason}).
                   </span>
@@ -947,10 +1061,10 @@ export const AudioStemAnalyzerModal: React.FC<AudioStemAnalyzerModalProps> = ({
               )}
 
               {/* Playback Control Bar */}
-              <div className="p-4 rounded-2xl bg-black/50 border border-white/10 flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <span className={`w-2.5 h-2.5 rounded-full ${activePlayingStems.size > 0 ? 'bg-emerald-400 animate-ping' : 'bg-white/30'}`} />
-                  <span className="text-xs font-black uppercase tracking-wider text-white">
+              <div className={`p-4 rounded-2xl flex items-center justify-between gap-3 ${currentTheme.playbackBar}`}>
+                <div className="flex items-center gap-2.5">
+                  <span className={`w-2.5 h-2.5 rounded-full ${activePlayingStems.size > 0 ? 'bg-emerald-500 animate-ping' : 'bg-black/30 dark:bg-white/30'}`} />
+                  <span className={`text-xs font-black uppercase tracking-wider ${currentTheme.titleText}`}>
                     {activePlayingStems.size > 0
                       ? `Synchronized Playback Active (${activePlayingStems.size} Stem${activePlayingStems.size > 1 ? 's' : ''} Synced in Time)`
                       : 'Stems Ready (Click play on any detected stem to audition or layer together in time)'}
@@ -960,7 +1074,7 @@ export const AudioStemAnalyzerModal: React.FC<AudioStemAnalyzerModalProps> = ({
                   <button
                     type="button"
                     onClick={stopAllStems}
-                    className="px-4 py-2 rounded-xl bg-red-500/20 hover:bg-red-500/30 border border-red-500/30 text-red-400 text-xs font-black uppercase tracking-wider transition-all flex items-center gap-2"
+                    className={`px-4 py-2 rounded-full text-xs font-black uppercase tracking-wider transition-all flex items-center gap-2 active:scale-95 ${currentTheme.stopBtn}`}
                   >
                     <Pause className="w-3.5 h-3.5" /> Stop All Stems
                   </button>
@@ -969,24 +1083,31 @@ export const AudioStemAnalyzerModal: React.FC<AudioStemAnalyzerModalProps> = ({
 
               {/* Detected Stems Grid (Empty/Undetected Stems Hidden) */}
               {detectedStemDefs.length > 0 ? (
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3.5">
                   {detectedStemDefs.map((s) => {
                     const isPlaying = activePlayingStems.has(s.key);
                     const info = stems.detectedStems?.[s.key];
                     const buf = stems[s.key];
                     return (
-                      <div key={s.key} className={`p-4 rounded-2xl border bg-black/40 flex items-center justify-between transition-all ${s.color} ${isPlaying ? 'bg-sky-500/10 shadow-lg shadow-sky-500/20 ring-1 ring-sky-400/50' : ''}`}>
-                        <div className="flex items-center gap-3">
+                      <div
+                        key={s.key}
+                        className={`p-4 rounded-2xl border transition-all flex items-center justify-between gap-3 ${
+                          isPlaying ? currentTheme.stemPlaying : currentTheme.stemCard
+                        }`}
+                      >
+                        <div className="flex items-center gap-3 min-w-0">
                           <button
                             type="button"
                             onClick={() => toggleStemPreview(buf, s.key)}
-                            className={`p-3 rounded-xl transition-all ${isPlaying ? 'bg-sky-500 text-slate-950 shadow-md scale-105' : 'bg-white/10 hover:bg-white/20 text-white'}`}
+                            className={`p-3 rounded-full transition-all shrink-0 active:scale-95 ${
+                              isPlaying ? currentTheme.playBtnActive : currentTheme.playBtnInactive
+                            }`}
                           >
-                            {isPlaying ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4" />}
+                            {isPlaying ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4 ml-0.5" />}
                           </button>
-                          <div>
-                            <h5 className="text-[10px] font-black uppercase tracking-wider">{s.name}</h5>
-                            <p className="text-[9px] font-bold opacity-60">
+                          <div className="min-w-0">
+                            <h5 className={`text-[11px] font-black uppercase tracking-wider truncate ${currentTheme.titleText}`}>{s.name}</h5>
+                            <p className={`text-[9px] font-bold truncate ${currentTheme.subText}`}>
                               {isPlaying
                                 ? 'Playing (Synced)'
                                 : info
@@ -995,61 +1116,61 @@ export const AudioStemAnalyzerModal: React.FC<AudioStemAnalyzerModalProps> = ({
                             </p>
                           </div>
                         </div>
-                        <Volume2 className={`w-3 h-3 ${isPlaying ? 'text-sky-400 animate-pulse' : 'opacity-30'}`} />
+                        <Volume2 className={`w-3.5 h-3.5 shrink-0 ${isPlaying ? 'text-sky-500 animate-pulse' : 'opacity-40'}`} />
                       </div>
                     );
                   })}
                 </div>
               ) : (
-                <div className="p-6 rounded-2xl bg-black/40 border border-white/10 text-center text-xs text-white/60">
+                <div className={`p-6 rounded-2xl border text-center text-xs font-bold ${currentTheme.sectionCard}`}>
                   No audible instruments were detected in this audio file.
                 </div>
               )}
 
               {/* Diagnostic Accuracy Panel */}
               {transcriptionDiagnostics.length > 0 && (
-                <div className="p-6 rounded-3xl bg-slate-800/50 border border-sky-500/20">
-                  <div className="flex items-center gap-2 mb-4">
-                    <ShieldCheck className="w-5 h-5 text-sky-400" />
-                    <h4 className="text-xs font-black uppercase tracking-widest text-sky-300">Robust Transcription Diagnostic Report</h4>
+                <div className={`p-6 rounded-3xl border space-y-4 ${currentTheme.diagCard}`}>
+                  <div className="flex items-center gap-2">
+                    <ShieldCheck className="w-5 h-5 text-sky-500" />
+                    <h4 className={`text-xs font-black uppercase tracking-widest ${currentTheme.titleText}`}>Robust Transcription Diagnostic Report</h4>
                   </div>
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3.5">
                     {transcriptionDiagnostics.map((diag, idx) => (
-                      <div key={idx} className="p-4 rounded-2xl bg-black/40 border border-white/5 space-y-2">
+                      <div key={idx} className={`p-4 rounded-2xl border space-y-2 ${currentTheme.diagItem}`}>
                         <div className="flex items-center justify-between">
-                          <span className="text-[10px] font-black uppercase text-white/70">{diag.stemName}</span>
+                          <span className={`text-[10px] font-black uppercase truncate ${currentTheme.titleText}`}>{diag.stemName}</span>
                           {diag.spectralCorrelation !== undefined && (
                             <span className={`text-[9px] font-black px-2 py-0.5 rounded-full ${
-                              diag.spectralCorrelation > 85 ? 'bg-emerald-500/20 text-emerald-400' : 'bg-amber-500/20 text-amber-400'
+                              diag.spectralCorrelation > 85 ? 'bg-emerald-500/20 text-emerald-600 dark:text-emerald-400' : 'bg-amber-500/20 text-amber-600 dark:text-amber-400'
                             }`}>
                               {diag.spectralCorrelation}% Accuracy
                             </span>
                           )}
                         </div>
                         <div className="space-y-1">
-                          <div className="flex justify-between text-[9px] font-bold">
-                            <span className="opacity-60">Confidence</span>
+                          <div className={`flex justify-between text-[9px] font-bold ${currentTheme.subText}`}>
+                            <span className="opacity-70">Confidence</span>
                             <span>{Math.round(diag.averageConfidence * 100)}%</span>
                           </div>
-                          <div className="w-full h-1 bg-white/10 rounded-full overflow-hidden">
+                          <div className="w-full h-1.5 bg-black/10 dark:bg-white/10 rounded-full overflow-hidden">
                             <div 
-                              className="h-full bg-sky-500" 
+                              className="h-full bg-sky-500 rounded-full" 
                               style={{ width: `${diag.averageConfidence * 100}%` }}
                             />
                           </div>
                         </div>
-                        <div className="pt-2 flex flex-wrap gap-2">
-                          <span className="text-[8px] font-black bg-white/5 px-2 py-0.5 rounded text-white/40 uppercase">
+                        <div className="pt-1 flex flex-wrap gap-1.5">
+                          <span className="text-[8px] font-black bg-black/5 dark:bg-white/10 px-2 py-0.5 rounded-full uppercase opacity-70">
                             Notes: {diag.noteCount}
                           </span>
-                          <span className="text-[8px] font-black bg-white/5 px-2 py-0.5 rounded text-white/40 uppercase">
+                          <span className="text-[8px] font-black bg-black/5 dark:bg-white/10 px-2 py-0.5 rounded-full uppercase opacity-70">
                             Stability: {Math.round(diag.pitchStability * 100)}%
                           </span>
                         </div>
                       </div>
                     ))}
                   </div>
-                  <p className="text-[9px] font-bold text-white/40 mt-4 italic">
+                  <p className={`text-[9px] font-bold italic ${currentTheme.subText}`}>
                     * Accuracy calculated locally via Ground Truth calibration against exactSongDatabase.ts. 0 server-side AI used.
                   </p>
                 </div>
@@ -1058,25 +1179,25 @@ export const AudioStemAnalyzerModal: React.FC<AudioStemAnalyzerModalProps> = ({
               {/* Action / Export Progress Banner */}
               <div className="space-y-4">
                 {isExporting && (
-                  <div className="p-4 rounded-2xl bg-sky-500/10 border border-sky-500/30 flex flex-col gap-2">
+                  <div className={`p-4 rounded-2xl border flex flex-col gap-2 ${currentTheme.statusBanner}`}>
                     <div className="flex items-center justify-between text-xs font-black">
-                      <span className="text-sky-300 animate-pulse">{exportLabel}</span>
-                      <span className="text-sky-400">{exportPct}%</span>
+                      <span className="text-sky-500 animate-pulse">{exportLabel}</span>
+                      <span className="text-sky-600 dark:text-sky-400">{exportPct}%</span>
                     </div>
-                    <div className="w-full h-2 bg-white/10 rounded-full overflow-hidden border border-white/10">
-                      <div className="h-full bg-gradient-to-r from-sky-500 to-emerald-400 transition-all duration-300" style={{ width: `${exportPct}%` }} />
+                    <div className="w-full h-2 bg-black/10 dark:bg-white/10 rounded-full overflow-hidden border border-white/20">
+                      <div className="h-full bg-gradient-to-r from-sky-400 to-emerald-400 transition-all duration-300 rounded-full" style={{ width: `${exportPct}%` }} />
                     </div>
-                    <p className="text-[10px] text-white/50 italic">Stems remain fully playable while WAV export and MIDI transcription run in the background.</p>
+                    <p className={`text-[10px] italic ${currentTheme.subText}`}>Stems remain fully playable while WAV export and MIDI transcription run in the background.</p>
                   </div>
                 )}
                 <button
                   type="button"
                   disabled={isExporting || detectedStemDefs.length === 0}
                   onClick={handleExportStemsAndRecipe}
-                  className={`w-full py-4 rounded-2xl font-black text-xs uppercase tracking-widest transition-all shadow-2xl flex items-center justify-center gap-2 ${
+                  className={`w-full py-4 rounded-full font-black text-xs uppercase tracking-[0.2em] transition-all shadow-xl flex items-center justify-center gap-2 active:scale-98 ${
                     isExporting || detectedStemDefs.length === 0
-                      ? 'bg-sky-500/30 text-white/50 cursor-not-allowed'
-                      : 'bg-gradient-to-r from-sky-500 to-emerald-500 hover:from-sky-400 hover:to-emerald-400 text-slate-950'
+                      ? currentTheme.exportDisabled
+                      : currentTheme.exportBtn
                   }`}
                 >
                   <Download className="w-4 h-4" /> {isExporting ? 'Exporting Detected Stems & Generating MIDI...' : `Export ${detectedStemDefs.length} Detected WAV Stems & Generate 1:1 MIDI Recipe`}
