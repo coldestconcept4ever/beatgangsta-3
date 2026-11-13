@@ -426,7 +426,12 @@ app.use((req, res, next) => {
   const host = req.get('host') || "";
   const protocol = req.get('x-forwarded-proto') || req.protocol;
 
-  const isHttp = protocol !== 'https' && !host.includes('localhost');
+  const isLocalHost =
+    host.includes('localhost') ||
+    host.startsWith('127.0.0.1') ||
+    host.startsWith('0.0.0.0') ||
+    host.startsWith('[::1]');
+  const isHttp = protocol !== 'https' && !isLocalHost;
   const isApex = host === 'beatgangsta.com';
 
   // If it's HTTP or the apex domain, do a single-hop redirect to the correct HTTPS destination

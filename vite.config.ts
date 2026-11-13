@@ -26,10 +26,16 @@ export default defineConfig(({ mode }) => {
           '@': path.resolve(__dirname, './src'),
         }
       },
+      worker: {
+        format: 'es'
+      },
+      optimizeDeps: {
+        exclude: ['onnxruntime-web']
+      },
       build: {
         minify: 'esbuild',
-        sourcemap: true,
-        chunkSizeWarningLimit: 2000,
+        sourcemap: false,
+        chunkSizeWarningLimit: 2500,
         modulePreload: {
           polyfill: true
         }

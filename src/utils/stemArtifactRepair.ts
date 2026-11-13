@@ -1,213 +1,143 @@
-// AI Artifact Repair & Spectral Smoothing Processor (100% Client-Side Local)
-// Cleans phase cancellation distortion, watery noise floor, and restores transients & harmonic overtones.
+// Studio Post-Clean & Phase-Safe Artifact Repair (100% Client-Side Local)
+// Cleans subsonic DC offset, applies smooth RMS-envelope gating (zero zero-crossing distortion),
+// and performs transparent analog-style peak ceiling protection.
+
+export type RepairStemType =
+  | 'kick'
+  | 'snare'
+  | 'hihat'
+  | 'openhat'
+  | 'perc'
+  | 'bass'
+  | 'bassGuitar'
+  | 'lead'
+  | 'leadGuitar'
+  | 'acousticGuitar'
+  | 'piano'
+  | 'pad'
+  | 'vocal';
 
 export interface RepairOptions {
-  noiseFloorThresholdDb?: number; // e.g., -45 dB
-  transientSharpeningAmount?: number; // 0.0 to 1.0
-  harmonicSmoothingAmount?: number; // 0.0 to 1.0
+  noiseFloorThresholdDb?: number;
+  transientSharpeningAmount?: number;
+  harmonicSmoothingAmount?: number;
   crossBleedSuppression?: boolean;
+  skipIfSilent?: boolean;
 }
 
 export async function repairStemArtifacts(
   audioBuffer: AudioBuffer,
-  stemType: 'kick' | 'snare' | 'hihat' | 'openhat' | 'bass' | 'bassGuitar' | 'lead' | 'leadGuitar' | 'acousticGuitar' | 'pad' | 'vocal',
+  stemType: RepairStemType,
   options: RepairOptions = {}
 ): Promise<AudioBuffer> {
-  // Studio Master Chain: Psychoacoustic de-artifacting, spectral smoothing, and clean warmth
   const numChannels = audioBuffer.numberOfChannels;
   const sampleRate = audioBuffer.sampleRate;
   const length = audioBuffer.length;
 
-  const isHarmonic = ['lead', 'leadGuitar', 'acousticGuitar', 'pad', 'piano', 'bass', 'bassGuitar', 'vocal'].includes(stemType);
-  const isPercussive = ['kick', 'snare', 'hihat', 'openhat', 'perc'].includes(stemType);
-
-  const offlineCtx = new OfflineAudioContext(numChannels, length, sampleRate);
-  const source = offlineCtx.createBufferSource();
-  source.buffer = audioBuffer;
-
-  let lastNode: AudioNode = source;
-
-  // 1. Studio EQ / 4-Pole Crossover shaping per stem type to eliminate "dirty" digital aliasing & cross-bleed
-  // Uses dual cascaded second-order filters (24dB/oct Linkwitz-Riley style) for steep out-of-band rejection
-  const filterNode1 = offlineCtx.createBiquadFilter();
-  const filterNode2 = offlineCtx.createBiquadFilter();
-
-  if (stemType === 'kick') {
-    filterNode1.type = 'lowpass';
-    filterNode1.frequency.value = 135;
-    filterNode1.Q.value = 0.707;
-    filterNode2.type = 'lowpass';
-    filterNode2.frequency.value = 135;
-    filterNode2.Q.value = 0.707;
-  } else if (stemType === 'snare') {
-    filterNode1.type = 'bandpass';
-    filterNode1.frequency.value = 1800;
-    filterNode1.Q.value = 1.0;
-    filterNode2.type = 'peaking';
-    filterNode2.frequency.value = 2400;
-    filterNode2.gain.value = 2.5;
-    filterNode2.Q.value = 1.2;
-  } else if (stemType === 'hihat' || stemType === 'openhat') {
-    filterNode1.type = 'highpass';
-    filterNode1.frequency.value = 6000;
-    filterNode1.Q.value = 0.707;
-    filterNode2.type = 'highpass';
-    filterNode2.frequency.value = 6000;
-    filterNode2.Q.value = 0.707;
-  } else if (stemType === 'bass') {
-    filterNode1.type = 'lowpass';
-    filterNode1.frequency.value = 160;
-    filterNode1.Q.value = 0.707;
-    filterNode2.type = 'lowpass';
-    filterNode2.frequency.value = 160;
-    filterNode2.Q.value = 0.707;
-  } else if (stemType === 'bassGuitar') {
-    filterNode1.type = 'lowpass';
-    filterNode1.frequency.value = 1100;
-    filterNode1.Q.value = 0.707;
-    filterNode2.type = 'highpass';
-    filterNode2.frequency.value = 75;
-    filterNode2.Q.value = 0.707;
-  } else if (stemType === 'vocal') {
-    filterNode1.type = 'highpass';
-    filterNode1.frequency.value = 135;
-    filterNode1.Q.value = 0.707;
-    filterNode2.type = 'lowpass';
-    filterNode2.frequency.value = 10000;
-    filterNode2.Q.value = 0.707;
-  } else {
-    // Guitars, Synths, Keys, Pads
-    filterNode1.type = 'highpass';
-    filterNode1.frequency.value = 140;
-    filterNode1.Q.value = 0.707;
-    filterNode2.type = 'lowpass';
-    filterNode2.frequency.value = 14000;
-    filterNode2.Q.value = 0.707;
+  // Quick energy check: if stem is silent/undetected, skip processing cleanly
+  let rawPeak = 0;
+  for (let c = 0; c < numChannels; c++) {
+    const ch = audioBuffer.getChannelData(c);
+    for (let i = 0; i < length; i += 8) {
+      const a = Math.abs(ch[i]);
+      if (a > rawPeak) rawPeak = a;
+    }
+  }
+  if (rawPeak < 1e-5 || options.skipIfSilent) {
+    return audioBuffer;
   }
 
-  // 2. Optical / VCA Studio Compressor for warmth, transparent leveling, and anti-clipping headroom
-  const compressor = offlineCtx.createDynamicsCompressor();
-  compressor.threshold.value = -18;
-  compressor.knee.value = 10;
-  compressor.ratio.value = 2.8;
-  compressor.attack.value = isPercussive ? 0.003 : 0.015;
-  compressor.release.value = isPercussive ? 0.08 : 0.22;
+  const isSubStem = stemType === 'kick' || stemType === 'bass';
+  const isPercussive =
+    stemType === 'kick' ||
+    stemType === 'snare' ||
+    stemType === 'hihat' ||
+    stemType === 'openhat' ||
+    stemType === 'perc';
 
-  lastNode.connect(filterNode1);
-  filterNode1.connect(filterNode2);
-  filterNode2.connect(compressor);
-  compressor.connect(offlineCtx.destination);
-  source.start(0);
+  // Use a clean AudioBuffer copy (avoids spawning 13 redundant OfflineAudioContexts)
+  const outCtx =
+    typeof window !== 'undefined' && (window as any).__stemBufferFactoryCtx
+      ? (window as any).__stemBufferFactoryCtx
+      : null;
 
-  const renderedBuffer = await offlineCtx.startRendering();
+  const outBuffer = outCtx?.createBuffer
+    ? outCtx.createBuffer(numChannels, length, sampleRate)
+    : new OfflineAudioContext(numChannels, length, sampleRate).createBuffer(
+        numChannels,
+        length,
+        sampleRate
+      );
 
-  // 3. Demucs/Wiener Psychoacoustic Transient Polish & Sub-Sample Soft Clipping
+  // DC blocker coefficient (~18 Hz cutoff for non-sub stems, ~10 Hz for kick/sub-bass)
+  const dcFreq = isSubStem ? 10 : 22;
+  const dcR = Math.exp((-2 * Math.PI * dcFreq) / sampleRate);
+
+  // Smooth RMS envelope follower parameters for noise-floor gating
+  // Crucially uses a smoothed envelope instead of sample-by-sample gating to prevent zero-crossing buzz
+  const envAttack = Math.exp(-1 / (sampleRate * (isPercussive ? 0.002 : 0.008)));
+  const envRelease = Math.exp(-1 / (sampleRate * (isPercussive ? 0.065 : 0.14)));
+  const gainSmooth = Math.exp(-1 / (sampleRate * 0.012));
+
+  // Calibrate noise floor relative to stem peak (very gentle -46dB to -38dB threshold)
+  const floorDb = options.noiseFloorThresholdDb ?? (isPercussive ? -38 : -46);
+  const floorRatio = Math.pow(10, floorDb / 20);
+
   for (let c = 0; c < numChannels; c++) {
-    const data = renderedBuffer.getChannelData(c);
+    const src = audioBuffer.getChannelData(c);
+    const dst = outBuffer.getChannelData(c);
 
-    if (isHarmonic) {
-      applyHarmonicMedianFilter(data);
-    } else if (isPercussive) {
-      applyPercussiveTransientSharper(data);
+    let channelPeak = 0;
+    for (let i = 0; i < length; i += 4) {
+      const a = Math.abs(src[i]);
+      if (a > channelPeak) channelPeak = a;
     }
 
-    // Dynamic Spectral Denoising & Smooth Analog Tape Saturation
-    // Calculate channel peak to calibrate downward expander threshold
-    let channelPeak = 0.0001;
-    for (let i = 0; i < length; i += 8) {
-      const mag = Math.abs(data[i]);
-      if (mag > channelPeak) channelPeak = mag;
+    if (channelPeak < 1e-5) {
+      dst.fill(0);
+      continue;
     }
 
-    // Adaptive noise floor expander: silences inter-beat pauses and residual cross-bleed
-    const noiseFloor = isPercussive 
-      ? Math.max(0.012, channelPeak * 0.15) 
-      : Math.max(0.003, channelPeak * 0.05);
+    const noiseThreshold = Math.max(1e-4, channelPeak * floorRatio);
+    let prevIn = 0;
+    let prevOut = 0;
+    let env = 0;
+    let currentGain = 1;
 
     for (let i = 0; i < length; i++) {
-      let val = data[i];
-      const absVal = Math.abs(val);
-      if (absVal < noiseFloor) {
-        const factor = absVal / noiseFloor;
-        val *= (factor * factor * factor); // Steep cubic downward expansion (up to -60dB bleed reduction)
+      // 1. Phase-clean 1st-order DC Blocker (y[n] = x[n] - x[n-1] + R * y[n-1])
+      const x = src[i];
+      const y = x - prevIn + dcR * prevOut;
+      prevIn = x;
+      prevOut = y;
+
+      // 2. Smooth Envelope Follower for quiet-tail bleed suppression
+      const absY = Math.abs(y);
+      if (absY > env) {
+        env = envAttack * env + (1 - envAttack) * absY;
+      } else {
+        env = envRelease * env + (1 - envRelease) * absY;
       }
 
-      // Continuous analog-style soft-saturation curve (smooth tanh approximation)
-      // Preserves warm transient harmonics while strictly preventing digital 0dBFS clipping
-      if (val > 0.85) {
-        val = 0.85 + 0.14 * Math.tanh((val - 0.85) / 0.14);
-      } else if (val < -0.85) {
-        val = -0.85 + 0.14 * Math.tanh((val + 0.85) / 0.14);
+      let targetGain = 1.0;
+      if (env < noiseThreshold) {
+        const ratio = env / noiseThreshold;
+        targetGain = ratio * ratio; // Smooth quadratic downward expansion
       }
-      data[i] = val;
+      currentGain = gainSmooth * currentGain + (1 - gainSmooth) * targetGain;
+
+      let outVal = y * currentGain;
+
+      // 3. Transparent soft ceiling limiter above 0.88 (-1.1 dBFS) to prevent 0 dBFS clipping
+      if (outVal > 0.88) {
+        outVal = 0.88 + 0.11 * Math.tanh((outVal - 0.88) / 0.11);
+      } else if (outVal < -0.88) {
+        outVal = -0.88 + 0.11 * Math.tanh((outVal + 0.88) / 0.11);
+      }
+
+      dst[i] = outVal;
     }
   }
 
-  return renderedBuffer;
-}
-
-/**
- * Zero-allocation 5-element median sorting network
- * Eliminates millions of temporary array allocations and .sort() calls.
- */
-function median5(a: number, b: number, c: number, d: number, e: number): number {
-  let v0 = a, v1 = b, v2 = c, v3 = d, v4 = e, t: number;
-  if (v0 > v1) { t = v0; v0 = v1; v1 = t; }
-  if (v3 > v4) { t = v3; v3 = v4; v4 = t; }
-  if (v0 > v3) { t = v0; v0 = v3; v3 = t; }
-  if (v1 > v4) { t = v1; v1 = v4; v4 = t; }
-  if (v1 > v2) { t = v1; v1 = v2; v2 = t; }
-  if (v2 > v3) { t = v2; v2 = v3; v3 = t; }
-  if (v1 > v2) { t = v1; v1 = v2; v2 = t; }
-  return v2;
-}
-
-/**
- * Harmonic Median Filter (Pico-HPSS)
- * Purges short-duration impulsive transients (drum bleeds) from sustained melodic stems.
- * Runs in O(N) with zero garbage-collector memory pressure.
- */
-let medianScratch: Float32Array | null = null;
-
-function applyHarmonicMedianFilter(data: Float32Array) {
-  const len = data.length;
-  if (len < 5) return;
-  if (!medianScratch || medianScratch.length < len) {
-    medianScratch = new Float32Array(len);
-  }
-  medianScratch.set(data);
-  for (let i = 2; i < len - 2; i++) {
-    data[i] = median5(medianScratch[i - 2], medianScratch[i - 1], medianScratch[i], medianScratch[i + 1], medianScratch[i + 2]);
-  }
-}
-
-/**
- * Percussive Transient Sharper
- * Purges sustained low-energy harmonic bleed from drum stems to ensure 100% peak accuracy.
- * Uses a sliding window moving average to run in O(N) instead of O(lookahead * N).
- */
-function applyPercussiveTransientSharper(data: Float32Array) {
-  const len = data.length;
-  const lookahead = 10;
-  if (len <= lookahead) return;
-
-  let futureEnergy = 0;
-  for (let j = 1; j <= lookahead && j < len; j++) {
-    futureEnergy += Math.abs(data[j]);
-  }
-
-  for (let i = 0; i < len; i++) {
-    const val = Math.abs(data[i]);
-    const avgFuture = futureEnergy / lookahead;
-    if (val < avgFuture * 0.8) {
-      data[i] *= 0.5; // Attenuate sustained harmonic blur
-    }
-    // Slide forward window
-    if (i + 1 < len) {
-      futureEnergy -= Math.abs(data[i + 1]);
-      if (i + 1 + lookahead < len) {
-        futureEnergy += Math.abs(data[i + 1 + lookahead]);
-      }
-    }
-  }
+  return outBuffer;
 }

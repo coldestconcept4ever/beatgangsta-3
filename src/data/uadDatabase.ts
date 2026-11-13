@@ -8596,9 +8596,9 @@ export const UAD_DATABASE: UADPluginProfile[] = [
     "parameters": [
       {
         "name": "Input",
-        "range": "0% to 100%",
-        "defaultVal": "50%",
-        "description": "Adjusts the input level.",
+        "range": "-12 dB to +12 dB",
+        "defaultVal": "0 dB",
+        "description": "Adjusts the input level in decibels.",
         "type": "knob"
       },
       {
