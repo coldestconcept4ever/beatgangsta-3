@@ -1,11 +1,31 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { X, Upload, Play, Pause, Volume2, Sparkles, Download, Music, ShieldCheck, Check, AlertCircle } from 'lucide-react';
+import { 
+  X, 
+  Upload, 
+  Play, 
+  Pause, 
+  Volume2, 
+  Sparkles, 
+  Download, 
+  Music, 
+  ShieldCheck, 
+  Check, 
+  AlertCircle,
+  Minus,
+  Maximize2,
+  RotateCcw,
+  Archive,
+  Sliders
+} from 'lucide-react';
+import JSZip from 'jszip';
+import { saveAs } from 'file-saver';
 import { splitAudioBufferIntoStems, IsolatedStems, StemKey } from '../utils/picoStemSplitter';
 import { isNeuralModelCached, hasWebGpuSupport } from '../utils/stemInference';
 import { extractNotesFromAudioBuffer, extractDrumPatternFromAudioBuffer } from '../utils/audioPitchAnalyzer';
 import { audioBufferToWavBlob } from '../utils/wavEncoder';
-import { BeatRecipe } from '../types';
+import { BeatRecipe, SampleVaultItem } from '../types';
+import { DEFAULT_COSMOS_FACTORY_SAMPLES } from './SampleVaultModal';
 
 const STEM_UI_DEFS: Array<{
   key: StemKey;
@@ -58,8 +78,20 @@ export const AudioStemAnalyzerModal: React.FC<AudioStemAnalyzerModalProps> = ({
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [neuralCached, setNeuralCached] = useState<boolean | null>(null);
   const [hasWebGpu, setHasWebGpu] = useState<boolean | null>(null);
+
+  // Minimized Floating Player Widget & Live Scrubber State
+  const [isMinimized, setIsMinimized] = useState<boolean>(false);
+  const [playbackCurrentTime, setPlaybackCurrentTime] = useState<number>(0);
+  const [isDownloadingZip, setIsDownloadingZip] = useState<boolean>(false);
+  const [zipDownloadPct, setZipDownloadPct] = useState<number>(0);
+  const [zipDownloadedSuccess, setZipDownloadedSuccess] = useState<boolean>(false);
+
   const previewAudioCtxRef = React.useRef<AudioContext | null>(null);
   const activeCancelRef = React.useRef<(() => void) | null>(null);
+  const activeSourcesRef = React.useRef<Record<string, AudioBufferSourceNode>>({});
+  const playbackStartTimeRef = React.useRef<number>(0);
+  const playbackOffsetRef = React.useRef<number>(0);
+  const lastActiveStemsRef = React.useRef<Set<string>>(new Set());
 
   // Manage persistent AudioContext for stem previews (Chrome tab limit = 6 max)
   const getPreviewAudioCtx = () => {
@@ -88,7 +120,7 @@ export const AudioStemAnalyzerModal: React.FC<AudioStemAnalyzerModalProps> = ({
   }, []);
 
   React.useEffect(() => {
-    if (!isOpen) return;
+    if (!isOpen && !isMinimized) return;
     let cancelled = false;
     Promise.all([isNeuralModelCached(), hasWebGpuSupport()]).then(([cached, gpu]) => {
       if (!cancelled) {
@@ -99,7 +131,7 @@ export const AudioStemAnalyzerModal: React.FC<AudioStemAnalyzerModalProps> = ({
     return () => {
       cancelled = true;
     };
-  }, [isOpen, stems]);
+  }, [isOpen, isMinimized, stems]);
 
   // Timer for deep analysis
   React.useEffect(() => {
@@ -115,10 +147,6 @@ export const AudioStemAnalyzerModal: React.FC<AudioStemAnalyzerModalProps> = ({
     return () => clearInterval(interval);
   }, [isProcessing]);
 
-  const activeSourcesRef = React.useRef<Record<string, AudioBufferSourceNode>>({});
-  const playbackStartTimeRef = React.useRef<number>(0);
-  const playbackOffsetRef = React.useRef<number>(0);
-
   const detectedStemDefs = React.useMemo(() => {
     if (!stems) return [];
     return STEM_UI_DEFS.filter((def) => {
@@ -129,7 +157,89 @@ export const AudioStemAnalyzerModal: React.FC<AudioStemAnalyzerModalProps> = ({
     });
   }, [stems]);
 
-  if (!isOpen) return null;
+  // Total song length from detected stems
+  const totalDuration = React.useMemo(() => {
+    if (!stems || detectedStemDefs.length === 0) return 0;
+    for (const def of detectedStemDefs) {
+      const buf = stems[def.key];
+      if (buf && buf.duration > 0) return buf.duration;
+    }
+    return 0;
+  }, [stems, detectedStemDefs]);
+
+  // Combined or solo waveform peaks computation (160 normalized bars)
+  const waveformPeaks = React.useMemo(() => {
+    const numBars = 160;
+    if (!stems || detectedStemDefs.length === 0) return new Float32Array(numBars);
+
+    const activeBuffers: AudioBuffer[] = [];
+    if (activePlayingStems.size > 0) {
+      activePlayingStems.forEach((key) => {
+        const buf = stems[key as StemKey];
+        if (buf) activeBuffers.push(buf);
+      });
+    } else {
+      detectedStemDefs.forEach((def) => {
+        const buf = stems[def.key];
+        if (buf) activeBuffers.push(buf);
+      });
+    }
+
+    if (activeBuffers.length === 0) return new Float32Array(numBars);
+
+    const peaks = new Float32Array(numBars);
+    const maxLen = Math.max(...activeBuffers.map((b) => b.length));
+    if (maxLen === 0) return peaks;
+
+    const blockSize = Math.max(1, Math.floor(maxLen / numBars));
+
+    for (let b = 0; b < numBars; b++) {
+      const startSample = b * blockSize;
+      const endSample = Math.min(maxLen, startSample + blockSize);
+      let peak = 0;
+
+      for (const buf of activeBuffers) {
+        const ch0 = buf.getChannelData(0);
+        const ch1 = buf.numberOfChannels > 1 ? buf.getChannelData(1) : ch0;
+        const bufLen = buf.length;
+        const sStart = Math.min(startSample, bufLen);
+        const sEnd = Math.min(endSample, bufLen);
+        const step = Math.max(1, Math.floor((sEnd - sStart) / 28));
+        for (let i = sStart; i < sEnd; i += step) {
+          const val = Math.max(Math.abs(ch0[i] || 0), Math.abs(ch1[i] || 0));
+          if (val > peak) peak = val;
+        }
+      }
+      peaks[b] = peak;
+    }
+
+    let maxPeak = 0.0001;
+    for (let b = 0; b < numBars; b++) {
+      if (peaks[b] > maxPeak) maxPeak = peaks[b];
+    }
+    for (let b = 0; b < numBars; b++) {
+      peaks[b] = Math.min(1, peaks[b] / maxPeak);
+    }
+    return peaks;
+  }, [stems, detectedStemDefs, activePlayingStems]);
+
+  // Live RAF playback time tracking (60fps smooth scrubber)
+  React.useEffect(() => {
+    let animId: number;
+    const updateTime = () => {
+      if (activePlayingStems.size > 0 && previewAudioCtxRef.current) {
+        const audioCtx = previewAudioCtxRef.current;
+        const elapsed = audioCtx.currentTime - playbackStartTimeRef.current + playbackOffsetRef.current;
+        const current = totalDuration > 0 ? elapsed % totalDuration : 0;
+        setPlaybackCurrentTime(current);
+      }
+      animId = requestAnimationFrame(updateTime);
+    };
+    animId = requestAnimationFrame(updateTime);
+    return () => cancelAnimationFrame(animId);
+  }, [activePlayingStems, totalDuration]);
+
+  if (!isOpen && !isMinimized) return null;
 
   const stopAllStems = () => {
     const activeSources = activeSourcesRef.current;
@@ -138,6 +248,7 @@ export const AudioStemAnalyzerModal: React.FC<AudioStemAnalyzerModalProps> = ({
     });
     activeSourcesRef.current = {};
     playbackOffsetRef.current = 0;
+    setPlaybackCurrentTime(0);
     setActivePlayingStems(new Set());
   };
 
@@ -148,7 +259,89 @@ export const AudioStemAnalyzerModal: React.FC<AudioStemAnalyzerModalProps> = ({
     }
     stopAllStems();
     setIsProcessing(false);
+    setIsMinimized(false);
+    setZipDownloadedSuccess(false);
     onClose();
+  };
+
+  const seekTo = (targetSec: number) => {
+    if (!stems || totalDuration <= 0) return;
+    const clampedSec = Math.max(0, Math.min(totalDuration, targetSec));
+    playbackOffsetRef.current = clampedSec;
+    setPlaybackCurrentTime(clampedSec);
+
+    const audioCtx = getPreviewAudioCtx();
+    playbackStartTimeRef.current = audioCtx.currentTime;
+
+    const activeKeys = Array.from(activePlayingStems);
+    if (activeKeys.length > 0) {
+      Object.values(activeSourcesRef.current).forEach((src) => {
+        try { src.stop(); } catch {}
+      });
+      activeSourcesRef.current = {};
+
+      activeKeys.forEach((stemKey) => {
+        const buf = stems[stemKey as StemKey];
+        if (!buf) return;
+        const source = audioCtx.createBufferSource();
+        source.buffer = buf;
+        source.connect(audioCtx.destination);
+        const offset = clampedSec % buf.duration;
+        source.start(0, offset);
+        activeSourcesRef.current[stemKey] = source;
+        source.onended = () => {
+          if (activeSourcesRef.current[stemKey] === source) {
+            delete activeSourcesRef.current[stemKey];
+            setActivePlayingStems(new Set(Object.keys(activeSourcesRef.current)));
+          }
+        };
+      });
+    }
+  };
+
+  const togglePlayAllOrResume = () => {
+    const audioCtx = getPreviewAudioCtx();
+    if (activePlayingStems.size > 0) {
+      // Pause active stems and record offset
+      const elapsed = audioCtx.currentTime - playbackStartTimeRef.current + playbackOffsetRef.current;
+      playbackOffsetRef.current = totalDuration > 0 ? elapsed % totalDuration : 0;
+      setPlaybackCurrentTime(playbackOffsetRef.current);
+      lastActiveStemsRef.current = new Set(activePlayingStems);
+
+      Object.values(activeSourcesRef.current).forEach((src) => {
+        try { src.stop(); } catch {}
+      });
+      activeSourcesRef.current = {};
+      setActivePlayingStems(new Set());
+    } else {
+      // Resume previously active stems or start all detected stems
+      const toPlay =
+        lastActiveStemsRef.current.size > 0
+          ? Array.from(lastActiveStemsRef.current)
+          : detectedStemDefs.map((d) => d.key);
+
+      if (toPlay.length === 0) return;
+
+      playbackStartTimeRef.current = audioCtx.currentTime;
+      const offset = totalDuration > 0 ? playbackOffsetRef.current % totalDuration : 0;
+
+      toPlay.forEach((stemKey) => {
+        const buf = stems[stemKey as StemKey];
+        if (!buf) return;
+        const source = audioCtx.createBufferSource();
+        source.buffer = buf;
+        source.connect(audioCtx.destination);
+        source.start(0, offset);
+        activeSourcesRef.current[stemKey] = source;
+        source.onended = () => {
+          if (activeSourcesRef.current[stemKey] === source) {
+            delete activeSourcesRef.current[stemKey];
+            setActivePlayingStems(new Set(Object.keys(activeSourcesRef.current)));
+          }
+        };
+      });
+      setActivePlayingStems(new Set(toPlay));
+    }
   };
 
   const handleFileUpload = async (file: File) => {
@@ -228,9 +421,13 @@ export const AudioStemAnalyzerModal: React.FC<AudioStemAnalyzerModalProps> = ({
         activeSources[stemName].stop();
       } catch {}
       delete activeSources[stemName];
-      setActivePlayingStems(new Set(Object.keys(activeSources)));
-      if (Object.keys(activeSources).length === 0) {
-        playbackOffsetRef.current = 0;
+      const nextActive = new Set(Object.keys(activeSources));
+      setActivePlayingStems(nextActive);
+      lastActiveStemsRef.current = nextActive;
+      if (nextActive.size === 0) {
+        const elapsed = audioCtx.currentTime - playbackStartTimeRef.current + playbackOffsetRef.current;
+        playbackOffsetRef.current = totalDuration > 0 ? elapsed % totalDuration : 0;
+        setPlaybackCurrentTime(playbackOffsetRef.current);
       }
       return;
     }
@@ -238,7 +435,6 @@ export const AudioStemAnalyzerModal: React.FC<AudioStemAnalyzerModalProps> = ({
     // If no stems are currently playing, record anchor start time
     if (Object.keys(activeSources).length === 0) {
       playbackStartTimeRef.current = audioCtx.currentTime;
-      playbackOffsetRef.current = 0;
     }
 
     // Play new stem synchronized to the shared anchor time
@@ -251,14 +447,83 @@ export const AudioStemAnalyzerModal: React.FC<AudioStemAnalyzerModalProps> = ({
 
     source.start(0, offset);
     activeSources[stemName] = source;
-    setActivePlayingStems(new Set(Object.keys(activeSources)));
+    const nextActive = new Set(Object.keys(activeSources));
+    setActivePlayingStems(nextActive);
+    lastActiveStemsRef.current = nextActive;
 
     source.onended = () => {
       if (activeSources[stemName] === source) {
         delete activeSources[stemName];
-        setActivePlayingStems(new Set(Object.keys(activeSources)));
+        const updated = new Set(Object.keys(activeSources));
+        setActivePlayingStems(updated);
+        lastActiveStemsRef.current = updated;
       }
     };
+  };
+
+  // Direct WAV Stem Packager (ZIP with 0 MIDI / 0 recipe overhead)
+  const handleDownloadStemsZipOnly = async () => {
+    if (!stems || detectedStemDefs.length === 0) return;
+
+    setIsDownloadingZip(true);
+    setZipDownloadPct(5);
+    setZipDownloadedSuccess(false);
+
+    const safeTitle = fileName ? fileName.replace(/\.[^/.]+$/, '') : 'Isolated_Stems';
+    const yieldToUI = () => new Promise((resolve) => setTimeout(resolve, 0));
+
+    try {
+      const zip = new JSZip();
+      const activeDefs = detectedStemDefs;
+
+      for (let i = 0; i < activeDefs.length; i++) {
+        const def = activeDefs[i];
+        setZipDownloadPct(10 + Math.round(((i + 1) / activeDefs.length) * 75));
+        await yieldToUI();
+        const wavBlob = await audioBufferToWavBlob(stems[def.key]);
+        zip.file(def.fileName, wavBlob);
+      }
+
+      const infoText = [
+        `================================================`,
+        `BEATGANGSTA STUDIO - ISOLATED WAV STEM ARCHIVE`,
+        `================================================`,
+        `Source Track: ${fileName}`,
+        `Detected Studio BPM: ${stems.detectedBpm} BPM`,
+        `Separation Engine: ${
+          stems.engineUsed === 'neural-webgpu'
+            ? 'HTDemucs 6-Stem Neural ONNX (WebGPU Acceleration)'
+            : stems.engineUsed === 'neural-wasm'
+              ? 'HTDemucs 6-Stem Neural ONNX (WASM CPU)'
+              : 'Local 4096-pt STFT + 2D HPSS DSP'
+        }`,
+        `Detected Active Stems: ${activeDefs.length}`,
+        ``,
+        `Stem Files Included:`,
+        ...activeDefs.map((d, i) => `  ${i + 1}. ${d.name.padEnd(16)} -> ${d.fileName}`),
+        ``,
+        `Sample Rate: 44.1 kHz, 16-bit PCM Linear WAV`,
+        `100% Client-Side Local Separation. 0 Server Tokens.`,
+        `Export Timestamp: ${new Date().toISOString()}`,
+        `================================================`,
+      ].join('\n');
+
+      zip.file('00_Stem_Extraction_Info.txt', infoText);
+
+      setZipDownloadPct(90);
+      await yieldToUI();
+
+      const zipBlob = await zip.generateAsync({ type: 'blob' });
+      setZipDownloadPct(100);
+
+      saveAs(zipBlob, `${safeTitle}_Isolated_WAV_Stems.zip`);
+      setZipDownloadedSuccess(true);
+    } catch (err: any) {
+      console.error('Error packaging WAV stems zip:', err);
+      setErrorMessage(err?.message || 'Failed to package WAV stems zip.');
+    } finally {
+      setIsDownloadingZip(false);
+    }
   };
 
   const handleExportStemsAndRecipe = async () => {
@@ -875,8 +1140,110 @@ const getStemModalTheme = (theme: string) => {
 
   const currentTheme = getStemModalTheme(theme);
 
+  const formatTime = (sec: number) => {
+    if (isNaN(sec) || sec < 0) return '00:00';
+    const m = Math.floor(sec / 60);
+    const s = Math.floor(sec % 60);
+    return `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+  };
+
   return (
     <AnimatePresence>
+      {/* Minimized Moveable Floating Glass Widget */}
+      {isMinimized && stems && (
+        <motion.div
+          drag
+          dragMomentum={false}
+          initial={{ opacity: 0, scale: 0.8, y: 50 }}
+          animate={{ opacity: 1, scale: 1, y: 0 }}
+          exit={{ opacity: 0, scale: 0.8, y: 50 }}
+          className={`fixed bottom-6 right-6 z-[250] p-4 rounded-3xl shadow-[0_25px_60px_rgba(0,0,0,0.6)] backdrop-blur-3xl border w-80 cursor-grab active:cursor-grabbing ${currentTheme.dialog}`}
+        >
+          <div className="flex items-center justify-between mb-2">
+            <div className="flex items-center gap-2 min-w-0">
+              <span className={`w-2 h-2 rounded-full ${activePlayingStems.size > 0 ? 'bg-emerald-500 animate-ping' : 'bg-sky-400'}`} />
+              <span className={`text-[11px] font-black uppercase tracking-wider truncate ${currentTheme.titleText}`}>
+                {fileName || 'Isolated Stems'}
+              </span>
+            </div>
+            <div className="flex items-center gap-1 shrink-0">
+              <button
+                type="button"
+                onClick={() => setIsMinimized(false)}
+                className={`p-1.5 rounded-full transition-all hover:scale-105 active:scale-95 ${currentTheme.closeBtn}`}
+                title="Maximize Player"
+              >
+                <Maximize2 className="w-3.5 h-3.5" />
+              </button>
+              <button
+                type="button"
+                onClick={handleClose}
+                className={`p-1.5 rounded-full transition-all hover:scale-105 active:scale-95 ${currentTheme.closeBtn}`}
+                title="Close Player"
+              >
+                <X className="w-3.5 h-3.5" />
+              </button>
+            </div>
+          </div>
+
+          {/* Mini Waveform & Scrubber */}
+          <div className="space-y-1.5 mb-3">
+            <div 
+              className="h-10 w-full bg-black/20 dark:bg-white/10 rounded-xl overflow-hidden flex items-center px-1 gap-0.5 cursor-pointer relative"
+              onClick={(e) => {
+                const rect = e.currentTarget.getBoundingClientRect();
+                const clickX = e.clientX - rect.left;
+                const pct = Math.max(0, Math.min(1, clickX / rect.width));
+                seekTo(pct * totalDuration);
+              }}
+            >
+              {Array.from(waveformPeaks).map((peak, idx) => {
+                const barProgress = totalDuration > 0 ? playbackCurrentTime / totalDuration : 0;
+                const isPassed = (idx / waveformPeaks.length) <= barProgress;
+                return (
+                  <div
+                    key={idx}
+                    className={`flex-1 rounded-full transition-all ${
+                      isPassed ? 'bg-sky-400' : 'bg-black/30 dark:bg-white/30'
+                    }`}
+                    style={{ height: `${Math.max(12, Math.round(peak * 100))}%` }}
+                  />
+                );
+              })}
+            </div>
+            <div className={`flex justify-between text-[9px] font-bold ${currentTheme.subText}`}>
+              <span>{formatTime(playbackCurrentTime)}</span>
+              <span>{activePlayingStems.size} active stem{activePlayingStems.size === 1 ? '' : 's'}</span>
+              <span>{formatTime(totalDuration)}</span>
+            </div>
+          </div>
+
+          {/* Mini Transport Controls */}
+          <div className="flex items-center justify-between gap-2">
+            <button
+              type="button"
+              onClick={togglePlayAllOrResume}
+              className={`flex-1 py-2 px-3 rounded-full text-[10px] font-black uppercase tracking-wider flex items-center justify-center gap-2 transition-all active:scale-95 ${
+                activePlayingStems.size > 0 ? currentTheme.playBtnActive : currentTheme.exportBtn
+              }`}
+            >
+              {activePlayingStems.size > 0 ? <Pause className="w-3.5 h-3.5" /> : <Play className="w-3.5 h-3.5 ml-0.5" />}
+              {activePlayingStems.size > 0 ? 'Pause Stems' : 'Play All Synced'}
+            </button>
+            {activePlayingStems.size > 0 && (
+              <button
+                type="button"
+                onClick={stopAllStems}
+                className={`py-2 px-3 rounded-full text-[10px] font-black uppercase tracking-wider transition-all active:scale-95 ${currentTheme.stopBtn}`}
+              >
+                Stop
+              </button>
+            )}
+          </div>
+        </motion.div>
+      )}
+
+      {/* Full Modal Overlay */}
       <div className={`fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 ${currentTheme.overlay}`}>
         <motion.div
           initial={{ opacity: 0, scale: 0.95 }}
@@ -899,12 +1266,25 @@ const getStemModalTheme = (theme: string) => {
                 </p>
               </div>
             </div>
-            <button
-              onClick={handleClose}
-              className={`w-9 h-9 rounded-full flex items-center justify-center transition-all hover:scale-105 active:scale-95 ${currentTheme.closeBtn}`}
-            >
-              <X className="w-5 h-5" />
-            </button>
+            <div className="flex items-center gap-2">
+              {stems && (
+                <button
+                  type="button"
+                  onClick={() => setIsMinimized(true)}
+                  className={`w-9 h-9 rounded-full flex items-center justify-center transition-all hover:scale-105 active:scale-95 ${currentTheme.closeBtn}`}
+                  title="Minimize to Floating Player"
+                >
+                  <Minus className="w-4 h-4" />
+                </button>
+              )}
+              <button
+                onClick={handleClose}
+                className={`w-9 h-9 rounded-full flex items-center justify-center transition-all hover:scale-105 active:scale-95 ${currentTheme.closeBtn}`}
+                title="Close Modal"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
           </div>
 
           {/* Separation & MIDI Engine Selector */}
@@ -1060,25 +1440,84 @@ const getStemModalTheme = (theme: string) => {
                 </div>
               )}
 
-              {/* Playback Control Bar */}
-              <div className={`p-4 rounded-2xl flex items-center justify-between gap-3 ${currentTheme.playbackBar}`}>
-                <div className="flex items-center gap-2.5">
-                  <span className={`w-2.5 h-2.5 rounded-full ${activePlayingStems.size > 0 ? 'bg-emerald-500 animate-ping' : 'bg-black/30 dark:bg-white/30'}`} />
-                  <span className={`text-xs font-black uppercase tracking-wider ${currentTheme.titleText}`}>
-                    {activePlayingStems.size > 0
-                      ? `Synchronized Playback Active (${activePlayingStems.size} Stem${activePlayingStems.size > 1 ? 's' : ''} Synced in Time)`
-                      : 'Stems Ready (Click play on any detected stem to audition or layer together in time)'}
-                  </span>
+              {/* Big Dynamic Waveform Display & Scrubber Transport */}
+              <div className={`p-5 rounded-3xl border space-y-4 ${currentTheme.sectionCard}`}>
+                <div className="flex items-center justify-between flex-wrap gap-3">
+                  <div className="flex items-center gap-2.5">
+                    <span className={`w-3 h-3 rounded-full ${activePlayingStems.size > 0 ? 'bg-emerald-500 animate-ping' : 'bg-sky-500'}`} />
+                    <span className={`text-xs font-black uppercase tracking-wider ${currentTheme.titleText}`}>
+                      {activePlayingStems.size > 0
+                        ? `Live Waveform (${activePlayingStems.size} Stem${activePlayingStems.size > 1 ? 's' : ''} Playing in Sync)`
+                        : 'Live Combined Waveform (Click play on any stem or Master Play All)'}
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={togglePlayAllOrResume}
+                      className={`px-4 py-2 rounded-full text-xs font-black uppercase tracking-wider transition-all flex items-center gap-2 active:scale-95 ${
+                        activePlayingStems.size > 0 ? currentTheme.playBtnActive : currentTheme.exportBtn
+                      }`}
+                    >
+                      {activePlayingStems.size > 0 ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4 ml-0.5" />}
+                      {activePlayingStems.size > 0 ? 'Pause Stems' : 'Play All Synced'}
+                    </button>
+                    {activePlayingStems.size > 0 && (
+                      <button
+                        type="button"
+                        onClick={stopAllStems}
+                        className={`px-4 py-2 rounded-full text-xs font-black uppercase tracking-wider transition-all flex items-center gap-2 active:scale-95 ${currentTheme.stopBtn}`}
+                      >
+                        <Pause className="w-3.5 h-3.5" /> Stop All
+                      </button>
+                    )}
+                  </div>
                 </div>
-                {activePlayingStems.size > 0 && (
-                  <button
-                    type="button"
-                    onClick={stopAllStems}
-                    className={`px-4 py-2 rounded-full text-xs font-black uppercase tracking-wider transition-all flex items-center gap-2 active:scale-95 ${currentTheme.stopBtn}`}
-                  >
-                    <Pause className="w-3.5 h-3.5" /> Stop All Stems
-                  </button>
-                )}
+
+                {/* Big Interactive Waveform Canvas / Bars */}
+                <div 
+                  className="h-24 w-full bg-black/25 dark:bg-white/10 rounded-2xl overflow-hidden flex items-center px-2 gap-1 cursor-pointer relative shadow-inner group"
+                  onClick={(e) => {
+                    const rect = e.currentTarget.getBoundingClientRect();
+                    const clickX = e.clientX - rect.left;
+                    const pct = Math.max(0, Math.min(1, clickX / rect.width));
+                    seekTo(pct * totalDuration);
+                  }}
+                  title="Click to seek playback position"
+                >
+                  {Array.from(waveformPeaks).map((peak, idx) => {
+                    const barProgress = totalDuration > 0 ? playbackCurrentTime / totalDuration : 0;
+                    const isPassed = (idx / waveformPeaks.length) <= barProgress;
+                    return (
+                      <div
+                        key={idx}
+                        className={`flex-1 rounded-full transition-all duration-75 ${
+                          isPassed ? 'bg-sky-400 group-hover:bg-sky-300' : 'bg-white/20 group-hover:bg-white/40'
+                        }`}
+                        style={{ height: `${Math.max(12, Math.round(peak * 100))}%` }}
+                      />
+                    );
+                  })}
+                  <div 
+                    className="absolute top-0 bottom-0 w-0.5 bg-white shadow-[0_0_12px_rgba(255,255,255,0.9)] pointer-events-none transition-all duration-75"
+                    style={{ left: `${totalDuration > 0 ? (playbackCurrentTime / totalDuration) * 100 : 0}%` }}
+                  />
+                </div>
+
+                {/* Time & Seek Bar */}
+                <div className="flex items-center justify-between text-xs font-bold px-1">
+                  <span className={currentTheme.titleText}>{formatTime(playbackCurrentTime)}</span>
+                  <input
+                    type="range"
+                    min={0}
+                    max={totalDuration || 1}
+                    step={0.01}
+                    value={playbackCurrentTime}
+                    onChange={(e) => seekTo(parseFloat(e.target.value))}
+                    className="w-full mx-4 accent-sky-500 cursor-pointer"
+                  />
+                  <span className={currentTheme.titleText}>{formatTime(totalDuration)}</span>
+                </div>
               </div>
 
               {/* Detected Stems Grid (Empty/Undetected Stems Hidden) */}
@@ -1176,8 +1615,35 @@ const getStemModalTheme = (theme: string) => {
                 </div>
               )}
 
-              {/* Action / Export Progress Banner */}
-              <div className="space-y-4">
+              {/* Two Distinct Action Buttons in Stems UI */}
+              <div className="space-y-4 pt-2">
+                {isDownloadingZip && (
+                  <div className={`p-4 rounded-2xl border flex flex-col gap-2 ${currentTheme.statusBanner}`}>
+                    <div className="flex items-center justify-between text-xs font-black">
+                      <span className="text-sky-500 animate-pulse">Packaging {detectedStemDefs.length} WAV Stems into ZIP Archive...</span>
+                      <span className="text-sky-600 dark:text-sky-400">{zipDownloadPct}%</span>
+                    </div>
+                    <div className="w-full h-2 bg-black/10 dark:bg-white/10 rounded-full overflow-hidden border border-white/20">
+                      <div className="h-full bg-gradient-to-r from-sky-400 to-blue-600 transition-all duration-300 rounded-full" style={{ width: `${zipDownloadPct}%` }} />
+                    </div>
+                  </div>
+                )}
+                {zipDownloadedSuccess && (
+                  <div className="p-3.5 rounded-2xl bg-emerald-500/15 border border-emerald-500/30 flex items-center justify-between text-emerald-800 dark:text-emerald-200 text-xs font-bold">
+                    <div className="flex items-center gap-2">
+                      <Check className="w-4 h-4 text-emerald-500 shrink-0" />
+                      <span>WAV Stems ZIP archive successfully downloaded! You can minimize or close this player.</span>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setIsMinimized(true)}
+                      className="px-3 py-1 rounded-full bg-emerald-600 text-white text-[10px] font-black uppercase tracking-wider"
+                    >
+                      Minimize Player
+                    </button>
+                  </div>
+                )}
+
                 {isExporting && (
                   <div className={`p-4 rounded-2xl border flex flex-col gap-2 ${currentTheme.statusBanner}`}>
                     <div className="flex items-center justify-between text-xs font-black">
@@ -1190,18 +1656,34 @@ const getStemModalTheme = (theme: string) => {
                     <p className={`text-[10px] italic ${currentTheme.subText}`}>Stems remain fully playable while WAV export and MIDI transcription run in the background.</p>
                   </div>
                 )}
-                <button
-                  type="button"
-                  disabled={isExporting || detectedStemDefs.length === 0}
-                  onClick={handleExportStemsAndRecipe}
-                  className={`w-full py-4 rounded-full font-black text-xs uppercase tracking-[0.2em] transition-all shadow-xl flex items-center justify-center gap-2 active:scale-98 ${
-                    isExporting || detectedStemDefs.length === 0
-                      ? currentTheme.exportDisabled
-                      : currentTheme.exportBtn
-                  }`}
-                >
-                  <Download className="w-4 h-4" /> {isExporting ? 'Exporting Detected Stems & Generating MIDI...' : `Export ${detectedStemDefs.length} Detected WAV Stems & Generate 1:1 MIDI Recipe`}
-                </button>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                  <button
+                    type="button"
+                    disabled={isDownloadingZip || isExporting || detectedStemDefs.length === 0}
+                    onClick={handleDownloadStemsZipOnly}
+                    className={`py-4 px-6 rounded-full font-black text-xs uppercase tracking-[0.16em] transition-all shadow-xl flex items-center justify-center gap-2 active:scale-98 ${
+                      isDownloadingZip || isExporting || detectedStemDefs.length === 0
+                        ? currentTheme.exportDisabled
+                        : currentTheme.inactivePill
+                    }`}
+                  >
+                    <Archive className="w-4 h-4" /> Download Stems Only (WAV Zip)
+                  </button>
+
+                  <button
+                    type="button"
+                    disabled={isDownloadingZip || isExporting || detectedStemDefs.length === 0}
+                    onClick={handleExportStemsAndRecipe}
+                    className={`py-4 px-6 rounded-full font-black text-xs uppercase tracking-[0.16em] transition-all shadow-xl flex items-center justify-center gap-2 active:scale-98 ${
+                      isDownloadingZip || isExporting || detectedStemDefs.length === 0
+                        ? currentTheme.exportDisabled
+                        : currentTheme.exportBtn
+                    }`}
+                  >
+                    <Download className="w-4 h-4" /> {isExporting ? 'Generating MIDI & Matching Vault...' : `Generate 1:1 MIDI & Match Vault (${detectedStemDefs.length} Stems)`}
+                  </button>
+                </div>
               </div>
             </div>
           )}
