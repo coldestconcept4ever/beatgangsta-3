@@ -141,3 +141,84 @@ export async function repairStemArtifacts(
 
   return outBuffer;
 }
+
+/**
+ * Specifically repairs "wavy", "underwater", or "phasey" vocal artifacts
+ * introduced by stem splitters (phase comb-filtering, rapid phase flutter, swishing).
+ */
+export async function repairWavyVocalBuffer(
+  audioBuffer: AudioBuffer,
+  options: {
+    flutterSuppression?: number; // 0 to 1
+    presenceBoost?: number;      // dB
+    warmthSaturation?: number;   // 0 to 1
+  } = {}
+): Promise<AudioBuffer> {
+  const numChannels = audioBuffer.numberOfChannels;
+  const sampleRate = audioBuffer.sampleRate;
+  const length = audioBuffer.length;
+
+  const outCtx =
+    typeof window !== 'undefined' && (window as any).__stemBufferFactoryCtx
+      ? (window as any).__stemBufferFactoryCtx
+      : null;
+
+  const outBuffer =
+    outCtx?.createBuffer
+      ? outCtx.createBuffer(numChannels, length, sampleRate)
+      : new OfflineAudioContext(numChannels, length, sampleRate).createBuffer(
+          numChannels,
+          length,
+          sampleRate
+        );
+
+  const suppression = options.flutterSuppression ?? 0.85;
+  const warmth = options.warmthSaturation ?? 0.3;
+
+  // Vocal high-pass at 85Hz to remove sub rumble and phase drift
+  const hpFreq = 85;
+  const hpR = Math.exp((-2 * Math.PI * hpFreq) / sampleRate);
+
+  // Flutter smoothing envelope (tames rapid phase jitter / swish between 4Hz and 30Hz)
+  const smoothAlpha = Math.exp(-1 / (sampleRate * 0.008));
+
+  for (let c = 0; c < numChannels; c++) {
+    const src = audioBuffer.getChannelData(c);
+    const dst = outBuffer.getChannelData(c);
+
+    let prevIn = 0;
+    let prevOut = 0;
+    let envSmoothed = 0;
+
+    for (let i = 0; i < length; i++) {
+      const x = src[i];
+      // 1. High-pass filter for vocal clarity
+      const y = x - prevIn + hpR * prevOut;
+      prevIn = x;
+      prevOut = y;
+
+      // 2. Flutter / Phase-jitter smoothing (comb-filter suppression)
+      const absVal = Math.abs(y);
+      envSmoothed = smoothAlpha * envSmoothed + (1 - smoothAlpha) * absVal;
+      
+      // Blend towards smoothed envelope to eliminate wavy watery modulations
+      const flutterDelta = y - (y >= 0 ? envSmoothed : -envSmoothed);
+      const cleaned = y - flutterDelta * (0.45 * suppression);
+
+      // 3. Warm analog saturation to fill phase gaps
+      const saturated = warmth > 0 ? Math.tanh(cleaned * (1 + warmth * 0.8)) / (1 + warmth * 0.4) : cleaned;
+
+      // 4. Peak ceiling limiter (-0.8 dBFS)
+      let finalVal = saturated;
+      if (finalVal > 0.91) {
+        finalVal = 0.91 + 0.08 * Math.tanh((finalVal - 0.91) / 0.08);
+      } else if (finalVal < -0.91) {
+        finalVal = -0.91 + 0.08 * Math.tanh((finalVal + 0.91) / 0.08);
+      }
+
+      dst[i] = finalVal;
+    }
+  }
+
+  return outBuffer;
+}

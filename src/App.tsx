@@ -26,6 +26,7 @@ import { JSFXCard } from './components/JSFXCard';
 import { HardwareCard } from './components/HardwareCard';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { AudioStemAnalyzerModal } from './components/AudioStemAnalyzerModal';
+import { VocalRepairStudioModal } from './components/VocalRepairStudioModal';
 const RecipeCard = React.lazy(() => import('./components/RecipeCard').then(m => ({ default: m.RecipeCard })));
 const CritiqueCard = React.lazy(() => import('./components/CritiqueCard').then(m => ({ default: m.CritiqueCard })));
 const Mascot = React.lazy(() => import('./components/Mascot').then(m => ({ default: m.Mascot })));
@@ -595,6 +596,8 @@ const App: React.FC = () => {
 
   const [mainTab, setMainTab] = useState<'beat' | 'vox' | null>(null);
   const [showStemAnalyzerModal, setShowStemAnalyzerModal] = useState<boolean>(false);
+  const [showVocalRepairModal, setShowVocalRepairModal] = useState<boolean>(false);
+  const [vocalRepairInitialFile, setVocalRepairInitialFile] = useState<File | null>(null);
   const [stemWavsCache, setStemWavsCache] = useState<Record<string, Blob> | null>(null);
 
   const handleGenerateFromStems = (recipe: Partial<BeatRecipe>, stemWavs: Record<string, Blob>) => {
@@ -8684,6 +8687,18 @@ Provide the exact JSFX plugin name and required sliders/parameters.`;
                       🎙️ Pico/Nano Stem Splitter (0 Tokens)
                     </button>
                     <button 
+                      id="btn-ai-vocal-repair"
+                      onClick={() => {
+                        setVocalRepairInitialFile(null);
+                        setShowVocalRepairModal(true);
+                      }}
+                      className={`py-3 px-6 rounded-full font-black text-xs select-none transition-all flex items-center gap-1.5 ${
+                        theme === 'coldest' ? 'bg-sky-500/20 hover:bg-sky-500/30 text-sky-300 border border-sky-500/30' : 'bg-sky-500/20 text-sky-400 border border-sky-500/30'
+                      }`}
+                    >
+                      🪄 AI Vocal Repair Studio
+                    </button>
+                    <button 
                       onClick={() => setShowModeInfo(true)}
                       className={`w-8 h-8 mr-1 flex items-center justify-center rounded-full transition-all font-bold text-sm ${
                         theme === 'coldest' ? 'text-sky-900/60 hover:bg-sky-500/20 hover:text-sky-900' : 
@@ -10948,6 +10963,18 @@ Provide the exact JSFX plugin name and required sliders/parameters.`;
           isOpen={showStemAnalyzerModal}
           onClose={() => setShowStemAnalyzerModal(false)}
           onGenerateFromStems={handleGenerateFromStems}
+          theme={theme}
+        />
+      )}
+
+      {showVocalRepairModal && (
+        <VocalRepairStudioModal
+          isOpen={showVocalRepairModal}
+          onClose={() => {
+            setShowVocalRepairModal(false);
+            setVocalRepairInitialFile(null);
+          }}
+          initialFile={vocalRepairInitialFile}
           theme={theme}
         />
       )}
